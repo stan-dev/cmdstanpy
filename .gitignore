@@ -1,0 +1,15 @@
+*.pyc
+__pycache__
+*.swp
+build
+*.egg-info
+.vscode
+.ipynb_checkpoints
+travis.yml
+.coverage
+.pytest_cache
+dist
+htmlcov
+*.png
+docs/_build
+.idea

@@ -1,0 +1,32 @@
+variables:
+  registry: gitlab.thevirtualbrain.org:5000
+  tag: tvb/pycmdstan
+
+build:
+  stage: build
+  tags:
+    - docker
+  script:
+    - sudo docker build -t $registry/$tag .
+    - sudo docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $registry
+    - sudo docker push $registry/$tag
+
+test:
+  stage: test
+  image: $registry/$tag
+  script:
+    - ls
+    - pytest --cov=pycmdstan --cov-report=term --cov-report=html -n 10 pycmdstan/tests.py
+  artifacts:
+    paths:
+    - htmlcov/
+    - "*.png"
+
+release_pypi:
+  stage: deploy
+  image: $registry/$tag
+  only:
+    - tags
+  script:
+    - python setup.py sdist bdist_wheel
+    - twine upload -u $TWINE_USERNAME2 -p $TWINE_PASSWORD2 dist/*
