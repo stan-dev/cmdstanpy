@@ -49,7 +49,7 @@ def preprocess_model(stan_fname, hpp_fname=None, overwrite=False):
     if os.path.exists(hpp_fname):
         return
     stanc_path = os.path.join(_find_cmdstan(), 'bin', 'stanc')
-    cmd = [stanc_path, f'--o={hpp_fname}', f'{stan_fname}']
+    cmd = [stanc_path, '--o={}'.format(hpp_fname), stan_fname]
     cwd = os.path.abspath(os.path.dirname(stan_fname))
     _run(cmd, cwd=cwd, check=False)
 
@@ -61,7 +61,7 @@ def compile_model(stan_fname, opt_lvl=3):
     path = os.path.abspath(os.path.dirname(stan_fname))
     name = stan_fname[:-5]
     target = os.path.join(path, name)
-    cmd = ['make', f'O={opt_lvl}', target]
+    cmd = ['make', 'O={}'.format(opt_lvl), target]
     _run(cmd, _find_cmdstan())
 
 
@@ -74,13 +74,13 @@ def stansummary_csv(csv_in):
     exe = os.path.join(_find_cmdstan(), 'bin', 'stansummary')
     with tempfile.TemporaryDirectory() as td:
         csv_out = os.path.join(td, 'summary.csv')
-        cmd = [exe, f'--csv_file={csv_out}'] + csv_in
+        cmd = [exe, '--csv_file={}'.format(csv_out)] + csv_in
         subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
         summary = io.parse_summary_csv(csv_out)
     return summary
 
 
-def model_path() -> str:
+def model_path():
     """Returns the directory where compiled models should be
     cached.
     """
@@ -89,12 +89,12 @@ def model_path() -> str:
         os.environ[key] = os.path.join(
             os.path.expanduser('~'), '.cache', 'cmdstanpy')
     if not os.path.exists(os.environ[key]):
-        logger.debug(f'creating cache dir {os.environ[key]}')
+        logger.debug('creating cache dir {}'.format(os.environ[key]))
         try:
             os.makedirs(os.environ[key])
         except FileExistsError:
             pass
-    logger.debug(f'have model path {os.environ[key]}')
+    logger.debug('have model path {}'.format(os.environ[key]))
     return os.environ[key]
 
 
@@ -102,7 +102,7 @@ class Model:
     """Stan model.
     """
 
-    def __init__(self, code: str = None, fname: os.PathLike = None, opt_lvl=3):
+    def __init__(self, code=None, fname=None, opt_lvl=3):
         """Create a new Stan model from code or filename.
         """
         self.code = code
@@ -113,14 +113,12 @@ class Model:
                 self.code = fd.read()
 
     @property
-    def model_id(self) -> str:
+    def model_id(self):
         """SHA256 checksum of model code.
         """
         sha = hashlib.sha256()
         sha.update(self.code.encode('ascii'))
-        #if self.fname:
-        #    os.path.basename()
-        return f'model-{sha.hexdigest()[:8]}'
+        return 'model-{}'.format(sha.hexdigest()[:8])
 
     def _compile(self, stan_fname):
         with open(stan_fname, 'w') as fd:
@@ -131,9 +129,10 @@ class Model:
         """Compile the model.
         """
         self.path = path or model_path()
-        self.stan_fname = os.path.join(self.path, f'{self.model_id}.stan')
+        self.stan_fname = os.path.join(self.path,
+                                       '{}.stan'.format(self.model_id))
         self.exe, _ = self.stan_fname.rsplit('.stan')
-        self._lock = filelock.FileLock(f'{self.exe}.lock')
+        self._lock = filelock.FileLock('{}.lock'.format(self.exe))
         with self._lock:
             if not os.path.exists(self.exe):
                 self._compile(self.stan_fname)
@@ -173,13 +172,13 @@ class Model:
 
 class Run:
     def __init__(self,
-                 model: Model,
-                 method: str,
-                 data: dict = None,
-                 id: int = None,
-                 start: bool = True,
-                 wait: bool = False,
-                 tmp_dir: str = '',
+                 model,
+                 method,
+                 data=None,
+                 id=None,
+                 start=True,
+                 wait=False,
+                 tmp_dir='',
                  **method_args):
         """Create a new run of the given model, for a given method.
         """
@@ -191,6 +190,11 @@ class Run:
         self.tmp_dir = tmp_dir or tempfile.TemporaryDirectory()
         self.output_csv_fname = os.path.join(self.tmp_dir.name, 'output.csv')
         self.output_fname = os.path.join(self.tmp_dir.name, 'output.txt')
+        self._output_fd = None
+        self._cmd = None
+        self.proc = None
+        self.stdout = None
+        self._csv = None
         if data:
             self.data_R_fname = os.path.join(self.tmp_dir.name, 'data.R')
             io.rdump(self.data_R_fname, data)
@@ -206,13 +210,15 @@ class Run:
             sep = '='
             # adapt_='delta=0.8' -> adapt delta=0.8
             if key.endswith('_'):
-                val = f'{key[:-1]} {val}'
+                val = '{0} {1}'.format(key[:-1], val)
                 sep = key = ''
             more = []
             if isinstance(val, str):
                 # "adapt delta=0.8" -> ['adapt', 'delta=0.8']
-                val, *more = val.split(' ')
-            cmd.append(f"{key}{sep}{val}")
+                parts = val.split(' ')
+                val = parts[0]
+                more = parts[1:]
+            cmd.append('{0}{1}{2}'.format(key, sep, val))
             cmd.extend(more)
 
     @property
@@ -225,12 +231,14 @@ class Run:
             self.model.compile()
         self._cmd = cmd = [self.model.exe]
         if self.id is not None:
-            cmd.append(f'id={self.id}')
+            cmd.append('id={}'.format(self.id))
         cmd.append(self.method)
         self._complex_args(cmd, self.method_args)
         if self.data:
-            cmd.extend(['data', f'file={self.data_R_fname}'])
-        cmd.extend(['output', f'file={self.output_csv_fname}', 'refresh=1'])
+            cmd.extend(['data', 'file={}'.format(self.data_R_fname)])
+        cmd.extend(['output',
+                    'file={}'.format(self.output_csv_fname),
+                    'refresh=1'])
         return cmd
 
     def start(self, wait=True):

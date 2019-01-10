@@ -46,7 +46,7 @@ def rload(fname):
     for line in lines:
         lhs, rhs = [_.strip() for _ in line.split('<-')]
         if rhs.startswith('structure'):
-            *_, vals, dim = rhs.replace('(', ' ').replace(')', ' ').split('c')
+            vals, dim = rhs.replace('(', ' ').replace(')', ' ').split('c')[-2:]
             vals = [float(v) for v in vals.split(',')[:-1]]
             dim = [int(v) for v in dim.split(',')]
             val = np.array(vals).reshape(dim[::-1]).T
@@ -64,9 +64,10 @@ def rload(fname):
     return data
 
 
-def merge_csv_data(*csvs, skip=0):
+def merge_csv_data(*csvs, **kwargs):
     """Merge multiple CSV dicts into a single dict.
     """
+    skip = kwargs.pop('skip', 0)
     data_ = {}
     for csv in csvs:
         for key, val in csv.items():
