@@ -4,22 +4,13 @@ python:
   - "2.7"
   - "3.6"
 
-env:
-  - CSVER=2.18.1
-
 cache:
   directories:
   - cmdstan
   - $HOME/.cache/pip
 
 install:
-  - |
-    curl -OL https://github.com/stan-dev/cmdstan/releases/download/v$CSVER/cmdstan-$CSVER.tar.gz
-    tar xzf cmdstan-$CSVER.tar.gz
-    rm -rf cmdstan-$CSVER.tar.gz
-    mv cmdstan-$CSVER cmdstan
-    cd cmdstan
-    make -j2 build examples/bernoulli/bernoulli
+  - dev/make_cmdstan.sh
   - pip install -r requirements.txt
   - pip install flake8 pytest
 
