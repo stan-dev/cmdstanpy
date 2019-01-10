@@ -7,7 +7,7 @@ import tempfile
 import threading
 import filelock
 import numpy as np
-from . import io, psis
+from . import io
 
 logger = logging.getLogger('pycmdstan.model')
 
@@ -177,7 +177,6 @@ class Run:
                  method: str,
                  data: dict = None,
                  id: int = None,
-                 log_lik: str = 'log_lik',
                  start: bool = True,
                  wait: bool = False,
                  tmp_dir: str = '',
@@ -186,7 +185,6 @@ class Run:
         """
         self.model = model
         self.id = id
-        self.log_lik = log_lik
         self.method = method
         self.method_args = method_args
         self.data = data
@@ -280,10 +278,6 @@ class Run:
         if not hasattr(self, '_csv'):
             self.wait()
             self._csv = io.parse_csv(self.output_csv_fname)
-            if self.log_lik in self._csv:
-                log_lik = self._csv[self.log_lik].reshape((self._csv['lp__'].size, -1))
-                if log_lik.shape[0] > 1:
-                    self._csv.update(psis.psisloo(-log_lik))
         return self._csv
 
     def __getitem__(self, key):
@@ -357,11 +351,6 @@ class RunSet:
         """
         if not hasattr(self, '_csv'):
             self._csv = io.merge_csv_data(*[r.csv for r in self.runs])
-            try:
-                log_lik = self._csv[self.runs[0].log_lik].reshape((self._csv['lp__'].size, -1))
-                self._csv.update(psis.psisloo(-log_lik))
-            except (AttributeError, KeyError):
-                pass
         return self._csv
 
     def __iter__(self):

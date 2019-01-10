@@ -2,17 +2,13 @@ import functools
 import re
 import os
 import unittest
-import subprocess
 import tempfile
 import logging
 import numpy as np
 import numpy.testing
-import matplotlib
-matplotlib.use('Agg')
 from .io import rdump, rload, parse_csv
 from .model import Model, Run, _find_cmdstan, CmdStanNotFound
 from .viz import plot_key, hist_key, trace_nuts, pairs, parallel_coordinates
-from .__main__ import main
 
 logging.basicConfig(level=logging.INFO)
 
@@ -119,14 +115,6 @@ generated quantities {
         self.model = Model(code=self.model_code, opt_lvl=0)
         self.data = {'x': np.random.randn(20) + 5.0}
         self.args = dict(num_warmup=200, num_samples=200)
-
-    def test_psis(self):
-        loo = []
-        for mu in np.r_[1.0, 3.0, 5.0, 7.0, 9.0]:
-            run = self.model.sample(data=dict(mu=mu, **self.data), **self.args)
-            loo.append(run['loo'])
-        loo = np.array(loo)
-        self.assertEqual(np.argmin(loo), 2)
 
 
 class TestSummary(TestMetrics):

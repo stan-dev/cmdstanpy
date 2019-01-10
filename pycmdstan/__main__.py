@@ -7,6 +7,7 @@ import argparse
 def main():
     pass
 
+# TODO CLI
 
 # compile model
 # dump npz/pkl/h5 to Rdump

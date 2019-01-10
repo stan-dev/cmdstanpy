@@ -1,27 +1,17 @@
-variables:
-  registry: gitlab.thevirtualbrain.org:5000
-  tag: tvb/pycmdstan
-
-build:
-  stage: build
-  tags:
-    - docker
-  script:
-    - sudo docker build -t $registry/$tag .
-    - sudo docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $registry
-    - sudo docker push $registry/$tag
+# TODO convert to Travis/Coveralls or similar
 
 test:
   stage: test
   image: $registry/$tag
   script:
     - ls
-    - pytest --cov=pycmdstan --cov-report=term --cov-report=html -n 10 pycmdstan/tests.py
+    - pytest --cov=pycmdstan --cov-report=term --cov-report=html -n 2 pycmdstan/tests.py
   artifacts:
     paths:
     - htmlcov/
     - "*.png"
 
+# TODO convert to script or other for e.g. automatic deploy tags to PyPI
 release_pypi:
   stage: deploy
   image: $registry/$tag

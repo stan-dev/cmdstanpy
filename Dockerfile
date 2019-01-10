@@ -7,7 +7,7 @@ ENV MPLBACKEND=agg
 ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN apt-get update && apt-get install -y clang-3.9
-RUN pip install numpy coverage pytest pytest-cov pytest-xdist matplotlib filelock sphinx
+RUN pip install numpy coverage pytest pytest-cov pytest-xdist filelock sphinx
 RUN pip install --upgrade setuptools wheel twine
 
 WORKDIR /opt/
@@ -15,7 +15,7 @@ RUN curl -OL https://github.com/stan-dev/cmdstan/releases/download/v$CSVER/cmdst
  && tar xzf cmdstan-$CSVER.tar.gz \
  && rm -rf cmdstan-$CSVER.tar.gz \
  && cd cmdstan-$CSVER \
- && make -j8 build examples/bernoulli/bernoulli
+ && make -j2 build examples/bernoulli/bernoulli
 
 RUN mkdir -p /opt/pycmdstan
 WORKDIR /opt/pycmdstan

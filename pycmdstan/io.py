@@ -3,9 +3,7 @@ I/O functions for working with CmdStan executables.
 
 """
 
-import os
 import re
-import threading
 import numpy as np
 
 
@@ -175,6 +173,9 @@ def parse_summary_csv(fname):
 
     return niter, recs
 
+
+# a TODO/nice-to-have: a background thread parses CSV samples
+# while CmdStan is running to avoid parsing overhead at end of run.
 
 # class OnlineCSVParser:
 

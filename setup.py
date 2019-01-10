@@ -28,7 +28,6 @@ setuptools.setup(
     long_description=readme_contents(),
     long_description_content_type="text/markdown",
     author='Stan Dev Team',
-    author_email='mmwoodman@gmail.com',
     url='https://github.com/stan-dev/cmdstanpy',
     packages=['pycmdstan'],
     install_requires='numpy filelock'.split(),

@@ -11,13 +11,7 @@ del os
 
 # reload submodules automatically
 from importlib import reload
-from . import io, model, viz, psis
-[reload(_) for _ in (io, model, viz, psis)]
-def reload():
-    import importlib, pycmdstan
-    importlib.reload(pycmdstan)
+from . import io, model
 
 from .io import *
 from .model import *
-from .viz import *
-from .psis import *
