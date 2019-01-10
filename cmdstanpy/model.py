@@ -1,5 +1,4 @@
 import os
-import enum
 import subprocess
 import hashlib
 import logging

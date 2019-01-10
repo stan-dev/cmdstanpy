@@ -30,7 +30,7 @@ def rdump(fname, data):
             else:
                 try:
                     val = val.flat[0]
-                except:
+                except AttributeError:
                     pass
                 line = '%s <- %s' % (key, val)
             fd.write(line)
@@ -55,10 +55,10 @@ def rload(fname):
         else:
             try:
                 val = int(rhs)
-            except:
+            except ValueError:
                 try:
                     val = float(rhs)
-                except:
+                except ValueError:
                     raise ValueError(rhs)
         data[lhs] = val
     return data

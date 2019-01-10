@@ -1,13 +1,11 @@
-import functools
 import re
 import os
 import unittest
 import tempfile
 import logging
 import numpy as np
-import numpy.testing
 from .io import rdump, rload, parse_csv
-from .model import Model, Run, _find_cmdstan, CmdStanNotFound
+from .model import Model, _find_cmdstan, CmdStanNotFound
 
 logging.basicConfig(level=logging.INFO)
 
@@ -96,7 +94,8 @@ generated quantities {
 
 
 class TestMetrics(BaseTestCase):
-    # cache model on test machine and cover code path for ~/.cache/cmdstanpy/...
+    # cache model on test machine
+    # and cover code path for ~/.cache/cmdstanpy/...
     use_tmp = False
 
     model_code = '''
@@ -123,8 +122,8 @@ class TestSummary(TestMetrics):
         runs['lp__']
         self.assertLess(runs.R_hats.max(), 1.2)
         # cover parse_csv & merge paths
-        csv = parse_csv([r.output_csv_fname for r in runs])
-        csv = runs.csv
+        parse_csv([r.output_csv_fname for r in runs])
+        runs.csv
         self.assertGreater(runs.niter, 0)
         self.assertGreater(runs.N_Eff_per_iter.min(), 0.2)
 
@@ -146,7 +145,6 @@ class TestComplexArgs(TestMetrics):
 
 class TestStanError(TestMetrics):
     def test_stan_error(self):
-        data = dict(mu=5.0, **self.data)
         with self.assertRaises(RuntimeError):
             run = self.model.sample(foo='bar')
             run.csv
