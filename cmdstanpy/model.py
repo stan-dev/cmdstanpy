@@ -243,7 +243,7 @@ class Run:
     def start(self, wait=True):
         """Start the run; invokes executable in subprocess.
         """
-        if hasattr(self, 'proc'):
+        if self.proc:
             raise RuntimeError('run has already started')
         logger.info('starting %s', ' '.join(self.cmd))
         logger.debug('starting %r', self.cmd)

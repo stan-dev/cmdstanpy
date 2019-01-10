@@ -4,6 +4,7 @@ import unittest
 import tempfile
 import logging
 import numpy as np
+from backports import tempfile
 from .io import rdump, rload, parse_csv
 from .model import Model, _find_cmdstan, CmdStanNotFound
 
@@ -27,7 +28,7 @@ class BaseTestCase(unittest.TestCase):
 
 class SimpleIOTests(BaseTestCase):
     def setUp(self):
-        super().setUp()
+        super(SimpleIOTests, self).setUp()
         self.data = {
             'int': 3,
             'real': 2.3,
@@ -109,7 +110,7 @@ generated quantities {
 '''
 
     def setUp(self):
-        super().setUp()
+        super(TestMetrics, self).setUp()
         self.model = Model(code=self.model_code, opt_lvl=0)
         self.data = {'x': np.random.randn(20) + 5.0}
         self.args = dict(num_warmup=200, num_samples=200)

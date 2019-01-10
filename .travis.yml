@@ -4,13 +4,16 @@ python:
   - "2.7"
   - "3.6"
 
+env:
+  - CSVER=2.18.1
+
 cache:
   directories:
-  - cmdstan
+  - cmdstan-$CSVER
   - $HOME/.cache/pip
 
 install:
-  - dev/make_cmdstan.sh
+  - CSVER=$CSVER dev/make_cmdstan.sh
   - pip install -r requirements.txt
   - pip install flake8 pytest
 
