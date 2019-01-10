@@ -9,7 +9,7 @@ import filelock
 import numpy as np
 from . import io
 
-logger = logging.getLogger('pycmdstan.model')
+logger = logging.getLogger('cmdstanpy.model')
 
 
 class CmdStanNotFound(RuntimeError):
@@ -87,7 +87,7 @@ def model_path() -> str:
     key = 'PYCMDSTAN_MODEL_PATH'
     if key not in os.environ:
         os.environ[key] = os.path.join(
-            os.path.expanduser('~'), '.cache', 'pycmdstan')
+            os.path.expanduser('~'), '.cache', 'cmdstanpy')
     if not os.path.exists(os.environ[key]):
         logger.debug(f'creating cache dir {os.environ[key]}')
         try:

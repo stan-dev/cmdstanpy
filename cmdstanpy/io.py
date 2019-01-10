@@ -4,7 +4,10 @@ I/O functions for working with CmdStan executables.
 """
 
 import re
+import logging
 import numpy as np
+
+logger = logging.getLogger('cmdstanpy.io')
 
 
 def _rdump_array(key, val):

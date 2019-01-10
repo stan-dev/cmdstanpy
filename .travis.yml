@@ -6,4 +6,4 @@ install:
   - docker build -t cmdstanpy .
 
 script:
-  - docker run --rm cmdstanpy pytest --cov=pycmdstan --cov-report=term --cov-report=html -n 10 pycmdstan/tests.py
+  - docker run --rm cmdstanpy pytest --cov=cmdstanpy --cov-report=term --cov-report=html -n 10 cmdstanpy/tests.py

@@ -97,7 +97,7 @@ generated quantities {
 
 
 class TestMetrics(BaseTestCase):
-    # cache model on test machine and cover code path for ~/.cache/pycmdstan/...
+    # cache model on test machine and cover code path for ~/.cache/cmdstanpy/...
     use_tmp = False
 
     model_code = '''
