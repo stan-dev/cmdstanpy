@@ -6,11 +6,10 @@ python:
 
 env:
   - CSVER=2.18.1
-  - CMDSTAN=cmdstan-$CSVER
 
 cache:
   directories:
-  - cmdstan-$CSVER
+  - cmdstan
   - $HOME/.cache/pip
 
 install:
@@ -18,7 +17,8 @@ install:
     curl -OL https://github.com/stan-dev/cmdstan/releases/download/v$CSVER/cmdstan-$CSVER.tar.gz
     tar xzf cmdstan-$CSVER.tar.gz
     rm -rf cmdstan-$CSVER.tar.gz
-    cd cmdstan-$CSVER
+    mv cmdstan-$CSVER cmdstan
+    cd cmdstan
     make -j2 build examples/bernoulli/bernoulli
   - pip install -r requirements.txt
   - pip install flake8 pytest
@@ -26,4 +26,4 @@ install:
 
 script:
   - flake8 cmdstanpy
-  - pytest cmdstanpy/tests.py
+  - CMDSTAN=$PWD/cmdstan pytest cmdstanpy/tests.py
