@@ -8,7 +8,6 @@ import numpy as np
 import numpy.testing
 from .io import rdump, rload, parse_csv
 from .model import Model, Run, _find_cmdstan, CmdStanNotFound
-from .viz import plot_key, hist_key, trace_nuts, pairs, parallel_coordinates
 
 logging.basicConfig(level=logging.INFO)
 
@@ -143,62 +142,6 @@ class TestComplexArgs(TestMetrics):
         cmd = ' '.join(run.cmd)
         self.assertIsNotNone(re.search('adapt delta', cmd))
         self.assertIsNotNone(re.search('algorithm=hmc engine=nuts', cmd))
-
-
-def savefig(f):
-    @functools.wraps(f)
-    def test(self):
-        import pylab as pl
-        pl.figure()
-        f(self)
-        pl.savefig(f'{f.__name__}.png')
-        pl.close()
-
-    return test
-
-
-class TestPlots(BaseTestCase):
-    def setUp(self):
-        super().setUp()
-        self.data = {k: v for k, v in zip('xyz', np.random.randn(3, 100))}
-
-    @savefig
-    def test_plot_key(self):
-        plot_key(self.data, 'x')
-
-    @savefig
-    def test_hist_key(self):
-        hist_key(self.data, 'x')
-
-    @savefig
-    def test_pairs(self):
-        pairs(self.data, 'x y z'.split(), skip=100)
-
-
-class TestPlotNutsTrace(TestMetrics):
-    @savefig
-    def test_trace_nuts(self):
-        data = dict(mu=5.0, **self.data)
-        run = self.model.sample(data=data, **self.args)
-        with self.assertRaises(RuntimeError):
-            run.start()
-        trace_nuts(run.csv, 'sig', skip=100)
-
-
-class TestPlotParCoord(BaseTestCase):
-    @savefig
-    def test_plot_parallel_coordinates(self):
-        randn = np.random.randn
-        nsamp = 100
-        csv = dict(
-            x=randn(nsamp, 3, 3) * randn(3, 3) + np.sin(np.r_[:9] / 4).reshape(
-                (3, 3)),
-            y=randn(nsamp, 2)**2,
-            z=np.abs(randn(nsamp))**0.5,
-            z1=randn(nsamp)**3,
-            lp__=randn(nsamp))
-        keys = 'x y z'.split()
-        parallel_coordinates(csv, keys)
 
 
 class TestStanError(TestMetrics):
