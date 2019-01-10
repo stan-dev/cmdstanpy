@@ -5,6 +5,8 @@ python:
   - "3.6"
 
 install:
-  -
+  - pip install -r requirements.txt
+
 script:
+  - flake8
   - pytest cmdstanpy/tests.py
