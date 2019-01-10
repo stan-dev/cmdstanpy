@@ -3,10 +3,7 @@ services:
  - docker
 
 install:
-  - docker build -t maedoc/pycmdstan .
+  - docker build -t cmdstanpy .
 
 script:
-  - docker run --rm maedoc/pycmdstan python -m unittest discover
-
-after_success:
-  - coveralls
+  - docker run --rm cmdstanpy pytest --cov=pycmdstan --cov-report=term --cov-report=html -n 10 pycmdstan/tests.py
