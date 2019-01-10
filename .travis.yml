@@ -1,9 +1,10 @@
-sudo: required
-services:
- - docker
+language: python
+
+python:
+  - "2.7"
+  - "3.6"
 
 install:
-  - docker build -t cmdstanpy .
-
+  -
 script:
-  - docker run --rm cmdstanpy pytest --cov=cmdstanpy --cov-report=term --cov-report=html -n 10 cmdstanpy/tests.py
+  - pytest cmdstanpy/tests.py
