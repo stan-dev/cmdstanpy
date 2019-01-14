@@ -17,7 +17,7 @@ or from sources
 
 .. code-block:: bash
 
-	pip install -e git+https://gitlab.thevirtualbrain.org/tvb/cmdstanpy
+	pip install -e git+https://github.com/stan-dev/cmdstanpy
 
 Basics
 ------
