@@ -1,23 +1,23 @@
 Guide
 =====
 
-This tutorial will walk you through the different steps of using PyCmdStan. 
+This tutorial will walk you through the different steps of using CmdStanPy. 
 
 Install
 -------
 
-Pycmdstan is a pure-Python package which can be installed from
+CmdStanPy is a pure-Python package which can be installed from
 PyPI
 
 .. code-block:: bash
 
-	pip install --upgrade pycmdstan
+	pip install --upgrade cmdstanpy
 
 or from sources
 
 .. code-block:: bash
 
-	pip install -e git+https://gitlab.thevirtualbrain.org/tvb/pycmdstan
+	pip install -e git+https://gitlab.thevirtualbrain.org/tvb/cmdstanpy
 
 Basics
 ------
@@ -26,7 +26,7 @@ Basics
 
 	import os
 	os.environ['CMDSTAN'] = '~/src/cmdstan-2.17.1'
-	from pycmdstan import Model, Run
+	from cmdstanpy import Model, Run
 
 	model = Model('''
 	data { vector[20] x; real mu; }
@@ -79,7 +79,7 @@ A more complex case with nested parameters looks like
 	            engine=nuts \
 	                max_depth=12
 
-Pycmdstan doesn't do anything clever (yet), so full set of subarguments need to be
+CmdStanPy doesn't do anything clever (yet), so full set of subarguments need to be
 passed as equivalent strings
 
 .. code-block:: python
@@ -107,9 +107,9 @@ Plots
 Trace plots
 ^^^^^^^^^^^
 
-.. image:: https://gitlab.thevirtualbrain.org/tvb/pycmdstan/-/jobs/artifacts/master/raw/test_trace_nuts.png?job=test
+.. image:: https://gitlab.thevirtualbrain.org/tvb/cmdstanpy/-/jobs/artifacts/master/raw/test_trace_nuts.png?job=test
 
 Parallel coordinates plot
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: https://gitlab.thevirtualbrain.org/tvb/pycmdstan/-/jobs/artifacts/master/raw/test_plot_parallel_coordinates.png?job=test
+.. image:: https://gitlab.thevirtualbrain.org/tvb/cmdstanpy/-/jobs/artifacts/master/raw/test_plot_parallel_coordinates.png?job=test
