@@ -91,7 +91,7 @@ def model_path():
         logger.debug('creating cache dir {}'.format(os.environ[key]))
         try:
             os.makedirs(os.environ[key])
-        except FileExistsError:
+        except OSError:
             pass
     logger.debug('have model path {}'.format(os.environ[key]))
     return os.environ[key]
