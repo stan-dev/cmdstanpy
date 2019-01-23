@@ -19,7 +19,9 @@ install:
   - pip install -r requirements.txt
   - pip install flake8 pytest
 
+after install:
+
 
 script:
   - flake8 cmdstanpy
-  - CMDSTAN=$PWD/cmdstan pytest cmdstanpy/tests.py
+  - CMDSTAN=$PWD/cmdstan-$CSVER pytest cmdstanpy/tests.py
