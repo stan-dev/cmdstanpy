@@ -1,7 +1,6 @@
 import re
 import os
 import unittest
-import tempfile
 import logging
 import numpy as np
 from backports import tempfile

@@ -2,7 +2,7 @@ import os
 import subprocess
 import hashlib
 import logging
-import tempfile
+from backports import tempfile
 import threading
 import filelock
 import numpy as np
