@@ -224,7 +224,7 @@ class Run:
     def cmd(self):
         """Generate the command line for this run.
         """
-        if hasattr(self, '_cmd'):
+        if self._cmd is not None:
             return self._cmd
         if not hasattr(self.model, 'exe'):
             self.model.compile()
@@ -243,7 +243,7 @@ class Run:
     def start(self, wait=True):
         """Start the run; invokes executable in subprocess.
         """
-        if self.proc:
+        if self.proc is not None:
             raise RuntimeError('run has already started')
         logger.info('starting %s', ' '.join(self.cmd))
         logger.debug('starting %r', self.cmd)
@@ -266,7 +266,7 @@ class Run:
     def wait(self):
         """Wait for run to complete.
         """
-        if not hasattr(self, 'proc'):
+        if self.proc is None:
             self.start(wait=False)
         self._wait_loop()
         self._output_fd.close()
@@ -282,7 +282,7 @@ class Run:
     def csv(self):
         """Return output samples.
         """
-        if not hasattr(self, '_csv'):
+        if self._csv is None:
             self.wait()
             self._csv = io.parse_csv(self.output_csv_fname)
         return self._csv
@@ -301,6 +301,8 @@ class RunSet:
         """Create a new RunSet from a sequence of Runs.
         """
         self.runs = runs
+        self._summary = None
+        self._csv = None
         self._summary_thread = threading.Thread(target=self._build_summary)
         self._summary_thread.start()
 
@@ -315,7 +317,7 @@ class RunSet:
     def summary(self):
         """Retrive summary results for this RunSet.
         """
-        if not hasattr(self, '_summary'):
+        if self._summary is None:
             self._build_summary()
         return self._summary
 
@@ -356,7 +358,7 @@ class RunSet:
     def csv(self):
         """Return all output samples for Runs in this Runset.
         """
-        if not hasattr(self, '_csv'):
+        if self._csv is None:
             self._csv = io.merge_csv_data(*[r.csv for r in self.runs])
         return self._csv
 
