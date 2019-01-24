@@ -20,10 +20,10 @@ def _rdump_array(key, val):
         return struct
 
 
-def rdump(fname, data):
+def rdump(path, data):
     """Dump a dict of data to a R dump format file.
     """
-    with open(fname, 'w') as fd:
+    with open(path, 'w') as fd:
         for key, val in data.items():
             if isinstance(val, np.ndarray) and val.size > 1:
                 line = _rdump_array(key, val)
@@ -37,10 +37,10 @@ def rdump(fname, data):
             fd.write('\n')
 
 
-def rload(fname):
+def rload(path):
     """Load a dict of data from an R dump format file.
     """
-    with open(fname, 'r') as fd:
+    with open(path, 'r') as fd:
         lines = fd.readlines()
     data = {}
     for line in lines:
@@ -100,7 +100,7 @@ def parse_csv(path, merge=True):
         return csv
 
     lines = []
-    with open(fname, 'r') as fd:
+    with open(path, 'r') as fd:
         for line in fd.readlines():
             if not line.startswith('#'):
                 lines.append(line.strip().split(','))
@@ -132,13 +132,13 @@ def parse_csv(path, merge=True):
     return data_
 
 
-def parse_summary_csv(fname):
+def parse_summary_csv(path):
     """Parse CSV output of the stansummary program.
     """
     skeys = []
     svals = []
     niter = -1
-    with open(fname, 'r') as fd:
+    with open(path, 'r') as fd:
         scols = fd.readline().strip().split(',')
         for line in fd.readlines():
             if 'iterations' in line:
@@ -188,8 +188,8 @@ def parse_summary_csv(fname):
 #     #     num_warmup = 1000 (Default)
 #     #     save_warmup = 0 (Default)
 
-#     def __init__(self, csv_fname):
-#         self.csv_fname = csv_fname
+#     def __init__(self, csv_path):
+#         self.csv_path = csv_path
 #         self.thread = Thread(target=self._run)
 #         self._line = ''
 #         self.read = True
@@ -203,7 +203,7 @@ def parse_summary_csv(fname):
 #                 print(exc)
 
 #     def _follow(self):
-#         with open(self.csv_fname, 'r') as fd:
+#         with open(self.csv_path, 'r') as fd:
 #             while True:
 #                 line = fd.readline()
 #                 if line:
