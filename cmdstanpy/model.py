@@ -1,5 +1,8 @@
 import os
-import subprocess32 as subprocess
+try:
+    import subprocess32 as subprocess
+except ImportError:
+    import subprocess
 import hashlib
 import logging
 from backports import tempfile
