@@ -160,7 +160,7 @@ class Model:
         runs = [
             Run(model=self,
                 method=method,
-                id=rng.random_integers(99999),
+                id=rng.randint(1, 99999 + 1),
                 **kwargs) for _ in range(chains)
         ]
         if len(runs) == 1:
