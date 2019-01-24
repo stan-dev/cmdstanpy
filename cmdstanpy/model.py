@@ -1,5 +1,5 @@
 import os
-import subprocess
+import subprocess32 as subprocess
 import hashlib
 import logging
 from backports import tempfile
