@@ -86,7 +86,7 @@ def model_path():
     """Returns the directory where compiled models should be
     cached.
     """
-    key = 'PYCMDSTAN_MODEL_PATH'
+    key = 'CMDSTANPY_MODEL_PATH'
     if key not in os.environ:
         os.environ[key] = os.path.join(
             os.path.expanduser('~'), '.cache', 'cmdstanpy')

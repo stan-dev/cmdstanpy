@@ -16,7 +16,7 @@ class BaseTestCase(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.TemporaryDirectory()
         if self.use_tmp:
-            os.environ['PYCMDSTAN_MODEL_PATH'] = self.tmp_dir.name
+            os.environ['CMDSTANPY_MODEL_PATH'] = self.tmp_dir.name
 
     def tearDown(self):
         self.tmp_dir.cleanup()
