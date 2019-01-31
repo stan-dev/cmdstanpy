@@ -1,25 +1,25 @@
 API
 ===
 
-The page documents the API of PyCmdStan, mostly by pulling docstrings from the sources.
+The page documents the API of CmdStanPy, mostly by pulling docstrings from the sources.
 
 Reading and writing files
 -------------------------
 
-.. automodule:: pycmdstan.io
+.. automodule:: cmdstanpy.io
    :members:
    :undoc-members:
 
 Working with Stan models
 ------------------------
 
-.. automodule:: pycmdstan.model
+.. automodule:: cmdstanpy.model
    :members:
    :undoc-members:
 
 Plotting results
 ----------------
 
-.. automodule:: pycmdstan.viz
+.. automodule:: cmdstanpy.viz
    :members:
    :undoc-members:

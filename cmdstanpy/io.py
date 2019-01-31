@@ -20,10 +20,10 @@ def _rdump_array(key, val):
         return struct
 
 
-def rdump(fname, data):
+def rdump(path, data):
     """Dump a dict of data to a R dump format file.
     """
-    with open(fname, 'w') as fd:
+    with open(path, 'w') as fd:
         for key, val in data.items():
             if isinstance(val, np.ndarray) and val.size > 1:
                 line = _rdump_array(key, val)
@@ -37,21 +37,21 @@ def rdump(fname, data):
             fd.write('\n')
 
 
-def rload(fname):
+def rload(path):
     """Load a dict of data from an R dump format file.
     """
-    with open(fname, 'r') as fd:
+    with open(path, 'r') as fd:
         lines = fd.readlines()
     data = {}
     for line in lines:
-        lhs, rhs = [_.strip() for _ in line.split('<-')]
+        lhs, rhs = [item.strip() for item in line.split('<-')]
         if rhs.startswith('structure'):
             vals, dim = rhs.replace('(', ' ').replace(')', ' ').split('c')[-2:]
             vals = [float(v) for v in vals.split(',')[:-1]]
             dim = [int(v) for v in dim.split(',')]
             val = np.array(vals).reshape(dim[::-1]).T
         elif rhs.startswith('c'):
-            val = np.array([float(_) for _ in rhs[2:-1].split(',')])
+            val = np.array([float(v) for v in rhs[2:-1].split(',')])
         else:
             try:
                 val = int(rhs)
@@ -82,17 +82,17 @@ def merge_csv_data(*csvs, **kwargs):
     return data_
 
 
-def parse_csv(fname, merge=True):
+def parse_csv(path, merge=True):
     """Parse samples from a Stan output CSV file.
     """
-    if '*' in fname:
+    if '*' in path:
         import glob
-        return parse_csv(glob.glob(fname), merge=merge)
-    if isinstance(fname, (list, tuple)):
+        return parse_csv(glob.glob(path), merge=merge)
+    if isinstance(path, (list, tuple)):
         csv = []
-        for _ in fname:
+        for fname in path:
             try:
-                csv.append(parse_csv(_))
+                csv.append(parse_csv(fname))
             except Exception as e:
                 print('skipping ', fname, e)
         if merge:
@@ -100,7 +100,7 @@ def parse_csv(fname, merge=True):
         return csv
 
     lines = []
-    with open(fname, 'r') as fd:
+    with open(path, 'r') as fd:
         for line in fd.readlines():
             if not line.startswith('#'):
                 lines.append(line.strip().split(','))
@@ -132,13 +132,13 @@ def parse_csv(fname, merge=True):
     return data_
 
 
-def parse_summary_csv(fname):
+def parse_summary_csv(path):
     """Parse CSV output of the stansummary program.
     """
     skeys = []
     svals = []
     niter = -1
-    with open(fname, 'r') as fd:
+    with open(path, 'r') as fd:
         scols = fd.readline().strip().split(',')
         for line in fd.readlines():
             if 'iterations' in line:
@@ -150,7 +150,7 @@ def parse_summary_csv(fname):
                 continue
             _, k, v = line.split('"')
             skeys.append(k)
-            svals.append(np.array([float(_) for _ in v.split(',')[1:]]))
+            svals.append(np.array([float(num) for num in v.split(',')[1:]]))
     svals = np.array(svals)
 
     sdat = {}
@@ -166,12 +166,12 @@ def parse_summary_csv(fname):
         else:
             sdat[skey] = sval
 
-    for key in [_ for _ in sdat.keys()]:
+    for key in sdat.keys():
         if key in sdims:
             sdat[key] = np.array(sdat[key]).reshape(sdims[key] + (-1, ))
 
     recs = {}
-    dt = [(k, 'f8') for k in scols[1:]]
+    dt = [(col, 'f8') for col in scols[1:]]
     for key, val in sdat.items():
         recs[key] = np.rec.array(val, dtype=dt)
 
@@ -188,8 +188,8 @@ def parse_summary_csv(fname):
 #     #     num_warmup = 1000 (Default)
 #     #     save_warmup = 0 (Default)
 
-#     def __init__(self, csv_fname):
-#         self.csv_fname = csv_fname
+#     def __init__(self, csv_path):
+#         self.csv_path = csv_path
 #         self.thread = Thread(target=self._run)
 #         self._line = ''
 #         self.read = True
@@ -203,7 +203,7 @@ def parse_summary_csv(fname):
 #                 print(exc)
 
 #     def _follow(self):
-#         with open(self.csv_fname, 'r') as fd:
+#         with open(self.csv_path, 'r') as fd:
 #             while True:
 #                 line = fd.readline()
 #                 if line:
