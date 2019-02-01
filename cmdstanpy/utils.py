@@ -23,7 +23,10 @@ def rdump(path, data):
         for key, val in data.items():
             if isinstance(val, np.ndarray) and val.size > 1:
                 line = _rdump_array(key, val)
+            elif isinstance(val, list) and len(val) > 1:
+                line = _rdump_array(key, np.asarray(val))
             else:
+
                 try:
                     val = val.flat[0]
                 except AttributeError:
