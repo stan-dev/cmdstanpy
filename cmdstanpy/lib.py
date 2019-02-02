@@ -76,3 +76,4 @@ class StanData(object):
     def write_rdump(self, dict):
         rdump(self.rdump_file, dict)
 
+
