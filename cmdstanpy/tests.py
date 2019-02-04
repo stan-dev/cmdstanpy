@@ -123,33 +123,24 @@ class ModelTest(BaseTestCase):
             model = Model("foo","bar","baz")
 
 class SampleTest(BaseTestCase):
-    def test_sample_1(self):
+    def test_sample_1_good(self):
+        rdump_file = os.path.join(examples_path, "bernoulli.rdump")
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        output = os.path.join(examples_path, "bernoulli.samples")
+        model = compile_model(stan)
+        sample(model, data_file=rdump_file, output_file=output)
+
+    def test_sample_2_fixed_param(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        output = os.path.join(examples_path, "bernoulli.samples")
+        model = compile_model(stan)
+        sample(model, fixed_param=True, output_file=output)
+
+    def test_sample_3_missing_input(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
         output = os.path.join(examples_path, "bernoulli.samples")
         model = compile_model(stan)
         sample(model, output_file=output)
-
-    def test_sample_2(self):
-        stan = os.path.join(examples_path, "bernoulli.stan")
-        output = os.path.join(examples_path, "bernoulli.samples")
-        model = compile_model(stan)
-        sample(model, adapt_delta=0.95, output_file=output)
-
-    def test_sample_3(self):
-        rdump_file = os.path.join(examples_path, "bernoulli.rdump")
-        standata = StanData(rdump_file)
-        stan = os.path.join(examples_path, "bernoulli.stan")
-        output = os.path.join(examples_path, "bernoulli.samples")
-        model = compile_model(stan)
-        sample(model, data_file=rdump_file, adapt_delta=0.95, output_file=output)
-
-    def test_sample_4(self):
-        rdump_file = os.path.join(examples_path, "bernoulli.rdump")
-        standata = StanData(rdump_file)
-        stan = os.path.join(examples_path, "bernoulli.stan")
-        output = os.path.join(examples_path, "bernoulli.samples")
-        model = compile_model(stan)
-        sample(model, data_file=rdump_file, fixed_param=True, output_file=output)
 
 
 if __name__ == '__main__':

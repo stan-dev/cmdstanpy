@@ -77,3 +77,44 @@ class StanData(object):
         rdump(self.rdump_file, dict)
 
 
+class RunSet(object):
+    """Record call to NUTS sampler for Stan model."""
+    def __init__(self, num_chains, args):
+        """Initialize object."""
+        self.num_chains = num_chains
+        """number of chains."""
+        self.args = args
+        """sampler args."""
+
+
+
+class Run:
+    def __init__(self,
+                 id=None,
+                 cmd=None,
+                 start=True,
+                 wait=False):
+
+        """Create a new run of the given model, for a given method.
+        """
+        self.id = id
+        self.cmd = cmd
+        self.output_fname = os.path.join(self.tmp_dir.name, 'output.txt')
+        self._output_fd = None
+        self.proc = None
+        self.stdout = None
+        if start:
+            self.start(wait=wait)
+
+    def start(self, wait=True):
+        """Start the run; invokes executable in subprocess.
+        """
+        if self.proc is not None:
+            raise RuntimeError('run has already started')
+        logger.info('starting %s', ' '.join(self.cmd))
+        logger.debug('starting %r', self.cmd)
+        self._output_fd = open(self.output_fname, 'w')
+        self.proc = subprocess.Popen(
+            self.cmd, stdout=self._output_fd, stderr=subprocess.STDOUT)
+        if wait:
+            self.wait()
