@@ -26,7 +26,6 @@ class ConfTest(BaseTestCase):
         
     def test_repr(self):
         testconf = Conf()
-
     
 rdump = ('''y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
 N <- 10
@@ -40,7 +39,7 @@ class StanDataTest(BaseTestCase):
     def test_standata_new(self):
         json_file = os.path.join(examples_path, "bernoulli.data.json")
         dict = json.load(open(json_file))
-        rdump_file = os.path.join(examples_path, "bernoulli.rdump")
+        rdump_file = os.path.join(examples_path, "bernoulli.data2.R")
         standata = StanData(rdump_file)
         standata.write_rdump(dict)
         with open(rdump_file, 'r') as myfile:
@@ -90,7 +89,7 @@ class ModelTest(BaseTestCase):
     def test_model1(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
         exe = os.path.join(examples_path, "bernoulli")
-        model = Model("bern",stan, exe)
+        model = Model(stan, "bern", exe)
         self.assertEqual("bern", model.name)
         self.assertEqual(stan, model.stan_file)
         self.assertEqual(exe, model.exe_file)
@@ -120,27 +119,82 @@ class ModelTest(BaseTestCase):
 
     def test_error(self):
         with self.assertRaises(Exception):
-            model = Model("foo","bar","baz")
+            model = Model("nosuchmodel","nosuchmodel.stan","nosuchmodel.exe")
+
+
+class SamplerArgsTest(BaseTestCase):
+    def test_samplerargs_min(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output)
+        print(args.compose_command('*'))
+
+    def test_samplerargs_good(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        rdata = os.path.join(examples_path, "bernoulli.data.R")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, seed=12345, data_file=rdata, output_file=output,
+                               nuts_max_depth=15, adapt_delta=0.99)
+        print(args.compose_command('*'))
+
+    def test_samplerargs_bad1(self):
+        with self.assertRaises(Exception):
+            args = SamplerArgs()
+
+    def test_samplerargs_bad2(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        with self.assertRaises(Exception):
+            args = SamplerArgs(model)
+
+    def test_samplerargs_bad2(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        with self.assertRaises(Exception):
+            args = SamplerArgs(model)
+            args.validate()
+            
+
+class RunSetTest(BaseTestCase):
+    def test_runset(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        rdata = os.path.join(examples_path, "bernoulli.data.R")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, seed=12345, data_file=rdata, output_file=output,
+                               nuts_max_depth=15, adapt_delta=0.99)
+        transcript = os.path.join(examples_path, "bernoulli.run")
+        runset = RunSet(chains=4, cores=2, transcript_file=transcript, args=args)
+        self.assertEqual(-1, runset.get_retcode(0))
+        runset.set_retcode(0,0)
+        self.assertEqual(0, runset.get_retcode(0))
+
+
 
 class SampleTest(BaseTestCase):
     def test_sample_1_good(self):
-        rdump_file = os.path.join(examples_path, "bernoulli.rdump")
+        rdata = os.path.join(examples_path, "bernoulli.data.R")
         stan = os.path.join(examples_path, "bernoulli.stan")
-        output = os.path.join(examples_path, "bernoulli.samples")
+        output = os.path.join(examples_path, "bernoulli.output")
         model = compile_model(stan)
-        sample(model, data_file=rdump_file, output_file=output)
+        runset = sample(model, data_file=rdata, csv_output_file=output)
+        for i in range(runset.chains):
+            self.assertEqual(0, runset.get_retcode(i))
 
-    def test_sample_2_fixed_param(self):
+    def test_sample_2_missing_input(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
-        output = os.path.join(examples_path, "bernoulli.samples")
+        output = os.path.join(examples_path, "bernoulli.output")
         model = compile_model(stan)
-        sample(model, fixed_param=True, output_file=output)
-
-    def test_sample_3_missing_input(self):
-        stan = os.path.join(examples_path, "bernoulli.stan")
-        output = os.path.join(examples_path, "bernoulli.samples")
-        model = compile_model(stan)
-        sample(model, output_file=output)
+        runset = sample(model, csv_output_file=output)
+        for i in range(runset.chains):
+            self.assertEqual(70, runset.get_retcode(i))
 
 
 if __name__ == '__main__':
