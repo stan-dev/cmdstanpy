@@ -6,20 +6,17 @@ import os
 import os.path
 import subprocess
 import numpy as np
-    
-def is_pos_int(i):
+
+def is_int(i):
     try:
        test = int(i)
-    except Execption:
-        return False
-    if (i < 1):
+    except Exception:
         return False
     return True
 
 def do_sample(runset, idx):
     """Spawn process, capture stdout and std err to transcript file, return returncode.
     """
-    print('run {}'.format(idx))
     cmd = runset.cmds[idx]
     proc = subprocess.Popen(
         cmd.split(),

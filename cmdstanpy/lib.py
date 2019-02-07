@@ -3,6 +3,8 @@ import os
 import os.path
 from pprint import pformat
 import numpy as np
+from utils import is_int
+
 
 
 class Conf(object):
@@ -173,16 +175,23 @@ class SamplerArgs(object):
             raise ValueError('stan model must be compiled first,' +
                                  ' run command compile_model("{}")'.
                                  format(self.model.stan_file))
+        if not os.path.exists(self.model.exe_file):
+            raise ValueError('cannot access model executible "{}"'.format(
+                self.model.exe_file))
         if self.output_file is None:
             raise ValueError('no output file specified')
         if self.output_file.endswith('.csv'):
             self.output_file = self.output_file[:-4]
-        if not os.path.exists(self.model.exe_file):
-            raise ValueError('cannot access model executible "{}"'.format(
-                self.model.exe_file))
+        try:
+            open(self.output_file,'w+')
+        except Exception:
+            raise ValueError('invalid path for output csv files')
         if self.seed is None:
             rng = np.random.RandomState()
             self.seed = rng.randint(1, 99999 + 1)
+        else:
+            if not is_int(self.seed) or self.seed < 0 or self.seed > 2**32-1:
+                raise ValueError('seed must be an integer value between 0 and 2**32-1, found {}'.format(self.seed))
         if self.data_file is not None:
             if not os.path.exists(self.data_file):
                 raise ValueError('no such file {}'.format(self.data_file))
@@ -192,16 +201,17 @@ class SamplerArgs(object):
         if (self.hmc_metric_file is not None):
             if not os.path.exists(self.hmc_metric_file):
                 raise ValueError('no such file {}'.format(self.hmc_metric_file))
-        if self.output_file is None:
-            raise ValueError('please specify path to sampler output.csv file.')
-        try:
-            open(self.output_file,'w+')
-        except OSError:
-            raise Exception('invalide output file path')
-        if self.output_file is not None:
-            if not os.path.exists(self.output_file):
-                raise ValueError('no such file {}'.format(self.output_file))
-        # todo, check type/bounds on all other controls
+        if self.post_warmup_draws is not None:
+            if not is_int(self.pose_warmup_draws) or self.post_warmup_draws < 0:
+                raise ValueError('post_warmup_draws must be a non-negative integer value'.format(
+                    self.post_warmup_draws))
+        if self.warmup_draws is not None:
+            if not is_int(self.pose_warmup_draws) or self.warmup_draws < 0:
+                raise ValueError('warmup_draws must be a non-negative integer value'.format(
+                    self.warmup_draws))
+        # TODO: check type/bounds on all other controls
+
+
         pass
 
     def compose_command(self, chain_id):

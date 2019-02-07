@@ -56,7 +56,6 @@ class CompileTest(BaseTestCase):
     def test_compile_good(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
         model = compile_model(stan)
-        print(model)
         exe = os.path.join(examples_path, "bernoulli")
         self.assertEqual("bernoulli", model.name)
         self.assertEqual(stan, model.stan_file)
@@ -129,7 +128,10 @@ class SamplerArgsTest(BaseTestCase):
         model = Model(exe_file=exe, stan_file=stan, name="bern")
         output = os.path.join(examples_path, "bernoulli.output")
         args = SamplerArgs(model, output_file=output)
-        print(args.compose_command('*'))
+        args.validate()
+        cmd = args.compose_command('*')
+        self.assertIn("id=*", cmd)
+        self.assertIn("bernoulli.output-*.csv", cmd)
 
     def test_samplerargs_good(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
@@ -139,25 +141,109 @@ class SamplerArgsTest(BaseTestCase):
         output = os.path.join(examples_path, "bernoulli.output")
         args = SamplerArgs(model, seed=12345, data_file=rdata, output_file=output,
                                nuts_max_depth=15, adapt_delta=0.99)
-        print(args.compose_command('*'))
+        cmd = args.compose_command('*')
+        self.assertIn("random seed=12345", cmd)
+        self.assertIn("data file=", cmd)
+        self.assertIn("algorithm=hmc engine=nuts max_depth=15 adapt delta=0.99", cmd)
 
-    def test_samplerargs_bad1(self):
+    def test_samplerargs_num_draws(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output, post_warmup_draws=3, warmup_draws=7)
+        cmd = args.compose_command('*')
+        self.assertIn("num_samples=3", cmd)
+        self.assertIn("num_warmup=7", cmd)
+
+    def test_samplerargs_thin(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output, thin=3)
+        cmd = args.compose_command('*')
+        self.assertIn("thin=3", cmd)
+
+
+    def test_samplerargs_missing_args1(self):
         with self.assertRaises(Exception):
             args = SamplerArgs()
 
-    def test_samplerargs_bad2(self):
+    def test_samplerargs_missing_args2(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
         exe = os.path.join(examples_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan, name="bern")
-        with self.assertRaises(Exception):
-            args = SamplerArgs(model)
+        args = SamplerArgs(model)
+        with self.assertRaises(ValueError):
+            args.validate()
 
-    def test_samplerargs_bad2(self):
+    def test_samplerargs_bad_model1(self):
+        stan = os.path.join(examples_path, "bbad.stan")
+        model = Model(stan_file=stan, name="bbad")
+        args = SamplerArgs(model, )
+        with self.assertRaises(ValueError):
+            args.validate()
+
+    def test_samplerargs_bad_model2(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "no_such_exe")
+        model = Model(stan_file=stan, name="bernoulli")
+        args = SamplerArgs(model, )
+        with self.assertRaises(ValueError):
+            args.validate()
+
+    def test_samplerargs_bad_output(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
         exe = os.path.join(examples_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan, name="bern")
-        with self.assertRaises(Exception):
-            args = SamplerArgs(model)
+        args = SamplerArgs(model, output_file="/no/such/path/to.file")
+        with self.assertRaises(ValueError):
+            args.validate()
+
+    def test_samplerargs_bad_seed1(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output, seed="badseed")
+        with self.assertRaises(ValueError):
+            args.validate()
+
+    def test_samplerargs_bad_seed2(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output, seed=-10)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+    def test_samplerargs_bad_data(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output, data_file="/no/such/path/to.file")
+        with self.assertRaises(ValueError):
+            args.validate()
+
+    def test_samplerargs_bad_init_params(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output, init_param_values="/no/such/path/to.file")
+        with self.assertRaises(ValueError):
+            args.validate()
+            
+    def test_samplerargs_bad_metric_file(self):
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        exe = os.path.join(examples_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        output = os.path.join(examples_path, "bernoulli.output")
+        args = SamplerArgs(model, output_file=output, hmc_metric_file="/no/such/path/to.file")
+        with self.assertRaises(ValueError):
             args.validate()
             
 

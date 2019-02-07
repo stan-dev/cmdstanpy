@@ -13,7 +13,7 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
 from lib import Conf, Model, RunSet, SamplerArgs
-from utils import do_command, do_sample, is_pos_int
+from utils import do_command, do_sample, is_int
 
 myconf = Conf()
 cmdstan_path = myconf['cmdstan']
@@ -95,9 +95,9 @@ def sample(stan_model = None,
                         hmc_metric_file = hmc_metric_file,
                         hmc_stepsize = hmc_stepsize)
     args.validate()
-    if not is_pos_int(chains):
+    if not is_int(chains) and chains > 0:
         raise ValueError('chains must be a positive integer value, found {}'.format(chains))
-    if not is_pos_int(cores):
+    if not is_int(cores) and cores > 0:
         raise ValueError('cores must be a positive integer value, found {}'.format(cores))
 
     if cores > cpu_count():
