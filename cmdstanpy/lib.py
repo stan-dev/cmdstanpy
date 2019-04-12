@@ -3,7 +3,7 @@ import os
 import os.path
 from pprint import pformat
 import numpy as np
-from utils import is_int
+from .utils import is_int
 
 
 
@@ -88,11 +88,16 @@ class RunSet(object):
         self.args = args
         """sampler args."""
         self.transcript_file = transcript_file
-        """sampler args."""
+        """base filename for console output transcripts."""
         self.cmds = [args.compose_command(i+1) for i in range(chains)]
         self.output_files = ['{}-{}.csv'.format(self.args.output_file,i+1) for i in range(chains)]
+        """per-chain sample csv files."""
         self.transcript_files = ['{}-{}.txt'.format(transcript_file,i+1) for i in range(chains)]
+        """per-chain console transcripts."""
         self.__retcodes = [ -1 for _ in range(chains)]
+        """per-chain return codes."""
+        if chains < 1:
+            raise ValueError('chains must be positive integer value, found {i]}'.format(self.chains))
 
     def __repr__(self):
         return 'RunSet(chains={}, cores={}, args={}, transcript_file={})'.format(
@@ -103,6 +108,13 @@ class RunSet(object):
 
     def set_retcode(self, idx, val):
         self.__retcodes[idx] = val
+
+    def is_success(self):
+        """checks that all chains have retcode 0."""
+        for x in range(chains):
+            if x != 0:
+                return false
+        return true
 
 
 class SamplerArgs(object):
@@ -167,7 +179,7 @@ class SamplerArgs(object):
 
 
     def validate(self):
-        """Check arg consistancy, correctness.
+        """Check arg consistency, correctness.
         """
         if self.model is None:
             raise ValueError('no stan model specified')
@@ -202,11 +214,11 @@ class SamplerArgs(object):
             if not os.path.exists(self.hmc_metric_file):
                 raise ValueError('no such file {}'.format(self.hmc_metric_file))
         if self.post_warmup_draws is not None:
-            if not is_int(self.pose_warmup_draws) or self.post_warmup_draws < 0:
+            if not is_int(self.post_warmup_draws) or self.post_warmup_draws < 0:
                 raise ValueError('post_warmup_draws must be a non-negative integer value'.format(
                     self.post_warmup_draws))
         if self.warmup_draws is not None:
-            if not is_int(self.pose_warmup_draws) or self.warmup_draws < 0:
+            if not is_int(self.post_warmup_draws) or self.warmup_draws < 0:
                 raise ValueError('warmup_draws must be a non-negative integer value'.format(
                     self.warmup_draws))
         # TODO: check type/bounds on all other controls

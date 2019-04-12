@@ -14,44 +14,6 @@ def is_int(i):
         return False
     return True
 
-def do_sample(runset, idx):
-    """Spawn process, capture stdout and std err to transcript file, return returncode.
-    """
-    cmd = runset.cmds[idx]
-    proc = subprocess.Popen(
-        cmd.split(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        )
-    proc.wait()
-    stdout, stderr = proc.communicate()
-    transcript_file = runset.transcript_files[idx]
-    with open(transcript_file, "w+") as transcript:
-        if stdout:
-            transcript.write(stdout.decode('ascii'))
-        if stderr:
-            transcript.write('ERROR')
-            transcript.write(stderr.decode('ascii'))
-    runset.set_retcode(idx, proc.returncode)
-
-
-def do_command(cmd, cwd=None):
-    """Spawn process, get output/err/returncode.
-    """
-    proc = subprocess.Popen(
-        cmd,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        )
-    proc.wait()
-    stdout, stderr = proc.communicate()
-    if stdout:
-        print(stdout.decode('ascii').strip())
-    if stderr:
-        print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
-    if (proc.returncode):
-        raise Exception('Command failed: {}'.format(cmd))
 
 def _rdump_array(key, val):
     c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'

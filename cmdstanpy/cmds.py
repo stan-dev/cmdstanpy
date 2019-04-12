@@ -12,8 +12,8 @@ import time
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-from lib import Conf, Model, RunSet, SamplerArgs
-from utils import do_command, do_sample, is_int
+from .lib import Conf, Model, RunSet, SamplerArgs
+from .utils import is_int
 
 myconf = Conf()
 cmdstan_path = myconf['cmdstan']
@@ -115,3 +115,80 @@ def sample(stan_model = None,
     tp.join()
     return runset
  
+def summary(runset = None, outfile = None):
+    if not is_success(runset):
+        raise ValueError('invalid runset {}'.format(runset))
+    if summary_outfile_file is None:
+        summary_output_file = '{}-summary.csv'.format(self.output_file)
+    if not os.path.exists(summary_output):
+        try:
+            open(summary_output_file,'w')
+        except OSError:
+            raise Exception('invalid summary output file name {}'.format(summary_output_file))
+
+    cmd_path = os.path.join(cmdstan_path, 'bin', 'summary')
+    csv_files = ' '.join(self.output_files)
+    cmd = '{} --csv_file={} {}'.format(cmd_path, summary_output_file, csv_files)
+    print(cmd)
+    proc = subprocess.Popen(
+        cmd.split(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        )
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    if stdout:
+            print(stdout.decode('ascii'))
+    if stderr:
+            print('ERROR')
+            print(stderr.decode('ascii'))
+    if proc.returncode != 0:
+            raise Exception('summary cmd failed, return code: {}'.format(proc.returncode))
+    
+
+def diagnose(runset, diagnose_output_file):
+    cmd_path = os.path.join(cmdstan_path, 'bin', 'diagnose')
+    pass
+
+
+
+
+
+def do_sample(runset, idx):
+    """Spawn process, capture stdout and std err to transcript file, return returncode.
+    """
+    cmd = runset.cmds[idx]
+    proc = subprocess.Popen(
+        cmd.split(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        )
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    transcript_file = runset.transcript_files[idx]
+    with open(transcript_file, "w+") as transcript:
+        if stdout:
+            transcript.write(stdout.decode('ascii'))
+        if stderr:
+            transcript.write('ERROR')
+            transcript.write(stderr.decode('ascii'))
+    runset.set_retcode(idx, proc.returncode)
+
+
+def do_command(cmd, cwd=None):
+    """Spawn process, get output/err/returncode.
+    """
+    proc = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        )
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    if stdout:
+        print(stdout.decode('ascii').strip())
+    if stderr:
+        print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
+    if (proc.returncode):
+        raise Exception('Command failed: {}'.format(cmd))
