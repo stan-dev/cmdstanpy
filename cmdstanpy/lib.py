@@ -6,7 +6,6 @@ import numpy as np
 from .utils import is_int
 
 
-
 class Conf(object):
     _config_location = '../config.json'
 
@@ -55,26 +54,23 @@ class Model(object):
             print('Cannot read file: {}'.format(self.stan_file))
         return code
 
-from utils import rdump
 
-class StanData(object):
-    """Stan model data or inits."""
-    
-    def __init__(self, rdump_file=None):
+class PosteriorSample(object):
+    """Sample itself, plus information about runs which produced it."""
+
+    def __init__(self, runset=None):
         """Initialize object."""
-        self.rdump_file = rdump_file
-        """path to rdump file."""
-        if not os.path.exists(rdump_file):
-            try:
-                open(rdump_file,'w')
-            except OSError:
-                raise Exception('invalid rdump_file name {}'.format(self.rdump_file))
+        self.runset = runset
+        """RunSet object."""
+        if runset is None:
+            raise Exception('no runset specified')
 
-    def __repr__(self):
-        return 'StanData(rdump_file="{}")'.format(self.rdump_file)
+    def extract(self):
+        """Check runset, assemple ndarray."""
+        if not is_success(runset):  # double checking
+            raise ValueError('invalid runset {}'.format(runset))
+        # cmd - 
 
-    def write_rdump(self, dict):
-        rdump(self.rdump_file, dict)
 
 
 class RunSet(object):
@@ -115,8 +111,7 @@ class RunSet(object):
             if x != 0:
                 return false
         return true
-
-
+    
 class SamplerArgs(object):
     """Flattened arguments for NUTS/HMC sampler
     """
@@ -271,3 +266,24 @@ class SamplerArgs(object):
         if (self.hmc_stepsize is not None):
             cmd = '{} stepsize={}'.format(cmd, self.hmc_stepsize)
         return cmd;
+
+from utils import rdump
+class StanData(object):
+    """Stan model data or inits."""
+    
+    def __init__(self, rdump_file=None):
+        """Initialize object."""
+        self.rdump_file = rdump_file
+        """path to rdump file."""
+        if not os.path.exists(rdump_file):
+            try:
+                open(rdump_file,'w')
+            except OSError:
+                raise Exception('invalid rdump_file name {}'.format(self.rdump_file))
+
+    def __repr__(self):
+        return 'StanData(rdump_file="{}")'.format(self.rdump_file)
+
+    def write_rdump(self, dict):
+        rdump(self.rdump_file, dict)
+    

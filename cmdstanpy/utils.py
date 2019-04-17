@@ -24,7 +24,6 @@ def _rdump_array(key, val):
         struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
         return struct
 
-
 def rdump(path, data):
     """Dump a dict of data to a R dump format file.
     """
@@ -43,3 +42,44 @@ def rdump(path, data):
                 line = '%s <- %s' % (key, val)
             fd.write(line)
             fd.write('\n')
+
+def scan_stan_csv(filename):
+    dict = {}
+    draws_found = 0
+    with open(filename) as fp:
+        line = fp.readline().strip()
+        while line.startswith("#"):
+            if not line.endswith("(Default)"):
+                line = line.lstrip(' #\t')
+                key_val = line.split('=')
+                if len(key_val) == 2:
+                    dict[key_val[0].strip()] = key_val[1].strip()
+            line = fp.readline().strip()
+        dict['col_headers'] = line.split(',')
+        cols_header = len(dict['col_headers'])
+        line = fp.readline().strip()
+        while line.startswith("#"):
+            line = fp.readline().strip()
+        while not line.startswith("#"):
+            draws_found += 1
+            cols_draw = len(line.split(','))
+            if cols_header != cols_draw:
+                raise ValueError('bad csv file {}, expected {} columns, found {}'.format(
+                    filename, cols_header, cols_draw))
+            line = fp.readline().strip()
+    # check draws against spec
+    draws_spec = 1000
+    num_warmup = 1000
+    if 'num_samples' in dict:
+        draws_spec = int(dict['num_samples'])
+    if 'num_warmup' in dict:
+        num_warmup = int(dict['num_warmup'])
+    if 'save_warmup' in dict and dict['save_warmup'] == '1':
+        draws_spec = draws_spec + num_warmup
+    if draws_found != draws_spec:
+        raise ValueError('bad csv file {}, expected {} draws, found {}'.format(
+            filename, draws_spec, draws_found))
+    dict['draws'] = draws_found
+    return dict
+
+

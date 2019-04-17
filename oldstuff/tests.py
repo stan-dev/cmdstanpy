@@ -180,10 +180,8 @@ class SamplerArgsTest(BaseTestCase):
 
     def test_samplerargs_bad_model1(self):
         stan = os.path.join(examples_path, "bbad.stan")
-        model = Model(stan_file=stan, name="bbad")
-        args = SamplerArgs(model, )
-        with self.assertRaises(ValueError):
-            args.validate()
+        with self.assertRaises(Exception):
+            model = Model(stan_file=stan, name="bbad")
 
     def test_samplerargs_bad_model2(self):
         stan = os.path.join(examples_path, "bernoulli.stan")
@@ -281,6 +279,15 @@ class SampleTest(BaseTestCase):
         runset = sample(model, csv_output_file=output)
         for i in range(runset.chains):
             self.assertEqual(70, runset.get_retcode(i))
+
+
+class SummaryTest(BaseTestCase):
+    def test_summary_1_good(self):
+        rdata = os.path.join(examples_path, "bernoulli.data.R")
+        stan = os.path.join(examples_path, "bernoulli.stan")
+        output = os.path.join(examples_path, "bernoulli.output")
+        model = compile_model(stan)
+        runset = sample(model, data_file=rdata, csv_output_file=output)
 
 
 if __name__ == '__main__':

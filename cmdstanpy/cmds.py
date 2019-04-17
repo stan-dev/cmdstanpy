@@ -113,7 +113,16 @@ def sample(stan_model = None,
         tp.apply_async(do_sample, (runset, i,))
     tp.close()
     tp.join()
-    return runset
+
+    if not is_success(runset):
+        # one or more chains failed.
+        # print report to console and/or logger.
+        return None
+
+    # not enough to return runset - process chains
+    posterior_sample = process_runset(runset)
+
+    return posterior_sample
  
 def summary(runset = None, outfile = None):
     if not is_success(runset):
@@ -151,9 +160,6 @@ def diagnose(runset, diagnose_output_file):
     pass
 
 
-
-
-
 def do_sample(runset, idx):
     """Spawn process, capture stdout and std err to transcript file, return returncode.
     """
@@ -174,10 +180,10 @@ def do_sample(runset, idx):
             transcript.write(stderr.decode('ascii'))
     runset.set_retcode(idx, proc.returncode)
 
+    
 
 def do_command(cmd, cwd=None):
-    """Spawn process, get output/err/returncode.
-    """
+    """Spawn process, get output/err/returncode."""
     proc = subprocess.Popen(
         cmd,
         cwd=cwd,
@@ -192,3 +198,13 @@ def do_command(cmd, cwd=None):
         print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
     if (proc.returncode):
         raise Exception('Command failed: {}'.format(cmd))
+
+def check_command(chain_id, args, cmd):
+    pass
+
+def process_runset(runset):
+    """Extract sample from runset."""
+
+def read_stan_csv(filename):
+    pass
+

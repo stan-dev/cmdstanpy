@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CSVER=${CSVER:-"2.18.1"}
+CSVER=${CSVER:-"2.19.0"}
 cs=cmdstan-$CSVER
 
 if [[ -d $cs && -f $cs/examples/bernoulli/bernoulli ]]; then
@@ -10,5 +10,6 @@ fi
 
 curl -OL https://github.com/stan-dev/cmdstan/releases/download/v$CSVER/cmdstan-$CSVER.tar.gz
 tar xzf $cs.tar.gz
-cd $cs
+mv $cs cmdstan
+cd cmdstan
 make -j2 build examples/bernoulli/bernoulli
