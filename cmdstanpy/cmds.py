@@ -12,15 +12,15 @@ import time
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-from .lib import Conf, Model, RunSet, SamplerArgs
+from .config import *
+from .lib import Model, RunSet, SamplerArgs
 from .utils import is_int
-
-myconf = Conf()
-cmdstan_path = myconf['cmdstan']
 
 def compile_model(stan_file, opt_lvl=3, overwrite=False):
     """Compile the given Stan model file to an executable.
     """
+    print('compile_model, path: {}'.format(CMDSTAN_PATH))
+
     if not os.path.exists(stan_file):
         raise Exception('no such stan_file {}'.format(stan_file))
         
@@ -32,8 +32,9 @@ def compile_model(stan_file, opt_lvl=3, overwrite=False):
     hpp_file = os.path.join(path, hpp_name)
     if overwrite or not os.path.exists(hpp_file):
         print('translating to {}'.format(hpp_file))
-        stanc_path = os.path.join(cmdstan_path, 'bin', 'stanc')
+        stanc_path = os.path.join(CMDSTAN_PATH, 'bin', 'stanc')
         cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file]
+        print(cmd)
         do_command(cmd)
         if not os.path.exists(hpp_file):
             raise Exception('syntax error'.format(stan_file))
@@ -46,7 +47,7 @@ def compile_model(stan_file, opt_lvl=3, overwrite=False):
     cmd = ['make', 'O={}'.format(opt_lvl), exe_file]
     print(cmd)  # compiling is slow - need a spinner
     try:
-        do_command(cmd, cmdstan_path)
+        do_command(cmd, CMDSTAN_PATH)
     except Exception:
         return Model(stan_file, model_name)
     return Model(stan_file, model_name, exe_file)
@@ -135,7 +136,7 @@ def summary(runset = None, outfile = None):
         except OSError:
             raise Exception('invalid summary output file name {}'.format(summary_output_file))
 
-    cmd_path = os.path.join(cmdstan_path, 'bin', 'summary')
+    cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'summary')
     csv_files = ' '.join(self.output_files)
     cmd = '{} --csv_file={} {}'.format(cmd_path, summary_output_file, csv_files)
     print(cmd)
@@ -156,7 +157,7 @@ def summary(runset = None, outfile = None):
     
 
 def diagnose(runset, diagnose_output_file):
-    cmd_path = os.path.join(cmdstan_path, 'bin', 'diagnose')
+    cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
     pass
 
 

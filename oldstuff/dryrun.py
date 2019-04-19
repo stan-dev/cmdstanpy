@@ -2,7 +2,7 @@ from utils import *
 from lib import *
 from cmds import *
 
-examples_path = os.path.expanduser(os.path.join("~", "github", "stan-dev",
+examples_path = os.path.expanduser(os.path.join("~", "github", "stan-dev", 
                                                     "cmdstanpy", "dev", "cmdstan", "examples", "bernoulli"))
 
 myconf = Conf()

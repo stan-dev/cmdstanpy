@@ -6,26 +6,6 @@ import numpy as np
 from .utils import is_int
 
 
-class Conf(object):
-    _config_location = '../config.json'
-
-    def __init__(self):
-        if os.path.exists(self._config_location):
-            self.__dict__ = json.load(open(self._config_location))
-        else:
-            self.__dict__ = {}
-
-    def __getitem__(self, item):
-        if (item in self.__dict__):
-            return self.__dict__[item]
-        else:
-            return None
-
-    def __repr__(self):
-        return 'config file: "{}" entries:\n"{}"'.format(
-            self._config_location, pformat(self.__dict__))
-
-
 class Model(object):
     """Stan model."""
 
@@ -67,12 +47,13 @@ class PosteriorSample(object):
 
     def extract(self):
         """Check runset, assemple ndarray."""
-        if not is_success(runset):  # double checking
+        if not validate(runset):  # double checking
             raise ValueError('invalid runset {}'.format(runset))
-        # cmd - 
 
 
 
+
+from utils import rdump
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
     def __init__(self, chains, cores, args, transcript_file):
@@ -107,9 +88,23 @@ class RunSet(object):
 
     def is_success(self):
         """checks that all chains have retcode 0."""
-        for x in range(chains):
-            if x != 0:
+        for i in range(chains):
+            if self.__retcodes[i] != 0:
                 return false
+        return true
+
+    def validate(self):
+        """checks draws for all output files."""
+        dzero = {}
+        for x in range(chains):
+            if x == 0:
+                dzero = scan_stan_csv(self.output_files[i])
+            else:
+                d = scan_stan_csv(self.output_files[i])
+                for key in dzero:
+                    if key != 'id':
+                        if dzero[key] != d[key]:
+                            return false
         return true
     
 class SamplerArgs(object):
