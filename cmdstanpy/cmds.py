@@ -19,8 +19,6 @@ from .utils import is_int
 def compile_model(stan_file, opt_lvl=3, overwrite=False):
     """Compile the given Stan model file to an executable.
     """
-    print('compile_model, path: {}'.format(CMDSTAN_PATH))
-
     if not os.path.exists(stan_file):
         raise Exception('no such stan_file {}'.format(stan_file))
         
@@ -34,7 +32,7 @@ def compile_model(stan_file, opt_lvl=3, overwrite=False):
         print('translating to {}'.format(hpp_file))
         stanc_path = os.path.join(CMDSTAN_PATH, 'bin', 'stanc')
         cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file]
-        print(cmd)
+        print('stan to c++: make args {}'.format(cmd))
         do_command(cmd)
         if not os.path.exists(hpp_file):
             raise Exception('syntax error'.format(stan_file))
@@ -45,7 +43,7 @@ def compile_model(stan_file, opt_lvl=3, overwrite=False):
         return Model(stan_file, model_name, exe_file)
 
     cmd = ['make', 'O={}'.format(opt_lvl), exe_file]
-    print(cmd)  # compiling is slow - need a spinner
+    print('compiling c++: make args {}'.format(cmd))
     try:
         do_command(cmd, CMDSTAN_PATH)
     except Exception:
@@ -77,6 +75,9 @@ def sample(stan_model = None,
                hmc_stepsize = 1):
     """Runs on or more chains of the NUTS/HMC sampler, writing set of draws from each chain to a file in stan-csv format 
     """
+    # not enough to return runset - process chains
+    # posterior_sample = process_runset(runset)
+    # return posterior_sample
     args = SamplerArgs(model = stan_model,
                         seed = seed,
                         data_file = data_file,
@@ -108,25 +109,20 @@ def sample(stan_model = None,
     if console_output_file is None:
         console_output_file = csv_output_file
 
-    runset = RunSet(chains, cores, args, console_output_file)
+    runset = RunSet(args = args,
+                    chains = chains,
+                    cores = cores,
+                    transcript_file = console_output_file)
     tp = ThreadPool(cores)
     for i in range(chains):
         tp.apply_async(do_sample, (runset, i,))
     tp.close()
     tp.join()
+    return runset
 
-    if not is_success(runset):
-        # one or more chains failed.
-        # print report to console and/or logger.
-        return None
-
-    # not enough to return runset - process chains
-    posterior_sample = process_runset(runset)
-
-    return posterior_sample
  
 def summary(runset = None, outfile = None):
-    if not is_success(runset):
+    if not runset.is_success():
         raise ValueError('invalid runset {}'.format(runset))
     if summary_outfile_file is None:
         summary_output_file = '{}-summary.csv'.format(self.output_file)
@@ -172,6 +168,7 @@ def do_sample(runset, idx):
         )
     proc.wait()
     stdout, stderr = proc.communicate()
+
     transcript_file = runset.transcript_files[idx]
     with open(transcript_file, "w+") as transcript:
         if stdout:

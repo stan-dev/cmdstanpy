@@ -18,7 +18,3 @@ args = SamplerArgs(model, seed=12345, post_warmup_draws=100, data_file=jdata, ou
 transcript = os.path.join(examples_path, "bernoulli.samples")
 
 runset = sample(model, chains=4, cores=2, seed=12345, post_warmup_draws_per_chain=100, data_file=jdata, csv_output_file=output, nuts_max_depth=11, adapt_delta=0.95)
-
-
-
-

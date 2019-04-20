@@ -5,7 +5,6 @@ from pprint import pformat
 import numpy as np
 from .utils import is_int
 
-
 class Model(object):
     """Stan model."""
 
@@ -34,29 +33,14 @@ class Model(object):
             print('Cannot read file: {}'.format(self.stan_file))
         return code
 
-
-class PosteriorSample(object):
-    """Sample itself, plus information about runs which produced it."""
-
-    def __init__(self, runset=None):
-        """Initialize object."""
-        self.runset = runset
-        """RunSet object."""
-        if runset is None:
-            raise Exception('no runset specified')
-
-    def extract(self):
-        """Check runset, assemple ndarray."""
-        if not validate(runset):  # double checking
-            raise ValueError('invalid runset {}'.format(runset))
-
-
-
-
-from utils import rdump
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
-    def __init__(self, chains, cores, args, transcript_file):
+
+    def __init__(self,
+                 args,
+                 chains = 1,
+                 cores = 1,
+                 transcript_file = None):
         """Initialize object."""
         self.chains = chains
         """number of chains."""
@@ -77,8 +61,11 @@ class RunSet(object):
             raise ValueError('chains must be positive integer value, found {i]}'.format(self.chains))
 
     def __repr__(self):
-        return 'RunSet(chains={}, cores={}, args={}, transcript_file={})'.format(
-            self.chains, self.cores, self.args, self.transcript_file)
+        return 'RunSet(args={}, chains={}, cores={}, transcript_file={})'.format(
+            self.args, self.chains, self.cores, self.transcript_file)
+
+    def get_retcodes(self):
+        return self.__retcodes
 
     def get_retcode(self, idx):
         return self.__retcodes[idx]
@@ -88,15 +75,15 @@ class RunSet(object):
 
     def is_success(self):
         """checks that all chains have retcode 0."""
-        for i in range(chains):
+        for i in range(self.chains):
             if self.__retcodes[i] != 0:
-                return false
-        return true
+                return False
+        return True
 
     def validate(self):
         """checks draws for all output files."""
         dzero = {}
-        for x in range(chains):
+        for x in range(self.chains):
             if x == 0:
                 dzero = scan_stan_csv(self.output_files[i])
             else:
@@ -104,8 +91,8 @@ class RunSet(object):
                 for key in dzero:
                     if key != 'id':
                         if dzero[key] != d[key]:
-                            return false
-        return true
+                            return False
+        return True
     
 class SamplerArgs(object):
     """Flattened arguments for NUTS/HMC sampler
@@ -240,6 +227,8 @@ class SamplerArgs(object):
         if (self.thin is not None):
             cmd = '{} thin={}'.format(cmd, self.thin)
         cmd = cmd + ' algorithm=hmc'
+        if (self.hmc_stepsize is not None):
+            cmd = '{} stepsize={}'.format(cmd, self.hmc_stepsize)
         if (self.nuts_max_depth is not None):
             cmd = '{} engine=nuts max_depth={}'.format(cmd, self.nuts_max_depth)
         if (self.do_adaptation and
@@ -258,8 +247,6 @@ class SamplerArgs(object):
             cmd = '{} t0={}'.format(cmd, self.adapt_t0)
         if (self.hmc_metric_file is not None):
             cmd = '{} metric_file="{}"'.format(cmd, self.hmc_metric_file)
-        if (self.hmc_stepsize is not None):
-            cmd = '{} stepsize={}'.format(cmd, self.hmc_stepsize)
         return cmd;
 
 from utils import rdump
@@ -282,3 +269,21 @@ class StanData(object):
     def write_rdump(self, dict):
         rdump(self.rdump_file, dict)
     
+
+#
+#class PosteriorSample(object):
+#    """Sample itself, plus information about runs which produced it."""
+#
+#    def __init__(self, runset=None):
+#        """Initialize object."""
+#        self.runset = runset
+#        """RunSet object."""
+#        if runset is None:
+#            raise Exception('no runset specified')
+#
+#    def extract(self):
+#        """Check runset, assemple ndarray."""
+#        if not validate(runset):  # double checking
+#            raise ValueError('invalid runset {}'.format(runset))
+#
+#
