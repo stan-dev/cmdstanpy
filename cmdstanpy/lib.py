@@ -2,6 +2,7 @@ import json
 import os
 import os.path
 from pprint import pformat
+import re
 import numpy as np
 
 from .utils import is_int, scan_stan_csv
@@ -37,18 +38,21 @@ class Model(object):
 class PosteriorSample(object):
     """Sample itself, plus information about runs which produced it."""
 
-    def __init__(self, runset=None):
+    def __init__(self, runset=None, shape=None):
         """Initialize object."""
         self.runset = runset
         """RunSet object."""
         if runset is None:
             raise Exception('no runset specified')
+        self.shape = shape
+        """per-chain sample info."""
+        if shape is None:
+            raise Exception('sample shape information not specified')
 
     def extract(self):
-        """Check runset, assemple ndarray."""
-        #if not validate(runset):   double checking
-        #    raise ValueError('invalid runset {}'.format(runset))
+        """assemple ndarray."""
         pass
+
 
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
@@ -93,14 +97,28 @@ class RunSet(object):
     def set_retcode(self, idx, val):
         self.__retcodes[idx] = val
 
-    def is_success(self):
+    def validate_retcodes(self):
         """checks that all chains have retcode 0."""
         for i in range(self.chains):
             if self.__retcodes[i] != 0:
                 return False
         return True
 
-    def validate(self):
+    def validate_transcripts(self):
+        valid = True
+        msg = ""
+        for i in range(self.chains):
+            with open(self.transcript_files[i], 'r') as fp:
+                contents = fp.read()
+                pat = re.compile(r'^Exception.*$', re.M)
+                errors = re.findall(pat, contents)
+                if (len(errors) > 0):
+                    valid = False
+                    msg = '{}chain {}: {}\n'.format(msg, i+1, errors)
+        if not valid:
+            raise ValueError(msg)
+        
+    def validate_csv_files(self):
         """checks draws for all output files."""
         dzero = {}
         for i in range(self.chains):
@@ -109,11 +127,10 @@ class RunSet(object):
             else:
                 d = scan_stan_csv(self.output_files[i])
                 for key in dzero:
-                    if key != 'id' and key != 'file':
-                        if dzero[key] != d[key]:
-                            raise ValueError('csv file header mismatch, '
-                                             'file {}, key {} is {}, expected {}'.
-                                             format(self.output_files[i], key, dzero[key], d[key]))
+                    if key != 'id' and dzero[key] != d[key]:
+                        raise ValueError('csv file header mismatch, '
+                                         'file {}, key {} is {}, expected {}'.
+                                         format(self.output_files[i], key, dzero[key], d[key]))
         return dzero
     
 class SamplerArgs(object):

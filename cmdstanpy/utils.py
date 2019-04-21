@@ -44,23 +44,33 @@ def rdump(path, data):
             fd.write('\n')
 
 def scan_stan_csv(filename):
+    '''capture essential config, shape from stan_csv file.'''
     dict = {}
     draws_found = 0
+    file_is_data = False
     with open(filename) as fp:
         line = fp.readline().strip()
-        while line.startswith("#"):
+        while len(line) > 0 and line.startswith("#"):
+            if line == "# data":
+                file_is_data = True
+            elif line == "# random":
+                file_is_data = False
             if not line.endswith("(Default)"):
                 line = line.lstrip(' #\t')
                 key_val = line.split('=')
                 if len(key_val) == 2:
-                    dict[key_val[0].strip()] = key_val[1].strip()
+                    if key_val[0].strip() == "file":
+                        if file_is_data:
+                            dict['data_file'] = key_val[1].strip()
+                    else:
+                        dict[key_val[0].strip()] = key_val[1].strip()
             line = fp.readline().strip()
         dict['col_headers'] = line.split(',')
         cols_header = len(dict['col_headers'])
         line = fp.readline().strip()
-        while line.startswith("#"):
+        while len(line) > 0 and line.startswith("#"):
             line = fp.readline().strip()
-        while not line.startswith("#"):
+        while len(line) > 0 and not line.startswith("#"):
             draws_found += 1
             cols_draw = len(line.split(','))
             if cols_header != cols_draw:

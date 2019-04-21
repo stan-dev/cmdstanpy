@@ -2,7 +2,7 @@ import os
 import os.path
 import unittest
 
-from cmdstanpy.lib import Model, RunSet
+from cmdstanpy.lib import Model, PosteriorSample
 from cmdstanpy.cmds import *
 
 datafiles_path = os.path.expanduser(os.path.join("~", "github", "stan-dev",
@@ -40,17 +40,16 @@ class SampleTest(unittest.TestCase):
         if not os.path.exists(exe):
             compile_model(stan)
         model = Model(stan, name="bernoulli", exe_file=exe)
-        print('model: {}'.format(model))
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(tmpfiles_path, "test1-bernoulli.output")
         transcript = os.path.join(tmpfiles_path, "test1-bernoulli.run")
-        runset = sample(model, chains=4, cores=2, seed=12345,
+        post_sample = sample(model, chains=4, cores=2, seed=12345,
                         post_warmup_draws_per_chain=100, data_file=jdata,
                         csv_output_file=output, nuts_max_depth=11, adapt_delta=0.95,
                         console_output_file=transcript)
-        for i in range(runset.chains):
-            self.assertEqual(0, runset.get_retcode(i))
-        for i in range(runset.chains):
+        for i in range(post_sample.runset.chains):
+            self.assertEqual(0, post_sample.runset.get_retcode(i))
+        for i in range(post_sample.runset.chains):
             csv = ''.join([output,"-",str(i+1),".csv"])
             txt = ''.join([transcript,"-",str(i+1),".txt"])
             self.assertTrue(os.path.exists(csv))
@@ -63,15 +62,14 @@ class SampleTest(unittest.TestCase):
         if not os.path.exists(exe):
             compile_model(stan)
         model = Model(stan, name="bernoulli", exe_file=exe)
-        print('model: {}'.format(model))
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(tmpfiles_path, "test2-bernoulli.output")
-        runset = sample(model, chains=4, cores=2, seed=12345,
+        post_sample = sample(model, chains=4, cores=2, seed=12345,
                         post_warmup_draws_per_chain=100, data_file=jdata,
                         csv_output_file=output, nuts_max_depth=11, adapt_delta=0.95)
-        for i in range(runset.chains):
-            self.assertEqual(0, runset.get_retcode(i))
-        for i in range(runset.chains):
+        for i in range(post_sample.runset.chains):
+            self.assertEqual(0, post_sample.runset.get_retcode(i))
+        for i in range(post_sample.runset.chains):
             csv = ''.join([output,"-",str(i+1),".csv"])
             txt = ''.join([output,"-",str(i+1),".txt"])
             self.assertTrue(os.path.exists(csv))
@@ -82,29 +80,38 @@ class SampleTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         output = os.path.join(tmpfiles_path, "test3-bernoulli.output")
         model = compile_model(stan)
-        runset = sample(model, data_file=rdata, csv_output_file=output)
-        for i in range(runset.chains):
-            self.assertEqual(0, runset.get_retcode(i))
+        post_sample = sample(model, data_file=rdata, csv_output_file=output)
+        for i in range(post_sample.runset.chains):
+            self.assertEqual(0, post_sample.runset.get_retcode(i))
 
     def test_sample_missing_input(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         output = os.path.join(tmpfiles_path, "test4-bernoulli.output")
         model = compile_model(stan)
-        runset = sample(model, csv_output_file=output)
-        for i in range(runset.chains):
-            self.assertEqual(70, runset.get_retcode(i))
+        with self.assertRaisesRegexp(Exception, "Exception"):
+            post_sample = sample(model, csv_output_file=output)
+
 
 class SummaryTest(unittest.TestCase):
     def test_summary_1_good(self):
         rdata = os.path.join(datafiles_path, "bernoulli.data.R")
         stan = os.path.join(datafiles_path, "bernoulli.stan")
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(tmpfiles_path, "summary-inputs")
         model = compile_model(stan)
-        runset = sample(model, data_file=rdata, csv_output_file=output)
-        transcript = os.path.join(tmpfiles_path, "bernoulli.samples")
-        ### stopped here
-        pass
+        post_sample = sample(model, data_file=rdata, csv_output_file=output)
+        transcript = os.path.join(tmpfiles_path, "summary-test1")
+        stansummary(post_sample, transcript)
+        self.assertTrue(os.path.exists(transcript))
 
+    def test_summary_2_good(self):
+        rdata = os.path.join(datafiles_path, "bernoulli.data.R")
+        stan = os.path.join(datafiles_path, "bernoulli.stan")
+        output = os.path.join(tmpfiles_path, "summary-inputs")
+        model = compile_model(stan)
+        post_sample = sample(model, data_file=rdata, csv_output_file=output)
+        transcript = os.path.join(tmpfiles_path, "summary-test2")
+        stansummary(post_sample, transcript, sig_figs=10)
+        self.assertTrue(os.path.exists(transcript))
 
 if __name__ == '__main__':
     unittest.main()

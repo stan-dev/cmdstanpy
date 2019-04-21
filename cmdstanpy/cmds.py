@@ -13,7 +13,7 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
 from .config import *
-from .lib import Model, RunSet, SamplerArgs
+from .lib import Model, PosteriorSample, RunSet, SamplerArgs
 from .utils import is_int
 
 def compile_model(stan_file, opt_lvl=3, overwrite=False):
@@ -38,7 +38,7 @@ def compile_model(stan_file, opt_lvl=3, overwrite=False):
 
     exe_file = os.path.join(path, model_name)
     if not overwrite and os.path.exists(exe_file):
-        print('model is up to date')
+        # print('model is up to date') # notify user or not?
         return Model(stan_file, model_name, exe_file)
 
     cmd = ['make', 'O={}'.format(opt_lvl), exe_file]
@@ -109,26 +109,35 @@ def sample(stan_model = None,
         tp.apply_async(do_sample, (runset, i,))
     tp.close()
     tp.join()
-    # not enough to return runset - process chains
-    # posterior_sample = process_runset(runset)
-    # return posterior_sample
-    return runset
-
+    if not runset.validate_retcodes:
+        msg = "Sampler run failed, "
+        for i in range(chains):
+            if runset.get_retcode(i) != 0:
+                msg = '{}, chain {} returned error code {}'.format(msg, i, runset.get_retcode(i))
+        raise Exception(msg)
+    runset.validate_transcripts()
+    dict = runset.validate_csv_files()
+    return PosteriorSample(runset, dict)
  
-def summary(runset = None, outfile = None):
-    if not runset.is_success():
-        raise ValueError('invalid runset {}'.format(runset))
-    if summary_outfile_file is None:
-        summary_output_file = '{}-summary.csv'.format(self.output_file)
-    if not os.path.exists(summary_output):
-        try:
-            open(summary_output_file,'w')
-        except OSError:
-            raise Exception('invalid summary output file name {}'.format(summary_output_file))
-
-    cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'summary')
-    csv_files = ' '.join(self.output_files)
-    cmd = '{} --csv_file={} {}'.format(cmd_path, summary_output_file, csv_files)
+def stansummary(post_sample, filename = None, sig_figs = None):
+    cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
+    csv_files = ' '.join(post_sample.runset.output_files)
+    cmd = '{} {} '.format(cmd_path, csv_files, filename)
+    if filename is not None:
+        print('stansummary output file: {}'.format(filename))
+        if not os.path.exists(filename):
+            try:
+                open(filename,'w')
+            except OSError:
+                raise Exception('cannot write to file {}'.format(filename))
+        else:
+            raise ValueError('output file already exists: {}'.format(filename))
+        cmd = '{} --csv_file={}'.format(cmd, filename)
+    if sig_figs is not None:
+        if not is_int(sig_figs) and sig_figs > 0:
+            raise ValueError('sig_figs must be a positive integer value, found {}'.
+                             format(sig_figs))
+        cmd = '{} --sig_figs={}'.format(cmd, sig_figs)
     print(cmd)
     proc = subprocess.Popen(
         cmd.split(),
@@ -143,7 +152,7 @@ def summary(runset = None, outfile = None):
             print('ERROR')
             print(stderr.decode('ascii'))
     if proc.returncode != 0:
-            raise Exception('summary cmd failed, return code: {}'.format(proc.returncode))
+            raise Exception('stansummary cmd failed, return code: {}'.format(proc.returncode))
     
 
 def diagnose(runset, diagnose_output_file):
@@ -188,13 +197,4 @@ def do_command(cmd, cwd=None):
         print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
     if (proc.returncode):
         raise Exception('Command failed: {}'.format(cmd))
-
-def check_command(chain_id, args, cmd):
-    pass
-
-def process_runset(runset):
-    """Extract sample from runset."""
-
-def read_stan_csv(filename):
-    pass
 

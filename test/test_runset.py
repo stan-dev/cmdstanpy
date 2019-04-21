@@ -17,12 +17,12 @@ badfiles_path = os.path.expanduser(os.path.join("~", "github", "stan-dev",
 
 class RunSetTest(unittest.TestCase):
 
-    def test_runset_1(self):
+    def test_validate_retcodes(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan, name="bern")
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(goodfiles_path, "bernoulli.output")
+        output = os.path.join(goodfiles_path, "bern")
         args = SamplerArgs(model, seed=12345, data_file=jdata, output_file=output,
                         post_warmup_draws=100,
                         nuts_max_depth=11, adapt_delta=0.95)
@@ -35,12 +35,12 @@ class RunSetTest(unittest.TestCase):
         self.assertEqual(0, runset.get_retcode(0))
         for i in range(1,len(retcodes)):
             self.assertEqual(-1, runset.get_retcode(i))
-        self.assertFalse(runset.is_success())
+        self.assertFalse(runset.validate_retcodes())
         for i in range(1,len(retcodes)):
             runset.set_retcode(i,0)
-        self.assertTrue(runset.is_success())
+        self.assertTrue(runset.validate_retcodes())
 
-    def test_validate_good(self):
+    def test_validate_outputs(self):
         # construct runset using existing sampler output
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
@@ -54,14 +54,28 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i,0)
-        self.assertTrue(runset.is_success())
-        dict = runset.validate()
+        self.assertTrue(runset.validate_retcodes())
+        runset.validate_transcripts()
+        dict = runset.validate_csv_files()
         self.assertEqual(100, dict['draws'])
         self.assertEqual(8, len(dict['col_headers']))
         self.assertEqual("lp__", dict['col_headers'][0])
 
+    def test_validate_bad_transcript(self):
+        stan = os.path.join(datafiles_path, "bernoulli.stan")
+        exe = os.path.join(datafiles_path, "bernoulli")
+        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
+        output = os.path.join(badfiles_path, "bad-transcript-bern")
+        args = SamplerArgs(model, seed=12345, data_file=jdata, output_file=output,
+                        post_warmup_draws=100,
+                        nuts_max_depth=11, adapt_delta=0.95)
+        runset = RunSet(chains=4, args=args)
+        with self.assertRaisesRegexp(ValueError, "Exception"):
+            runset.validate_transcripts()
+
+
     def test_validate_bad_hdr(self):
-        # construct runset using existing sampler output
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan, name="bern")
@@ -74,9 +88,9 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i,0)
-        self.assertTrue(runset.is_success())
+        self.assertTrue(runset.validate_retcodes())
         with self.assertRaisesRegexp(ValueError, "header mismatch"):
-            runset.validate()
+            runset.validate_csv_files()
 
     def test_validate_bad_draws(self):
         # construct runset using existing sampler output
@@ -92,9 +106,9 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i,0)
-        self.assertTrue(runset.is_success())
+        self.assertTrue(runset.validate_retcodes())
         with self.assertRaisesRegexp(ValueError, "draws"):
-            runset.validate()
+            runset.validate_csv_files()
 
     def test_validate_bad_cols(self):
         # construct runset using existing sampler output
@@ -110,9 +124,10 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i,0)
-        self.assertTrue(runset.is_success())
+        self.assertTrue(runset.validate_retcodes())
         with self.assertRaisesRegexp(ValueError, "columns"):
-            runset.validate()
+            runset.validate_csv_files()
+
 
 if __name__ == '__main__':
     unittest.main()
