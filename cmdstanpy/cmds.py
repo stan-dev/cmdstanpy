@@ -21,7 +21,6 @@ def compile_model(stan_file, opt_lvl=3, overwrite=False):
     """
     if not os.path.exists(stan_file):
         raise Exception('no such stan_file {}'.format(stan_file))
-        
     path = os.path.abspath(os.path.dirname(stan_file))
     program_name = os.path.basename(stan_file)
     model_name = program_name[:-5]
@@ -75,9 +74,6 @@ def sample(stan_model = None,
                hmc_stepsize = 1):
     """Runs on or more chains of the NUTS/HMC sampler, writing set of draws from each chain to a file in stan-csv format 
     """
-    # not enough to return runset - process chains
-    # posterior_sample = process_runset(runset)
-    # return posterior_sample
     args = SamplerArgs(model = stan_model,
                         seed = seed,
                         data_file = data_file,
@@ -101,14 +97,9 @@ def sample(stan_model = None,
         raise ValueError('chains must be a positive integer value, found {}'.format(chains))
     if not is_int(cores) and cores > 0:
         raise ValueError('cores must be a positive integer value, found {}'.format(cores))
-
     if cores > cpu_count():
         logger.warning('requested {} cores but only {} cores available'.format(codes, cpu_count()))
         cores = cpu_count()
-        
-    if console_output_file is None:
-        console_output_file = csv_output_file
-
     runset = RunSet(args = args,
                     chains = chains,
                     cores = cores,
@@ -118,6 +109,9 @@ def sample(stan_model = None,
         tp.apply_async(do_sample, (runset, i,))
     tp.close()
     tp.join()
+    # not enough to return runset - process chains
+    # posterior_sample = process_runset(runset)
+    # return posterior_sample
     return runset
 
  
@@ -168,7 +162,6 @@ def do_sample(runset, idx):
         )
     proc.wait()
     stdout, stderr = proc.communicate()
-
     transcript_file = runset.transcript_files[idx]
     with open(transcript_file, "w+") as transcript:
         if stdout:
@@ -178,7 +171,6 @@ def do_sample(runset, idx):
             transcript.write(stderr.decode('ascii'))
     runset.set_retcode(idx, proc.returncode)
 
-    
 
 def do_command(cmd, cwd=None):
     """Spawn process, get output/err/returncode."""

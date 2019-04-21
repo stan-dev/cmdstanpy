@@ -3,7 +3,8 @@ import os
 import os.path
 from pprint import pformat
 import numpy as np
-from .utils import is_int
+
+from .utils import is_int, scan_stan_csv
 
 class Model(object):
     """Stan model."""
@@ -33,6 +34,22 @@ class Model(object):
             print('Cannot read file: {}'.format(self.stan_file))
         return code
 
+class PosteriorSample(object):
+    """Sample itself, plus information about runs which produced it."""
+
+    def __init__(self, runset=None):
+        """Initialize object."""
+        self.runset = runset
+        """RunSet object."""
+        if runset is None:
+            raise Exception('no runset specified')
+
+    def extract(self):
+        """Check runset, assemple ndarray."""
+        #if not validate(runset):   double checking
+        #    raise ValueError('invalid runset {}'.format(runset))
+        pass
+
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
@@ -48,12 +65,15 @@ class RunSet(object):
         """max processes to run at once."""
         self.args = args
         """sampler args."""
-        self.transcript_file = transcript_file
+        if transcript_file is None:
+            self.transcript_file = self.args.output_file
+        else:
+            self.transcript_file = transcript_file
         """base filename for console output transcripts."""
         self.cmds = [args.compose_command(i+1) for i in range(chains)]
         self.output_files = ['{}-{}.csv'.format(self.args.output_file,i+1) for i in range(chains)]
         """per-chain sample csv files."""
-        self.transcript_files = ['{}-{}.txt'.format(transcript_file,i+1) for i in range(chains)]
+        self.transcript_files = ['{}-{}.txt'.format(self.transcript_file,i+1) for i in range(chains)]
         """per-chain console transcripts."""
         self.__retcodes = [ -1 for _ in range(chains)]
         """per-chain return codes."""
@@ -83,16 +103,18 @@ class RunSet(object):
     def validate(self):
         """checks draws for all output files."""
         dzero = {}
-        for x in range(self.chains):
-            if x == 0:
+        for i in range(self.chains):
+            if i == 0:
                 dzero = scan_stan_csv(self.output_files[i])
             else:
                 d = scan_stan_csv(self.output_files[i])
                 for key in dzero:
-                    if key != 'id':
+                    if key != 'id' and key != 'file':
                         if dzero[key] != d[key]:
-                            return False
-        return True
+                            raise ValueError('csv file header mismatch, '
+                                             'file {}, key {} is {}, expected {}'.
+                                             format(self.output_files[i], key, dzero[key], d[key]))
+        return dzero
     
 class SamplerArgs(object):
     """Flattened arguments for NUTS/HMC sampler
@@ -173,6 +195,7 @@ class SamplerArgs(object):
             self.output_file = self.output_file[:-4]
         try:
             open(self.output_file,'w+')
+            os.remove(self.output_file)  # cleanup after test
         except Exception:
             raise ValueError('invalid path for output csv files')
         if self.seed is None:
@@ -268,22 +291,5 @@ class StanData(object):
 
     def write_rdump(self, dict):
         rdump(self.rdump_file, dict)
-    
 
-#
-#class PosteriorSample(object):
-#    """Sample itself, plus information about runs which produced it."""
-#
-#    def __init__(self, runset=None):
-#        """Initialize object."""
-#        self.runset = runset
-#        """RunSet object."""
-#        if runset is None:
-#            raise Exception('no runset specified')
-#
-#    def extract(self):
-#        """Check runset, assemple ndarray."""
-#        if not validate(runset):  # double checking
-#            raise ValueError('invalid runset {}'.format(runset))
-#
-#
+
