@@ -2,14 +2,13 @@
 Utility functions
 """
 
-import os
-import os.path
-import subprocess
 import numpy as np
+
 
 def is_int(i):
     try:
-       test = int(i)
+        test = int(i)
+        test   # suppress flake8 warning
     except Exception:
         return False
     return True
@@ -23,6 +22,7 @@ def _rdump_array(key, val):
         dim = '.Dim = c{0}'.format(val.shape)
         struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
         return struct
+
 
 def rdump(path, data):
     """Dump a dict of data to a R dump format file.
@@ -42,6 +42,7 @@ def rdump(path, data):
                 line = '%s <- %s' % (key, val)
             fd.write(line)
             fd.write('\n')
+
 
 def scan_stan_csv(filename):
     '''capture essential config, shape from stan_csv file.'''
@@ -74,8 +75,9 @@ def scan_stan_csv(filename):
             draws_found += 1
             cols_draw = len(line.split(','))
             if cols_header != cols_draw:
-                raise ValueError('bad csv file {}, expected {} columns, found {}'.format(
-                    filename, cols_header, cols_draw))
+                raise ValueError(
+                    'bad csv file {}, expected {} columns, found {}'.format(
+                        filename, cols_header, cols_draw))
             line = fp.readline().strip()
     # check draws against spec
     draws_spec = 1000
@@ -91,5 +93,3 @@ def scan_stan_csv(filename):
             filename, draws_spec, draws_found))
     dict['draws'] = draws_found
     return dict
-
-

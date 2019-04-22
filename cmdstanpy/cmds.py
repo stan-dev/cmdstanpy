@@ -109,19 +109,17 @@ def sample(stan_model = None,
         tp.apply_async(do_sample, (runset, i,))
     tp.close()
     tp.join()
-    if not runset.validate_retcodes:
-        msg = "Sampler run failed, "
+    if not runset.validate_retcodes():
+        msg = "Error during sampling"
         for i in range(chains):
             if runset.get_retcode(i) != 0:
                 msg = '{}, chain {} returned error code {}'.format(msg, i, runset.get_retcode(i))
         raise Exception(msg)
-    runset.validate_transcripts()
-    dict = runset.validate_csv_files()
-    return PosteriorSample(runset, dict)
+    return runset
  
-def stansummary(post_sample, filename = None, sig_figs = None):
+def stansummary(runset, filename = None, sig_figs = None):
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
-    csv_files = ' '.join(post_sample.runset.output_files)
+    csv_files = ' '.join(runset.output_files)
     cmd = '{} {} '.format(cmd_path, csv_files, filename)
     if filename is not None:
         print('stansummary output file: {}'.format(filename))
