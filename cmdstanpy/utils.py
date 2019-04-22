@@ -8,7 +8,7 @@ import numpy as np
 def is_int(i):
     try:
         test = int(i)
-        test   # suppress flake8 warning
+        test  # suppress flake8 warning
     except Exception:
         return False
     return True

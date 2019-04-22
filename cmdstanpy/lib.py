@@ -1,11 +1,9 @@
-import json
 import os
 import os.path
-from pprint import pformat
 import re
 import numpy as np
+from .utils import is_int, rdump, scan_stan_csv
 
-from .utils import is_int, scan_stan_csv
 
 class Model(object):
     """Stan model."""
@@ -24,7 +22,7 @@ class Model(object):
     def __repr__(self):
         return 'Model(name="{}", stan_file="{}", exe_file="{}")'.format(
             self.name, self.stan_file, self.exe_file)
-    
+
     def code(self):
         """Return Stan program as a string."""
         code = None
@@ -35,33 +33,11 @@ class Model(object):
             print('Cannot read file: {}'.format(self.stan_file))
         return code
 
-class PosteriorSample(object):
-    """Sample itself, plus information about runs which produced it."""
-
-    def __init__(self, runset=None, shape=None):
-        """Initialize object."""
-        self.runset = runset
-        """RunSet object."""
-        if runset is None:
-            raise Exception('no runset specified')
-        self.shape = shape
-        """per-chain sample info."""
-        if shape is None:
-            raise Exception('sample shape information not specified')
-
-    def extract(self):
-        """assemple ndarray."""
-        pass
-
 
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self,
-                 args,
-                 chains = 1,
-                 cores = 1,
-                 transcript_file = None):
+    def __init__(self, args, chains=1, cores=1, transcript_file=None):
         """Initialize object."""
         self.chains = chains
         """number of chains."""
@@ -74,18 +50,28 @@ class RunSet(object):
         else:
             self.transcript_file = transcript_file
         """base filename for console output transcripts."""
-        self.cmds = [args.compose_command(i+1) for i in range(chains)]
-        self.output_files = ['{}-{}.csv'.format(self.args.output_file,i+1) for i in range(chains)]
+        self.cmds = [args.compose_command(i + 1) for i in range(chains)]
+        self.output_files = [
+            '{}-{}.csv'.format(self.args.output_file, i + 1)
+            for i in range(chains)
+        ]
         """per-chain sample csv files."""
-        self.transcript_files = ['{}-{}.txt'.format(self.transcript_file,i+1) for i in range(chains)]
+        self.transcript_files = [
+            '{}-{}.txt'.format(self.transcript_file, i + 1)
+            for i in range(chains)
+        ]
         """per-chain console transcripts."""
-        self.__retcodes = [ -1 for _ in range(chains)]
+        self.__retcodes = [-1 for _ in range(chains)]
         """per-chain return codes."""
+        self.__sample_shape = None
+        """sample shape: chains, draws, cols."""
         if chains < 1:
-            raise ValueError('chains must be positive integer value, found {i]}'.format(self.chains))
+            raise ValueError(
+                'chains must be positive integer value, found {i]}'.format(
+                    self.chains))
 
     def __repr__(self):
-        return 'RunSet(args={}, chains={}, cores={}, transcript_file={})'.format(
+        return 'RunSet(args={}, chains={}, cores={}, transcript={})'.format(
             self.args, self.chains, self.cores, self.transcript_file)
 
     def get_retcodes(self):
@@ -114,10 +100,10 @@ class RunSet(object):
                 errors = re.findall(pat, contents)
                 if (len(errors) > 0):
                     valid = False
-                    msg = '{}chain {}: {}\n'.format(msg, i+1, errors)
+                    msg = '{}chain {}: {}\n'.format(msg, i + 1, errors)
         if not valid:
             raise ValueError(msg)
-        
+
     def validate_csv_files(self):
         """checks draws for all output files."""
         dzero = {}
@@ -128,33 +114,38 @@ class RunSet(object):
                 d = scan_stan_csv(self.output_files[i])
                 for key in dzero:
                     if key != 'id' and dzero[key] != d[key]:
-                        raise ValueError('csv file header mismatch, '
-                                         'file {}, key {} is {}, expected {}'.
-                                         format(self.output_files[i], key, dzero[key], d[key]))
+                        raise ValueError(
+                            'csv file header mismatch, '
+                            'file {}, key {} is {}, expected {}'.format(
+                                self.output_files[i], key, dzero[key], d[key]))
+            self.__sample_shape = (self.chains, dzero['draws'],
+                                   len(dzero['col_headers']))
         return dzero
-    
+
+
 class SamplerArgs(object):
     """Flattened arguments for NUTS/HMC sampler
     """
+
     def __init__(self,
                  model,
-                 seed = None,
-                 data_file = None,
-                 init_param_values = None,
-                 output_file = None,
-                 refresh = None,
-                 post_warmup_draws = None,
-                 warmup_draws = None,
-                 save_warmup = False,
-                 thin = None,
-                 do_adaptation = True,
-                 adapt_gamma = None,
-                 adapt_delta = None,
-                 adapt_kappa = None,
-                 adapt_t0 = None,
-                 nuts_max_depth = None,
-                 hmc_metric_file = None,
-                 hmc_stepsize = None):
+                 seed=None,
+                 data_file=None,
+                 init_param_values=None,
+                 output_file=None,
+                 refresh=None,
+                 post_warmup_draws=None,
+                 warmup_draws=None,
+                 save_warmup=False,
+                 thin=None,
+                 do_adaptation=True,
+                 adapt_gamma=None,
+                 adapt_delta=None,
+                 adapt_kappa=None,
+                 adapt_t0=None,
+                 nuts_max_depth=None,
+                 hmc_metric_file=None,
+                 hmc_stepsize=None):
         """Initialize object."""
         self.model = model
         """Model object"""
@@ -193,7 +184,6 @@ class SamplerArgs(object):
         self.hmc_stepsize = hmc_stepsize
         """initial value for HMC stepsize."""
 
-
     def validate(self):
         """Check arg consistency, correctness.
         """
@@ -201,8 +191,8 @@ class SamplerArgs(object):
             raise ValueError('no stan model specified')
         if self.model.exe_file is None:
             raise ValueError('stan model must be compiled first,' +
-                                 ' run command compile_model("{}")'.
-                                 format(self.model.stan_file))
+                             ' run command compile_model("{}")'.format(
+                                 self.model.stan_file))
         if not os.path.exists(self.model.exe_file):
             raise ValueError('cannot access model executible "{}"'.format(
                 self.model.exe_file))
@@ -211,7 +201,7 @@ class SamplerArgs(object):
         if self.output_file.endswith('.csv'):
             self.output_file = self.output_file[:-4]
         try:
-            open(self.output_file,'w+')
+            open(self.output_file, 'w+')
             os.remove(self.output_file)  # cleanup after test
         except Exception:
             raise ValueError('invalid path for output csv files')
@@ -219,27 +209,33 @@ class SamplerArgs(object):
             rng = np.random.RandomState()
             self.seed = rng.randint(1, 99999 + 1)
         else:
-            if not is_int(self.seed) or self.seed < 0 or self.seed > 2**32-1:
-                raise ValueError('seed must be an integer value between 0 and 2**32-1, found {}'.format(self.seed))
+            if not is_int(self.seed) or self.seed < 0 or self.seed > 2**32 - 1:
+                raise ValueError(
+                    'seed must be an integer value between 0 and 2**32-1, '
+                    'found {}'.format(self.seed))
         if self.data_file is not None:
             if not os.path.exists(self.data_file):
                 raise ValueError('no such file {}'.format(self.data_file))
         if self.init_param_values is not None:
             if not os.path.exists(self.init_param_values):
-                raise ValueError('no such file {}'.format(self.init_param_values))
+                raise ValueError('no such file {}'.format(
+                    self.init_param_values))
         if (self.hmc_metric_file is not None):
             if not os.path.exists(self.hmc_metric_file):
-                raise ValueError('no such file {}'.format(self.hmc_metric_file))
+                raise ValueError('no such file {}'.format(
+                    self.hmc_metric_file))
         if self.post_warmup_draws is not None:
-            if not is_int(self.post_warmup_draws) or self.post_warmup_draws < 0:
-                raise ValueError('post_warmup_draws must be a non-negative integer value'.format(
-                    self.post_warmup_draws))
+            if not is_int(
+                    self.post_warmup_draws) or self.post_warmup_draws < 0:
+                raise ValueError(
+                    'post_warmup_draws must be a non-negative integer value'.
+                    format(self.post_warmup_draws))
         if self.warmup_draws is not None:
             if not is_int(self.post_warmup_draws) or self.warmup_draws < 0:
-                raise ValueError('warmup_draws must be a non-negative integer value'.format(
-                    self.warmup_draws))
+                raise ValueError(
+                    'warmup_draws must be a non-negative integer value'.format(
+                        self.warmup_draws))
         # TODO: check type/bounds on all other controls
-
 
         pass
 
@@ -270,12 +266,11 @@ class SamplerArgs(object):
         if (self.hmc_stepsize is not None):
             cmd = '{} stepsize={}'.format(cmd, self.hmc_stepsize)
         if (self.nuts_max_depth is not None):
-            cmd = '{} engine=nuts max_depth={}'.format(cmd, self.nuts_max_depth)
+            cmd = '{} engine=nuts max_depth={}'.format(cmd,
+                                                       self.nuts_max_depth)
         if (self.do_adaptation and
-            not (self.adapt_gamma is None and
-                 self.adapt_delta is None and
-                 self.adapt_kappa is None and
-                 self.adapt_t0 is None)):
+                not (self.adapt_gamma is None and self.adapt_delta is None
+                     and self.adapt_kappa is None and self.adapt_t0 is None)):
             cmd = cmd + " adapt"
         if (self.adapt_gamma is not None):
             cmd = '{} gamma={}'.format(cmd, self.adapt_gamma)
@@ -287,26 +282,25 @@ class SamplerArgs(object):
             cmd = '{} t0={}'.format(cmd, self.adapt_t0)
         if (self.hmc_metric_file is not None):
             cmd = '{} metric_file="{}"'.format(cmd, self.hmc_metric_file)
-        return cmd;
+        return cmd
 
-from utils import rdump
+
 class StanData(object):
     """Stan model data or inits."""
-    
+
     def __init__(self, rdump_file=None):
         """Initialize object."""
         self.rdump_file = rdump_file
         """path to rdump file."""
         if not os.path.exists(rdump_file):
             try:
-                open(rdump_file,'w')
+                open(rdump_file, 'w')
             except OSError:
-                raise Exception('invalid rdump_file name {}'.format(self.rdump_file))
+                raise Exception('invalid rdump_file name {}'.format(
+                    self.rdump_file))
 
     def __repr__(self):
         return 'StanData(rdump_file="{}")'.format(self.rdump_file)
 
     def write_rdump(self, dict):
         rdump(self.rdump_file, dict)
-
-

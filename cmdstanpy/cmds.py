@@ -1,20 +1,13 @@
-"""
-User-facing commands
-"""
-
-import json
-import logging
 import os
 import os.path
 import subprocess
-import sys
-import time
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-from .config import *
-from .lib import Model, PosteriorSample, RunSet, SamplerArgs
+from .config import CMDSTAN_PATH
+from .lib import Model, RunSet, SamplerArgs
 from .utils import is_int
+
 
 def compile_model(stan_file, opt_lvl=3, overwrite=False):
     """Compile the given Stan model file to an executable.
@@ -50,74 +43,81 @@ def compile_model(stan_file, opt_lvl=3, overwrite=False):
     return Model(stan_file, model_name, exe_file)
 
 
-def sample(stan_model = None,
-               chains = 4,
-               cores = 1,
-               seed = None,
-               data_file = None,
-               init_param_values = None,
-               csv_output_file = None,
-               console_output_file = None,
-               refresh = None,
-               post_warmup_draws_per_chain = None,
-               warmup_draws_per_chain = None,
-               save_warmup = False,
-               thin = None,
-               do_adaptation = True,
-               adapt_gamma = None,
-               adapt_delta = None,
-               adapt_kappa = None,
-               adapt_t0 = None,
-               nuts_max_depth = None,
-               hmc_metric = None,
-               hmc_metric_file = None,
-               hmc_stepsize = 1):
-    """Runs on or more chains of the NUTS/HMC sampler, writing set of draws from each chain to a file in stan-csv format 
-    """
-    args = SamplerArgs(model = stan_model,
-                        seed = seed,
-                        data_file = data_file,
-                        init_param_values = init_param_values,
-                        output_file = csv_output_file,
-                        refresh = refresh,
-                        post_warmup_draws =  post_warmup_draws_per_chain,
-                        warmup_draws = warmup_draws_per_chain,
-                        save_warmup = save_warmup,
-                        thin = thin,
-                        do_adaptation = do_adaptation,
-                        adapt_gamma = adapt_gamma,
-                        adapt_delta = adapt_delta,
-                        adapt_kappa = adapt_kappa,
-                        adapt_t0 = adapt_t0,
-                        nuts_max_depth = nuts_max_depth,
-                        hmc_metric_file = hmc_metric_file,
-                        hmc_stepsize = hmc_stepsize)
+def sample(stan_model=None,
+           chains=4,
+           cores=1,
+           seed=None,
+           data_file=None,
+           init_param_values=None,
+           csv_output_file=None,
+           console_output_file=None,
+           refresh=None,
+           post_warmup_draws_per_chain=None,
+           warmup_draws_per_chain=None,
+           save_warmup=False,
+           thin=None,
+           do_adaptation=True,
+           adapt_gamma=None,
+           adapt_delta=None,
+           adapt_kappa=None,
+           adapt_t0=None,
+           nuts_max_depth=None,
+           hmc_metric=None,
+           hmc_metric_file=None,
+           hmc_stepsize=1):
+    """Runs on or more chains of the NUTS/HMC sampler."""
+    args = SamplerArgs(model=stan_model,
+                       seed=seed,
+                       data_file=data_file,
+                       init_param_values=init_param_values,
+                       output_file=csv_output_file,
+                       refresh=refresh,
+                       post_warmup_draws=post_warmup_draws_per_chain,
+                       warmup_draws=warmup_draws_per_chain,
+                       save_warmup=save_warmup,
+                       thin=thin,
+                       do_adaptation=do_adaptation,
+                       adapt_gamma=adapt_gamma,
+                       adapt_delta=adapt_delta,
+                       adapt_kappa=adapt_kappa,
+                       adapt_t0=adapt_t0,
+                       nuts_max_depth=nuts_max_depth,
+                       hmc_metric_file=hmc_metric_file,
+                       hmc_stepsize=hmc_stepsize)
     args.validate()
     if not is_int(chains) and chains > 0:
-        raise ValueError('chains must be a positive integer value, found {}'.format(chains))
+        raise ValueError(
+            'chains must be a positive integer value, found {}'.format(chains))
     if not is_int(cores) and cores > 0:
-        raise ValueError('cores must be a positive integer value, found {}'.format(cores))
+        raise ValueError(
+            'cores must be a positive integer value, found {}'.format(cores))
     if cores > cpu_count():
-        logger.warning('requested {} cores but only {} cores available'.format(codes, cpu_count()))
+        print('requested {} cores, only {} available'.format(
+            cores, cpu_count()))
         cores = cpu_count()
-    runset = RunSet(args = args,
-                    chains = chains,
-                    cores = cores,
-                    transcript_file = console_output_file)
+    runset = RunSet(args=args,
+                    chains=chains,
+                    cores=cores,
+                    transcript_file=console_output_file)
     tp = ThreadPool(cores)
     for i in range(chains):
-        tp.apply_async(do_sample, (runset, i,))
+        tp.apply_async(do_sample, (
+            runset,
+            i,
+        ))
     tp.close()
     tp.join()
     if not runset.validate_retcodes():
         msg = "Error during sampling"
         for i in range(chains):
             if runset.get_retcode(i) != 0:
-                msg = '{}, chain {} returned error code {}'.format(msg, i, runset.get_retcode(i))
+                msg = '{}, chain {} returned error code {}'.format(
+                    msg, i, runset.get_retcode(i))
         raise Exception(msg)
     return runset
- 
-def stansummary(runset, filename = None, sig_figs = None):
+
+
+def stansummary(runset, filename=None, sig_figs=None):
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
     csv_files = ' '.join(runset.output_files)
     cmd = '{} {} '.format(cmd_path, csv_files, filename)
@@ -125,7 +125,7 @@ def stansummary(runset, filename = None, sig_figs = None):
         print('stansummary output file: {}'.format(filename))
         if not os.path.exists(filename):
             try:
-                open(filename,'w')
+                open(filename, 'w')
             except OSError:
                 raise Exception('cannot write to file {}'.format(filename))
         else:
@@ -133,40 +133,43 @@ def stansummary(runset, filename = None, sig_figs = None):
         cmd = '{} --csv_file={}'.format(cmd, filename)
     if sig_figs is not None:
         if not is_int(sig_figs) and sig_figs > 0:
-            raise ValueError('sig_figs must be a positive integer value, found {}'.
-                             format(sig_figs))
+            raise ValueError(
+                'sig_figs must be a positive integer value, found {}'.format(
+                    sig_figs))
         cmd = '{} --sig_figs={}'.format(cmd, sig_figs)
     print(cmd)
     proc = subprocess.Popen(
         cmd.split(),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        )
+    )
     proc.wait()
     stdout, stderr = proc.communicate()
     if stdout:
-            print(stdout.decode('ascii'))
+        print(stdout.decode('ascii'))
     if stderr:
-            print('ERROR')
-            print(stderr.decode('ascii'))
+        print('ERROR')
+        print(stderr.decode('ascii'))
     if proc.returncode != 0:
-            raise Exception('stansummary cmd failed, return code: {}'.format(proc.returncode))
-    
+        raise Exception('stansummary cmd failed, return code: {}'.format(
+            proc.returncode))
 
-def diagnose(runset, diagnose_output_file):
+
+def diagnose(runset, filename):
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
-    pass
+    csv_files = ' '.join(runset.output_files)
+    cmd = '{} {} '.format(cmd_path, csv_files, filename)
+    print(cmd)
 
 
 def do_sample(runset, idx):
-    """Spawn process, capture stdout and std err to transcript file, return returncode.
-    """
+    """Spawn process, capture console output to file, record returncode."""
     cmd = runset.cmds[idx]
     proc = subprocess.Popen(
         cmd.split(),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        )
+    )
     proc.wait()
     stdout, stderr = proc.communicate()
     transcript_file = runset.transcript_files[idx]
@@ -186,7 +189,7 @@ def do_command(cmd, cwd=None):
         cwd=cwd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        )
+    )
     proc.wait()
     stdout, stderr = proc.communicate()
     if stdout:
@@ -195,4 +198,3 @@ def do_command(cmd, cwd=None):
         print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
     if (proc.returncode):
         raise Exception('Command failed: {}'.format(cmd))
-
