@@ -66,32 +66,6 @@ class ReadStanCsvTest(unittest.TestCase):
         with self.assertRaisesRegexp(Exception, "10 draws"):
             dict = scan_stan_csv(csv_bad)
 
-class RunSetTest(unittest.TestCase):
-
-    def test_runset(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
-        rdata = os.path.join(datafiles_path, "bernoulli.data.R")
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
-        args = SamplerArgs(model, seed=12345, data_file=rdata, output_file=output,
-                               nuts_max_depth=15, adapt_delta=0.99)
-        transcript = os.path.join(tmpfiles_path, "bernoulli.run")
-        runset = RunSet(chains=4, cores=2, transcript_file=transcript, args=args)
-        print(type(runset))
-        retcodes = runset.get_retcodes()
-        self.assertEqual(4, len(retcodes))
-        for i in range(len(retcodes)):
-            self.assertEqual(-1, runset.get_retcode(i))
-        runset.set_retcode(0,0)
-        self.assertEqual(0, runset.get_retcode(0))
-        for i in range(1,len(retcodes)):
-            self.assertEqual(-1, runset.get_retcode(i))
-        self.assertFalse(runset.is_success())
-        for i in range(1,len(retcodes)):
-            runset.set_retcode(i,0)
-        self.assertTrue(runset.is_success())
-
 
 if __name__ == '__main__':
     unittest.main()
