@@ -98,7 +98,7 @@ def sample(stan_model=None,
     runset = RunSet(args=args,
                     chains=chains,
                     cores=cores,
-                    transcript_file=console_output_file)
+                    console_file=console_output_file)
     tp = ThreadPool(cores)
     for i in range(chains):
         tp.apply_async(do_sample, (
@@ -107,22 +107,25 @@ def sample(stan_model=None,
         ))
     tp.close()
     tp.join()
-    if not runset.validate_retcodes():
+    if not runset.check_retcodes():
         msg = "Error during sampling"
         for i in range(chains):
             if runset.get_retcode(i) != 0:
                 msg = '{}, chain {} returned error code {}'.format(
                     msg, i, runset.get_retcode(i))
         raise Exception(msg)
+    # runset.check_console_msgs()
     return runset
 
 
-def stansummary(runset, filename=None, sig_figs=None):
+def summary(runset=None, filename=None, sig_figs=None):
+    if runset is None:
+        raise ValueError('summary command requires specified RunSet from sampler')
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
     csv_files = ' '.join(runset.output_files)
     cmd = '{} {} '.format(cmd_path, csv_files, filename)
     if filename is not None:
-        print('stansummary output file: {}'.format(filename))
+        print('summary output file: {}'.format(filename))
         if not os.path.exists(filename):
             try:
                 open(filename, 'w')
@@ -150,16 +153,54 @@ def stansummary(runset, filename=None, sig_figs=None):
     if stderr:
         print('ERROR')
         print(stderr.decode('ascii'))
+    if filename is not None:
+        with open(filename, 'w') as fd:
+            if stdout:
+                fd.write(stdout.decode('ascii'))
+                fd.write('\n')
+            if stderr:
+                fd.write(stderr.decode('ascii'))
+                fd.write('\n')
     if proc.returncode != 0:
-        raise Exception('stansummary cmd failed, return code: {}'.format(
+        raise Exception('summary cmd failed, return code: {}'.format(
             proc.returncode))
 
 
-def diagnose(runset, filename):
+def diagnose(runset=None, filename=None):
+    if runset is None:
+        raise ValueError('summary command requires specified RunSet from sampler')
+    print('diagnose - runset: {}'.format(runset))
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
     csv_files = ' '.join(runset.output_files)
-    cmd = '{} {} '.format(cmd_path, csv_files, filename)
-    print(cmd)
+    cmd = '{} {} '.format(cmd_path, csv_files)
+    print('cmd: {}'.format(cmd))
+    proc = subprocess.Popen(
+        cmd.split(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    if stdout:
+        print("stdout")
+        print(stdout.decode('ascii'))
+    if stderr:
+        print('ERROR')
+        print(stderr.decode('ascii'))
+    if filename is not None:
+        with open(filename, 'w') as fd:
+            if not (stdout and stderr):
+                fd.write('Processing complete, no problems detected\n')
+            else:
+                if stdout:
+                    fd.write(stdout.decode('ascii'))
+                if stderr:
+                    fd.write('ERROR\n')
+                    fd.write(stderr.decode('ascii'))
+
+    if proc.returncode != 0:
+        raise Exception('summary cmd failed, return code: {}'.format(
+            proc.returncode))
 
 
 def do_sample(runset, idx):
@@ -172,7 +213,7 @@ def do_sample(runset, idx):
     )
     proc.wait()
     stdout, stderr = proc.communicate()
-    transcript_file = runset.transcript_files[idx]
+    transcript_file = runset.console_files[idx]
     with open(transcript_file, "w+") as transcript:
         if stdout:
             transcript.write(stdout.decode('ascii'))

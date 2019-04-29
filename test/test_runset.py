@@ -15,7 +15,7 @@ badfiles_path = os.path.expanduser(
 
 
 class RunSetTest(unittest.TestCase):
-    def test_validate_retcodes(self):
+    def test_check_retcodes(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan, name="bern")
@@ -37,10 +37,10 @@ class RunSetTest(unittest.TestCase):
         self.assertEqual(0, runset.get_retcode(0))
         for i in range(1, len(retcodes)):
             self.assertEqual(-1, runset.get_retcode(i))
-        self.assertFalse(runset.validate_retcodes())
+        self.assertFalse(runset.check_retcodes())
         for i in range(1, len(retcodes)):
             runset.set_retcode(i, 0)
-        self.assertTrue(runset.validate_retcodes())
+        self.assertTrue(runset.check_retcodes())
 
     def test_validate_outputs(self):
         # construct runset using existing sampler output
@@ -60,12 +60,13 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
-        self.assertTrue(runset.validate_retcodes())
-        runset.validate_transcripts()
+        self.assertTrue(runset.check_retcodes())
+        runset.check_console_msgs()
         dict = runset.validate_csv_files()
         self.assertEqual(100, dict['draws'])
         self.assertEqual(8, len(dict['col_headers']))
         self.assertEqual("lp__", dict['col_headers'][0])
+        self.assertEqual((4,100,8), runset.get_sample_shape())
 
     def test_validate_bad_transcript(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
@@ -81,8 +82,8 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        with self.assertRaisesRegexp(ValueError, "Exception"):
-            runset.validate_transcripts()
+        with self.assertRaisesRegexp(Exception, "Exception"):
+            runset.check_console_msgs()
 
     def test_validate_bad_hdr(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
@@ -101,7 +102,7 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
-        self.assertTrue(runset.validate_retcodes())
+        self.assertTrue(runset.check_retcodes())
         with self.assertRaisesRegexp(ValueError, "header mismatch"):
             runset.validate_csv_files()
 
@@ -123,7 +124,7 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
-        self.assertTrue(runset.validate_retcodes())
+        self.assertTrue(runset.check_retcodes())
         with self.assertRaisesRegexp(ValueError, "draws"):
             runset.validate_csv_files()
 
@@ -145,7 +146,7 @@ class RunSetTest(unittest.TestCase):
         retcodes = runset.get_retcodes()
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
-        self.assertTrue(runset.validate_retcodes())
+        self.assertTrue(runset.check_retcodes())
         with self.assertRaisesRegexp(ValueError, "columns"):
             runset.validate_csv_files()
 

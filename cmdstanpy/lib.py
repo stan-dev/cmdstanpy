@@ -37,7 +37,7 @@ class Model(object):
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args, chains=1, cores=1, transcript_file=None):
+    def __init__(self, args, chains=1, cores=1, console_file=None):
         """Initialize object."""
         self.chains = chains
         """number of chains."""
@@ -45,22 +45,22 @@ class RunSet(object):
         """max processes to run at once."""
         self.args = args
         """sampler args."""
-        if transcript_file is None:
-            self.transcript_file = self.args.output_file
+        if console_file is None:
+            self.console_file = self.args.output_file
         else:
-            self.transcript_file = transcript_file
-        """base filename for console output transcripts."""
+            self.console_file = console_file
+        """base filename for console output transcript files."""
         self.cmds = [args.compose_command(i + 1) for i in range(chains)]
         self.output_files = [
             '{}-{}.csv'.format(self.args.output_file, i + 1)
             for i in range(chains)
         ]
         """per-chain sample csv files."""
-        self.transcript_files = [
-            '{}-{}.txt'.format(self.transcript_file, i + 1)
+        self.console_files = [
+            '{}-{}.txt'.format(self.console_file, i + 1)
             for i in range(chains)
         ]
-        """per-chain console transcripts."""
+        """per-chain console transcript files."""
         self.__retcodes = [-1 for _ in range(chains)]
         """per-chain return codes."""
         self.__sample_shape = None
@@ -71,8 +71,8 @@ class RunSet(object):
                     self.chains))
 
     def __repr__(self):
-        return 'RunSet(args={}, chains={}, cores={}, transcript={})'.format(
-            self.args, self.chains, self.cores, self.transcript_file)
+        return 'RunSet(args={}, chains={}, cores={}, console={})'.format(
+            self.args, self.chains, self.cores, self.console_file)
 
     def get_retcodes(self):
         return self.__retcodes
@@ -80,21 +80,27 @@ class RunSet(object):
     def get_retcode(self, idx):
         return self.__retcodes[idx]
 
+    def get_sample_shape(self):
+        if self.__sample_shape is None and self.check_retcodes():
+            self.validate_csv_files()
+        return self.__sample_shape
+
     def set_retcode(self, idx, val):
         self.__retcodes[idx] = val
 
-    def validate_retcodes(self):
+    def check_retcodes(self):
         """checks that all chains have retcode 0."""
         for i in range(self.chains):
             if self.__retcodes[i] != 0:
                 return False
         return True
 
-    def validate_transcripts(self):
+    def check_console_msgs(self):
+        """checks console messages for each chain."""
         valid = True
         msg = ""
         for i in range(self.chains):
-            with open(self.transcript_files[i], 'r') as fp:
+            with open(self.console_files[i], 'r') as fp:
                 contents = fp.read()
                 pat = re.compile(r'^Exception.*$', re.M)
                 errors = re.findall(pat, contents)
@@ -102,10 +108,10 @@ class RunSet(object):
                     valid = False
                     msg = '{}chain {}: {}\n'.format(msg, i + 1, errors)
         if not valid:
-            raise ValueError(msg)
+            raise Exception(msg)
 
     def validate_csv_files(self):
-        """checks draws for all output files."""
+        """checks drawset from each chain."""
         dzero = {}
         for i in range(self.chains):
             if i == 0:
