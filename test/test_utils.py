@@ -12,8 +12,8 @@ datafiles_path = os.path.expanduser(
 tmpfiles_path = os.path.expanduser(
     os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-tmp"))
 
-rdump = ('''y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
-N <- 10
+rdump = ('''N <- 10
+y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
 ''')
 
 
@@ -30,7 +30,8 @@ class StanDataTest(unittest.TestCase):
 
     def test_standata_new(self):
         json_file = os.path.join(datafiles_path, "bernoulli.data.json")
-        dict = json.load(open(json_file))
+        with open(json_file, 'r') as fd:
+            dict = json.load(fd)
         rdump_file = os.path.join(tmpfiles_path, "bernoulli.data2.R")
         standata = StanData(rdump_file)
         standata.write_rdump(dict)
@@ -60,12 +61,12 @@ class ReadStanCsvTest(unittest.TestCase):
 
     def test_scan_csv_3(self):
         csv_bad = os.path.join(datafiles_path, "output_bad_cols.csv")
-        with self.assertRaisesRegexp(Exception, "8 columns"):
+        with self.assertRaisesRegex(Exception, "8 columns"):
             dict = scan_stan_csv(csv_bad)
 
     def test_scan_csv_4(self):
         csv_bad = os.path.join(datafiles_path, "output_bad_rows.csv")
-        with self.assertRaisesRegexp(Exception, "10 draws"):
+        with self.assertRaisesRegex(Exception, "10 draws"):
             dict = scan_stan_csv(csv_bad)
 
 

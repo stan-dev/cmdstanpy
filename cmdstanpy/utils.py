@@ -2,31 +2,23 @@
 Utility functions
 """
 
+from typing import Dict
 import numpy as np
 
 
-def is_int(i):
-    try:
-        test = int(i)
-        test  # suppress flake8 warning
-    except Exception:
-        return False
-    return True
-
-
-def _rdump_array(key, val):
+def _rdump_array(key:str, val:np.ndarray) -> str:
+    """Flatten numpy ndarray, format as Rdump variable declaration."""
     c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'
     if (val.size, ) == val.shape:
         return '{key} <- {c}'.format(key=key, c=c)
     else:
-        dim = '.Dim = c{0}'.format(val.shape)
+        dim = '.Dim = c{}'.format(val.shape)
         struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
         return struct
 
 
-def rdump(path, data):
-    """Dump a dict of data to a R dump format file.
-    """
+def rdump(path:str, data:Dict) -> None:
+    """Dump a dict of data to a R dump format file."""
     with open(path, 'w') as fd:
         for key, val in data.items():
             if isinstance(val, np.ndarray) and val.size > 1:
@@ -44,8 +36,8 @@ def rdump(path, data):
             fd.write('\n')
 
 
-def scan_stan_csv(filename):
-    '''capture essential config, shape from stan_csv file.'''
+def scan_stan_csv(filename:str) -> Dict:
+    """Capture essential config, shape from stan_csv file."""
     dict = {}
     draws_found = 0
     file_is_data = False

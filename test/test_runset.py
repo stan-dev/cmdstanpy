@@ -82,7 +82,7 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        with self.assertRaisesRegexp(Exception, "Exception"):
+        with self.assertRaisesRegex(Exception, "Exception"):
             runset.check_console_msgs()
 
     def test_validate_bad_hdr(self):
@@ -103,7 +103,7 @@ class RunSetTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
-        with self.assertRaisesRegexp(ValueError, "header mismatch"):
+        with self.assertRaisesRegex(ValueError, "header mismatch"):
             runset.validate_csv_files()
 
     def test_validate_bad_draws(self):
@@ -125,7 +125,7 @@ class RunSetTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
-        with self.assertRaisesRegexp(ValueError, "draws"):
+        with self.assertRaisesRegex(ValueError, "draws"):
             runset.validate_csv_files()
 
     def test_validate_bad_cols(self):
@@ -147,7 +147,7 @@ class RunSetTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
-        with self.assertRaisesRegexp(ValueError, "columns"):
+        with self.assertRaisesRegex(ValueError, "columns"):
             runset.validate_csv_files()
 
 

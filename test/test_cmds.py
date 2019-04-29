@@ -100,7 +100,7 @@ class SampleTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         output = os.path.join(tmpfiles_path, "test4-bernoulli.output")
         model = compile_model(stan)
-        with self.assertRaisesRegexp(Exception, "Error during sampling"):
+        with self.assertRaisesRegex(Exception, "Error during sampling"):
             runset = sample(model, csv_output_file=output)
 
 
@@ -165,7 +165,7 @@ class DiagnoseTest(unittest.TestCase):
         self.assertTrue(os.path.exists(transcript))
         with open(transcript, 'r') as myfile:
             contents = myfile.read()
-        self.assertEqual(contents, 'Processing complete, no problems detected\n')
+        self.assertEqual(contents, 'Processing completed\n')
 
 if __name__ == '__main__':
     unittest.main()
