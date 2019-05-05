@@ -12,12 +12,14 @@ from .utils import rdump, scan_stan_csv
 class Model(object):
     """Stan model."""
 
-    def __init__(self, stan_file:str, exe_file:str=None) -> None:
+    def __init__(self, stan_file:str=None, exe_file:str=None) -> None:
         """Initialize object."""
         self.stan_file = stan_file
         """full path to Stan program src."""
         self.exe_file = exe_file
         """full path to compiled c++ executible."""
+        if stan_file is None:
+            raise ValueError('must specify Stan program file')
         if not os.path.exists(stan_file):
             raise ValueError('no such file {}'.format(self.stan_file))
         if not exe_file is None:
@@ -42,9 +44,11 @@ class Model(object):
             print('Cannot read file: {}'.format(self.stan_file))
         return code
 
+
 # rewrite - constructor takes Dict, optional filename
 # see https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # @clsmethod rdump, json (default)
+
 class StanData(object):
     """Stan model data or inits."""
 
