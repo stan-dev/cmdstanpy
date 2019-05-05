@@ -1,28 +1,36 @@
 import os
 import os.path
 import re
-import numpy as np
 from typing import List, Dict, Tuple
+
+import numpy as np
+import pandas as pd
+
 from .utils import rdump, scan_stan_csv
 
 
 class Model(object):
     """Stan model."""
 
-    def __init__(self, stan_file:str, name:str=None, exe_file:str=None) -> None:
+    def __init__(self, stan_file:str, exe_file:str=None) -> None:
         """Initialize object."""
         self.stan_file = stan_file
         """full path to Stan program src."""
-        self.name = name
-        """defaults to base name of Stan program file."""
         self.exe_file = exe_file
         """full path to compiled c++ executible."""
         if not os.path.exists(stan_file):
-            raise ValueError('no such stan_file {}'.format(self.stan_file))
+            raise ValueError('no such file {}'.format(self.stan_file))
+        if not exe_file is None:
+            if not os.path.exists(exe_file):
+                raise ValueError('no such file {}'.format(self.exe_file))
+        filename = os.path.split(stan_file)[1]
+        if len(filename) < 6 or not filename.endswith('.stan'):
+            raise ValueError('invalid stan filename {}'.format(self.stan_file))
+        self.name = os.path.splitext(filename)[0]
 
     def __repr__(self) -> str:
-        return 'Model(name="{}", stan_file="{}", exe_file="{}")'.format(
-            self.name, self.stan_file, self.exe_file)
+        return 'Model(stan_file="{}", exe_file="{}")'.format(
+            self.stan_file, self.exe_file)
 
     def code(self) -> str:
         """Return Stan program as a string."""
@@ -34,7 +42,9 @@ class Model(object):
             print('Cannot read file: {}'.format(self.stan_file))
         return code
 
-
+# rewrite - constructor takes Dict, optional filename
+# see https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
+# @clsmethod rdump, json (default)
 class StanData(object):
     """Stan model data or inits."""
 
@@ -46,7 +56,7 @@ class StanData(object):
             try:
                 with open(rdump_file, 'w') as fd:
                     pass
-                os.remove(rdump_file)  # cleanup after test
+                os.remove(rdump_file)  # cleanup
             except OSError:
                 raise Exception('invalid rdump_file name {}'.format(
                     self.rdump_file))
@@ -224,21 +234,22 @@ class SamplerArgs(object):
         return cmd
 
 
+
+# TODO: RunSet uses secure temp files - registers names of files, once created, not deleted
+# add "save" operation - moves tempfiles to specified permanent dir
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args:SamplerArgs, chains:int=1, cores:int=1, console_file:str=None) -> None:
+    def __init__(self, args:SamplerArgs, chains:int=1, console_file:str=None) -> None:
         """Initialize object."""
-        self.chains = chains
+        self.__chains = chains
         """number of chains."""
-        self.cores = cores
-        """max processes to run at once."""
         self.args = args
         """sampler args."""
         if console_file is None:
-            self.console_file = self.args.output_file
+            self.__console_file = self.args.output_file
         else:
-            self.console_file = console_file
+            self.__console_file = console_file
         """base filename for console output transcript files."""
         self.cmds = [args.compose_command(i + 1) for i in range(chains)]
         self.output_files = [
@@ -247,43 +258,25 @@ class RunSet(object):
         ]
         """per-chain sample csv files."""
         self.console_files = [
-            '{}-{}.txt'.format(self.console_file, i + 1)
+            '{}-{}.txt'.format(self.__console_file, i + 1)
             for i in range(chains)
         ]
         """per-chain console transcript files."""
         self.__retcodes = [-1 for _ in range(chains)]
         """per-chain return codes."""
-        self.__sample_shape = None
-        """sample shape: chains, draws, cols."""
+        self.__column_names = None
         if chains < 1:
             raise ValueError(
-                'chains must be positive integer value, found {i]}'.format(
-                    self.chains))
+                'chains must be positive integer value, found {i]}'.format(chains))
 
     def __repr__(self) -> str:
-        return 'RunSet(args={}, chains={}, cores={}, console={})'.format(
-            self.args, self.chains, self.cores, self.console_file)
+        return 'RunSet(args={}, chains={}, console={})'.format(
+            self.args, self.__chains, self.__console_file)
 
-    def get_retcodes(self) -> List[int]:
+    @property
+    def retcodes(self) -> List[int]:
         """Get list of retcodes for all chains."""
         return self.__retcodes
-
-    def get_retcode(self, idx:int) -> int:
-        """get retcode for chain[idx]."""
-        return self.__retcodes[idx]
-
-    def get_sample_shape(self) -> Tuple:
-        """
-        Get 3-Tuple consisting of: chains; csv rows (post_warmup_draws);
-        csv columns (sampler state + model params, tparams, and gqvars).
-        """
-        if self.__sample_shape is None and self.check_retcodes():
-            self.validate_csv_files()
-        return self.__sample_shape
-
-    def set_retcode(self, idx:int, val:int) -> None:
-        """Set retcode for chain[idx] to val."""
-        self.__retcodes[idx] = val
 
     def check_retcodes(self) -> bool:
         """Checks that all chains have retcode 0."""
@@ -291,6 +284,36 @@ class RunSet(object):
             if self.__retcodes[i] != 0:
                 return False
         return True
+
+    def retcode(self, idx:int) -> int:
+        """get retcode for chain[idx]."""
+        return self.__retcodes[idx]
+
+    def set_retcode(self, idx:int, val:int) -> None:
+        """Set retcode for chain[idx] to val."""
+        self.__retcodes[idx] = val
+
+    @property
+    def chains(self) -> int:
+        return self.__chains
+
+    @property
+    def draws(self) -> int:
+        """Get draws per chain."""
+        if self.__draws is None and self.check_retcodes():
+            sample_dict = self.validate_csv_files()
+            self.__draws = sample_dict['draws']
+            self.__column_names = sample_dict['column_names']  # call validate once
+        return self.__draws
+
+    @property
+    def column_names(self) -> (str, ...):
+        """Get csv file column names."""
+        if self.__column_names is None and self.check_retcodes():
+            sample_dict = self.validate_csv_files()
+            self.__column_names = sample_dict['column_names']
+            self.__draws = sample_dict['draws']  # call validate once
+        return self.__column_names
 
     def check_console_msgs(self) -> bool:
         """Checks console messages for each chain."""
@@ -310,8 +333,7 @@ class RunSet(object):
     def validate_csv_files(self) -> Dict:
         """
         Checks csv output files for all chains.
-        Verifies consistency of headers, drawset shape.
-        Returns Dict with entries for header config and drawset shape.
+        Returns Dict with entries for sampler config and drawset .
         """
         dzero = {}
         for i in range(self.chains):
@@ -325,9 +347,90 @@ class RunSet(object):
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
                                 self.output_files[i], key, dzero[key], d[key]))
-            self.__sample_shape = (self.chains, dzero['draws'],
-                                   len(dzero['col_headers']))
         return dzero
 
+
+
+class PosteriorSample(object):
+    """Assembled draws from all chains in a RunSet."""
+
+    def __init__(self, chains:int=None, draws:int=None, column_names:(str, ...)=None,
+                     csv_files:(str, ...)=None) -> None:
+        """Initialize object."""
+        self.__chains = chains
+        """number of chains"""
+        self.__draws = draws
+        """number of chains"""
+        self.__column_names = column_names
+        """csv output header."""
+        self.__csv_files = csv_files
+        """sampler output csv files."""
+        self.__sample = None
+        """assembled draws across all chains, stored column major."""
+        if chains is None:
+            raise ValueError('must specify chains')
+        if draws is None:
+            raise ValueError('must specify draws')
+        if column_names is None:
+            raise ValueError('must specify columns')
+        if len(column_names) == 0:
+            raise ValueError('no column names specified')
+        if csv_files is None:
+            raise ValueError('must specify sampler output csv files')
+        if len(csv_files) != chains:
+            raise ValueError('expecting {} sampler output files, found {}'.format(
+                chains, len(csv_files)))
+        for i in range(chains):
+            if not os.path.exists(csv_files[i]):
+                raise ValueError('no such file {}'.format(csv_files[i]))
+
+    def get_sample(self) -> np.ndarray:
+        sample = np.empty((self.__draws, self.__chains, len(self.__column_names)),
+                              dtype=float, order='F')
+        for chain in range(self.__chains):
+            print("chain: {}".format(chain))
+            draw = 0
+            with open(self.__csv_files[chain], 'r') as fd:
+                for line in fd:
+                    if line.startswith('#') or line.startswith('lp__,'):
+                        continue
+                    print(line.strip())
+                    vs = [float(x) for x in line.split(',')]
+                    sample[draw, chain, :] = vs
+                    draw += 1
+        return sample
+    
+    def extract(self) -> pd.DataFrame:
+        if self.__sample is None:
+            self.__sample = self.get_sample()
+        data = self.__sample.reshape((self.__draws*self.__chains),len(self.__column_names),
+                                         order='A')
+        return pd.DataFrame(data=data, columns=self.__column_names)
+
+#    def extract_sampler_state(self) -> pd.DataFrame:
+#    def extract_sampler_params(self) -> pd.DataFrame:
+
+    @property
+    def draws(self) -> int:
+        return self.__draws
+
+    @property
+    def chains(self) -> int:
+        return self.__chains
+
+    @property
+    def columns(self) -> int:
+        return len(self.__column_names)
+
+    @property
+    def column_names(self) -> (str, ...):
+        return self.__column_names
+
+    @property
+    def sample(self) -> np.ndarray:
+        if self.__sample is not None:
+            return self.__sample
+        self.__sample = self.get_sample()
+        return self.__sample
 
 

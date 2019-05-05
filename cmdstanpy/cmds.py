@@ -1,22 +1,27 @@
 import os
 import os.path
 import subprocess
+import tempfile
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from typing import List, Dict, Tuple
 
-from .config import CMDSTAN_PATH
-from .lib import Model, RunSet, SamplerArgs
+import numpy as np
+import pandas as pd
 
+
+from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
+from cmdstanpy.lib import Model, RunSet, SamplerArgs, PosteriorSample
 
 def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
     """Compile the given Stan model file to an executable.
     """
+    print("compile_model, CMDSTAN_PATH={}".format(CMDSTAN_PATH))
     if not os.path.exists(stan_file):
         raise Exception('no such stan_file {}'.format(stan_file))
     path = os.path.abspath(os.path.dirname(stan_file))
     program_name = os.path.basename(stan_file)
-    model_name = program_name[:-5]
+    model_name = os.path.splitext(program_name)[0]
 
     hpp_name = model_name + '.hpp'
     hpp_file = os.path.join(path, hpp_name)
@@ -32,17 +37,17 @@ def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
     exe_file = os.path.join(path, model_name)
     if not overwrite and os.path.exists(exe_file):
         # print('model is up to date') # notify user or not?
-        return Model(stan_file, model_name, exe_file)
+        return Model(stan_file, exe_file)
     cmd = ['make', 'O={}'.format(opt_lvl), exe_file]
     print('compiling c++: make args {}'.format(cmd))
     try:
         do_command(cmd, CMDSTAN_PATH)
     except Exception:
-        return Model(stan_file, model_name)
-    return Model(stan_file, model_name, exe_file)
+        return Model(stan_file)
+    return Model(stan_file, exe_file)
 
 
-def sample(stan_model:str=None,
+def sample(stan_model:Model=None,
            chains:int=4,
            cores:int=1,
            seed:int=None,
@@ -65,7 +70,7 @@ def sample(stan_model:str=None,
            hmc_metric_file:str=None,
            hmc_stepsize:float=1.0,
            hmc_stepsize_jitter:float=0) -> RunSet:
-    """Runs on or more chains of the NUTS/HMC sampler."""
+    """Run or more chains of the NUTS/HMC sampler."""
     args = SamplerArgs(model=stan_model,
                        seed=seed,
                        data_file=data_file,
@@ -98,7 +103,6 @@ def sample(stan_model:str=None,
         cores = cpu_count()
     runset = RunSet(args=args,
                     chains=chains,
-                    cores=cores,
                     console_file=console_output_file)
     tp = ThreadPool(cores)
     for i in range(chains):
@@ -111,57 +115,52 @@ def sample(stan_model:str=None,
     if not runset.check_retcodes():
         msg = "Error during sampling"
         for i in range(chains):
-            if runset.get_retcode(i) != 0:
+            if runset.retcode(i) != 0:
                 msg = '{}, chain {} returned error code {}'.format(
-                    msg, i, runset.get_retcode(i))
+                    msg, i, runset.retcode(i))
         raise Exception(msg)
-    # runset.check_console_msgs()
-    return runset
+    column_names = runset.column_names # also checks runset is valid
+    chains = runset.chains
+    draws = runset.draws
+    post_sample = PosteriorSample(chains, draws, column_names, runset.output_files)
+    return post_sample
 
-
-def summary(runset:RunSet=None, filename:str=None, sig_figs:int=None) -> None:
+def summary(runset:RunSet=None) -> pd.DataFrame:
+    """
+    Run cmdstan/bin/stansummary over all sampler output csv files in runset.
+    Echo stansummary stdout/stderr to console.
+    Assemble csv tempfile contents into pandasDataFrame.
+    """
     if runset is None:
         raise ValueError('summary command requires specified RunSet from sampler')
+    names = runset.get_column_names()  # also checks runset is valid
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
-    csv_files = ' '.join(runset.output_files)
-    cmd = '{} {} '.format(cmd_path, csv_files, filename)
-    if filename is not None:
-        if not os.path.exists(filename):
-            try:
-                with open(filename, 'w') as fd:
-                    pass
-                os.remove(filename)  # cleanup after test
-            except OSError:
-                raise Exception('cannot write to file {}'.format(filename))
-        else:
-            raise ValueError('output file already exists: {}'.format(filename))
-        cmd = '{} --csv_file={}'.format(cmd, filename)
-    if sig_figs is not None:
-        if sig_figs < 0:
-            raise ValueError(
-                'sig_figs must be a positive integer value, found {}'.format(
-                    sig_figs))
-        cmd = '{} --sig_figs={}'.format(cmd, sig_figs)
-    if filename is None:
-        do_command(cmd=cmd.split())
-    else:
-        do_command_to_outfile(cmd=cmd.split(), filename=filename)
+    tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
+        runset.args.model.name, runset.chains)
+    fd, tmp_csv_path = tempfile.mkstemp(suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True)
+    cmd = '{} --csv_file={} {}'.format(cmd_path, tmp_csv_path, ' '.join(runset.output_files))
+    do_command(cmd.split())  # breaks on all whitespace
+    summary_data = pd.read_csv(tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#')
+    return summary_data
 
 
-def diagnose(runset:RunSet=None, filename:str=None) -> None:
+def diagnose(runset:RunSet=None) -> None:
+    """
+    Run cmdstan/bin/diagnose on runset.
+    Echo diagnose stdout/stderr to console.
+    """
     if runset is None:
         raise ValueError('summary command requires specified RunSet from sampler')
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
     csv_files = ' '.join(runset.output_files)
     cmd = '{} {} '.format(cmd_path, csv_files)
-    if filename is None:
-        do_command(cmd=cmd.split())
-    else:
-        do_command_to_outfile(cmd=cmd.split(), filename=filename)
+    do_command(cmd=cmd.split())
 
 
 def do_sample(runset:RunSet, idx:int) -> None:
-    """Spawn process, capture console output to file, record returncode."""
+    """
+    Spawn process, capture console output to file, record returncode.
+    """
     cmd = runset.cmds[idx]
     proc = subprocess.Popen(
         cmd.split(),
@@ -181,7 +180,10 @@ def do_sample(runset:RunSet, idx:int) -> None:
 
 
 def do_command(cmd:str, cwd:str=None) -> None:
-    """Spawn process, get output/err/returncode."""
+    """
+    Spawn process, print stdout/stderr to console.
+    Throws exception on non-zero returncode.
+    """
     proc = subprocess.Popen(
         cmd,
         cwd=cwd,
@@ -196,25 +198,3 @@ def do_command(cmd:str, cwd:str=None) -> None:
         raise Exception('Command failed: {}'.format(cmd))
     if stdout:
         print(stdout.decode('ascii').strip())
-
-
-def do_command_to_outfile(cmd:str, cwd:str=None, filename:str=None) -> None:
-    """Spawn process, capture output to file."""
-    proc = subprocess.Popen(
-        cmd,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    proc.wait()
-    stdout, stderr = proc.communicate()
-    if (proc.returncode):
-        if stderr:
-            print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
-        raise Exception('Command failed: {}'.format(cmd))
-    with open(filename, 'w') as fd:
-        if not stdout:
-            fd.write('Processing completed\n')
-        else:
-            fd.write(stdout.decode('ascii').strip())
-            fd.write('\n')

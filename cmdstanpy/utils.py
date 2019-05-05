@@ -58,18 +58,18 @@ def scan_stan_csv(filename:str) -> Dict:
                     else:
                         dict[key_val[0].strip()] = key_val[1].strip()
             line = fp.readline().strip()
-        dict['col_headers'] = line.split(',')
-        cols_header = len(dict['col_headers'])
+        dict['column_names'] = tuple(line.split(','))
+        cols_expected = len(dict['column_names'])
         line = fp.readline().strip()
         while len(line) > 0 and line.startswith("#"):
             line = fp.readline().strip()
         while len(line) > 0 and not line.startswith("#"):
             draws_found += 1
             cols_draw = len(line.split(','))
-            if cols_header != cols_draw:
+            if cols_expected != cols_draw:
                 raise ValueError(
                     'bad csv file {}, expected {} columns, found {}'.format(
-                        filename, cols_header, cols_draw))
+                        filename, cols_expected, cols_draw))
             line = fp.readline().strip()
     # check draws against spec
     draws_spec = 1000
@@ -85,3 +85,24 @@ def scan_stan_csv(filename:str) -> Dict:
             filename, draws_spec, draws_found))
     dict['draws'] = draws_found
     return dict
+
+def scan_stansummary_csv(filename:str, summary_data:np.recarray) -> None:
+    with open("foo.csv") as fp:
+        line = fp.readline()
+        for line in fp:
+            if line.startswith('#'):
+                break
+            cells = line.split(',')
+            col = cells[0]
+            for row in range(1, len(cells)):
+                summary_data[col,row] = float(cells[row+1])
+            
+
+# create named temporary file - persist as long as necessary
+# import tempfile, shutil
+# f = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
+# f.write('foo')
+# file_name = f.name
+# f.close()
+# shutil.copy(file_name, 'bar.txt')
+# os.remove(file_name)

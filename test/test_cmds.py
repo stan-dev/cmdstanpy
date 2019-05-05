@@ -20,7 +20,6 @@ class CompileTest(unittest.TestCase):
         if os.path.exists(exe):
             os.remove(exe)
         model = compile_model(stan)
-        self.assertEqual("bernoulli", model.name)
         self.assertEqual(stan, model.stan_file)
         self.assertEqual(exe, model.exe_file)
 
@@ -39,7 +38,7 @@ class SampleTest(unittest.TestCase):
         exe = os.path.join(datafiles_path, "bernoulli")
         if not os.path.exists(exe):
             compile_model(stan)
-        model = Model(stan, name="bernoulli", exe_file=exe)
+        model = Model(stan, exe_file=exe)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(tmpfiles_path, "test1-bernoulli.output")
         transcript = os.path.join(tmpfiles_path, "test1-bernoulli.run")
@@ -67,7 +66,7 @@ class SampleTest(unittest.TestCase):
         exe = os.path.join(datafiles_path, "bernoulli")
         if not os.path.exists(exe):
             compile_model(stan)
-        model = Model(stan, name="bernoulli", exe_file=exe)
+        model = Model(stan, exe_file=exe)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(tmpfiles_path, "test2-bernoulli.output")
         runset = sample(model,
@@ -111,9 +110,13 @@ class SummaryTest(unittest.TestCase):
         output = os.path.join(tmpfiles_path, "summary-inputs")
         model = compile_model(stan)
         runset = sample(model, data_file=rdata, csv_output_file=output)
-        transcript = os.path.join(tmpfiles_path, "summary-test1.txt")
-        summary(runset, transcript)
-        self.assertTrue(os.path.exists(transcript))
+        sum_array = summary(runset)
+        # self.assertTrue(os.path.exists(transcript))
+
+
+
+############## stopped here ########################
+
 
     def test_summary_2_good(self):
         rdata = os.path.join(datafiles_path, "bernoulli.data.R")
@@ -130,7 +133,7 @@ class DiagnoseTest(unittest.TestCase):
     def test_diagnose_divergences(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(datafiles_path, "diagnose-good", "corr_gauss_depth8")
         args = SamplerArgs(model,
@@ -148,7 +151,7 @@ class DiagnoseTest(unittest.TestCase):
         exe = os.path.join(datafiles_path, "bernoulli")
         if not os.path.exists(exe):
             compile_model(stan)
-        model = Model(stan, name="bernoulli", exe_file=exe)
+        model = Model(stan, exe_file=exe)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(tmpfiles_path, "test1-bernoulli.output")
         runset2 = sample(model,
