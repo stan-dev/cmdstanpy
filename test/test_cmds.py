@@ -93,8 +93,6 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv))
             self.assertTrue(os.path.exists(txt))
 
-
-
     def test_sample_missing_input(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         output = os.path.join(tmpfiles_path, "test4-bernoulli.output")
@@ -103,28 +101,18 @@ class SampleTest(unittest.TestCase):
             post_sample = sample(model, csv_output_file=output)
 
 
-# class SummaryTest(unittest.TestCase):
-#     def test_summary_1_good(self):
-#         rdata = os.path.join(datafiles_path, "bernoulli.data.R")
-#         stan = os.path.join(datafiles_path, "bernoulli.stan")
-#         output = os.path.join(tmpfiles_path, "summary-inputs")
-#         model = compile_model(stan)
-#         post_sample = sample(model, data_file=rdata, csv_output_file=output)
-#         sum_array = summary(runset)
-#         # self.assertTrue(os.path.exists(transcript))
-# 
-# 
-#     def test_summary_2_good(self):
-#         rdata = os.path.join(datafiles_path, "bernoulli.data.R")
-#         stan = os.path.join(datafiles_path, "bernoulli.stan")
-#         output = os.path.join(tmpfiles_path, "summary-inputs")
-#         model = compile_model(stan)
-#         runset = sample(model, data_file=rdata, csv_output_file=output)
-#         transcript = os.path.join(tmpfiles_path, "summary-test2.txt")
-#         summary(runset, transcript, sig_figs=10)
-#         self.assertTrue(os.path.exists(transcript))
-# 
-# 
+class SummaryTest(unittest.TestCase):
+    def test_summary_good(self):
+        rdata = os.path.join(datafiles_path, "bernoulli.data.R")
+        stan = os.path.join(datafiles_path, "bernoulli.stan")
+        output = os.path.join(tmpfiles_path, "summary-inputs")
+        model = compile_model(stan)
+        post_sample = sample(model, data_file=rdata, csv_output_file=output)
+        df = summary(post_sample)
+        print(df.shape)
+        self.assertTrue(df.shape == (8, 9))
+
+
 # class DiagnoseTest(unittest.TestCase):
 #     def test_diagnose_divergences(self):
 #         stan = os.path.join(datafiles_path, "bernoulli.stan")
@@ -165,7 +153,7 @@ class SampleTest(unittest.TestCase):
 #         with open(transcript, 'r') as myfile:
 #             contents = myfile.read()
 #         self.assertEqual(contents, 'Processing completed\n')
- 
+  
 if __name__ == '__main__':
     unittest.main()
 

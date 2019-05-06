@@ -119,26 +119,24 @@ def sample(stan_model:Model=None,
                 msg = '{}, chain {} returned error code {}'.format(
                     msg, i, runset.retcode(i))
         raise Exception(msg)
-    column_names = runset.column_names # also checks runset is valid
-    chains = runset.chains
-    draws = runset.draws
-    post_sample = PosteriorSample(chains, draws, column_names, runset.output_files)
+    run_dict = runset.validate_csv_files()
+    post_sample = PosteriorSample(run_dict, runset.output_files)
     return post_sample
 
-def summary(runset:RunSet=None) -> pd.DataFrame:
+def summary(post_sample:PosteriorSample=None) -> pd.DataFrame:
     """
-    Run cmdstan/bin/stansummary over all sampler output csv files in runset.
+    Run cmdstan/bin/stansummary over all sampler output csv files in sample.
     Echo stansummary stdout/stderr to console.
     Assemble csv tempfile contents into pandasDataFrame.
     """
-    if runset is None:
-        raise ValueError('summary command requires specified RunSet from sampler')
-    names = runset.get_column_names()  # also checks runset is valid
+    if post_sample is None:
+        raise ValueError('no PosteriorSample specified')
+    names = post_sample.column_names
     cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
     tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
-        runset.args.model.name, runset.chains)
+        post_sample.model, post_sample.chains)
     fd, tmp_csv_path = tempfile.mkstemp(suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True)
-    cmd = '{} --csv_file={} {}'.format(cmd_path, tmp_csv_path, ' '.join(runset.output_files))
+    cmd = '{} --csv_file={} {}'.format(cmd_path, tmp_csv_path, ' '.join(post_sample.csv_files))
     do_command(cmd.split())  # breaks on all whitespace
     summary_data = pd.read_csv(tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#')
     return summary_data

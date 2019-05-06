@@ -268,7 +268,6 @@ class RunSet(object):
         """per-chain console transcript files."""
         self.__retcodes = [-1 for _ in range(chains)]
         """per-chain return codes."""
-        self.__column_names = None
         if chains < 1:
             raise ValueError(
                 'chains must be positive integer value, found {i]}'.format(chains))
@@ -300,24 +299,6 @@ class RunSet(object):
     @property
     def chains(self) -> int:
         return self.__chains
-
-    @property
-    def draws(self) -> int:
-        """Get draws per chain."""
-        if self.__draws is None and self.check_retcodes():
-            sample_dict = self.validate_csv_files()
-            self.__draws = sample_dict['draws']
-            self.__column_names = sample_dict['column_names']  # call validate once
-        return self.__draws
-
-    @property
-    def column_names(self) -> (str, ...):
-        """Get csv file column names."""
-        if self.__column_names is None and self.check_retcodes():
-            sample_dict = self.validate_csv_files()
-            self.__column_names = sample_dict['column_names']
-            self.__draws = sample_dict['draws']  # call validate once
-        return self.__column_names
 
     def check_console_msgs(self) -> bool:
         """Checks console messages for each chain."""
@@ -351,6 +332,7 @@ class RunSet(object):
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
                                 self.output_files[i], key, dzero[key], d[key]))
+        dzero['chains'] = self.__chains
         return dzero
 
 
@@ -358,35 +340,24 @@ class RunSet(object):
 class PosteriorSample(object):
     """Assembled draws from all chains in a RunSet."""
 
-    def __init__(self, chains:int=None, draws:int=None, column_names:(str, ...)=None,
-                     csv_files:(str, ...)=None) -> None:
+    def __init__(self, run:Dict=None, csv_files:(str, ...)=None) -> None:
         """Initialize object."""
-        self.__chains = chains
-        """number of chains"""
-        self.__draws = draws
-        """number of chains"""
-        self.__column_names = column_names
-        """csv output header."""
+        self.__run = run
+        """sampler run info."""
         self.__csv_files = csv_files
         """sampler output csv files."""
         self.__sample = None
         """assembled draws across all chains, stored column major."""
-        if chains is None:
-            raise ValueError('must specify chains')
-        if draws is None:
-            raise ValueError('must specify draws')
-        if column_names is None:
-            raise ValueError('must specify columns')
-        if len(column_names) == 0:
-            raise ValueError('no column names specified')
+        if run is None:
+            raise ValueError('missing sampler run info')
         if csv_files is None:
             raise ValueError('must specify sampler output csv files')
-        if len(csv_files) != chains:
-            raise ValueError('expecting {} sampler output files, found {}'.format(
-                chains, len(csv_files)))
-        for i in range(chains):
-            if not os.path.exists(csv_files[i]):
-                raise ValueError('no such file {}'.format(csv_files[i]))
+        for x in csv_files:
+            if not os.path.exists(x):
+                raise ValueError('no such file {}'.format(x))
+        self.__chains = run['chains']
+        self.__draws = run['draws']
+        self.__column_names = run['column_names']
 
     def get_sample(self) -> np.ndarray:
         sample = np.empty((self.__draws, self.__chains, len(self.__column_names)),
@@ -415,6 +386,10 @@ class PosteriorSample(object):
 #    def extract_sampler_params(self) -> pd.DataFrame:
 
     @property
+    def model(self) -> str:
+        return self.__run['model']
+
+    @property
     def draws(self) -> int:
         return self.__draws
 
@@ -429,6 +404,10 @@ class PosteriorSample(object):
     @property
     def column_names(self) -> (str, ...):
         return self.__column_names
+
+    @property
+    def csv_files(self) -> (str, ...):
+        return self.__csv_files
 
     @property
     def sample(self) -> np.ndarray:
