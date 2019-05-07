@@ -3,7 +3,7 @@ import os.path
 import unittest
 import json
 
-from cmdstanpy import config
+from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
 from cmdstanpy.lib import StanData
 from cmdstanpy.utils import scan_stan_csv
 
@@ -20,7 +20,7 @@ y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
 class ConfigTest(unittest.TestCase):
     def test_path(self):
         abs_rel_path = os.path.abspath(os.path.join("releases", "cmdstan"))
-        self.assertEqual(abs_rel_path, config.CMDSTAN_PATH)
+        self.assertEqual(abs_rel_path, CMDSTAN_PATH)
 
 
 class StanDataTest(unittest.TestCase):
@@ -52,7 +52,7 @@ class ReadStanCsvTest(unittest.TestCase):
         self.assertEqual('10', dict['num_samples'])
         self.assertFalse('save_warmup' in dict)
         self.assertEqual(10, dict['draws'])
-        self.assertEqual(8, len(dict['col_headers']))
+        self.assertEqual(8, len(dict['column_names']))
 
     def test_scan_csv_2(self):
         csv_bad = os.path.join(datafiles_path, "no_such_file.csv")

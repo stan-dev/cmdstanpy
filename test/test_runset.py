@@ -18,7 +18,7 @@ class RunSetTest(unittest.TestCase):
     def test_check_retcodes(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(goodfiles_path, "bern")
         args = SamplerArgs(model,
@@ -29,14 +29,14 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        retcodes = runset.get_retcodes()
+        retcodes = runset.retcodes
         self.assertEqual(4, len(retcodes))
         for i in range(len(retcodes)):
-            self.assertEqual(-1, runset.get_retcode(i))
+            self.assertEqual(-1, runset.retcode(i))
         runset.set_retcode(0, 0)
-        self.assertEqual(0, runset.get_retcode(0))
+        self.assertEqual(0, runset.retcode(0))
         for i in range(1, len(retcodes)):
-            self.assertEqual(-1, runset.get_retcode(i))
+            self.assertEqual(-1, runset.retcode(i))
         self.assertFalse(runset.check_retcodes())
         for i in range(1, len(retcodes)):
             runset.set_retcode(i, 0)
@@ -46,7 +46,7 @@ class RunSetTest(unittest.TestCase):
         # construct runset using existing sampler output
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(goodfiles_path, "bern")
         args = SamplerArgs(model,
@@ -57,21 +57,21 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        retcodes = runset.get_retcodes()
+        retcodes = runset.retcodes
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
         runset.check_console_msgs()
         dict = runset.validate_csv_files()
+        self.assertEqual(4, runset.chains)
         self.assertEqual(100, dict['draws'])
-        self.assertEqual(8, len(dict['col_headers']))
-        self.assertEqual("lp__", dict['col_headers'][0])
-        self.assertEqual((4,100,8), runset.get_sample_shape())
+        self.assertEqual(8, len(dict['column_names']))
+        self.assertEqual("lp__", dict['column_names'][0])
 
     def test_validate_bad_transcript(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(badfiles_path, "bad-transcript-bern")
         args = SamplerArgs(model,
@@ -88,7 +88,7 @@ class RunSetTest(unittest.TestCase):
     def test_validate_bad_hdr(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(badfiles_path, "bad-hdr-bern")
         args = SamplerArgs(model,
@@ -99,7 +99,7 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        retcodes = runset.get_retcodes()
+        retcodes = runset.retcodes
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
@@ -110,7 +110,7 @@ class RunSetTest(unittest.TestCase):
         # construct runset using existing sampler output
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(badfiles_path, "bad-draws-bern")
         args = SamplerArgs(model,
@@ -121,7 +121,7 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        retcodes = runset.get_retcodes()
+        retcodes = runset.retcodes
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
@@ -132,7 +132,7 @@ class RunSetTest(unittest.TestCase):
         # construct runset using existing sampler output
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
-        model = Model(exe_file=exe, stan_file=stan, name="bern")
+        model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         output = os.path.join(badfiles_path, "bad-cols-bern")
         args = SamplerArgs(model,
@@ -143,7 +143,7 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        retcodes = runset.get_retcodes()
+        retcodes = runset.retcodes
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())

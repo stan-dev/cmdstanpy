@@ -2,8 +2,29 @@
 Utility functions
 """
 
-from typing import Dict
+import subprocess
 import numpy as np
+from typing import Dict
+
+def do_command(cmd:str, cwd:str=None) -> None:
+    """
+    Spawn process, print stdout/stderr to console.
+    Throws exception on non-zero returncode.
+    """
+    proc = subprocess.Popen(
+        cmd,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    if (proc.returncode):
+        if stderr:
+            print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
+        raise Exception('Command failed: {}'.format(cmd))
+    if stdout:
+        print(stdout.decode('ascii').strip())
 
 
 def _rdump_array(key:str, val:np.ndarray) -> str:
@@ -85,31 +106,4 @@ def scan_stan_csv(filename:str) -> Dict:
             filename, draws_spec, draws_found))
     dict['draws'] = draws_found
     return dict
-
-def scan_stansummary_csv(filename:str, summary_data:np.recarray) -> None:
-    with open("foo.csv") as fp:
-        line = fp.readline()
-        for line in fp:
-            if line.startswith('#'):
-                break
-            cells = line.split(',')
-            col = cells[0]
-            for row in range(1, len(cells)):
-                summary_data[col,row] = float(cells[row+1])
             
-
-# create named temporary file - persist as long as necessary
-# import tempfile, shutil
-# f = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
-# f.write('foo')
-# file_name = f.name
-# f.close()
-# shutil.copy(file_name, 'bar.txt')
-# os.remove(file_name)
-## need to check output files
-        if self.output_file is None:
-            basename = 'stan-{}-'.format(
-                os.path.basename(os.path.splitext(self.model.stan_file)[0]))
-            fd, temp_path = tempfile.Makemkstemp(prefix=basename, dir=TMPDIR, text=True)
-            os.remove(temp_path)  # cleanup
-            self.output_file=temp_path

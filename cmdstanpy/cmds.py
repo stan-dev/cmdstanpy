@@ -13,6 +13,7 @@ import pandas as pd
 
 from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
 from cmdstanpy.lib import Model, RunSet, SamplerArgs, PosteriorSample
+from cmdstanpy.utils import do_command
 
 def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
     """Compile the given Stan model file to an executable.
@@ -56,7 +57,6 @@ def sample(stan_model:Model=None,
            data_file:str=None,
            init_param_values:str=None,
            csv_output_file:str=None,
-           console_output_file:str=None,
            refresh:int=None,
            post_warmup_draws_per_chain:int=None,
            warmup_draws_per_chain:int=None,
@@ -103,9 +103,7 @@ def sample(stan_model:Model=None,
         print('requested {} cores, only {} available'.format(
             cores, cpu_count()))
         cores = cpu_count()
-    runset = RunSet(args=args,
-                    chains=chains,
-                    console_file=console_output_file)
+    runset = RunSet(args=args, chains=chains)
     tp = ThreadPool(cores)
     for i in range(chains):
         tp.apply_async(do_sample, (
@@ -122,39 +120,9 @@ def sample(stan_model:Model=None,
                     msg, i, runset.retcode(i))
         raise Exception(msg)
     run_dict = runset.validate_csv_files()
-    post_sample = PosteriorSample(run_dict, runset.output_files)
+    post_sample = PosteriorSample(run_dict, runset.csv_files)
     return post_sample
 
-def summary(post_sample:PosteriorSample=None) -> pd.DataFrame:
-    """
-    Run cmdstan/bin/stansummary over all sampler output csv files in sample.
-    Echo stansummary stdout/stderr to console.
-    Assemble csv tempfile contents into pandasDataFrame.
-    """
-    if post_sample is None:
-        raise ValueError('no PosteriorSample specified')
-    names = post_sample.column_names
-    cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
-    tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
-        post_sample.model, post_sample.chains)
-    fd, tmp_csv_path = tempfile.mkstemp(suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True)
-    cmd = '{} --csv_file={} {}'.format(cmd_path, tmp_csv_path, ' '.join(post_sample.csv_files))
-    do_command(cmd.split())  # breaks on all whitespace
-    summary_data = pd.read_csv(tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#')
-    return summary_data
-
-
-def diagnose(runset:RunSet=None) -> None:
-    """
-    Run cmdstan/bin/diagnose on runset.
-    Echo diagnose stdout/stderr to console.
-    """
-    if runset is None:
-        raise ValueError('summary command requires specified RunSet from sampler')
-    cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
-    csv_files = ' '.join(runset.output_files)
-    cmd = '{} {} '.format(cmd_path, csv_files)
-    do_command(cmd=cmd.split())
 
 
 def do_sample(runset:RunSet, idx:int) -> None:
@@ -179,23 +147,3 @@ def do_sample(runset:RunSet, idx:int) -> None:
             transcript.write(stderr.decode('ascii'))
     runset.set_retcode(idx, proc.returncode)
 
-
-def do_command(cmd:str, cwd:str=None) -> None:
-    """
-    Spawn process, print stdout/stderr to console.
-    Throws exception on non-zero returncode.
-    """
-    proc = subprocess.Popen(
-        cmd,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    proc.wait()
-    stdout, stderr = proc.communicate()
-    if (proc.returncode):
-        if stderr:
-            print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
-        raise Exception('Command failed: {}'.format(cmd))
-    if stdout:
-        print(stdout.decode('ascii').strip())

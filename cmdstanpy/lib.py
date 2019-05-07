@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
-from cmdstanpy.utils import rdump, scan_stan_csv
+from cmdstanpy.utils import do_command, rdump, scan_stan_csv
 
 
 class Model(object):
@@ -243,12 +243,12 @@ class SamplerArgs(object):
             cmd = '{} metric_file="{}"'.format(cmd, self.hmc_metric_file)
         return cmd
 
-# TODO: RunSet uses secure temp files - registers names of files, once created, not deleted
-# add "save" operation - moves tempfiles to specified permanent dir
+# RunSet uses temp files - registers names of files, once created, not deleted
+# TODO: add "save" operation - moves tempfiles to specified permanent dir
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args:SamplerArgs, chains:int=1, console_file:str=None) -> None:
+    def __init__(self, args:SamplerArgs, chains:int=1) -> None:
         """Initialize object."""
         self.__chains = chains
         """number of chains."""
@@ -257,7 +257,7 @@ class RunSet(object):
                 'chains must be positive integer value, found {i]}'.format(chains))
         self.args = args
         """sampler args."""
-        self.output_files = []
+        self.csv_files = []
         """per-chain sample csv files."""
         if args.output_file is None:
             csv_basename = 'stan-{}-draws'.format(args.model.name)
@@ -265,33 +265,25 @@ class RunSet(object):
                 fd = tempfile.NamedTemporaryFile(
                     mode='w+', prefix='{}-{}-'.format(csv_basename, i + 1),
                     suffix='.csv', dir=TMPDIR, delete=False)
-                self.output_files.append(fd.name)
+                self.csv_files.append(fd.name)
         else:
             for i in range(chains):
-                self.output_files.append(
+                self.csv_files.append(
                     '{}-{}.csv'.format(args.output_file, i + 1))
-        self.cmds = [args.compose_command(i + 1, self.output_files[i]) for i in range(chains)]
+        self.console_files = []
+        """per-chain sample console output files."""
+        for i in range(chains):
+            txt_file = ''.join([os.path.splitext(self.csv_files[i])[0], '.txt'])
+            self.console_files.append(txt_file)
+        self.cmds = [args.compose_command(i + 1, self.csv_files[i]) for i in range(chains)]
         """per-chain sampler command."""
         self.__retcodes = [-1 for _ in range(chains)]
         """per-chain return codes."""
-        self.console_files = []
-        """per-chain sample console output files."""
-        if console_file is None:
-            console_basename = 'stan-{}-console'.format(args.model.name)
-            for i in range(chains):
-                fd = tempfile.NamedTemporaryFile(
-                    mode='w+', prefix='{}-{}-'.format(console_basename, i + 1),
-                    suffix='.txt', dir=TMPDIR, delete=False)
-                self.console_files.append(fd.name)
-        else:
-            console_file = os.path.splitext(console_file)[0]
-            for i in range(chains):
-                self.console_files.append(
-                    '{}-{}.txt'.format(console_file, i + 1))
 
     def __repr__(self) -> str:
-        return 'RunSet(args={}, chains={}, csv_files={})'.format(
-            self.args, self.__chains, self.output_files)
+        return 'RunSet(args={}, chains={}\ncsv_files={}\nconsole_files={})'.format(
+            self.args, self.__chains,
+            '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files))
 
     @property
     def retcodes(self) -> List[int]:
@@ -340,15 +332,15 @@ class RunSet(object):
         dzero = {}
         for i in range(self.__chains):
             if i == 0:
-                dzero = scan_stan_csv(self.output_files[i])
+                dzero = scan_stan_csv(self.csv_files[i])
             else:
-                d = scan_stan_csv(self.output_files[i])
+                d = scan_stan_csv(self.csv_files[i])
                 for key in dzero:
                     if key != 'id' and dzero[key] != d[key]:
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
-                                self.output_files[i], key, dzero[key], d[key]))
+                                self.csv_files[i], key, dzero[key], d[key]))
         dzero['chains'] = self.__chains
         return dzero
 
@@ -357,7 +349,7 @@ class RunSet(object):
 class PosteriorSample(object):
     """Assembled draws from all chains in a RunSet."""
 
-    def __init__(self, run:Dict=None, csv_files:(str, ...)=None) -> None:
+    def __init__(self, run:Dict=None, csv_files:Tuple[str]=None) -> None:
         """Initialize object."""
         self.__run = run
         """sampler run info."""
@@ -369,9 +361,9 @@ class PosteriorSample(object):
             raise ValueError('missing sampler run info')
         if csv_files is None:
             raise ValueError('must specify sampler output csv files')
-        for x in csv_files:
-            if not os.path.exists(x):
-                raise ValueError('no such file {}'.format(x))
+        for i in range(len(csv_files)):
+            if not os.path.exists(csv_files[i]):
+                raise ValueError('no such file {}'.format(csv_files[i]))
         self.__chains = run['chains']
         self.__draws = run['draws']
         self.__column_names = run['column_names']
@@ -391,6 +383,39 @@ class PosteriorSample(object):
                     sample[draw, chain, :] = vs
                     draw += 1
         return sample
+
+    def summary(self) -> pd.DataFrame:
+        """
+        Run cmdstan/bin/stansummary over all output csv files.
+        Echo stansummary stdout/stderr to console.
+        Assemble csv tempfile contents into pandasDataFrame.
+        """
+        names = self.column_names
+        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
+        tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
+            self.model, self.chains)
+        fd, tmp_csv_path = tempfile.mkstemp(suffix='.csv', prefix=tmp_csv_file,
+                                                dir=TMPDIR, text=True)
+        cmd = '{} --csv_file={} {}'.format(
+            cmd_path, tmp_csv_path, ' '.join(self.csv_files))
+        do_command(cmd.split())  # breaks on all whitespace
+        summary_data = pd.read_csv(tmp_csv_path, delimiter=',',
+                                       header=0, index_col=0, comment='#')
+        return summary_data
+
+
+    def diagnose(self) -> None:
+        """
+        Run cmdstan/bin/diagnose over all output csv files.
+        Echo diagnose stdout/stderr to console.
+        """
+        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
+        csv_files = ' '.join(self.csv_files)
+        cmd = '{} {} '.format(cmd_path, csv_files)
+        do_command(cmd=cmd.split())
+
+
+
     
     def extract(self) -> pd.DataFrame:
         if self.__sample is None:
