@@ -2,6 +2,7 @@ import os
 import os.path
 import subprocess
 import tempfile
+
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from typing import List, Dict, Tuple
@@ -21,6 +22,7 @@ def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
         raise Exception('no such stan_file {}'.format(stan_file))
     path = os.path.abspath(os.path.dirname(stan_file))
     program_name = os.path.basename(stan_file)
+    # what about Windows????
     model_name = os.path.splitext(program_name)[0]
 
     hpp_name = model_name + '.hpp'
@@ -160,6 +162,7 @@ def do_sample(runset:RunSet, idx:int) -> None:
     Spawn process, capture console output to file, record returncode.
     """
     cmd = runset.cmds[idx]
+    print('do sample: {}'.format(cmd))
     proc = subprocess.Popen(
         cmd.split(),
         stdout=subprocess.PIPE,

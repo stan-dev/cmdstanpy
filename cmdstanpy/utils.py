@@ -106,3 +106,10 @@ def scan_stansummary_csv(filename:str, summary_data:np.recarray) -> None:
 # f.close()
 # shutil.copy(file_name, 'bar.txt')
 # os.remove(file_name)
+## need to check output files
+        if self.output_file is None:
+            basename = 'stan-{}-'.format(
+                os.path.basename(os.path.splitext(self.model.stan_file)[0]))
+            fd, temp_path = tempfile.Makemkstemp(prefix=basename, dir=TMPDIR, text=True)
+            os.remove(temp_path)  # cleanup
+            self.output_file=temp_path

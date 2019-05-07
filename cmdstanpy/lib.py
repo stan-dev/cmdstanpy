@@ -1,12 +1,15 @@
 import os
 import os.path
 import re
+import tempfile
+
 from typing import List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
 
-from .utils import rdump, scan_stan_csv
+from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
+from cmdstanpy.utils import rdump, scan_stan_csv
 
 
 class Model(object):
@@ -28,7 +31,7 @@ class Model(object):
         filename = os.path.split(stan_file)[1]
         if len(filename) < 6 or not filename.endswith('.stan'):
             raise ValueError('invalid stan filename {}'.format(self.stan_file))
-        self.name = os.path.splitext(filename)[0]
+        self.__name = os.path.splitext(filename)[0]
 
     def __repr__(self) -> str:
         return 'Model(stan_file="{}", exe_file="{}")'.format(
@@ -43,6 +46,11 @@ class Model(object):
         except IOError:
             print('Cannot read file: {}'.format(self.stan_file))
         return code
+
+    @property
+    def name(self) -> str:
+        return self.__name
+
 
 
 # rewrite - constructor takes Dict, optional filename
@@ -147,16 +155,15 @@ class SamplerArgs(object):
         if not os.path.exists(self.model.exe_file):
             raise ValueError('cannot access model executible "{}"'.format(
                 self.model.exe_file))
-        if self.output_file is None:
-            raise ValueError('no output file specified')
-        if self.output_file.endswith('.csv'):
-            self.output_file = self.output_file[:-4]
-        try:
-            with open(self.output_file, 'w+') as fd:
-                pass
-            os.remove(self.output_file)  # cleanup after test
-        except Exception:
-            raise ValueError('invalid path for output csv files')
+        if self.output_file is not None:
+            try:
+                with open(self.output_file, 'w+') as fd:
+                    pass
+                os.remove(self.output_file)  # cleanup
+            except Exception:
+                raise ValueError('invalid path for output files: {}'.format(self.output_file))
+            if self.output_file.endswith('.csv'):
+                self.output_file = self.output_file[:-4]
         if self.seed is None:
             rng = np.random.RandomState()
             self.seed = rng.randint(1, 99999 + 1)
@@ -190,7 +197,7 @@ class SamplerArgs(object):
         # positive int values
         pass
 
-    def compose_command(self, chain_id:int) -> str:
+    def compose_command(self, chain_id:int, csv_file:str) -> str:
         """compose command string for CmdStan for non-default arg values.
         """
         cmd = '{} id={}'.format(self.model.exe_file, chain_id)
@@ -200,8 +207,7 @@ class SamplerArgs(object):
             cmd = '{} data file={}'.format(cmd, self.data_file)
         if self.init_param_values is not None:
             cmd = '{} init={}'.format(cmd, self.init_param_values)
-        output_file = '{}-{}.csv'.format(self.output_file, chain_id)
-        cmd = '{} output file={}'.format(cmd, output_file)
+        cmd = '{} output file={}'.format(cmd, csv_file)
         if self.refresh is not None:
             cmd = '{} refresh={}'.format(cmd, self.refresh)
         cmd = cmd + ' method=sample'
@@ -237,8 +243,6 @@ class SamplerArgs(object):
             cmd = '{} metric_file="{}"'.format(cmd, self.hmc_metric_file)
         return cmd
 
-
-
 # TODO: RunSet uses secure temp files - registers names of files, once created, not deleted
 # add "save" operation - moves tempfiles to specified permanent dir
 class RunSet(object):
@@ -248,33 +252,46 @@ class RunSet(object):
         """Initialize object."""
         self.__chains = chains
         """number of chains."""
-        self.args = args
-        """sampler args."""
-        if console_file is None:
-            self.__console_file = self.args.output_file
-        else:
-            self.__console_file = console_file
-        """base filename for console output transcript files."""
-        self.cmds = [args.compose_command(i + 1) for i in range(chains)]
-        self.output_files = [
-            '{}-{}.csv'.format(self.args.output_file, i + 1)
-            for i in range(chains)
-        ]
-        """per-chain sample csv files."""
-        self.console_files = [
-            '{}-{}.txt'.format(self.__console_file, i + 1)
-            for i in range(chains)
-        ]
-        """per-chain console transcript files."""
-        self.__retcodes = [-1 for _ in range(chains)]
-        """per-chain return codes."""
         if chains < 1:
             raise ValueError(
                 'chains must be positive integer value, found {i]}'.format(chains))
+        self.args = args
+        """sampler args."""
+        self.output_files = []
+        """per-chain sample csv files."""
+        if args.output_file is None:
+            csv_basename = 'stan-{}-draws'.format(args.model.name)
+            for i in range(chains):
+                fd = tempfile.NamedTemporaryFile(
+                    mode='w+', prefix='{}-{}-'.format(csv_basename, i + 1),
+                    suffix='.csv', dir=TMPDIR, delete=False)
+                self.output_files.append(fd.name)
+        else:
+            for i in range(chains):
+                self.output_files.append(
+                    '{}-{}.csv'.format(args.output_file, i + 1))
+        self.cmds = [args.compose_command(i + 1, self.output_files[i]) for i in range(chains)]
+        """per-chain sampler command."""
+        self.__retcodes = [-1 for _ in range(chains)]
+        """per-chain return codes."""
+        self.console_files = []
+        """per-chain sample console output files."""
+        if console_file is None:
+            console_basename = 'stan-{}-console'.format(args.model.name)
+            for i in range(chains):
+                fd = tempfile.NamedTemporaryFile(
+                    mode='w+', prefix='{}-{}-'.format(console_basename, i + 1),
+                    suffix='.txt', dir=TMPDIR, delete=False)
+                self.console_files.append(fd.name)
+        else:
+            console_file = os.path.splitext(console_file)[0]
+            for i in range(chains):
+                self.console_files.append(
+                    '{}-{}.txt'.format(console_file, i + 1))
 
     def __repr__(self) -> str:
-        return 'RunSet(args={}, chains={}, console={})'.format(
-            self.args, self.__chains, self.__console_file)
+        return 'RunSet(args={}, chains={}, csv_files={})'.format(
+            self.args, self.__chains, self.output_files)
 
     @property
     def retcodes(self) -> List[int]:
@@ -283,7 +300,7 @@ class RunSet(object):
 
     def check_retcodes(self) -> bool:
         """Checks that all chains have retcode 0."""
-        for i in range(self.chains):
+        for i in range(self.__chains):
             if self.__retcodes[i] != 0:
                 return False
         return True
@@ -304,7 +321,7 @@ class RunSet(object):
         """Checks console messages for each chain."""
         valid = True
         msg = ""
-        for i in range(self.chains):
+        for i in range(self.__chains):
             with open(self.console_files[i], 'r') as fp:
                 contents = fp.read()
                 pat = re.compile(r'^Exception.*$', re.M)
@@ -321,7 +338,7 @@ class RunSet(object):
         Returns Dict with entries for sampler config and drawset .
         """
         dzero = {}
-        for i in range(self.chains):
+        for i in range(self.__chains):
             if i == 0:
                 dzero = scan_stan_csv(self.output_files[i])
             else:
