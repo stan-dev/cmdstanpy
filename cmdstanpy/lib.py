@@ -34,9 +34,8 @@ class Model(object):
         self.__name = os.path.splitext(filename)[0]
 
     def __repr__(self) -> str:
-        return 'Model(stan_file="{}", exe_file="{}")'.format(
-            self.stan_file, self.exe_file)
-
+        return 'Model(name={},  stan_file="{}", exe_file="{}")'.format(
+            self.__name, self.stan_file, self.exe_file)
     def code(self) -> str:
         """Return Stan program as a string."""
         code = None
@@ -368,21 +367,10 @@ class PosteriorSample(object):
         self.__draws = run['draws']
         self.__column_names = run['column_names']
 
-    def get_sample(self) -> np.ndarray:
-        sample = np.empty((self.__draws, self.__chains, len(self.__column_names)),
-                              dtype=float, order='F')
-        for chain in range(self.__chains):
-            print("chain: {}".format(chain))
-            draw = 0
-            with open(self.__csv_files[chain], 'r') as fd:
-                for line in fd:
-                    if line.startswith('#') or line.startswith('lp__,'):
-                        continue
-                    print(line.strip())
-                    vs = [float(x) for x in line.split(',')]
-                    sample[draw, chain, :] = vs
-                    draw += 1
-        return sample
+
+    def __repr__(self) -> str:
+        return 'PosteriorSample(chains={},  draws={}, columns={})'.format(
+            self.__chains, self.__draws, len(self.__column_names))
 
     def summary(self) -> pd.DataFrame:
         """
@@ -412,9 +400,11 @@ class PosteriorSample(object):
         cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
         csv_files = ' '.join(self.csv_files)
         cmd = '{} {} '.format(cmd_path, csv_files)
-        do_command(cmd=cmd.split())
-
-
+        result = do_command(cmd=cmd.split())
+        if result is None:
+            print("No problems detected.")
+        else:
+            print(result)
 
     
     def extract(self) -> pd.DataFrame:
@@ -423,9 +413,6 @@ class PosteriorSample(object):
         data = self.__sample.reshape((self.__draws*self.__chains),len(self.__column_names),
                                          order='A')
         return pd.DataFrame(data=data, columns=self.__column_names)
-
-#    def extract_sampler_state(self) -> pd.DataFrame:
-#    def extract_sampler_params(self) -> pd.DataFrame:
 
     @property
     def model(self) -> str:
@@ -453,9 +440,17 @@ class PosteriorSample(object):
 
     @property
     def sample(self) -> np.ndarray:
-        if self.__sample is not None:
-            return self.__sample
-        self.__sample = self.get_sample()
+        if self.__sample is None:
+            sample = np.empty((self.__draws, self.__chains, len(self.__column_names)),
+                                  dtype=float, order='F')
+            for chain in range(self.__chains):
+                draw = 0
+                with open(self.__csv_files[chain], 'r') as fd:
+                    for line in fd:
+                        if line.startswith('#') or line.startswith('lp__,'):
+                            continue
+                        vs = [float(x) for x in line.split(',')]
+                        sample[draw, chain, :] = vs
+                        draw += 1
+            self.__sample = sample     
         return self.__sample
-
-

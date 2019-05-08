@@ -6,7 +6,7 @@ import subprocess
 import numpy as np
 from typing import Dict
 
-def do_command(cmd:str, cwd:str=None) -> None:
+def do_command(cmd:str, cwd:str=None) -> str:
     """
     Spawn process, print stdout/stderr to console.
     Throws exception on non-zero returncode.
@@ -21,11 +21,11 @@ def do_command(cmd:str, cwd:str=None) -> None:
     stdout, stderr = proc.communicate()
     if (proc.returncode):
         if stderr:
-            print('ERROR\n {} '.format(stderr.decode('ascii').strip()))
-        raise Exception('Command failed: {}'.format(cmd))
+            msg = 'ERROR\n {} '.format(stderr.decode('ascii').strip())
+        raise Exception(msg)
     if stdout:
-        print(stdout.decode('ascii').strip())
-
+        return stdout.decode('ascii').strip()
+    return None
 
 def _rdump_array(key:str, val:np.ndarray) -> str:
     """Flatten numpy ndarray, format as Rdump variable declaration."""

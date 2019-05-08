@@ -130,7 +130,7 @@ def do_sample(runset:RunSet, idx:int) -> None:
     Spawn process, capture console output to file, record returncode.
     """
     cmd = runset.cmds[idx]
-    print('do sample: {}'.format(cmd))
+    print('start chain {}.\n'.format(idx+1))
     proc = subprocess.Popen(
         cmd.split(),
         stdout=subprocess.PIPE,
@@ -139,6 +139,7 @@ def do_sample(runset:RunSet, idx:int) -> None:
     proc.wait()
     stdout, stderr = proc.communicate()
     transcript_file = runset.console_files[idx]
+    print('finish chain {}.\n'.format(idx+1))
     with open(transcript_file, "w+") as transcript:
         if stdout:
             transcript.write(stdout.decode('ascii'))
