@@ -1,5 +1,6 @@
 import os
 import os.path
+import platform
 import subprocess
 import tempfile
 
@@ -18,12 +19,10 @@ from cmdstanpy.utils import do_command
 def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
     """Compile the given Stan model file to an executable.
     """
-    print("compile_model, CMDSTAN_PATH={}".format(CMDSTAN_PATH))
     if not os.path.exists(stan_file):
         raise Exception('no such stan_file {}'.format(stan_file))
     path = os.path.abspath(os.path.dirname(stan_file))
     program_name = os.path.basename(stan_file)
-    # what about Windows????
     model_name = os.path.splitext(program_name)[0]
 
     hpp_name = model_name + '.hpp'
@@ -38,6 +37,8 @@ def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
             raise Exception('syntax error'.format(stan_file))
 
     exe_file = os.path.join(path, model_name)
+    if platform.system().lower().startswith('win'):
+        exe_file += '.exe'
     if not overwrite and os.path.exists(exe_file):
         # print('model is up to date') # notify user or not?
         return Model(stan_file, exe_file)
@@ -124,13 +125,13 @@ def sample(stan_model:Model=None,
     return post_sample
 
 
-
 def do_sample(runset:RunSet, idx:int) -> None:
     """
+    Encapsulates call to sampler.
     Spawn process, capture console output to file, record returncode.
     """
     cmd = runset.cmds[idx]
-    print('start chain {}.\n'.format(idx+1))
+    print('start chain {}.  '.format(idx+1))
     proc = subprocess.Popen(
         cmd.split(),
         stdout=subprocess.PIPE,
@@ -139,7 +140,7 @@ def do_sample(runset:RunSet, idx:int) -> None:
     proc.wait()
     stdout, stderr = proc.communicate()
     transcript_file = runset.console_files[idx]
-    print('finish chain {}.\n'.format(idx+1))
+    print('finish chain {}.  '.format(idx+1))
     with open(transcript_file, "w+") as transcript:
         if stdout:
             transcript.write(stdout.decode('ascii'))

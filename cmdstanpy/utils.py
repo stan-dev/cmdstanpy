@@ -106,4 +106,3 @@ def scan_stan_csv(filename:str) -> Dict:
             filename, draws_spec, draws_found))
     dict['draws'] = draws_found
     return dict
-            

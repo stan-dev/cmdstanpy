@@ -52,7 +52,7 @@ class Model(object):
 
 
 
-# rewrite - constructor takes Dict, optional filename
+# TODO:  handle JSON, save to disk
 # see https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
 # @clsmethod rdump, json (default)
 
@@ -242,12 +242,13 @@ class SamplerArgs(object):
             cmd = '{} metric_file="{}"'.format(cmd, self.hmc_metric_file)
         return cmd
 
+
 # RunSet uses temp files - registers names of files, once created, not deleted
 # TODO: add "save" operation - moves tempfiles to specified permanent dir
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args:SamplerArgs, chains:int=1) -> None:
+    def __init__(self, args:SamplerArgs, chains:int=2) -> None:
         """Initialize object."""
         self.__chains = chains
         """number of chains."""
@@ -344,7 +345,7 @@ class RunSet(object):
         return dzero
 
 
-
+# TODO:  save sample - mv csv tempfiles to permanent location
 class PosteriorSample(object):
     """Assembled draws from all chains in a RunSet."""
 
@@ -367,7 +368,6 @@ class PosteriorSample(object):
         self.__draws = run['draws']
         self.__column_names = run['column_names']
 
-
     def __repr__(self) -> str:
         return 'PosteriorSample(chains={},  draws={}, columns={})'.format(
             self.__chains, self.__draws, len(self.__column_names))
@@ -389,8 +389,8 @@ class PosteriorSample(object):
         do_command(cmd.split())  # breaks on all whitespace
         summary_data = pd.read_csv(tmp_csv_path, delimiter=',',
                                        header=0, index_col=0, comment='#')
-        return summary_data
-
+        mask = mask = [x == 'lp__' or not x.endswith("__") for x in summary_data.index]
+        return summary_data[mask]
 
     def diagnose(self) -> None:
         """
@@ -405,7 +405,6 @@ class PosteriorSample(object):
             print("No problems detected.")
         else:
             print(result)
-
     
     def extract(self) -> pd.DataFrame:
         if self.__sample is None:
