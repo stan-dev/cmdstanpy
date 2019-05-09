@@ -8,12 +8,12 @@ from cmdstanpy.lib import Model, PosteriorSample
 from cmdstanpy.cmds import compile_model, sample
 
 datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-data"))
+    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
 goodfiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-data",
+    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data",
                  "runset-good"))
 badfiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-data",
+    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data",
                  "runset-bad"))
 
 class PostSampleTest(unittest.TestCase):
@@ -26,7 +26,7 @@ class PostSampleTest(unittest.TestCase):
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
         post_sample = sample(model, data_file=jdata)
         df = post_sample.summary()
-        self.assertTrue(df.shape == (8, 9))
+        self.assertTrue(df.shape == (2, 9))
 
     def test_postsample_diagnose_ok(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
@@ -42,7 +42,7 @@ class PostSampleTest(unittest.TestCase):
         sys.stdout = capturedOutput  
         post_sample.diagnose()
         sys.stdout = sys.__stdout__
-        self.assertEqual(capturedOutput.getvalue(), '')
+        self.assertEqual(capturedOutput.getvalue(), 'No problems detected.\n')
 
     def test_postsample_diagnose_divergences(self):
         output = os.path.join(datafiles_path, "diagnose-good", "corr_gauss_depth8-1.csv")

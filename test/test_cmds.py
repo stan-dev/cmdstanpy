@@ -7,7 +7,7 @@ from cmdstanpy.lib import Model, RunSet, SamplerArgs, PosteriorSample
 from cmdstanpy.cmds import compile_model, sample
 
 datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-data"))
+    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
 tmpfiles_path = os.path.expanduser(
     os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-tmp"))
 

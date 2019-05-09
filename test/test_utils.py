@@ -8,7 +8,7 @@ from cmdstanpy.lib import StanData
 from cmdstanpy.utils import scan_stan_csv
 
 datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-data"))
+    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
 tmpfiles_path = os.path.expanduser(
     os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-tmp"))
 

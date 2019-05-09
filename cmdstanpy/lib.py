@@ -31,11 +31,11 @@ class Model(object):
         filename = os.path.split(stan_file)[1]
         if len(filename) < 6 or not filename.endswith('.stan'):
             raise ValueError('invalid stan filename {}'.format(self.stan_file))
-        self.__name = os.path.splitext(filename)[0]
+        self._name = os.path.splitext(filename)[0]
 
     def __repr__(self) -> str:
         return 'Model(name={},  stan_file="{}", exe_file="{}")'.format(
-            self.__name, self.stan_file, self.exe_file)
+            self._name, self.stan_file, self.exe_file)
     def code(self) -> str:
         """Return Stan program as a string."""
         code = None
@@ -48,7 +48,7 @@ class Model(object):
 
     @property
     def name(self) -> str:
-        return self.__name
+        return self._name
 
 
 
@@ -250,7 +250,7 @@ class RunSet(object):
 
     def __init__(self, args:SamplerArgs, chains:int=2) -> None:
         """Initialize object."""
-        self.__chains = chains
+        self._chains = chains
         """number of chains."""
         if chains < 1:
             raise ValueError(
@@ -277,43 +277,43 @@ class RunSet(object):
             self.console_files.append(txt_file)
         self.cmds = [args.compose_command(i + 1, self.csv_files[i]) for i in range(chains)]
         """per-chain sampler command."""
-        self.__retcodes = [-1 for _ in range(chains)]
+        self._retcodes = [-1 for _ in range(chains)]
         """per-chain return codes."""
 
     def __repr__(self) -> str:
         return 'RunSet(args={}, chains={}\ncsv_files={}\nconsole_files={})'.format(
-            self.args, self.__chains,
+            self.args, self._chains,
             '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files))
 
     @property
     def retcodes(self) -> List[int]:
         """Get list of retcodes for all chains."""
-        return self.__retcodes
+        return self._retcodes
 
     def check_retcodes(self) -> bool:
         """Checks that all chains have retcode 0."""
-        for i in range(self.__chains):
-            if self.__retcodes[i] != 0:
+        for i in range(self._chains):
+            if self._retcodes[i] != 0:
                 return False
         return True
 
     def retcode(self, idx:int) -> int:
         """get retcode for chain[idx]."""
-        return self.__retcodes[idx]
+        return self._retcodes[idx]
 
     def set_retcode(self, idx:int, val:int) -> None:
         """Set retcode for chain[idx] to val."""
-        self.__retcodes[idx] = val
+        self._retcodes[idx] = val
 
     @property
     def chains(self) -> int:
-        return self.__chains
+        return self._chains
 
     def check_console_msgs(self) -> bool:
         """Checks console messages for each chain."""
         valid = True
         msg = ""
-        for i in range(self.__chains):
+        for i in range(self._chains):
             with open(self.console_files[i], 'r') as fp:
                 contents = fp.read()
                 pat = re.compile(r'^Exception.*$', re.M)
@@ -330,7 +330,7 @@ class RunSet(object):
         Returns Dict with entries for sampler config and drawset .
         """
         dzero = {}
-        for i in range(self.__chains):
+        for i in range(self._chains):
             if i == 0:
                 dzero = scan_stan_csv(self.csv_files[i])
             else:
@@ -341,7 +341,7 @@ class RunSet(object):
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
                                 self.csv_files[i], key, dzero[key], d[key]))
-        dzero['chains'] = self.__chains
+        dzero['chains'] = self._chains
         return dzero
 
 
@@ -351,11 +351,11 @@ class PosteriorSample(object):
 
     def __init__(self, run:Dict=None, csv_files:Tuple[str]=None) -> None:
         """Initialize object."""
-        self.__run = run
+        self._run = run
         """sampler run info."""
-        self.__csv_files = csv_files
+        self._csv_files = csv_files
         """sampler output csv files."""
-        self.__sample = None
+        self._sample = None
         """assembled draws across all chains, stored column major."""
         if run is None:
             raise ValueError('missing sampler run info')
@@ -364,13 +364,13 @@ class PosteriorSample(object):
         for i in range(len(csv_files)):
             if not os.path.exists(csv_files[i]):
                 raise ValueError('no such file {}'.format(csv_files[i]))
-        self.__chains = run['chains']
-        self.__draws = run['draws']
-        self.__column_names = run['column_names']
+        self._chains = run['chains']
+        self._draws = run['draws']
+        self._column_names = run['column_names']
 
     def __repr__(self) -> str:
         return 'PosteriorSample(chains={},  draws={}, columns={})'.format(
-            self.__chains, self.__draws, len(self.__column_names))
+            self._chains, self._draws, len(self._column_names))
 
     def summary(self) -> pd.DataFrame:
         """
@@ -407,49 +407,49 @@ class PosteriorSample(object):
             print(result)
     
     def extract(self) -> pd.DataFrame:
-        if self.__sample is None:
-            self.__sample = self.get_sample()
-        data = self.__sample.reshape((self.__draws*self.__chains),len(self.__column_names),
+        if self._sample is None:
+            self._sample = self.get_sample()
+        data = self._sample.reshape((self._draws*self._chains),len(self._column_names),
                                          order='A')
-        return pd.DataFrame(data=data, columns=self.__column_names)
+        return pd.DataFrame(data=data, columns=self._column_names)
 
     @property
     def model(self) -> str:
-        return self.__run['model']
+        return self._run['model']
 
     @property
     def draws(self) -> int:
-        return self.__draws
+        return self._draws
 
     @property
     def chains(self) -> int:
-        return self.__chains
+        return self._chains
 
     @property
     def columns(self) -> int:
-        return len(self.__column_names)
+        return len(self._column_names)
 
     @property
     def column_names(self) -> (str, ...):
-        return self.__column_names
+        return self._column_names
 
     @property
     def csv_files(self) -> (str, ...):
-        return self.__csv_files
+        return self._csv_files
 
     @property
     def sample(self) -> np.ndarray:
-        if self.__sample is None:
-            sample = np.empty((self.__draws, self.__chains, len(self.__column_names)),
+        if self._sample is None:
+            sample = np.empty((self._draws, self._chains, len(self._column_names)),
                                   dtype=float, order='F')
-            for chain in range(self.__chains):
+            for chain in range(self._chains):
                 draw = 0
-                with open(self.__csv_files[chain], 'r') as fd:
+                with open(self._csv_files[chain], 'r') as fd:
                     for line in fd:
                         if line.startswith('#') or line.startswith('lp__,'):
                             continue
                         vs = [float(x) for x in line.split(',')]
                         sample[draw, chain, :] = vs
                         draw += 1
-            self.__sample = sample     
-        return self.__sample
+            self._sample = sample     
+        return self._sample

@@ -5,7 +5,7 @@ import unittest
 from cmdstanpy.lib import Model, SamplerArgs
 
 datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-data"))
+    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
 tmpfiles_path = os.path.expanduser(
     os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-tmp"))
 

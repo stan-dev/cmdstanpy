@@ -5,7 +5,7 @@ from cmdstanpy.lib import Model
 from cmdstanpy.cmds import compile_model
 
 datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-data"))
+    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
 
 code = ('''data {
   int<lower=0> N;
@@ -42,9 +42,9 @@ class ModelTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        m2 = eval(repr(model))
-        self.assertEqual(stan, m2.stan_file)
-        self.assertEqual(exe, m2.exe_file)
+        s = repr(model)
+        self.assertTrue(stan in s)
+        self.assertTrue(exe in s)
 
     def test_print(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
