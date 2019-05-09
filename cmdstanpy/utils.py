@@ -4,7 +4,7 @@ Utility functions
 
 import subprocess
 import numpy as np
-from typing import Dict
+from typing import Dict, List
 
 def do_command(cmd:str, cwd:str=None) -> str:
     """
@@ -106,3 +106,9 @@ def scan_stan_csv(filename:str) -> Dict:
             filename, draws_spec, draws_found))
     dict['draws'] = draws_found
     return dict
+
+def is_prefix(name:str, names:List[str]):
+    for item in names:
+        if item.startswith(name):
+            return True
+    return False

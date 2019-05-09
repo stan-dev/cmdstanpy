@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
-from cmdstanpy.utils import do_command, rdump, scan_stan_csv
+from cmdstanpy.utils import do_command, rdump, scan_stan_csv, is_prefix
 
 
 class Model(object):
@@ -406,13 +406,29 @@ class PosteriorSample(object):
         else:
             print(result)
     
-    def extract(self) -> pd.DataFrame:
+    def extract(self, params:List[str]=None) -> pd.DataFrame:
+        if params is not None:
+            for p in params:
+                    if not is_prefix(p, self._column_names):
+                            raise ValueError('unknown parameter: {}'.format(x))
         if self._sample is None:
             self._sample = self.get_sample()
         data = self._sample.reshape((self._draws*self._chains),len(self._column_names),
                                          order='A')
-        return pd.DataFrame(data=data, columns=self._column_names)
-
+        df = pd.DataFrame(data=data, columns=self._column_names)
+        if params is None:
+            return df
+        mask = []
+        for p in params:
+            for column in self._column_names:
+                name = column.split('.')[0]
+                if name == p:
+                    if not column in mask:
+                        mask.append(column)
+        print(mask)
+        print(type(mask))
+        return df[mask]
+    
     @property
     def model(self) -> str:
         return self._run['model']
@@ -440,16 +456,19 @@ class PosteriorSample(object):
     @property
     def sample(self) -> np.ndarray:
         if self._sample is None:
-            sample = np.empty((self._draws, self._chains, len(self._column_names)),
-                                  dtype=float, order='F')
-            for chain in range(self._chains):
-                draw = 0
-                with open(self._csv_files[chain], 'r') as fd:
-                    for line in fd:
-                        if line.startswith('#') or line.startswith('lp__,'):
-                            continue
-                        vs = [float(x) for x in line.split(',')]
-                        sample[draw, chain, :] = vs
-                        draw += 1
-            self._sample = sample     
+            self._sample = self.get_sample()
         return self._sample
+
+    def get_sample(self) -> np.ndarray:
+        sample = np.empty((self._draws, self._chains, len(self._column_names)),
+                              dtype=float, order='F')
+        for chain in range(self._chains):
+            draw = 0
+            with open(self._csv_files[chain], 'r') as fd:
+                for line in fd:
+                    if line.startswith('#') or line.startswith('lp__,'):
+                        continue
+                    vs = [float(x) for x in line.split(',')]
+                    sample[draw, chain, :] = vs
+                    draw += 1
+        return sample
