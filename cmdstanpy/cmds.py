@@ -83,7 +83,7 @@ def sample(stan_model:Model=None,
         if data_file is None:
             fd = tempfile.NamedTemporaryFile(mode='w+', suffix='.json', dir=TMPDIR, delete=False)
             data_file = fd.name
-            print(data_file)
+            print('input data tempfile: {}'.format(fd.name))
         sd = StanData(data_file)
         sd.write_json(data)
 
@@ -93,6 +93,7 @@ def sample(stan_model:Model=None,
         if init_param_values_file is None:
             fd = tempfile.NamedTemporaryFile(mode='w+', suffix='.json', dir=TMPDIR, delete=False)
             init_param_values_file = fd.name
+            print('init params tempfile: {}'.format(fs.name))
         sd = StanData(init_param_values_file)
         sd.write_json(init_param_values)
 
