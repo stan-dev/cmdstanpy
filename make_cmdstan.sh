@@ -36,6 +36,6 @@ if [[ -h cmdstan ]]; then
 fi
 ln -s ${cs} cmdstan
 cd cmdstan
-make build examples/bernoulli/bernoulli
+make -j2 build examples/bernoulli/bernoulli
 echo "installed $cs"
 echo `ls -lFd releases/*`
