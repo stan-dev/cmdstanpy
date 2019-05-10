@@ -13,6 +13,8 @@ if [[ ! -d releases ]]; then
 fi
 pushd releases
 
+echo `pwd`
+
 VER=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name" | sed -E 's/.*"v([^"]+)".*/\1/'`
 cs=cmdstan-${VER}
 if [[ -d $cs && -f $cs/bin/stanc && -f $cs/examples/bernoulli/bernoulli ]]; then
@@ -21,6 +23,10 @@ if [[ -d $cs && -f $cs/bin/stanc && -f $cs/examples/bernoulli/bernoulli ]]; then
 fi
 
 curl -OL https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${cs}.tar.gz
+
+echo `ls`
+
+
 tar xzf ${cs}.tar.gz
 if [[ -h cmdstan ]]; then
     unlink cmdstan
