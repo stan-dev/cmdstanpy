@@ -4,7 +4,6 @@ import shutil
 import tempfile
 
 
-
 CMDSTAN_PATH = os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
 TMPDIR = tempfile.mkdtemp()
 STANSUMMARY_STATS = ['Mean', 'MCSE', 'StdDev', '5%', '50%', '95%',
