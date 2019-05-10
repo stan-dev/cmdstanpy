@@ -15,7 +15,12 @@ pushd releases
 
 echo `pwd`
 
+TAG=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name"`
+echo $TAG
+
 VER=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name" | sed -E 's/.*"v([^"]+)".*/\1/'`
+echo $VER
+
 cs=cmdstan-${VER}
 if [[ -d $cs && -f $cs/bin/stanc && -f $cs/examples/bernoulli/bernoulli ]]; then
     echo "cmdstan already installed"
