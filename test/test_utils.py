@@ -7,8 +7,8 @@ from cmdstanpy import CMDSTAN_PATH, TMPDIR
 from cmdstanpy.lib import StanData
 from cmdstanpy.utils import scan_stan_csv
 
-datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
+datafiles_path = os.path.join("test", "data")
+
 
 rdump = ('''N <- 10
 y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)

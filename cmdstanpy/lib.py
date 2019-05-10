@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
+from cmdstanpy import CMDSTAN_PATH, TMPDIR
 from cmdstanpy.utils import do_command, jsondump, rdump
 from cmdstanpy.utils import scan_stan_csv, is_prefix
 

@@ -4,14 +4,9 @@ import unittest
 
 from cmdstanpy.lib import Model, RunSet, SamplerArgs
 
-datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
-goodfiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data",
-                 "runset-good"))
-badfiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data",
-                 "runset-bad"))
+datafiles_path = os.path.join("test", "data")
+goodfiles_path = os.path.join(datafiles_path, "runset-good")
+badfiles_path = os.path.join(datafiles_path, "runset-bad")
 
 
 class RunSetTest(unittest.TestCase):

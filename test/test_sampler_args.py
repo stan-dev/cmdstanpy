@@ -5,8 +5,7 @@ import unittest
 from cmdstanpy import TMPDIR
 from cmdstanpy.lib import Model, SamplerArgs
 
-datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
+datafiles_path = os.path.join("test", "data")
 
 
 class SamplerArgsTest(unittest.TestCase):

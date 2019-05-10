@@ -4,8 +4,7 @@ import unittest
 from cmdstanpy.lib import Model
 from cmdstanpy.cmds import compile_model
 
-datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
+datafiles_path = os.path.join("test", "data")
 
 code = ('''data {
   int<lower=0> N;
