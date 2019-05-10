@@ -6,12 +6,12 @@ import tempfile
 
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
-from typing import List, Dict, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
+from cmdstanpy import CMDSTAN_PATH, TMPDIR
 from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs, PosteriorSample
 from cmdstanpy.utils import do_command
 

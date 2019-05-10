@@ -6,8 +6,7 @@ from cmdstanpy import TMPDIR
 from cmdstanpy.lib import Model
 from cmdstanpy.cmds import compile_model, sample
 
-datafiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
+datafiles_path = os.path.join("test", "data")
 
 
 class CompileTest(unittest.TestCase):
@@ -18,7 +17,7 @@ class CompileTest(unittest.TestCase):
             os.remove(exe)
         model = compile_model(stan)
         self.assertEqual(stan, model.stan_file)
-        self.assertEqual(exe, model.exe_file)
+        self.assertTrue(model.exe_file.endswith(exe))
 
     def test_bad(self):
         stan = os.path.join(TMPDIR, "bbad.stan")
