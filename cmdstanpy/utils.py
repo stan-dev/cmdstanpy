@@ -1,7 +1,7 @@
 """
 Utility functions
 """
-
+import json
 import subprocess
 import numpy as np
 from typing import Dict, List
@@ -37,6 +37,13 @@ def _rdump_array(key:str, val:np.ndarray) -> str:
         struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
         return struct
 
+def jsondump(path:str, data:Dict) -> None:
+    """Dump a dict of data to a JSON file."""
+    for key, val in data.items():
+            if isinstance(val, np.ndarray) and val.size > 1:
+                data[key] = val.tolist()
+    with open(path, 'w') as fd:
+        json.dump(data, fd)
 
 def rdump(path:str, data:Dict) -> None:
     """Dump a dict of data to a R dump format file."""
@@ -47,7 +54,6 @@ def rdump(path:str, data:Dict) -> None:
             elif isinstance(val, list) and len(val) > 1:
                 line = _rdump_array(key, np.asarray(val))
             else:
-
                 try:
                     val = val.flat[0]
                 except AttributeError:
@@ -55,7 +61,6 @@ def rdump(path:str, data:Dict) -> None:
                 line = '%s <- %s' % (key, val)
             fd.write(line)
             fd.write('\n')
-
 
 def scan_stan_csv(filename:str) -> Dict:
     """Capture essential config, shape from stan_csv file."""
@@ -107,8 +112,9 @@ def scan_stan_csv(filename:str) -> Dict:
     dict['draws'] = draws_found
     return dict
 
-def is_prefix(name:str, names:List[str]):
-    for item in names:
-        if item.startswith(name):
+def is_prefix(pre:str, names:List[str]):
+    for name in names:
+        if name.startswith(pre) and (len(name) == len(pre)
+                                          or name[len(pre)] == '.'):
             return True
     return False

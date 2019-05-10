@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
-from cmdstanpy.utils import do_command, rdump, scan_stan_csv, is_prefix
+from cmdstanpy.utils import do_command, jsondump, rdump, scan_stan_csv, is_prefix
 
 
 class Model(object):
@@ -57,27 +57,32 @@ class Model(object):
 # @clsmethod rdump, json (default)
 
 class StanData(object):
-    """Stan model data or inits."""
+    """Stan model data or sampler inits."""
 
-    def __init__(self, rdump_file:str=None) -> None:
+    def __init__(self, data_file:str=None) -> None:
         """Initialize object."""
-        self.rdump_file = rdump_file
-        """path to rdump file."""
-        if not os.path.exists(rdump_file):
+        self._data_file = data_file
+        """path to on-disk cmdstan input datafile."""
+        if data_file is not None and not os.path.exists(data_file):
             try:
-                with open(rdump_file, 'w') as fd:
+                with open(data_file, 'w') as fd:
                     pass
-                os.remove(rdump_file)  # cleanup
+                os.remove(data_file)  # cleanup
             except OSError:
-                raise Exception('invalid rdump_file name {}'.format(
-                    self.rdump_file))
+                raise Exception('invalid data_file name {}'.format(data_file))
 
     def __repr__(self) -> str:
-        return 'StanData(rdump_file="{}")'.format(self.rdump_file)
+        return 'StanData(data_file="{}")'.format(self._data_file)
 
     def write_rdump(self, dict:Dict) -> None:
-        rdump(self.rdump_file, dict)
+        rdump(self._data_file, dict)
 
+    def write_json(self, dict:Dict) -> None:
+        jsondump(self._data_file, dict)
+
+    @property
+    def data_file(self) -> str:
+        return self._data_file
 
 class SamplerArgs(object):
     """Full set of arguments for NUTS/HMC sampler."""
@@ -410,7 +415,7 @@ class PosteriorSample(object):
         if params is not None:
             for p in params:
                     if not is_prefix(p, self._column_names):
-                            raise ValueError('unknown parameter: {}'.format(x))
+                            raise ValueError('unknown parameter: {}'.format(p))
         if self._sample is None:
             self._sample = self.get_sample()
         data = self._sample.reshape((self._draws*self._chains),len(self._column_names),
@@ -420,13 +425,11 @@ class PosteriorSample(object):
             return df
         mask = []
         for p in params:
-            for column in self._column_names:
-                name = column.split('.')[0]
-                if name == p:
-                    if not column in mask:
-                        mask.append(column)
-        print(mask)
-        print(type(mask))
+            for name in self._column_names:
+                if name.startswith(p) and (len(p) == len(name)
+                                               or name[len(p)] == '.'):
+                    if not name in mask:
+                        mask.append(name)
         return df[mask]
     
     @property

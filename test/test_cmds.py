@@ -91,6 +91,18 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
 
+    def test_bernoulli_data(self):
+        data_dict = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
+        stan = os.path.join(datafiles_path, "bernoulli.stan")
+        output = os.path.join(tmpfiles_path, "test3-bernoulli-output")
+        model = compile_model(stan)
+        post_sample = sample(model, data=data_dict, csv_output_file=output)
+        for i in range(post_sample.chains):
+            csv_file = post_sample.csv_files[i]
+            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(txt_file))
+
     def test_missing_input(self):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         output = os.path.join(tmpfiles_path, "test4-bernoulli-output")

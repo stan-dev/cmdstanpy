@@ -13,7 +13,7 @@ import pandas as pd
 
 
 from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
-from cmdstanpy.lib import Model, RunSet, SamplerArgs, PosteriorSample
+from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs, PosteriorSample
 from cmdstanpy.utils import do_command
 
 def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
@@ -55,8 +55,10 @@ def sample(stan_model:Model=None,
            chains:int=4,
            cores:int=1,
            seed:int=None,
+           data:Dict=None,
            data_file:str=None,
-           init_param_values:str=None,
+           init_param_values:Dict=None,
+           init_param_values_file:str=None,
            csv_output_file:str=None,
            refresh:int=None,
            post_warmup_draws_per_chain:int=None,
@@ -74,10 +76,30 @@ def sample(stan_model:Model=None,
            hmc_stepsize:float=1.0,
            hmc_stepsize_jitter:float=0) -> RunSet:
     """Run or more chains of the NUTS/HMC sampler."""
+
+    if data is not None and data_file is not None and os.path.exists(data_file):
+            raise ValueError('cannot specify both "data" and "data_file" arguments')
+    if data is not None:
+        if data_file is None:
+            fd = tempfile.NamedTemporaryFile(mode='w+', suffix='.json', dir=TMPDIR, delete=False)
+            data_file = fd.name
+            print(data_file)
+        sd = StanData(data_file)
+        sd.write_json(data)
+
+    if init_param_values is not None and init_param_values_file is not None and os.path.exists(init_param_values_file):
+            raise ValueError('cannot specify both "init_param_values" and "init_param_values_file" arguments')
+    if init_param_values is not None:
+        if init_param_values_file is None:
+            fd = tempfile.NamedTemporaryFile(mode='w+', suffix='.json', dir=TMPDIR, delete=False)
+            init_param_values_file = fd.name
+        sd = StanData(init_param_values_file)
+        sd.write_json(init_param_values)
+
     args = SamplerArgs(model=stan_model,
                        seed=seed,
                        data_file=data_file,
-                       init_param_values=init_param_values,
+                       init_param_values=init_param_values_file,
                        output_file=csv_output_file,
                        refresh=refresh,
                        post_warmup_draws=post_warmup_draws_per_chain,
@@ -148,4 +170,3 @@ def do_sample(runset:RunSet, idx:int) -> None:
             transcript.write('ERROR')
             transcript.write(stderr.decode('ascii'))
     runset.set_retcode(idx, proc.returncode)
-
