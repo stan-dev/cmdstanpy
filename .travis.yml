@@ -6,9 +6,9 @@ python:
   - "3.6"
 
 install:
-  - make_cmdstan.sh
   - pip install -r requirements.txt
   - pip install flake8 pytest
+  - ./make_cmdstan.sh
 
 after install:
 
