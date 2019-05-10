@@ -8,9 +8,6 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from typing import Dict
 
-import numpy as np
-import pandas as pd
-
 from cmdstanpy import CMDSTAN_PATH, TMPDIR
 from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs, PosteriorSample
 from cmdstanpy.utils import do_command
@@ -107,7 +104,7 @@ def sample(stan_model:Model=None,
                                              dir=TMPDIR,
                                              delete=False)
             init_param_values_file = fd.name
-            print('init params tempfile: {}'.format(fs.name))
+            print('init params tempfile: {}'.format(fd.name))
         sd = StanData(init_param_values_file)
         sd.write_json(init_param_values)
 

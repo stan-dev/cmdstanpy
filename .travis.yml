@@ -6,11 +6,11 @@ python:
   - "3.6"
 
 install:
+  - make_cmdstan.sh
   - pip install -r requirements.txt
   - pip install flake8 pytest
 
 after install:
-  - make_cmdstan.sh
 
 script:
   - flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E999,F841 cmdstanpy
