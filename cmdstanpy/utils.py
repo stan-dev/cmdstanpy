@@ -6,6 +6,7 @@ import subprocess
 import numpy as np
 from typing import Dict, List
 
+
 def do_command(cmd:str, cwd:str=None) -> str:
     """
     Spawn process, print stdout/stderr to console.
@@ -27,6 +28,7 @@ def do_command(cmd:str, cwd:str=None) -> str:
         return stdout.decode('ascii').strip()
     return None
 
+
 def _rdump_array(key:str, val:np.ndarray) -> str:
     """Flatten numpy ndarray, format as Rdump variable declaration."""
     c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'
@@ -37,13 +39,15 @@ def _rdump_array(key:str, val:np.ndarray) -> str:
         struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
         return struct
 
+
 def jsondump(path:str, data:Dict) -> None:
     """Dump a dict of data to a JSON file."""
     for key, val in data.items():
-            if isinstance(val, np.ndarray) and val.size > 1:
-                data[key] = val.tolist()
+        if isinstance(val, np.ndarray) and val.size > 1:
+            data[key] = val.tolist()
     with open(path, 'w') as fd:
         json.dump(data, fd)
+
 
 def rdump(path:str, data:Dict) -> None:
     """Dump a dict of data to a R dump format file."""
@@ -61,6 +65,7 @@ def rdump(path:str, data:Dict) -> None:
                 line = '%s <- %s' % (key, val)
             fd.write(line)
             fd.write('\n')
+
 
 def scan_stan_csv(filename:str) -> Dict:
     """Capture essential config, shape from stan_csv file."""
@@ -111,6 +116,7 @@ def scan_stan_csv(filename:str) -> Dict:
             filename, draws_spec, draws_found))
     dict['draws'] = draws_found
     return dict
+
 
 def is_prefix(pre:str, names:List[str]):
     for name in names:

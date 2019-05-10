@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
-from cmdstanpy.utils import do_command, jsondump, rdump, scan_stan_csv, is_prefix
+from cmdstanpy.utils import do_command, jsondump, rdump
+from cmdstanpy.utils import scan_stan_csv, is_prefix
 
 
 class Model(object):
@@ -25,7 +26,7 @@ class Model(object):
             raise ValueError('must specify Stan program file')
         if not os.path.exists(stan_file):
             raise ValueError('no such file {}'.format(self.stan_file))
-        if not exe_file is None:
+        if exe_file is not None:
             if not os.path.exists(exe_file):
                 raise ValueError('no such file {}'.format(self.exe_file))
         filename = os.path.split(stan_file)[1]
@@ -36,6 +37,7 @@ class Model(object):
     def __repr__(self) -> str:
         return 'Model(name={},  stan_file="{}", exe_file="{}")'.format(
             self._name, self.stan_file, self.exe_file)
+
     def code(self) -> str:
         """Return Stan program as a string."""
         code = None
@@ -50,11 +52,6 @@ class Model(object):
     def name(self) -> str:
         return self._name
 
-
-
-# TODO:  handle JSON, save to disk
-# see https://stackoverflow.com/questions/682504/what-is-a-clean-pythonic-way-to-have-multiple-constructors-in-python
-# @clsmethod rdump, json (default)
 
 class StanData(object):
     """Stan model data or sampler inits."""
@@ -83,6 +80,7 @@ class StanData(object):
     @property
     def data_file(self) -> str:
         return self._data_file
+
 
 class SamplerArgs(object):
     """Full set of arguments for NUTS/HMC sampler."""
@@ -165,14 +163,16 @@ class SamplerArgs(object):
                     pass
                 os.remove(self.output_file)  # cleanup
             except Exception:
-                raise ValueError('invalid path for output files: {}'.format(self.output_file))
+                raise ValueError('invalid path for output files: {}'.format(
+                    self.output_file))
             if self.output_file.endswith('.csv'):
                 self.output_file = self.output_file[:-4]
         if self.seed is None:
             rng = np.random.RandomState()
             self.seed = rng.randint(1, 99999 + 1)
         else:
-            if not isinstance(self.seed, int) or self.seed < 0 or self.seed > 2**32 - 1:
+            if not isinstance(self.seed,
+                              int) or self.seed < 0 or self.seed > 2**32 - 1:
                 raise ValueError(
                     'seed must be an integer value between 0 and 2**32-1, '
                     'found {}'.format(self.seed))
@@ -259,7 +259,8 @@ class RunSet(object):
         """number of chains."""
         if chains < 1:
             raise ValueError(
-                'chains must be positive integer value, found {i]}'.format(chains))
+                'chains must be positive integer value, found {i]}'.format(
+                    chains))
         self.args = args
         """sampler args."""
         self.csv_files = []
@@ -267,28 +268,36 @@ class RunSet(object):
         if args.output_file is None:
             csv_basename = 'stan-{}-draws'.format(args.model.name)
             for i in range(chains):
-                fd = tempfile.NamedTemporaryFile(
-                    mode='w+', prefix='{}-{}-'.format(csv_basename, i + 1),
-                    suffix='.csv', dir=TMPDIR, delete=False)
+                fd = tempfile.NamedTemporaryFile(mode='w+',
+                                                 prefix='{}-{}-'.format(
+                                                     csv_basename, i + 1),
+                                                 suffix='.csv',
+                                                 dir=TMPDIR,
+                                                 delete=False)
                 self.csv_files.append(fd.name)
         else:
             for i in range(chains):
-                self.csv_files.append(
-                    '{}-{}.csv'.format(args.output_file, i + 1))
+                self.csv_files.append('{}-{}.csv'.format(
+                    args.output_file, i + 1))
         self.console_files = []
         """per-chain sample console output files."""
         for i in range(chains):
-            txt_file = ''.join([os.path.splitext(self.csv_files[i])[0], '.txt'])
+            txt_file = ''.join(
+                [os.path.splitext(self.csv_files[i])[0], '.txt'])
             self.console_files.append(txt_file)
-        self.cmds = [args.compose_command(i + 1, self.csv_files[i]) for i in range(chains)]
+        self.cmds = [
+            args.compose_command(i + 1, self.csv_files[i])
+            for i in range(chains)
+        ]
         """per-chain sampler command."""
         self._retcodes = [-1 for _ in range(chains)]
         """per-chain return codes."""
 
     def __repr__(self) -> str:
-        return 'RunSet(args={}, chains={}\ncsv_files={}\nconsole_files={})'.format(
-            self.args, self._chains,
-            '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files))
+        repr = 'RunSet(args={}, chains={}'.format(self.args, self._chains)
+        repr = '{}\n csv_files={}\nconsole_files={})'.format(
+            repr, '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files))
+        return repr
 
     @property
     def retcodes(self) -> List[int]:
@@ -387,14 +396,21 @@ class PosteriorSample(object):
         cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
         tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
             self.model, self.chains)
-        fd, tmp_csv_path = tempfile.mkstemp(suffix='.csv', prefix=tmp_csv_file,
-                                                dir=TMPDIR, text=True)
-        cmd = '{} --csv_file={} {}'.format(
-            cmd_path, tmp_csv_path, ' '.join(self.csv_files))
+        fd, tmp_csv_path = tempfile.mkstemp(suffix='.csv',
+                                            prefix=tmp_csv_file,
+                                            dir=TMPDIR,
+                                            text=True)
+        cmd = '{} --csv_file={} {}'.format(cmd_path, tmp_csv_path,
+                                           ' '.join(self.csv_files))
         do_command(cmd.split())  # breaks on all whitespace
-        summary_data = pd.read_csv(tmp_csv_path, delimiter=',',
-                                       header=0, index_col=0, comment='#')
-        mask = mask = [x == 'lp__' or not x.endswith("__") for x in summary_data.index]
+        summary_data = pd.read_csv(tmp_csv_path,
+                                   delimiter=',',
+                                   header=0,
+                                   index_col=0,
+                                   comment='#')
+        mask = [
+            x == 'lp__' or not x.endswith("__") for x in summary_data.index
+        ]
         return summary_data[mask]
 
     def diagnose(self) -> None:
@@ -410,16 +426,17 @@ class PosteriorSample(object):
             print("No problems detected.")
         else:
             print(result)
-    
+
     def extract(self, params:List[str]=None) -> pd.DataFrame:
         if params is not None:
             for p in params:
-                    if not is_prefix(p, self._column_names):
-                            raise ValueError('unknown parameter: {}'.format(p))
+                if not is_prefix(p, self._column_names):
+                    raise ValueError('unknown parameter: {}'.format(p))
         if self._sample is None:
             self._sample = self.get_sample()
-        data = self._sample.reshape((self._draws*self._chains),len(self._column_names),
-                                         order='A')
+        data = self._sample.reshape((self._draws * self._chains),
+                                    len(self._column_names),
+                                    order='A')
         df = pd.DataFrame(data=data, columns=self._column_names)
         if params is None:
             return df
@@ -427,11 +444,11 @@ class PosteriorSample(object):
         for p in params:
             for name in self._column_names:
                 if name.startswith(p) and (len(p) == len(name)
-                                               or name[len(p)] == '.'):
-                    if not name in mask:
+                                           or name[len(p)] == '.'):
+                    if name not in mask:
                         mask.append(name)
         return df[mask]
-    
+
     @property
     def model(self) -> str:
         return self._run['model']
@@ -464,7 +481,8 @@ class PosteriorSample(object):
 
     def get_sample(self) -> np.ndarray:
         sample = np.empty((self._draws, self._chains, len(self._column_names)),
-                              dtype=float, order='F')
+                          dtype=float,
+                          order='F')
         for chain in range(self._chains):
             draw = 0
             with open(self._csv_files[chain], 'r') as fd:

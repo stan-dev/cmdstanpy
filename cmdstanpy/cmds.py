@@ -11,14 +11,16 @@ from typing import List, Dict, Tuple
 import numpy as np
 import pandas as pd
 
-
 from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
 from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs, PosteriorSample
 from cmdstanpy.utils import do_command
 
-def compile_model(stan_file:str, opt_lvl:int=3, overwrite:bool=False) -> Model:
-    """Compile the given Stan model file to an executable.
-    """
+
+def compile_model(stan_file:str=None, opt_lvl:int=None,
+                      overwrite:bool=False) -> Model:
+    """Compile the given Stan model file to an executable."""
+    if stan_file is None:
+        raise Exception('must specify argument "stan_file"')
     if not os.path.exists(stan_file):
         raise Exception('no such stan_file {}'.format(stan_file))
     path = os.path.abspath(os.path.dirname(stan_file))
@@ -77,21 +79,33 @@ def sample(stan_model:Model=None,
            hmc_stepsize_jitter:float=0) -> RunSet:
     """Run or more chains of the NUTS/HMC sampler."""
 
-    if data is not None and data_file is not None and os.path.exists(data_file):
-            raise ValueError('cannot specify both "data" and "data_file" arguments')
+    if data is not None and data_file is not None and os.path.exists(
+            data_file):
+        raise ValueError(
+            'cannot specify both "data" and "data_file" arguments')
     if data is not None:
         if data_file is None:
-            fd = tempfile.NamedTemporaryFile(mode='w+', suffix='.json', dir=TMPDIR, delete=False)
+            fd = tempfile.NamedTemporaryFile(mode='w+',
+                                             suffix='.json',
+                                             dir=TMPDIR,
+                                             delete=False)
             data_file = fd.name
             print('input data tempfile: {}'.format(fd.name))
         sd = StanData(data_file)
         sd.write_json(data)
 
-    if init_param_values is not None and init_param_values_file is not None and os.path.exists(init_param_values_file):
-            raise ValueError('cannot specify both "init_param_values" and "init_param_values_file" arguments')
+    if (init_param_values is not None and init_param_values_file is not None
+            and os.path.exists(init_param_values_file)):
+        raise ValueError(
+            'cannot specify both"init_param_values" '
+            'and "init_param_values_file" arguments'
+        )
     if init_param_values is not None:
         if init_param_values_file is None:
-            fd = tempfile.NamedTemporaryFile(mode='w+', suffix='.json', dir=TMPDIR, delete=False)
+            fd = tempfile.NamedTemporaryFile(mode='w+',
+                                             suffix='.json',
+                                             dir=TMPDIR,
+                                             delete=False)
             init_param_values_file = fd.name
             print('init params tempfile: {}'.format(fs.name))
         sd = StanData(init_param_values_file)
@@ -154,7 +168,7 @@ def do_sample(runset:RunSet, idx:int) -> None:
     Spawn process, capture console output to file, record returncode.
     """
     cmd = runset.cmds[idx]
-    print('start chain {}.  '.format(idx+1))
+    print('start chain {}.  '.format(idx + 1))
     proc = subprocess.Popen(
         cmd.split(),
         stdout=subprocess.PIPE,
@@ -163,7 +177,7 @@ def do_sample(runset:RunSet, idx:int) -> None:
     proc.wait()
     stdout, stderr = proc.communicate()
     transcript_file = runset.console_files[idx]
-    print('finish chain {}.  '.format(idx+1))
+    print('finish chain {}.  '.format(idx + 1))
     with open(transcript_file, "w+") as transcript:
         if stdout:
             transcript.write(stdout.decode('ascii'))
