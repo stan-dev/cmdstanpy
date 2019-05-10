@@ -16,7 +16,7 @@ from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs, PosteriorSample
 from cmdstanpy.utils import do_command
 
 
-def compile_model(stan_file:str=None, opt_lvl:int=None,
+def compile_model(stan_file:str=None, opt_lvl:int=1,
                       overwrite:bool=False) -> Model:
     """Compile the given Stan model file to an executable."""
     if stan_file is None:

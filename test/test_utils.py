@@ -3,14 +3,12 @@ import os.path
 import unittest
 import json
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR, STANSUMMARY_STATS
+from cmdstanpy import CMDSTAN_PATH, TMPDIR
 from cmdstanpy.lib import StanData
 from cmdstanpy.utils import scan_stan_csv
 
 datafiles_path = os.path.expanduser(
     os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
-tmpfiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-tmp"))
 
 rdump = ('''N <- 10
 y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
@@ -32,7 +30,7 @@ class StanDataTest(unittest.TestCase):
         json_file = os.path.join(datafiles_path, "bernoulli.data.json")
         with open(json_file, 'r') as fd:
             dict = json.load(fd)
-        rdump_file = os.path.join(tmpfiles_path, "bernoulli.data2.R")
+        rdump_file = os.path.join(TMPDIR, "bernoulli.data2.R")
         standata = StanData(rdump_file)
         standata.write_rdump(dict)
         with open(rdump_file, 'r') as myfile:

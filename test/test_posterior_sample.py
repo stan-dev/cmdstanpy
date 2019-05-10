@@ -16,10 +16,11 @@ badfiles_path = os.path.expanduser(
     os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data",
                  "runset-bad"))
 
-class PostSampleTest(unittest.TestCase):
 
+class PostSampleTest(unittest.TestCase):
     def test_postsample_prefab_csv(self):
-        column_names = ['lp__','accept_stat__','stepsize__','treedepth__','n_leapfrog__','divergent__','energy__', 'theta']
+        column_names = ['lp__','accept_stat__','stepsize__','treedepth__',
+                            'n_leapfrog__','divergent__','energy__', 'theta']
         output = os.path.join(datafiles_path, "runset-good")
         csv_files = []
         for i in range(4):
@@ -42,7 +43,8 @@ class PostSampleTest(unittest.TestCase):
             PosteriorSample(run, tuple(csv_files))
 
     def test_postsample_good(self):
-        column_names = ['lp__','accept_stat__','stepsize__','treedepth__','n_leapfrog__','divergent__','energy__', 'theta']
+        column_names = ['lp__','accept_stat__','stepsize__','treedepth__',
+                            'n_leapfrog__','divergent__','energy__', 'theta']
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         if not os.path.exists(exe):
@@ -58,32 +60,41 @@ class PostSampleTest(unittest.TestCase):
         df = post_sample.summary()
         self.assertTrue(df.shape == (2, 9))
         capturedOutput = io.StringIO()
-        sys.stdout = capturedOutput  
+        sys.stdout = capturedOutput
         post_sample.diagnose()
         sys.stdout = sys.__stdout__
         self.assertEqual(capturedOutput.getvalue(), 'No problems detected.\n')
 
     def test_postsample_diagnose_divergences(self):
-        output = os.path.join(datafiles_path, "diagnose-good", "corr_gauss_depth8-1.csv")
-        expected = """424 of 1000 (42%) transitions hit the maximum treedepth limit of 8, or 2^8 leapfrog steps. Trajectories that are prematurely terminated due to this limit will result in slow exploration and you should increase the limit to ensure optimal performance.
-"""
+        output = os.path.join(datafiles_path, "diagnose-good",
+                                  "corr_gauss_depth8-1.csv")
+        # TODO - use cmdstan test files instead
+        expected = ''.join([
+            '424 of 1000 (42%) transitions hit the maximum ',
+            'treedepth limit of 8, or 2^8 leapfrog steps. ',
+            'Trajectories that are prematurely terminated ',
+            'due to this limit will result in slow ',
+            'exploration and you should increase the ',
+            'limit to ensure optimal performance.\n'])
         run = { 'draws': 10, 'chains': 1, 'column_names': ['a', 'b', 'c']}
         csv_files = tuple([output])
         post_sample = PosteriorSample(run, csv_files)
         capturedOutput = io.StringIO()
-        sys.stdout = capturedOutput  
+        sys.stdout = capturedOutput
         post_sample.diagnose()
         sys.stdout = sys.__stdout__
         self.assertEqual(capturedOutput.getvalue(), expected)
 
     def test_postsample_big(self):
-        sampler_state = ['lp__','accept_stat__','stepsize__','treedepth__','n_leapfrog__','divergent__','energy__']
+        sampler_state = ['lp__','accept_stat__','stepsize__','treedepth__',
+                             'n_leapfrog__','divergent__','energy__']
         phis = ['phi.{}'.format(str(x+1)) for x in range(2095)]
         column_names = sampler_state + phis
         output = os.path.join(datafiles_path, "runset-big")
         csv_files = []
         for i in range(2):
-            csv_files.append(os.path.join(output, 'output_icar_nyc_{}.csv'.format(i+1)))
+            csv_files.append(os.path.join(
+                output, 'output_icar_nyc_{}.csv'.format(i+1)))
         run = { 'draws': 1000, 'chains': 2, 'column_names': column_names}
         post_sample = PosteriorSample(run, tuple(csv_files))
         post_sample.sample
@@ -98,6 +109,7 @@ class PostSampleTest(unittest.TestCase):
             post_sample.extract(params=['phi.2096'])
         with self.assertRaises(Exception):
             post_sample.extract(params=['ph'])
+
 
 if __name__ == '__main__':
     unittest.main()

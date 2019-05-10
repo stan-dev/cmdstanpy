@@ -2,12 +2,11 @@ import os
 import os.path
 import unittest
 
+from cmdstanpy import TMPDIR
 from cmdstanpy.lib import Model, SamplerArgs
 
 datafiles_path = os.path.expanduser(
     os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "data"))
-tmpfiles_path = os.path.expanduser(
-    os.path.join("~", "github", "stan-dev", "cmdstanpy", "test", "files-tmp"))
 
 
 class SamplerArgsTest(unittest.TestCase):
@@ -15,7 +14,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model, output_file=output)
         args.validate()
         cmd = args.compose_command('*', ''.join([output,'-*.csv']))
@@ -26,7 +25,7 @@ class SamplerArgsTest(unittest.TestCase):
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
         rdata = os.path.join(datafiles_path, "bernoulli.data.R")
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model,
                            seed=12345,
                            data_file=rdata,
@@ -43,7 +42,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model,
                            output_file=output,
                            post_warmup_draws=3,
@@ -56,7 +55,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model, output_file=output, thin=3)
         cmd = args.compose_command('*', ''.join([output,'-*.csv']))
         self.assertIn("thin=3", cmd)
@@ -66,7 +65,7 @@ class SamplerArgsTest(unittest.TestCase):
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model,
                            seed=12345,
                            post_warmup_draws=100,
@@ -98,7 +97,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model, output_file=output, seed="badseed")
         with self.assertRaises(ValueError):
             args.validate()
@@ -107,7 +106,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model, output_file=output, seed=-10)
         with self.assertRaises(ValueError):
             args.validate()
@@ -116,7 +115,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model,
                            output_file=output,
                            data_file="/no/such/path/to.file")
@@ -127,7 +126,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model,
                            output_file=output,
                            init_param_values="/no/such/path/to.file")
@@ -138,7 +137,7 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, "bernoulli.stan")
         exe = os.path.join(datafiles_path, "bernoulli")
         model = Model(exe_file=exe, stan_file=stan)
-        output = os.path.join(tmpfiles_path, "bernoulli.output")
+        output = os.path.join(TMPDIR, "bernoulli.output")
         args = SamplerArgs(model,
                            output_file=output,
                            hmc_metric_file="/no/such/path/to.file")
