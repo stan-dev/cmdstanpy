@@ -4,7 +4,7 @@ Utility functions
 import json
 import subprocess
 import numpy as np
-from typing import Dict, List, IO
+from typing import Dict
 
 
 def do_command(cmd: str, cwd: str = None) -> str:
