@@ -10,7 +10,7 @@ import pandas as pd
 
 from cmdstanpy import CMDSTAN_PATH, TMPDIR
 from cmdstanpy.utils import do_command, jsondump, rdump
-from cmdstanpy.utils import scan_stan_csv, is_prefix
+from cmdstanpy.utils import check_csv
 
 
 class Model(object):
@@ -359,9 +359,9 @@ class RunSet(object):
         dzero = {}
         for i in range(self._chains):
             if i == 0:
-                dzero = scan_stan_csv(self.csv_files[i])
+                dzero = check_csv(self.csv_files[i])
             else:
-                d = scan_stan_csv(self.csv_files[i])
+                d = check_csv(self.csv_files[i])
                 for key in dzero:
                     if key != 'id' and dzero[key] != d[key]:
                         raise ValueError(
@@ -440,8 +440,9 @@ class PosteriorSample(object):
 
     def extract(self, params: List[str] = None) -> pd.DataFrame:
         if params is not None:
+            pnames_base = [name.split('.')[0] for name in self._column_names]
             for p in params:
-                if not is_prefix(p, self._column_names):
+                if not (p in self._column_names or p in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(p))
         if self._sample is None:
             self._sample = self.get_sample()

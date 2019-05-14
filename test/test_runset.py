@@ -4,18 +4,18 @@ import unittest
 
 from cmdstanpy.lib import Model, RunSet, SamplerArgs
 
-datafiles_path = os.path.join("test", "data")
-goodfiles_path = os.path.join(datafiles_path, "runset-good")
-badfiles_path = os.path.join(datafiles_path, "runset-bad")
+datafiles_path = os.path.join('test', 'data')
+goodfiles_path = os.path.join(datafiles_path, 'runset-good')
+badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
 
 class RunSetTest(unittest.TestCase):
     def test_check_retcodes(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
-        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(goodfiles_path, "bern")
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        output = os.path.join(goodfiles_path, 'bern')
         args = SamplerArgs(model,
                            seed=12345,
                            data_file=jdata,
@@ -39,11 +39,11 @@ class RunSetTest(unittest.TestCase):
 
     def test_validate_outputs(self):
         # construct runset using existing sampler output
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
-        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(goodfiles_path, "bern")
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        output = os.path.join(goodfiles_path, 'bern')
         args = SamplerArgs(model,
                            seed=12345,
                            data_file=jdata,
@@ -61,14 +61,14 @@ class RunSetTest(unittest.TestCase):
         self.assertEqual(4, runset.chains)
         self.assertEqual(100, dict['draws'])
         self.assertEqual(8, len(dict['column_names']))
-        self.assertEqual("lp__", dict['column_names'][0])
+        self.assertEqual('lp__', dict['column_names'][0])
 
     def test_validate_bad_transcript(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
-        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(badfiles_path, "bad-transcript-bern")
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        output = os.path.join(badfiles_path, 'bad-transcript-bern')
         args = SamplerArgs(model,
                            seed=12345,
                            data_file=jdata,
@@ -77,15 +77,15 @@ class RunSetTest(unittest.TestCase):
                            nuts_max_depth=11,
                            adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
-        with self.assertRaisesRegex(Exception, "Exception"):
+        with self.assertRaisesRegex(Exception, 'Exception'):
             runset.check_console_msgs()
 
     def test_validate_bad_hdr(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
-        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(badfiles_path, "bad-hdr-bern")
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        output = os.path.join(badfiles_path, 'bad-hdr-bern')
         args = SamplerArgs(model,
                            seed=12345,
                            data_file=jdata,
@@ -98,16 +98,16 @@ class RunSetTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
-        with self.assertRaisesRegex(ValueError, "header mismatch"):
+        with self.assertRaisesRegex(ValueError, 'header mismatch'):
             runset.validate_csv_files()
 
     def test_validate_bad_draws(self):
         # construct runset using existing sampler output
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
-        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(badfiles_path, "bad-draws-bern")
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        output = os.path.join(badfiles_path, 'bad-draws-bern')
         args = SamplerArgs(model,
                            seed=12345,
                            data_file=jdata,
@@ -120,16 +120,16 @@ class RunSetTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
-        with self.assertRaisesRegex(ValueError, "draws"):
+        with self.assertRaisesRegex(ValueError, 'draws'):
             runset.validate_csv_files()
 
     def test_validate_bad_cols(self):
         # construct runset using existing sampler output
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
-        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
-        output = os.path.join(badfiles_path, "bad-cols-bern")
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        output = os.path.join(badfiles_path, 'bad-cols-bern')
         args = SamplerArgs(model,
                            seed=12345,
                            data_file=jdata,
@@ -142,7 +142,7 @@ class RunSetTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
-        with self.assertRaisesRegex(ValueError, "columns"):
+        with self.assertRaisesRegex(ValueError, 'bad draw'):
             runset.validate_csv_files()
 
 

@@ -4,7 +4,7 @@ import unittest
 from cmdstanpy.lib import Model
 from cmdstanpy.cmds import compile_model
 
-datafiles_path = os.path.join("test", "data")
+datafiles_path = os.path.join('test', 'data')
 
 code = ('''data {
   int<lower=0> N;
@@ -23,14 +23,14 @@ model {
 
 class ModelTest(unittest.TestCase):
     def test_model_1arg(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = Model(stan)
         self.assertEqual(stan, model.stan_file)
         self.assertEqual(None, model.exe_file)
 
     def test_model_2arg(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         if not os.path.exists(exe):
             compile_model(stan)
         model = Model(stan, exe_file=exe)
@@ -38,25 +38,25 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(exe, model.exe_file)
 
     def test_repr(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
         s = repr(model)
         self.assertTrue(stan in s)
         self.assertTrue(exe in s)
 
     def test_print(self):
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
         self.assertEqual(code, model.code())
 
     def test_error_1(self):
         with self.assertRaises(Exception):
-            model = Model("xdlfkjx", "sdfndjsds")
+            model = Model('xdlfkjx', 'sdfndjsds')
 
     def test_error_2(self):
-        stan = os.path.join(datafiles_path, "b")
+        stan = os.path.join(datafiles_path, 'b')
         with self.assertRaises(Exception):
             model = Model(stan)
 

@@ -7,16 +7,16 @@ import unittest
 from cmdstanpy.lib import Model, PosteriorSample
 from cmdstanpy.cmds import compile_model, sample
 
-datafiles_path = os.path.join("test", "data")
-goodfiles_path = os.path.join(datafiles_path, "runset-good")
-badfiles_path = os.path.join(datafiles_path, "runset-bad")
+datafiles_path = os.path.join('test', 'data')
+goodfiles_path = os.path.join(datafiles_path, 'runset-good')
+badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
 
 class PostSampleTest(unittest.TestCase):
     def test_postsample_prefab_csv(self):
         column_names = ['lp__','accept_stat__','stepsize__','treedepth__',
                             'n_leapfrog__','divergent__','energy__', 'theta']
-        output = os.path.join(datafiles_path, "runset-good")
+        output = os.path.join(datafiles_path, 'runset-good')
         csv_files = []
         for i in range(4):
             csv_files.append(os.path.join(output, 'bern-{}.csv'.format(i+1)))
@@ -40,12 +40,12 @@ class PostSampleTest(unittest.TestCase):
     def test_postsample_good(self):
         column_names = ['lp__','accept_stat__','stepsize__','treedepth__',
                             'n_leapfrog__','divergent__','energy__', 'theta']
-        stan = os.path.join(datafiles_path, "bernoulli.stan")
-        exe = os.path.join(datafiles_path, "bernoulli")
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
         if not os.path.exists(exe):
             compile_model(stan)
         model = Model(stan, exe_file=exe)
-        jdata = os.path.join(datafiles_path, "bernoulli.data.json")
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         post_sample = sample(model, data_file=jdata)
         self.assertEqual(post_sample.chains,4)
         self.assertEqual(post_sample.draws,1000)
@@ -61,8 +61,8 @@ class PostSampleTest(unittest.TestCase):
         self.assertEqual(capturedOutput.getvalue(), 'No problems detected.\n')
 
     def test_postsample_diagnose_divergences(self):
-        output = os.path.join(datafiles_path, "diagnose-good",
-                                  "corr_gauss_depth8-1.csv")
+        output = os.path.join(datafiles_path, 'diagnose-good',
+                                  'corr_gauss_depth8-1.csv')
         # TODO - use cmdstan test files instead
         expected = ''.join([
             '424 of 1000 (42%) transitions hit the maximum ',
@@ -85,7 +85,7 @@ class PostSampleTest(unittest.TestCase):
                              'n_leapfrog__','divergent__','energy__']
         phis = ['phi.{}'.format(str(x+1)) for x in range(2095)]
         column_names = sampler_state + phis
-        output = os.path.join(datafiles_path, "runset-big")
+        output = os.path.join(datafiles_path, 'runset-big')
         csv_files = []
         for i in range(2):
             csv_files.append(os.path.join(
