@@ -110,7 +110,8 @@ def scan_stan_csv(filename: str) -> Dict:
             if len(line.split(',')) != num_cols:
                 raise ValueError(
                     'file {}, at line {}: bad draw, expecting {} items, '
-                    'found {}'.format(filename, lineno, num_cols, len(line.split(',')))
+                    'found {}'.format(filename, lineno, num_cols,
+                                          len(line.split(',')))
                 )
             line = fp.readline().strip()
             lineno += 1
