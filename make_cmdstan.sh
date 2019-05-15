@@ -13,29 +13,40 @@ if [[ ! -d releases ]]; then
 fi
 pushd releases
 
-echo `pwd`
+echo "release dir: `pwd`"
 
 TAG=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name"`
 echo $TAG > tmp-tag
 VER=`perl -p -e 's/"tag_name": "v//g; s/",//g' tmp-tag`
 echo $VER
+rm tmp-tag
 
-# VER=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name" | sed -E 's/.*"v([^"]+)".*/\1/'`
-
-cs=cmdstan-${VER}
-if [[ -d $cs && -f $cs/bin/stanc && -f $cs/examples/bernoulli/bernoulli ]]; then
+echo "latest cmdstan: $VER"
+CS=cmdstan-${VER}
+if [[ -d $cs && -f ${CS}/bin/stanc && -f ${CS}/examples/bernoulli/bernoulli ]]; then
     echo "cmdstan already installed"
-    exit 0
+#    exit 0
 fi
 
-curl -OL https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${cs}.tar.gz
+#wget --no-check-certificate --content-disposition https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${CS}.tar.gz
+curl -LJO https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${CS}.tar.gz
+RC=$?
+if [[ $RC ]]; then
+    echo "github download failed: $RC"
+    exit $RC
+fi
+tar xzf ${CS}.tar.gz
+RC=$?
+if [[ $RC ]]; then
+    echo "github download failed, cannot extract from ${CS}.tar.gz"
+    exit $RC
+fi
 
-tar xzf ${cs}.tar.gz
 if [[ -h cmdstan ]]; then
     unlink cmdstan
 fi
-ln -s ${cs} cmdstan
+ln -s ${CS} cmdstan
 cd cmdstan
 make -j2 build examples/bernoulli/bernoulli
-echo "installed $cs"
+echo "installed ${CS}"
 echo `ls -lFd releases/*`
