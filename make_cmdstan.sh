@@ -28,19 +28,10 @@ if [[ -d $cs && -f ${CS}/bin/stanc && -f ${CS}/examples/bernoulli/bernoulli ]]; 
 #    exit 0
 fi
 
-#wget --no-check-certificate --content-disposition https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${CS}.tar.gz
-curl -LJO https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${CS}.tar.gz
-RC=$?
-if [[ $RC ]]; then
-    echo "github download failed: $RC"
-    exit $RC
-fi
+curl -s -OL https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${CS}.tar.gz
+echo "download rc code: $?"
 tar xzf ${CS}.tar.gz
-RC=$?
-if [[ $RC ]]; then
-    echo "github download failed, cannot extract from ${CS}.tar.gz"
-    exit $RC
-fi
+echo "tar rc $?"
 
 if [[ -h cmdstan ]]; then
     unlink cmdstan
