@@ -23,13 +23,13 @@ Topic :: Scientific/Engineering :: Information Analysis
 
 setuptools.setup(
     name='cmdstanpy',
-    version='0.9',
+    version='0.10',
     description='Python interface to CmdStan',
     long_description=readme_contents(),
     long_description_content_type="text/markdown",
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
     packages=['cmdstanpy'],
-    install_requires='numpy filelock'.split(),
+    install_requires='numpy pandas'.split(),
     classifiers=_classifiers.strip().split('\n'),
 )

@@ -6,5 +6,4 @@ python:
     pip_install: true
     extra_requirements:
       - numpy
-      - matplotlib
-      - filelock
+      - pandas
