@@ -26,14 +26,14 @@ def compile_model(
         raise Exception('no such stan_file {}'.format(stan_file))
     path = os.path.abspath(os.path.dirname(stan_file))
     program_name = os.path.basename(stan_file)
-    model_name = os.path.splitext(program_name)[0]
+    model_name, _ = os.path.splitext(program_name)
 
     hpp_name = model_name + '.hpp'
-    hpp_file = os.path.join(path, hpp_name)
+    hpp_file = os.path.join(path, hpp_name).replace("\\", "/")
     if overwrite or not os.path.exists(hpp_file):
         print('translating to {}'.format(hpp_file))
         stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc')
-        cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file]
+        cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file.replace("\\", "/")]
         print('stan to c++: make args {}'.format(cmd))
         do_command(cmd)
         if not os.path.exists(hpp_file):
@@ -45,7 +45,7 @@ def compile_model(
     if not overwrite and os.path.exists(exe_file):
         # print('model is up to date') # notify user or not?
         return Model(stan_file, exe_file)
-    cmd = ['make', 'O={}'.format(opt_lvl), exe_file]
+    cmd = ['make', 'O={}'.format(opt_lvl), exe_file.replace("\\", "/")]
     print('compiling c++: make args {}'.format(cmd))
     try:
         do_command(cmd, cmdstan_path())
@@ -150,11 +150,13 @@ def sample(
             cores, cpu_count()))
         cores = cpu_count()
     runset = RunSet(args=args, chains=chains)
-    tp = ThreadPool(cores)
-    for i in range(chains):
-        tp.apply_async(do_sample, (runset, i))
-    tp.close()
-    tp.join()
+    try:
+        tp = ThreadPool(cores)
+        for i in range(chains):
+            tp.apply_async(do_sample, (runset, i))
+    finally:
+        tp.close()
+        tp.join()
     if not runset.check_retcodes():
         msg = 'Error during sampling'
         for i in range(chains):

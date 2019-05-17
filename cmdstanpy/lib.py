@@ -356,11 +356,11 @@ class RunSet(object):
         for i in range(self._chains):
             with open(self.console_files[i], 'r') as fp:
                 contents = fp.read()
-                pat = re.compile(r'^Exception.*$', re.M)
-                errors = re.findall(pat, contents)
-                if len(errors) > 0:
-                    valid = False
-                    msg = '{}chain {}: {}\n'.format(msg, i + 1, errors)
+            pat = re.compile(r'^Exception.*$', re.M)
+            errors = re.findall(pat, contents)
+            if len(errors) > 0:
+                valid = False
+                msg = '{}chain {}: {}\n'.format(msg, i + 1, errors)
         if not valid:
             raise Exception(msg)
 
@@ -429,7 +429,7 @@ class PosteriorSample(object):
             suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True
         )
         cmd = '{} --csv_file={} {}'.format(
-            cmd_path, tmp_csv_path, ' '.join(self.csv_files)
+            cmd_path, tmp_csv_path.replace("\\", "/"), ' '.join(self.csv_files).replace("\\", "/")
         )
         do_command(cmd.split())  # breaks on all whitespace
         summary_data = pd.read_csv(
@@ -446,7 +446,7 @@ class PosteriorSample(object):
         Echo diagnose stdout/stderr to console.
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
-        csv_files = ' '.join(self.csv_files)
+        csv_files = ' '.join(self.csv_files).replace("\\", "/")
         cmd = '{} {} '.format(cmd_path, csv_files)
         result = do_command(cmd=cmd.split())
         if result is None:
