@@ -1,10 +1,14 @@
 import atexit
+import os
 import os.path
 import shutil
 import tempfile
 
+if 'CMDSTAN' in os.environ:
+    CMDSTAN_PATH = os.environ['CMDSTAN']
+else:
+    CMDSTAN_PATH = os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
 
-CMDSTAN_PATH = os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
 TMPDIR = tempfile.mkdtemp()
 STANSUMMARY_STATS = [
     'Mean',
