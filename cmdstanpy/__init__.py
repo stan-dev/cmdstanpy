@@ -6,7 +6,7 @@ import tempfile
 
 if 'CMDSTAN' in os.environ:
     CMDSTAN_PATH = os.environ['CMDSTAN']
-else: 
+else:
     CMDSTAN_PATH = os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
 
 TMPDIR = tempfile.mkdtemp()
