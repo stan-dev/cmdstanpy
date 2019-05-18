@@ -3,28 +3,22 @@ import os.path
 import unittest
 import json
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR
+from cmdstanpy import TMPDIR
 from cmdstanpy.lib import StanData
 from cmdstanpy.utils import check_csv
 
 datafiles_path = os.path.join('test', 'data')
-
 
 rdump = ('''N <- 10
 y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
 ''')
 
 
-class ConfigTest(unittest.TestCase):
-    def test_path(self):
-        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
-        self.assertEqual(abs_rel_path, CMDSTAN_PATH)
-
-
 class StanDataTest(unittest.TestCase):
     def test_standata_existing(self):
         rdump = os.path.join(datafiles_path, 'bernoulli.data.R')
         standata = StanData(rdump)
+        self.assertEqual(standata.data_file, rdump)
 
     def test_standata_new(self):
         json_file = os.path.join(datafiles_path, 'bernoulli.data.json')
