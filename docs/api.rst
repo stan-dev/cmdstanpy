@@ -3,23 +3,24 @@ API
 
 The page documents the API of CmdStanPy, mostly by pulling docstrings from the sources.
 
-Reading and writing files
--------------------------
 
-.. automodule:: cmdstanpy.io
-   :members:
-   :undoc-members:
-
-Working with Stan models
+Compiling a Stan model
 ------------------------
 
-.. automodule:: cmdstanpy.model
+.. automodule:: cmdstanpy.lib.Model
    :members:
    :undoc-members:
 
-Plotting results
+Running the NUTS-HMC Sampler
+------------------------
+
+.. automodule:: cmdstanpy.cmds.sample
+   :members:
+   :undoc-members:
+
+Retreiving the Posterior Sample
 ----------------
 
-.. automodule:: cmdstanpy.viz
+.. automodule:: cmdstanpy.lib.PosteriorSample
    :members:
    :undoc-members:
