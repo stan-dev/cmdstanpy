@@ -16,7 +16,7 @@ def validate_cmdstan_path(path: str) -> None:
     """
     if not os.path.isdir(path):
         raise ValueError('no such CmdStan directory {}'.format(path))
-    if not os.path.exists(os.path.join(cmdstan_path, 'bin', 'stanc')):
+    if not os.path.exists(os.path.join(path, 'bin', 'stanc')):
         raise ValueError(
             "no CmdStan binaries found, "
             "do 'make build' in directory {}".format(path)
