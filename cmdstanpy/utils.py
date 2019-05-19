@@ -1,10 +1,48 @@
 """
 Utility functions
 """
+import os
+import os.path
 import json
 import subprocess
 import numpy as np
 from typing import Dict
+
+
+def validate_cmdstan_path(path: str) -> None:
+    """
+    Validate that CmdStan directory exists and binaries have been built.
+    Throws exception if specified path is invalid.
+    """
+    if not os.path.isdir(path):
+        raise ValueError('no such CmdStan directory {}'.format(path))
+    if not os.path.exists(os.path.join(path, 'bin', 'stanc')):
+        raise ValueError(
+            "no CmdStan binaries found, "
+            "do 'make build' in directory {}".format(path)
+        )
+
+
+def set_cmdstan_path(path: str) -> None:
+    """
+    Validate, then set CmdStan directory path.
+    """
+    validate_cmdstan_path(path)
+    os.environ['CMDSTAN'] = path
+
+
+def cmdstan_path() -> str:
+    """
+    Validate, then return CmdStan directory path.
+    """
+    cmdstan_path = ''
+    if 'CMDSTAN' in os.environ:
+        cmdstan_path = os.environ['CMDSTAN']
+    else:
+        cmdstan_path = os.path.abspath(
+            os.path.join('.', 'releases', 'cmdstan'))
+    validate_cmdstan_path(cmdstan_path)
+    return cmdstan_path
 
 
 def do_command(cmd: str, cwd: str = None) -> str:
@@ -88,6 +126,7 @@ def check_csv(filename: str) -> Dict:
 
 
 def scan_stan_csv(filename: str) -> Dict:
+    """Process stan_csv file line by line."""
     dict = {}
     draws_found = 0
     lineno = 0
@@ -110,8 +149,8 @@ def scan_stan_csv(filename: str) -> Dict:
             if len(line.split(',')) != num_cols:
                 raise ValueError(
                     'file {}, at line {}: bad draw, expecting {} items, '
-                    'found {}'.format(filename, lineno, num_cols,
-                                          len(line.split(',')))
+                    'found {}'.format(
+                        filename, lineno, num_cols, len(line.split(',')))
                 )
             line = fp.readline().strip()
             lineno += 1
@@ -120,6 +159,10 @@ def scan_stan_csv(filename: str) -> Dict:
 
 
 def parse_header(line: str, dict: Dict) -> None:
+    """
+    Parse initial stan_csv file comments lines and
+    save non-default configuration information to dict.
+    """
     if not line.endswith('(Default)'):
         line = line.lstrip(' #\t')
         key_val = line.split('=')
