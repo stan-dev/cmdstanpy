@@ -14,7 +14,7 @@ def cmdstan_path() -> str:
         return os.environ['CMDSTAN']
     else:
         return os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
-    
+
 
 def do_command(cmd: str, cwd: str = None) -> str:
     """
