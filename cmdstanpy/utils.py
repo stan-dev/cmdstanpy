@@ -1,11 +1,20 @@
 """
 Utility functions
 """
+import os
+import os.path
 import json
 import subprocess
 import numpy as np
 from typing import Dict
 
+
+def cmdstan_path() -> str:
+    if 'CMDSTAN' in os.environ:
+        return os.environ['CMDSTAN']
+    else:
+        return os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
+    
 
 def do_command(cmd: str, cwd: str = None) -> str:
     """

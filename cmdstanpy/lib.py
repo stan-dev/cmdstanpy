@@ -8,9 +8,9 @@ from typing import List, Dict, Tuple
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR
+from cmdstanpy import TMPDIR
 from cmdstanpy.utils import do_command, jsondump, rdump
-from cmdstanpy.utils import check_csv
+from cmdstanpy.utils import check_csv, cmdstan_path
 
 
 class Model(object):
@@ -422,7 +422,7 @@ class PosteriorSample(object):
         Assemble csv tempfile contents into pandasDataFrame.
         """
         names = self.column_names
-        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
+        cmd_path = os.path.join(cmdstan_path(), 'bin', 'stansummary')
         tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
             self.model, self.chains)
         fd, tmp_csv_path = tempfile.mkstemp(
@@ -445,7 +445,7 @@ class PosteriorSample(object):
         Run cmdstan/bin/diagnose over all output csv files.
         Echo diagnose stdout/stderr to console.
         """
-        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
+        cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
         csv_files = ' '.join(self.csv_files)
         cmd = '{} {} '.format(cmd_path, csv_files)
         result = do_command(cmd=cmd.split())

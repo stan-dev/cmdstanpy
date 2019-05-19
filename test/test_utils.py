@@ -5,13 +5,25 @@ import json
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.lib import StanData
-from cmdstanpy.utils import check_csv
+from cmdstanpy.utils import cmdstan_path, check_csv
 
 datafiles_path = os.path.join('test', 'data')
 
 rdump = ('''N <- 10
 y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
 ''')
+
+
+class CmdStanPathTest(unittest.TestCase):
+    def test_default_path(self):
+        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
+        self.assertEqual(abs_rel_path, cmdstan_path())
+
+    def test_env_path(self):
+        old_version = os.path.abspath(
+            os.path.join('releases', 'cmdstan-2.18.1'))
+        os.environ['CMDSTAN'] = old_version
+        self.assertEqual(old_version, cmdstan_path())
 
 
 class StanDataTest(unittest.TestCase):
