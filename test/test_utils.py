@@ -5,13 +5,39 @@ import json
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.lib import StanData
-from cmdstanpy.utils import check_csv
+from cmdstanpy.utils import cmdstan_path, set_cmdstan_path, validate_cmdstan_path, check_csv
+
 
 datafiles_path = os.path.join('test', 'data')
 
 rdump = ('''N <- 10
 y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
 ''')
+
+
+class CmdStanPathTest(unittest.TestCase):
+    def test_default_path(self):
+        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
+        self.assertEqual(abs_rel_path, cmdstan_path())
+
+    def test_set_path(self):
+        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
+        self.assertEqual(abs_rel_path, cmdstan_path())
+        cur_version = os.path.abspath(
+            os.path.join('releases', 'cmdstan-2.19.1'))
+        set_cmdstan_path(cur_version)
+        self.assertEqual(cur_version, cmdstan_path())
+
+    def test_validate_path(self):
+        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
+        validate_cmdstan_path(abs_rel_path)
+        path_foo = os.path.abspath(os.path.join('releases', 'foo'))
+        with self.assertRaisesRegex(ValueError, 'no such CmdStan directory'):
+            validate_cmdstan_path(path_foo)
+        path_test = os.path.abspath('test')
+        with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
+            validate_cmdstan_path(path_test)
+
 
 
 class StanDataTest(unittest.TestCase):
