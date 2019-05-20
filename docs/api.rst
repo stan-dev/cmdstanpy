@@ -1,26 +1,43 @@
 API
 ===
 
-The page documents the API of CmdStanPy, mostly by pulling docstrings from the sources.
+Functions
+---------
 
+compile_model
+^^^^^^^^^^^^^
+.. autofunction:: cmdstanpy.cmds.compile_model
 
-Compiling a Stan model
-------------------------
+sample
+^^^^^^
+.. autofunction:: cmdstanpy.cmds.sample
 
-.. automodule:: cmdstanpy.lib.Model
+set_cmdstan_path
+^^^^^^^^^^^^^^^^
+.. autofunction:: cmdstanpy.utils.set_cmdstan_path
+
+cmdstan_path
+^^^^^^^^^^^^
+.. autofunction:: cmdstanpy.utils.cmdstan_path
+
+                  
+
+              
+
+Classes
+-------
+
+Model
+^^^^^
+
+.. autoclass:: cmdstanpy.lib.Model
    :members:
-   :undoc-members:
 
-Running the NUTS-HMC Sampler
-------------------------
 
-.. automodule:: cmdstanpy.cmds.sample
+PosteriorSample
+^^^^^^^^^^^^^^^
+
+.. autoclass:: cmdstanpy.lib.PosteriorSample
    :members:
-   :undoc-members:
 
-Retreiving the Posterior Sample
-----------------
 
-.. automodule:: cmdstanpy.lib.PosteriorSample
-   :members:
-   :undoc-members:
