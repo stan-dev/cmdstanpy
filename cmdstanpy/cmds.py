@@ -1,3 +1,6 @@
+"""
+First class functions
+"""
 import os
 import os.path
 import platform
