@@ -12,9 +12,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
 import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath('.')))
@@ -22,13 +19,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath('.')))
 # -- Project information -----------------------------------------------------
 
 project = 'CmdStanPy'
-copyright = '2018, Marmaduke Woodman'
-author = 'Marmaduke Woodman'
+copyright = '2019, Stan Development Team'
+author = 'Stan Development Team'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v0.9'
+release = 'alpha'
 
 # -- General configuration ---------------------------------------------------
 
@@ -131,7 +128,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'CmdStanPy.tex', 'CmdStanPy Documentation',
-     'Marmaduke Woodman', 'manual'),
+        'Stan Development Team', 'manual'),
 ]
 
 # -- Options for manual page output ------------------------------------------

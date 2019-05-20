@@ -1,3 +1,6 @@
+"""
+First class functions
+"""
 import os
 import os.path
 import platform
@@ -8,9 +11,9 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from typing import Dict
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR
+from cmdstanpy import TMPDIR
 from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs, PosteriorSample
-from cmdstanpy.utils import do_command
+from cmdstanpy.utils import do_command, cmdstan_path
 
 
 def compile_model(
@@ -29,7 +32,7 @@ def compile_model(
     hpp_file = os.path.join(path, hpp_name)
     if overwrite or not os.path.exists(hpp_file):
         print('translating to {}'.format(hpp_file))
-        stanc_path = os.path.join(CMDSTAN_PATH, 'bin', 'stanc')
+        stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc')
         cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file]
         print('stan to c++: make args {}'.format(cmd))
         do_command(cmd)
@@ -45,7 +48,7 @@ def compile_model(
     cmd = ['make', 'O={}'.format(opt_lvl), exe_file]
     print('compiling c++: make args {}'.format(cmd))
     try:
-        do_command(cmd, CMDSTAN_PATH)
+        do_command(cmd, cmdstan_path())
     except Exception:
         return Model(stan_file)
     return Model(stan_file, exe_file)

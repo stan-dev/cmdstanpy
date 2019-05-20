@@ -8,9 +8,9 @@ from typing import List, Dict, Tuple
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR
+from cmdstanpy import TMPDIR
 from cmdstanpy.utils import do_command, jsondump, rdump
-from cmdstanpy.utils import check_csv
+from cmdstanpy.utils import check_csv, cmdstan_path
 
 
 class Model(object):
@@ -422,7 +422,7 @@ class PosteriorSample(object):
         Assemble csv tempfile contents into pandasDataFrame.
         """
         names = self.column_names
-        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
+        cmd_path = os.path.join(cmdstan_path(), 'bin', 'stansummary')
         tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
             self.model, self.chains)
         fd, tmp_csv_path = tempfile.mkstemp(
@@ -445,7 +445,7 @@ class PosteriorSample(object):
         Run cmdstan/bin/diagnose over all output csv files.
         Echo diagnose stdout/stderr to console.
         """
-        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
+        cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
         csv_files = ' '.join(self.csv_files)
         cmd = '{} {} '.format(cmd_path, csv_files)
         result = do_command(cmd=cmd.split())
@@ -455,6 +455,10 @@ class PosteriorSample(object):
             print(result)
 
     def extract(self, params: List[str] = None) -> pd.DataFrame:
+        """
+        Returns the assembled sample as a pandas DataFrame consisting of
+        one column per parameter and one row per draw.
+        """
         pnames_base = [name.split('.')[0] for name in self._column_names]
         if params is not None:
             for p in params:
@@ -477,35 +481,62 @@ class PosteriorSample(object):
 
     @property
     def model(self) -> str:
+        """Stan model name"""
         return self._run['model']
 
     @property
     def draws(self) -> int:
+        """Number of draws per chain"""
         return self._draws
 
     @property
     def chains(self) -> int:
+        """Number of chains"""
         return self._chains
 
     @property
     def columns(self) -> int:
+        """
+        Total number of information items returned by sampler for each draw.
+        Consists of sampler state, model parameters and computed quantities.
+        """
         return len(self._column_names)
 
     @property
     def column_names(self) -> (str, ...):
+        """
+        Names of information items returned by sampler for each draw.
+        Includes for sampler state labels and
+        names of model parameters and computed quantities.
+        """
         return self._column_names
 
     @property
     def csv_files(self) -> (str, ...):
+        """
+        Full path name to stan_csv files returned by sampler.
+        """
         return self._csv_files
 
     @property
     def sample(self) -> np.ndarray:
+        """
+        A 3-D numpy ndarray which contains all draws across all chain arranged
+        as (draws, chains, columns) stored column major so that the values
+        for each parameter are stored contiguously in memory, likewise
+        all draws from a chain are contiguous.
+        """
         if self._sample is None:
             self._sample = self.get_sample()
         return self._sample
 
     def get_sample(self) -> np.ndarray:
+        """
+        Returns posterior sample.
+        The first time this function is called it assembles the sample
+        from the stan_csv files; subsequent calls to this function
+        return the assembled sample.
+        """
         sample = np.empty(
             (self._draws, self._chains, len(self._column_names)), dtype=float,
             order='F'

@@ -1,11 +1,7 @@
 import atexit
-import os.path
 import shutil
 import tempfile
 
-
-CMDSTAN_PATH = os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
-TMPDIR = tempfile.mkdtemp()
 STANSUMMARY_STATS = [
     'Mean',
     'MCSE',
@@ -17,6 +13,8 @@ STANSUMMARY_STATS = [
     'N_Eff/s',
     'R_hat',
 ]
+
+TMPDIR = tempfile.mkdtemp()
 
 
 def cleanup_tmpdir():
