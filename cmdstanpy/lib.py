@@ -506,7 +506,7 @@ class PosteriorSample(object):
     def column_names(self) -> (str, ...):
         """
         Names of information items returned by sampler for each draw.
-        Includes for sampler state labels and 
+        Includes for sampler state labels and
         names of model parameters and computed quantities.
         """
         return self._column_names
@@ -523,8 +523,8 @@ class PosteriorSample(object):
         """
         A 3-D numpy ndarray which contains all draws across all chain arranged
         as (draws, chains, columns) stored column major so that the values
-        for each parameter are stored contiguously in memory, likewise all draws
-        from a chain are contiguous.
+        for each parameter are stored contiguously in memory, likewise
+        all draws from a chain are contiguous.
         """
         if self._sample is None:
             self._sample = self.get_sample()
