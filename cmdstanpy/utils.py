@@ -39,8 +39,8 @@ def cmdstan_path() -> str:
     if 'CMDSTAN' in os.environ:
         cmdstan_path = os.environ['CMDSTAN']
     else:
-        cmdstan_path = os.path.abspath(
-            os.path.join('.', 'releases', 'cmdstan'))
+        cmdstan_path = os.path.expanduser(
+            os.path.join('~', '.cmdstanpy', 'cmdstan'))
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
 
