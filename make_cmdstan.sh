@@ -4,12 +4,20 @@
 #  - build binaries, compile example model to build model header
 #  - symlink downloaded version as "cmdstan"
 
-RELDIR=$1
+while getopts ":d:v:" opt; do
+  case $opt in
+    d) RELDIR="$OPTARG"
+    ;;
+    v) VER="$OPTARG"
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+    ;;
+  esac
+done
+
 if [ -z ${RELDIR} ]; then
     RELDIR="$HOME/.cmdstanpy"
 fi
-echo "$HOME"
-echo "${RELDIR}"
 
 if [[ ! -e ${RELDIR} ]]; then
    mkdir ${RELDIR}
@@ -18,9 +26,8 @@ if [[ ! -d ${RELDIR} ]]; then
     echo "cannot install cmdstan, ${RELDIR} is not a directory"
     exit 1
 fi
-echo "release dir: ${RELDIR}"
+echo "cmdstan dir: ${RELDIR}"
 
-VER=$2
 if [ -z ${VER} ]; then
     TAG=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name"`
     echo $TAG > tmp-tag
@@ -28,6 +35,7 @@ if [ -z ${VER} ]; then
     rm tmp-tag
 fi
 CS=cmdstan-${VER}
+echo "cmdstan version: ${VER}"
 
 pushd ${RELDIR} > /dev/null
 if [[ -d $cs && -f ${CS}/bin/stanc && -f ${CS}/examples/bernoulli/bernoulli ]]; then

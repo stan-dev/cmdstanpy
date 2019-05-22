@@ -13,12 +13,23 @@ CmdStanPy can be installed from GitHub
 	pip install -e git+https://github.com/stan-dev/cmdstanpy
 
 CmdStanPy requires a local install of CmdStan.
-If you don't have CmdStan installed, the script ``make_cmdstan.sh`` will install the latest version
-of CmdStan in the ``releases`` directory.  
+If you don't have CmdStan installed, you can run the script ``make_cmdstan.sh`` which
+will download CmdStan from GitHub and build the CmdStan utilities.
+By default this script installs the latest version of CmdStan into a directory named
+`.cmdstanpy` in the user's `$HOME` directory:
+
 
 .. code-block:: bash
 
 	./make_cmdstan.sh
+    ls -F ~/.cmdstanpy
+
+This script takes two optional named arguments: `-d <directory> -v <version>`
+
+.. code-block:: bash
+
+	./make_cmdstan.sh -d cmdstan -v 2.18.1
+    ls -F ~/cmdstan
 
 If you already have CmdStan installed, then set the ``CMDSTAN`` environment variable accordingly,
 either from within your Python session or setting the environment variable directly using ``bash``:
