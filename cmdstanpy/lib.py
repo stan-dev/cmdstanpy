@@ -124,7 +124,9 @@ class SamplerArgs(object):
         # seed for pseudo-random number generator.
         self.data_file = None if data_file is None else Path(data_file)
         # full path to input data file name.
-        self.init_param_values = None if init_param_values is None else Path(init_param_values)
+        self.init_param_values = (
+            None if init_param_values is None else Path(init_param_values)
+        )
         # full path to initial parameter values file name.
         self.output_file = None if output_file is None else Path(output_file)
         # full path to output file.
@@ -150,7 +152,9 @@ class SamplerArgs(object):
         # adaptation iteration offset.
         self.nuts_max_depth = nuts_max_depth
         # NUTS maximum tree depth.
-        self.hmc_metric_file = None if hmc_metric_file is None else Path(hmc_metric_file)
+        self.hmc_metric_file = (
+            None if hmc_metric_file is None else Path(hmc_metric_file)
+        )
         # initial value for HMC mass matrix.
         self.hmc_stepsize = hmc_stepsize
         # initial value for HMC stepsize.
@@ -164,13 +168,11 @@ class SamplerArgs(object):
         if self.model.exe_file is None:
             raise ValueError(
                 'stan model must be compiled first,'
-                + ' run command compile_model("{}")'.format(
-                    self.model.stan_file)
+                + ' run command compile_model("{}")'.format(self.model.stan_file)
             )
         if not self.model.exe_file.exists():
             raise ValueError(
-                'cannot access model executible "{}"'.format(
-                    self.model.exe_file)
+                'cannot access model executible "{}"'.format(self.model.exe_file)
             )
         if self.output_file is not None:
             try:
@@ -179,14 +181,13 @@ class SamplerArgs(object):
                 self.output_file.unlink()  # cleanup
             except Exception:
                 raise ValueError(
-                    'invalid path for output files: {}'.format(
-                        self.output_file)
+                    'invalid path for output files: {}'.format(self.output_file)
                 )
             if self.output_file.suffix.lower() == '.csv':
                 self.output_file = self.output_file.stem
         if self.seed is None:
             rng = np.random.RandomState()
-            self.seed = rng.randint(1, 99_999 + 1)
+            self.seed = rng.randint(1, 99999 + 1)
         else:
             if (
                 not isinstance(self.seed, int)
@@ -202,27 +203,21 @@ class SamplerArgs(object):
                 raise ValueError('no such file {}'.format(self.data_file))
         if self.init_param_values is not None:
             if not self.init_param_values.exists():
-                raise ValueError('no such file {}'.format(
-                    self.init_param_values))
+                raise ValueError('no such file {}'.format(self.init_param_values))
         if self.hmc_metric_file is not None:
             if not self.hmc_metric_file.exists():
-                raise ValueError('no such file {}'.format(
-                    self.hmc_metric_file))
+                raise ValueError('no such file {}'.format(self.hmc_metric_file))
         if self.post_warmup_draws is not None:
             if self.post_warmup_draws < 0:
                 raise ValueError(
                     'post_warmup_draws must be '
-                    'a non-negative integer value'.format(
-                        self.post_warmup_draws
-                    )
+                    'a non-negative integer value'.format(self.post_warmup_draws)
                 )
         if self.warmup_draws is not None:
             if self.warmup_draws < 0:
                 raise ValueError(
                     'warmup_draws must be a '
-                    'non-negative integer value'.format(
-                        self.warmup_draws
-                    )
+                    'non-negative integer value'.format(self.warmup_draws)
                 )
         # TODO: check type/bounds on all other controls
         # positive int values
@@ -256,8 +251,7 @@ class SamplerArgs(object):
         if self.hmc_stepsize_jitter is not None:
             cmd = '{} stepsize_jitter={}'.format(cmd, self.hmc_stepsize_jitter)
         if self.nuts_max_depth is not None:
-            cmd = '{} engine=nuts max_depth={}'.format(
-                cmd, self.nuts_max_depth)
+            cmd = '{} engine=nuts max_depth={}'.format(cmd, self.nuts_max_depth)
         if self.do_adaptation and not (
             self.adapt_gamma is None
             and self.adapt_delta is None
@@ -289,13 +283,16 @@ class RunSet(object):
         # number of chains
         if chains < 1:
             raise ValueError(
-                'chains must be positive integer value, '
-                'found {i]}'.format(chains)
+                'chains must be positive integer value, ' 'found {i]}'.format(chains)
             )
         self.args = args
         # sampler args
         self.csv_files = []
-        fmt = '{}{}{}'.format('{', ':>0{}d'.format(int(np.log10(chains))+1), '}') if chains >= 9 else '{}'
+        fmt = (
+            '{}{}{}'.format('{', ':>0{}d'.format(int(np.log10(chains)) + 1), '}')
+            if chains >= 9
+            else '{}'
+        )
         prefix = '{}-' + fmt + '-'
         # per-chain sample csv files
         if args.output_file is None:
@@ -312,16 +309,14 @@ class RunSet(object):
         else:
             prefix = prefix + '.csv'
             for i in range(chains):
-                self.csv_files.append(Path(prefix.format(
-                    args.output_file, i + 1)))
+                self.csv_files.append(Path(prefix.format(args.output_file, i + 1)))
         self.console_files = []
         # per-chain sample console output files
         for csv_file in self.csv_files:
             txt_file = csv_file.stem + '.txt'
             self.console_files.append(txt_file)
         self.cmds = [
-            args.compose_command(i + 1, csv_file)
-            for csv_file in self.csv_files
+            args.compose_command(i + 1, csv_file) for csv_file in self.csv_files
         ]
         # per-chain sampler command
         self._retcodes = [-1 for _ in range(chains)]
@@ -432,8 +427,7 @@ class PosteriorSample(object):
         """
         names = self.column_names
         cmd_path = cmdstan_path() / 'bin' / 'stansummary'
-        tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
-            self.model, self.chains)
+        tmp_csv_file = 'stansummary-{}-{}-chains-'.format(self.model, self.chains)
         fd, tmp_csv_path = tempfile.mkstemp(
             suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True
         )
@@ -446,9 +440,7 @@ class PosteriorSample(object):
         summary_data = pd.read_csv(
             tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
         )
-        mask = [
-            x == 'lp__' or not x.endswith('__') for x in summary_data.index
-            ]
+        mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
 
     def diagnose(self) -> None:
@@ -549,8 +541,7 @@ class PosteriorSample(object):
         return the assembled sample.
         """
         sample = np.empty(
-            (self._draws, self._chains, len(self._column_names)), dtype=float,
-            order='F'
+            (self._draws, self._chains, len(self._column_names)), dtype=float, order='F'
         )
         for chain in range(self._chains):
             draw = 0

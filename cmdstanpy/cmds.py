@@ -86,10 +86,8 @@ def sample(
 ) -> RunSet:
     """Run or more chains of the NUTS/HMC sampler."""
 
-    if data is not None and (
-            data_file is not None and os.path.exists(data_file)):
-        raise ValueError(
-            'cannot specify both "data" and "data_file" arguments')
+    if data is not None and (data_file is not None and os.path.exists(data_file)):
+        raise ValueError('cannot specify both "data" and "data_file" arguments')
     if data is not None:
         if data_file is None:
             fd = tempfile.NamedTemporaryFile(
@@ -150,8 +148,7 @@ def sample(
             'cores must be a positive integer value, found {}'.format(cores)
         )
     if cores > cpu_count():
-        print('requested {} cores, only {} available'.format(
-            cores, cpu_count()))
+        print('requested {} cores, only {} available'.format(cores, cpu_count()))
         cores = cpu_count()
     runset = RunSet(args=args, chains=chains)
     try:
@@ -181,8 +178,7 @@ def do_sample(runset: RunSet, idx: int) -> None:
     """
     cmd = runset.cmds[idx]
     print('start chain {}.  '.format(idx + 1))
-    proc = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+    proc = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     proc.wait()
     stdout, stderr = proc.communicate()
     transcript_file = runset.console_files[idx]

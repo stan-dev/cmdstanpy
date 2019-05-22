@@ -24,8 +24,7 @@ def validate_cmdstan_path(path: str) -> None:
         stanc += '.exe'
     if not (path / 'bin' / stanc).exists():
         raise ValueError(
-            "no CmdStan binaries found, "
-            "do 'make build' in directory {}".format(path)
+            "no CmdStan binaries found, " "do 'make build' in directory {}".format(path)
         )
 
 
@@ -152,8 +151,7 @@ def scan_stan_csv(filename: str) -> Dict:
             if len(line.split(',')) != num_cols:
                 raise ValueError(
                     'file {}, at line {}: bad draw, expecting {} items, '
-                    'found {}'.format(
-                        filename, lineno, num_cols, len(line.split(',')))
+                    'found {}'.format(filename, lineno, num_cols, len(line.split(',')))
                 )
             line = fp.readline().strip()
             lineno += 1
