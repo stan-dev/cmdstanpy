@@ -2,11 +2,11 @@
 First class functions
 """
 import os
-import os.path
 import platform
 import subprocess
 import tempfile
 
+from pathlib import Path
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from typing import Dict
@@ -22,30 +22,34 @@ def compile_model(
     """Compile the given Stan model file to an executable."""
     if stan_file is None:
         raise Exception('must specify argument "stan_file"')
-    if not os.path.exists(stan_file):
+    stan_file = Path(stan_file)
+    if not stan_file.exists():
         raise Exception('no such stan_file {}'.format(stan_file))
-    path = os.path.abspath(os.path.dirname(stan_file))
-    program_name = os.path.basename(stan_file)
-    model_name, _ = os.path.splitext(program_name)
+    path = stan_file.parent.absolute()
+    program_name = stan_file.name
+    model_name = stan_file.stem
 
     hpp_name = model_name + '.hpp'
-    hpp_file = os.path.join(path, hpp_name).replace("\\", "/")
-    if overwrite or not os.path.exists(hpp_file):
+    hpp_file = path / hpp_name
+    if overwrite or not hpp_file.exists():
         print('translating to {}'.format(hpp_file))
-        stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc')
-        cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file.replace("\\", "/")]
+        stanc = 'stanc'
+        if platform.system() == "Windows":
+            stanc += '.exe'
+        stanc_path = cmdstan_path() / 'bin' / stanc
+        cmd = [stanc_path, '--o={}'.format(hpp_file.as_posix()), stan_file.as_posix()]
         print('stan to c++: make args {}'.format(cmd))
         do_command(cmd)
-        if not os.path.exists(hpp_file):
-            raise Exception('syntax error'.format(stan_file))
+        if not hpp_file.exists():
+            raise Exception('syntax error: {}'.format(stan_file))
 
-    exe_file = os.path.join(path, model_name)
-    if platform.system().lower().startswith('win'):
-        exe_file += '.exe'
-    if not overwrite and os.path.exists(exe_file):
+    if platform.system() == "Windows":
+        model_name += '.exe'
+    exe_file = path / model_name
+    if not overwrite and exe_file.exists():
         # print('model is up to date') # notify user or not?
         return Model(stan_file, exe_file)
-    cmd = ['make', 'O={}'.format(opt_lvl), exe_file.replace("\\", "/")]
+    cmd = ['make', 'O={}'.format(opt_lvl), exe_file.as_posix()]
     print('compiling c++: make args {}'.format(cmd))
     try:
         do_command(cmd, cmdstan_path())

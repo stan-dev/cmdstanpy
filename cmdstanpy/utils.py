@@ -2,8 +2,9 @@
 Utility functions
 """
 import os
-import os.path
+from pathlib import Path
 import json
+import platform
 import subprocess
 import numpy as np
 from typing import Dict
@@ -14,9 +15,14 @@ def validate_cmdstan_path(path: str) -> None:
     Validate that CmdStan directory exists and binaries have been built.
     Throws exception if specified path is invalid.
     """
-    if not os.path.isdir(path):
+    if path is not None:
+        path = Path(path)
+    if path is None or not path.is_dir():
         raise ValueError('no such CmdStan directory {}'.format(path))
-    if not os.path.exists(os.path.join(path, 'bin', 'stanc')):
+    stanc = 'stanc'
+    if platform.system() == "Windows":
+        stanc += '.exe'
+    if not (path / 'bin' / stanc).exists():
         raise ValueError(
             "no CmdStan binaries found, "
             "do 'make build' in directory {}".format(path)
@@ -36,11 +42,8 @@ def cmdstan_path() -> str:
     Validate, then return CmdStan directory path.
     """
     cmdstan_path = ''
-    if 'CMDSTAN' in os.environ:
-        cmdstan_path = os.environ['CMDSTAN']
-    else:
-        cmdstan_path = os.path.abspath(
-            os.path.join('.', 'releases', 'cmdstan'))
+    cmdstan_path = os.getenv('CMDSTAN', Path('.') / 'releases' / 'cmdstan')
+    cmdstan_path = Path(cmdstan_path).absolute()
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
 
