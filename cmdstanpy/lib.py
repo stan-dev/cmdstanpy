@@ -399,6 +399,10 @@ class PosteriorSample(object):
         """sampler output csv files."""
         self._sample = None
         """assembled draws across all chains, stored column major."""
+        self._metric = None
+        """per-chain metrics."""
+        self._stepsize = None
+        """per-chain stepsizes."""
         if run is None:
             raise ValueError('missing sampler run info')
         if csv_files is None:
@@ -409,6 +413,8 @@ class PosteriorSample(object):
         self._chains = run['chains']
         self._draws = run['draws']
         self._column_names = run['column_names']
+        self._param_names = run['param_names']
+        self._metric_type = run['metric']
 
     def __repr__(self) -> str:
         return 'PosteriorSample(chains={},  draws={}, columns={})'.format(
@@ -465,7 +471,7 @@ class PosteriorSample(object):
                 if not (p in self._column_names or p in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(p))
         if self._sample is None:
-            self._sample = self.get_sample()
+            self.parse_sample()
         data = self._sample.reshape(
             (self._draws * self._chains), len(self._column_names), order='A'
         )
@@ -512,11 +518,34 @@ class PosteriorSample(object):
         return self._column_names
 
     @property
+    def param_names(self) -> (str, ...):
+        """
+        Names of parameter, transformed parameter, and generated quantity model variables.
+        """
+        return self._param_names
+
+    @property
     def csv_files(self) -> (str, ...):
         """
         Full path name to stan_csv files returned by sampler.
         """
         return self._csv_files
+
+    @property
+    def metric_type(self) -> str:
+        return self._metric_type
+
+    @property
+    def metric(self) -> np.ndarray:
+        if self._metric is None:
+            self.parse_sample()
+        return self._metric
+
+    @property
+    def stepsize(self) -> np.ndarray:
+        if self._stepsize is None:
+            self.parse_sample()
+        return self._stepsize
 
     @property
     def sample(self) -> np.ndarray:
@@ -527,27 +556,60 @@ class PosteriorSample(object):
         all draws from a chain are contiguous.
         """
         if self._sample is None:
-            self._sample = self.get_sample()
+            self.parse_sample()
         return self._sample
 
-    def get_sample(self) -> np.ndarray:
+    def parse_sample(self) -> None:
         """
-        Returns posterior sample.
-        The first time this function is called it assembles the sample
-        from the stan_csv files; subsequent calls to this function
+        The first time this function is called it parses the stepsizes, metrics, and
+        drawset from the validated stan_csv files; subsequent calls to this function
         return the assembled sample.
         """
-        sample = np.empty(
+        if not (self._stepsize is None and self._metric is None and
+                    self._sample is None):
+            return
+        self._stepsize = np.empty(self._chains, dtype=float)
+        if self._metric_type == 'diag_e':
+            self._metric = np.empty(
+                (self._chains, len(self._param_names)), dtype=float)
+        else:
+            self._metric = np.empty(
+                (self._chains, len(self._param_names), len(self._param_names)),
+                dtype=float)
+        self._sample = np.empty(
             (self._draws, self._chains, len(self._column_names)), dtype=float,
             order='F'
         )
         for chain in range(self._chains):
-            draw = 0
-            with open(self._csv_files[chain], 'r') as fd:
-                for line in fd:
-                    if line.startswith('#') or line.startswith('lp__,'):
-                        continue
-                    vs = [float(x) for x in line.split(',')]
-                    sample[draw, chain, :] = vs
-                    draw += 1
-        return sample
+            try:
+                fp = open(self._csv_files[chain], 'r')
+                try:
+                    # read past initial comments, column header
+                    line = fp.readline().strip()
+                    while len(line) > 0 and line.startswith('#'):
+                        line = fp.readline().strip()
+                    line = fp.readline().strip() # adaptation header
+                    # stepsize
+                    line = fp.readline().strip() 
+                    label, stepsize = line.split('=')
+                    self._stepsize[chain] = float(stepsize.strip())
+                    line = fp.readline().strip() # metric header
+                    # metric
+                    if self._metric_type == 'diag_e':
+                        line = fp.readline().lstrip(' #\t')
+                        xs = line.split(',')
+                        self._metric[chain, :] = [float(x) for x in xs]
+                    else:
+                        for i in range(len(self._param_names)):
+                            line = fp.readline().lstrip(' #\t')
+                            xs = line.split(',')
+                            self._metric[chain, i, :] = [float(x) for x in xs]
+                    # draws
+                    for i in range(self._draws):
+                        line = fp.readline().lstrip(' #\t')
+                        xs = line.split(',')
+                        self._sample[i, chain, :] = [float(x) for x in xs]
+                finally:
+                    fp.close()
+            except IOError:
+                raise IOError()

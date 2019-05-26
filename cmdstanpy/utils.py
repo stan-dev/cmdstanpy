@@ -6,7 +6,7 @@ import os.path
 import json
 import subprocess
 import numpy as np
-from typing import Dict
+from typing import Dict, TextIO
 
 
 def validate_cmdstan_path(path: str) -> None:
@@ -128,46 +128,140 @@ def check_csv(filename: str) -> Dict:
 def scan_stan_csv(filename: str) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
-    draws_found = 0
     lineno = 0
-    with open(filename) as fp:
-        line = fp.readline().strip()
-        lineno += 1
-        while len(line) > 0 and line.startswith('#'):
-            parse_header(line, dict)
-            line = fp.readline().strip()
-            lineno += 1
-        dict['column_names'] = tuple(line.split(','))
-        num_cols = len(dict['column_names'])
-        line = fp.readline().strip()
-        lineno += 1
-        while len(line) > 0 and line.startswith('#'):
-            line = fp.readline().strip()
-            lineno += 1
-        while len(line) > 0 and not line.startswith('#'):
-            draws_found += 1
-            if len(line.split(',')) != num_cols:
-                raise ValueError(
-                    'file {}, at line {}: bad draw, expecting {} items, '
-                    'found {}'.format(
-                        filename, lineno, num_cols, len(line.split(',')))
-                )
-            line = fp.readline().strip()
-            lineno += 1
-    dict['draws'] = draws_found
+    try: 
+        fp = open(filename, 'r')
+        try:
+            lineno = scan_config(fp, dict, lineno)
+            lineno = scan_column_names(fp, dict, lineno)
+            lineno = scan_metric(fp, dict, lineno)
+            lineno = scan_draws(fp, dict, lineno)
+        finally:
+            fp.close()
+    except IOError:
+        raise IOError()
     return dict
 
 
-def parse_header(line: str, dict: Dict) -> None:
+def scan_config(fp: TextIO, dict: Dict, lineno: int) -> int:
     """
-    Parse initial stan_csv file comments lines and
+    Scan initial stan_csv file comments lines and
     save non-default configuration information to dict.
     """
-    if not line.endswith('(Default)'):
-        line = line.lstrip(' #\t')
-        key_val = line.split('=')
-        if len(key_val) == 2:
-            if key_val[0].strip() == 'file' and not key_val[1].endswith('csv'):
-                dict['data_file'] = key_val[1].strip()
-            elif key_val[0].strip() != 'file':
-                dict[key_val[0].strip()] = key_val[1].strip()
+    pline = peek_line(fp)
+    while len(pline) > 0 and pline.startswith('#'):
+        line = fp.readline().strip()
+        lineno += 1
+        if not line.endswith('(Default)'):
+            line = line.lstrip(' #\t')
+            key_val = line.split('=')
+            if len(key_val) == 2:
+                if key_val[0].strip() == 'file' and not key_val[1].endswith('csv'):
+                    dict['data_file'] = key_val[1].strip()
+                elif key_val[0].strip() != 'file':
+                    dict[key_val[0].strip()] = key_val[1].strip()
+        pline = peek_line(fp)
+    return lineno
+
+
+def scan_column_names(fp: TextIO, dict: Dict, lineno: int) -> int:
+    """
+    Parse column header into dict entries column_names, param_names
+    """
+    line = fp.readline().strip()
+    lineno += 1
+    names = line.split(',')
+    dict['column_names'] = tuple(names)
+    dict['param_names'] = [name for name in names if not name.endswith('__')]
+    return lineno
+
+
+def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
+    """
+    Scan stepsize, metric from  stan_csv file comment lines,
+    check against dict entries for metric, num_params
+    """
+    if not 'metric' in dict:
+        dict['metric'] = 'diag_e'
+    metric = dict['metric']
+    if  not metric in ['diag_e', 'dense_e']:
+        raise ValueError(
+            'bad metric specification: {}'.format(metric))
+    line = fp.readline().strip()
+    lineno += 1
+    if not line == '# Adaptation terminated':
+        raise ValueError(
+            'line {}: expecting metric, '
+            'found:\n\t "{}"'.format(lineno, line))
+    line = fp.readline().strip()
+    lineno += 1
+    label, stepsize = line.split('=')
+    if not label.startswith('# Step size'):
+        raise ValueError(
+            'line {}: expecting stepsize, '
+            'found:\n\t "{}"'.format(lineno, line))
+    try:
+        float(stepsize.strip())
+    except ValueError:
+        raise ValueError(
+            'line {}: invalid stepsize: {}'.format(
+                lineno, stepsize))
+    line = fp.readline().strip()
+    lineno += 1
+    if not ((metric == 'diag_e' and
+                 line == '# Diagonal elements of inverse mass matrix:') or
+                 (metric == 'dense_e' and
+                      line == '# Elements of inverse mass matrix:')):
+        raise ValueError(
+            'line {}: invalid or missing mass matrix '
+            'specification'.format(lineno))
+    num_params = len(dict['param_names'])
+    if metric == 'diag_e':
+        line = fp.readline().lstrip(' #\t')
+        lineno += 1
+        if len(line.split(',')) != num_params:
+            raise ValueError(
+                'line {}: invalid or missing mass matrix specification'.format(
+                    lineno))
+        return lineno
+    else:
+        for i in range(num_params):
+            line = fp.readline().lstrip(' #\t')
+            lineno += 1
+            if len(line.split(',')) != num_params:
+                raise ValueError(
+                'line {}: invalid or missing mass matrix specification'.format(
+                    lineno))
+        return lineno
+
+
+
+def scan_draws(fp: TextIO, dict: Dict, lineno: int) -> int:
+    """
+    Parse draws, check elements per draw, save num draws to dict.
+    """
+    draws_found = 0
+    num_cols = len(dict['column_names'])
+    pline = peek_line(fp)
+    while len(pline) > 0 and not pline.startswith('#'):
+        line = fp.readline().strip()
+        lineno += 1
+        draws_found += 1
+        if len(line.split(',')) != num_cols:
+            raise ValueError(
+                'line {}: bad draw, expecting {} items, found {}'.format(
+                    lineno, num_cols, len(line.split(',')))
+                )
+        pline = peek_line(fp)
+    dict['draws'] = draws_found
+    return lineno
+
+
+def peek_line(fp: TextIO) -> str:
+    """
+    Get one line from a file, reset position.
+    """
+    pos = fp.tell()
+    line = fp.readline()
+    fp.seek(pos)
+    return line

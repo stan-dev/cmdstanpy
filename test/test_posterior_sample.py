@@ -13,14 +13,19 @@ badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
 
 class PostSampleTest(unittest.TestCase):
-    def test_postsample_prefab_csv(self):
+    def test_postsample_prefab_runset(self):
         column_names = ['lp__','accept_stat__','stepsize__','treedepth__',
                             'n_leapfrog__','divergent__','energy__', 'theta']
+        param_names = ['theta']
+        metric = 'diag_e'
+        run = {'draws': 100, 'chains': 4, 'column_names': tuple(column_names),
+                   'param_names' : tuple(param_names), 'metric' : metric}
+
         output = os.path.join(datafiles_path, 'runset-good')
         csv_files = []
         for i in range(4):
             csv_files.append(os.path.join(output, 'bern-{}.csv'.format(i+1)))
-        run = {'draws': 100, 'chains': 4, 'column_names': tuple(column_names)}
+
         post_sample = PosteriorSample(run, tuple(csv_files))
         self.assertEqual(post_sample.chains,4)
         self.assertEqual(post_sample.draws,100)
@@ -61,8 +66,6 @@ class PostSampleTest(unittest.TestCase):
         self.assertEqual(capturedOutput.getvalue(), 'No problems detected.\n')
 
     def test_postsample_diagnose_divergences(self):
-        output = os.path.join(datafiles_path, 'diagnose-good',
-                                  'corr_gauss_depth8-1.csv')
         # TODO - use cmdstan test files instead
         expected = ''.join([
             '424 of 1000 (42%) transitions hit the maximum ',
@@ -71,8 +74,12 @@ class PostSampleTest(unittest.TestCase):
             'due to this limit will result in slow ',
             'exploration and you should increase the ',
             'limit to ensure optimal performance.\n'])
-        run = { 'draws': 10, 'chains': 1, 'column_names': ['a', 'b', 'c']}
+        run = { 'draws': 10, 'chains': 1, 'column_names': ['a', 'b', 'c'],
+                    'param_names' : ['b', 'c'], 'metric' : 'diag_e'}
+        output = os.path.join(datafiles_path, 'diagnose-good',
+                                  'corr_gauss_depth8-1.csv')
         csv_files = tuple([output])
+
         post_sample = PosteriorSample(run, csv_files)
         capturedOutput = io.StringIO()
         sys.stdout = capturedOutput
@@ -85,12 +92,16 @@ class PostSampleTest(unittest.TestCase):
                              'n_leapfrog__','divergent__','energy__']
         phis = ['phi.{}'.format(str(x+1)) for x in range(2095)]
         column_names = sampler_state + phis
+        metric = 'diag_e'
+        run = { 'draws': 1000, 'chains': 2, 'column_names': column_names,
+                    'param_names' : tuple(phis), 'metric' : metric}
+
         output = os.path.join(datafiles_path, 'runset-big')
         csv_files = []
         for i in range(2):
             csv_files.append(os.path.join(
                 output, 'output_icar_nyc_{}.csv'.format(i+1)))
-        run = { 'draws': 1000, 'chains': 2, 'column_names': column_names}
+
         post_sample = PosteriorSample(run, tuple(csv_files))
         post_sample.sample
         self.assertEqual((1000,2,2102), post_sample.sample.shape)
