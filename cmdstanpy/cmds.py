@@ -9,8 +9,7 @@ import tempfile
 
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
-from pathlib import PurePosixPath
-
+from pathlib import Path
 from typing import Dict
 
 from cmdstanpy import TMPDIR
@@ -43,7 +42,7 @@ def compile_model(
     if not overwrite and os.path.exists(exe_file):
         # print('model is up to date') # notify user or not?
         return Model(stan_file, exe_file)
-    exe_file_path = str(PurePosixPath(exe_file))
+    exe_file_path = Path(exe_file).as_posix()
     cmd = ['make', 'O={}'.format(opt_lvl), exe_file_path]
     print('compiling c++: make args {}'.format(cmd))
     try:
