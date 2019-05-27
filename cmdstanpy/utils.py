@@ -129,7 +129,7 @@ def scan_stan_csv(filename: str) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
-    try: 
+    try:
         fp = open(filename, 'r')
         try:
             lineno = scan_config(fp, dict, lineno)
@@ -156,7 +156,8 @@ def scan_config(fp: TextIO, dict: Dict, lineno: int) -> int:
             line = line.lstrip(' #\t')
             key_val = line.split('=')
             if len(key_val) == 2:
-                if key_val[0].strip() == 'file' and not key_val[1].endswith('csv'):
+                if key_val[0].strip() == 'file' and not key_val[1].endswith(
+                        'csv'):
                     dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
                     dict[key_val[0].strip()] = key_val[1].strip()
@@ -174,7 +175,8 @@ def scan_column_names(fp: TextIO, dict: Dict, lineno: int) -> int:
     lineno += 1
     names = line.split(',')
     dict['column_names'] = tuple(names)
-    dict['param_names'] = tuple([name for name in names if not name.endswith('__')])
+    dict['param_names'] = tuple(
+        [name for name in names if not name.endswith('__')])
     return lineno
 
 
@@ -183,7 +185,7 @@ def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
     Scan stepsize, metric from  stan_csv file comment lines,
     check against dict entries for metric, num_params
     """
-    if not 'metric' in dict:
+    if 'metric' not in dict:
         dict['metric'] = 'diag_e'
     metric = dict['metric']
     line = fp.readline().strip()
@@ -229,10 +231,9 @@ def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
             lineno += 1
             if len(line.split(',')) != num_params:
                 raise ValueError(
-                'line {}: invalid or missing mass matrix specification'.format(
-                    lineno))
+                    'line {}: invalid or missing mass matrix '
+                    'specification'.format(lineno))
         return lineno
-
 
 
 def scan_draws(fp: TextIO, dict: Dict, lineno: int) -> int:

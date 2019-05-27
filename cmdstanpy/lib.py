@@ -520,7 +520,8 @@ class PosteriorSample(object):
     @property
     def param_names(self) -> (str, ...):
         """
-        Names of parameter, transformed parameter, and generated quantity model variables.
+        Names of parameter, transformed parameter, and
+        generated quantity model variables.
         """
         return self._param_names
 
@@ -590,12 +591,12 @@ class PosteriorSample(object):
                     line = fp.readline().strip()
                     while len(line) > 0 and line.startswith('#'):
                         line = fp.readline().strip()
-                    line = fp.readline().strip() # adaptation header
+                    line = fp.readline().strip()  # adaptation header
                     # stepsize
-                    line = fp.readline().strip() 
+                    line = fp.readline().strip()
                     label, stepsize = line.split('=')
                     self._stepsize[chain] = float(stepsize.strip())
-                    line = fp.readline().strip() # metric header
+                    line = fp.readline().strip()  # metric header
                     # metric
                     if self._metric_type == 'diag_e':
                         line = fp.readline().lstrip(' #\t')
