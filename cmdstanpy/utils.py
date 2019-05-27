@@ -169,21 +169,19 @@ def scan_config(fp: TextIO, dict: Dict, lineno: int) -> int:
 
 def scan_column_names(fp: TextIO, dict: Dict, lineno: int) -> int:
     """
-    Parse column header into dict entries column_names, param_names
+    Parse column header into dict entries column_names
     """
     line = fp.readline().strip()
     lineno += 1
     names = line.split(',')
     dict['column_names'] = tuple(names)
-    dict['param_names'] = tuple(
-        [name for name in names if not name.endswith('__')])
     return lineno
 
 
 def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
     """
     Scan stepsize, metric from  stan_csv file comment lines,
-    check against dict entries for metric, num_params
+    set dict entries 'metric' and 'num_params'
     """
     if 'metric' not in dict:
         dict['metric'] = 'diag_e'
@@ -216,17 +214,14 @@ def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
         raise ValueError(
             'line {}: invalid or missing mass matrix '
             'specification'.format(lineno))
-    num_params = len(dict['param_names'])
+    line = fp.readline().lstrip(' #\t')
+    lineno += 1
+    num_params = len(line.split(','))
+    dict['num_params'] = num_params
     if metric == 'diag_e':
-        line = fp.readline().lstrip(' #\t')
-        lineno += 1
-        if len(line.split(',')) != num_params:
-            raise ValueError(
-                'line {}: invalid or missing mass matrix specification'.format(
-                    lineno))
         return lineno
     else:
-        for i in range(num_params):
+        for i in range(1,num_params):
             line = fp.readline().lstrip(' #\t')
             lineno += 1
             if len(line.split(',')) != num_params:

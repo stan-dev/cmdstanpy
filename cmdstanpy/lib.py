@@ -413,7 +413,7 @@ class PosteriorSample(object):
         self._chains = run['chains']
         self._draws = run['draws']
         self._column_names = run['column_names']
-        self._param_names = run['param_names']
+        self._num_params = run['num_params']
         self._metric_type = run['metric']
 
     def __repr__(self) -> str:
@@ -518,14 +518,6 @@ class PosteriorSample(object):
         return self._column_names
 
     @property
-    def param_names(self) -> (str, ...):
-        """
-        Names of parameter, transformed parameter, and
-        generated quantity model variables.
-        """
-        return self._param_names
-
-    @property
     def csv_files(self) -> (str, ...):
         """
         Full path name to stan_csv files returned by sampler.
@@ -574,10 +566,10 @@ class PosteriorSample(object):
         self._stepsize = np.empty(self._chains, dtype=float)
         if self._metric_type == 'diag_e':
             self._metric = np.empty(
-                (self._chains, len(self._param_names)), dtype=float)
+                (self._chains, self._num_params), dtype=float)
         else:
             self._metric = np.empty(
-                (self._chains, len(self._param_names), len(self._param_names)),
+                (self._chains, self._num_params, self._num_params),
                 dtype=float)
         self._sample = np.empty(
             (self._draws, self._chains, len(self._column_names)), dtype=float,
@@ -603,7 +595,7 @@ class PosteriorSample(object):
                         xs = line.split(',')
                         self._metric[chain, :] = [float(x) for x in xs]
                     else:
-                        for i in range(len(self._param_names)):
+                        for i in range(self._num_params):
                             line = fp.readline().lstrip(' #\t')
                             xs = line.split(',')
                             self._metric[chain, i, :] = [float(x) for x in xs]

@@ -104,6 +104,11 @@ class ReadStanCsvTest(unittest.TestCase):
                                     'invalid or missing mass matrix specification'):
             dict = check_csv(csv_bad)
 
+    def test_check_csv_metric_3(self):
+        csv_bad = os.path.join(datafiles_path, 'output_bad_metric_4.csv')
+        with self.assertRaisesRegex(Exception,
+                                    'invalid or missing mass matrix specification'):
+            dict = check_csv(csv_bad)
 
 
 if __name__ == '__main__':

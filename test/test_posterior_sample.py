@@ -27,7 +27,6 @@ class PosteriorSampleTest(unittest.TestCase):
         self.assertEqual(post_sample.draws,1000)
         self.assertEqual(post_sample.columns, len(column_names))
         self.assertEqual(post_sample.column_names, tuple(column_names))
-        self.assertEqual(post_sample.param_names, tuple(['theta']))
         post_sample.sample
         self.assertEqual(post_sample.metric_type, 'diag_e')
         self.assertEqual(post_sample.stepsize.shape,(4,))
@@ -53,10 +52,10 @@ class SampleTest(unittest.TestCase):
     def test_sample_prefab_runset(self):
         column_names = ['lp__','accept_stat__','stepsize__','treedepth__',
                             'n_leapfrog__','divergent__','energy__', 'theta']
-        param_names = ['theta']
+        num_params = 1
         metric = 'diag_e'
         run = {'draws': 100, 'chains': 4, 'column_names': tuple(column_names),
-                   'param_names' : tuple(param_names), 'metric' : metric}
+                   'num_params' : num_params, 'metric' : metric}
 
         output = os.path.join(datafiles_path, 'runset-good')
         csv_files = []
@@ -82,7 +81,7 @@ class SampleTest(unittest.TestCase):
             'exploration and you should increase the ',
             'limit to ensure optimal performance.\n'])
         run = { 'draws': 10, 'chains': 1, 'column_names': ['a', 'b', 'c'],
-                    'param_names' : ['b', 'c'], 'metric' : 'diag_e'}
+                    'num_params' : 3, 'metric' : 'diag_e'}
         output = os.path.join(datafiles_path, 'diagnose-good',
                                   'corr_gauss_depth8-1.csv')
         csv_files = tuple([output])
@@ -101,7 +100,7 @@ class SampleTest(unittest.TestCase):
         column_names = sampler_state + phis
         metric = 'diag_e'
         run = { 'draws': 1000, 'chains': 2, 'column_names': column_names,
-                    'param_names' : phis, 'metric' : metric}
+                    'num_params' : len(phis), 'metric' : metric}
 
         output = os.path.join(datafiles_path, 'runset-big')
         csv_files = []
@@ -113,7 +112,6 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(post_sample.chains, 2)
         self.assertEqual(post_sample.columns, len(column_names))
         self.assertEqual(post_sample.column_names, column_names)
-        self.assertEqual(post_sample.param_names, phis)
         post_sample.sample
         self.assertEqual(post_sample.metric_type, 'diag_e')
         self.assertEqual(post_sample.stepsize.shape,(2,))

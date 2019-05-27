@@ -22,7 +22,7 @@
 #         engine = nuts (Default)
 #           nuts
 #             max_depth = 10 (Default)
-#         metric = diag_e
+#         metric = dense_e
 #         metric_file =  (Default)
 #         stepsize = 1 (Default)
 #         stepsize_jitter = 0 (Default)
@@ -41,7 +41,7 @@ lp__,accept_stat__,stepsize__,treedepth__,n_leapfrog__,divergent__,energy__,thet
 # Step size = 0.787025
 # Elements of inverse mass matrix:
 # 1, 0, 0
-# 0, 2, 0
+# 0, 2, 0, 0
 # 1, 0, 1
 -6.76206,1,0.787025,1,1,0,6.81411,0.229458
 -6.81411,0.983499,0.787025,1,1,0,6.8147,0.20649
