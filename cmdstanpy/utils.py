@@ -148,9 +148,9 @@ def scan_config(fp: TextIO, dict: Dict, lineno: int) -> int:
     Scan initial stan_csv file comments lines and
     save non-default configuration information to dict.
     """
-    pline = peek_line(fp)
-    while len(pline) > 0 and pline.startswith('#'):
-        line = fp.readline().strip()
+    cur_pos = fp.tell()
+    line = fp.readline().strip()
+    while len(line) > 0 and line.startswith('#'):
         lineno += 1
         if not line.endswith('(Default)'):
             line = line.lstrip(' #\t')
@@ -160,7 +160,9 @@ def scan_config(fp: TextIO, dict: Dict, lineno: int) -> int:
                     dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
                     dict[key_val[0].strip()] = key_val[1].strip()
-        pline = peek_line(fp)
+        cur_pos = fp.tell()
+        line = fp.readline().strip()
+    fp.seek(cur_pos)
     return lineno
 
 
@@ -184,9 +186,6 @@ def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
     if not 'metric' in dict:
         dict['metric'] = 'diag_e'
     metric = dict['metric']
-    if  not metric in ['diag_e', 'dense_e']:
-        raise ValueError(
-            'bad metric specification: {}'.format(metric))
     line = fp.readline().strip()
     lineno += 1
     if not line == '# Adaptation terminated':
@@ -242,9 +241,9 @@ def scan_draws(fp: TextIO, dict: Dict, lineno: int) -> int:
     """
     draws_found = 0
     num_cols = len(dict['column_names'])
-    pline = peek_line(fp)
-    while len(pline) > 0 and not pline.startswith('#'):
-        line = fp.readline().strip()
+    cur_pos = fp.tell()
+    line = fp.readline().strip()
+    while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
         if len(line.split(',')) != num_cols:
@@ -252,16 +251,8 @@ def scan_draws(fp: TextIO, dict: Dict, lineno: int) -> int:
                 'line {}: bad draw, expecting {} items, found {}'.format(
                     lineno, num_cols, len(line.split(',')))
                 )
-        pline = peek_line(fp)
+        cur_pos = fp.tell()
+        line = fp.readline().strip()
     dict['draws'] = draws_found
+    fp.seek(cur_pos)
     return lineno
-
-
-def peek_line(fp: TextIO) -> str:
-    """
-    Get one line from a file, reset position.
-    """
-    pos = fp.tell()
-    line = fp.readline()
-    fp.seek(pos)
-    return line
