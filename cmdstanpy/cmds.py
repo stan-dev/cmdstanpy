@@ -148,11 +148,13 @@ def sample(
             cores, cpu_count()))
         cores = cpu_count()
     runset = RunSet(args=args, chains=chains)
-    tp = ThreadPool(cores)
-    for i in range(chains):
-        tp.apply_async(do_sample, (runset, i))
-    tp.close()
-    tp.join()
+    try:
+        tp = ThreadPool(cores)
+        for i in range(chains):
+            tp.apply_async(do_sample, (runset, i))
+    finally:
+        tp.close()
+        tp.join()
     if not runset.check_retcodes():
         msg = 'Error during sampling'
         for i in range(chains):
