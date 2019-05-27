@@ -174,7 +174,7 @@ def scan_column_names(fp: TextIO, dict: Dict, lineno: int) -> int:
     lineno += 1
     names = line.split(',')
     dict['column_names'] = tuple(names)
-    dict['param_names'] = [name for name in names if not name.endswith('__')]
+    dict['param_names'] = tuple([name for name in names if not name.endswith('__')])
     return lineno
 
 

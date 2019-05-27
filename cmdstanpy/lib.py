@@ -533,16 +533,19 @@ class PosteriorSample(object):
 
     @property
     def metric_type(self) -> str:
+        """Metric type, either 'diag_e' or 'dense_e'"""
         return self._metric_type
 
     @property
     def metric(self) -> np.ndarray:
+        """Array of per-chain metric used by sampler."""
         if self._metric is None:
             self.parse_sample()
         return self._metric
 
     @property
     def stepsize(self) -> np.ndarray:
+        """Array or per-chain stepsize."""
         if self._stepsize is None:
             self.parse_sample()
         return self._stepsize
@@ -561,9 +564,8 @@ class PosteriorSample(object):
 
     def parse_sample(self) -> None:
         """
-        The first time this function is called it parses the stepsizes, metrics, and
-        drawset from the validated stan_csv files; subsequent calls to this function
-        return the assembled sample.
+        Allocates and populates the stepsize, metric, and drawset arrays
+        by parsing the validated stan_csv files if they don't already exist.
         """
         if not (self._stepsize is None and self._metric is None and
                     self._sample is None):
