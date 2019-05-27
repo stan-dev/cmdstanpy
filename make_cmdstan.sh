@@ -1,32 +1,48 @@
 #!/usr/bin/env bash
 
-# install latest cmdstan release into subdir "releases"
-# symlink release dir as "cmdstan"
-# build binaries, compile example model to build model header
+# install a cmdstan release into a specified directory
+#  - build binaries, compile example model to build model header
+#  - symlink downloaded version as "cmdstan"
 
-if [[ ! -e releases ]]; then
-   mkdir releases
+while getopts ":d:v:" opt; do
+  case $opt in
+    d) RELDIR="$OPTARG"
+    ;;
+    v) VER="$OPTARG"
+    ;;
+    \?) echo "Invalid option -$OPTARG" >&2
+    ;;
+  esac
+done
+
+if [ -z ${RELDIR} ]; then
+    RELDIR="$HOME/.cmdstanpy"
 fi
-if [[ ! -d releases ]]; then
-    echo 'cannot install cmdstan, file "releases" is not a directory'
+
+if [[ ! -e ${RELDIR} ]]; then
+   mkdir ${RELDIR}
+fi
+if [[ ! -d ${RELDIR} ]]; then
+    echo "cannot install cmdstan, ${RELDIR} is not a directory"
     exit 1
 fi
-pushd releases > /dev/null
+echo "cmdstan dir: ${RELDIR}"
 
-echo "release dir: `pwd`"
-
-TAG=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name"`
-echo $TAG > tmp-tag
-VER=`perl -p -e 's/"tag_name": "v//g; s/",//g' tmp-tag`
-echo $VER
-rm tmp-tag
-
-echo "latest cmdstan: $VER"
+if [ -z ${VER} ]; then
+    TAG=`curl -s https://api.github.com/repos/stan-dev/cmdstan/releases/latest | grep "tag_name"`
+    echo $TAG > tmp-tag
+    VER=`perl -p -e 's/"tag_name": "v//g; s/",//g' tmp-tag`
+    rm tmp-tag
+fi
 CS=cmdstan-${VER}
+echo "cmdstan version: ${VER}"
+
+pushd ${RELDIR} > /dev/null
 if [[ -d $cs && -f ${CS}/bin/stanc && -f ${CS}/examples/bernoulli/bernoulli ]]; then
     echo "cmdstan already installed"
     exit 0
 fi
+echo "installing ${CS}"
 
 echo "downloading ${CS}.tar.gz from github"
 curl -s -OL https://github.com/stan-dev/cmdstan/releases/download/v${VER}/${CS}.tar.gz
@@ -52,9 +68,9 @@ ln -s ${CS} cmdstan
 pushd cmdstan > /dev/null
 echo "building cmdstan binaries"
 make -j2 build examples/bernoulli/bernoulli
-echo "installed ${CS}"
+echo "installed ${CS}; symlink: `ls -l ${RELDIR}/cmdstan`"
 
 # cleanup
 pushd -0 > /dev/null
 dirs -c > /dev/null
-echo "all installed versions in releases dir: `ls -Fd releases/* | grep -v @ | grep -v gz`"
+echo "all installed versions in ${RELDIR} dir: `ls -Fd ${RELDIR}/* | grep -v @ | grep -v gz`"
