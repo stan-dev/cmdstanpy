@@ -17,19 +17,19 @@ y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
 
 class CmdStanPathTest(unittest.TestCase):
     def test_default_path(self):
-        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
+        abs_rel_path = os.path.expanduser(os.path.join('~', '.cmdstanpy', 'cmdstan'))
         self.assertEqual(abs_rel_path, cmdstan_path())
 
     def test_set_path(self):
-        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
+        abs_rel_path = os.path.expanduser(os.path.join('~', '.cmdstanpy', 'cmdstan'))
         self.assertEqual(abs_rel_path, cmdstan_path())
-        cur_version = os.path.abspath(
-            os.path.join('releases', 'cmdstan-2.19.1'))
-        set_cmdstan_path(cur_version)
-        self.assertEqual(cur_version, cmdstan_path())
+        install_version = os.path.expanduser(
+            os.path.join('~', '.cmdstanpy', 'cmdstan-2.19.1'))
+        set_cmdstan_path(install_version)
+        self.assertEqual(install_version, cmdstan_path())
 
     def test_validate_path(self):
-        abs_rel_path = os.path.abspath(os.path.join('releases', 'cmdstan'))
+        abs_rel_path = os.path.expanduser(os.path.join('~', '.cmdstanpy', 'cmdstan'))
         validate_cmdstan_path(abs_rel_path)
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
         with self.assertRaisesRegex(ValueError, 'no such CmdStan directory'):
