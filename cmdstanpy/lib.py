@@ -394,15 +394,10 @@ class PosteriorSample(object):
     def __init__(self, run: Dict = None, csv_files: Tuple[str] = None) -> None:
         """Initialize object."""
         self._run = run
-        """sampler run info."""
         self._csv_files = csv_files
-        """sampler output csv files."""
         self._sample = None
-        """assembled draws across all chains, stored column major."""
         self._metric = None
-        """per-chain metrics."""
         self._stepsize = None
-        """per-chain stepsizes."""
         if run is None:
             raise ValueError('missing sampler run info')
         if csv_files is None:
@@ -497,7 +492,7 @@ class PosteriorSample(object):
 
     @property
     def chains(self) -> int:
-        """Number of chains"""
+        """Number of chains run by sampler"""
         return self._chains
 
     @property
@@ -574,37 +569,31 @@ class PosteriorSample(object):
         self._sample = np.empty(
             (self._draws, self._chains, len(self._column_names)), dtype=float,
             order='F'
-        )
+            )
         for chain in range(self._chains):
-            try:
-                fp = open(self._csv_files[chain], 'r')
-                try:
-                    # read past initial comments, column header
+            with open(self._csv_files[chain], 'r') as fp:
+                # read past initial comments, column header
+                line = fp.readline().strip()
+                while len(line) > 0 and line.startswith('#'):
                     line = fp.readline().strip()
-                    while len(line) > 0 and line.startswith('#'):
-                        line = fp.readline().strip()
-                    line = fp.readline().strip()  # adaptation header
-                    # stepsize
-                    line = fp.readline().strip()
-                    label, stepsize = line.split('=')
-                    self._stepsize[chain] = float(stepsize.strip())
-                    line = fp.readline().strip()  # metric header
-                    # metric
-                    if self._metric_type == 'diag_e':
+                line = fp.readline().strip()  # adaptation header
+                # stepsize
+                line = fp.readline().strip()
+                label, stepsize = line.split('=')
+                self._stepsize[chain] = float(stepsize.strip())
+                line = fp.readline().strip()  # metric header
+                # metric
+                if self._metric_type == 'diag_e':
+                    line = fp.readline().lstrip(' #\t')
+                    xs = line.split(',')
+                    self._metric[chain, :] = [float(x) for x in xs]
+                else:
+                    for i in range(self._num_params):
                         line = fp.readline().lstrip(' #\t')
                         xs = line.split(',')
-                        self._metric[chain, :] = [float(x) for x in xs]
-                    else:
-                        for i in range(self._num_params):
-                            line = fp.readline().lstrip(' #\t')
-                            xs = line.split(',')
-                            self._metric[chain, i, :] = [float(x) for x in xs]
-                    # draws
-                    for i in range(self._draws):
-                        line = fp.readline().lstrip(' #\t')
-                        xs = line.split(',')
-                        self._sample[i, chain, :] = [float(x) for x in xs]
-                finally:
-                    fp.close()
-            except IOError:
-                raise IOError()
+                        self._metric[chain, i, :] = [float(x) for x in xs]
+                # draws
+                for i in range(self._draws):
+                    line = fp.readline().lstrip(' #\t')
+                    xs = line.split(',')
+                    self._sample[i, chain, :] = [float(x) for x in xs]

@@ -129,24 +129,18 @@ def scan_stan_csv(filename: str) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
-    try:
-        fp = open(filename, 'r')
-        try:
-            lineno = scan_config(fp, dict, lineno)
-            lineno = scan_column_names(fp, dict, lineno)
-            lineno = scan_metric(fp, dict, lineno)
-            lineno = scan_draws(fp, dict, lineno)
-        finally:
-            fp.close()
-    except IOError:
-        raise IOError()
+    with open(filename, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
+        lineno = scan_metric(fp, dict, lineno)
+        lineno = scan_draws(fp, dict, lineno)
     return dict
 
 
-def scan_config(fp: TextIO, dict: Dict, lineno: int) -> int:
+def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan initial stan_csv file comments lines and
-    save non-default configuration information to dict.
+    save non-default configuration information to config_dict.
     """
     cur_pos = fp.tell()
     line = fp.readline().strip()
@@ -158,34 +152,34 @@ def scan_config(fp: TextIO, dict: Dict, lineno: int) -> int:
             if len(key_val) == 2:
                 if key_val[0].strip() == 'file' and not key_val[1].endswith(
                         'csv'):
-                    dict['data_file'] = key_val[1].strip()
+                    config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
-                    dict[key_val[0].strip()] = key_val[1].strip()
+                    config_dict[key_val[0].strip()] = key_val[1].strip()
         cur_pos = fp.tell()
         line = fp.readline().strip()
     fp.seek(cur_pos)
     return lineno
 
 
-def scan_column_names(fp: TextIO, dict: Dict, lineno: int) -> int:
+def scan_column_names(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
-    Parse column header into dict entries column_names
+    Process columns header, add to config_dict as 'column_names'
     """
     line = fp.readline().strip()
     lineno += 1
     names = line.split(',')
-    dict['column_names'] = tuple(names)
+    config_dict['column_names'] = tuple(names)
     return lineno
 
 
-def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
+def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan stepsize, metric from  stan_csv file comment lines,
-    set dict entries 'metric' and 'num_params'
+    set config_dict entries 'metric' and 'num_params'
     """
-    if 'metric' not in dict:
-        dict['metric'] = 'diag_e'
-    metric = dict['metric']
+    if 'metric' not in config_dict:
+        config_dict['metric'] = 'diag_e'
+    metric = config_dict['metric']
     line = fp.readline().strip()
     lineno += 1
     if not line == '# Adaptation terminated':
@@ -217,7 +211,7 @@ def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
     line = fp.readline().lstrip(' #\t')
     lineno += 1
     num_params = len(line.split(','))
-    dict['num_params'] = num_params
+    config_dict['num_params'] = num_params
     if metric == 'diag_e':
         return lineno
     else:
@@ -231,12 +225,12 @@ def scan_metric(fp: TextIO, dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fp: TextIO, dict: Dict, lineno: int) -> int:
+def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
-    Parse draws, check elements per draw, save num draws to dict.
+    Parse draws, check elements per draw, save num draws to config_dict.
     """
     draws_found = 0
-    num_cols = len(dict['column_names'])
+    num_cols = len(config_dict['column_names'])
     cur_pos = fp.tell()
     line = fp.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
@@ -249,6 +243,6 @@ def scan_draws(fp: TextIO, dict: Dict, lineno: int) -> int:
                 )
         cur_pos = fp.tell()
         line = fp.readline().strip()
-    dict['draws'] = draws_found
+    config_dict['draws'] = draws_found
     fp.seek(cur_pos)
     return lineno
