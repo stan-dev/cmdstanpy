@@ -40,7 +40,7 @@ lp__,accept_stat__,stepsize__,treedepth__,n_leapfrog__,divergent__,energy__,thet
 # Adaptation terminated
 # Step size = 0.730383
 # Diagonal elements of inverse mass matrix:
-# 0.508248
+# 0.508248, 0.508248
 -7.00518,1,0.730383,2,3,0,7.26237,0.345882
 -6.76715,0.968283,0.730383,1,3,0,7.334,0.226096
 -7.44199,0.932693,0.730383,2,3,0,7.44227,0.124863
