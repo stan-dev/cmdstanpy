@@ -123,7 +123,7 @@ class RunSetTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'draws'):
             runset.validate_csv_files()
 
-    def test_validate_bad_cols(self):
+    def test_validate_extra_param(self):
         # construct runset using existing sampler output
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli')

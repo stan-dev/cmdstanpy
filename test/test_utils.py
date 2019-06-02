@@ -87,6 +87,29 @@ class ReadStanCsvTest(unittest.TestCase):
         with self.assertRaisesRegex(Exception, 'found 9'):
             dict = check_csv(csv_bad)
 
+    def test_check_csv_metric_1(self):
+        csv_bad = os.path.join(datafiles_path, 'output_bad_metric_1.csv')
+        with self.assertRaisesRegex(Exception,
+                                   'expecting metric'):
+            dict = check_csv(csv_bad)
+
+    def test_check_csv_metric_2(self):
+        csv_bad = os.path.join(datafiles_path, 'output_bad_metric_2.csv')
+        with self.assertRaisesRegex(Exception, 'invalid stepsize'):
+            dict = check_csv(csv_bad)
+
+    def test_check_csv_metric_3(self):
+        csv_bad = os.path.join(datafiles_path, 'output_bad_metric_3.csv')
+        with self.assertRaisesRegex(Exception,
+                                    'invalid or missing mass matrix specification'):
+            dict = check_csv(csv_bad)
+
+    def test_check_csv_metric_3(self):
+        csv_bad = os.path.join(datafiles_path, 'output_bad_metric_4.csv')
+        with self.assertRaisesRegex(Exception,
+                                    'invalid or missing mass matrix specification'):
+            dict = check_csv(csv_bad)
+
 
 if __name__ == '__main__':
     unittest.main()
