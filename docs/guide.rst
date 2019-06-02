@@ -73,32 +73,31 @@ If you already have a compiled executable, you can construct the Model object di
 	bernoulli_model.name
 
 The ``sample`` function invokes the Stan HMC-NUTS sampler on the ``Model`` object and some data
-and returns a ``PosteriorSample`` object:
+and returns a ``RunSet`` object:
 
 .. code-block:: python
 
     bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
-    bern_sample = sample(bernoulli_model, chains=4, cores=2, data=bern_data)
+    bern_fit = sample(bernoulli_model, chains=4, cores=2, data=bern_data)
 
-The ``sample`` property of the ``PosteriorSample`` object is a 3-D ``numpy.ndarray``
+The ``sample`` property of the ``RunSet`` object is a 3-D ``numpy.ndarray``
 which contains all draws across all chains, stored column major format so that values
 for each parameter are stored contiguously in memory.
 The dimensions of the ndarray are arranged (draws, chains, columns).
-The ``extract`` function flattens this 3-D ndarray to a pandas.DataFrame,
+
+The ``get_drawset`` function flattens this 3-D ndarray to a pandas.DataFrame,
 one draw per row.  The `params` argument is used to restrict the DataFrame
 view to the specified parameter names, else all output columns are returned.
 
 .. code-block:: python
 
-    bern_sample.sample.shape
-    bern_sample.extract(params=['theta'])
+    bern_fit.sample.shape
+    get_drawset(bern_fit, params=['theta'])
 
 
-A ``PosteriorSample`` object's ``summary`` function returns the output of the CmdStan ``bin/stansummary``
+The ``summary`` function returns the output of the CmdStan ``bin/stansummary``
 utility as pandas.DataFrame:
 
 .. code-block:: python
 
-    bern_sample.summary()
-
-
+    summary(bern_fit)
