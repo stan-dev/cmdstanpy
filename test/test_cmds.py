@@ -6,7 +6,8 @@ import unittest
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.lib import Model, SamplerArgs, RunSet
-from cmdstanpy.cmds import compile_model, sample, summary, diagnose, get_drawset
+from cmdstanpy.cmds import compile_model, sample, summary, diagnose
+from cmdstanpy.cmds import get_drawset, save_csvfiles
 
 datafiles_path = os.path.join('test', 'data')
 
@@ -175,7 +176,6 @@ class DrawsetTest(unittest.TestCase):
             get_drawset(runset, params=['ph'])
 
 
-
 class SummaryTest(unittest.TestCase):
     def test_bernoulli(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -237,6 +237,48 @@ class DiagnoseTest(unittest.TestCase):
         diagnose(runset)
         sys.stdout = sys.__stdout__
         self.assertEqual(capturedOutput.getvalue(), expected)
+
+class SaveCsvfilesTest(unittest.TestCase):
+    def test_bernoulli(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        if not os.path.exists(exe):
+            compile_model(stan)
+        model = Model(stan, exe_file=exe)
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        post_sample = sample(model,
+                                 chains=4,
+                                 cores=2,
+                                 seed=12345,
+                                 post_warmup_draws_per_chain=200,
+                                 data_file=jdata)
+        for i in range(post_sample.chains):
+            csv_file = post_sample.csv_files[i]
+            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(txt_file))
+
+        basename = 'bern_save_csvfiles_test'
+        save_csvfiles(post_sample, datafiles_path, basename) # good
+        for i in range(post_sample.chains):
+            csv_file = post_sample.csv_files[i]
+            self.assertTrue(os.path.exists(csv_file))
+
+        with self.assertRaisesRegex(Exception, 'cannot save'):
+            save_csvfiles(post_sample,
+                              os.path.join('no', 'such', 'dir'), basename)
+
+        with self.assertRaisesRegex(Exception, 'file exists'):
+            save_csvfiles(post_sample, datafiles_path, basename)
+
+        save_csvfiles(post_sample, basename=basename) # default dir
+        for i in range(post_sample.chains):
+            csv_file = post_sample.csv_files[i]
+            self.assertTrue(os.path.exists(csv_file))
+
+        for i in range(post_sample.chains):    # cleanup
+            os.remove(post_sample.csv_files[i])
+
 
 if __name__ == '__main__':
     unittest.main()

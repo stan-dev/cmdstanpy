@@ -4,6 +4,7 @@ First class functions
 import os
 import os.path
 import platform
+import shutil
 import subprocess
 import tempfile
 
@@ -233,6 +234,39 @@ def get_drawset(runset: RunSet, params: List[str] = None) -> pd.DataFrame:
             if p == name or p == name.split('.')[0]:
                 mask.append(name)
     return df[mask]
+
+
+def save_csvfiles(
+        runset: RunSet, dir: str = None, basename: str = None) -> None:
+    """
+    Moves csvfiles to specified directory using specified basename,
+    appending suffix '-<id>.csv' to each.
+    """
+    if dir is None:
+        dir = '.'
+    test_path = os.path.join(dir, '.{}-test.tmp'.format(basename))
+    try:
+        with open(test_path, 'w') as fd:
+            pass
+        os.remove(test_path)  # cleanup
+    except OSError:
+        raise Exception('cannot save to path: {}'.format(dir))
+
+    for i in range(runset.chains):
+        if not os.path.exists(runset.csv_files[i]):
+            raise ValueError(
+                'cannot access csv file {}'.format(runset.csv_files[i]))
+        to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i+1))
+        if os.path.exists(to_path):
+            raise ValueError(
+                'file exists, not overwriting: {}'.format(to_path))
+        try:
+            print('saving tmpfile: "{}" as: "{}"'.format(
+                    runset.csv_files[i], to_path))
+            shutil.move(runset.csv_files[i], to_path)
+            runset.csv_files[i] = to_path
+        except (IOError, OSError) as e:
+            raise ValueError('cannot save to file: {}'.format(to_path)) from e
 
 
 def do_sample(runset: RunSet, idx: int) -> None:
