@@ -45,25 +45,6 @@ def cmdstan_path() -> str:
     return cmdstan_path
 
 
-def do_command(cmd: str, cwd: str = None) -> str:
-    """
-    Spawn process, print stdout/stderr to console.
-    Throws exception on non-zero returncode.
-    """
-    proc = subprocess.Popen(
-        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    proc.wait()
-    stdout, stderr = proc.communicate()
-    if proc.returncode:
-        if stderr:
-            msg = 'ERROR\n {} '.format(stderr.decode('ascii').strip())
-        raise Exception(msg)
-    if stdout:
-        return stdout.decode('ascii').strip()
-    return None
-
-
 def _rdump_array(key: str, val: np.ndarray) -> str:
     """Flatten numpy ndarray, format as Rdump variable declaration."""
     c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'

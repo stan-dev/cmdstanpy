@@ -7,14 +7,16 @@ import platform
 import subprocess
 import tempfile
 
+import pandas as pd
+
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs, PosteriorSample
-from cmdstanpy.utils import do_command, cmdstan_path
+from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs
+from cmdstanpy.utils import cmdstan_path
 
 
 def compile_model(
@@ -163,9 +165,74 @@ def sample(
                     msg, i, runset.retcode(i)
                 )
         raise Exception(msg)
-    run_dict = runset.validate_csv_files()
-    post_sample = PosteriorSample(run_dict, runset.csv_files)
-    return post_sample
+    runset.validate_csv_files()
+    return runset
+
+
+def summary(runset: RunSet) -> pd.DataFrame:
+    """
+    Run cmdstan/bin/stansummary over all output csv files.
+    Echo stansummary stdout/stderr to console.
+    Assemble csv tempfile contents into pandasDataFrame.
+    """
+    names = runset.column_names
+    cmd_path = os.path.join(cmdstan_path(), 'bin', 'stansummary')
+    tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
+        runset.model, runset.chains)
+    fd, tmp_csv_path = tempfile.mkstemp(
+        suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True
+        )
+    cmd = '{} --csv_file={} {}'.format(
+        cmd_path, tmp_csv_path, ' '.join(runset.csv_files)
+        )
+    do_command(cmd.split())  # breaks on all whitespace
+    summary_data = pd.read_csv(
+        tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
+        )
+    mask = [
+        x == 'lp__' or not x.endswith('__') for x in summary_data.index
+        ]
+    return summary_data[mask]
+
+
+def diagnose(runset: RunSet) -> None:
+    """
+    Run cmdstan/bin/diagnose over all output csv files.
+    Echo diagnose stdout/stderr to console.
+    """
+    cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
+    csv_files = ' '.join(runset.csv_files)
+    cmd = '{} {} '.format(cmd_path, csv_files)
+    result = do_command(cmd=cmd.split())
+    if result is None:
+        print('No problems detected.')
+    else:
+        print(result)
+
+
+def get_drawset(runset: RunSet, params: List[str] = None) -> pd.DataFrame:
+    """
+    Returns the assembled sample as a pandas DataFrame consisting of
+    one column per parameter and one row per draw.
+    """
+    pnames_base = [name.split('.')[0] for name in runset.column_names]
+    if params is not None:
+        for p in params:
+            if not (p in runset._column_names or p in pnames_base):
+                raise ValueError('unknown parameter: {}'.format(p))
+    runset.assemble_sample()
+    data = runset.sample.reshape(
+        (runset.draws * runset.chains), len(runset.column_names), order='A'
+        )
+    df = pd.DataFrame(data=data, columns=runset.column_names)
+    if params is None:
+        return df
+    mask = []
+    for p in params:
+        for name in runset.column_names:
+            if p == name or p == name.split('.')[0]:
+                mask.append(name)
+    return df[mask]
 
 
 def do_sample(runset: RunSet, idx: int) -> None:
@@ -188,3 +255,22 @@ def do_sample(runset: RunSet, idx: int) -> None:
             transcript.write('ERROR')
             transcript.write(stderr.decode('ascii'))
     runset.set_retcode(idx, proc.returncode)
+
+
+def do_command(cmd: str, cwd: str = None) -> str:
+    """
+    Spawn process, print stdout/stderr to console.
+    Throws exception on non-zero returncode.
+    """
+    proc = subprocess.Popen(
+        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    if proc.returncode:
+        if stderr:
+            msg = 'ERROR\n {} '.format(stderr.decode('ascii').strip())
+        raise Exception(msg)
+    if stdout:
+        return stdout.decode('ascii').strip()
+    return None
