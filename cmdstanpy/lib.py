@@ -2,15 +2,13 @@ import os
 import os.path
 import re
 import tempfile
-
 from typing import Dict, List
 
 import numpy as np
-import pandas as pd
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import jsondump, rdump
-from cmdstanpy.utils import check_csv, cmdstan_path
+from cmdstanpy.utils import check_csv
 
 
 class Model(object):
