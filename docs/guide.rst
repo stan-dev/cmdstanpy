@@ -95,9 +95,41 @@ view to the specified parameter names, else all output columns are returned.
     get_drawset(bern_fit, params=['theta'])
 
 
-The ``summary`` function returns the output of the CmdStan ``bin/stansummary``
-utility as pandas.DataFrame:
+CmdStan is distributed with a posterior analysis utility `stansummary`
+that reads the outputs of all chains and computes summary statistics
+on the model fit for all parameters. CmdStanPy's ``summary`` function
+runs this utility and returns the output as a pandas.DataFrame:
 
 .. code-block:: python
 
     summary(bern_fit)
+
+CmdStan is distributed with a second posterior analysis utility `diagnose`
+that reads the outputs of all chains and checks for the following
+potential problems:
+
++ Transitions that hit the maximum treedepth
++ Divergent transitions
++ Low E-BFMI values (sampler transitions HMC potential energy)
++ Low effective sample sizes
++ High R-hat values
+
+The ``diagnose`` function prints the output of the CmdStan ``bin/diagnose``:
+
+.. code-block:: python
+
+    diagnose(bern_fit)
+
+By default, CmdStanPy will save all CmdStan outputs in a temporary
+directory which is deleted when the Python session exits.
+In particular, if the ``sample`` command is invoked without
+specifying the `csv_output_file` path, then the csv output files
+will be written into this temporary directory and therefore will
+be deleted once the session exits.
+The ``save_csvfiles`` function moves the CmdStan csv output files
+to the specified location, renaming them using a specified basename.
+
+.. code-block:: python
+
+    save_csvfiles(bern_fit, dir='some/path', basename='descriptive-name')
+
