@@ -4,7 +4,6 @@ Utility functions
 import os
 import os.path
 import json
-import subprocess
 import numpy as np
 from typing import Dict, TextIO
 
@@ -43,25 +42,6 @@ def cmdstan_path() -> str:
             os.path.join('~', '.cmdstanpy', 'cmdstan'))
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
-
-
-def do_command(cmd: str, cwd: str = None) -> str:
-    """
-    Spawn process, print stdout/stderr to console.
-    Throws exception on non-zero returncode.
-    """
-    proc = subprocess.Popen(
-        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    proc.wait()
-    stdout, stderr = proc.communicate()
-    if proc.returncode:
-        if stderr:
-            msg = 'ERROR\n {} '.format(stderr.decode('ascii').strip())
-        raise Exception(msg)
-    if stdout:
-        return stdout.decode('ascii').strip()
-    return None
 
 
 def _rdump_array(key: str, val: np.ndarray) -> str:

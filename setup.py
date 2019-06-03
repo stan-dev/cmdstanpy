@@ -13,13 +13,27 @@ _classifiers = """
 Programming Language :: Python :: 3
 License :: OSI Approved :: Apache Software License
 Operating System :: OS Independent
-Development Status :: 4 - Beta
+Development Status :: Alpha
 Intended Audience :: Science/Research
 Natural Language :: English
-Programming Language :: Other
-Programming Language :: C++
+Programming Language :: Python
 Topic :: Scientific/Engineering :: Information Analysis
 """
+
+INSTALL_REQUIRES = ['numpy', 'pandas']
+
+EXTRAS_REQUIRE = {
+    'tests': [
+        'pytest',
+        'pytest-cov'],
+    'docs': [
+        'sphinx',
+        'sphinx-gallery',
+        'sphinx_rtd_theme',
+        'numpydoc',
+        'matplotlib'
+    ]
+}
 
 setuptools.setup(
     name='cmdstanpy',
@@ -30,6 +44,7 @@ setuptools.setup(
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
     packages=['cmdstanpy'],
-    install_requires='numpy pandas'.split(),
+    install_requires=INSTALL_REQUIRES,
+    extras_require=EXTRAS_REQUIRE,
     classifiers=_classifiers.strip().split('\n'),
 )
