@@ -25,7 +25,7 @@ def compile_model(
 ) -> Model:
     """
     Compile the given Stan model file to an executable.
-    
+
     :param stan_file: Path to Stan program
 
     :param opt_lvl: Optimization level for c++ compiler, one of {0, 1, 2, 3}
@@ -95,7 +95,7 @@ def sample(
 ) -> RunSet:
     """
     Run or more chains of the NUTS/HMC sampler.
-    
+
     Optional parameters override CmdStan default arguments.
 
     :param stan_model: compiled Stan program

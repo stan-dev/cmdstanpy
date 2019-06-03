@@ -2,6 +2,7 @@ import atexit
 import shutil
 import tempfile
 
+
 STANSUMMARY_STATS = [
     'Mean',
     'MCSE',
@@ -15,6 +16,7 @@ STANSUMMARY_STATS = [
 ]
 
 TMPDIR = tempfile.mkdtemp()
+
 
 def cleanup_tmpdir():
     print('deleting tmpfiles dir: {}'.format(TMPDIR))
