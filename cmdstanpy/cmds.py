@@ -1,5 +1,5 @@
 """
-First class functions
+First class functions.
 """
 import os
 import os.path
@@ -23,7 +23,19 @@ from cmdstanpy.utils import cmdstan_path
 def compile_model(
     stan_file: str = None, opt_lvl: int = 1, overwrite: bool = False
 ) -> Model:
-    """Compile the given Stan model file to an executable."""
+    """
+    Compile the given Stan model file to an executable.
+    
+    :param stan_file: Path to Stan program
+
+    :param opt_lvl: Optimization level for c++ compiler, one of {0, 1, 2, 3}
+      where level 0 optimization results in the shortest compilation time
+      with code that may run slowly and increasing optimization levels increase
+      compile time and runtime performance.
+
+    :param overwrite: When True, existing executible will be overwritten.
+      Defaults to False.
+    """
     if stan_file is None:
         raise Exception('must specify argument "stan_file"')
     if not os.path.exists(stan_file):
@@ -56,7 +68,7 @@ def compile_model(
 
 
 def sample(
-    stan_model: Model = None,
+    stan_model: Model,
     chains: int = 4,
     cores: int = 1,
     seed: int = None,
@@ -81,8 +93,49 @@ def sample(
     hmc_stepsize: float = 1.0,
     hmc_stepsize_jitter: float = 0,
 ) -> RunSet:
-    """Run or more chains of the NUTS/HMC sampler."""
+    """
+    Run or more chains of the NUTS/HMC sampler.
+    
+    Optional parameters override CmdStan default arguments.
 
+    :param stan_model: compiled Stan program
+    :param chains: number of sampler chains, should be > 1
+    :param cores: number of processes to run in parallel,
+        shouldn't exceed number of available processors
+    :param seed: seed for random number generator, if unspecified the seed
+        seed is generated from the system time
+    :param data: dictionary with entries for all data variables in the model
+    :param data_file: path to input data file in JSON or Rdump format.
+        *Note: cannot specify both `data` and `data_file` arguments*
+    :param init_param_values: dictionary with entries for initial value of
+        model parameters
+    :param init_param_values_file: path to initial parameter values file in
+        JSON or Rdump format.
+        *Note: cannot specify both `init_param_values` and
+        `init_param_values_file` arguments*
+    :parm csv_output_file: basename
+    :param refresh: console refresh rate, -1 for no updates
+    :param post_warmup_draws_per_chain: number of draws after warmup
+    :param warmup_draws_per_chain: number of draws during warmup
+    :param save_warmup: when True, sampler saves warmup draws in output file
+    :param thin: period between saved samples.
+        *Note: default value 1 is strongly recommended*
+    :param do_adaptation: when True, adapt stepsize, metric.
+        *Note: True requires that number of warmup draws > 0;
+        False requires that number of warmup draws == 0*
+    :param adapt_gamma: adaptation regularization scale
+    :param adapt_delta: adaptation target acceptance statistic
+    :param adapt_kappa: adaptation relaxation exponent
+    :param adapt_t0: adaptation interation offset
+    :param nuts_max_depth: maximum allowed iterations of NUTS sampler
+    :param hmc_metric: Euclidean metric, either `diag_e` or `dense_e`
+    :param hmc_metric_file: path to file containing either vector specifying
+        diagonal metric or matrix specifying dense metric
+        in either JSON or Rdump format
+    :param hmc_stepsize: initial stepsize for HMC sampler
+    :param hmc_stepsize_jitter: amount of random jitter added to stepsize
+        at each sampler iteration
+    """
     if data is not None and (
             data_file is not None and os.path.exists(data_file)):
         raise ValueError(
@@ -175,6 +228,8 @@ def summary(runset: RunSet) -> pd.DataFrame:
     Run cmdstan/bin/stansummary over all output csv files.
     Echo stansummary stdout/stderr to console.
     Assemble csv tempfile contents into pandasDataFrame.
+
+    :param runset: record of completed run of NUTS sampler
     """
     names = runset.column_names
     cmd_path = os.path.join(cmdstan_path(), 'bin', 'stansummary')
@@ -200,6 +255,8 @@ def diagnose(runset: RunSet) -> None:
     """
     Run cmdstan/bin/diagnose over all output csv files.
     Echo diagnose stdout/stderr to console.
+
+    :param runset: record of completed run of NUTS sampler
     """
     cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
     csv_files = ' '.join(runset.csv_files)
@@ -215,6 +272,9 @@ def get_drawset(runset: RunSet, params: List[str] = None) -> pd.DataFrame:
     """
     Returns the assembled sample as a pandas DataFrame consisting of
     one column per parameter and one row per draw.
+
+    :param runset: record of completed run of NUTS sampler
+    :param params: list of model parameter names.
     """
     pnames_base = [name.split('.')[0] for name in runset.column_names]
     if params is not None:
@@ -241,6 +301,10 @@ def save_csvfiles(
     """
     Moves csvfiles to specified directory using specified basename,
     appending suffix '-<id>.csv' to each.
+
+    :param runset: record of completed run of NUTS sampler
+    :param dir: directory path
+    :param basename:  base filename
     """
     if dir is None:
         dir = '.'

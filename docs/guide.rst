@@ -4,7 +4,7 @@ Guide
 This tutorial will walk you through the different steps of using CmdStanPy. 
 
 Install
--------
+_______
 
 CmdStanPy can be installed from GitHub
 
@@ -45,7 +45,7 @@ either from within your Python session or setting the environment variable direc
 
 
 Basics
-------
+______
 
 The ``compile_model`` function takes as its argument the name of the Stan program and returns a ``Model`` object:
 
