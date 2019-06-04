@@ -4,7 +4,7 @@ Guide
 This tutorial will walk you through the different steps of using CmdStanPy. 
 
 Install
--------
+_______
 
 CmdStanPy can be installed from GitHub
 
@@ -45,7 +45,7 @@ either from within your Python session or setting the environment variable direc
 
 
 Basics
-------
+______
 
 The ``compile_model`` function takes as its argument the name of the Stan program and returns a ``Model`` object:
 
@@ -73,32 +73,63 @@ If you already have a compiled executable, you can construct the Model object di
 	bernoulli_model.name
 
 The ``sample`` function invokes the Stan HMC-NUTS sampler on the ``Model`` object and some data
-and returns a ``PosteriorSample`` object:
+and returns a ``RunSet`` object:
 
 .. code-block:: python
 
     bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
-    bern_sample = sample(bernoulli_model, chains=4, cores=2, data=bern_data)
+    bern_fit = sample(bernoulli_model, chains=4, cores=2, data=bern_data)
 
-The ``sample`` property of the ``PosteriorSample`` object is a 3-D ``numpy.ndarray``
+The ``sample`` property of the ``RunSet`` object is a 3-D ``numpy.ndarray``
 which contains all draws across all chains, stored column major format so that values
 for each parameter are stored contiguously in memory.
 The dimensions of the ndarray are arranged (draws, chains, columns).
-The ``extract`` function flattens this 3-D ndarray to a pandas.DataFrame,
+
+The ``get_drawset`` function flattens this 3-D ndarray to a pandas.DataFrame,
 one draw per row.  The `params` argument is used to restrict the DataFrame
 view to the specified parameter names, else all output columns are returned.
 
 .. code-block:: python
 
-    bern_sample.sample.shape
-    bern_sample.extract(params=['theta'])
+    bern_fit.sample.shape
+    get_drawset(bern_fit, params=['theta'])
 
 
-A ``PosteriorSample`` object's ``summary`` function returns the output of the CmdStan ``bin/stansummary``
-utility as pandas.DataFrame:
+CmdStan is distributed with a posterior analysis utility `stansummary`
+that reads the outputs of all chains and computes summary statistics
+on the model fit for all parameters. CmdStanPy's ``summary`` function
+runs this utility and returns the output as a pandas.DataFrame:
 
 .. code-block:: python
 
-    bern_sample.summary()
+    summary(bern_fit)
 
+CmdStan is distributed with a second posterior analysis utility `diagnose`
+that reads the outputs of all chains and checks for the following
+potential problems:
+
++ Transitions that hit the maximum treedepth
++ Divergent transitions
++ Low E-BFMI values (sampler transitions HMC potential energy)
++ Low effective sample sizes
++ High R-hat values
+
+The ``diagnose`` function prints the output of the CmdStan ``bin/diagnose``:
+
+.. code-block:: python
+
+    diagnose(bern_fit)
+
+By default, CmdStanPy will save all CmdStan outputs in a temporary
+directory which is deleted when the Python session exits.
+In particular, if the ``sample`` command is invoked without
+specifying the `csv_output_file` path, then the csv output files
+will be written into this temporary directory and therefore will
+be deleted once the session exits.
+The ``save_csvfiles`` function moves the CmdStan csv output files
+to the specified location, renaming them using a specified basename.
+
+.. code-block:: python
+
+    save_csvfiles(bern_fit, dir='some/path', basename='descriptive-name')
 
