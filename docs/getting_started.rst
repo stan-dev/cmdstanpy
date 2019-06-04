@@ -1,16 +1,15 @@
-Guide
-=====
+Getting Started
+===============
 
-This tutorial will walk you through the different steps of using CmdStanPy. 
 
-Install
-_______
+Installation
+____________
 
 CmdStanPy can be installed from GitHub
 
 .. code-block:: bash
 
-	pip install -e git+https://github.com/stan-dev/cmdstanpy
+    pip install -e git+https://github.com/stan-dev/cmdstanpy
 
 CmdStanPy requires a local install of CmdStan.
 If you don't have CmdStan installed, you can run the script ``make_cmdstan.sh`` which
@@ -18,59 +17,76 @@ will download CmdStan from GitHub and build the CmdStan utilities.
 By default this script installs the latest version of CmdStan into a directory named
 `.cmdstanpy` in the user's `$HOME` directory:
 
-
 .. code-block:: bash
 
-	./make_cmdstan.sh
+    ./make_cmdstan.sh
     ls -F ~/.cmdstanpy
 
-This script takes two optional named arguments: `-d <directory> -v <version>`
+The named arguments: `-d <directory>` and  `-v <version>`
+can be used to override these defaults:
 
 .. code-block:: bash
 
-	./make_cmdstan.sh -d cmdstan -v 2.18.1
+    ./make_cmdstan.sh -d cmdstan -v 2.18.1
     ls -F ~/cmdstan
 
-If you already have CmdStan installed, then set the ``CMDSTAN`` environment variable accordingly,
-either from within your Python session or setting the environment variable directly using ``bash``:
+If you already have CmdStan installed in another location,
+then you can set the environment variable ``CMDSTAN`` to this
+location and it will be picked up by CmdStanPy:
 
 .. code-block:: bash
 
-	export CMDSTAN='/path/to/cmdstan'
+    export CMDSTAN='/path/to/cmdstan'
+
+
+The CmdStanPy commands `cmdstan_path` and `set_cmdstan_path`
+get and set this environment variable:
 
 .. code-block:: python
 
-	import os
-	os.environ['CMDSTAN'] = '/path/to/cmdstan'
+    from cmdstanpy import cmdstan_path, set_cmdstan_path
+
+    oldpath = get_cmdstan_path()
+    set_cmdstan_path(os.join('path','to','cmdstan'))
+    newpath = get_cmdstan_path()
 
 
-Basics
-______
+
+Basic Workflow
+______________
+
+
+Instantiate a Stan model
+------------------------
 
 The ``compile_model`` function takes as its argument the name of the Stan program and returns a ``Model`` object:
 
 .. code-block:: python
 
-	import os
-	import os.path
-	from cmdstanpy.lib import Model
-	from cmdstanpy.cmds import compile_model
-	bernoulli_stan = os.path.join('cmdstanpy', 'test', 'data', 'bernoulli.stan')
-	bernoulli_model = compile_model(bernoulli_stan)
-	print(bernoulli_model)
-	bernoulli_model.name
+    import os
+    import os.path
+    from cmdstanpy import Model, compile_model
+
+    bernoulli_stan = os.path.join('cmdstanpy', 'test', 'data', 'bernoulli.stan')
+    bernoulli_model = compile_model(bernoulli_stan)
+    print(bernoulli_model)
+    bernoulli_model.name
 
 The ``Model`` class specifies the Stan program and its corresponding compiled executable.
 If you already have a compiled executable, you can construct the Model object directly:
 
 .. code-block:: python
 
-	bernoulli_model = Model(
-			stan_file=os.path.join('cmdstanpy', 'test', 'data', 'bernoulli.stan'),
-			stan_exe=os.path.join('cmdstanpy', 'test', 'data', 'bernoulli')
-		    )
-	print(bernoulli_model)
-	bernoulli_model.name
+    bernoulli_model = Model(
+            stan_file=os.path.join('cmdstanpy', 'test', 'data', 'bernoulli.stan'),
+            stan_exe=os.path.join('cmdstanpy', 'test', 'data', 'bernoulli')
+            )
+    print(bernoulli_model)
+    bernoulli_model.name
+
+
+Run the HMC-NUTS sampler
+------------------------
 
 The ``sample`` function invokes the Stan HMC-NUTS sampler on the ``Model`` object and some data
 and returns a ``RunSet`` object:
@@ -79,6 +95,10 @@ and returns a ``RunSet`` object:
 
     bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
     bern_fit = sample(bernoulli_model, chains=4, cores=2, data=bern_data)
+
+
+Summarize or save the results
+-----------------------------
 
 The ``sample`` property of the ``RunSet`` object is a 3-D ``numpy.ndarray``
 which contains all draws across all chains, stored column major format so that values

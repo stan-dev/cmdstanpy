@@ -2,7 +2,6 @@ import atexit
 import shutil
 import tempfile
 
-
 STANSUMMARY_STATS = [
     'Mean',
     'MCSE',
@@ -17,11 +16,16 @@ STANSUMMARY_STATS = [
 
 TMPDIR = tempfile.mkdtemp()
 
-
 def cleanup_tmpdir():
     print('deleting tmpfiles dir: {}'.format(TMPDIR))
     shutil.rmtree(TMPDIR, ignore_errors=True)
     print("done")
 
-
 atexit.register(cleanup_tmpdir)
+
+# public API
+from .cmds import compile_model, sample, summary, diagnose, get_drawset
+from .cmds import save_csvfiles
+from .utils import set_cmdstan_path, cmdstan_path, jsondump, rdump
+from .lib import Model, RunSet
+
