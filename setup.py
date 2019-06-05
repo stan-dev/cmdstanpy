@@ -13,7 +13,7 @@ _classifiers = """
 Programming Language :: Python :: 3
 License :: OSI Approved :: Apache Software License
 Operating System :: OS Independent
-Development Status :: Alpha
+Development Status :: 3 - Alpha
 Intended Audience :: Science/Research
 Natural Language :: English
 Programming Language :: Python
@@ -37,7 +37,7 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='cmdstanpy',
-    version='0.10',
+    version='0.11',
     description='Python interface to CmdStan',
     long_description=readme_contents(),
     long_description_content_type="text/markdown",
