@@ -21,7 +21,7 @@ from cmdstanpy.utils import cmdstan_path
 
 
 def compile_model(
-    stan_file: str = None, opt_lvl: int = 1, overwrite: bool = False
+        stan_file: str = None, opt_lvl: int = 1, overwrite: bool = False, include_paths: List[str] = None
 ) -> Model:
     """
     Compile the given Stan model file to an executable.
@@ -35,6 +35,9 @@ def compile_model(
 
     :param overwrite: When True, existing executible will be overwritten.
       Defaults to False.
+    
+    :param include_paths: list of paths to directories where Stan should look 
+      for files to include.
     """
     if stan_file is None:
         raise Exception('must specify argument "stan_file"')
@@ -47,6 +50,8 @@ def compile_model(
         print('translating to {}'.format(hpp_file))
         stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc')
         cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file]
+        if include_paths is not None:
+            cmd = cmd.append('--include_paths=' + ','.join(include_paths))
         print('stan to c++: make args {}'.format(cmd))
         do_command(cmd)
         if not os.path.exists(hpp_file):
