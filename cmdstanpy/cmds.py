@@ -21,7 +21,8 @@ from cmdstanpy.utils import cmdstan_path
 
 
 def compile_model(
-        stan_file: str = None, opt_lvl: int = 1, overwrite: bool = False, include_paths: List[str] = None
+    stan_file: str = None, opt_lvl: int = 1, overwrite: bool = False,
+    include_paths: List[str] = None
 ) -> Model:
     """
     Compile the given Stan model file to an executable.
