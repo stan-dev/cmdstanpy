@@ -37,7 +37,7 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='cmdstanpy',
-    version='0.11',
+    version='0.12',
     description='Python interface to CmdStan',
     long_description=readme_contents(),
     long_description_content_type="text/markdown",

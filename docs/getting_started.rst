@@ -25,7 +25,7 @@ By default this script installs the latest version of CmdStan into a directory n
 
 .. code-block:: bash
 
-    ./make_cmdstan.sh
+    python install_cmdstan.py
     ls -F ~/.cmdstanpy
 
 The named arguments: `-d <directory>` and  `-v <version>`
@@ -33,7 +33,7 @@ can be used to override these defaults:
 
 .. code-block:: bash
 
-    ./make_cmdstan.sh -d cmdstan -v 2.18.1
+    python install_cmdstan.py
     ls -F ~/cmdstan
 
 If you already have CmdStan installed in another location,
@@ -62,10 +62,13 @@ Basic Workflow
 ______________
 
 
-Instantiate a Stan model
-------------------------
+Create a python `Model` object
+------------------------------
 
-The ``compile_model`` function takes as its argument the name of the Stan program and returns a ``Model`` object:
+The ``Model`` class specifies the Stan program and its corresponding compiled executable.
+
+The function ``compile_model`` is used to compile or or recompile a Stan program.
+It takes the path to the Stan program file and returns a ``Model`` object:
 
 .. code-block:: python
 
@@ -78,7 +81,6 @@ The ``compile_model`` function takes as its argument the name of the Stan progra
     print(bernoulli_model)
     bernoulli_model.name
 
-The ``Model`` class specifies the Stan program and its corresponding compiled executable.
 If you already have a compiled executable, you can construct the Model object directly:
 
 .. code-block:: python
@@ -91,6 +93,8 @@ If you already have a compiled executable, you can construct the Model object di
     bernoulli_model.name
 
 
+
+
 Run the HMC-NUTS sampler
 ------------------------
 
@@ -100,7 +104,7 @@ and returns a ``RunSet`` object:
 .. code-block:: python
 
     bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
-    bern_fit = sample(bernoulli_model, chains=4, cores=2, data=bern_data)
+    bern_fit = sample(bernoulli_model, data=bern_data)
 
 
 Summarize or save the results
