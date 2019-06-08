@@ -7,10 +7,12 @@ import json
 import numpy as np
 from typing import Dict, TextIO
 
+
 def get_latest_cmdstan(dot_dir: str) -> str:
-    versions = [name.split('-')[1] for name in os.listdir(dot_dir)
-            if os.path.isdir(os.path.join(dot_dir, name)) and
-                   name.startswith('cmdstan-')]
+    versions = [
+        name.split('-')[1] for name in os.listdir(dot_dir)
+        if os.path.isdir(os.path.join(dot_dir, name))
+        and name.startswith('cmdstan-')]
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
