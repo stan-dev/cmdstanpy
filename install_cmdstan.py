@@ -1,6 +1,6 @@
 """
 Download and install a CmdStan release from GitHub.
-Optional command line arguments: 
+Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
 """
@@ -15,6 +15,7 @@ import sys
 import tarfile
 import urllib.request
 
+
 @contextlib.contextmanager
 def pushd(new_dir):
     previous_dir = os.getcwd()
@@ -22,13 +23,15 @@ def pushd(new_dir):
     yield
     os.chdir(previous_dir)
 
+
 def usage():
     print(
-    """Arguments:
-    -v (--version) :CmdStan version
-    -d (--dir) : install directory
-    -h (--help) : this message
-    """)
+        """Arguments:
+        -v (--version) :CmdStan version
+        -d (--dir) : install directory
+        -h (--help) : this message
+        """)
+
 
 def install_version(cmdstan_version):
     with pushd(cmdstan_version):
@@ -58,16 +61,18 @@ def install_version(cmdstan_version):
             sys.exit(3)
     print('Installed {}'.format(cmdstan_version))
 
+
 def is_installed(cmdstan_version):
     if not os.path.exists(os.path.join(cmdstan_version, 'bin')):
         return False
     if os.path.exists(os.path.join(
-        cmdstan_version, 'examples', 'bernoulli', 'bernoulli')):
+            cmdstan_version, 'examples', 'bernoulli', 'bernoulli')):
         return True
     if os.path.exists(os.path.join(
-        cmdstan_version, 'examples', 'bernoulli', 'bernoulli.exe')):
+            cmdstan_version, 'examples', 'bernoulli', 'bernoulli.exe')):
         return True
     return False
+
 
 def latest_version():
     try:
@@ -83,6 +88,7 @@ def latest_version():
         end_idx = response.find('\"', start_idx)
     return response[start_idx:end_idx]
 
+
 def retrieve_latest_version(version):
     print('Downloading CmdStan version {}'.format(version))
     url = 'https://github.com/stan-dev/cmdstan/releases/download/'\
@@ -90,7 +96,8 @@ def retrieve_latest_version(version):
     try:
         file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
     except urllib.error.URLError as err:
-        print('Failed to download CmdStan version {} from github.com'.format(version))
+        print('Failed to download CmdStan version {} from github.com'.format(
+            version))
         print(err)
         sys.exit(3)
     print('Download successful, file: {}'.format(file_tmp))
@@ -103,10 +110,11 @@ def retrieve_latest_version(version):
         sys.exit(3)
     print('Unpacked download as cmdstan-{}'.format(version))
 
+
 def validate_dir(install_dir):
     if not os.path.exists(install_dir):
-        try:  
-            os.makedirs(install_dir);
+        try:
+            os.makedirs(install_dir)
         except OSError as e:
             raise ValueError(
                 'Cannot create directory: {}'.format(install_dir)
@@ -122,7 +130,6 @@ def validate_dir(install_dir):
         except OSError as e:
             raise ValueError('Cannot write files to directory {}'.format(
                 install_dir)) from e
-
 
 
 def main():
@@ -151,6 +158,6 @@ def main():
             sys.exit()
         install_version(cmdstan_version)
 
-    
+
 if __name__ == "__main__":
     main()

@@ -8,7 +8,7 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install flake8 pytest
-  - python build_cmdstan.py
+  - python install_cmdstan.py
 
 after install:
 

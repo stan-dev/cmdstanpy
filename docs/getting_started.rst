@@ -5,14 +5,20 @@ Getting Started
 Installation
 ____________
 
-CmdStanPy can be installed from GitHub
+CmdStanPy is a pure-Python package which can be installed from PyPI
+
+.. code-block:: bash
+
+    pip install --upgrade cmdstanpy
+
+or from GitHub
 
 .. code-block:: bash
 
     pip install -e git+https://github.com/stan-dev/cmdstanpy
 
 CmdStanPy requires a local install of CmdStan.
-If you don't have CmdStan installed, you can run the script ``make_cmdstan.sh`` which
+If you don't have CmdStan installed, you can run the script ``install_cmdstan.sh`` which
 will download CmdStan from GitHub and build the CmdStan utilities.
 By default this script installs the latest version of CmdStan into a directory named
 `.cmdstanpy` in the user's `$HOME` directory:
