@@ -61,16 +61,12 @@ if [[ ${TAR_RC} -ne 0 ]]; then
     exit ${TAR_RC}
 fi
 
-if [[ -h cmdstan ]]; then
-    unlink cmdstan
-fi
-ln -s ${CS} cmdstan
-pushd cmdstan > /dev/null
+pushd ${CS}cmdstan > /dev/null
 echo "building cmdstan binaries"
 make -j2 build examples/bernoulli/bernoulli
-echo "installed ${CS}; symlink: `ls -l ${RELDIR}/cmdstan`"
+echo "installed ${CS}"
 
 # cleanup
 pushd -0 > /dev/null
 dirs -c > /dev/null
-echo "all installed versions in ${RELDIR} dir: `ls -Fd ${RELDIR}/* | grep -v @ | grep -v gz`"
+echo "all installed versions in ${RELDIR} dir: `ls -Fd ${RELDIR}/cmdstan* | grep -v gz`"
