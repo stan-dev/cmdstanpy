@@ -37,13 +37,14 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='cmdstanpy',
-    version='0.13',
+    version='0.14',
     description='Python interface to CmdStan',
     long_description=readme_contents(),
     long_description_content_type="text/markdown",
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
     packages=['cmdstanpy'],
+    scripts=['bin/install_cmdstan'],
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
     classifiers=_classifiers.strip().split('\n'),

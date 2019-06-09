@@ -9,6 +9,11 @@ from typing import Dict, TextIO
 
 
 def get_latest_cmdstan(dot_dir: str) -> str:
+    """
+    Given a valid directory path, find all installed CmdStan versions
+    and return highest (i.e., latest) version number.
+    Assumes directory populated via script ``bin/install_cmdstan``.
+    """
     versions = [
         name.split('-')[1] for name in os.listdir(dot_dir)
         if os.path.isdir(os.path.join(dot_dir, name))
@@ -26,11 +31,12 @@ def validate_cmdstan_path(path: str) -> None:
     Throws exception if specified path is invalid.
     """
     if not os.path.isdir(path):
-        raise ValueError('no such CmdStan directory {}'.format(path))
+        raise ValueError('no such CmdStan directory {}'.format(
+            path))
     if not os.path.exists(os.path.join(path, 'bin', 'stanc')):
         raise ValueError(
             "no CmdStan binaries found, "
-            "run installer script 'build_cmdstan.py'")
+            "run command line script 'install_cmdstan'")
 
 
 def set_cmdstan_path(path: str) -> None:
@@ -50,11 +56,15 @@ def cmdstan_path() -> str:
         cmdstan_path = os.environ['CMDSTAN']
     else:
         cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        if not os.path.exists(cmdstan_dir):
+            raise ValueError(
+                "no CmdStan installation found, "
+                "run command line script 'install_cmdstan'")
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
                 "no CmdStan installation found, "
-                "run installer script 'build_cmdstan.py'")
+                "run command line script 'install_cmdstan'")
         cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
