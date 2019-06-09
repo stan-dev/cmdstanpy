@@ -256,6 +256,15 @@ def diagnose(runset: RunSet) -> None:
     Run cmdstan/bin/diagnose over all output csv files.
     Echo diagnose stdout/stderr to console.
 
+    The diagnose utility reads the outputs of all chains
+    and checks for the following potential problems:
+
+    + Transitions that hit the maximum treedepth
+    + Divergent transitions
+    + Low E-BFMI values (sampler transitions HMC potential energy)
+    + Low effective sample sizes
+    + High R-hat values
+
     :param runset: record of completed run of NUTS sampler
     """
     cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
