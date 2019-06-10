@@ -110,7 +110,7 @@ def retrieve_latest_version(version):
         print(err)
         sys.exit(3)
     finally:
-        tarfile.close()
+        tar.close()
     print('Unpacked download as cmdstan-{}'.format(version))
 
 
