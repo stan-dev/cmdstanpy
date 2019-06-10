@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import setuptools
-
+from cmdstanpy import __version__
 
 def readme_contents() -> str:
     with open('README.md', 'r') as fd:
@@ -37,7 +37,7 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='cmdstanpy',
-    version='0.3.0',
+    version=__version__,
     description='Python interface to CmdStan',
     long_description=readme_contents(),
     long_description_content_type="text/markdown",

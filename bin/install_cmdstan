@@ -46,7 +46,7 @@ def install_version(cmdstan_version):
         if proc.returncode:
             print('Command "make build" failed')
             if stderr:
-                print(stderr.decode('ascii').strip())
+                print(stderr.decode('utf-8').strip())
             sys.exit(3)
         print('Test model compilation')
         cmd = ['make', os.path.join('examples', 'bernoulli', 'bernoulli')]
@@ -58,7 +58,7 @@ def install_version(cmdstan_version):
         if proc.returncode:
             print('Failed to compile example model bernoulli.stan')
             if stderr:
-                print(stderr.decode('ascii').strip())
+                print(stderr.decode('utf-8').strip())
             sys.exit(3)
     print('Installed {}'.format(cmdstan_version))
 
@@ -109,6 +109,8 @@ def retrieve_latest_version(version):
         print('Failed to unpack download')
         print(err)
         sys.exit(3)
+    finally:
+        tarfile.close()
     print('Unpacked download as cmdstan-{}'.format(version))
 
 

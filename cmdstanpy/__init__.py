@@ -29,3 +29,4 @@ from .cmds import compile_model, sample, summary, diagnose, get_drawset
 from .cmds import save_csvfiles
 from .utils import set_cmdstan_path, cmdstan_path, jsondump, rdump
 from .lib import Model, RunSet
+from ._version import __version__

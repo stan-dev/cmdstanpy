@@ -1,5 +1,4 @@
 import os
-import os.path
 import re
 import tempfile
 from typing import Dict, List

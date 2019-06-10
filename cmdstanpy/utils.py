@@ -2,7 +2,6 @@
 Utility functions
 """
 import os
-import os.path
 import json
 import numpy as np
 from typing import Dict, TextIO
