@@ -2,7 +2,6 @@
 First class functions.
 """
 import os
-import os.path
 import platform
 import shutil
 import subprocess
@@ -256,6 +255,15 @@ def diagnose(runset: RunSet) -> None:
     Run cmdstan/bin/diagnose over all output csv files.
     Echo diagnose stdout/stderr to console.
 
+    The diagnose utility reads the outputs of all chains
+    and checks for the following potential problems:
+
+    + Transitions that hit the maximum treedepth
+    + Divergent transitions
+    + Low E-BFMI values (sampler transitions HMC potential energy)
+    + Low effective sample sizes
+    + High R-hat values
+
     :param runset: record of completed run of NUTS sampler
     """
     cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
@@ -348,10 +356,10 @@ def do_sample(runset: RunSet, idx: int) -> None:
     print('finish chain {}.  '.format(idx + 1))
     with open(transcript_file, 'w+') as transcript:
         if stdout:
-            transcript.write(stdout.decode('ascii'))
+            transcript.write(stdout.decode('utf-8'))
         if stderr:
             transcript.write('ERROR')
-            transcript.write(stderr.decode('ascii'))
+            transcript.write(stderr.decode('utf-8'))
     runset.set_retcode(idx, proc.returncode)
 
 
@@ -367,8 +375,8 @@ def do_command(cmd: str, cwd: str = None) -> str:
     stdout, stderr = proc.communicate()
     if proc.returncode:
         if stderr:
-            msg = 'ERROR\n {} '.format(stderr.decode('ascii').strip())
+            msg = 'ERROR\n {} '.format(stderr.decode('utf-8').strip())
         raise Exception(msg)
     if stdout:
-        return stdout.decode('ascii').strip()
+        return stdout.decode('utf-8').strip()
     return None

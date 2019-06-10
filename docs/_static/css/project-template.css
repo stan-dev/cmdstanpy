@@ -1,5 +1,9 @@
 @import url("theme.css");
 
+.highlight * {
+    background: #eff2f5;
+}
+
 .highlight a {
     text-decoration: underline;
 }
