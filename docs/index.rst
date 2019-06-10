@@ -3,23 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to CmdStanPy's documentation!
-=====================================
+===============================================
+:mod:`cmdstanpy` -- Python interface to CmdStan
+===============================================
 
-CmdStanPy is a Python interface to CmdStan, itself an interface to the
-Stan statistics software.
+.. module:: cmdstanpy
+   :synopsis: A lightweight interface to CmdStan which provides the necessary objects and functions to do use Stan for Bayesian inference.
+
+.. moduleauthor:: Stan Developement Team
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
-   guide
+   getting_started
    api
 
 
-Indices and tables
-==================
+:ref:`genindex`
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

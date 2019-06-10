@@ -1,11 +1,7 @@
 import atexit
-import os.path
 import shutil
 import tempfile
 
-
-CMDSTAN_PATH = os.path.abspath(os.path.join('.', 'releases', 'cmdstan'))
-TMPDIR = tempfile.mkdtemp()
 STANSUMMARY_STATS = [
     'Mean',
     'MCSE',
@@ -18,6 +14,8 @@ STANSUMMARY_STATS = [
     'R_hat',
 ]
 
+TMPDIR = tempfile.mkdtemp()
+
 
 def cleanup_tmpdir():
     print('deleting tmpfiles dir: {}'.format(TMPDIR))
@@ -26,3 +24,9 @@ def cleanup_tmpdir():
 
 
 atexit.register(cleanup_tmpdir)
+
+from .cmds import compile_model, sample, summary, diagnose, get_drawset
+from .cmds import save_csvfiles
+from .utils import set_cmdstan_path, cmdstan_path, jsondump, rdump
+from .lib import Model, RunSet
+from ._version import __version__

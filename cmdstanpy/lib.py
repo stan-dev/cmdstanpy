@@ -1,15 +1,12 @@
 import os
-import os.path
 import re
 import tempfile
-
-from typing import List, Dict, Tuple
+from typing import Dict, List
 
 import numpy as np
-import pandas as pd
 
-from cmdstanpy import CMDSTAN_PATH, TMPDIR
-from cmdstanpy.utils import do_command, jsondump, rdump
+from cmdstanpy import TMPDIR
+from cmdstanpy.utils import jsondump, rdump
 from cmdstanpy.utils import check_csv
 
 
@@ -275,17 +272,15 @@ class SamplerArgs(object):
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args: SamplerArgs, chains: int = 2) -> None:
+    def __init__(self, args: SamplerArgs, chains: int = 4) -> None:
         """Initialize object."""
+        self._args = args
         self._chains = chains
-        """number of chains."""
         if chains < 1:
             raise ValueError(
                 'chains must be positive integer value, '
                 'found {i]}'.format(chains)
             )
-        self.args = args
-        """sampler args."""
         self.csv_files = []
         """per-chain sample csv files."""
         if args.output_file is None:
@@ -316,7 +311,13 @@ class RunSet(object):
         ]
         """per-chain sampler command."""
         self._retcodes = [-1 for _ in range(chains)]
-        """per-chain return codes."""
+        self._draws = None
+        self._column_names = None
+        self._num_params = None  # metric dim(s)
+        self._metric_type = None
+        self._metric = None
+        self._stepsize = None
+        self._sample = None
 
     def __repr__(self) -> str:
         repr = 'RunSet(args={}, chains={}'.format(self.args, self._chains)
@@ -327,11 +328,11 @@ class RunSet(object):
 
     @property
     def retcodes(self) -> List[int]:
-        """Get list of retcodes for all chains."""
+        """per-chain return codes."""
         return self._retcodes
 
     def check_retcodes(self) -> bool:
-        """Checks that all chains have retcode 0."""
+        """True when all chains have retcode 0."""
         for i in range(self._chains):
             if self._retcodes[i] != 0:
                 return False
@@ -346,8 +347,67 @@ class RunSet(object):
         self._retcodes[idx] = val
 
     @property
+    def model(self) -> str:
+        """Stan model name"""
+        return self._args.model.name
+
+    @property
     def chains(self) -> int:
+        """Number of sampler chains."""
         return self._chains
+
+    @property
+    def draws(self) -> int:
+        """Number of draws per chain"""
+        return self._draws
+
+    @property
+    def columns(self) -> int:
+        """
+        Total number of information items returned by sampler for each draw.
+        Consists of sampler state, model parameters and computed quantities.
+        """
+        return len(self._column_names)
+
+    @property
+    def column_names(self) -> (str, ...):
+        """
+        Names of information items returned by sampler for each draw.
+        Includes for sampler state labels and
+        names of model parameters and computed quantities.
+        """
+        return self._column_names
+
+    @property
+    def metric_type(self) -> str:
+        """Metric type, either 'diag_e' or 'dense_e'"""
+        return self._metric_type
+
+    @property
+    def metric(self) -> np.ndarray:
+        """Array of per-chain metric used by sampler."""
+        if self._metric is None:
+            self.assemble_sample()
+        return self._metric
+
+    @property
+    def stepsize(self) -> np.ndarray:
+        """Array or per-chain stepsize."""
+        if self._stepsize is None:
+            self.assemble_sample()
+        return self._stepsize
+
+    @property
+    def sample(self) -> np.ndarray:
+        """
+        A 3-D numpy ndarray which contains all draws across all chain arranged
+        as (draws, chains, columns) stored column major so that the values
+        for each parameter are stored contiguously in memory, likewise
+        all draws from a chain are contiguous.
+        """
+        if self._sample is None:
+            self.assemble_sample()
+        return self._sample
 
     def check_console_msgs(self) -> bool:
         """Checks console messages for each chain."""
@@ -364,10 +424,11 @@ class RunSet(object):
         if not valid:
             raise Exception(msg)
 
-    def validate_csv_files(self) -> Dict:
+    def validate_csv_files(self) -> None:
         """
-        Checks csv output files for all chains.
-        Returns Dict with entries for sampler config and drawset .
+        Checks that csv output files for all chains are consistent.
+        Populates attributes for drawset, metric.
+        Raises exception when inconsistencies detected.
         """
         dzero = {}
         for i in range(self._chains):
@@ -383,140 +444,55 @@ class RunSet(object):
                                 self.csv_files[i], key, dzero[key], d[key]
                             )
                         )
-        dzero['chains'] = self._chains
-        return dzero
+        self._draws = dzero['draws']
+        self._column_names = dzero['column_names']
+        self._num_params = dzero['num_params']
+        self._metric_type = dzero['metric']
 
-
-# TODO:  save sample - mv csv tempfiles to permanent location
-class PosteriorSample(object):
-    """Assembled draws from all chains in a RunSet."""
-
-    def __init__(self, run: Dict = None, csv_files: Tuple[str] = None) -> None:
-        """Initialize object."""
-        self._run = run
-        """sampler run info."""
-        self._csv_files = csv_files
-        """sampler output csv files."""
-        self._sample = None
-        """assembled draws across all chains, stored column major."""
-        if run is None:
-            raise ValueError('missing sampler run info')
-        if csv_files is None:
-            raise ValueError('must specify sampler output csv files')
-        for i in range(len(csv_files)):
-            if not os.path.exists(csv_files[i]):
-                raise ValueError('no such file {}'.format(csv_files[i]))
-        self._chains = run['chains']
-        self._draws = run['draws']
-        self._column_names = run['column_names']
-
-    def __repr__(self) -> str:
-        return 'PosteriorSample(chains={},  draws={}, columns={})'.format(
-            self._chains, self._draws, len(self._column_names)
-        )
-
-    def summary(self) -> pd.DataFrame:
+    def assemble_sample(self) -> None:
         """
-        Run cmdstan/bin/stansummary over all output csv files.
-        Echo stansummary stdout/stderr to console.
-        Assemble csv tempfile contents into pandasDataFrame.
+        Allocates and populates the stepsize, metric, and drawset arrays
+        by parsing the validated stan_csv files.
         """
-        names = self.column_names
-        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'stansummary')
-        tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
-            self.model, self.chains)
-        fd, tmp_csv_path = tempfile.mkstemp(
-            suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True
-        )
-        cmd = '{} --csv_file={} {}'.format(
-            cmd_path, tmp_csv_path, ' '.join(self.csv_files)
-        )
-        do_command(cmd.split())  # breaks on all whitespace
-        summary_data = pd.read_csv(
-            tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
-        )
-        mask = [
-            x == 'lp__' or not x.endswith('__') for x in summary_data.index
-            ]
-        return summary_data[mask]
-
-    def diagnose(self) -> None:
-        """
-        Run cmdstan/bin/diagnose over all output csv files.
-        Echo diagnose stdout/stderr to console.
-        """
-        cmd_path = os.path.join(CMDSTAN_PATH, 'bin', 'diagnose')
-        csv_files = ' '.join(self.csv_files)
-        cmd = '{} {} '.format(cmd_path, csv_files)
-        result = do_command(cmd=cmd.split())
-        if result is None:
-            print('No problems detected.')
+        if not (self._stepsize is None and self._metric is None and
+                    self._sample is None):
+            return
+        self._stepsize = np.empty(self._chains, dtype=float)
+        if self._metric_type == 'diag_e':
+            self._metric = np.empty(
+                (self._chains, self._num_params), dtype=float)
         else:
-            print(result)
-
-    def extract(self, params: List[str] = None) -> pd.DataFrame:
-        pnames_base = [name.split('.')[0] for name in self._column_names]
-        if params is not None:
-            for p in params:
-                if not (p in self._column_names or p in pnames_base):
-                    raise ValueError('unknown parameter: {}'.format(p))
-        if self._sample is None:
-            self._sample = self.get_sample()
-        data = self._sample.reshape(
-            (self._draws * self._chains), len(self._column_names), order='A'
-        )
-        df = pd.DataFrame(data=data, columns=self._column_names)
-        if params is None:
-            return df
-        mask = []
-        for p in params:
-            for name in self._column_names:
-                if p == name or p == name.split('.')[0]:
-                    mask.append(name)
-        return df[mask]
-
-    @property
-    def model(self) -> str:
-        return self._run['model']
-
-    @property
-    def draws(self) -> int:
-        return self._draws
-
-    @property
-    def chains(self) -> int:
-        return self._chains
-
-    @property
-    def columns(self) -> int:
-        return len(self._column_names)
-
-    @property
-    def column_names(self) -> (str, ...):
-        return self._column_names
-
-    @property
-    def csv_files(self) -> (str, ...):
-        return self._csv_files
-
-    @property
-    def sample(self) -> np.ndarray:
-        if self._sample is None:
-            self._sample = self.get_sample()
-        return self._sample
-
-    def get_sample(self) -> np.ndarray:
-        sample = np.empty(
+            self._metric = np.empty(
+                (self._chains, self._num_params, self._num_params),
+                dtype=float)
+        self._sample = np.empty(
             (self._draws, self._chains, len(self._column_names)), dtype=float,
             order='F'
-        )
+            )
         for chain in range(self._chains):
-            draw = 0
-            with open(self._csv_files[chain], 'r') as fd:
-                for line in fd:
-                    if line.startswith('#') or line.startswith('lp__,'):
-                        continue
-                    vs = [float(x) for x in line.split(',')]
-                    sample[draw, chain, :] = vs
-                    draw += 1
-        return sample
+            with open(self.csv_files[chain], 'r') as fp:
+                # read past initial comments, column header
+                line = fp.readline().strip()
+                while len(line) > 0 and line.startswith('#'):
+                    line = fp.readline().strip()
+                line = fp.readline().strip()  # adaptation header
+                # stepsize
+                line = fp.readline().strip()
+                label, stepsize = line.split('=')
+                self._stepsize[chain] = float(stepsize.strip())
+                line = fp.readline().strip()  # metric header
+                # metric
+                if self._metric_type == 'diag_e':
+                    line = fp.readline().lstrip(' #\t')
+                    xs = line.split(',')
+                    self._metric[chain, :] = [float(x) for x in xs]
+                else:
+                    for i in range(self._num_params):
+                        line = fp.readline().lstrip(' #\t')
+                        xs = line.split(',')
+                        self._metric[chain, i, :] = [float(x) for x in xs]
+                # draws
+                for i in range(self._draws):
+                    line = fp.readline().lstrip(' #\t')
+                    xs = line.split(',')
+                    self._sample[i, chain, :] = [float(x) for x in xs]

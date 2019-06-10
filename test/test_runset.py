@@ -57,11 +57,11 @@ class RunSetTest(unittest.TestCase):
             runset.set_retcode(i, 0)
         self.assertTrue(runset.check_retcodes())
         runset.check_console_msgs()
-        dict = runset.validate_csv_files()
+        runset.validate_csv_files()
         self.assertEqual(4, runset.chains)
-        self.assertEqual(100, dict['draws'])
-        self.assertEqual(8, len(dict['column_names']))
-        self.assertEqual('lp__', dict['column_names'][0])
+        self.assertEqual(100, runset.draws)
+        self.assertEqual(8, len(runset.column_names))
+        self.assertEqual('lp__', runset.column_names[0])
 
     def test_validate_bad_transcript(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -123,7 +123,7 @@ class RunSetTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'draws'):
             runset.validate_csv_files()
 
-    def test_validate_bad_cols(self):
+    def test_validate_extra_param(self):
         # construct runset using existing sampler output
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli')

@@ -1,25 +1,71 @@
-API
-===
+#############
+API Reference
+#############
 
-The page documents the API of CmdStanPy, mostly by pulling docstrings from the sources.
+********
+Commands
+********
 
-Reading and writing files
--------------------------
+Model fit and analysis
+======================
 
-.. automodule:: cmdstanpy.io
-   :members:
-   :undoc-members:
+compile_model
+-------------
+.. autofunction:: cmdstanpy.compile_model
 
-Working with Stan models
-------------------------
+sample
+------
+.. autofunction:: cmdstanpy.sample
 
-.. automodule:: cmdstanpy.model
-   :members:
-   :undoc-members:
+get_drawset
+-----------
+.. autofunction:: cmdstanpy.get_drawset
 
-Plotting results
+save_csvfiles
+-------------
+.. autofunction:: cmdstanpy.save_csvfiles
+
+summary
+-------
+.. autofunction:: cmdstanpy.summary
+
+diagnose
+--------
+.. autofunction:: cmdstanpy.diagnose
+
+Utility functions
+=================
+
+set_cmdstan_path
 ----------------
+.. autofunction:: cmdstanpy.set_cmdstan_path
 
-.. automodule:: cmdstanpy.viz
+cmdstan_path
+------------
+.. autofunction:: cmdstanpy.cmdstan_path
+
+jsondump
+--------
+.. autofunction:: cmdstanpy.jsondump
+
+rdump
+--------
+.. autofunction:: cmdstanpy.rdump
+
+
+*******
+Classes
+*******
+
+
+Model
+=====
+
+.. autoclass:: cmdstanpy.Model
    :members:
-   :undoc-members:
+
+RunSet
+======
+
+.. autoclass:: cmdstanpy.RunSet
+   :members:
