@@ -14,15 +14,12 @@
 
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :caption: Contents:
 
-   guide
+   getting_started
    api
 
 
-Indices and tables
-==================
+:ref:`genindex`
 
-* :ref:`genindex`
-* :ref:`search`

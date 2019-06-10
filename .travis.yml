@@ -8,10 +8,10 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install flake8 pytest
-  - ./make_cmdstan.sh
+  - ./bin/install_cmdstan
 
 after install:
 
 script:
-  - flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E999,F841 cmdstanpy
+  - flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E402,E999,F401,F841 cmdstanpy
   - pytest test

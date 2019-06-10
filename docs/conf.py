@@ -82,7 +82,7 @@ copyright = '2019, Stan Development Team'
 # built documents.
 #
 # The short X.Y version.
-from cmdstanpy._version import __version__
+from cmdstanpy import __version__
 version = __version__
 # The full version, including alpha/beta/rc tags.
 release = __version__
