@@ -36,8 +36,8 @@ def compile_model(
 
     :param overwrite: When True, existing executible will be overwritten.
       Defaults to False.
-    
-    :param include_paths: list of paths to directories where Stan should look 
+
+    :param include_paths: list of paths to directories where Stan should look
       for files to include.
     """
     if stan_file is None:
@@ -52,8 +52,11 @@ def compile_model(
         stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc')
         cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file]
         if include_paths is not None:
-            if any([not os.path.exists(d) for d in include_paths]):
-                raise Exception('no such include path {}'.format(d))
+            bad_paths = [d for d in include_paths if not os.path.exists(d)]
+            if any(bad_paths):
+                raise Exception(
+                    'invalid include paths: {}'.format(', '.join(bad_paths))
+                )
             cmd.append('--include_paths=' + ','.join(include_paths))
         print('stan to c++: make args {}'.format(cmd))
         do_command(cmd)
