@@ -22,6 +22,18 @@ class CompileTest(unittest.TestCase):
         self.assertEqual(stan, model.stan_file)
         self.assertTrue(model.exe_file.endswith(exe))
 
+    def test_include(self):
+        stan = os.path.join(datafiles_path, 'bernoulli_include.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli_include')
+        here = os.path.dirname(os.path.abspath(__file__))
+        datafiles_abspath = os.path.join(here, 'data')
+        include_paths = [datafiles_abspath]
+        if os.path.exists(exe):
+            os.remove(exe)
+        model = compile_model(stan, include_paths=include_paths)
+        self.assertEqual(stan, model.stan_file)
+        self.assertTrue(model.exe_file.endswith(exe))
+
     def test_bad(self):
         stan = os.path.join(TMPDIR, 'bbad.stan')
         with self.assertRaises(Exception):
