@@ -12,7 +12,7 @@ import pandas as pd
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Union, Tuple
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs
@@ -33,10 +33,10 @@ def compile_model(
       with code that may run slowly and increasing optimization levels increase
       compile time and runtime performance.
 
-    :param overwrite: When True, existing executible will be overwritten.
+    :param overwrite: When True, existing executable will be overwritten.
       Defaults to False.
 
-    :param include_paths: list of paths to directories where Stan should look
+    :param include_paths: List of paths to directories where Stan should look
       for files to include.
     """
     if stan_file is None:
@@ -79,72 +79,111 @@ def compile_model(
 
 def sample(
     stan_model: Model,
+    data: Union[Dict, str] = None,
     chains: int = 4,
     cores: int = 1,
     seed: int = None,
-    data: Dict = None,
-    data_file: str = None,
-    init_param_values: Dict = None,
-    init_param_values_file: str = None,
-    csv_output_file: str = None,
-    refresh: int = None,
-    post_warmup_draws_per_chain: int = None,
-    warmup_draws_per_chain: int = None,
+    chain_id: Union[int, List[int]] = None,
+    inits: Union[Dict, List[str], str] = None,
+    warmup_iter: int = None,
+    sampling_iter: int = None,
+    wamup_schedule: Tuple[float, float, float] = None,
     save_warmup: bool = False,
     thin: int = None,
-    do_adaptation: bool = True,
-    adapt_gamma: float = None,
-    adapt_delta: float = None,
-    adapt_kappa: float = None,
-    adapt_t0: float = None,
-    nuts_max_depth: int = None,
-    hmc_metric: str = None,
-    hmc_metric_file: str = None,
-    hmc_stepsize: float = 1.0,
-    hmc_stepsize_jitter: float = 0,
+    max_treedepth: float = None,
+    metric: Union[List[str], str] = None,
+    step_size: float = 1.0,
+    adapt_engaged: bool = True,
+    target_accept_rate: float = None,
+    output_file: str = None,
+    show_progress: bool = False
 ) -> RunSet:
     """
-    Run or more chains of the NUTS/HMC sampler.
+    Run or more chains of the NUTS sampler to produce a set of draws
+    from the posterior distribution of a model conditioned on some data.
+    The caller must specify the model and data; all other arguments
+    are optional.
 
-    Optional parameters override CmdStan default arguments.
+    This function validates the specified configuration, composes a call to
+    the CmdStan `sample` method and spawns one subprocess per chain to run
+    the sampler and waits for all chains to run to completion.
+    For each chain, it records the set return code, location of the sampler
+    output files,  and the corresponding subprocess console outputs, if any.
 
-    :param stan_model: compiled Stan program
-    :param chains: number of sampler chains, should be > 1
-    :param cores: number of processes to run in parallel,
-        shouldn't exceed number of available processors
-    :param seed: seed for random number generator, if unspecified the seed
-        seed is generated from the system time
-    :param data: dictionary with entries for all data variables in the model
-    :param data_file: path to input data file in JSON or Rdump format.
-        *Note: cannot specify both `data` and `data_file` arguments*
-    :param init_param_values: dictionary with entries for initial value of
-        model parameters
-    :param init_param_values_file: path to initial parameter values file in
-        JSON or Rdump format.
-        *Note: cannot specify both `init_param_values` and
-        `init_param_values_file` arguments*
-    :parm csv_output_file: basename
-    :param refresh: console refresh rate, -1 for no updates
-    :param post_warmup_draws_per_chain: number of draws after warmup
-    :param warmup_draws_per_chain: number of draws during warmup
-    :param save_warmup: when True, sampler saves warmup draws in output file
-    :param thin: period between saved samples.
-        *Note: default value 1 is strongly recommended*
-    :param do_adaptation: when True, adapt stepsize, metric.
-        *Note: True requires that number of warmup draws > 0;
-        False requires that number of warmup draws == 0*
-    :param adapt_gamma: adaptation regularization scale
-    :param adapt_delta: adaptation target acceptance statistic
-    :param adapt_kappa: adaptation relaxation exponent
-    :param adapt_t0: adaptation interation offset
-    :param nuts_max_depth: maximum allowed iterations of NUTS sampler
-    :param hmc_metric: Euclidean metric, either `diag_e` or `dense_e`
-    :param hmc_metric_file: path to file containing either vector specifying
-        diagonal metric or matrix specifying dense metric
-        in either JSON or Rdump format
-    :param hmc_stepsize: initial stepsize for HMC sampler
-    :param hmc_stepsize_jitter: amount of random jitter added to stepsize
-        at each sampler iteration
+    :param stan_model: Compiled Stan model.
+
+    :param data: Values for all data variables in the model, specified either
+        as a dictionary with entries matching the data variables,
+        or as the path of a data file in JSON or Rdump format.
+
+    :param chains: Number of sampler chains, should be > 1.
+
+    :param cores: Number of processes to run in parallel. If this value
+        exceeds the number of available processors, only max processors chains
+        will be run in parallel.
+
+    :param seed: The seed for random number generator or a list of per-chain
+        seeds.  If unspecified, a seed is generated from the system time.  When
+        the same seed is used across all chains, the chain-id is used to advance
+        the RNG to avoid dependent samples.
+
+    :param chain_id: The offset for the random number generator, either an integer or
+        a list of unique per-chain offsets.  If unspecified, chain ids are numbered
+        sequentially starting from 1.
+
+    :param inits: Initial model parameter values.
+
+        * By default, all parameters are randomly initialized between [-2, 2].
+        * If the value is a number n > 0, the initialization range is [-n, n].
+        * If the value is 0, all parameters are initialized to 0.
+        * If the value is a dictionary, the entries are used for initialization. Missing parameter values are randomly initialized in range [-2, 2].
+        * If the value is a string, it is the pathname to a data file in JSON or Rdump format of initial parameter values.
+        * If the value is a list of strings, these are the per-chain data file paths.
+
+    :param warmup_iter: Number of iterations during warmup for each chain.
+
+    :param sampling_iter: Number of draws from the posterior for each chain.
+
+    :param warmup_schedule: Triple specifying percentage of warmup iterations
+        allocated to each phase of adaptation.  The default schedule is 
+        ( 15%, 75%, 10%) where
+
+        * Phase I is "fast" adaptation to find the typical set
+        * Phase II is "slow" adaptation to find the metric
+        * Phase III is "fast" adaptation to find the step_size.
+
+        For further details, see `the Stan Reference Manual
+        <https://mc-stan.org/docs/2_19/reference-manual/hmc-algorithm-parameters.html>`_.
+
+    :param save_warmup: When True, sampler saves warmup draws as part of
+        the Stan csv output file.
+
+    :param thin: Period between saved samples. *Note: default value 1 is strongly recommended*
+
+    :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler
+        per iteration.
+
+    :param metric:  Specification of the mass matrix. One of:
+
+        * If value is "diag", diagonal matrix is estimated.
+        * If value is "dense", full matrix is estimated.
+        * Otherwise, the value is a file path of list of filepaths where each file specifies the metric either as a vector of diagonal entries for a diagonal metric of a matrix for the dense metric. The data must be in JSON or Rdump format.
+
+    :param step_size: Initial stepsize for HMC sampler.
+
+    :param adapt_engaged: When True, adapt stepsize, metric.
+        *Note: If True, `warmup_iter` must be > 0.*
+
+    :param target_accept_rate: Adaptation target acceptance statistic.
+
+    :parm csv_output_file: A path or file name which will be used as the
+        base name for the sampler output files.  The csv output files produced by
+        each chain are written to file `<basename>-<chain_id>.csv` and the console
+        output and error messages are written to files `<basename>-<chain_id>.txt`.
+
+    :param show_progress: When True, command sends progress messages to console.
+        When False, command executes silently.
+
     """
     if data is not None and (
             data_file is not None and os.path.exists(data_file)):
