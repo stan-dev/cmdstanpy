@@ -123,29 +123,33 @@ def sample(
         will be run in parallel.
 
     :param seed: The seed for random number generator or a list of per-chain
-        seeds.  If unspecified, a seed is generated from the system time.  When
-        the same seed is used across all chains, the chain-id is used to advance
-        the RNG to avoid dependent samples.
+        seeds.  If unspecified, a seed is generated from the system time.
+        When         the same seed is used across all chains, the chain-id
+        is used to advance the RNG to avoid dependent samples.
 
-    :param chain_id: The offset for the random number generator, either an integer or
-        a list of unique per-chain offsets.  If unspecified, chain ids are numbered
-        sequentially starting from 1.
+    :param chain_id: The offset for the random number generator, either
+        an integer or a list of unique per-chain offsets.  If unspecified,
+        chain ids are numbered sequentially starting from 1.
 
     :param inits: Initial model parameter values.
 
         * By default, all parameters are randomly initialized between [-2, 2].
         * If the value is a number n > 0, the initialization range is [-n, n].
         * If the value is 0, all parameters are initialized to 0.
-        * If the value is a dictionary, the entries are used for initialization. Missing parameter values are randomly initialized in range [-2, 2].
-        * If the value is a string, it is the pathname to a data file in JSON or Rdump format of initial parameter values.
-        * If the value is a list of strings, these are the per-chain data file paths.
+        * If the value is a dictionary, the entries are used for
+            initialization. Missing parameter values are randomly
+            initialized in range [-2, 2].
+        * If the value is a string, it is the pathname to a data file
+            in JSON or Rdump format of initial parameter values.
+        * If the value is a list of strings, these are the per-chain
+            data file paths.
 
     :param warmup_iter: Number of iterations during warmup for each chain.
 
     :param sampling_iter: Number of draws from the posterior for each chain.
 
     :param warmup_schedule: Triple specifying percentage of warmup iterations
-        allocated to each phase of adaptation.  The default schedule is 
+        allocated to each phase of adaptation.  The default schedule is
         ( 15%, 75%, 10%) where
 
         * Phase I is "fast" adaptation to find the typical set
@@ -153,12 +157,13 @@ def sample(
         * Phase III is "fast" adaptation to find the step_size.
 
         For further details, see `the Stan Reference Manual
-        <https://mc-stan.org/docs/2_19/reference-manual/hmc-algorithm-parameters.html>`_.
+            <https://mc-stan.org/docs/reference-manual/hmc-algorithm-parameters.html>`_.
 
     :param save_warmup: When True, sampler saves warmup draws as part of
         the Stan csv output file.
 
-    :param thin: Period between saved samples. *Note: default value 1 is strongly recommended*
+    :param thin: Period between saved samples.
+        *Note: default value 1 is strongly recommended.*
 
     :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler
         per iteration.
@@ -167,7 +172,9 @@ def sample(
 
         * If value is "diag", diagonal matrix is estimated.
         * If value is "dense", full matrix is estimated.
-        * Otherwise, the value is a file path of list of filepaths where each file specifies the metric either as a vector of diagonal entries for a diagonal metric of a matrix for the dense metric. The data must be in JSON or Rdump format.
+        * Otherwise, the value is a file path of list of filepaths where
+            each file specifies the metric either as a diagonal vector
+            or a dense matrix. The data must be in JSON or Rdump format.
 
     :param step_size: Initial stepsize for HMC sampler.
 
@@ -177,9 +184,10 @@ def sample(
     :param target_accept_rate: Adaptation target acceptance statistic.
 
     :parm csv_output_file: A path or file name which will be used as the
-        base name for the sampler output files.  The csv output files produced by
-        each chain are written to file `<basename>-<chain_id>.csv` and the console
-        output and error messages are written to files `<basename>-<chain_id>.txt`.
+        base name for the sampler output files.  The csv output files
+        for each chain are written to file `<basename>-<chain_id>.csv`
+        and the console output and error messages are written to file
+        `<basename>-<chain_id>.txt`.
 
     :param show_progress: When True, command sends progress messages to console.
         When False, command executes silently.
@@ -399,7 +407,7 @@ def do_sample(runset: RunSet, idx: int) -> None:
     cmd = runset.cmds[idx]
     print('start chain {}.  '.format(idx + 1))
     proc = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE)
     proc.wait()
     stdout, stderr = proc.communicate()
     transcript_file = runset.console_files[idx]
