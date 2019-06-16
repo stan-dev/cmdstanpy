@@ -1,7 +1,7 @@
 import os
 import re
 import tempfile
-from typing import Dict, List
+from typing import Dict, List, Union, Tuple
 
 import numpy as np
 
@@ -18,7 +18,7 @@ class Model(object):
         self.stan_file = stan_file
         """full path to Stan program src."""
         self.exe_file = exe_file
-        """full path to compiled c++ executible."""
+        """full path to compiled c++ executable."""
         if stan_file is None:
             raise ValueError('must specify Stan program file')
         if not os.path.exists(stan_file):
@@ -81,69 +81,43 @@ class StanData(object):
 
 
 class SamplerArgs(object):
-    """Full set of arguments for NUTS/HMC sampler."""
+    """Arguments for NUTS/HMC sampler."""
 
     def __init__(
         self,
         model: Model,
-        seed: int = None,
-        data_file: str = None,
-        init_param_values: str = None,
-        output_file: str = None,
-        refresh: int = None,
-        post_warmup_draws: int = None,
-        warmup_draws: int = None,
+        data: str = None,
+        seed: Union[int, List[int]] = None,
+        inits: Union[float, str, List[str]] = None,
+        warmup_iters: int = None,
+        sampling_iters: int = None,
+        warmup_schedule: Tuple[float, float, float] = None,
         save_warmup: bool = False,
         thin: int = None,
-        do_adaptation: bool = True,
-        adapt_gamma: float = None,
-        adapt_delta: float = None,
-        adapt_kappa: float = None,
-        adapt_t0: float = None,
-        nuts_max_depth: int = None,
-        hmc_metric_file: str = None,
-        hmc_stepsize: float = None,
-        hmc_stepsize_jitter: float = None,
+        max_treedepth: float = None,
+        metric: Union[str, List[str]] = None,
+        step_size: Union[float, List[float]] = None,
+        adapt_engaged: bool = True,
+        target_accept_rate: float = None,
+        output_file: str = None,
     ) -> None:
         """Initialize object."""
         self.model = model
-        """Model object"""
         self.seed = seed
-        """seed for pseudo-random number generator."""
-        self.data_file = data_file
-        """full path to input data file name."""
-        self.init_param_values = init_param_values
-        """full path to initial parameter values file name."""
-        self.output_file = output_file
-        """full path to output file."""
+        self.data = data
+        self.inits = inits
         self.refresh = refresh
-        """number of iterations between progress message updates."""
-        self.post_warmup_draws = post_warmup_draws
-        """number of post-warmup draws."""
-        self.warmup_draws = warmup_draws
-        """number of wramup draws."""
+        self.sampling_iters = sampling_iters
+        self.warmup_iters = warmup_iters
         self.save_warmup = save_warmup
-        """boolean - include warmup iterations in output."""
         self.thin = thin
-        """period between draws."""
-        self.do_adaptation = do_adaptation
-        """boolean - do adaptation during warmup."""
+        self.adapt_engaged = adapt_engaged
         self.adapt_gamma = adapt_gamma
-        """adaptation regularization scale."""
-        self.adapt_delta = adapt_delta
-        """adaptation target acceptance statistic."""
-        self.adapt_kappa = adapt_kappa
-        """adaptation relaxation exponent."""
-        self.adapt_t0 = adapt_t0
-        """adaptation iteration offset."""
         self.nuts_max_depth = nuts_max_depth
-        """NUTS maximum tree depth."""
         self.hmc_metric_file = hmc_metric_file
-        """initial value for HMC mass matrix."""
-        self.hmc_stepsize = hmc_stepsize
-        """initial value for HMC stepsize."""
-        self.hmc_stepsize_jitter = hmc_stepsize_jitter
-        """initial value for uniform random jitter of HMC stepsize."""
+        self.step_size = step_size
+        self.output_file = output_file
+
 
     def validate(self) -> None:
         """Check arg consistency, correctness.
@@ -158,7 +132,7 @@ class SamplerArgs(object):
             )
         if not os.path.exists(self.model.exe_file):
             raise ValueError(
-                'cannot access model executible "{}"'.format(
+                'cannot access model executable "{}"'.format(
                     self.model.exe_file)
             )
         if self.output_file is not None:
@@ -186,31 +160,35 @@ class SamplerArgs(object):
                     'seed must be an integer value between 0 and 2**32-1, '
                     'found {}'.format(self.seed)
                 )
-        if self.data_file is not None:
-            if not os.path.exists(self.data_file):
-                raise ValueError('no such file {}'.format(self.data_file))
-        if self.init_param_values is not None:
-            if not os.path.exists(self.init_param_values):
+        if self.data is not None:
+            if not os.path.exists(self.data):
+                raise ValueError('no such file {}'.format(self.data))
+# ************ stopped here **********
+# validate inits
+        if self.inits is not None:
+            if not os.path.exists(self.inits):
                 raise ValueError('no such file {}'.format(
-                    self.init_param_values))
+                    self.inits))
+# validate metric:  metric, path, or list of paths
         if self.hmc_metric_file is not None:
             if not os.path.exists(self.hmc_metric_file):
                 raise ValueError('no such file {}'.format(
                     self.hmc_metric_file))
-        if self.post_warmup_draws is not None:
-            if self.post_warmup_draws < 0:
+        if self.sampling_iters is not None:
+            if self.sampling_iters < 0:
                 raise ValueError(
-                    'post_warmup_draws must be '
+                    'sampling_iters must be '
                     'a non-negative integer value'.format(
-                        self.post_warmup_draws
+                        self.sampling_iters
                     )
                 )
-        if self.warmup_draws is not None:
-            if self.warmup_draws < 0:
+# validate warmup, warmup schedule
+        if self.warmup_iters is not None:
+            if self.warmup_iters < 0:
                 raise ValueError(
-                    'warmup_draws must be a '
+                    'warmup_iters must be a '
                     'non-negative integer value'.format(
-                        self.warmup_draws
+                        self.warmup_iters
                     )
                 )
         # TODO: check type/bounds on all other controls
@@ -223,37 +201,30 @@ class SamplerArgs(object):
         cmd = '{} id={}'.format(self.model.exe_file, chain_id)
         if self.seed is not None:
             cmd = '{} random seed={}'.format(cmd, self.seed)
-        if self.data_file is not None:
-            cmd = '{} data file={}'.format(cmd, self.data_file)
-        if self.init_param_values is not None:
-            cmd = '{} init={}'.format(cmd, self.init_param_values)
+        if self.data is not None:
+            cmd = '{} data file={}'.format(cmd, self.data)
+        if self.inits is not None:
+            cmd = '{} init={}'.format(cmd, self.inits)
         cmd = '{} output file={}'.format(cmd, csv_file)
         if self.refresh is not None:
             cmd = '{} refresh={}'.format(cmd, self.refresh)
         cmd = cmd + ' method=sample'
-        if self.post_warmup_draws is not None:
-            cmd = '{} num_samples={}'.format(cmd, self.post_warmup_draws)
-        if self.warmup_draws is not None:
-            cmd = '{} num_warmup={}'.format(cmd, self.warmup_draws)
+        if self.sampling_iters is not None:
+            cmd = '{} num_samples={}'.format(cmd, self.sampling_iters)
+        if self.warmup_iters is not None:
+            cmd = '{} num_warmup={}'.format(cmd, self.warmup_iters)
         if self.save_warmup:
             cmd = cmd + ' save_warmup=1'
         if self.thin is not None:
             cmd = '{} thin={}'.format(cmd, self.thin)
         cmd = cmd + ' algorithm=hmc'
-        if self.hmc_stepsize is not None:
-            cmd = '{} stepsize={}'.format(cmd, self.hmc_stepsize)
-        if self.hmc_stepsize_jitter is not None:
-            cmd = '{} stepsize_jitter={}'.format(cmd, self.hmc_stepsize_jitter)
+        if self.step_size is not None:
+            cmd = '{} stepsize={}'.format(cmd, self.step_size)
         if self.nuts_max_depth is not None:
             cmd = '{} engine=nuts max_depth={}'.format(
                 cmd, self.nuts_max_depth)
-        if self.do_adaptation and not (
-            self.adapt_gamma is None
-            and self.adapt_delta is None
-            and self.adapt_kappa is None
-            and self.adapt_t0 is None
-        ):
-            cmd = cmd + " adapt"
+        if self.adapt_engaged or not self.target_accept_rate is not None:
+            cmd = cmd + " adapt engaged "
         if self.adapt_gamma is not None:
             cmd = '{} gamma={}'.format(cmd, self.adapt_gamma)
         if self.adapt_delta is not None:
@@ -267,12 +238,10 @@ class SamplerArgs(object):
         return cmd
 
 
-# RunSet uses temp files - registers names of files, once created, not deleted
-# TODO: add "save" operation - moves tempfiles to specified permanent dir
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args: SamplerArgs, chains: int = 4) -> None:
+    def __init__(self, args: SamplerArgs, chains: int = 4, ) -> None:
         """Initialize object."""
         self._args = args
         self._chains = chains
@@ -358,7 +327,7 @@ class RunSet(object):
 
     @property
     def draws(self) -> int:
-        """Number of draws per chain"""
+        """Number of draws per chain."""
         return self._draws
 
     @property
@@ -370,7 +339,7 @@ class RunSet(object):
         return len(self._column_names)
 
     @property
-    def column_names(self) -> (str, ...):
+    def column_names(self) -> Tuple[str, ...]:
         """
         Names of information items returned by sampler for each draw.
         Includes for sampler state labels and

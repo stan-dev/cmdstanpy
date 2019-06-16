@@ -28,7 +28,7 @@ def compile_model(
 
     :param stan_file: Path to Stan program
 
-    :param opt_lvl: Optimization level for c++ compiler, one of {0, 1, 2, 3}
+    :param opt_lvl: Optimization level for C++ compiler, one of {0, 1, 2, 3}
       where level 0 optimization results in the shortest compilation time
       with code that may run slowly and increasing optimization levels increase
       compile time and runtime performance.
@@ -37,7 +37,7 @@ def compile_model(
       Defaults to False.
 
     :param include_paths: List of paths to directories where Stan should look
-      for files to include.
+      for files to include in compilation of the C++ executable.
     """
     if stan_file is None:
         raise Exception('must specify argument "stan_file"')
@@ -82,17 +82,17 @@ def sample(
     data: Union[Dict, str] = None,
     chains: int = 4,
     cores: int = 1,
-    seed: int = None,
-    chain_id: Union[int, List[int]] = None,
-    inits: Union[Dict, List[str], str] = None,
-    warmup_iter: int = None,
-    sampling_iter: int = None,
-    wamup_schedule: Tuple[float, float, float] = None,
+    seed: Union[int, List[int]] = None,
+    chain_ids: Union[int, List[int]] = None,
+    inits: Union[Dict, float, str, List[str]] = None,
+    warmup_iters: int = None,
+    sampling_iters: int = None,
+    warmup_schedule: Tuple[float, float, float] = (.15, .75, .10),
     save_warmup: bool = False,
     thin: int = None,
     max_treedepth: float = None,
-    metric: Union[List[str], str] = None,
-    step_size: float = 1.0,
+    metric: Union[str, List[str]] = None,
+    step_size: Union[float, List[float]] = None,
     adapt_engaged: bool = True,
     target_accept_rate: float = None,
     output_file: str = None,
@@ -107,8 +107,12 @@ def sample(
     This function validates the specified configuration, composes a call to
     the CmdStan `sample` method and spawns one subprocess per chain to run
     the sampler and waits for all chains to run to completion.
-    For each chain, it records the set return code, location of the sampler
-    output files,  and the corresponding subprocess console outputs, if any.
+    The composed call to CmdStan omits arguments left unspecified (i.e., value
+    is `None`) so that the default CmdStan configuration values will be used.
+
+    For each chain, the `RunSet` object records the command, the return code,
+    the paths to the sampler output files, and the corresponding subprocess
+    console outputs, if any.
 
     :param stan_model: Compiled Stan model.
 
@@ -123,11 +127,11 @@ def sample(
         will be run in parallel.
 
     :param seed: The seed for random number generator or a list of per-chain
-        seeds.  If unspecified, a seed is generated from the system time.
-        When         the same seed is used across all chains, the chain-id
+        seeds.  If unspecified, numpy.random.RandomState() is used to generate
+        the seed. When the same seed is used across all chains, the chain-id
         is used to advance the RNG to avoid dependent samples.
 
-    :param chain_id: The offset for the random number generator, either
+    :param chain_ids: The offset for the random number generator, either
         an integer or a list of unique per-chain offsets.  If unspecified,
         chain ids are numbered sequentially starting from 1.
 
@@ -136,122 +140,85 @@ def sample(
         * By default, all parameters are randomly initialized between [-2, 2].
         * If the value is a number n > 0, the initialization range is [-n, n].
         * If the value is 0, all parameters are initialized to 0.
-        * If the value is a dictionary, the entries are used for
-            initialization. Missing parameter values are randomly
-            initialized in range [-2, 2].
-        * If the value is a string, it is the pathname to a data file
-            in JSON or Rdump format of initial parameter values.
-        * If the value is a list of strings, these are the per-chain
-            data file paths.
+        * If the value is a dictionary, the entries are used for initialization. Missing parameter values are randomly initialized in range [-2, 2].
+        * If the value is a string, it is the pathname to a data file in JSON or Rdump format of initial parameter values.
+        * If the value is a list of strings, these are the per-chain data file paths.
 
-    :param warmup_iter: Number of iterations during warmup for each chain.
+    :param warmup_iters: Number of iterations during warmup for each chain.
 
-    :param sampling_iter: Number of draws from the posterior for each chain.
+    :param sampling_iters: Number of draws from the posterior for each chain.
 
-    :param warmup_schedule: Triple specifying percentage of warmup iterations
-        allocated to each phase of adaptation.  The default schedule is
-        ( 15%, 75%, 10%) where
+    :param warmup_schedule: Triple specifying fraction of total warmup iterations
+        allocated to each adaptation phase.  The default schedule is
+        (.15, .75, .10) where
 
         * Phase I is "fast" adaptation to find the typical set
         * Phase II is "slow" adaptation to find the metric
         * Phase III is "fast" adaptation to find the step_size.
 
-        For further details, see `the Stan Reference Manual
-            <https://mc-stan.org/docs/reference-manual/hmc-algorithm-parameters.html>`_.
+        For further details, see `the Stan Reference Manual <https://mc-stan.org/docs/reference-manual/hmc-algorithm-parameters.html>`_.
 
     :param save_warmup: When True, sampler saves warmup draws as part of
         the Stan csv output file.
 
     :param thin: Period between saved samples.
-        *Note: default value 1 is strongly recommended.*
 
     :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler
         per iteration.
 
-    :param metric:  Specification of the mass matrix. One of:
+    :param metric: Specification of the mass matrix.
 
         * If value is "diag", diagonal matrix is estimated.
         * If value is "dense", full matrix is estimated.
-        * Otherwise, the value is a file path of list of filepaths where
-            each file specifies the metric either as a diagonal vector
-            or a dense matrix. The data must be in JSON or Rdump format.
+        * Otherwise, the value is a file path of list of filepaths where each file specifies the metric either as a diagonal vector or a dense matrix. The data must be in JSON or Rdump format.
 
     :param step_size: Initial stepsize for HMC sampler.
 
     :param adapt_engaged: When True, adapt stepsize, metric.
-        *Note: If True, `warmup_iter` must be > 0.*
+        *Note: If True, `warmup_iters` must be > 0.*
 
     :param target_accept_rate: Adaptation target acceptance statistic.
+        (In CmdStan and PyStan, this is called `adapt delta`)
 
-    :parm csv_output_file: A path or file name which will be used as the
+    :param csv_output_file: A path or file name which will be used as the
         base name for the sampler output files.  The csv output files
         for each chain are written to file `<basename>-<chain_id>.csv`
         and the console output and error messages are written to file
         `<basename>-<chain_id>.txt`.
 
-    :param show_progress: When True, command sends progress messages to console.
-        When False, command executes silently.
-
+    :param show_progress: When True, command sends progress messages to
+        console. When False, command executes silently.
     """
-    if data is not None and (
-            data_file is not None and os.path.exists(data_file)):
-        raise ValueError(
-            'cannot specify both "data" and "data_file" arguments')
-    if data is not None:
-        if data_file is None:
-            fd = tempfile.NamedTemporaryFile(
-                mode='w+', suffix='.json', dir=TMPDIR, delete=False
-            )
-            data_file = fd.name
-            print('input data tempfile: {}'.format(fd.name))
-        sd = StanData(data_file)
-        sd.write_json(data)
-
-    if (
-        init_param_values is not None
-        and init_param_values_file is not None
-        and os.path.exists(init_param_values_file)
-    ):
-        raise ValueError(
-            'cannot specify both"init_param_values" '
-            'and "init_param_values_file" arguments'
-        )
-    if init_param_values is not None:
-        if init_param_values_file is None:
-            fd = tempfile.NamedTemporaryFile(
-                mode='w+', suffix='.json', dir=TMPDIR, delete=False
-            )
-            init_param_values_file = fd.name
-            print('init params tempfile: {}'.format(fd.name))
-        sd = StanData(init_param_values_file)
-        sd.write_json(init_param_values)
-
-    args = SamplerArgs(
-        model=stan_model,
-        seed=seed,
-        data_file=data_file,
-        init_param_values=init_param_values_file,
-        output_file=csv_output_file,
-        refresh=refresh,
-        post_warmup_draws=post_warmup_draws_per_chain,
-        warmup_draws=warmup_draws_per_chain,
-        save_warmup=save_warmup,
-        thin=thin,
-        do_adaptation=do_adaptation,
-        adapt_gamma=adapt_gamma,
-        adapt_delta=adapt_delta,
-        adapt_kappa=adapt_kappa,
-        adapt_t0=adapt_t0,
-        nuts_max_depth=nuts_max_depth,
-        hmc_metric_file=hmc_metric_file,
-        hmc_stepsize=hmc_stepsize,
-        hmc_stepsize_jitter=hmc_stepsize_jitter,
-    )
-    args.validate()
     if chains < 1:
         raise ValueError(
             'chains must be a positive integer value, found {}'.format(chains)
         )
+
+    if chain_ids is None:
+        chain_ids = [x for x in range(1, chains+1)]
+    else:
+        if type(chain_ids) is int:
+            if chain_ids < 1:
+                raise ValueError(
+                    'chain_id must be a positive integer value,'
+                    ' found {}'.format(chain_ids)
+                    )
+            offset = chain_ids;
+            chain_ids =  [x + offset for x in range(1, chains+1)]
+        else:
+            if not len(chain_ids) == chains:
+                raise ValueError(
+                    'chain_ids must correspond to number of chains'
+                    ' specified {} chains, found {} chain_ids'.format(
+                        chains, len(chain_ids))
+                    )
+            for i in len(chain_ids):
+                if chain_ids[i] < 1:
+                    raise ValueError(
+                        'chain_id must be a positive integer value,'
+                        ' found {}'.format(chain_ids[i])
+                        )
+
     if cores < 1:
         raise ValueError(
             'cores must be a positive integer value, found {}'.format(cores)
@@ -260,7 +227,52 @@ def sample(
         print('requested {} cores, only {} available'.format(
             cores, cpu_count()))
         cores = cpu_count()
-    runset = RunSet(args=args, chains=chains)
+
+    if data is not None:
+        if type(data) is Dict:
+            with tempfile.NamedTemporaryFile(
+                mode='w+', suffix='.json', dir=TMPDIR, delete=False
+            ) as fd:
+                data_file = fd.name
+                print('input data tempfile: {}'.format(fd.name))
+            sd = StanData(data_file)
+            sd.write_json(data)
+            data_dict = data
+            data = data_file
+
+    if inits is not None:
+        if type(inits) is Dict:
+            with tempfile.NamedTemporaryFile(
+                mode='w+', suffix='.json', dir=TMPDIR, delete=False
+            ) as fd:
+                inits_file = fd.name
+                print('inits tempfile: {}'.format(fd.name))
+            sd = StanData(inits_file)
+            sd.write_json(inits)
+            inits_dict = inits
+            inits = inits_file
+        #TODO:  issue 49: inits can be initialization function
+
+    args = SamplerArgs(
+        model=stan_model,
+        data=data,
+        seed=seed,
+        inits=inits,
+        warmup_iters=warmup_iters,
+        sampling_iters=sampling_iters,
+        warmup_schedule=warmup_schedule,
+        save_warmup=save_warmup,
+        thin=thin,
+        max_treedepth=max_treedepth,
+        metric=metric,
+        step_size=step_size,
+        adapt_engaged=adapt_engaged,
+        target_accept_rate=target_accept_rate,
+        output_file=csv_output_file
+    )
+    args.validate()
+
+    runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
     try:
         tp = ThreadPool(cores)
         for i in range(chains):
