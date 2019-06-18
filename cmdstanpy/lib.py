@@ -81,7 +81,7 @@ class StanData(object):
 
 
 class SamplerArgs(object):
-    """Arguments for NUTS/HMC sampler."""
+    """Container for arguments for the NUTS adaptive sampler."""
 
     def __init__(
         self,
@@ -103,24 +103,32 @@ class SamplerArgs(object):
     ) -> None:
         """Initialize object."""
         self.model = model
-        self.seed = seed
         self.data = data
+        self.seed = seed
         self.inits = inits
-        self.refresh = refresh
-        self.sampling_iters = sampling_iters
         self.warmup_iters = warmup_iters
+        self.sampling_iters = sampling_iters
+        self.warmup_schedule = warmup_schedule
         self.save_warmup = save_warmup
         self.thin = thin
-        self.adapt_engaged = adapt_engaged
-        self.adapt_gamma = adapt_gamma
-        self.nuts_max_depth = nuts_max_depth
-        self.hmc_metric_file = hmc_metric_file
+        self.max_treedepth = max_treedepth
+        self.metric = metric
+        self.metric_file = None
         self.step_size = step_size
+        self.adapt_engaged = adapt_engaged
+        self.target_accept_rate = target_accept_rate
         self.output_file = output_file
-
+        self.validate()
 
     def validate(self) -> None:
-        """Check arg consistency, correctness.
+        """
+        Check arguments correctness and consistency.
+        
+        * input files must exist
+        * output files must be in a writeable directory
+        * adaptation and warmup args are consistent
+        * if file(s) for metric are supplied, check contents.
+        * if no seed specified, set random seed.
         """
         if self.model is None:
             raise ValueError('no stan model specified')
@@ -163,32 +171,44 @@ class SamplerArgs(object):
         if self.data is not None:
             if not os.path.exists(self.data):
                 raise ValueError('no such file {}'.format(self.data))
-# ************ stopped here **********
-# validate inits
         if self.inits is not None:
-            if not os.path.exists(self.inits):
-                raise ValueError('no such file {}'.format(
-                    self.inits))
+            if type(self.inits) is str:
+                if not os.path.exists(self.inits):
+                    raise ValueError('no such file {}'.format(self.inits))
+            elif type(self.inits) is List:
+                for i in range(len(self.inits)):
+                    if not os.path.exists(self.inits[i]):
+                        raise ValueError('no such file {}'.format(self.inits[i]))
+
 # validate metric:  metric, path, or list of paths
-        if self.hmc_metric_file is not None:
-            if not os.path.exists(self.hmc_metric_file):
-                raise ValueError('no such file {}'.format(
-                    self.hmc_metric_file))
-        if self.sampling_iters is not None:
-            if self.sampling_iters < 0:
-                raise ValueError(
-                    'sampling_iters must be '
-                    'a non-negative integer value'.format(
-                        self.sampling_iters
-                    )
-                )
-# validate warmup, warmup schedule
+        if self.metric is not None:
+            if type(self.metric) is str:
+                if not self.metric in ['diag', 'dense']:
+                    if not os.path.exists(self.metric):
+                        raise ValueError('no such file {}'.format(self.metric))
+                    
+            elif type(self.metric) is List:
+                for i in range(len(self.metric)):
+                    if not os.path.exists(self.metric[i]):
+                        raise ValueError('no such file {}'.format(self.metric[i]))
+
         if self.warmup_iters is not None:
             if self.warmup_iters < 0:
                 raise ValueError(
                     'warmup_iters must be a '
                     'non-negative integer value'.format(
                         self.warmup_iters
+                    )
+                )
+
+
+
+        if self.sampling_iters is not None:
+            if self.sampling_iters < 0:
+                raise ValueError(
+                    'sampling_iters must be '
+                    'a non-negative integer value'.format(
+                        self.sampling_iters
                     )
                 )
         # TODO: check type/bounds on all other controls
