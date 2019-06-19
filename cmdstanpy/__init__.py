@@ -20,7 +20,7 @@ TMPDIR = tempfile.mkdtemp()
 def cleanup_tmpdir():
     print('deleting tmpfiles dir: {}'.format(TMPDIR))
     shutil.rmtree(TMPDIR, ignore_errors=True)
-    print("done")
+    print('done')
 
 
 atexit.register(cleanup_tmpdir)

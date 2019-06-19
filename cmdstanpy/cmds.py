@@ -20,8 +20,10 @@ from cmdstanpy.utils import cmdstan_path
 
 
 def compile_model(
-    stan_file: str = None, opt_lvl: int = 1, overwrite: bool = False,
-    include_paths: List[str] = None
+    stan_file: str = None,
+    opt_lvl: int = 1,
+    overwrite: bool = False,
+    include_paths: List[str] = None,
 ) -> Model:
     """
     Compile the given Stan model file to an executable.
@@ -87,7 +89,7 @@ def sample(
     inits: Union[Dict, float, str, List[str]] = None,
     warmup_iters: int = None,
     sampling_iters: int = None,
-    warmup_schedule: Tuple[float, float, float] = (.15, .75, .10),
+    warmup_schedule: Tuple[float, float, float] = (0.15, 0.75, 0.10),
     save_warmup: bool = False,
     thin: int = None,
     max_treedepth: float = None,
@@ -96,7 +98,7 @@ def sample(
     adapt_engaged: bool = True,
     target_accept_rate: float = None,
     csv_output_file: str = None,
-    show_progress: bool = False
+    show_progress: bool = False,
 ) -> RunSet:
     """
     Run or more chains of the NUTS sampler to produce a set of draws
@@ -135,28 +137,34 @@ def sample(
         an integer or a list of unique per-chain offsets.  If unspecified,
         chain ids are numbered sequentially starting from 1.
 
-    :param inits: Initial model parameter values.
+    :param inits: Specifies how the sampler initializes parameter values.
+        Initializiation is either uniform random on a range centered on 0,
+        exactly 0, or a dictionary or file of initial values for some or all
+        parameters in the model.  The default initialization behavoir will
+        initialize all parameter values on range [-2, 2].  If these values
+        are too far from the expected parameter values, explicit initialization
+        may improve adaptation. The following value types are allowed:
 
-        * By default, all parameters are randomly initialized between [-2, 2].
-        * If the value is a number n > 0, the initialization range is [-n, n].
-        * If the value is 0, all parameters are initialized to 0.
-        * If the value is a dictionary, the entries are used for initialization. Missing parameter values are randomly initialized in range [-2, 2].
-        * If the value is a string, it is the pathname to a data file in JSON or Rdump format of initial parameter values.
-        * If the value is a list of strings, these are the per-chain data file paths.
+        * Single number `n > 0` - initialization range is [-n, n].
+        * `0` - all parameters are initialized to 0.
+        * dictionary - pairs parameter name : initial value.
+        * string - pathname to a JSON or Rdump file of initial parameter values.
+        * list of strings - per-chain pathname to data file.
 
     :param warmup_iters: Number of iterations during warmup for each chain.
 
     :param sampling_iters: Number of draws from the posterior for each chain.
 
-    :param warmup_schedule: Triple specifying fraction of total warmup iterations
-        allocated to each adaptation phase.  The default schedule is
-        (.15, .75, .10) where
+    :param warmup_schedule: Triple specifying fraction of total warmup
+        iterations allocated to each adaptation phase.  The default schedule
+        is (.15, .75, .10) where:
 
         * Phase I is "fast" adaptation to find the typical set
         * Phase II is "slow" adaptation to find the metric
         * Phase III is "fast" adaptation to find the step_size.
 
-        For further details, see `the Stan Reference Manual <https://mc-stan.org/docs/reference-manual/hmc-algorithm-parameters.html>`_.
+        For further details, see `the Stan Reference Manual, section
+            HMC algorithm parameters.
 
     :param save_warmup: When True, sampler saves warmup draws as part of
         the Stan csv output file.
@@ -166,13 +174,29 @@ def sample(
     :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler
         per iteration.
 
-    :param metric: Specification of the mass matrix.
+    :param metric: Specification of the mass matrix.  The value is either
+        a string or a list of strings.  The strings `diag` and `dense`
+        specify whether or not to estimate the full covariance matrix or
+        only the diagonal elements.
 
-        * If value is "diag", diagonal matrix is estimated.
-        * If value is "dense", full matrix is estimated.
-        * Otherwise, the value is a file path of list of filepaths where each file specifies the metric either as a diagonal vector or a dense matrix. The data must be in JSON or Rdump format.
+        The metric is initialized to a unit matrix.  If the value of the
+        metric argument is a string other than `diag` or `dense` or a
+        list of strings, these are treated as pathnames to a data file
+        in JSON or Rdump format which contains entry `inv_metric` which
+        is either a vector or a full matrix, depending on whether the
+        diagonal or dense covariance matrix is to be estimated.
 
-    :param step_size: Initial stepsize for HMC sampler.
+        The length of the list of pathnames must match the number of chains.
+        This feature can be used to restart sampling with no adaptation
+        given the outputs of all chains from a previous run.
+
+    :param step_size: Initial stepsize for HMC sampler.  The value is either
+        a single number or a list of numbers which will be used as the global
+        or per-chain initial step_size, respectively.
+
+        The length of the list of step sizes must match the number of chains.
+        This feature can be used to restart sampling with no adaptation
+        given the outputs of all chains from a previous run.
 
     :param adapt_engaged: When True, adapt stepsize, metric.
         *Note: If True, `warmup_iters` must be > 0.*
@@ -202,30 +226,32 @@ def sample(
                 raise ValueError(
                     'chain_id must be a positive integer value,'
                     ' found {}'.format(chain_ids)
-                    )
-            offset = chain_ids;
-            chain_ids =  [x + offset + 1 for x in range(chains)]
+                )
+            offset = chain_ids
+            chain_ids = [x + offset + 1 for x in range(chains)]
         else:
             if not len(chain_ids) == chains:
                 raise ValueError(
                     'chain_ids must correspond to number of chains'
                     ' specified {} chains, found {} chain_ids'.format(
-                        chains, len(chain_ids))
+                        chains, len(chain_ids)
                     )
+                )
             for i in len(chain_ids):
                 if chain_ids[i] < 1:
                     raise ValueError(
                         'chain_id must be a positive integer value,'
                         ' found {}'.format(chain_ids[i])
-                        )
+                    )
 
     if cores < 1:
         raise ValueError(
             'cores must be a positive integer value, found {}'.format(cores)
         )
     if cores > cpu_count():
-        print('requested {} cores, only {} available'.format(
-            cores, cpu_count()))
+        print(
+            'requested {} cores, only {} available'.format(cores, cpu_count())
+        )
         cores = cpu_count()
 
     if data is not None:
@@ -241,7 +267,7 @@ def sample(
             data = data_file
 
     if inits is not None:
-        if isinstane(inits, dict):
+        if isinstance(inits, dict):
             with tempfile.NamedTemporaryFile(
                 mode='w+', suffix='.json', dir=TMPDIR, delete=False
             ) as fd:
@@ -251,7 +277,7 @@ def sample(
             sd.write_json(inits)
             inits_dict = inits
             inits = inits_file
-        #TODO:  issue 49: inits can be initialization function
+        # TODO:  issue 49: inits can be initialization function
 
     args = SamplerArgs(
         model=stan_model,
@@ -269,7 +295,7 @@ def sample(
         step_size=step_size,
         adapt_engaged=adapt_engaged,
         target_accept_rate=target_accept_rate,
-        output_file=csv_output_file
+        output_file=csv_output_file,
     )
 
     runset = RunSet(args=args, chains=chains)
@@ -303,20 +329,19 @@ def summary(runset: RunSet) -> pd.DataFrame:
     names = runset.column_names
     cmd_path = os.path.join(cmdstan_path(), 'bin', 'stansummary')
     tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
-        runset.model, runset.chains)
+        runset.model, runset.chains
+    )
     fd, tmp_csv_path = tempfile.mkstemp(
         suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True
-        )
+    )
     cmd = '{} --csv_file={} {}'.format(
         cmd_path, tmp_csv_path, ' '.join(runset.csv_files)
-        )
+    )
     do_command(cmd.split())  # breaks on all whitespace
     summary_data = pd.read_csv(
         tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
-        )
-    mask = [
-        x == 'lp__' or not x.endswith('__') for x in summary_data.index
-        ]
+    )
+    mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
     return summary_data[mask]
 
 
@@ -362,7 +387,7 @@ def get_drawset(runset: RunSet, params: List[str] = None) -> pd.DataFrame:
     runset.assemble_sample()
     data = runset.sample.reshape(
         (runset.draws * runset.chains), len(runset.column_names), order='A'
-        )
+    )
     df = pd.DataFrame(data=data, columns=runset.column_names)
     if params is None:
         return df
@@ -375,7 +400,8 @@ def get_drawset(runset: RunSet, params: List[str] = None) -> pd.DataFrame:
 
 
 def save_csvfiles(
-        runset: RunSet, dir: str = None, basename: str = None) -> None:
+    runset: RunSet, dir: str = None, basename: str = None
+) -> None:
     """
     Moves csvfiles to specified directory using specified basename,
     appending suffix '-<id>.csv' to each.
@@ -397,14 +423,17 @@ def save_csvfiles(
     for i in range(runset.chains):
         if not os.path.exists(runset.csv_files[i]):
             raise ValueError(
-                'cannot access csv file {}'.format(runset.csv_files[i]))
-        to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i+1))
+                'cannot access csv file {}'.format(runset.csv_files[i])
+            )
+        to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i + 1))
         if os.path.exists(to_path):
-            raise ValueError(
-                'file exists, not overwriting: {}'.format(to_path))
+            raise ValueError('file exists, not overwriting: {}'.format(to_path))
         try:
-            print('saving tmpfile: "{}" as: "{}"'.format(
-                    runset.csv_files[i], to_path))
+            print(
+                'saving tmpfile: "{}" as: "{}"'.format(
+                    runset.csv_files[i], to_path
+                )
+            )
             shutil.move(runset.csv_files[i], to_path)
             runset.csv_files[i] = to_path
         except (IOError, OSError) as e:
@@ -418,8 +447,9 @@ def do_sample(runset: RunSet, idx: int) -> None:
     """
     cmd = runset.cmds[idx]
     print('start chain {}.  '.format(idx + 1))
-    proc = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     proc.wait()
     stdout, stderr = proc.communicate()
     transcript_file = runset.console_files[idx]

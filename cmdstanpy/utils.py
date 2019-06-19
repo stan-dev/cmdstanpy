@@ -12,7 +12,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script ``bin/install_cmdstan``.
+    Assumes directory populated via script `bin/install_cmdstan`.
     """
     versions = [
         name.split('-')[1] for name in os.listdir(dot_dir)
@@ -35,8 +35,8 @@ def validate_cmdstan_path(path: str) -> None:
             path))
     if not os.path.exists(os.path.join(path, 'bin', 'stanc')):
         raise ValueError(
-            "no CmdStan binaries found, "
-            "run command line script 'install_cmdstan'")
+            'no CmdStan binaries found, '
+            'run command line script "install_cmdstan"')
 
 
 def set_cmdstan_path(path: str) -> None:
@@ -58,13 +58,13 @@ def cmdstan_path() -> str:
         cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
         if not os.path.exists(cmdstan_dir):
             raise ValueError(
-                "no CmdStan installation found, "
-                "run command line script 'install_cmdstan'")
+                'no CmdStan installation found, '
+                'run command line script "install_cmdstan"')
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                "no CmdStan installation found, "
-                "run command line script 'install_cmdstan'")
+                'no CmdStan installation found, '
+                'run command line script "install_cmdstan"')
         cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
@@ -269,14 +269,14 @@ def read_metric(path: str) -> List[int]:
         else:
             raise ValueError(
                 'metric file {}, bad or missing'
-                ' entry \'inv_metric\''.format(path)
+                ' entry "inv_metric"'.format(path)
                 )
     else:
         dims = read_rdump_metric(path)
         if dims is None:
             raise ValueError(
                 'metric file {}, bad or missing'
-                ' entry \'inv_metric\''.format(path)
+                ' entry "inv_metric"'.format(path)
                 )
         return dims
 
@@ -295,4 +295,3 @@ def read_rdump_metric(path: str) -> List[int]:
             return None
         dims = m2.group(1).split(',')
         return [int(d) for d in dims]
-    
