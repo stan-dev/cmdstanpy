@@ -140,19 +140,19 @@ class ReadMetricTest(unittest.TestCase):
     def test_metric_json_bad(self):
         metric_file = os.path.join(datafiles_path, 'metric_bad.data.json')
         with self.assertRaisesRegex(Exception,
-                                    'bad or missing entry \'inv_metric\''):
+                                    'bad or missing entry "inv_metric"'):
             dims = read_metric(metric_file)
 
     def test_metric_rdump_bad_1(self):
         metric_file = os.path.join(datafiles_path, 'metric_bad_1.data.R')
         with self.assertRaisesRegex(Exception,
-                                    'bad or missing entry \'inv_metric\''):
+                                    'bad or missing entry "inv_metric"'):
             dims = read_metric(metric_file)
 
     def test_metric_rdump_bad_2(self):
         metric_file = os.path.join(datafiles_path, 'metric_bad_2.data.R')
         with self.assertRaisesRegex(Exception,
-                                    'bad or missing entry \'inv_metric\''):
+                                    'bad or missing entry "inv_metric"'):
             dims = read_metric(metric_file)
 
     def test_metric_missing(self):

@@ -33,7 +33,7 @@ class SamplerArgsTest(unittest.TestCase):
                                data=rdata,
                                output_file=output,
                                max_treedepth=15,
-                               target_accept_rate=0.99)
+                               adapt_delta=0.99)
         cmd = args.compose_command(0, ''.join([output,'-1.csv']))
         self.assertIn('random seed=12345', cmd)
         self.assertIn('data file=', cmd)
@@ -79,7 +79,7 @@ class SamplerArgsTest(unittest.TestCase):
                                data=jdata,
                                output_file=output,
                                max_treedepth=11,
-                               target_accept_rate=0.9)
+                               adapt_delta=0.9)
         cmd = args.compose_command(0, ''.join([output,'-1.csv']))
         self.assertIn('bernoulli', cmd)
         self.assertIn('seed=12345', cmd)
@@ -87,6 +87,20 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('bernoulli.data.json', cmd)
         self.assertIn('algorithm=hmc engine=nuts max_depth=11 adapt delta=0.9',
                       cmd)
+
+    def test_samplerargs_chain_ids(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        output = os.path.join(TMPDIR, 'bernoulli.output')
+        args = SamplerArgs(model,
+                               chain_ids=[7,9],
+                               data=jdata)
+        cmd = args.compose_command(0, ''.join([output,'-7.csv']))
+        self.assertIn('bernoulli', cmd)
+        self.assertIn('bernoulli.data.json', cmd)
+        self.assertIn('id=7', cmd)
 
     def test_samplerargs_missing_args(self):
         with self.assertRaises(Exception):

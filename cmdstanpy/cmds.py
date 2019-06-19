@@ -96,7 +96,7 @@ def sample(
     metric: Union[str, List[str]] = None,
     step_size: Union[float, List[float]] = None,
     adapt_engaged: bool = True,
-    target_accept_rate: float = None,
+    adapt_delta: float = None,
     csv_output_file: str = None,
     show_progress: bool = False,
 ) -> RunSet:
@@ -201,8 +201,11 @@ def sample(
     :param adapt_engaged: When True, adapt stepsize, metric.
         *Note: If True, `warmup_iters` must be > 0.*
 
-    :param target_accept_rate: Adaptation target acceptance statistic.
-        (In CmdStan and PyStan, this is called `adapt delta`)
+    :param adapt_delta: Adaptation target Metropolis acceptance rate.
+        The default value is 0.8.  Increasing this value, which must be
+        strictly less than 1, causes adaptation to use smaller step sizes.
+        It improves the effective sample size, but may increase the time
+        per iteration.
 
     :param csv_output_file: A path or file name which will be used as the
         base name for the sampler output files.  The csv output files
@@ -294,7 +297,7 @@ def sample(
         metric=metric,
         step_size=step_size,
         adapt_engaged=adapt_engaged,
-        target_accept_rate=target_accept_rate,
+        adapt_delta=adapt_delta,
         output_file=csv_output_file,
     )
 

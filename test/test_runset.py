@@ -22,7 +22,7 @@ class RunSetTest(unittest.TestCase):
                            output_file=output,
                            sampling_iters=100,
                            max_treedepth=11,
-                           target_accept_rate=0.95)
+                           adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         self.assertEqual(4, len(retcodes))
@@ -50,7 +50,7 @@ class RunSetTest(unittest.TestCase):
                            output_file=output,
                            sampling_iters=100,
                            max_treedepth=11,
-                           target_accept_rate=0.95)
+                           adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):
@@ -75,7 +75,7 @@ class RunSetTest(unittest.TestCase):
                            output_file=output,
                            sampling_iters=100,
                            max_treedepth=11,
-                           target_accept_rate=0.95)
+                           adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
         with self.assertRaisesRegex(Exception, 'Exception'):
             runset.check_console_msgs()
@@ -92,7 +92,7 @@ class RunSetTest(unittest.TestCase):
                            output_file=output,
                            sampling_iters=100,
                            max_treedepth=11,
-                           target_accept_rate=0.95)
+                           adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):
@@ -114,7 +114,7 @@ class RunSetTest(unittest.TestCase):
                            output_file=output,
                            sampling_iters=100,
                            max_treedepth=11,
-                           target_accept_rate=0.95)
+                           adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):
@@ -136,7 +136,7 @@ class RunSetTest(unittest.TestCase):
                            output_file=output,
                            sampling_iters=100,
                            max_treedepth=11,
-                           target_accept_rate=0.95)
+                           adapt_delta=0.95)
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):

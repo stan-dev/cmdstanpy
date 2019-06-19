@@ -100,7 +100,7 @@ class SamplerArgs(object):
         metric: Union[str, List[str]] = None,
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = None,
-        target_accept_rate: float = None,
+        adapt_delta: float = None,
         output_file: str = None,
     ) -> None:
         """Initialize object."""
@@ -118,7 +118,7 @@ class SamplerArgs(object):
         self.metric = metric
         self.step_size = step_size
         self.adapt_engaged = adapt_engaged
-        self.target_accept_rate = target_accept_rate
+        self.adapt_delta = adapt_delta
         self.output_file = output_file
         self.metric_file = None
         self.init_buffer = None
@@ -358,11 +358,11 @@ class SamplerArgs(object):
                 elif len(dims) == 2:
                     self.metric = 'dense_e'
 
-        if self.target_accept_rate is not None:
-            if self.target_accept_rate < 0.0 or self.target_accept_rate > 1.0:
+        if self.adapt_delta is not None:
+            if self.adapt_delta < 0.0 or self.adapt_delta > 1.0:
                 raise ValueError(
-                    'target_accept_rate must be between 0 and 1,'
-                    ' found {}'.format(self.target_accept_rate)
+                    'adapt_delta must be between 0 and 1,'
+                    ' found {}'.format(self.adapt_delta)
                 )
         pass
 
@@ -409,14 +409,14 @@ class SamplerArgs(object):
                 cmd = '{} metric_file="{}"'.format(cmd, self.metric_file[idx])
         if (
             self.adapt_engaged
-            or self.target_accept_rate is not None
+            or self.adapt_delta is not None
             or self.warmup_schedule is not None
         ):
             cmd = cmd + ' adapt'
         if self.adapt_engaged:
             cmd = cmd + ' engaged'
-        if self.target_accept_rate is not None:
-            cmd = '{} delta={}'.format(cmd, self.target_accept_rate)
+        if self.adapt_delta is not None:
+            cmd = '{} delta={}'.format(cmd, self.adapt_delta)
         if self.warmup_schedule is not None:
             cmd = '{} init_buffer={}'.format(cmd, self.init_buffer)
             cmd = '{} term_buffer={}'.format(cmd, self.term_buffer)

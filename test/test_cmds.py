@@ -60,7 +60,7 @@ class SampleTest(unittest.TestCase):
                                  data=jdata,
                                  csv_output_file=output,
                                  max_treedepth=11,
-                                 target_accept_rate=0.95)
+                                 adapt_delta=0.95)
         for i in range(post_sample.chains):
             csv_file = post_sample.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -94,7 +94,7 @@ class SampleTest(unittest.TestCase):
                                  sampling_iters=100,
                                  data=jdata,
                                  max_treedepth=11,
-                                 target_accept_rate=0.95)
+                                 adapt_delta=0.95)
         for i in range(post_sample.chains):
             csv_file = post_sample.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
