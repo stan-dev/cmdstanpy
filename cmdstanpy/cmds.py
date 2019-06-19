@@ -95,7 +95,7 @@ def sample(
     step_size: Union[float, List[float]] = None,
     adapt_engaged: bool = True,
     target_accept_rate: float = None,
-    output_file: str = None,
+    csv_output_file: str = None,
     show_progress: bool = False
 ) -> RunSet:
     """
@@ -195,7 +195,7 @@ def sample(
         )
 
     if chain_ids is None:
-        chain_ids = [x for x in range(1, chains+1)]
+        chain_ids = [x + 1 for x in range(chains)]
     else:
         if type(chain_ids) is int:
             if chain_ids < 1:
@@ -204,7 +204,7 @@ def sample(
                     ' found {}'.format(chain_ids)
                     )
             offset = chain_ids;
-            chain_ids =  [x + offset for x in range(1, chains+1)]
+            chain_ids =  [x + offset + 1 for x in range(chains)]
         else:
             if not len(chain_ids) == chains:
                 raise ValueError(
@@ -229,7 +229,7 @@ def sample(
         cores = cpu_count()
 
     if data is not None:
-        if type(data) is Dict:
+        if isinstance(data, dict):
             with tempfile.NamedTemporaryFile(
                 mode='w+', suffix='.json', dir=TMPDIR, delete=False
             ) as fd:
@@ -241,7 +241,7 @@ def sample(
             data = data_file
 
     if inits is not None:
-        if type(inits) is Dict:
+        if isinstane(inits, dict):
             with tempfile.NamedTemporaryFile(
                 mode='w+', suffix='.json', dir=TMPDIR, delete=False
             ) as fd:
@@ -255,6 +255,7 @@ def sample(
 
     args = SamplerArgs(
         model=stan_model,
+        chain_ids=chain_ids,
         data=data,
         seed=seed,
         inits=inits,
@@ -270,9 +271,8 @@ def sample(
         target_accept_rate=target_accept_rate,
         output_file=csv_output_file
     )
-    args.validate()
 
-    runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
+    runset = RunSet(args=args, chains=chains)
     try:
         tp = ThreadPool(cores)
         for i in range(chains):

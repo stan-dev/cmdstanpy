@@ -1,3 +1,4 @@
+import math
 import os
 import re
 import tempfile
@@ -86,6 +87,7 @@ class SamplerArgs(object):
     def __init__(
         self,
         model: Model,
+        chain_ids: List[int],
         data: str = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
@@ -94,15 +96,16 @@ class SamplerArgs(object):
         warmup_schedule: Tuple[float, float, float] = None,
         save_warmup: bool = False,
         thin: int = None,
-        max_treedepth: float = None,
+        max_treedepth: int = None,
         metric: Union[str, List[str]] = None,
         step_size: Union[float, List[float]] = None,
-        adapt_engaged: bool = True,
+        adapt_engaged: bool = None,
         target_accept_rate: float = None,
         output_file: str = None,
     ) -> None:
         """Initialize object."""
         self.model = model
+        self.chain_ids = chain_ids
         self.data = data
         self.seed = seed
         self.inits = inits
@@ -113,11 +116,13 @@ class SamplerArgs(object):
         self.thin = thin
         self.max_treedepth = max_treedepth
         self.metric = metric
-        self.metric_file = None
         self.step_size = step_size
         self.adapt_engaged = adapt_engaged
         self.target_accept_rate = target_accept_rate
         self.output_file = output_file
+        self.metric_file = None
+        self.init_buffer = None
+        self.term_buffer = None
         self.validate()
 
     def validate(self) -> None:
@@ -129,6 +134,7 @@ class SamplerArgs(object):
         * adaptation and warmup args are consistent
         * if file(s) for metric are supplied, check contents.
         * if no seed specified, set random seed.
+        * length of per-chain lists equals specified # of chains
         """
         if self.model is None:
             raise ValueError('no stan model specified')
@@ -143,7 +149,12 @@ class SamplerArgs(object):
                 'cannot access model executable "{}"'.format(
                     self.model.exe_file)
             )
+
         if self.output_file is not None:
+            if not os.path.exists(os.path.dirname(self.output_file)):
+                raise ValueError(
+                    'invalid path for output files: {}'.format(
+                        self.output_file))
             try:
                 with open(self.output_file, 'w+') as fd:
                     pass
@@ -155,79 +166,179 @@ class SamplerArgs(object):
                 )
             if self.output_file.endswith('.csv'):
                 self.output_file = self.output_file[:-4]
+
         if self.seed is None:
             rng = np.random.RandomState()
             self.seed = rng.randint(1, 99999 + 1)
         else:
-            if (
-                not isinstance(self.seed, int)
-                or self.seed < 0
-                or self.seed > 2 ** 32 - 1
-            ):
-                raise ValueError(
-                    'seed must be an integer value between 0 and 2**32-1, '
-                    'found {}'.format(self.seed)
-                )
+            if not isinstance(self.seed, list):
+                if not type(self.seed) is int or self.seed < 0 or self.seed > 2 ** 32 - 1:
+                    raise ValueError(
+                        'seed must be an integer between 0 and 2**32-1, '
+                        'found {}'.format(self.seed))
+            else:
+                if len(self.seed) != len(self.chain_ids):
+                    raise ValueError(
+                        'number of seeds must match number of chains '
+                        ' found {} seed for {} chains '.format(
+                            len(self.seed), len(self.chains)))
+                for i in range(len(self.seed)):
+                    if self.seed[i] < 0 or self.seed[i] > 2 ** 32 - 1:
+                        raise ValueError(
+                        'seed must be an integer value between 0 and 2**32-1, '
+                            'found {}'.format(self.seed[i]))
+
         if self.data is not None:
             if not os.path.exists(self.data):
                 raise ValueError('no such file {}'.format(self.data))
+
         if self.inits is not None:
             if type(self.inits) is str:
                 if not os.path.exists(self.inits):
                     raise ValueError('no such file {}'.format(self.inits))
-            elif type(self.inits) is List:
+            elif isinstance(self.inits, List):
+                if len(self.inits) != len(self.chains_ids):
+                    raise ValueError(
+                        'number of inits files must match number of chains '
+                        ' found {} inits files for {} chains '.format(
+                            len(self.inits), len(self.chain_ids)))
                 for i in range(len(self.inits)):
                     if not os.path.exists(self.inits[i]):
                         raise ValueError('no such file {}'.format(self.inits[i]))
 
-# validate metric:  metric, path, or list of paths
-        if self.metric is not None:
-            if type(self.metric) is str:
-                if not self.metric in ['diag', 'dense']:
-                    if not os.path.exists(self.metric):
-                        raise ValueError('no such file {}'.format(self.metric))
-                    
-            elif type(self.metric) is List:
-                for i in range(len(self.metric)):
-                    if not os.path.exists(self.metric[i]):
-                        raise ValueError('no such file {}'.format(self.metric[i]))
-
         if self.warmup_iters is not None:
             if self.warmup_iters < 0:
                 raise ValueError(
-                    'warmup_iters must be a '
-                    'non-negative integer value'.format(
-                        self.warmup_iters
-                    )
-                )
-
-
+                    'warmup_iters must be a non-negative integer'.format(
+                        self.warmup_iters))
+            if self.adapt_engaged and self.warmup_iters == 0:
+                raise ValueError(
+                    'adaptation requested but 0 warmup iterations specified, '
+                    'must run warmup iterations')
 
         if self.sampling_iters is not None:
             if self.sampling_iters < 0:
                 raise ValueError(
-                    'sampling_iters must be '
-                    'a non-negative integer value'.format(
-                        self.sampling_iters
-                    )
-                )
-        # TODO: check type/bounds on all other controls
-        # positive int values
+                    'sampling_iters must be a non-negative integer'.format(
+                        self.sampling_iters))
+
+        if self.warmup_schedule is not None:
+            if not self.warmup_iters is None and self.warmup_iters < 1:
+                raise ValueError('Config error: '
+                        'warmup_schedule specified for 0 warmup iterations')
+            if len(self.warmup_schedule) != 3 or sum(self.warmup_schedule) > 1:
+                raise ValueError(
+                    'warmup_schedule should be triple of precentages '
+                    ' that sums to 1, e.g. (0.1, 0.8, 0.1), found {}'.format(
+                        self.warmup_iters))
+            for x in self.warmup_schedule:
+                if x < 0 or x > 1:
+                    raise ValueError(
+                        'warmup_schedule should be triple of precentages that'
+                        ' sum to 1, e.g. (0.1, 0.8, 0.1), found {}'.format(
+                        self.warmup_schedule))
+
+            num_warmup = 1000
+            if self.warmup_iters is not None:
+                num_warmup = self.warmup_iters
+            self.init_buffer = math.floor(num_warmup * self.warmup_schedule[0]);
+            self.term_buffer = math.floor(num_warmup * self.warmup_schedule[2]);
+                    
+        if self.thin is not None:
+            if self.thin < 1:
+                raise ValueError(
+                    'thin must be at least 1, found {}'.format(self.thin))
+
+        if self.max_treedepth is not None:
+            if self.max_treedepth < 1:
+                raise ValueError(
+                    'max_treedepth must be at least 1, found {}'.format(
+                        self.max_treedepth))
+
+        if self.step_size is not None:
+            if (type(self.step_size) is int
+                    or type(self.step_size) is float) and self.step_size < 0:
+                raise ValueError(
+                    'step_size must be > 0, found {}'.format(self.step_size))
+            else:
+                if len(self.step_size) != len(self.chain_ids):
+                    raise ValueError(
+                        'number of step_sizes must match number of chains '
+                        ' found {} step_sizes for {} chains '.format(
+                            len(self.step_size), len(self.chain_ids)))
+                for i in len(self.step_size):
+                    if self.step_size[i] < 0:
+                        raise ValueError(
+                            'step_size must be > 0, found {}'.format(
+                                self.step_size[i]))
+
+        if self.metric is not None:
+            dims = None
+            if type(self.metric) is str:
+                if self.metric == 'diag':
+                    self.metric = 'diag_e'
+                elif self.metric == 'dense':
+                    self.metric = 'dense_e'
+                else:
+                    if not os.path.exists(self.metric):
+                        raise ValueError('no such file {}'.format(self.metric))
+                    dims = read_metric(self.metric)
+            elif isinstance(self.metric, list):
+                if len(self.metric) != len(self.chains_ids):
+                    raise ValueError(
+                        'number of metric files must match number of chains '
+                        ' found {} metric files for {} chains '.format(
+                            len(self.metric), len(self.chain_ids)))
+                for i in range(len(self.metric)):
+                    if not os.path.exists(self.metric[i]):
+                        raise ValueError('no such file {}'.format(self.metric[i]))
+                    if i == 0:
+                        dims = read_metric(self.metric[i])
+                    else:
+                        dims2 = read_metric(self.metric[i])
+                        if len(dims) != len(dims2):
+                            raise ValueError('metrics files {}, {},'
+                                                 ' inconsistent metrics'.
+                                                 format(self.metric[0],
+                                                            self.metric[i]))
+                        for j in range(len(dims)):
+                            if dims[j] != dims2[j]:
+                                raise ValueError('metrics files {}, {},'
+                                                    ' inconsistent metrics'.
+                                                    format(self.metric[0],
+                                                               self.metric[i]))
+            if dims is not None:
+                if len(dims) > 2 or (len(dims) == 2 and dims[0] != dims[1]):
+                    raise ValueError('bad metric specifiation')
+                metric_file = metric
+                if len(dims) == 1:
+                    metric = 'diag_e'
+                elif len(dims) == 2:
+                    metric = 'dense_e'
+
+        if self.target_accept_rate is not None:
+            if self.target_accept_rate < 0.0 or self.target_accept_rate > 1.0:
+                raise ValueError('target_accept_rate must be between 0 and 1,'
+                                    ' found {}'.format(self.target_accept_rate))
         pass
 
-    def compose_command(self, chain_id: int, csv_file: str) -> str:
+    def compose_command(self, idx: int, csv_file: str) -> str:
         """compose command string for CmdStan for non-default arg values.
         """
-        cmd = '{} id={}'.format(self.model.exe_file, chain_id)
+        cmd = '{} id={}'.format(self.model.exe_file, self.chain_ids[idx])
         if self.seed is not None:
-            cmd = '{} random seed={}'.format(cmd, self.seed)
+            if not isinstance(self.seed, list):
+                cmd = '{} random seed={}'.format(cmd, self.seed)
+            else:
+                cmd = '{} random seed={}'.format(cmd, self.seed[idx])
         if self.data is not None:
             cmd = '{} data file={}'.format(cmd, self.data)
         if self.inits is not None:
-            cmd = '{} init={}'.format(cmd, self.inits)
+            if not isinstance(self.inits, list):
+                cmd = '{} init={}'.format(cmd, self.inits)
+            else:
+                cmd = '{} init={}'.format(cmd, self.inits[idx])
         cmd = '{} output file={}'.format(cmd, csv_file)
-        if self.refresh is not None:
-            cmd = '{} refresh={}'.format(cmd, self.refresh)
         cmd = cmd + ' method=sample'
         if self.sampling_iters is not None:
             cmd = '{} num_samples={}'.format(cmd, self.sampling_iters)
@@ -238,30 +349,38 @@ class SamplerArgs(object):
         if self.thin is not None:
             cmd = '{} thin={}'.format(cmd, self.thin)
         cmd = cmd + ' algorithm=hmc'
-        if self.step_size is not None:
-            cmd = '{} stepsize={}'.format(cmd, self.step_size)
-        if self.nuts_max_depth is not None:
+        if self.max_treedepth is not None:
             cmd = '{} engine=nuts max_depth={}'.format(
-                cmd, self.nuts_max_depth)
-        if self.adapt_engaged or not self.target_accept_rate is not None:
-            cmd = cmd + " adapt engaged "
-        if self.adapt_gamma is not None:
-            cmd = '{} gamma={}'.format(cmd, self.adapt_gamma)
-        if self.adapt_delta is not None:
-            cmd = '{} delta={}'.format(cmd, self.adapt_delta)
-        if self.adapt_kappa is not None:
-            cmd = '{} kappa={}'.format(cmd, self.adapt_kappa)
-        if self.adapt_t0 is not None:
-            cmd = '{} t0={}'.format(cmd, self.adapt_t0)
-        if self.hmc_metric_file is not None:
-            cmd = '{} metric_file="{}"'.format(cmd, self.hmc_metric_file)
+                cmd, self.max_treedepth)
+        if self.step_size is not None:
+            if not isinstance(self.step_size, list):
+                cmd = '{} stepsize={}'.format(cmd, self.step_size)
+            else:
+                cmd = '{} stepsize={}'.format(cmd, self.step_size[idx])
+        if self.metric is not None:
+            cmd = '{} metric={}'.format(cmd, self.metric)
+        if self.metric_file is not None:
+            if not isinstance(self.metric_file, list):
+                cmd = '{} metric_file="{}"'.format(cmd, self.metric_file)
+            else:
+                cmd = '{} metric_file="{}"'.format(cmd, self.metric_file[idx])
+        if self.adapt_engaged or self.target_accept_rate is not None or self.warmup_schedule is not None:
+            cmd = cmd + ' adapt'
+        if self.adapt_engaged:
+            cmd = cmd + ' engaged'
+        if self.target_accept_rate is not None:
+            cmd = '{} delta={}'.format(cmd, self.target_accept_rate)
+        if self.warmup_schedule is not None:
+            cmd = '{} init_buffer={}'.format(cmd, self.init_buffer)
+            cmd = '{} term_buffer={}'.format(cmd, self.term_buffer)
+            
         return cmd
 
 
 class RunSet(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args: SamplerArgs, chains: int = 4, ) -> None:
+    def __init__(self, args: SamplerArgs, chains: int = 4) -> None:
         """Initialize object."""
         self._args = args
         self._chains = chains
@@ -295,7 +414,7 @@ class RunSet(object):
                 )
             self.console_files.append(txt_file)
         self.cmds = [
-            args.compose_command(i + 1, self.csv_files[i])
+            args.compose_command(i, self.csv_files[i])
             for i in range(chains)
         ]
         """per-chain sampler command."""
@@ -374,14 +493,14 @@ class RunSet(object):
 
     @property
     def metric(self) -> np.ndarray:
-        """Array of per-chain metric used by sampler."""
+        """Metric used by sampler for each chain."""
         if self._metric is None:
             self.assemble_sample()
         return self._metric
 
     @property
     def stepsize(self) -> np.ndarray:
-        """Array or per-chain stepsize."""
+        """Stepsize used by sampler for each chain."""
         if self._stepsize is None:
             self.assemble_sample()
         return self._stepsize

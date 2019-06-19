@@ -51,16 +51,16 @@ class SampleTest(unittest.TestCase):
             compile_model(stan)
         model = Model(stan, exe_file=exe)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        output = os.path.join(TMPDIR, 'test1-bernoulli-output')
+        output = os.path.join(datafiles_path, 'test1-bernoulli-output')
         post_sample = sample(model,
                                  chains=4,
                                  cores=2,
                                  seed=12345,
-                                 post_warmup_draws_per_chain=100,
-                                 data_file=jdata,
+                                 sampling_iters=100,
+                                 data=jdata,
                                  csv_output_file=output,
-                                 nuts_max_depth=11,
-                                 adapt_delta=0.95)
+                                 max_treedepth=11,
+                                 target_accept_rate=0.95)
         for i in range(post_sample.chains):
             csv_file = post_sample.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -91,10 +91,10 @@ class SampleTest(unittest.TestCase):
                                  chains=4,
                                  cores=2,
                                  seed=12345,
-                                 post_warmup_draws_per_chain=100,
-                                 data_file=jdata,
-                                 nuts_max_depth=11,
-                                 adapt_delta=0.95)
+                                 sampling_iters=100,
+                                 data=jdata,
+                                 max_treedepth=11,
+                                 target_accept_rate=0.95)
         for i in range(post_sample.chains):
             csv_file = post_sample.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -106,7 +106,7 @@ class SampleTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         output = os.path.join(TMPDIR, 'test3-bernoulli-output')
         model = compile_model(stan)
-        post_sample = sample(model, data_file=rdata, csv_output_file=output)
+        post_sample = sample(model, data=rdata, csv_output_file=output)
         for i in range(post_sample.chains):
             csv_file = post_sample.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -145,8 +145,8 @@ class DrawsetTest(unittest.TestCase):
                                  chains=4,
                                  cores=2,
                                  seed=12345,
-                                 post_warmup_draws_per_chain=200,
-                                 data_file=jdata)
+                                 sampling_iters=200,
+                                 data=jdata)
         post_sample.assemble_sample()
         df = get_drawset(post_sample)
         self.assertEqual(df.shape,
@@ -160,7 +160,8 @@ class DrawsetTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         output = os.path.join(datafiles_path, 'runset-big', 'output_icar_nyc')
         args = SamplerArgs(model,
-                           output_file=output)
+                               chain_ids=[1,2],
+                               output_file=output)
         runset = RunSet(chains=2, args=args)
         runset.validate_csv_files()
         runset.assemble_sample()
@@ -200,8 +201,8 @@ class SummaryTest(unittest.TestCase):
                                  chains=4,
                                  cores=2,
                                  seed=12345,
-                                 post_warmup_draws_per_chain=200,
-                                 data_file=jdata)
+                                 sampling_iters=200,
+                                 data=jdata)
         df = summary(post_sample)
         self.assertTrue(df.shape == (2, 9))
 
@@ -218,8 +219,8 @@ class DiagnoseTest(unittest.TestCase):
                                  chains=4,
                                  cores=2,
                                  seed=12345,
-                                 post_warmup_draws_per_chain=200,
-                                 data_file=jdata)
+                                 sampling_iters=200,
+                                 data=jdata)
         capturedOutput = io.StringIO()
         sys.stdout = capturedOutput
         diagnose(post_sample)
@@ -232,7 +233,9 @@ class DiagnoseTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         output = os.path.join(datafiles_path, 'diagnose-good',
                                   'corr_gauss_depth8')
-        args = SamplerArgs(model, output_file=output)
+        args = SamplerArgs(model,
+                               chain_ids=[1],
+                               output_file=output)
         runset = RunSet(args=args, chains=1)
 
         # TODO - use cmdstan test files instead
@@ -262,8 +265,8 @@ class SaveCsvfilesTest(unittest.TestCase):
                                  chains=4,
                                  cores=2,
                                  seed=12345,
-                                 post_warmup_draws_per_chain=200,
-                                 data_file=jdata)
+                                 sampling_iters=200,
+                                 data=jdata)
         for i in range(post_sample.chains):
             csv_file = post_sample.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
