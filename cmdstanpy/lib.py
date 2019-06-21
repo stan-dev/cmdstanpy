@@ -152,6 +152,13 @@ class SamplerArgs(object):
                 )
             )
 
+        if self.chain_ids is not None:
+            for i in range(len(self.chain_ids)):
+                if self.chain_ids[i] < 1:
+                    raise ValueError(
+                        'invalid chain_id {}'.format(self.chain_ids[i])
+                        )
+
         if self.output_file is not None:
             if not os.path.exists(os.path.dirname(self.output_file)):
                 raise ValueError(
@@ -172,30 +179,31 @@ class SamplerArgs(object):
             rng = np.random.RandomState()
             self.seed = rng.randint(1, 99999 + 1)
         else:
-            if not isinstance(self.seed, list):
-                if (
-                    not type(self.seed) is int
-                    or self.seed < 0
-                    or self.seed > 2 ** 32 - 1
-                ):
-                    raise ValueError(
-                        'seed must be an integer between 0 and 2**32-1, '
-                        'found {}'.format(self.seed)
+            if not isinstance(self.seed, (int, list)):
+                raise ValueError(
+                    'seed must be an integer between 0 and 2**32-1,'
+                    ' found {}'.format(self.seed)
                     )
+            elif isinstance(self.seed, int):
+                if self.seed < 0 or self.seed > 2 ** 32 - 1:
+                    raise ValueError(
+                        'seed must be an integer between 0 and 2**32-1,'
+                        ' found {}'.format(self.seed)
+                        )
             else:
                 if len(self.seed) != len(self.chain_ids):
                     raise ValueError(
                         'number of seeds must match number of chains '
                         ' found {} seed for {} chains '.format(
-                            len(self.seed), len(self.chains)
+                            len(self.seed), len(self.chain_ids)
                         )
                     )
                 for i in range(len(self.seed)):
                     if self.seed[i] < 0 or self.seed[i] > 2 ** 32 - 1:
                         raise ValueError(
                             'seed must be an integer value'
-                            ' between 0 and 2**32-1, '
-                            'found {}'.format(self.seed[i])
+                            ' between 0 and 2**32-1,'
+                            ' found {}'.format(self.seed[i])
                         )
 
         if self.data is not None:
@@ -203,11 +211,16 @@ class SamplerArgs(object):
                 raise ValueError('no such file {}'.format(self.data))
 
         if self.inits is not None:
-            if type(self.inits) is str:
+            if isinstance(self.inits, (int, float)):
+                if self.inits < 0:
+                    raise ValueError(
+                        'inits must be > 0, found {}'.format(self.inits)
+                        )
+            elif isinstance(self.inits, str):
                 if not os.path.exists(self.inits):
                     raise ValueError('no such file {}'.format(self.inits))
             elif isinstance(self.inits, List):
-                if len(self.inits) != len(self.chains_ids):
+                if len(self.inits) != len(self.chain_ids):
                     raise ValueError(
                         'number of inits files must match number of chains '
                         ' found {} inits files for {} chains '.format(
@@ -284,12 +297,11 @@ class SamplerArgs(object):
                 )
 
         if self.step_size is not None:
-            if (
-                type(self.step_size) is int or type(self.step_size) is float
-            ) and self.step_size < 0:
-                raise ValueError(
-                    'step_size must be > 0, found {}'.format(self.step_size)
-                )
+            if isinstance(self.step_size, (int, float)):
+                if self.step_size < 0:
+                    raise ValueError(
+                        'step_size must be > 0, found {}'.format(self.step_size)
+                        )
             else:
                 if len(self.step_size) != len(self.chain_ids):
                     raise ValueError(
@@ -298,7 +310,7 @@ class SamplerArgs(object):
                             len(self.step_size), len(self.chain_ids)
                         )
                     )
-                for i in len(self.step_size):
+                for i in range(len(self.step_size)):
                     if self.step_size[i] < 0:
                         raise ValueError(
                             'step_size must be > 0, found {}'.format(
@@ -308,7 +320,7 @@ class SamplerArgs(object):
 
         if self.metric is not None:
             dims = None
-            if type(self.metric) is str:
+            if isinstance(self.metric, str):
                 if self.metric == 'diag':
                     self.metric = 'diag_e'
                 elif self.metric == 'dense':
@@ -318,7 +330,7 @@ class SamplerArgs(object):
                         raise ValueError('no such file {}'.format(self.metric))
                     dims = read_metric(self.metric)
             elif isinstance(self.metric, list):
-                if len(self.metric) != len(self.chains_ids):
+                if len(self.metric) != len(self.chain_ids):
                     raise ValueError(
                         'number of metric files must match number of chains '
                         ' found {} metric files for {} chains '.format(
