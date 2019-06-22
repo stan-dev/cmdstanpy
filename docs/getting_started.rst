@@ -100,6 +100,8 @@ and returns a ``RunSet`` object:
 
 .. code-block:: python
 
+    from cmdstanpy import sample, RunSet
+
     bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
     bern_fit = sample(bernoulli_model, data=bern_data)
     
@@ -143,6 +145,8 @@ runs the CmdStan ``stansummary`` utility and returns the output as a pandas.Data
 
 .. code-block:: python
 
+    from cmdstanpy import summary
+
     summary(bern_fit)
 
 CmdStan is distributed with a second posterior analysis utility ``diagnose``
@@ -160,6 +164,8 @@ and prints the output to the console.
 
 .. code-block:: python
 
+    from cmdstanpy import diagnose
+
     diagnose(bern_fit)
 
 By default, CmdStanPy will save all CmdStan outputs in a temporary
@@ -171,5 +177,7 @@ The ``save_csvfiles`` function moves the CmdStan csv output files
 to the specified location, renaming them using a specified basename.
 
 .. code-block:: python
+
+    from cmdstanpy import save_csvfiles
 
     save_csvfiles(bern_fit, dir='some/path', basename='descriptive-name')
