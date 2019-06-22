@@ -16,7 +16,7 @@ from typing import Dict, List, Union, Tuple
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.lib import Model, StanData, RunSet, SamplerArgs
-from cmdstanpy.utils import cmdstan_path
+from cmdstanpy.utils import cmdstan_path, EXTENSION
 
 
 def compile_model(
@@ -48,24 +48,32 @@ def compile_model(
     program_name = os.path.basename(stan_file)
     exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
     hpp_file = '.'.join([exe_file, 'hpp'])
+    hpp_file = Path(hpp_file).as_posix()
     if overwrite or not os.path.exists(hpp_file):
         print('translating to {}'.format(hpp_file))
-        stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc')
-        cmd = [stanc_path, '--o={}'.format(hpp_file), stan_file]
+        stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)
+        stanc_path = Path(stanc_path).as_posix()
+        cmd = [
+            stanc_path,
+            '--o={}'.format(hpp_file),
+            Path(stan_file).as_posix(),
+        ]
         if include_paths is not None:
             bad_paths = [d for d in include_paths if not os.path.exists(d)]
             if any(bad_paths):
                 raise Exception(
                     'invalid include paths: {}'.format(', '.join(bad_paths))
                 )
-            cmd.append('--include_paths=' + ','.join(include_paths))
+            cmd.append(
+                '--include_paths='
+                + ','.join((Path(p).as_posix() for p in include_paths))
+            )
         print('stan to c++: make args {}'.format(cmd))
         do_command(cmd)
         if not os.path.exists(hpp_file):
             raise Exception('syntax error'.format(stan_file))
 
-    if platform.system().lower().startswith('win'):
-        exe_file += '.exe'
+    exe_file += EXTENSION
     if not overwrite and os.path.exists(exe_file):
         # print('model is up to date') # notify user or not?
         return Model(stan_file, exe_file)
@@ -74,7 +82,8 @@ def compile_model(
     print('compiling c++: make args {}'.format(cmd))
     try:
         do_command(cmd, cmdstan_path())
-    except Exception:
+    except Exception as e:
+        print("make failed", e)
         return Model(stan_file)
     return Model(stan_file, exe_file)
 
@@ -331,7 +340,7 @@ def summary(runset: RunSet) -> pd.DataFrame:
     :param runset: record of completed run of NUTS sampler
     """
     names = runset.column_names
-    cmd_path = os.path.join(cmdstan_path(), 'bin', 'stansummary')
+    cmd_path = os.path.join(cmdstan_path(), 'bin', 'stansummary' + EXTENSION)
     tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
         runset.model, runset.chains
     )
@@ -365,7 +374,7 @@ def diagnose(runset: RunSet) -> None:
 
     :param runset: record of completed run of NUTS sampler
     """
-    cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose')
+    cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
     csv_files = ' '.join(runset.csv_files)
     cmd = '{} {} '.format(cmd_path, csv_files)
     result = do_command(cmd=cmd.split())

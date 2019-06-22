@@ -4,8 +4,11 @@ Utility functions
 import os
 import json
 import numpy as np
+import platform
 import re
 from typing import Dict, TextIO, List
+
+EXTENSION = ".exe" if platform.system() == "Windows" else ""
 
 
 def get_latest_cmdstan(dot_dir: str) -> str:
@@ -15,9 +18,11 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     Assumes directory populated via script `bin/install_cmdstan`.
     """
     versions = [
-        name.split('-')[1] for name in os.listdir(dot_dir)
+        name.split('-')[1]
+        for name in os.listdir(dot_dir)
         if os.path.isdir(os.path.join(dot_dir, name))
-        and name.startswith('cmdstan-')]
+        and name.startswith('cmdstan-')
+    ]
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
@@ -31,12 +36,12 @@ def validate_cmdstan_path(path: str) -> None:
     Throws exception if specified path is invalid.
     """
     if not os.path.isdir(path):
-        raise ValueError('no such CmdStan directory {}'.format(
-            path))
-    if not os.path.exists(os.path.join(path, 'bin', 'stanc')):
+        raise ValueError('no such CmdStan directory {}'.format(path))
+    if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
             'no CmdStan binaries found, '
-            'run command line script "install_cmdstan"')
+            'run command line script "install_cmdstan"'
+        )
 
 
 def set_cmdstan_path(path: str) -> None:
@@ -59,12 +64,14 @@ def cmdstan_path() -> str:
         if not os.path.exists(cmdstan_dir):
             raise ValueError(
                 'no CmdStan installation found, '
-                'run command line script "install_cmdstan"')
+                'run command line script "install_cmdstan"'
+            )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
                 'no CmdStan installation found, '
-                'run command line script "install_cmdstan"')
+                'run command line script "install_cmdstan"'
+            )
         cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
@@ -158,7 +165,8 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
             key_val = line.split('=')
             if len(key_val) == 2:
                 if key_val[0].strip() == 'file' and not key_val[1].endswith(
-                        'csv'):
+                    'csv'
+                ):
                     config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
                     config_dict[key_val[0].strip()] = key_val[1].strip()
@@ -191,30 +199,37 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     lineno += 1
     if not line == '# Adaptation terminated':
         raise ValueError(
-            'line {}: expecting metric, '
-            'found:\n\t "{}"'.format(lineno, line))
+            'line {}: expecting metric, ' 'found:\n\t "{}"'.format(lineno, line)
+        )
     line = fp.readline().strip()
     lineno += 1
     label, stepsize = line.split('=')
     if not label.startswith('# Step size'):
         raise ValueError(
             'line {}: expecting stepsize, '
-            'found:\n\t "{}"'.format(lineno, line))
+            'found:\n\t "{}"'.format(lineno, line)
+        )
     try:
         float(stepsize.strip())
     except ValueError:
         raise ValueError(
-            'line {}: invalid stepsize: {}'.format(
-                lineno, stepsize))
+            'line {}: invalid stepsize: {}'.format(lineno, stepsize)
+        )
     line = fp.readline().strip()
     lineno += 1
-    if not ((metric == 'diag_e' and
-                 line == '# Diagonal elements of inverse mass matrix:') or
-                 (metric == 'dense_e' and
-                      line == '# Elements of inverse mass matrix:')):
+    if not (
+        (
+            metric == 'diag_e'
+            and line == '# Diagonal elements of inverse mass matrix:'
+        )
+        or (
+            metric == 'dense_e' and line == '# Elements of inverse mass matrix:'
+        )
+    ):
         raise ValueError(
             'line {}: invalid or missing mass matrix '
-            'specification'.format(lineno))
+            'specification'.format(lineno)
+        )
     line = fp.readline().lstrip(' #\t')
     lineno += 1
     num_params = len(line.split(','))
@@ -222,13 +237,14 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     if metric == 'diag_e':
         return lineno
     else:
-        for i in range(1,num_params):
+        for i in range(1, num_params):
             line = fp.readline().lstrip(' #\t')
             lineno += 1
             if len(line.split(',')) != num_params:
                 raise ValueError(
                     'line {}: invalid or missing mass matrix '
-                    'specification'.format(lineno))
+                    'specification'.format(lineno)
+                )
         return lineno
 
 
@@ -246,8 +262,9 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         if len(line.split(',')) != num_cols:
             raise ValueError(
                 'line {}: bad draw, expecting {} items, found {}'.format(
-                    lineno, num_cols, len(line.split(',')))
+                    lineno, num_cols, len(line.split(','))
                 )
+            )
         cur_pos = fp.tell()
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
@@ -270,14 +287,14 @@ def read_metric(path: str) -> List[int]:
             raise ValueError(
                 'metric file {}, bad or missing'
                 ' entry "inv_metric"'.format(path)
-                )
+            )
     else:
         dims = read_rdump_metric(path)
         if dims is None:
             raise ValueError(
                 'metric file {}, bad or missing'
                 ' entry "inv_metric"'.format(path)
-                )
+            )
         return dims
 
 

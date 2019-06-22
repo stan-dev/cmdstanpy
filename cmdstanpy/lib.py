@@ -157,7 +157,7 @@ class SamplerArgs(object):
                 if self.chain_ids[i] < 1:
                     raise ValueError(
                         'invalid chain_id {}'.format(self.chain_ids[i])
-                        )
+                    )
 
         if self.output_file is not None:
             if not os.path.exists(os.path.dirname(self.output_file)):
@@ -183,13 +183,13 @@ class SamplerArgs(object):
                 raise ValueError(
                     'seed must be an integer between 0 and 2**32-1,'
                     ' found {}'.format(self.seed)
-                    )
+                )
             elif isinstance(self.seed, int):
                 if self.seed < 0 or self.seed > 2 ** 32 - 1:
                     raise ValueError(
                         'seed must be an integer between 0 and 2**32-1,'
                         ' found {}'.format(self.seed)
-                        )
+                    )
             else:
                 if len(self.seed) != len(self.chain_ids):
                     raise ValueError(
@@ -215,7 +215,7 @@ class SamplerArgs(object):
                 if self.inits < 0:
                     raise ValueError(
                         'inits must be > 0, found {}'.format(self.inits)
-                        )
+                    )
             elif isinstance(self.inits, str):
                 if not os.path.exists(self.inits):
                     raise ValueError('no such file {}'.format(self.inits))
@@ -232,7 +232,7 @@ class SamplerArgs(object):
                     raise ValueError(
                         'each chain must have its own init file,'
                         ' found duplicates in inits files list.'
-                        )
+                    )
                 for i in range(len(self.inits)):
                     if not os.path.exists(self.inits[i]):
                         raise ValueError(
@@ -307,7 +307,7 @@ class SamplerArgs(object):
                 if self.step_size < 0:
                     raise ValueError(
                         'step_size must be > 0, found {}'.format(self.step_size)
-                        )
+                    )
             else:
                 if len(self.step_size) != len(self.chain_ids):
                     raise ValueError(
@@ -348,7 +348,7 @@ class SamplerArgs(object):
                     raise ValueError(
                         'each chain must have its own metric file,'
                         ' found duplicates in metric files list.'
-                        )
+                    )
                 for i in range(len(self.metric)):
                     if not os.path.exists(self.metric[i]):
                         raise ValueError(
@@ -497,7 +497,7 @@ class RunSet(object):
         self._sample = None
 
     def __repr__(self) -> str:
-        repr = 'RunSet(args={}, chains={}'.format(self.args, self._chains)
+        repr = 'RunSet(args={}, chains={}'.format(self._args, self._chains)
         repr = '{}\n csv_files={}\nconsole_files={})'.format(
             repr, '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files)
         )
