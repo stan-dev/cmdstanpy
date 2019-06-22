@@ -47,6 +47,7 @@ def compile_model(
         raise Exception('no such stan_file {}'.format(stan_file))
     program_name = os.path.basename(stan_file)
     exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
+    exe_file = Path(exe_file).as_posix()
     hpp_file = '.'.join([exe_file, 'hpp'])
     hpp_file = Path(hpp_file).as_posix()
     if overwrite or not os.path.exists(hpp_file):
@@ -77,13 +78,13 @@ def compile_model(
     if not overwrite and os.path.exists(exe_file):
         # print('model is up to date') # notify user or not?
         return Model(stan_file, exe_file)
-    exe_file_path = Path(exe_file).as_posix()
-    cmd = ['make', 'O={}'.format(opt_lvl), exe_file_path]
+    make = os.getenv("MAKE", "make")
+    cmd = [make, 'O={}'.format(opt_lvl), exe_file]
     print('compiling c++: make args {}'.format(cmd))
     try:
         do_command(cmd, cmdstan_path())
     except Exception as e:
-        print("make failed", e)
+        print("make failed\n", e)
         return Model(stan_file)
     return Model(stan_file, exe_file)
 

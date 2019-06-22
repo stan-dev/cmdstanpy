@@ -8,7 +8,7 @@ import platform
 import re
 from typing import Dict, TextIO, List
 
-EXTENSION = ".exe" if platform.system() == "Windows" else ""
+EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
 def get_latest_cmdstan(dot_dir: str) -> str:
@@ -50,6 +50,13 @@ def set_cmdstan_path(path: str) -> None:
     """
     validate_cmdstan_path(path)
     os.environ['CMDSTAN'] = path
+
+
+def set_make_env(make: str) -> None:
+    """
+    set MAKE environmental variable.
+    """
+    os.environ['MAKE'] = make
 
 
 def cmdstan_path() -> str:

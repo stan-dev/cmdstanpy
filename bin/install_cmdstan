@@ -8,14 +8,16 @@ Optional command line arguments:
 import argparse
 import contextlib
 import os
-import os.path
+import platform
 import re
 import shutil
 import subprocess
 import sys
 import tarfile
 import urllib.request
+from pathlib import Path
 
+EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 @contextlib.contextmanager
 def pushd(new_dir):
@@ -37,7 +39,10 @@ def usage():
 def install_version(cmdstan_version):
     with pushd(cmdstan_version):
         print('Building {} binaries'.format(cmdstan_version))
-        cmd = ['make', 'build']
+        make = os.getenv('MAKE', 'make')
+        cmd = [make, 'build']
+        #if platform.system() == "Windows":
+        #    cmd = ["sh"] + cmd #["cmd.exe", "/c"] + cmd
         proc = subprocess.Popen(
             cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -49,9 +54,11 @@ def install_version(cmdstan_version):
                 print(stderr.decode('utf-8').strip())
             sys.exit(3)
         print('Test model compilation')
-        cmd = ['make', os.path.join('examples', 'bernoulli', 'bernoulli')]
+        cmd = [make, Path(os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)).as_posix()]
+        #if platform.system() == "Windows":
+        #    cmd = ["sh"] + cmd #["cmd.exe", "/c"] + cmd
         proc = subprocess.Popen(
-            cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd, cwd=None, #stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         proc.wait()
         stdout, stderr = proc.communicate()
@@ -66,13 +73,8 @@ def install_version(cmdstan_version):
 def is_installed(cmdstan_version):
     if not os.path.exists(os.path.join(cmdstan_version, 'bin')):
         return False
-    if os.path.exists(os.path.join(
-            cmdstan_version, 'examples', 'bernoulli', 'bernoulli')):
-        return True
-    if os.path.exists(os.path.join(
-            cmdstan_version, 'examples', 'bernoulli', 'bernoulli.exe')):
-        return True
-    return False
+    return os.path.exists(os.path.join(
+            cmdstan_version, 'examples', 'bernoulli', 'bernoulli' + EXTENSION))
 
 
 def latest_version():
@@ -104,7 +106,11 @@ def retrieve_latest_version(version):
     print('Download successful, file: {}'.format(file_tmp))
     try:
         tar = tarfile.open(file_tmp)
-        tar.extractall(os.getcwd())
+        target = os.getcwd()
+        if platform.system() == "Windows":
+            # fixes long-path limitation on Windows
+            target = r"\\?\{}".format(target)
+        tar.extractall(target)
     except Exception as err:
         print('Failed to unpack download')
         print(err)
