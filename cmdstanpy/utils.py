@@ -287,10 +287,10 @@ def read_rdump_metric(path: str) -> List[int]:
     """
     with open(path, 'r') as fp:
         data = fp.read().replace('\n', '')
-        m1 = re.search('inv_metric\s*<-\s*structure\(\s*c\(', data)
+        m1 = re.search(r'inv_metric\s*<-\s*structure\(\s*c\(', data)
         if not m1:
             return None
-        m2 = re.search('\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
+        m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
         if not m2:
             return None
         dims = m2.group(1).split(',')

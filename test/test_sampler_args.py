@@ -219,6 +219,21 @@ class SamplerArgsTest(unittest.TestCase):
         s1 = 'data file=test/data/bernoulli.data.json init=3.33'
         self.assertIn(s1, cmd)
 
+    def test_args_inits_4(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        jinits1 = os.path.join(datafiles_path, 'bernoulli.init_1.json')
+        jinits2 = os.path.join(datafiles_path, 'bernoulli.init_2.json')
+        args = SamplerArgs(model,
+                               chain_ids=[1,2],
+                               data=jdata,
+                               inits=[jinits1, jinits2])
+        cmd = args.compose_command(0, 'output')
+        s1 = 'data file=test/data/bernoulli.data.json init=test/data/bernoulli.init_1.json'
+        self.assertIn(s1, cmd)
+
     def test_args_bad_inits_value(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli')
@@ -241,11 +256,13 @@ class SamplerArgsTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli')
         model = Model(exe_file=exe, stan_file=stan)
-        jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
+        jinits1 = os.path.join(datafiles_path, 'bernoulli.init_1.json')
+        jinits2 = os.path.join(datafiles_path, 'bernoulli.init_2.json')
+        jinits3 = os.path.join(datafiles_path, 'bernoulli.init.json')
         with self.assertRaises(ValueError):
             args = SamplerArgs(model,
                                    chain_ids=[1,2],
-                                   inits=[jinits, jinits, jinits])
+                                   inits=[jinits1, jinits2, jinits3])
 
     def test_args_bad_inits_files_2(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -256,6 +273,16 @@ class SamplerArgsTest(unittest.TestCase):
             args = SamplerArgs(model,
                                    chain_ids=[1,2],
                                    inits=[jinits, 'no/such/file.json'])
+
+    def test_args_bad_inits_files_3(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
+        with self.assertRaises(ValueError):
+            args = SamplerArgs(model,
+                                   chain_ids=[1,2],
+                                   inits=[jinits, jinits])
 
     def test_args_iters_1(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -426,6 +453,50 @@ class SamplerArgsTest(unittest.TestCase):
                                 chain_ids=[1,2],
                                 max_treedepth=-3)
 
+    def test_args_metric_1(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        args = SamplerArgs(model,
+                               chain_ids=[1,2],
+                               metric='diag')
+        cmd = args.compose_command(0, 'output')
+        s1 = 'metric=diag_e'
+        self.assertIn(s1, cmd)
+
+    def test_args_metric_2(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        args = SamplerArgs(model,
+                               chain_ids=[1,2],
+                               metric='diag_e')
+        cmd = args.compose_command(0, 'output')
+        s1 = 'metric=diag_e'
+        self.assertIn(s1, cmd)
+
+    def test_args_metric_3(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        args = SamplerArgs(model,
+                               chain_ids=[1,2],
+                               metric='dense')
+        cmd = args.compose_command(0, 'output')
+        s1 = 'metric=dense_e'
+        self.assertIn(s1, cmd)
+
+    def test_args_metric_4(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        args = SamplerArgs(model,
+                               chain_ids=[1,2],
+                               metric='dense_e')
+        cmd = args.compose_command(0, 'output')
+        s1 = 'metric=dense_e'
+        self.assertIn(s1, cmd)
+
     def test_args_metric_file_1(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli')
@@ -479,7 +550,18 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args = SamplerArgs(model,
                                    chain_ids=[1,2],
-                                   metric=[jmetric, jmetric, jmetric])
+                                   metric=[jmetric, jmetric])
+
+    def test_args_bad_metric_file_3(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        model = Model(exe_file=exe, stan_file=stan)
+        jmetric = os.path.join(datafiles_path, 'bernoulli.metric.json')
+        jmetric2 = os.path.join(datafiles_path, 'bernoulli.metric-2.json')
+        with self.assertRaises(ValueError):
+            args = SamplerArgs(model,
+                                   chain_ids=[1],
+                                   metric=[jmetric, jmetric2])
 
     def test_args_step_size_1(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')

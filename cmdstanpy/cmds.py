@@ -124,14 +124,14 @@ def sample(
 
     :param chains: Number of sampler chains, should be > 1.
 
-    :param cores: Number of processes to run in parallel. If this value
-        exceeds the number of available processors, only max processors chains
-        will be run in parallel.
+    :param cores: Number of processes to run in parallel. Must be an integer
+        between 1 and the number of CPUs in the system.
 
     :param seed: The seed for random number generator or a list of per-chain
-        seeds.  If unspecified, numpy.random.RandomState() is used to generate
-        the seed. When the same seed is used across all chains, the chain-id
-        is used to advance the RNG to avoid dependent samples.
+        seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
+        numpy.random.RandomState() is used to generate a seed which will be
+        used for all chains. When the same seed is used across all chains,
+        the chain-id is used to advance the RNG to avoid dependent samples.
 
     :param chain_ids: The offset for the random number generator, either
         an integer or a list of unique per-chain offsets.  If unspecified,
@@ -180,13 +180,14 @@ def sample(
         only the diagonal elements.
 
         The metric is initialized to a unit matrix.  If the value of the
-        metric argument is a string other than `diag` or `dense` or a
-        list of strings, these are treated as pathnames to a data file
-        in JSON or Rdump format which contains entry `inv_metric` which
+        metric argument is a string other than `diag`, `diag_e`,`dense`
+        `dense_e` or if it is a list of strings, it must be a valid path
+        to a JSON or Rdump file which contains an entry `inv_metric` which
         is either a vector or a full matrix, depending on whether the
         diagonal or dense covariance matrix is to be estimated.
+        The length of the list of paths must match the number of chains.
+        Pathnames must be unique.
 
-        The length of the list of pathnames must match the number of chains.
         This feature can be used to restart sampling with no adaptation
         given the outputs of all chains from a previous run.
 

@@ -227,6 +227,12 @@ class SamplerArgs(object):
                             len(self.inits), len(self.chain_ids)
                         )
                     )
+                names_set = set(self.inits)
+                if len(names_set) != len(self.inits):
+                    raise ValueError(
+                        'each chain must have its own init file,'
+                        ' found duplicates in inits files list.'
+                        )
                 for i in range(len(self.inits)):
                     if not os.path.exists(self.inits[i]):
                         raise ValueError(
@@ -321,9 +327,9 @@ class SamplerArgs(object):
         if self.metric is not None:
             dims = None
             if isinstance(self.metric, str):
-                if self.metric == 'diag':
+                if self.metric in ['diag', 'diag_e']:
                     self.metric = 'diag_e'
-                elif self.metric == 'dense':
+                elif self.metric in ['dense', 'dense_e']:
                     self.metric = 'dense_e'
                 else:
                     if not os.path.exists(self.metric):
@@ -337,6 +343,12 @@ class SamplerArgs(object):
                             len(self.metric), len(self.chain_ids)
                         )
                     )
+                names_set = set(self.metric)
+                if len(names_set) != len(self.metric):
+                    raise ValueError(
+                        'each chain must have its own metric file,'
+                        ' found duplicates in metric files list.'
+                        )
                 for i in range(len(self.metric)):
                     if not os.path.exists(self.metric[i]):
                         raise ValueError(
