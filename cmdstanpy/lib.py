@@ -604,7 +604,7 @@ class RunSet(object):
     def validate_csv_files(self) -> None:
         """
         Checks that csv output files for all chains are consistent.
-        Populates attributes for drawset, metric.
+        Populates attributes for draws, column_names, num_params, metric_type.
         Raises exception when inconsistencies detected.
         """
         dzero = {}
@@ -628,7 +628,7 @@ class RunSet(object):
 
     def assemble_sample(self) -> None:
         """
-        Allocates and populates the stepsize, metric, and drawset arrays
+        Allocates and populates the stepsize, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
         if not (
