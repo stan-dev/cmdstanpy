@@ -4,14 +4,15 @@ Utility functions
 import os
 import json
 import numpy as np
-from typing import Dict, TextIO
+import re
+from typing import Dict, TextIO, List
 
 
 def get_latest_cmdstan(dot_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script ``bin/install_cmdstan``.
+    Assumes directory populated via script `bin/install_cmdstan`.
     """
     versions = [
         name.split('-')[1] for name in os.listdir(dot_dir)
@@ -34,8 +35,8 @@ def validate_cmdstan_path(path: str) -> None:
             path))
     if not os.path.exists(os.path.join(path, 'bin', 'stanc')):
         raise ValueError(
-            "no CmdStan binaries found, "
-            "run command line script 'install_cmdstan'")
+            'no CmdStan binaries found, '
+            'run command line script "install_cmdstan"')
 
 
 def set_cmdstan_path(path: str) -> None:
@@ -57,13 +58,13 @@ def cmdstan_path() -> str:
         cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
         if not os.path.exists(cmdstan_dir):
             raise ValueError(
-                "no CmdStan installation found, "
-                "run command line script 'install_cmdstan'")
+                'no CmdStan installation found, '
+                'run command line script "install_cmdstan"')
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                "no CmdStan installation found, "
-                "run command line script 'install_cmdstan'")
+                'no CmdStan installation found, '
+                'run command line script "install_cmdstan"')
         cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
@@ -107,9 +108,9 @@ def rdump(path: str, data: Dict) -> None:
             fd.write('\n')
 
 
-def check_csv(filename: str) -> Dict:
+def check_csv(path: str) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    dict = scan_stan_csv(filename)
+    dict = scan_stan_csv(path)
     # check draws against spec
     if 'num_samples' in dict:
         draws_spec = int(dict['num_samples'])
@@ -124,18 +125,19 @@ def check_csv(filename: str) -> Dict:
     if dict['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
-                filename, draws_spec, dict['draws']
+                path, draws_spec, dict['draws']
             )
         )
     return dict
 
 
-def scan_stan_csv(filename: str) -> Dict:
+def scan_stan_csv(path: str) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
-    with open(filename, 'r') as fp:
+    with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
+        # TODO: scan_warmup
         lineno = scan_column_names(fp, dict, lineno)
         lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
@@ -251,3 +253,45 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     config_dict['draws'] = draws_found
     fp.seek(cur_pos)
     return lineno
+
+
+def read_metric(path: str) -> List[int]:
+    """
+    Read metric file in JSON or Rdump format.
+    Return dimensions of entry "inv_metric".
+    """
+    if path.endswith('.json'):
+        with open(path, 'r') as fd:
+            metric_dict = json.load(fd)
+        if 'inv_metric' in metric_dict:
+            dims = np.asarray(metric_dict['inv_metric'])
+            return list(dims.shape)
+        else:
+            raise ValueError(
+                'metric file {}, bad or missing'
+                ' entry "inv_metric"'.format(path)
+                )
+    else:
+        dims = read_rdump_metric(path)
+        if dims is None:
+            raise ValueError(
+                'metric file {}, bad or missing'
+                ' entry "inv_metric"'.format(path)
+                )
+        return dims
+
+
+def read_rdump_metric(path: str) -> List[int]:
+    """
+    Find dimensions of variable named 'inv_metric' using regex search.
+    """
+    with open(path, 'r') as fp:
+        data = fp.read().replace('\n', '')
+        m1 = re.search(r'inv_metric\s*<-\s*structure\(\s*c\(', data)
+        if not m1:
+            return None
+        m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
+        if not m2:
+            return None
+        dims = m2.group(1).split(',')
+        return [int(d) for d in dims]

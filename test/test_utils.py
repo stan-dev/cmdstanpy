@@ -5,7 +5,7 @@ import json
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.lib import StanData
-from cmdstanpy.utils import cmdstan_path, set_cmdstan_path, validate_cmdstan_path, get_latest_cmdstan, check_csv
+from cmdstanpy.utils import cmdstan_path, set_cmdstan_path, validate_cmdstan_path, get_latest_cmdstan, check_csv, read_metric
 
 
 datafiles_path = os.path.join('test', 'data')
@@ -106,11 +106,60 @@ class ReadStanCsvTest(unittest.TestCase):
                                     'invalid or missing mass matrix specification'):
             dict = check_csv(csv_bad)
 
-    def test_check_csv_metric_3(self):
+    def test_check_csv_metric_4(self):
         csv_bad = os.path.join(datafiles_path, 'output_bad_metric_4.csv')
         with self.assertRaisesRegex(Exception,
                                     'invalid or missing mass matrix specification'):
             dict = check_csv(csv_bad)
+
+class ReadMetricTest(unittest.TestCase):
+    def test_metric_json_vec(self):
+        metric_file = os.path.join(datafiles_path, 'metric_diag.data.json')
+        dims = read_metric(metric_file)
+        self.assertEqual(1, len(dims))
+        self.assertEqual(3, dims[0])
+
+    def test_metric_json_matrix(self):
+        metric_file = os.path.join(datafiles_path, 'metric_dense.data.json')
+        dims = read_metric(metric_file)
+        self.assertEqual(2, len(dims))
+        self.assertEqual(dims[0], dims[1])
+
+    def test_metric_rdump_vec(self):
+        metric_file = os.path.join(datafiles_path, 'metric_diag.data.R')
+        dims = read_metric(metric_file)
+        self.assertEqual(1, len(dims))
+        self.assertEqual(3, dims[0])
+
+    def test_metric_rdump_matrix(self):
+        metric_file = os.path.join(datafiles_path, 'metric_dense.data.R')
+        dims = read_metric(metric_file)
+        self.assertEqual(2, len(dims))
+        self.assertEqual(dims[0], dims[1])
+
+    def test_metric_json_bad(self):
+        metric_file = os.path.join(datafiles_path, 'metric_bad.data.json')
+        with self.assertRaisesRegex(Exception,
+                                    'bad or missing entry "inv_metric"'):
+            dims = read_metric(metric_file)
+
+    def test_metric_rdump_bad_1(self):
+        metric_file = os.path.join(datafiles_path, 'metric_bad_1.data.R')
+        with self.assertRaisesRegex(Exception,
+                                    'bad or missing entry "inv_metric"'):
+            dims = read_metric(metric_file)
+
+    def test_metric_rdump_bad_2(self):
+        metric_file = os.path.join(datafiles_path, 'metric_bad_2.data.R')
+        with self.assertRaisesRegex(Exception,
+                                    'bad or missing entry "inv_metric"'):
+            dims = read_metric(metric_file)
+
+    def test_metric_missing(self):
+        metric_file = os.path.join(datafiles_path, 'no_such_file.json')
+        with self.assertRaisesRegex(Exception,
+                                    'No such file or directory'):
+            dims = read_metric(metric_file)
 
 
 if __name__ == '__main__':
