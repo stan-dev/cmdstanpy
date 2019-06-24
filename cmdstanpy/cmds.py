@@ -107,12 +107,12 @@ def sample(
     are optional.
 
     This function validates the specified configuration, composes a call to
-    the CmdStan `sample` method and spawns one subprocess per chain to run
+    the CmdStan ``sample`` method and spawns one subprocess per chain to run
     the sampler and waits for all chains to run to completion.
     The composed call to CmdStan omits arguments left unspecified (i.e., value
-    is `None`) so that the default CmdStan configuration values will be used.
+    is ``None``) so that the default CmdStan configuration values will be used.
 
-    For each chain, the `RunSet` object records the command, the return code,
+    For each chain, the ``RunSet`` object records the command, the return code,
     the paths to the sampler output files, and the corresponding subprocess
     console outputs, if any.
 
@@ -145,8 +145,8 @@ def sample(
         are too far from the expected parameter values, explicit initialization
         may improve adaptation. The following value types are allowed:
 
-        * Single number `n > 0` - initialization range is [-n, n].
-        * `0` - all parameters are initialized to 0.
+        * Single number ``n > 0`` - initialization range is [-n, n].
+        * ``0`` - all parameters are initialized to 0.
         * dictionary - pairs parameter name : initial value.
         * string - pathname to a JSON or Rdump file of initial parameter values.
         * list of strings - per-chain pathname to data file.
@@ -163,8 +163,8 @@ def sample(
         * Phase II is "slow" adaptation to find the metric
         * Phase III is "fast" adaptation to find the step_size.
 
-        For further details, see `the Stan Reference Manual, section
-            HMC algorithm parameters.
+        For further details, see the Stan Reference Manual, section
+        HMC algorithm parameters.
 
     :param save_warmup: When True, sampler saves warmup draws as part of
         the Stan csv output file.
@@ -174,22 +174,23 @@ def sample(
     :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler
         per iteration.
 
-    :param metric: Specification of the mass matrix.  The value is either
-        a string or a list of strings.  The strings `diag` and `dense`
-        specify whether or not to estimate the full covariance matrix or
-        only the diagonal elements.
+    :param metric: Specification of the mass matrix, either as a
+        vector consisting of the diagonal elements
+        of the covariance matrix (``diag`` or ``diag_e``) or a
+        the full covariance matrix (``dense`` or ``dense_e``).
 
-        The metric is initialized to a unit matrix.  If the value of the
-        metric argument is a string other than `diag`, `diag_e`,`dense`
-        `dense_e` or if it is a list of strings, it must be a valid path
-        to a JSON or Rdump file which contains an entry `inv_metric` which
-        is either a vector or a full matrix, depending on whether the
-        diagonal or dense covariance matrix is to be estimated.
-        The length of the list of paths must match the number of chains.
-        Pathnames must be unique.
-
-        This feature can be used to restart sampling with no adaptation
+        If the value of the
+        metric argument is a string other than ``diag``, ``diag_e``,
+        ``dense``, or ``dense_e``, it must be a valid filepath to a JSON or
+        Rdump file which contains an entry ``inv_metric`` whose
+        value is the diagonal vector or full covariance matrix.
+        This can be used to restart sampling with no adaptation
         given the outputs of all chains from a previous run.
+
+        If the value of the metric argument is a list of paths, its
+        length must match the number of chains and all paths must be
+        unique.
+
 
     :param step_size: Initial stepsize for HMC sampler.  The value is either
         a single number or a list of numbers which will be used as the global
@@ -200,7 +201,7 @@ def sample(
         given the outputs of all chains from a previous run.
 
     :param adapt_engaged: When True, adapt stepsize, metric.
-        *Note: If True, `warmup_iters` must be > 0.*
+        *Note: If True, ``warmup_iters`` must be > 0.*
 
     :param adapt_delta: Adaptation target Metropolis acceptance rate.
         The default value is 0.8.  Increasing this value, which must be
@@ -210,9 +211,9 @@ def sample(
 
     :param csv_output_file: A path or file name which will be used as the
         base name for the sampler output files.  The csv output files
-        for each chain are written to file `<basename>-<chain_id>.csv`
+        for each chain are written to file ``<basename>-<chain_id>.csv``
         and the console output and error messages are written to file
-        `<basename>-<chain_id>.txt`.
+        ``<basename>-<chain_id>.txt``.
 
     :param show_progress: When True, command sends progress messages to
         console. When False, command executes silently.
