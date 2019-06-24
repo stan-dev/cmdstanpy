@@ -33,12 +33,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath('.')))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx_autodoc_typehints',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'numpydoc',
+    'sphinx_autodoc_typehints'
 ]
 
 # this is needed for some reason...
