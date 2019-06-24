@@ -37,8 +37,8 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
-    'sphinx_autodoc_typehints',
     'sphinxcontrib.napoleon',
+    'sphinx_autodoc_typehints',
 ]
 
 # this is needed for some reason...
