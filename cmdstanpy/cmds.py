@@ -21,7 +21,7 @@ from cmdstanpy.utils import cmdstan_path
 
 def compile_model(
     stan_file: str = None,
-    opt_lvl: int = 1,
+    opt_lvl: int = 2,
     overwrite: bool = False,
     include_paths: List[str] = None,
 ) -> Model:
@@ -175,22 +175,20 @@ def sample(
         per iteration.
 
     :param metric: Specification of the mass matrix, either as a
-        vector consisting of the diagonal elements
-        of the covariance matrix (``diag`` or ``diag_e``) or a
-        the full covariance matrix (``dense`` or ``dense_e``).
+        vector consisting of the diagonal elements of the covariance
+        matrix (``diag`` or ``diag_e``) or the full covariance matrix
+        (``dense`` or ``dense_e``).
 
-        If the value of the
-        metric argument is a string other than ``diag``, ``diag_e``,
-        ``dense``, or ``dense_e``, it must be a valid filepath to a JSON or
-        Rdump file which contains an entry ``inv_metric`` whose
-        value is the diagonal vector or full covariance matrix.
-        This can be used to restart sampling with no adaptation
-        given the outputs of all chains from a previous run.
+        If the value of the metric argument is a string other than
+        ``diag``, ``diag_e``, ``dense``, or ``dense_e``, it must be
+        a valid filepath to a JSON or Rdump file which contains an entry
+        ``inv_metric`` whose value is either the diagonal vector or
+        the full covariance matrix. This can be used to restart sampling
+        with no adaptation given the outputs of all chains from a previous run.
 
         If the value of the metric argument is a list of paths, its
         length must match the number of chains and all paths must be
         unique.
-
 
     :param step_size: Initial stepsize for HMC sampler.  The value is either
         a single number or a list of numbers which will be used as the global
