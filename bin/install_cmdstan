@@ -19,6 +19,7 @@ from pathlib import Path
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
+
 @contextlib.contextmanager
 def pushd(new_dir):
     previous_dir = os.getcwd()
@@ -33,7 +34,8 @@ def usage():
         -v (--version) :CmdStan version
         -d (--dir) : install directory
         -h (--help) : this message
-        """)
+        """
+    )
 
 
 def install_version(cmdstan_version):
@@ -41,8 +43,6 @@ def install_version(cmdstan_version):
         print('Building {} binaries'.format(cmdstan_version))
         make = os.getenv('MAKE', 'make')
         cmd = [make, 'build']
-        #if platform.system() == "Windows":
-        #    cmd = ["sh"] + cmd #["cmd.exe", "/c"] + cmd
         proc = subprocess.Popen(
             cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -54,11 +54,14 @@ def install_version(cmdstan_version):
                 print(stderr.decode('utf-8').strip())
             sys.exit(3)
         print('Test model compilation')
-        cmd = [make, Path(os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)).as_posix()]
-        #if platform.system() == "Windows":
-        #    cmd = ["sh"] + cmd #["cmd.exe", "/c"] + cmd
+        cmd = [
+            make,
+            Path(
+                os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
+            ).as_posix(),
+        ]
         proc = subprocess.Popen(
-            cmd, cwd=None, #stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         proc.wait()
         stdout, stderr = proc.communicate()
@@ -73,14 +76,18 @@ def install_version(cmdstan_version):
 def is_installed(cmdstan_version):
     if not os.path.exists(os.path.join(cmdstan_version, 'bin')):
         return False
-    return os.path.exists(os.path.join(
-            cmdstan_version, 'examples', 'bernoulli', 'bernoulli' + EXTENSION))
+    return os.path.exists(
+        os.path.join(
+            cmdstan_version, 'examples', 'bernoulli', 'bernoulli' + EXTENSION
+        )
+    )
 
 
 def latest_version():
     try:
         file_tmp, _ = urllib.request.urlretrieve(
-            'https://api.github.com/repos/stan-dev/cmdstan/releases/latest')
+            'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
+        )
     except urllib.error.URLError as err:
         print('Cannot connect to github.')
         print(err)
@@ -94,22 +101,27 @@ def latest_version():
 
 def retrieve_latest_version(version):
     print('Downloading CmdStan version {}'.format(version))
-    url = 'https://github.com/stan-dev/cmdstan/releases/download/'\
-      'v{0}/cmdstan-{0}.tar.gz'.format(version)
+    url = (
+        'https://github.com/stan-dev/cmdstan/releases/download/'
+        'v{0}/cmdstan-{0}.tar.gz'.format(version)
+    )
     try:
         file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
     except urllib.error.URLError as err:
-        print('Failed to download CmdStan version {} from github.com'.format(
-            version))
+        print(
+            'Failed to download CmdStan version {} from github.com'.format(
+                version
+            )
+        )
         print(err)
         sys.exit(3)
     print('Download successful, file: {}'.format(file_tmp))
     try:
         tar = tarfile.open(file_tmp)
         target = os.getcwd()
-        if platform.system() == "Windows":
+        if platform.system() == 'Windows':
             # fixes long-path limitation on Windows
-            target = r"\\?\{}".format(target)
+            target = r'\\?\{}'.format(target)
         tar.extractall(target)
     except Exception as err:
         print('Failed to unpack download')
@@ -127,18 +139,20 @@ def validate_dir(install_dir):
         except OSError as e:
             raise ValueError(
                 'Cannot create directory: {}'.format(install_dir)
-                ) from e
+            ) from e
     else:
         if not os.path.isdir(install_dir):
             raise ValueError(
-                'File {} is not a directory: {}'.format(install_dir))
+                'File {} is not a directory: {}'.format(install_dir)
+            )
         try:
             with open('tmp_test_w', 'w') as fd:
                 pass
             os.remove('tmp_test_w')  # cleanup
         except OSError as e:
-            raise ValueError('Cannot write files to directory {}'.format(
-                install_dir)) from e
+            raise ValueError(
+                'Cannot write files to directory {}'.format(install_dir)
+            ) from e
 
 
 def main():

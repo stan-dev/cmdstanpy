@@ -16,13 +16,16 @@ class RunSetTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(goodfiles_path, 'bern')
-        args = SamplerArgs(model, chain_ids=[1,2,3,4],
-                           seed=12345,
-                           data=jdata,
-                           output_file=output,
-                           sampling_iters=100,
-                           max_treedepth=11,
-                           adapt_delta=0.95)
+        args = SamplerArgs(
+            model,
+            chain_ids=[1, 2, 3, 4],
+            seed=12345,
+            data=jdata,
+            output_file=output,
+            sampling_iters=100,
+            max_treedepth=11,
+            adapt_delta=0.95,
+        )
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         self.assertEqual(4, len(retcodes))
@@ -44,13 +47,16 @@ class RunSetTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(goodfiles_path, 'bern')
-        args = SamplerArgs(model, chain_ids=[1,2,3,4],
-                           seed=12345,
-                           data=jdata,
-                           output_file=output,
-                           sampling_iters=100,
-                           max_treedepth=11,
-                           adapt_delta=0.95)
+        args = SamplerArgs(
+            model,
+            chain_ids=[1, 2, 3, 4],
+            seed=12345,
+            data=jdata,
+            output_file=output,
+            sampling_iters=100,
+            max_treedepth=11,
+            adapt_delta=0.95,
+        )
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):
@@ -69,13 +75,16 @@ class RunSetTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(badfiles_path, 'bad-transcript-bern')
-        args = SamplerArgs(model, chain_ids=[1,2,3,4],
-                           seed=12345,
-                           data=jdata,
-                           output_file=output,
-                           sampling_iters=100,
-                           max_treedepth=11,
-                           adapt_delta=0.95)
+        args = SamplerArgs(
+            model,
+            chain_ids=[1, 2, 3, 4],
+            seed=12345,
+            data=jdata,
+            output_file=output,
+            sampling_iters=100,
+            max_treedepth=11,
+            adapt_delta=0.95,
+        )
         runset = RunSet(chains=4, args=args)
         with self.assertRaisesRegex(Exception, 'Exception'):
             runset.check_console_msgs()
@@ -86,13 +95,16 @@ class RunSetTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(badfiles_path, 'bad-hdr-bern')
-        args = SamplerArgs(model, chain_ids=[1,2,3,4],
-                           seed=12345,
-                           data=jdata,
-                           output_file=output,
-                           sampling_iters=100,
-                           max_treedepth=11,
-                           adapt_delta=0.95)
+        args = SamplerArgs(
+            model,
+            chain_ids=[1, 2, 3, 4],
+            seed=12345,
+            data=jdata,
+            output_file=output,
+            sampling_iters=100,
+            max_treedepth=11,
+            adapt_delta=0.95,
+        )
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):
@@ -108,13 +120,16 @@ class RunSetTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(badfiles_path, 'bad-draws-bern')
-        args = SamplerArgs(model, chain_ids=[1,2,3,4],
-                           seed=12345,
-                           data=jdata,
-                           output_file=output,
-                           sampling_iters=100,
-                           max_treedepth=11,
-                           adapt_delta=0.95)
+        args = SamplerArgs(
+            model,
+            chain_ids=[1, 2, 3, 4],
+            seed=12345,
+            data=jdata,
+            output_file=output,
+            sampling_iters=100,
+            max_treedepth=11,
+            adapt_delta=0.95,
+        )
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):
@@ -130,13 +145,16 @@ class RunSetTest(unittest.TestCase):
         model = Model(exe_file=exe, stan_file=stan)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(badfiles_path, 'bad-cols-bern')
-        args = SamplerArgs(model, chain_ids=[1,2,3,4],
-                           seed=12345,
-                           data=jdata,
-                           output_file=output,
-                           sampling_iters=100,
-                           max_treedepth=11,
-                           adapt_delta=0.95)
+        args = SamplerArgs(
+            model,
+            chain_ids=[1, 2, 3, 4],
+            seed=12345,
+            data=jdata,
+            output_file=output,
+            sampling_iters=100,
+            max_treedepth=11,
+            adapt_delta=0.95,
+        )
         runset = RunSet(chains=4, args=args)
         retcodes = runset.retcodes
         for i in range(len(retcodes)):

@@ -78,13 +78,13 @@ def compile_model(
     if not overwrite and os.path.exists(exe_file):
         # print('model is up to date') # notify user or not?
         return Model(stan_file, exe_file)
-    make = os.getenv("MAKE", "make")
+    make = os.getenv('MAKE', 'make')
     cmd = [make, 'O={}'.format(opt_lvl), exe_file]
     print('compiling c++: make args {}'.format(cmd))
     try:
         do_command(cmd, cmdstan_path())
     except Exception as e:
-        print("make failed\n", e)
+        print('make cmd failed\n', e)
         return Model(stan_file)
     return Model(stan_file, exe_file)
 

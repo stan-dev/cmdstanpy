@@ -206,7 +206,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     lineno += 1
     if not line == '# Adaptation terminated':
         raise ValueError(
-            'line {}: expecting metric, ' 'found:\n\t "{}"'.format(lineno, line)
+            'line {}: expecting metric, found:\n\t "{}"'.format(lineno, line)
         )
     line = fp.readline().strip()
     lineno += 1
