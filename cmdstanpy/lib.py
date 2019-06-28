@@ -497,7 +497,7 @@ class RunSet(object):
         self._sample = None
 
     def __repr__(self) -> str:
-        repr = 'RunSet(args={}, chains={}'.format(self.args, self._chains)
+        repr = 'RunSet(args={}, chains={}'.format(self._args, self._chains)
         repr = '{}\n csv_files={}\nconsole_files={})'.format(
             repr, '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files)
         )
