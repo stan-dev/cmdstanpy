@@ -3,6 +3,7 @@
 import setuptools
 from cmdstanpy import __version__
 
+
 def readme_contents() -> str:
     with open('README.md', 'r') as fd:
         src = fd.read()
@@ -23,16 +24,14 @@ Topic :: Scientific/Engineering :: Information Analysis
 INSTALL_REQUIRES = ['numpy', 'pandas']
 
 EXTRAS_REQUIRE = {
-    'tests': [
-        'pytest',
-        'pytest-cov'],
+    'tests': ['pytest', 'pytest-cov'],
     'docs': [
         'sphinx',
         'sphinx-gallery',
         'sphinx_rtd_theme',
         'numpydoc',
-        'matplotlib'
-    ]
+        'matplotlib',
+    ],
 }
 
 setuptools.setup(

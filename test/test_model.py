@@ -6,7 +6,7 @@ from cmdstanpy.cmds import compile_model
 
 datafiles_path = os.path.join('test', 'data')
 
-code = ('''data {
+code = '''data {
   int<lower=0> N;
   int<lower=0,upper=1> y[N];
 }
@@ -18,7 +18,7 @@ model {
   for (n in 1:N)
     y[n] ~ bernoulli(theta);
 }
-''')
+'''
 
 
 class ModelTest(unittest.TestCase):
