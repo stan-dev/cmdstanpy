@@ -25,3 +25,21 @@ CmdStan's source-code repository is hosted here on GitHub.
 ### Licensing
 
 The CmdStanPy, CmdStan, and the core Stan C++ code are licensed under new BSD.
+
+### Example
+
+::
+
+    import os
+    from cmdstanpy import cmdstan_path, compile_model, RunSet, sample, summary
+
+    # create model
+    bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
+    bernoulli_model = compile_model(bernoulli_stan)
+
+    # setup data and fit the model
+    bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
+    bernoulli_fit = sample(bernoulli_model, data=bernoulli_data)
+
+    # print summary
+    print(summary(bern_fit))
