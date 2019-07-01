@@ -196,10 +196,13 @@ class SamplerArgs(object):
                 cmd = '{} metric_file="{}"'.format(cmd, self.metric_file)
             else:
                 cmd = '{} metric_file="{}"'.format(cmd, self.metric_file[idx])
-        if self.adapt_engaged or self.adapt_delta is not None:
+        if self.adapt_engaged is not None or self.adapt_delta is not None:
             cmd = cmd + ' adapt'
-        if self.adapt_engaged:
-            cmd = cmd + ' engaged'
+        if self.adapt_engaged is not None:
+            if self.adapt_engaged:
+                cmd = cmd + ' engaged=1'
+            else:
+                cmd = cmd + ' engaged=0'
         if self.adapt_delta is not None:
             cmd = '{} delta={}'.format(cmd, self.adapt_delta)
         return cmd
