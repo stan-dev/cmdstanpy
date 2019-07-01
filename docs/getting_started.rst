@@ -15,7 +15,7 @@ or from GitHub
 
 .. code-block:: bash
 
-    pip install -e git+https://github.com/stan-dev/cmdstanpy
+    pip install -e git+https://github.com/stan-dev/cmdstanpy#egg=cmdstanpy
 
 CmdStanPy requires a local install of CmdStan.
 If you don't have CmdStan installed, you can run the CmdStanPy script ``install_cmdstan``
@@ -96,17 +96,17 @@ Run the HMC-NUTS sampler
 ------------------------
 
 The ``sample`` function invokes the Stan HMC-NUTS sampler on the ``Model`` object and some data
-and returns a ``RunSet`` object:
+and returns a ``StanFit`` object:
 
 .. code-block:: python
 
-    from cmdstanpy import sample, RunSet
+    from cmdstanpy import sample, StanFit
 
     bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
     bern_fit = sample(bernoulli_model, data=bern_data)
     
 By default, the ``sample`` command runs 4 sampler chains.
-The ``RunSet`` object records the results of each sampler chain.
+The ``StanFit`` object records the results of each sampler chain.
 If no output file path is specified, the sampler outputs
 are written to a temporary directory which is deleted
 when the current Python session is terminated.
@@ -126,12 +126,12 @@ columns to just the specified parameter names.
     get_drawset(bern_fit, params=['theta'])
 
 Underlyingly, this information is stored in the ``sample`` property
-of a ``RunSet`` object as a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
+of a ``StanFit`` object as a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
 with dimensions: (draws, chains, columns).
 Python's index slicing operations can be used to access the information by chain.
 For example, to select all draws and all output columns from the first chain,
 we specify the chain index (2nd index dimension).  As arrays indexing starts at 0,
-the index '0' corresponds to the first chain in the ``RunSet``:
+the index '0' corresponds to the first chain in the ``StanFit``:
 
 .. code-block:: python
 
