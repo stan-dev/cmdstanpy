@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.cmdstan_args import *
+from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import jsondump, do_command, EXTENSION, cmdstan_path
 
@@ -20,6 +20,7 @@ class Model(object):
     Provides functions to compile the model and perform inference on the
     model given data.
     """
+
     def __init__(self, stan_file: str = None, exe_file: str = None) -> None:
         """Initialize object."""
         self._stan_file = stan_file
@@ -37,9 +38,11 @@ class Model(object):
                 raise ValueError('no such file {}'.format(self._exe_file))
             _, exename = os.path.split(exe_file)
             if self._name != ''.join([exename, EXTENSION]):
-                raise ValueError('name mismatch between Stan file and compiled'
-                                     ' executable, expecting basename: {}'
-                                     ' found: {}'.format(self._name, exename))
+                raise ValueError(
+                    'name mismatch between Stan file and compiled'
+                    ' executable, expecting basename: {}'
+                    ' found: {}'.format(self._name, exename)
+                )
             self._exe_file = exe_file
 
     def __repr__(self) -> str:
@@ -69,11 +72,12 @@ class Model(object):
     def exe_file(self) -> str:
         return self._exe_file
 
-    def compile(self,
-            opt_lvl: int = 2,
-            overwrite: bool = False,
-            include_paths: List[str] = None,
-            ) -> None:
+    def compile(
+        self,
+        opt_lvl: int = 2,
+        overwrite: bool = False,
+        include_paths: List[str] = None,
+    ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
         C++, then calls the C++ compiler.
@@ -97,7 +101,9 @@ class Model(object):
         hpp_file = Path(hpp_file).as_posix()
         if overwrite or not os.path.exists(hpp_file):
             print('translating to {}'.format(hpp_file))
-            stanc_path = os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)
+            stanc_path = os.path.join(
+                cmdstan_path(), 'bin', 'stanc' + EXTENSION
+            )
             stanc_path = Path(stanc_path).as_posix()
             cmd = [
                 stanc_path,
@@ -109,16 +115,15 @@ class Model(object):
                 if any(bad_paths):
                     raise Exception(
                         'invalid include paths: {}'.format(', '.join(bad_paths))
-                        )
+                    )
                 cmd.append(
                     '--include_paths='
                     + ','.join((Path(p).as_posix() for p in include_paths))
-                    )
+                )
             print('stan to c++: make args {}'.format(cmd))
             do_command(cmd)
             if not os.path.exists(hpp_file):
                 raise Exception('syntax error'.format(self._stan_file))
-
 
         exe_file, _ = os.path.splitext(os.path.abspath(self._stan_file))
         exe_file = Path(exe_file).as_posix()
@@ -133,25 +138,25 @@ class Model(object):
         self._exe_file = exe_file
         print('compiled model file: {}'.format(self._exe_file))
 
-
-    def sample(self,
-                   data: Union[Dict, str] = None,
-                   chains: int = 4,
-                   cores: int = 1,
-                   seed: Union[int, List[int]] = None,
-                   chain_ids: Union[int, List[int]] = None,
-                   inits: Union[Dict, float, str, List[str]] = None,
-                   warmup_iters: int = None,
-                   sampling_iters: int = None,
-                   save_warmup: bool = False,
-                   thin: int = None,
-                   max_treedepth: float = None,
-                   metric: Union[str, List[str]] = None,
-                   step_size: Union[float, List[float]] = None,
-                   adapt_engaged: bool = True,
-                   adapt_delta: float = None,
-                   csv_output_file: str = None,
-                   show_progress: bool = False,
+    def sample(
+        self,
+        data: Union[Dict, str] = None,
+        chains: int = 4,
+        cores: int = 1,
+        seed: Union[int, List[int]] = None,
+        chain_ids: Union[int, List[int]] = None,
+        inits: Union[Dict, float, str, List[str]] = None,
+        warmup_iters: int = None,
+        sampling_iters: int = None,
+        save_warmup: bool = False,
+        thin: int = None,
+        max_treedepth: float = None,
+        metric: Union[str, List[str]] = None,
+        step_size: Union[float, List[float]] = None,
+        adapt_engaged: bool = True,
+        adapt_delta: float = None,
+        csv_output_file: str = None,
+        show_progress: bool = False,
     ) -> StanFit:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -253,7 +258,8 @@ class Model(object):
         if chains < 1:
             raise ValueError(
                 'chains must be a positive integer value, found {}'.format(
-                    chains)
+                    chains
+                )
             )
 
         if chain_ids is None:
@@ -288,7 +294,9 @@ class Model(object):
             )
         if cores > cpu_count():
             print(
-                'requested {} cores, only {} available'.format(cores, cpu_count())
+                'requested {} cores, only {} available'.format(
+                    cores, cpu_count()
+                )
             )
             cores = cpu_count()
 
@@ -322,8 +330,8 @@ class Model(object):
             metric=metric,
             step_size=step_size,
             adapt_engaged=adapt_engaged,
-            adapt_delta=adapt_delta
-            )
+            adapt_delta=adapt_delta,
+        )
 
         args = CmdStanArgs(
             self._name,
@@ -333,7 +341,7 @@ class Model(object):
             seed=seed,
             inits=inits,
             output_file=csv_output_file,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
 
         stanfit = StanFit(args=args, chains=chains)

@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import tempfile
 from typing import Dict, List, Union, Tuple
 
@@ -7,8 +8,15 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.utils import check_csv, read_metric, EXTENSION, cmdstan_path, do_command
-from cmdstanpy.cmdstan_args import *
+from cmdstanpy.utils import (
+    check_csv,
+    read_metric,
+    EXTENSION,
+    cmdstan_path,
+    do_command,
+)
+from cmdstanpy.cmdstan_args import CmdStanArgs
+
 
 class StanFit(object):
     """Record of running NUTS sampler on a model."""
@@ -245,7 +253,6 @@ class StanFit(object):
                     xs = line.split(',')
                     self._sample[i, chain, :] = [float(x) for x in xs]
 
-
     def summary(self) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output csv files.
@@ -253,8 +260,9 @@ class StanFit(object):
         Assemble csv tempfile contents into pandasDataFrame.
         """
         names = self.column_names
-        cmd_path = os.path.join(cmdstan_path(), 'bin',
-                                    'stansummary' + EXTENSION)
+        cmd_path = os.path.join(
+            cmdstan_path(), 'bin', 'stansummary' + EXTENSION
+        )
         tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
             self._args.model_name, self.chains
         )
@@ -270,7 +278,6 @@ class StanFit(object):
         )
         mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
-
 
     def diagnose(self) -> None:
         """
@@ -294,7 +301,6 @@ class StanFit(object):
             print('No problems detected.')
         else:
             print(result)
-
 
     def get_drawset(self, params: List[str] = None) -> pd.DataFrame:
         """
@@ -322,7 +328,6 @@ class StanFit(object):
                     mask.append(name)
         return df[mask]
 
-
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
         """
         Moves csvfiles to specified directory using specified basename,
@@ -348,8 +353,9 @@ class StanFit(object):
                 )
             to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i + 1))
             if os.path.exists(to_path):
-                raise ValueError('file exists, not overwriting: {}'.format(
-                    to_path))
+                raise ValueError(
+                    'file exists, not overwriting: {}'.format(to_path)
+                )
             try:
                 print(
                     'saving tmpfile: "{}" as: "{}"'.format(
@@ -359,5 +365,6 @@ class StanFit(object):
                 shutil.move(self.csv_files[i], to_path)
                 self.csv_files[i] = to_path
             except (IOError, OSError) as e:
-                raise ValueError('cannot save to file: {}'.format(
-                    to_path)) from e
+                raise ValueError(
+                    'cannot save to file: {}'.format(to_path)
+                ) from e
