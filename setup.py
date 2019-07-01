@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 
+import re
 import setuptools
-from cmdstanpy import __version__
-
 
 def readme_contents() -> str:
     with open('README.md', 'r') as fd:
         src = fd.read()
     return src
+
+def get_version():
+    with open('./cmdstanpy/__version__.py', 'r') as fd:
+        version_contents = fd.read()
+        return re.search('__version__ = "(.*?)"', version_contents).group(1)
 
 
 _classifiers = """
@@ -36,7 +40,7 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='cmdstanpy',
-    version=__version__,
+    version=get_version(),
     description='Python interface to CmdStan',
     long_description=readme_contents(),
     long_description_content_type="text/markdown",
