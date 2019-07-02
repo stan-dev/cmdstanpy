@@ -70,17 +70,16 @@ Specify a Stan model
 --------------------
 
 The ``Model`` class specifies the Stan program and its corresponding compiled executable.
-The function ``compile_model`` is used to compile or or recompile a Stan program.
-It takes the path to the Stan program file and returns a ``Model`` object:
+The method ``compile`` is used to compile or or recompile a Stan program.
 
 .. code-block:: python
 
     import os
-    import os.path
-    from cmdstanpy import Model, compile_model
+    from cmdstanpy import cmdstan_path, Model, StanFit
 
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
-    bernoulli_model = compile_model(bernoulli_stan)
+    bernoulli_model = Model(stan_file=bernoulli_stan)
+    bernoulli_model.compile()
 
 If you already have a compiled executable, you can construct a ``Model`` object directly:
 
@@ -95,15 +94,13 @@ If you already have a compiled executable, you can construct a ``Model`` object 
 Run the HMC-NUTS sampler
 ------------------------
 
-The ``sample`` function invokes the Stan HMC-NUTS sampler on the ``Model`` object and some data
+The ``Model`` method ``sample`` runs the Stan HMC-NUTS sampler on the model and data
 and returns a ``StanFit`` object:
 
 .. code-block:: python
 
-    from cmdstanpy import sample, StanFit
-
-    bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
-    bern_fit = sample(bernoulli_model, data=bern_data)
+    bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
+    bern_fit = bernoulli_model.sample(data=bernoulli_data)
     
 By default, the ``sample`` command runs 4 sampler chains.
 The ``StanFit`` object records the results of each sampler chain.
@@ -115,7 +112,7 @@ when the current Python session is terminated.
 Summarize or save the results
 -----------------------------
 
-The ``get_drawset`` function is used to get the draws from
+The ``get_drawset`` method returns the draws from
 all chains as a ``pandas.DataFrame``, one draw per row, one column per
 model parameter, transformed parameter, generated quantity variable.
 The ``params`` argument is used to restrict the DataFrame
@@ -123,7 +120,7 @@ columns to just the specified parameter names.
 
 .. code-block:: python
 
-    get_drawset(bern_fit, params=['theta'])
+    bern_fit.get_drawset(params=['theta'])
 
 Underlyingly, this information is stored in the ``sample`` property
 of a ``StanFit`` object as a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
@@ -140,14 +137,12 @@ the index '0' corresponds to the first chain in the ``StanFit``:
 
 CmdStan is distributed with a posterior analysis utility ``stansummary``
 that reads the outputs of all chains and computes summary statistics
-on the model fit for all parameters. CmdStanPy's ``summary`` function
+on the model fit for all parameters. The ``StanFit`` method ``summary``
 runs the CmdStan ``stansummary`` utility and returns the output as a pandas.DataFrame:
 
 .. code-block:: python
 
-    from cmdstanpy import summary
-
-    summary(bern_fit)
+    bern_fit.summary()
 
 CmdStan is distributed with a second posterior analysis utility ``diagnose``
 that reads the outputs of all chains and checks for the following
@@ -159,18 +154,16 @@ potential problems:
 + Low effective sample sizes
 + High R-hat values
 
-The ``diagnose`` function runs the CmdStan ``diagnose`` utility
+The ``StanFit`` method ``diagnose`` runs the CmdStan ``diagnose`` utility
 and prints the output to the console.
 
 .. code-block:: python
 
-    from cmdstanpy import diagnose
-
-    diagnose(bern_fit)
+    bern_fit.diagnose()
 
 By default, CmdStanPy will save all CmdStan outputs in a temporary
 directory which is deleted when the Python session exits.
-In particular, unless the ``csv_output_file`` argument to the ``sample``
+In particular, unless the ``csv_basename`` argument to the ``sample``
 function is overtly specified, all the csv output files will be written into
 this temporary directory and then when the session exits.
 The ``save_csvfiles`` function moves the CmdStan csv output files
@@ -178,6 +171,4 @@ to the specified location, renaming them using a specified basename.
 
 .. code-block:: python
 
-    from cmdstanpy import save_csvfiles
-
-    save_csvfiles(bern_fit, dir='some/path', basename='descriptive-name')
+    bern_fit.save_csvfiles(dir='some/path', basename='descriptive-name')

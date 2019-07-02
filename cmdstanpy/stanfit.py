@@ -203,7 +203,6 @@ class StanFit(object):
         ):
             return
         self._stepsize = np.empty(self._chains, dtype=float)
-        print(self._metric_type)
         if self._metric_type == 'diag_e':
             self._metric = np.empty(
                 (self._chains, self._num_params), dtype=float
