@@ -135,7 +135,6 @@ class SampleTest(unittest.TestCase):
                                          seed=12345,
                                          sampling_iters=100,
                                          csv_basename=output)
-
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -143,6 +142,9 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(txt_file))
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        for i in range(bern_fit.chains):  # cleanup datafile_path dir
+            os.remove(bern_fit.csv_files[i])
+            os.remove(bern_fit.console_files[i])
 
         rdata = os.path.join(datafiles_path, 'bernoulli.data.R')
         bern_fit = bern_model.sample(data=rdata,
@@ -161,10 +163,6 @@ class SampleTest(unittest.TestCase):
                                          sampling_iters=100)
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
-
-        for i in range(bern_fit.chains):  # cleanup datafile_path dir
-            os.remove(bern_fit.csv_files[i])
-            os.remove(bern_fit.console_files[i])
 
 
     def test_bernoulli_bad(self):
