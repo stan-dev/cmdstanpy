@@ -155,7 +155,7 @@ class Model(object):
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = True,
         adapt_delta: float = None,
-        csv_output_file: str = None,
+        csv_basename: str = None,
         show_progress: bool = False,
     ) -> StanFit:
         """
@@ -249,7 +249,7 @@ class Model(object):
             It improves the effective sample size, but may increase the time
             per iteration.
 
-        :param csv_output_file: A path or file name which will be used as the
+        :param csv_basename: A path or file name which will be used as the
             base name for the sampler output files.  The csv output files
             for each chain are written to file ``<basename>-<chain_id>.csv``
             and the console output and error messages are written to file
@@ -340,7 +340,7 @@ class Model(object):
             data=data,
             seed=seed,
             inits=inits,
-            output_file=csv_output_file,
+            output_basename=csv_basename,
             method_args=sampler_args,
         )
 

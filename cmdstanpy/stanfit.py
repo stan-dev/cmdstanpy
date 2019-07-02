@@ -32,7 +32,7 @@ class StanFit(object):
             )
         self.csv_files = []
         """per-chain sample csv files."""
-        if args.output_file is None:
+        if args.output_basename is None:
             csv_basename = 'stan-{}-draws'.format(args.model_name)
             for i in range(chains):
                 fd = tempfile.NamedTemporaryFile(
@@ -46,7 +46,7 @@ class StanFit(object):
         else:
             for i in range(chains):
                 self.csv_files.append(
-                    '{}-{}.csv'.format(args.output_file, i + 1)
+                    '{}-{}.csv'.format(args.output_basename, i + 1)
                 )
         self.console_files = []
         """per-chain sample console output files."""

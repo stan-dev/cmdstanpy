@@ -228,22 +228,22 @@ class CmdStanArgs(object):
         model_name: str,
         model_exe: str,
         chain_ids: List[int],
+        method_args: Union[SamplerArgs, FixedParamArgs],
         data: str = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
-        output_file: str = None,
-        method_args: Union[SamplerArgs, FixedParamArgs] = None,
+        output_basename: str = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
         self.model_exe = model_exe
         self.chain_ids = chain_ids
+        self.method_args = method_args
+        self.method_args.validate(len(chain_ids))
         self.data = data
         self.seed = seed
         self.inits = inits
-        self.output_file = output_file
-        self.method_args = method_args
-        self.method_args.validate(len(chain_ids))
+        self.output_basename = output_basename
         self.validate()
 
     def validate(self) -> None:
@@ -267,21 +267,21 @@ class CmdStanArgs(object):
                         'invalid chain_id {}'.format(self.chain_ids[i])
                     )
 
-        if self.output_file is not None:
-            if not os.path.exists(os.path.dirname(self.output_file)):
+        if self.output_basename is not None:
+            if not os.path.exists(os.path.dirname(self.output_basename)):
                 raise ValueError(
-                    'invalid path for output files: {}'.format(self.output_file)
+                    'invalid path for output files: {}'.format(self.output_basename)
                 )
             try:
-                with open(self.output_file, 'w+') as fd:
+                with open(self.output_basename, 'w+') as fd:
                     pass
-                os.remove(self.output_file)  # cleanup
+                os.remove(self.output_basename)  # cleanup
             except Exception:
                 raise ValueError(
-                    'invalid path for output files: {}'.format(self.output_file)
+                    'invalid path for output files: {}'.format(self.output_basename)
                 )
-            if self.output_file.endswith('.csv'):
-                self.output_file = self.output_file[:-4]
+            if self.output_basename.endswith('.csv'):
+                self.output_basename = self.output_basename[:-4]
 
         if self.seed is None:
             rng = np.random.RandomState()
@@ -351,6 +351,11 @@ class CmdStanArgs(object):
         """
         Compose CmdStan command for non-default arguments.
         """
+        if idx < 0 or idx > len(self.chain_ids) - 1:
+            raise ValueError(
+                'index ({}) exceeds number of chains ({})'.format(
+                    idx, len(self.chain_ids))
+            )
         cmd = '{} id={}'.format(self.model_exe, self.chain_ids[idx])
         if self.seed is not None:
             if not isinstance(self.seed, list):
