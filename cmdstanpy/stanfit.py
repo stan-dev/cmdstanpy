@@ -114,14 +114,14 @@ class StanFit(object):
     def metric(self) -> np.ndarray:
         """Metric used by sampler for each chain."""
         if self._metric is None:
-            self.assemble_sample()
+            self._assemble_sample()
         return self._metric
 
     @property
     def stepsize(self) -> np.ndarray:
         """Stepsize used by sampler for each chain."""
         if self._stepsize is None:
-            self.assemble_sample()
+            self._assemble_sample()
         return self._stepsize
 
     @property
@@ -133,7 +133,7 @@ class StanFit(object):
         all draws from a chain are contiguous.
         """
         if self._sample is None:
-            self.assemble_sample()
+            self._assemble_sample()
         return self._sample
 
     def _check_retcodes(self) -> bool:
@@ -219,15 +219,12 @@ class StanFit(object):
         )
         for chain in range(self._chains):
             with open(self.csv_files[chain], 'r') as fp:
-                # read past initial comments, column header
+                # skip initial comments, reads thru column header
                 line = fp.readline().strip()
                 while len(line) > 0 and line.startswith('#'):
                     line = fp.readline().strip()
-                print(line)
-                line = fp.readline().strip()  # column header
-                print(line)
-                line = fp.readline().strip()  # adaptation header
-                print(line)
+                # skip warmup draws, if any, read to adaptation msg
+                line = fp.readline().strip() 
                 if line != '# Adaptation terminated':
                     while line != '# Adaptation terminated':
                         line = fp.readline().strip()
@@ -235,9 +232,7 @@ class StanFit(object):
                 label, stepsize = line.split('=')
                 self._stepsize[chain] = float(stepsize.strip())
                 line = fp.readline().strip()  # metric header
-                print(line)
-                print(line)
-                # metric
+                # process metric
                 if self._metric_type == 'diag_e':
                     line = fp.readline().lstrip(' #\t')
                     xs = line.split(',')
@@ -247,7 +242,7 @@ class StanFit(object):
                         line = fp.readline().lstrip(' #\t')
                         xs = line.split(',')
                         self._metric[chain, i, :] = [float(x) for x in xs]
-                # draws
+                # process draws
                 for i in range(self._draws):
                     line = fp.readline().lstrip(' #\t')
                     xs = line.split(',')
@@ -314,7 +309,7 @@ class StanFit(object):
             for p in params:
                 if not (p in self._column_names or p in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(p))
-        self.assemble_sample()
+        self._assemble_sample()
         data = self.sample.reshape(
             (self.draws * self.chains), len(self.column_names), order='A'
         )
