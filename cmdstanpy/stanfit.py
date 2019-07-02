@@ -224,7 +224,7 @@ class StanFit(object):
                 while len(line) > 0 and line.startswith('#'):
                     line = fp.readline().strip()
                 # skip warmup draws, if any, read to adaptation msg
-                line = fp.readline().strip() 
+                line = fp.readline().strip()
                 if line != '# Adaptation terminated':
                     while line != '# Adaptation terminated':
                         line = fp.readline().strip()

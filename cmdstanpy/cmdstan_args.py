@@ -270,7 +270,8 @@ class CmdStanArgs(object):
         if self.output_basename is not None:
             if not os.path.exists(os.path.dirname(self.output_basename)):
                 raise ValueError(
-                    'invalid path for output files: {}'.format(self.output_basename)
+                    'invalid path for output files: {}'.format(
+                        self.output_basename)
                 )
             try:
                 with open(self.output_basename, 'w+') as fd:
@@ -278,7 +279,8 @@ class CmdStanArgs(object):
                 os.remove(self.output_basename)  # cleanup
             except Exception:
                 raise ValueError(
-                    'invalid path for output files: {}'.format(self.output_basename)
+                    'invalid path for output files: {}'.format(
+                        self.output_basename)
                 )
             if self.output_basename.endswith('.csv'):
                 self.output_basename = self.output_basename[:-4]
