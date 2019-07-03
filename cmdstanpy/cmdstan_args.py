@@ -45,6 +45,11 @@ class SamplerArgs(object):
         * if file(s) for metric are supplied, check contents.
         * length of per-chain lists equals specified # of chains
         """
+        if type(chains) is not int or chains < 1:
+            raise ValueError(
+                "sampler expects number of chains to be greater than 0"
+            )
+
         if self.warmup_iters is not None:
             if self.warmup_iters < 0:
                 raise ValueError(
@@ -215,6 +220,9 @@ class FixedParamArgs(object):
         cmd = cmd + ' method=fixed_param'
         return cmd
 
+    def validate(self, chains):
+        pass
+
 
 class CmdStanArgs(object):
     """
@@ -227,7 +235,7 @@ class CmdStanArgs(object):
         self,
         model_name: str,
         model_exe: str,
-        chain_ids: List[int],
+        chain_ids: Union[List[int], None],
         method_args: Union[SamplerArgs, FixedParamArgs],
         data: str = None,
         seed: Union[int, List[int]] = None,
@@ -239,7 +247,7 @@ class CmdStanArgs(object):
         self.model_exe = model_exe
         self.chain_ids = chain_ids
         self.method_args = method_args
-        self.method_args.validate(len(chain_ids))
+        self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.data = data
         self.seed = seed
         self.inits = inits
@@ -301,6 +309,11 @@ class CmdStanArgs(object):
                         ' found {}'.format(self.seed)
                     )
             else:
+                if self.chain_ids is None:
+                    raise ValueError(
+                        "seed must not be a list when no chains used"
+                    )
+
                 if len(self.seed) != len(self.chain_ids):
                     raise ValueError(
                         'number of seeds must match number of chains '
@@ -330,6 +343,11 @@ class CmdStanArgs(object):
                 if not os.path.exists(self.inits):
                     raise ValueError('no such file {}'.format(self.inits))
             elif isinstance(self.inits, List):
+                if self.chain_ids is None:
+                    raise ValueError(
+                        "inits must not be a list when no chains are used"
+                    )
+
                 if len(self.inits) != len(self.chain_ids):
                     raise ValueError(
                         'number of inits files must match number of chains '
@@ -353,12 +371,16 @@ class CmdStanArgs(object):
         """
         Compose CmdStan command for non-default arguments.
         """
-        if idx < 0 or idx > len(self.chain_ids) - 1:
-            raise ValueError(
-                'index ({}) exceeds number of chains ({})'.format(
-                    idx, len(self.chain_ids))
-            )
-        cmd = '{} id={}'.format(self.model_exe, self.chain_ids[idx])
+        if idx is not None and self.chain_ids is not None:
+            if idx < 0 or idx > len(self.chain_ids) - 1:
+                raise ValueError(
+                    'index ({}) exceeds number of chains ({})'.format(
+                        idx, len(self.chain_ids))
+                )
+            cmd = '{} id={}'.format(self.model_exe, self.chain_ids[idx])
+        else:
+            cmd = self.model_exe
+
         if self.seed is not None:
             if not isinstance(self.seed, list):
                 cmd = '{} random seed={}'.format(cmd, self.seed)

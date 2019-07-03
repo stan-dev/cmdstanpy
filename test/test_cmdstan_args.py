@@ -2,7 +2,7 @@ import os
 import unittest
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
+from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs, FixedParamArgs
 
 datafiles_path = os.path.join("test", "data")
 
@@ -13,6 +13,11 @@ class SamplerArgsTest(unittest.TestCase):
         args.validate(chains=4)
         cmd = args.compose(idx=1, cmd='')
         self.assertIn('method=sample algorithm=hmc', cmd)
+
+    def test_args_chains(self):
+        args = SamplerArgs()
+        with self.assertRaises(ValueError):
+            args.validate(chains=None)
 
     def test_good(self):
         args = SamplerArgs(
@@ -168,6 +173,36 @@ class CmdStanArgsTest(unittest.TestCase):
             cmdstan_args.compose_command(idx=4, csv_file='foo')
         with self.assertRaises(ValueError):
             cmdstan_args.compose_command(idx=-1, csv_file='foo')
+
+    def test_no_chains(self):
+        # we don't have chains for optimize
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        sampler_args = FixedParamArgs()
+        jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=None,
+            inits=jinits,
+            method_args=sampler_args)
+        self.assertIn("init=", cmdstan_args.compose_command(None, "out.csv"))
+
+        with self.assertRaises(ValueError):
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe=exe,
+                chain_ids=None,
+                seed=[1,2,3],
+                inits=jinits,
+                method_args=sampler_args)
+
+        with self.assertRaises(ValueError):
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe=exe,
+                chain_ids=None,
+                inits=[jinits],
+                method_args=sampler_args)
 
 
     def test_args_good(self):

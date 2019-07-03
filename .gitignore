@@ -13,3 +13,4 @@ htmlcov
 *.png
 docs/_build
 .idea
+.DS_Store
