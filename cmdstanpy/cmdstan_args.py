@@ -46,7 +46,9 @@ class SamplerArgs(object):
         * length of per-chain lists equals specified # of chains
         """
         if type(chains) is not int or chains < 1:
-            raise ValueError("sampler expects number of chains to be greater than 0")
+            raise ValueError(
+                "sampler expects number of chains to be greater than 0"
+            )
 
         if self.warmup_iters is not None:
             if self.warmup_iters < 0:
@@ -221,6 +223,7 @@ class FixedParamArgs(object):
     def validate(self, chains):
         pass
 
+
 class CmdStanArgs(object):
     """
     Container for CmdStan command line arguments.
@@ -307,7 +310,9 @@ class CmdStanArgs(object):
                     )
             else:
                 if self.chain_ids is None:
-                    raise ValueError("seed must not be a list when no chains used")
+                    raise ValueError(
+                        "seed must not be a list when no chains used"
+                    )
 
                 if len(self.seed) != len(self.chain_ids):
                     raise ValueError(
@@ -339,7 +344,9 @@ class CmdStanArgs(object):
                     raise ValueError('no such file {}'.format(self.inits))
             elif isinstance(self.inits, List):
                 if self.chain_ids is None:
-                    raise ValueError("inits must not be a list when no chains are used")
+                    raise ValueError(
+                        "inits must not be a list when no chains are used"
+                    )
 
                 if len(self.inits) != len(self.chain_ids):
                     raise ValueError(
