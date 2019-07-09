@@ -224,6 +224,53 @@ class FixedParamArgs(object):
         pass
 
 
+class OptimizeArgs(object):
+    """Container for arguments for the optimizer."""
+
+    OPTIMIZE_ALGOS = {"BFGS", "LBFGS", "Newton"}
+
+    def __init__(self, algorithm: str = None, init_alpha: float = None, iter: int = None) -> None:
+
+        self.algorithm = algorithm
+        self.init_alpha = init_alpha
+        self.iter = iter
+
+    def validate(self, chains=None) -> None:
+        """
+        Check arguments correctness and consistency.
+        """
+        if self.algorithm is not None and self.algorithm not in self.OPTIMIZE_ALGOS:
+            raise ValueError(
+                "Please specify optimizer algorithms as one of [{}]".format(", ".join(self.OPTIMIZE_ALGOS)))
+
+        if self.init_alpha is not None:
+            if isinstance(self.init_alpha, float):
+                if self.init_alpha < 0.0:
+                    raise ValueError("init_alpha must be greater than 0")
+            else:
+                raise ValueError("init_alpha must be type of float")
+
+        if self.iter is not None:
+            if isinstance(self.iter, int):
+                if self.iter < 0:
+                    raise ValueError("iter must be greater than 0")
+            else:
+                raise ValueError("iter must be type of int")
+
+    def compose_command(self, idx: int, cmd: str) -> str:
+        """compose command string for CmdStan for non-default arg values.
+        """
+
+        cmd = cmd + ' method=optimize'
+        if self.algorithm:
+            cmd = cmd + 'algorithm={}'.format(self.algorithm.lower())
+        if self.init_alpha is not None:
+            cmd = cmd + ' init_alpha={}'.format(self.init_alpha)
+        if self.iter is not None:
+            cmd = cmd + ' iter={}'.format(self.iter)
+        return cmd
+
+
 class CmdStanArgs(object):
     """
     Container for CmdStan command line arguments.
