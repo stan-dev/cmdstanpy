@@ -138,12 +138,12 @@ def check_csv(path: str, is_optimizing: bool = False) -> Dict:
             draws_spec = 1000
         if 'thin' in dict:
             draws_spec = int(math.ceil(draws_spec / dict['thin']))
-        if dict['draws'] != draws_spec:
-            raise ValueError(
-                'bad csv file {}, expected {} draws, found {}'.format(
-                    path, draws_spec, dict['draws']
-                )
+    if dict['draws'] != draws_spec:
+        raise ValueError(
+            'bad csv file {}, expected {} draws, found {}'.format(
+                path, draws_spec, dict['draws']
             )
+        )
     return dict
 
 
@@ -275,7 +275,12 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fp: TextIO, config_dict: Dict, lineno: int, store_first: bool = False) -> int:
+def scan_draws(
+        fp: TextIO,
+        config_dict: Dict,
+        lineno: int,
+        store_first: bool = False
+    ) -> int:
     """
     Parse draws, check elements per draw, save num draws to config_dict.
     """
@@ -350,7 +355,6 @@ def do_command(cmd: str, cwd: str = None) -> str:
     Spawn process, print stdout/stderr to console.
     Throws exception on non-zero returncode.
     """
-    print("CMD: {}".format(cmd))
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )

@@ -210,9 +210,15 @@ class StanFit(object):
         dzero = {}
         for i in range(self._chains):
             if i == 0:
-                dzero = check_csv(self.csv_files[i], is_optimizing=self.is_optimizing)
+                dzero = check_csv(
+                    self.csv_files[i],
+                    is_optimizing=self.is_optimizing
+                )
             else:
-                d = check_csv(self.csv_files[i],  is_optimizing=self.is_optimizing)
+                d = check_csv(
+                    self.csv_files[i],
+                    is_optimizing=self.is_optimizing
+                )
                 for key in dzero:
                     if key != 'id' and dzero[key] != d[key]:
                         raise ValueError(

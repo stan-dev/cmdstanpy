@@ -227,7 +227,12 @@ class OptimizeArgs(object):
 
     OPTIMIZE_ALGOS = {"BFGS", "LBFGS", "Newton"}
 
-    def __init__(self, algorithm: str = None, init_alpha: float = None, iter: int = None) -> None:
+    def __init__(
+            self,
+            algorithm: str = None,
+            init_alpha: float = None,
+            iter: int = None
+            ) -> None:
 
         self.algorithm = algorithm
         self.init_alpha = init_alpha
@@ -237,9 +242,12 @@ class OptimizeArgs(object):
         """
         Check arguments correctness and consistency.
         """
-        if self.algorithm is not None and self.algorithm not in self.OPTIMIZE_ALGOS:
+        if self.algorithm is not None and \
+                self.algorithm not in self.OPTIMIZE_ALGOS:
             raise ValueError(
-                "Please specify optimizer algorithms as one of [{}]".format(", ".join(self.OPTIMIZE_ALGOS)))
+                "Please specify optimizer algorithms as one of [{}]"
+                .format(", ".join(self.OPTIMIZE_ALGOS))
+            )
 
         if self.init_alpha is not None:
             if isinstance(self.init_alpha, float):

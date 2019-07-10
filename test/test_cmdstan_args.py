@@ -13,13 +13,13 @@ class OptimizeArgsTest(unittest.TestCase):
         self.assertRaises(ValueError, lambda: args.validate())
         args = OptimizeArgs(algorithm="Newton")
         args.validate()
-        cmd = args.compose_command(None, 'output')
+        cmd = args.compose(None, 'output')
         self.assertIn("algorithm=newton", cmd)
 
     def test_args_algorithm_init_alpha(self):
         args = OptimizeArgs(init_alpha=2e-4)
         args.validate()
-        cmd = args.compose_command(None, 'output')
+        cmd = args.compose(None, 'output')
         self.assertIn("init_alpha=0.0002", cmd)
         args = OptimizeArgs(init_alpha=-1.0)
         self.assertRaises(ValueError, lambda: args.validate())
@@ -27,7 +27,7 @@ class OptimizeArgsTest(unittest.TestCase):
     def test_args_algorithm_iter(self):
         args = OptimizeArgs(iter=400)
         args.validate()
-        cmd = args.compose_command(None, 'output')
+        cmd = args.compose(None, 'output')
         self.assertIn("iter=400", cmd)
         args = OptimizeArgs(iter=-1)
         self.assertRaises(ValueError, lambda: args.validate())
