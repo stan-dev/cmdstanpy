@@ -230,8 +230,8 @@ class StanFit(object):
         self._draws = dzero['draws']
         self._column_names = dzero['column_names']
         self._num_params = dzero['num_params']
-        self._first_draw = dzero['first_draw'] if 'first_draw' in dzero else None
-        self._metric_type = dzero['metric'] if 'metric' in dzero else None
+        self._first_draw = dzero.get('first_draw')
+        self._metric_type = dzero.get('metric')
 
     def _assemble_sample(self) -> None:
         """
