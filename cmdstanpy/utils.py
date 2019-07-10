@@ -175,7 +175,7 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
             key_val = line.split('=')
             if len(key_val) == 2:
                 if key_val[0].strip() == 'file' and not key_val[1].endswith(
-                        'csv'
+                    'csv'
                 ):
                     config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
@@ -245,13 +245,13 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     line = fp.readline().strip()
     lineno += 1
     if not (
-            (
-                    metric == 'diag_e'
-                    and line == '# Diagonal elements of inverse mass matrix:'
-            )
-            or (
-                    metric == 'dense_e' and line == '# Elements of inverse mass matrix:'
-            )
+        (
+            metric == 'diag_e'
+            and line == '# Diagonal elements of inverse mass matrix:'
+        )
+        or (
+            metric == 'dense_e' and line == '# Elements of inverse mass matrix:'
+        )
     ):
         raise ValueError(
             'line {}: invalid or missing mass matrix '
