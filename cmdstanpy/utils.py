@@ -3,9 +3,12 @@ Utility functions
 """
 import os
 import json
+import math
 import numpy as np
 import platform
 import re
+import subprocess
+
 from typing import Dict, TextIO, List
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -130,12 +133,8 @@ def check_csv(path: str) -> Dict:
         draws_spec = int(dict['num_samples'])
     else:
         draws_spec = 1000
-    if 'num_warmup' in dict:
-        num_warmup = int(dict['num_warmup'])
-    else:
-        num_warmup = 1000
-    if 'save_warmup' in dict and dict['save_warmup'] == '1':
-        draws_spec = draws_spec + num_warmup
+    if 'thin' in dict:
+        draws_spec = int(math.ceil(draws_spec / dict['thin']))
     if dict['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
@@ -151,8 +150,8 @@ def scan_stan_csv(path: str) -> Dict:
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
-        # TODO: scan_warmup
         lineno = scan_column_names(fp, dict, lineno)
+        lineno = scan_warmup(fp, dict, lineno)
         lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
     return dict
@@ -177,6 +176,22 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                     config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
                     config_dict[key_val[0].strip()] = key_val[1].strip()
+        cur_pos = fp.tell()
+        line = fp.readline().strip()
+    fp.seek(cur_pos)
+    return lineno
+
+
+def scan_warmup(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+    """
+    Check warmup iterations, if any.
+    """
+    if 'save_warmup' not in config_dict:
+        return lineno
+    cur_pos = fp.tell()
+    line = fp.readline().strip()
+    while len(line) > 0 and not line.startswith('#'):
+        lineno += 1
         cur_pos = fp.tell()
         line = fp.readline().strip()
     fp.seek(cur_pos)
@@ -319,3 +334,22 @@ def read_rdump_metric(path: str) -> List[int]:
             return None
         dims = m2.group(1).split(',')
         return [int(d) for d in dims]
+
+
+def do_command(cmd: str, cwd: str = None) -> str:
+    """
+    Spawn process, print stdout/stderr to console.
+    Throws exception on non-zero returncode.
+    """
+    proc = subprocess.Popen(
+        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    proc.wait()
+    stdout, stderr = proc.communicate()
+    if proc.returncode:
+        if stderr:
+            msg = 'ERROR\n {} '.format(stderr.decode('utf-8').strip())
+        raise Exception(msg)
+    if stdout:
+        return stdout.decode('utf-8').strip()
+    return None

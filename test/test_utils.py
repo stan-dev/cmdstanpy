@@ -4,7 +4,6 @@ import unittest
 import json
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.lib import StanData
 from cmdstanpy.utils import (
     cmdstan_path,
     set_cmdstan_path,
@@ -50,28 +49,6 @@ class CmdStanPathTest(unittest.TestCase):
         path_test = os.path.abspath('test')
         with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
             validate_cmdstan_path(path_test)
-
-
-class StanDataTest(unittest.TestCase):
-    def test_standata_existing(self):
-        rdump = os.path.join(datafiles_path, 'bernoulli.data.R')
-        standata = StanData(rdump)
-        self.assertEqual(standata.data_file, rdump)
-
-    def test_standata_new(self):
-        json_file = os.path.join(datafiles_path, 'bernoulli.data.json')
-        with open(json_file, 'r') as fd:
-            dict = json.load(fd)
-        rdump_file = os.path.join(TMPDIR, 'bernoulli.data2.R')
-        standata = StanData(rdump_file)
-        standata.write_rdump(dict)
-        with open(rdump_file, 'r') as myfile:
-            new_data = myfile.read()
-        self.assertEqual(rdump, new_data)
-
-    def test_standata_bad(self):
-        with self.assertRaises(Exception):
-            standata = StanData('/no/such/path')
 
 
 class ReadStanCsvTest(unittest.TestCase):

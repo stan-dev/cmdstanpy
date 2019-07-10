@@ -25,8 +25,7 @@ def cleanup_tmpdir():
 
 atexit.register(cleanup_tmpdir)
 
-from .cmds import compile_model, sample, summary, diagnose, get_drawset
-from .cmds import save_csvfiles
-from .utils import set_cmdstan_path, cmdstan_path, set_make_env, jsondump, rdump
-from .lib import Model, RunSet
+from .utils import set_cmdstan_path, cmdstan_path, set_make_env
+from .stanfit import StanFit
+from .model import Model
 from ._version import __version__
