@@ -134,18 +134,15 @@ class StanFit(object):
     @property
     def optimized_params_np(self) -> np.array:
         """returns optimized params as numpy array"""
-        self._optimizing_only()
         return self._first_draw
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
         """returns optimized params as pandas DataFrame"""
-        self._optimizing_only()
         return pd.DataFrame([self._first_draw], columns=self.column_names)
 
-    def optimized_params_dict(self) -> dict:
+    def optimized_params_dict(self) -> OrderedDict:
         """returns optimized params as Dict"""
-        self._optimizing_only()
 
         output = OrderedDict()
 
@@ -186,10 +183,6 @@ class StanFit(object):
     def _sampling_only(self):
         if self.is_optimizing:
             raise RuntimeError("Method available only when sampling!")
-
-    def _optimizing_only(self):
-        if not self.is_optimizing:
-            raise RuntimeError("Method available only when optimizing!")
 
     @property
     def sample(self) -> np.ndarray:
@@ -254,7 +247,7 @@ class StanFit(object):
                     is_optimizing=self.is_optimizing
                 )
                 for key in dzero:
-                    if key != 'id' and dzero[key] != d[key]:
+                    if key not in ('id', 'first_draw') and dzero[key] != d[key]:
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(

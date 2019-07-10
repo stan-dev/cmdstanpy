@@ -127,24 +127,21 @@ def rdump(path: str, data: Dict) -> None:
 
 def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    dict = scan_stan_csv(path, is_optimizing=is_optimizing)
+    meta = scan_stan_csv(path, is_optimizing=is_optimizing)
     # check draws against spec
     if is_optimizing:
         draws_spec = 1
     else:
-        if 'num_samples' in dict:
-            draws_spec = int(dict['num_samples'])
-        else:
-            draws_spec = 1000
-        if 'thin' in dict:
-            draws_spec = int(math.ceil(draws_spec / dict['thin']))
-    if dict['draws'] != draws_spec:
+        draws_spec = int(meta.get('num_samples',1000))
+        if 'thin' in meta:
+            draws_spec = int(math.ceil(draws_spec / meta['thin']))
+    if meta['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
-                path, draws_spec, dict['draws']
+                path, draws_spec, meta['draws']
             )
         )
-    return dict
+    return meta
 
 
 def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
@@ -157,7 +154,7 @@ def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
         lineno = scan_warmup(fp, dict, lineno)
         if not is_optimizing:
             lineno = scan_metric(fp, dict, lineno)
-        lineno = scan_draws(fp, dict, lineno, store_first=is_optimizing)
+        lineno = scan_draws(fp, dict, lineno)
     return dict
 
 
@@ -278,8 +275,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
 def scan_draws(
         fp: TextIO,
         config_dict: Dict,
-        lineno: int,
-        store_first: bool = False
+        lineno: int
 ) -> int:
     """
     Parse draws, check elements per draw, save num draws to config_dict.
@@ -299,7 +295,7 @@ def scan_draws(
                     lineno, num_cols, len(line.split(','))
                 )
             )
-        if not first_draw and store_first:
+        if not first_draw:
             config_dict['first_draw'] = np.array(data, dtype=np.float64)
         cur_pos = fp.tell()
         line = fp.readline().strip()

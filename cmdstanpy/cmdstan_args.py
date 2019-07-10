@@ -230,7 +230,7 @@ class OptimizeArgs(object):
     def __init__(
             self,
             algorithm: str = None,
-            init_alpha: float = None,
+            init_alpha: Real = None,
             iter: int = None
             ) -> None:
 
@@ -250,14 +250,14 @@ class OptimizeArgs(object):
             )
 
         if self.init_alpha is not None:
-            if isinstance(self.init_alpha, float):
-                if self.init_alpha < 0.0:
+            if isinstance(self.init_alpha, Real):
+                if self.init_alpha < 0:
                     raise ValueError("init_alpha must be greater than 0")
             else:
                 raise ValueError("init_alpha must be type of float")
 
         if self.iter is not None:
-            if isinstance(self.iter, int):
+            if isinstance(self.iter, Integral):
                 if self.iter < 0:
                     raise ValueError("iter must be greater than 0")
             else:
@@ -269,11 +269,11 @@ class OptimizeArgs(object):
 
         cmd = cmd + ' method=optimize'
         if self.algorithm:
-            cmd = cmd + ' algorithm={}'.format(self.algorithm.lower())
+            cmd += ' algorithm={}'.format(self.algorithm.lower())
         if self.init_alpha is not None:
-            cmd = cmd + ' init_alpha={}'.format(self.init_alpha)
+            cmd += ' init_alpha={}'.format(self.init_alpha)
         if self.iter is not None:
-            cmd = cmd + ' iter={}'.format(self.iter)
+            cmd += ' iter={}'.format(self.iter)
         return cmd
 
 

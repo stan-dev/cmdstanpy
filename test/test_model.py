@@ -222,12 +222,6 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
         # check if calling optimize related stuff fails
-        with self.assertRaises(RuntimeError):
-            _ = bern_fit.optimized_params_pd
-        with self.assertRaises(RuntimeError):
-            _ = bern_fit.optimized_params_np
-        with self.assertRaises(RuntimeError):
-            _ = bern_fit.optimized_params_dict
 
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
