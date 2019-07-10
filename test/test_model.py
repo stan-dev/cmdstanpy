@@ -7,7 +7,6 @@ from cmdstanpy import TMPDIR
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import Model
 
-
 datafiles_path = os.path.join('test', 'data')
 
 code = '''data {
@@ -85,6 +84,7 @@ class ModelTest(unittest.TestCase):
     # TODO: test compile with existing exe - timestamp on exe unchanged
     # TODO: test overwrite with existing exe - timestamp on exe updated
 
+
 class OptimizeTest(unittest.TestCase):
     def test_optimize_works(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
@@ -92,7 +92,13 @@ class OptimizeTest(unittest.TestCase):
         model = Model(stan_file=stan, exe_file=exe)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinit = os.path.join(datafiles_path, 'bernoulli.init.json')
-        fit = model.optimize(data=jdata, seed=1239812093, inits=jinit, algorithm="BFGS", init_alpha=0.001, iter=100)
+        fit = model.optimize(
+            data=jdata,
+            seed=1239812093,
+            inits=jinit,
+            algorithm="BFGS",
+            init_alpha=0.001,
+            iter=100)
 
         # check if calling sample related stuff fails
         with self.assertRaises(RuntimeError):
@@ -107,12 +113,24 @@ class OptimizeTest(unittest.TestCase):
         self.assertAlmostEqual(fit.optimized_params_np[1], 0.2, places=3)
 
         # test pandas output
-        self.assertEqual(fit.optimized_params_np[0], fit.optimized_params_pd["lp__"][0])
-        self.assertEqual(fit.optimized_params_np[1], fit.optimized_params_pd["theta"][0])
+        self.assertEqual(
+            fit.optimized_params_np[0],
+            fit.optimized_params_pd["lp__"][0]
+        )
+        self.assertEqual(
+            fit.optimized_params_np[1],
+            fit.optimized_params_pd["theta"][0]
+        )
 
         # test dict output
-        self.assertEqual(fit.optimized_params_np[0], fit.optimized_params_dict["lp__"])
-        self.assertEqual(fit.optimized_params_np[1], fit.optimized_params_dict["theta"])
+        self.assertEqual(
+            fit.optimized_params_np[0],
+            fit.optimized_params_dict["lp__"]
+        )
+        self.assertEqual(
+            fit.optimized_params_np[1],
+            fit.optimized_params_dict["theta"]
+        )
 
 
 class SampleTest(unittest.TestCase):
@@ -124,11 +142,10 @@ class SampleTest(unittest.TestCase):
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_fit = bern_model.sample(data=jdata,
-                                         chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=100)
-
+                                     chains=4,
+                                     cores=2,
+                                     seed=12345,
+                                     sampling_iters=100)
 
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
@@ -159,11 +176,11 @@ class SampleTest(unittest.TestCase):
 
         output = os.path.join(datafiles_path, 'test1-bernoulli-output')
         bern_fit = bern_model.sample(data=jdata,
-                                         chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=100,
-                                         csv_basename=output)
+                                     chains=4,
+                                     cores=2,
+                                     seed=12345,
+                                     sampling_iters=100,
+                                     csv_basename=output)
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -177,19 +194,19 @@ class SampleTest(unittest.TestCase):
 
         rdata = os.path.join(datafiles_path, 'bernoulli.data.R')
         bern_fit = bern_model.sample(data=rdata,
-                                         chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=100)
+                                     chains=4,
+                                     cores=2,
+                                     seed=12345,
+                                     sampling_iters=100)
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
         bern_fit = bern_model.sample(data=data_dict,
-                                         chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=100)
+                                     chains=4,
+                                     cores=2,
+                                     seed=12345,
+                                     sampling_iters=100)
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
@@ -201,7 +218,6 @@ class SampleTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             _ = bern_fit.optimized_params_dict
 
-
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
@@ -210,9 +226,10 @@ class SampleTest(unittest.TestCase):
 
         with self.assertRaisesRegex(Exception, 'Error during sampling'):
             bern_fit = bern_model.sample(chains=4,
-                                             cores=2,
-                                             seed=12345,
-                                             sampling_iters=100)
+                                         cores=2,
+                                         seed=12345,
+                                         sampling_iters=100)
+
 
 if __name__ == '__main__':
     unittest.main()
