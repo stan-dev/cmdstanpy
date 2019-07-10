@@ -85,6 +85,35 @@ class ModelTest(unittest.TestCase):
     # TODO: test compile with existing exe - timestamp on exe unchanged
     # TODO: test overwrite with existing exe - timestamp on exe updated
 
+class OptimizeTest(unittest.TestCase):
+    def test_optimize_works(self):
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        model = Model(stan_file=stan, exe_file=exe)
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        jinit = os.path.join(datafiles_path, 'bernoulli.init.json')
+        fit = model.optimize(data=jdata, seed=1239812093, inits=jinit, algorithm="BFGS", init_alpha=0.001, iter=100)
+
+        # check if calling sample related stuff fails
+        with self.assertRaises(RuntimeError):
+            fit.summary()
+        with self.assertRaises(RuntimeError):
+            _ = fit.sample
+        with self.assertRaises(RuntimeError):
+            fit.diagnose()
+
+        # test numpy output
+        self.assertAlmostEqual(fit.optimized_params_np[0], -5, places=2)
+        self.assertAlmostEqual(fit.optimized_params_np[1], 0.2, places=3)
+
+        # test pandas output
+        self.assertEqual(fit.optimized_params_np[0], fit.optimized_params_pd["lp__"][0])
+        self.assertEqual(fit.optimized_params_np[1], fit.optimized_params_pd["theta"][0])
+
+        # test dict output
+        self.assertEqual(fit.optimized_params_np[0], fit.optimized_params_dict["lp__"])
+        self.assertEqual(fit.optimized_params_np[1], fit.optimized_params_dict["theta"])
+
 
 class SampleTest(unittest.TestCase):
     def test_bernoulli_good(self):
@@ -163,6 +192,14 @@ class SampleTest(unittest.TestCase):
                                          sampling_iters=100)
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+
+        # check if calling optimize related stuff fails
+        with self.assertRaises(RuntimeError):
+            _ = bern_fit.optimized_params_pd
+        with self.assertRaises(RuntimeError):
+            _ = bern_fit.optimized_params_np
+        with self.assertRaises(RuntimeError):
+            _ = bern_fit.optimized_params_dict
 
 
     def test_bernoulli_bad(self):

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import jsondump, do_command, EXTENSION, cmdstan_path
 
@@ -137,6 +137,47 @@ class Model(object):
             print('make cmd failed\n', e)
         self._exe_file = exe_file
         print('compiled model file: {}'.format(self._exe_file))
+
+    def optimize(
+            self,
+            data: Union[Dict, str] = None,
+            seed: int = None,
+            inits: Union[Dict, float, str] = None,
+            csv_basename: str = None,
+            algorithm: str = None,
+            init_alpha: float = None,
+            iter: int = None
+
+    ) -> StanFit:
+
+        optimize_args = OptimizeArgs(algorithm=algorithm, init_alpha=init_alpha, iter=iter)
+
+        args = CmdStanArgs(
+            self._name,
+            self._exe_file,
+            chain_ids=None,
+            data=data,
+            seed=seed,
+            inits=inits,
+            output_basename=csv_basename,
+            method_args=optimize_args,
+        )
+
+        stanfit = StanFit(args=args, chains=1)
+        dummy_chain_id = 0
+        self._do_sample(stanfit, dummy_chain_id)
+
+        if not stanfit._check_retcodes():
+            msg = 'Error during optimizing'
+            if stanfit._retcode(dummy_chain_id) != 0:
+                msg = '{} Got returned error code {}'.format(
+                    msg, stanfit._retcode(dummy_chain_id)
+                )
+            raise Exception(msg)
+        stanfit._validate_csv_files()
+        return stanfit
+
+
 
     def sample(
         self,
@@ -369,6 +410,7 @@ class Model(object):
         Spawn process, capture console output to file, record returncode.
         """
         cmd = stanfit.cmds[idx]
+        print("CMD {}".format(cmd))
         print('start chain {}.  '.format(idx + 1))
         proc = subprocess.Popen(
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE

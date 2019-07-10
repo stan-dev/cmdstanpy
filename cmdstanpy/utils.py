@@ -24,7 +24,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
         name.split('-')[1]
         for name in os.listdir(dot_dir)
         if os.path.isdir(os.path.join(dot_dir, name))
-        and name.startswith('cmdstan-')
+           and name.startswith('cmdstan-')
     ]
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
@@ -125,16 +125,19 @@ def rdump(path: str, data: Dict) -> None:
             fd.write('\n')
 
 
-def check_csv(path: str) -> Dict:
+def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    dict = scan_stan_csv(path)
+    dict = scan_stan_csv(path, is_optimizing=is_optimizing)
     # check draws against spec
-    if 'num_samples' in dict:
-        draws_spec = int(dict['num_samples'])
+    if is_optimizing:
+        draws_spec = 1
     else:
-        draws_spec = 1000
-    if 'thin' in dict:
-        draws_spec = int(math.ciel(draws_spec / dict['thin']))
+        if 'num_samples' in dict:
+            draws_spec = int(dict['num_samples'])
+        else:
+            draws_spec = 1000
+        if 'thin' in dict:
+            draws_spec = int(math.ciel(draws_spec / dict['thin']))
     if dict['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
@@ -144,7 +147,7 @@ def check_csv(path: str) -> Dict:
     return dict
 
 
-def scan_stan_csv(path: str) -> Dict:
+def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
@@ -152,8 +155,9 @@ def scan_stan_csv(path: str) -> Dict:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
         lineno = scan_warmup(fp, dict, lineno)
-        lineno = scan_metric(fp, dict, lineno)
-        lineno = scan_draws(fp, dict, lineno)
+        if not is_optimizing:
+            lineno = scan_metric(fp, dict, lineno)
+        lineno = scan_draws(fp, dict, lineno, store_first=is_optimizing)
     return dict
 
 
@@ -171,7 +175,7 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
             key_val = line.split('=')
             if len(key_val) == 2:
                 if key_val[0].strip() == 'file' and not key_val[1].endswith(
-                    'csv'
+                        'csv'
                 ):
                     config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
@@ -206,6 +210,7 @@ def scan_column_names(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     lineno += 1
     names = line.split(',')
     config_dict['column_names'] = tuple(names)
+    config_dict['num_params'] = len(names) - 1
     return lineno
 
 
@@ -240,13 +245,13 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     line = fp.readline().strip()
     lineno += 1
     if not (
-        (
-            metric == 'diag_e'
-            and line == '# Diagonal elements of inverse mass matrix:'
-        )
-        or (
-            metric == 'dense_e' and line == '# Elements of inverse mass matrix:'
-        )
+            (
+                    metric == 'diag_e'
+                    and line == '# Diagonal elements of inverse mass matrix:'
+            )
+            or (
+                    metric == 'dense_e' and line == '# Elements of inverse mass matrix:'
+            )
     ):
         raise ValueError(
             'line {}: invalid or missing mass matrix '
@@ -270,7 +275,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_draws(fp: TextIO, config_dict: Dict, lineno: int, store_first: bool = False) -> int:
     """
     Parse draws, check elements per draw, save num draws to config_dict.
     """
@@ -278,15 +283,19 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     num_cols = len(config_dict['column_names'])
     cur_pos = fp.tell()
     line = fp.readline().strip()
+    first_draw = None
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
-        if len(line.split(',')) != num_cols:
+        data = line.split(',')
+        if len(data) != num_cols:
             raise ValueError(
                 'line {}: bad draw, expecting {} items, found {}'.format(
                     lineno, num_cols, len(line.split(','))
                 )
             )
+        if not first_draw and store_first:
+            config_dict['first_draw'] = np.array(data, dtype=np.float64)
         cur_pos = fp.tell()
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
@@ -341,6 +350,7 @@ def do_command(cmd: str, cwd: str = None) -> str:
     Spawn process, print stdout/stderr to console.
     Throws exception on non-zero returncode.
     """
+    print("CMD: {}".format(cmd))
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
