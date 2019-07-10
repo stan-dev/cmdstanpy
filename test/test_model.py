@@ -6,6 +6,7 @@ import unittest
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import Model
+import numpy as np
 
 datafiles_path = os.path.join('test', 'data')
 
@@ -122,15 +123,25 @@ class OptimizeTest(unittest.TestCase):
             fit.optimized_params_pd["theta"][0]
         )
 
-        # test dict output
-        self.assertEqual(
-            fit.optimized_params_np[0],
-            fit.optimized_params_dict["lp__"]
-        )
-        self.assertEqual(
-            fit.optimized_params_np[1],
-            fit.optimized_params_dict["theta"]
-        )
+        fit._first_draw = np.arange(0, 10)
+        fit._column_names = [
+            "lp__", "x", "y", "a.1", "a.2", "a.3", "b.1", "b.2", "b.3", "c"
+        ]
+        res = fit.optimized_params_dict()
+        np.testing.assert_array_equal(res["lp__"], np.array(0))
+        np.testing.assert_array_equal(res["x"], np.array(1))
+        np.testing.assert_array_equal(res["y"], np.array(2))
+        np.testing.assert_array_equal(res["a"], np.array([3, 4, 5]))
+        np.testing.assert_array_equal(res["b"], np.array([6, 7, 8]))
+        np.testing.assert_array_equal(res["c"], np.array(9))
+
+        fit._first_draw = np.arange(0, 10)
+        fit._column_names = [
+            "lp__", "x.1", "x.2", "a.1", "x.3"
+        ]
+
+        with self.assertRaises(RuntimeError):
+            _ = fit.optimized_params_dict()
 
 
 class SampleTest(unittest.TestCase):
