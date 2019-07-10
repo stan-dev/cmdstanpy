@@ -134,7 +134,7 @@ def check_csv(path: str) -> Dict:
     else:
         draws_spec = 1000
     if 'thin' in dict:
-        draws_spec = int(math.ciel(draws_spec / dict['thin']))
+        draws_spec = int(math.ceil(draws_spec / dict['thin']))
     if dict['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
