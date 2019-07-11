@@ -141,44 +141,10 @@ class StanFit(object):
         """returns optimized params as pandas DataFrame"""
         return pd.DataFrame([self._first_draw], columns=self.column_names)
 
+    @property
     def optimized_params_dict(self) -> OrderedDict:
         """returns optimized params as Dict"""
-
-        output = OrderedDict()
-
-        prev = None
-        start = 0
-        end = 0
-        r1 = re.compile("^(.*)\.([0-9]{1,})$")
-        for cname in self._column_names:
-            parsed = r1.findall(cname)
-            if not parsed:
-                curr = cname
-            else:
-                curr = parsed[0][0]
-            if prev is None:
-                prev = curr
-
-            if curr != prev:
-                if prev in output:
-                    raise RuntimeError(
-                        "Found repeated column name"
-                    )
-                output[prev] = np.array(self._first_draw[start:end])
-                if end - start == 1:
-                    output[prev] = output[prev].reshape(())
-                prev = curr
-                start = end
-                end += 1
-            else:
-                end += 1
-
-        if prev in output:
-            raise RuntimeError(
-                "Found repeated column name"
-            )
-        output[prev] = np.array(self._first_draw[start:end])
-        return output
+        return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
         if self.is_optimizing:
