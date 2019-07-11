@@ -295,11 +295,12 @@ def scan_draws(
                     lineno, num_cols, len(line.split(','))
                 )
             )
-        if not first_draw:
-            config_dict['first_draw'] = np.array(data, dtype=np.float64)
+        if first_draw is None:
+            first_draw = np.array(data, dtype=np.float64)
         cur_pos = fp.tell()
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
+    config_dict['first_draw'] = first_draw
     fp.seek(cur_pos)
     return lineno
 

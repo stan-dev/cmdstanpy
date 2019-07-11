@@ -211,7 +211,12 @@ class SampleTest(unittest.TestCase):
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
-        # check if calling optimize related stuff fails
+        # check if  optimized_params_np returns first draw
+        # (actually first row from csv)
+        np.testing.assert_equal(
+            bern_fit.get_drawset().to_numpy()[0],
+            bern_fit.optimized_params_np
+        )
 
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
