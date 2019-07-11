@@ -125,26 +125,26 @@ def rdump(path: str, data: Dict) -> None:
             fd.write('\n')
 
 
-def check_csv(path: str) -> Dict:
+def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    dict = scan_stan_csv(path)
+    meta = scan_stan_csv(path, is_optimizing=is_optimizing)
     # check draws against spec
-    if 'num_samples' in dict:
-        draws_spec = int(dict['num_samples'])
+    if is_optimizing:
+        draws_spec = 1
     else:
-        draws_spec = 1000
-    if 'thin' in dict:
-        draws_spec = int(math.ceil(draws_spec / dict['thin']))
-    if dict['draws'] != draws_spec:
+        draws_spec = int(meta.get('num_samples',1000))
+        if 'thin' in meta:
+            draws_spec = int(math.ceil(draws_spec / meta['thin']))
+    if meta['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
-                path, draws_spec, dict['draws']
+                path, draws_spec, meta['draws']
             )
         )
-    return dict
+    return meta
 
 
-def scan_stan_csv(path: str) -> Dict:
+def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
@@ -152,7 +152,8 @@ def scan_stan_csv(path: str) -> Dict:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
         lineno = scan_warmup(fp, dict, lineno)
-        lineno = scan_metric(fp, dict, lineno)
+        if not is_optimizing:
+            lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
     return dict
 
@@ -206,6 +207,7 @@ def scan_column_names(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     lineno += 1
     names = line.split(',')
     config_dict['column_names'] = tuple(names)
+    config_dict['num_params'] = len(names) - 1
     return lineno
 
 
@@ -270,7 +272,11 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_draws(
+        fp: TextIO,
+        config_dict: Dict,
+        lineno: int
+) -> int:
     """
     Parse draws, check elements per draw, save num draws to config_dict.
     """
@@ -278,18 +284,23 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     num_cols = len(config_dict['column_names'])
     cur_pos = fp.tell()
     line = fp.readline().strip()
+    first_draw = None
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
-        if len(line.split(',')) != num_cols:
+        data = line.split(',')
+        if len(data) != num_cols:
             raise ValueError(
                 'line {}: bad draw, expecting {} items, found {}'.format(
                     lineno, num_cols, len(line.split(','))
                 )
             )
+        if first_draw is None:
+            first_draw = np.array(data, dtype=np.float64)
         cur_pos = fp.tell()
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
+    config_dict['first_draw'] = first_draw
     fp.seek(cur_pos)
     return lineno
 
