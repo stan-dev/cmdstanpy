@@ -3,7 +3,7 @@ import re
 import shutil
 import tempfile
 from typing import Dict, List, Union, Tuple
-
+from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
@@ -15,7 +15,7 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
 )
-from cmdstanpy.cmdstan_args import CmdStanArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 
 
 class StanFit(object):
@@ -24,6 +24,7 @@ class StanFit(object):
     def __init__(self, args: CmdStanArgs, chains: int = 4) -> None:
         """Initialize object."""
         self._args = args
+        self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
         self._chains = chains
         if chains < 1:
             raise ValueError(
@@ -65,6 +66,7 @@ class StanFit(object):
         self._metric = None
         self._stepsize = None
         self._sample = None
+        self._first_draw = None
 
     def __repr__(self) -> str:
         repr = 'StanFit(args={}, chains={}'.format(self._args, self._chains)
@@ -125,6 +127,30 @@ class StanFit(object):
         return self._stepsize
 
     @property
+    def is_optimizing(self) -> bool:
+        """Returns true if we are optimizing rather than sampling"""
+        return self._is_optimizing
+
+    @property
+    def optimized_params_np(self) -> np.array:
+        """returns optimized params as numpy array"""
+        return self._first_draw
+
+    @property
+    def optimized_params_pd(self) -> pd.DataFrame:
+        """returns optimized params as pandas DataFrame"""
+        return pd.DataFrame([self._first_draw], columns=self.column_names)
+
+    @property
+    def optimized_params_dict(self) -> OrderedDict:
+        """returns optimized params as Dict"""
+        return OrderedDict(zip(self.column_names, self._first_draw))
+
+    def _sampling_only(self):
+        if self.is_optimizing:
+            raise RuntimeError("Method available only when sampling!")
+
+    @property
     def sample(self) -> np.ndarray:
         """
         A 3-D numpy ndarray which contains all draws across all chain arranged
@@ -132,6 +158,8 @@ class StanFit(object):
         for each parameter are stored contiguously in memory, likewise
         all draws from a chain are contiguous.
         """
+        self._sampling_only()
+
         if self._sample is None:
             self._assemble_sample()
         return self._sample
@@ -175,11 +203,17 @@ class StanFit(object):
         dzero = {}
         for i in range(self._chains):
             if i == 0:
-                dzero = check_csv(self.csv_files[i])
+                dzero = check_csv(
+                    self.csv_files[i],
+                    is_optimizing=self.is_optimizing
+                )
             else:
-                d = check_csv(self.csv_files[i])
+                d = check_csv(
+                    self.csv_files[i],
+                    is_optimizing=self.is_optimizing
+                )
                 for key in dzero:
-                    if key != 'id' and dzero[key] != d[key]:
+                    if key not in ('id', 'first_draw') and dzero[key] != d[key]:
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
@@ -189,7 +223,8 @@ class StanFit(object):
         self._draws = dzero['draws']
         self._column_names = dzero['column_names']
         self._num_params = dzero['num_params']
-        self._metric_type = dzero['metric']
+        self._first_draw = dzero.get('first_draw')
+        self._metric_type = dzero.get('metric')
 
     def _assemble_sample(self) -> None:
         """
@@ -253,6 +288,8 @@ class StanFit(object):
         Echo stansummary stdout/stderr to console.
         Assemble csv tempfile contents into pandasDataFrame.
         """
+        self._sampling_only()
+
         names = self.column_names
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
@@ -287,6 +324,8 @@ class StanFit(object):
         + Low effective sample sizes
         + High R-hat values
         """
+        self._sampling_only()
+
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         csv_files = ' '.join(self.csv_files)
         cmd = '{} {} '.format(cmd_path, csv_files)
@@ -303,6 +342,8 @@ class StanFit(object):
 
         :param params: list of model parameter names.
         """
+        self._sampling_only()
+
         pnames_base = [name.split('.')[0] for name in self.column_names]
         if params is not None:
             for p in params:
