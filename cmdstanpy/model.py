@@ -138,6 +138,45 @@ class Model(object):
         self._exe_file = exe_file
         print('compiled model file: {}'.format(self._exe_file))
 
+    def generate_quantities(
+        self,
+        data: Union[Dict, str] = None,
+        fitted_params_file: str = None,
+    ) -> StanFit:
+        """
+        :param fitted_params_file: The path to a csv file that contains the fitted parameters of the STAN model
+        """
+        if not os.file.exists(fitted_params_file):
+                raise ValueError(
+                    'invalid path for fitted_params: {}'.format(
+                        fitted_params_file)
+                )
+
+        if data is not None:
+            if isinstance(data, dict):
+                with tempfile.NamedTemporaryFile(
+                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
+                ) as fd:
+                    data_file = fd.name
+                    print('input data tempfile: {}'.format(fd.name))
+                    jsondump(data_file, data)
+                data = data_file
+
+
+        generate_quantities_args = GenerateQuantitiesArgs(
+            fitted_params_file=fitted_params_file,
+        )
+
+        args = CmdStanArgs(
+            self._name,
+            self._exe_file,
+            data=data,
+            output_basename=csv_basename,
+            method_args=generate_quantities_args,
+        )
+        stanfit = StanFit(args=args)
+
+
     def sample(
         self,
         data: Union[Dict, str] = None,

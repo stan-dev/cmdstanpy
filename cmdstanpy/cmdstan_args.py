@@ -9,6 +9,35 @@ import numpy as np
 
 from cmdstanpy.utils import check_csv, read_metric
 
+class GenerateQuantitiesArgs(object):
+    """Arguments for the generated quantities block."""
+    def __init__(
+        self,
+        fitted_params_file: str = None,
+    ) -> None:
+        """Initialize object."""
+        self.fitted_params_file = fitted_params_file
+
+    def validate(self):
+        """
+        Check arguments correctness and consistency.
+        * file for fitted_params exists
+        """
+        if not os.file.exists(self.fitted_params_file):
+                raise ValueError(
+                    'invalid path for fitted_params: {}'.format(
+                        self.fitted_params_file)
+                )
+    def compose(self, idx: int, cmd: str) -> str:
+        """
+        Compose CmdStan command for method-specific non-default arguments.
+        """
+        cmd = cmd + ' method=generate_quantities'
+        cmd = '{} fitted_params="{}"'.format(cmd, self.fitted_params_file)
+        return cmd
+        
+
+
 
 class SamplerArgs(object):
     """Arguments for the NUTS adaptive sampler."""
