@@ -28,7 +28,7 @@ Programming Language :: Python
 Topic :: Scientific/Engineering :: Information Analysis
 """
 
-INSTALL_REQUIRES = ['numpy', 'pandas>=0.24.0']
+INSTALL_REQUIRES = ['numpy', 'pandas']
 
 EXTRAS_REQUIRE = {
     'tests': ['pytest', 'pytest-cov'],
