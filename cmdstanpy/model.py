@@ -13,7 +13,7 @@ from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import (
     jsondump, do_command, EXTENSION,
-    cmdstan_path, TemporaryMovedFile
+    cmdstan_path, TemporaryCopiedFile
 )
 
 
@@ -29,6 +29,7 @@ class Model(object):
         """Initialize object."""
         self._stan_file = stan_file
         self._name = None
+        self._exe_file = None
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -46,7 +47,7 @@ class Model(object):
             self._exe_file = None
         if exe_file is not None:
             if not os.path.exists(exe_file):
-                raise ValueError('no such file {}'.format(self._exe_file))
+                raise ValueError('no such file {}'.format(exe_file))
             _, exename = os.path.split(exe_file)
             if self._name is None:
                 self._name, _ = os.path.splitext(exename)
@@ -118,7 +119,7 @@ class Model(object):
             print('model is already compiled')
             return
 
-        with TemporaryMovedFile(self._stan_file) as (stan_file, is_path_changed):
+        with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()
             if overwrite or not os.path.exists(hpp_file):
@@ -138,8 +139,9 @@ class Model(object):
                     ]
                     if any(bad_paths):
                         raise Exception(
-                            'invalid include paths: {}'.
-                                format(', '.join(bad_paths))
+                            'invalid include paths: {}'.format(
+                                ', '.join(bad_paths)
+                            )
                         )
                     cmd.append(
                         '--include_paths='
@@ -163,14 +165,20 @@ class Model(object):
             except Exception as e:
                 print('make cmd failed\n', e)
 
-            if is_path_changed:
-                # copy the generated file back to the original directory
+            if is_copied:
+
                 original_target_dir = os.path.dirname(self._stan_file)
-                new_exec_name = os.path.basename(self._stan_file) + EXTENSION
-                print("******************")
-                print(new_exec_name)
-                self._exe_file = os.path.join(original_target_dir, new_exec_name)
-                print(self._exe_file)
+                # reconstruct the output file name
+                new_exec_name = os.path.basename(
+                    os.path.splitext(self._stan_file)[0]
+                ) + EXTENSION
+
+                self._exe_file = os.path.join(
+                    original_target_dir,
+                    new_exec_name
+                )
+
+                # copy the generated file back to the original directory
                 shutil.copy(exe_file, self._exe_file)
             else:
                 self._exe_file = exe_file

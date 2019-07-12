@@ -50,7 +50,7 @@ def validate_cmdstan_path(path: str) -> None:
         )
 
 
-class TemporaryMovedFile(object):
+class TemporaryCopiedFile(object):
     def __init__(self, file_path: str):
         self._path = None
         self._tmpdir = None

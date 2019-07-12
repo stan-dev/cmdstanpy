@@ -11,7 +11,7 @@ from cmdstanpy.utils import (
     get_latest_cmdstan,
     check_csv,
     read_metric,
-    TemporaryMovedFile
+    TemporaryCopiedFile
 )
 
 
@@ -31,7 +31,7 @@ class CmdStanPathTest(unittest.TestCase):
 
     def test_non_spaces_location(self):
         good_path = "/tmp/"
-        with TemporaryMovedFile(good_path) as (p, is_changed):
+        with TemporaryCopiedFile(good_path) as (p, is_changed):
             self.assertEqual(p, good_path)
             self.assertFalse(is_changed)
 
@@ -44,7 +44,7 @@ class CmdStanPathTest(unittest.TestCase):
 
         stan_copied = None
         try:
-            with TemporaryMovedFile(stan_bad) as (p, is_changed):
+            with TemporaryCopiedFile(stan_bad) as (p, is_changed):
                 stan_copied = p
                 self.assertTrue(os.path.exists(stan_copied))
                 self.assertTrue(" " not in stan_copied)
@@ -53,14 +53,10 @@ class CmdStanPathTest(unittest.TestCase):
         except RuntimeError:
             pass
 
-        print(stan_copied)
         self.assertFalse(os.path.exists(stan_copied))
 
         # cleanup after test
         shutil.rmtree(bad_path, ignore_errors=True)
-
-
-        print(bad_path)
 
     def test_set_path(self):
         install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
