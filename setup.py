@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 
+import os
+import re
 import setuptools
-from cmdstanpy import __version__
 
 
 def readme_contents() -> str:
     with open('README.md', 'r') as fd:
         src = fd.read()
     return src
+
+
+def get_version() -> str:
+    version_file = open(os.path.join('cmdstanpy', '_version.py'))
+    version_contents = version_file.read()
+    return re.search("__version__ = '(.*?)'", version_contents).group(1)
 
 
 _classifiers = """
@@ -21,7 +28,7 @@ Programming Language :: Python
 Topic :: Scientific/Engineering :: Information Analysis
 """
 
-INSTALL_REQUIRES = ['numpy', 'pandas']
+INSTALL_REQUIRES = ['numpy', 'pandas>=0.24.0']
 
 EXTRAS_REQUIRE = {
     'tests': ['pytest', 'pytest-cov'],
@@ -36,7 +43,7 @@ EXTRAS_REQUIRE = {
 
 setuptools.setup(
     name='cmdstanpy',
-    version=__version__,
+    version=get_version(),
     description='Python interface to CmdStan',
     long_description=readme_contents(),
     long_description_content_type="text/markdown",
