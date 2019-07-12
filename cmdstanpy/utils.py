@@ -8,7 +8,10 @@ import numpy as np
 import platform
 import re
 import subprocess
+import shutil
+import tempfile
 
+from contextlib import contextmanager
 from typing import Dict, TextIO, List
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -45,6 +48,35 @@ def validate_cmdstan_path(path: str) -> None:
             'no CmdStan binaries found, '
             'run command line script "install_cmdstan"'
         )
+
+
+class TemporaryMovedFile(object):
+    def __init__(self, file_path: str):
+        self._path = None
+        self._tmpdir = None
+        if " " in file_path:
+            tmpdir = tempfile.mkdtemp()
+            if " " in tmpdir:
+                raise RuntimeError(
+                    "Unable to generate temporary path without spaces! \n" +
+                    "Please move your stan file to location without spaces."
+                )
+
+            _, path = tempfile.mkstemp(suffix=".stan", dir=tmpdir)
+
+            shutil.copy(file_path, path)
+            self._path = path
+            self._tmpdir = tmpdir
+        else:
+            self._changed = False
+            self._path = file_path
+
+    def __enter__(self):
+        return self._path, self._tmpdir is not None
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._tmpdir:
+            shutil.rmtree(self._tmpdir, ignore_errors=True)
 
 
 def set_cmdstan_path(path: str) -> None:
@@ -359,7 +391,7 @@ def do_command(cmd: str, cwd: str = None) -> str:
     stdout, stderr = proc.communicate()
     if proc.returncode:
         if stderr:
-            msg = 'ERROR\n {} '.format(stderr.decode('utf-8').strip())
+            msg = 'ERROR\n {} '.format(stderr.strip())
         raise Exception(msg)
     if stdout:
         return stdout.decode('utf-8').strip()

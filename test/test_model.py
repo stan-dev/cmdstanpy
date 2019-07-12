@@ -57,7 +57,7 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(code, model.code())
 
     def test_model_compile(self):
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        stan = os.path.join(datafiles_path, 'bernoulli space.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         model = Model(stan_file=stan)
         self.assertEqual(None, model.exe_file)
