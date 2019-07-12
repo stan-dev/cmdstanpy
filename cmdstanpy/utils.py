@@ -11,7 +11,6 @@ import subprocess
 import shutil
 import tempfile
 
-from contextlib import contextmanager
 from typing import Dict, TextIO, List
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -391,7 +390,7 @@ def do_command(cmd: str, cwd: str = None) -> str:
     stdout, stderr = proc.communicate()
     if proc.returncode:
         if stderr:
-            msg = 'ERROR\n {} '.format(stderr.strip())
+            msg = 'ERROR\n {} '.format(stderr.decode('utf-8').strip())
         raise Exception(msg)
     if stdout:
         return stdout.decode('utf-8').strip()
