@@ -37,6 +37,21 @@ class ModelTest(unittest.TestCase):
         model = Model(stan_file=stan, exe_file=exe)
         self.assertEqual(exe, model.exe_file)
 
+    def test_model_good_no_source(self):
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
+        model = Model(exe_file=exe)
+        self.assertEqual(exe, model.exe_file)
+        self.assertEqual('bernoulli', model.name)
+
+        with self.assertRaises(RuntimeError):
+            model.code()
+        with self.assertRaises(RuntimeError):
+            model.compile()
+
+    def test_model_none(self):
+        with self.assertRaises(ValueError):
+            _ = Model(exe_file=None, stan_file=None)
+
     def test_model_bad(self):
         with self.assertRaises(Exception):
             model = Model(stan_file='xdlfkjx', exe_file='sdfndjsds')

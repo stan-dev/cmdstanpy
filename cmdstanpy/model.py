@@ -28,25 +28,35 @@ class Model(object):
     def __init__(self, stan_file: str = None, exe_file: str = None) -> None:
         """Initialize object."""
         self._stan_file = stan_file
+        self._name = None
         if stan_file is None:
-            raise ValueError('must specify Stan program file')
-        if not os.path.exists(stan_file):
-            raise ValueError('no such file {}'.format(self._stan_file))
-        _, filename = os.path.split(stan_file)
-        if len(filename) < 6 or not filename.endswith('.stan'):
-            raise ValueError('invalid stan filename {}'.format(self._stan_file))
-        self._name, _ = os.path.splitext(filename)
-        self._exe_file = None
+            if exe_file is None:
+                raise ValueError(
+                    'must specify Stan source or executable program file'
+                )
+        else:
+            if not os.path.exists(stan_file):
+                raise ValueError('no such file {}'.format(self._stan_file))
+            _, filename = os.path.split(stan_file)
+            if len(filename) < 6 or not filename.endswith('.stan'):
+                raise ValueError(
+                    'invalid stan filename {}'.format(self._stan_file)
+                )
+            self._name, _ = os.path.splitext(filename)
+            self._exe_file = None
         if exe_file is not None:
             if not os.path.exists(exe_file):
                 raise ValueError('no such file {}'.format(self._exe_file))
             _, exename = os.path.split(exe_file)
-            if self._name != ''.join([exename, EXTENSION]):
-                raise ValueError(
-                    'name mismatch between Stan file and compiled'
-                    ' executable, expecting basename: {}'
-                    ' found: {}'.format(self._name, exename)
-                )
+            if self._name is None:
+                self._name, _ = os.path.splitext(exename)
+            else:
+                if self._name != ''.join([exename, EXTENSION]):
+                    raise ValueError(
+                        'name mismatch between Stan file and compiled'
+                        ' executable, expecting basename: {}'
+                        ' found: {}'.format(self._name, exename)
+                    )
             self._exe_file = exe_file
 
     def __repr__(self) -> str:
@@ -56,6 +66,9 @@ class Model(object):
 
     def code(self) -> str:
         """Return Stan program as a string."""
+        if not self._stan_file:
+            raise RuntimeError("Please specify source file")
+
         code = None
         try:
             with open(self._stan_file, 'r') as fd:
@@ -98,6 +111,9 @@ class Model(object):
         :param include_paths: List of paths to directories where Stan should
             look for files to include in compilation of the C++ executable.
         """
+        if not self._stan_file:
+            raise RuntimeError("Please specify source file")
+
         if self._exe_file is not None and not overwrite:
             print('model is already compiled')
             return
