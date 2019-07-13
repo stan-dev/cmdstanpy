@@ -69,7 +69,6 @@ class MaybeDictToFilePath(object):
                 os.remove(path)
 
 
-
 def validate_cmdstan_path(path: str) -> None:
     """
     Validate that CmdStan directory exists and binaries have been built.

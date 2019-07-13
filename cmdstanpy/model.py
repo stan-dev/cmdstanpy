@@ -400,7 +400,6 @@ class Model(object):
             )
             cores = cpu_count()
 
-
             # TODO:  issue 49: inits can be initialization function
 
         sampler_args = SamplerArgs(

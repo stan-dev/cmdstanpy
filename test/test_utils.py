@@ -68,6 +68,7 @@ class CmdStanPathTest(unittest.TestCase):
             with MaybeDictToFilePath(123, dict_good) as (f1, f2):
                 pass
 
+
 class ReadStanCsvTest(unittest.TestCase):
     def test_check_csv_1(self):
         csv_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
