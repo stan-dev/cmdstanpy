@@ -10,7 +10,10 @@ from typing import Dict, List, Union
 from cmdstanpy import TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
 from cmdstanpy.stanfit import StanFit
-from cmdstanpy.utils import jsondump, do_command, EXTENSION, cmdstan_path
+from cmdstanpy.utils import (
+    jsondump, do_command, EXTENSION,
+    cmdstan_path, MaybeDictToFilePath
+)
 
 
 class Model(object):
@@ -209,20 +212,21 @@ class Model(object):
             iter=iter
         )
 
-        args = CmdStanArgs(
-            self._name,
-            self._exe_file,
-            chain_ids=None,
-            data=data,
-            seed=seed,
-            inits=inits,
-            output_basename=csv_basename,
-            method_args=optimize_args,
-        )
+        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=None,
+                data=_data,
+                seed=seed,
+                inits=_inits,
+                output_basename=csv_basename,
+                method_args=optimize_args,
+            )
 
-        stanfit = StanFit(args=args, chains=1)
-        dummy_chain_id = 0
-        self._do_sample(stanfit, dummy_chain_id)
+            stanfit = StanFit(args=args, chains=1)
+            dummy_chain_id = 0
+            self._do_sample(stanfit, dummy_chain_id)
 
         if not stanfit._check_retcodes():
             msg = 'Error during optimizing'
@@ -396,25 +400,7 @@ class Model(object):
             )
             cores = cpu_count()
 
-        if data is not None:
-            if isinstance(data, dict):
-                with tempfile.NamedTemporaryFile(
-                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
-                ) as fd:
-                    data_file = fd.name
-                    print('input data tempfile: {}'.format(fd.name))
-                    jsondump(data_file, data)
-                data = data_file
 
-        if inits is not None:
-            if isinstance(inits, dict):
-                with tempfile.NamedTemporaryFile(
-                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
-                ) as fd:
-                    inits_file = fd.name
-                    print('inits tempfile: {}'.format(fd.name))
-                    jsondump(inits_file, inits)
-                inits = inits_file
             # TODO:  issue 49: inits can be initialization function
 
         sampler_args = SamplerArgs(
@@ -428,35 +414,35 @@ class Model(object):
             adapt_engaged=adapt_engaged,
             adapt_delta=adapt_delta,
         )
+        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=chain_ids,
+                data=_data,
+                seed=seed,
+                inits=_inits,
+                output_basename=csv_basename,
+                method_args=sampler_args,
+            )
 
-        args = CmdStanArgs(
-            self._name,
-            self._exe_file,
-            chain_ids=chain_ids,
-            data=data,
-            seed=seed,
-            inits=inits,
-            output_basename=csv_basename,
-            method_args=sampler_args,
-        )
-
-        stanfit = StanFit(args=args, chains=chains)
-        try:
-            tp = ThreadPool(cores)
-            for i in range(chains):
-                tp.apply_async(self._do_sample, (stanfit, i))
-        finally:
-            tp.close()
-            tp.join()
-        if not stanfit._check_retcodes():
-            msg = 'Error during sampling'
-            for i in range(chains):
-                if stanfit._retcode(i) != 0:
-                    msg = '{}, chain {} returned error code {}'.format(
-                        msg, i, stanfit._retcode(i)
-                    )
-            raise Exception(msg)
-        stanfit._validate_csv_files()
+            stanfit = StanFit(args=args, chains=chains)
+            try:
+                tp = ThreadPool(cores)
+                for i in range(chains):
+                    tp.apply_async(self._do_sample, (stanfit, i))
+            finally:
+                tp.close()
+                tp.join()
+            if not stanfit._check_retcodes():
+                msg = 'Error during sampling'
+                for i in range(chains):
+                    if stanfit._retcode(i) != 0:
+                        msg = '{}, chain {} returned error code {}'.format(
+                            msg, i, stanfit._retcode(i)
+                        )
+                raise Exception(msg)
+            stanfit._validate_csv_files()
         return stanfit
 
     def _do_sample(self, stanfit: StanFit, idx: int) -> None:

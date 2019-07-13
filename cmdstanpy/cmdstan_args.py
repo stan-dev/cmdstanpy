@@ -381,9 +381,12 @@ class CmdStanArgs(object):
                             ' found {}'.format(self.seed[i])
                         )
 
-        if self.data is not None:
+        if isinstance(self.data, str):
             if not os.path.exists(self.data):
                 raise ValueError('no such file {}'.format(self.data))
+        elif not isinstance(self.data, dict):
+            if isinstance(self.method_args, OptimizeArgs):
+                raise ValueError('data must be string or dict')
 
         if self.inits is not None:
             if isinstance(self.inits, Real):
