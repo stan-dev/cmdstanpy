@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tempfile
+import shutil
 
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
@@ -10,7 +11,10 @@ from typing import Dict, List, Union
 from cmdstanpy import TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
 from cmdstanpy.stanfit import StanFit
-from cmdstanpy.utils import jsondump, do_command, EXTENSION, cmdstan_path
+from cmdstanpy.utils import (
+    jsondump, do_command, EXTENSION,
+    cmdstan_path, TemporaryCopiedFile
+)
 
 
 class Model(object):
@@ -25,6 +29,7 @@ class Model(object):
         """Initialize object."""
         self._stan_file = stan_file
         self._name = None
+        self._exe_file = None
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -42,7 +47,7 @@ class Model(object):
             self._exe_file = None
         if exe_file is not None:
             if not os.path.exists(exe_file):
-                raise ValueError('no such file {}'.format(self._exe_file))
+                raise ValueError('no such file {}'.format(exe_file))
             _, exename = os.path.split(exe_file)
             if self._name is None:
                 self._name, _ = os.path.splitext(exename)
@@ -113,45 +118,71 @@ class Model(object):
         if self._exe_file is not None and not overwrite:
             print('model is already compiled')
             return
-        hpp_file = os.path.splitext(self._stan_file)[0] + '.hpp'
-        hpp_file = Path(hpp_file).as_posix()
-        if overwrite or not os.path.exists(hpp_file):
-            print('translating to {}'.format(hpp_file))
-            stanc_path = os.path.join(
-                cmdstan_path(), 'bin', 'stanc' + EXTENSION
-            )
-            stanc_path = Path(stanc_path).as_posix()
-            cmd = [
-                stanc_path,
-                '--o={}'.format(hpp_file),
-                Path(self._stan_file).as_posix(),
-            ]
-            if include_paths is not None:
-                bad_paths = [d for d in include_paths if not os.path.exists(d)]
-                if any(bad_paths):
-                    raise Exception(
-                        'invalid include paths: {}'.format(', '.join(bad_paths))
-                    )
-                cmd.append(
-                    '--include_paths='
-                    + ','.join((Path(p).as_posix() for p in include_paths))
-                )
-            print('stan to c++: make args {}'.format(cmd))
-            do_command(cmd)
-            if not os.path.exists(hpp_file):
-                raise Exception('syntax error'.format(self._stan_file))
 
-        exe_file, _ = os.path.splitext(os.path.abspath(self._stan_file))
-        exe_file = Path(exe_file).as_posix()
-        exe_file += EXTENSION
-        make = os.getenv('MAKE', 'make')
-        cmd = [make, 'O={}'.format(opt_lvl), exe_file]
-        print('compiling c++: make args {}'.format(cmd))
-        try:
-            do_command(cmd, cmdstan_path())
-        except Exception as e:
-            print('make cmd failed\n', e)
-        self._exe_file = exe_file
+        with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
+            hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
+            hpp_file = Path(hpp_file).as_posix()
+            if overwrite or not os.path.exists(hpp_file):
+                print('translating to {}'.format(hpp_file))
+                stanc_path = os.path.join(
+                    cmdstan_path(), 'bin', 'stanc' + EXTENSION
+                )
+                stanc_path = Path(stanc_path).as_posix()
+                cmd = [
+                    stanc_path,
+                    '--o={}'.format(hpp_file),
+                    Path(stan_file).as_posix(),
+                ]
+                if include_paths is not None:
+                    bad_paths = [
+                        d for d in include_paths if not os.path.exists(d)
+                    ]
+                    if any(bad_paths):
+                        raise Exception(
+                            'invalid include paths: {}'.format(
+                                ', '.join(bad_paths)
+                            )
+                        )
+                    cmd.append(
+                        '--include_paths='
+                        + ','.join(
+                            (Path(p).as_posix() for p in include_paths)
+                        )
+                    )
+                print('stan to c++: make args {}'.format(cmd))
+                do_command(cmd)
+                if not os.path.exists(hpp_file):
+                    raise Exception('syntax error'.format(stan_file))
+
+            exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
+            exe_file = Path(exe_file).as_posix()
+            exe_file += EXTENSION
+            make = os.getenv('MAKE', 'make')
+            cmd = [make, 'O={}'.format(opt_lvl), exe_file]
+            print('compiling c++: make args {}'.format(cmd))
+            try:
+                do_command(cmd, cmdstan_path())
+            except Exception as e:
+                print('make cmd failed\n', e)
+
+            if is_copied:
+
+                original_target_dir = os.path.dirname(self._stan_file)
+                # reconstruct the output file name
+                new_exec_name = os.path.basename(
+                    os.path.splitext(self._stan_file)[0]
+                ) + EXTENSION
+
+                self._exe_file = os.path.join(
+                    original_target_dir,
+                    new_exec_name
+                )
+
+                # copy the generated file back to the original directory
+                shutil.copy(exe_file, self._exe_file)
+            else:
+                self._exe_file = exe_file
+
         print('compiled model file: {}'.format(self._exe_file))
 
     def optimize(
