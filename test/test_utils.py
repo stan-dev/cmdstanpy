@@ -1,9 +1,9 @@
 import os
 import os.path
 import unittest
-import json
+import tempfile
+import shutil
 
-from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     cmdstan_path,
     set_cmdstan_path,
@@ -11,6 +11,7 @@ from cmdstanpy.utils import (
     get_latest_cmdstan,
     check_csv,
     read_metric,
+    TemporaryCopiedFile
 )
 
 
@@ -27,6 +28,35 @@ class CmdStanPathTest(unittest.TestCase):
             os.path.join('~', '.cmdstanpy', 'cmdstan')
         )
         self.assertTrue(cmdstan_path().startswith(abs_rel_path))
+
+    def test_non_spaces_location(self):
+        good_path = "/tmp/"
+        with TemporaryCopiedFile(good_path) as (p, is_changed):
+            self.assertEqual(p, good_path)
+            self.assertFalse(is_changed)
+
+        # prepare files for test
+        bad_path = os.path.join(tempfile.mkdtemp(), "bad dir")
+        os.mkdir(bad_path)
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        stan_bad = os.path.join(bad_path, "bad name.stan")
+        shutil.copy(stan, stan_bad)
+
+        stan_copied = None
+        try:
+            with TemporaryCopiedFile(stan_bad) as (p, is_changed):
+                stan_copied = p
+                self.assertTrue(os.path.exists(stan_copied))
+                self.assertTrue(" " not in stan_copied)
+                self.assertTrue(is_changed)
+                raise RuntimeError
+        except RuntimeError:
+            pass
+
+        self.assertFalse(os.path.exists(stan_copied))
+
+        # cleanup after test
+        shutil.rmtree(bad_path, ignore_errors=True)
 
     def test_set_path(self):
         install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
