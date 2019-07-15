@@ -261,7 +261,7 @@ class Model(object):
                 msg = '{} Got returned error code {}'.format(
                     msg, stanfit._retcode(dummy_chain_id)
                 )
-            raise Exception(msg)
+            print(msg)
         stanfit._validate_csv_files()
         return stanfit
 
@@ -486,7 +486,7 @@ class Model(object):
                     msg = '{}, chain {} returned error code {}'.format(
                         msg, i, stanfit._retcode(i)
                     )
-            raise Exception(msg)
+            print(msg)
         stanfit._validate_csv_files()
         return stanfit
 

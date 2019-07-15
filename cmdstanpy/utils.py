@@ -179,6 +179,8 @@ def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
+    if not os.path.getsize(path):
+        raise RuntimeError("Error! Stan result file is empty")
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)

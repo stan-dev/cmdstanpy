@@ -239,8 +239,10 @@ class SampleTest(unittest.TestCase):
         bern_model = Model(stan_file=stan, exe_file=exe)
         bern_model.compile()
 
-        with self.assertRaisesRegex(Exception, 'Error during sampling'):
-            bern_fit = bern_model.sample(chains=4,
+        with self.assertRaisesRegex(
+                Exception, 'Error! Stan result file is empty'
+        ):
+            _ = bern_model.sample(chains=4,
                                          cores=2,
                                          seed=12345,
                                          sampling_iters=100)
