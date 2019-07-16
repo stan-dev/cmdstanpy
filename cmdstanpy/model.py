@@ -419,21 +419,22 @@ class Model(object):
                             ' found {}'.format(chain_ids[i])
                         )
 
+        cores_avail = cpu_count()
+
         if cores is None:
-            # leave at least 2 cores for the OS
-            cores = min(cpu_count() - 2, chains)
+            cores = max(min(cores_avail - 2, chains), 1)
 
         if cores < 1:
             raise ValueError(
                 'cores must be a positive integer value, found {}'.format(cores)
             )
-        if cores > cpu_count():
+        if cores > cores_avail:
             print(
                 'requested {} cores, only {} available'.format(
                     cores, cpu_count()
                 )
             )
-            cores = cpu_count()
+            cores = cores_avail
 
             # TODO:  issue 49: inits can be initialization function
 
