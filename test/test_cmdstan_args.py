@@ -57,6 +57,7 @@ class SamplerArgsTest(unittest.TestCase):
         )
         args.validate(chains=4)
         cmd = args.compose(1, '')
+        self.assertEqual(args.warmup_iters, 10)
         self.assertIn('method=sample', cmd)
         self.assertIn('num_warmup=10', cmd)
         self.assertIn('num_samples=20', cmd)

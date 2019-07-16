@@ -51,6 +51,14 @@ class SamplerArgs(object):
                 "sampler expects number of chains to be greater than 0"
             )
 
+        if self.sampling_iters is not None:
+            if self.sampling_iters < 0:
+                raise ValueError(
+                    'sampling_iters must be a non-negative integer'.format(
+                        self.sampling_iters
+                    )
+                )
+
         if self.warmup_iters is not None:
             if self.warmup_iters < 0:
                 raise ValueError(
@@ -63,14 +71,8 @@ class SamplerArgs(object):
                     'adaptation requested but 0 warmup iterations specified, '
                     'must run warmup iterations'
                 )
-
-        if self.sampling_iters is not None:
-            if self.sampling_iters < 0:
-                raise ValueError(
-                    'sampling_iters must be a non-negative integer'.format(
-                        self.sampling_iters
-                    )
-                )
+        elif self.sampling_iters is not None:
+            self.warmup_iters = self.sampling_iters // 2
 
         if self.thin is not None:
             if self.thin < 1:
