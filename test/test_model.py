@@ -250,7 +250,7 @@ class SampleTest(unittest.TestCase):
         # check if  optimized_params_np returns first draw
         # (actually first row from csv)
         np.testing.assert_equal(
-            bern_fit.get_drawset().to_numpy()[0],
+            bern_fit.get_drawset().iloc[0].values,
             bern_fit.optimized_params_np
         )
 
