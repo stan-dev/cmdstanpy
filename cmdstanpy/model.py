@@ -271,7 +271,7 @@ class Model(object):
         self,
         data: Union[Dict, str] = None,
         chains: int = 4,
-        cores: int = 1,
+        cores: Union[int, None] = None,
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
         inits: Union[Dict, float, str, List[str]] = None,
@@ -309,6 +309,8 @@ class Model(object):
 
         :param cores: Number of processes to run in parallel. Must be an
             integer between 1 and the number of CPUs in the system.
+            If none then set automatically to `chains` but no more
+            than `total_cpu_count - 2`
 
         :param seed: The seed for random number generator or a list of per-chain
             seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
@@ -416,6 +418,10 @@ class Model(object):
                             'chain_id must be a positive integer value,'
                             ' found {}'.format(chain_ids[i])
                         )
+
+        if cores is None:
+            # leave at least 2 cores for the OS
+            cores = min(cpu_count() - 2, chains)
 
         if cores < 1:
             raise ValueError(
