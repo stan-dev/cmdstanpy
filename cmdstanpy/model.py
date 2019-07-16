@@ -271,7 +271,7 @@ class Model(object):
         self,
         data: Union[Dict, str] = None,
         chains: int = 4,
-        cores: int = 1,
+        cores: Union[int, None] = None,
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
         inits: Union[Dict, float, str, List[str]] = None,
@@ -309,6 +309,8 @@ class Model(object):
 
         :param cores: Number of processes to run in parallel. Must be an
             integer between 1 and the number of CPUs in the system.
+            If none then set automatically to `chains` but no more
+            than `total_cpu_count - 2`
 
         :param seed: The seed for random number generator or a list of per-chain
             seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
@@ -417,17 +419,22 @@ class Model(object):
                             ' found {}'.format(chain_ids[i])
                         )
 
+        cores_avail = cpu_count()
+
+        if cores is None:
+            cores = max(min(cores_avail - 2, chains), 1)
+
         if cores < 1:
             raise ValueError(
                 'cores must be a positive integer value, found {}'.format(cores)
             )
-        if cores > cpu_count():
+        if cores > cores_avail:
             print(
                 'requested {} cores, only {} available'.format(
                     cores, cpu_count()
                 )
             )
-            cores = cpu_count()
+            cores = cores_avail
 
             # TODO:  issue 49: inits can be initialization function
 
