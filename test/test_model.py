@@ -148,6 +148,27 @@ class OptimizeTest(unittest.TestCase):
             fit.optimized_params_dict["theta"]
         )
 
+    def test_optimize_works_dict(self):
+        import json
+        exe = os.path.join(datafiles_path, 'bernoulli')
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        model = Model(stan_file=stan, exe_file=exe)
+        with open(os.path.join(datafiles_path, 'bernoulli.data.json')) as d:
+            data = json.load(d)
+        with open(os.path.join(datafiles_path, 'bernoulli.init.json')) as d:
+            init = json.load(d)
+        fit = model.optimize(
+            data=data,
+            seed=1239812093,
+            inits=init,
+            algorithm="BFGS",
+            init_alpha=0.001,
+            iter=100)
+
+        # test numpy output
+        self.assertAlmostEqual(fit.optimized_params_np[0], -5, places=2)
+        self.assertAlmostEqual(fit.optimized_params_np[1], 0.2, places=3)
+
 
 class SampleTest(unittest.TestCase):
     def test_bernoulli_good(self):
@@ -229,7 +250,7 @@ class SampleTest(unittest.TestCase):
         # check if  optimized_params_np returns first draw
         # (actually first row from csv)
         np.testing.assert_equal(
-            bern_fit.get_drawset().to_numpy()[0],
+            bern_fit.get_drawset().iloc[0].values,
             bern_fit.optimized_params_np
         )
 

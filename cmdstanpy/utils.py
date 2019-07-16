@@ -11,7 +11,8 @@ import subprocess
 import shutil
 import tempfile
 
-from typing import Dict, TextIO, List
+from typing import Dict, TextIO, List, Union
+from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -33,6 +34,40 @@ def get_latest_cmdstan(dot_dir: str) -> str:
         return None
     latest = 'cmdstan-{}'.format(versions[len(versions) - 1])
     return latest
+
+
+class MaybeDictToFilePath(object):
+    def __init__(self, *objs: Union[str, dict]):
+        self._unlink = [False] * len(objs)
+        self._paths = [""] * len(objs)
+        i = 0
+        for o in objs:
+            if isinstance(o, dict):
+                with tempfile.NamedTemporaryFile(
+                        mode='w+', suffix='.json', dir=TMPDIR, delete=False
+                ) as fd:
+                    data_file = fd.name
+                    print('input tempfile: {}'.format(fd.name))
+                    jsondump(data_file, o)
+                self._paths[i] = data_file
+                self._unlink[i] = True
+            elif isinstance(o, str):
+                if not os.path.exists(o):
+                    raise ValueError("File doesn't exists {}".format(o))
+                self._paths[i] = o
+            elif o is None:
+                self._paths[i] = None
+            else:
+                raise ValueError("data must be string or dict")
+            i += 1
+
+    def __enter__(self):
+        return self._paths
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for can_unlink, path in zip(self._unlink, self._paths):
+            if can_unlink and path:
+                os.remove(path)
 
 
 def validate_cmdstan_path(path: str) -> None:

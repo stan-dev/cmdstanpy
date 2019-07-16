@@ -3,6 +3,7 @@ import os.path
 import unittest
 import tempfile
 import shutil
+import json
 
 from cmdstanpy.utils import (
     cmdstan_path,
@@ -10,6 +11,7 @@ from cmdstanpy.utils import (
     validate_cmdstan_path,
     get_latest_cmdstan,
     check_csv,
+    MaybeDictToFilePath,
     read_metric,
     TemporaryCopiedFile
 )
@@ -79,6 +81,23 @@ class CmdStanPathTest(unittest.TestCase):
         path_test = os.path.abspath('test')
         with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
             validate_cmdstan_path(path_test)
+
+    def test_dict_to_file(self):
+        file_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
+        dict_good = {"a": "A"}
+        created_tmp = None
+        with MaybeDictToFilePath(file_good, dict_good) as (f1, f2):
+            self.assertTrue(os.path.exists(f1))
+            self.assertTrue(os.path.exists(f2))
+            with open(f2) as f2_d:
+                self.assertEqual(json.load(f2_d), dict_good)
+            created_tmp = f2
+        self.assertTrue(os.path.exists(file_good))
+        self.assertFalse(os.path.exists(created_tmp))
+
+        with self.assertRaises(ValueError):
+            with MaybeDictToFilePath(123, dict_good) as (f1, f2):
+                pass
 
 
 class ReadStanCsvTest(unittest.TestCase):

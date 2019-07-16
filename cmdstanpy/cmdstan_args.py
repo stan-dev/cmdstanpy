@@ -290,7 +290,7 @@ class CmdStanArgs(object):
         model_exe: str,
         chain_ids: Union[List[int], None],
         method_args: Union[SamplerArgs, FixedParamArgs, OptimizeArgs],
-        data: str = None,
+        data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
         output_basename: str = None,
@@ -381,9 +381,14 @@ class CmdStanArgs(object):
                             ' found {}'.format(self.seed[i])
                         )
 
-        if self.data is not None:
+        if isinstance(self.data, str):
             if not os.path.exists(self.data):
                 raise ValueError('no such file {}'.format(self.data))
+        elif self.data is None:
+            if isinstance(self.method_args, OptimizeArgs):
+                raise ValueError('data must be set when optimizing')
+        elif not isinstance(self.data, dict):
+            raise ValueError('data must be string or dict')
 
         if self.inits is not None:
             if isinstance(self.inits, Real):
