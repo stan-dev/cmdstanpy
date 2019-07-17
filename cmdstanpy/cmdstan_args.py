@@ -2,13 +2,11 @@
 CmdStan arguments
 """
 import os
-import tempfile
-from numbers import Integral, Real
-from typing import List, Union, Tuple
-
 import numpy as np
 
-from cmdstanpy.utils import check_csv, read_metric
+from numbers import Integral, Real
+from typing import List, Union
+from cmdstanpy.utils import read_metric
 
 
 class SamplerArgs(object):

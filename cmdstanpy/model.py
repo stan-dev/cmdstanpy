@@ -1,20 +1,18 @@
 import os
 import subprocess
-import tempfile
 import shutil
+import logging
 
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Union
-
-from cmdstanpy import TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import (
-    jsondump, do_command, EXTENSION,
+    do_command, EXTENSION,
     cmdstan_path, MaybeDictToFilePath,
-    TemporaryCopiedFile
+    TemporaryCopiedFile, get_logger
 )
 
 
@@ -26,11 +24,17 @@ class Model(object):
     model given data.
     """
 
-    def __init__(self, stan_file: str = None, exe_file: str = None) -> None:
+    def __init__(
+            self,
+            stan_file: str = None,
+            exe_file: str = None,
+            logger: logging.Logger = None
+    ) -> None:
         """Initialize object."""
         self._stan_file = stan_file
         self._name = None
         self._exe_file = None
+        self._logger = logger or get_logger()
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -76,7 +80,9 @@ class Model(object):
             with open(self._stan_file, 'r') as fd:
                 code = fd.read()
         except IOError:
-            print('Cannot read file Stan file: {}'.format(self._stan_file))
+            self._logger.error(
+                'Cannot read file Stan file: {}'.format(self._stan_file)
+            )
         return code
 
     @property
@@ -117,14 +123,14 @@ class Model(object):
             raise RuntimeError("Please specify source file")
 
         if self._exe_file is not None and not overwrite:
-            print('model is already compiled')
+            self._logger.warning('model is already compiled')
             return
 
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()
             if overwrite or not os.path.exists(hpp_file):
-                print('translating to {}'.format(hpp_file))
+                self._logger.info('translating to {}'.format(hpp_file))
                 stanc_path = os.path.join(
                     cmdstan_path(), 'bin', 'stanc' + EXTENSION
                 )
@@ -150,8 +156,8 @@ class Model(object):
                             (Path(p).as_posix() for p in include_paths)
                         )
                     )
-                print('stan to c++: make args {}'.format(cmd))
-                do_command(cmd)
+                self._logger.info('stan to c++')
+                do_command(cmd, logger=self._logger)
                 if not os.path.exists(hpp_file):
                     raise Exception('syntax error'.format(stan_file))
 
@@ -160,11 +166,11 @@ class Model(object):
             exe_file += EXTENSION
             make = os.getenv('MAKE', 'make')
             cmd = [make, 'O={}'.format(opt_lvl), exe_file]
-            print('compiling c++: make args {}'.format(cmd))
+            self._logger.info('compiling c++')
             try:
-                do_command(cmd, cmdstan_path())
+                do_command(cmd, cmdstan_path(), self._logger)
             except Exception as e:
-                print('make cmd failed\n', e)
+                self._logger.error('make cmd failed\n', e)
 
             if is_copied:
 
@@ -184,7 +190,7 @@ class Model(object):
             else:
                 self._exe_file = exe_file
 
-        print('compiled model file: {}'.format(self._exe_file))
+        self._logger.info('compiled model file: {}'.format(self._exe_file))
 
     def optimize(
             self,
@@ -429,7 +435,7 @@ class Model(object):
                 'cores must be a positive integer value, found {}'.format(cores)
             )
         if cores > cores_avail:
-            print(
+            self._logger.warn(
                 'requested {} cores, only {} available'.format(
                     cores, cpu_count()
                 )
@@ -486,14 +492,14 @@ class Model(object):
         Spawn process, capture console output to file, record returncode.
         """
         cmd = stanfit.cmds[idx]
-        print('start chain {}.  '.format(idx + 1))
+        self._logger.info('start chain {}.  '.format(idx + 1))
         proc = subprocess.Popen(
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         proc.wait()
         stdout, stderr = proc.communicate()
         transcript_file = stanfit.console_files[idx]
-        print('finish chain {}.  '.format(idx + 1))
+        self._logger.info('finish chain {}.  '.format(idx + 1))
         with open(transcript_file, 'w+') as transcript:
             if stdout:
                 transcript.write(stdout.decode('utf-8'))
