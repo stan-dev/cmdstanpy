@@ -37,7 +37,7 @@ class StanFitTest(unittest.TestCase):
         self.assertTrue(fit._check_retcodes())
 
     def test_validate_good_run(self):
-        # construct fit using existing sampler outputv
+        # construct fit using existing sampler output
         exe = os.path.join(datafiles_path, 'bernoulli')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(goodfiles_path, 'bern')

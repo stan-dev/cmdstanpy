@@ -130,7 +130,7 @@ class Model(object):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()
             if overwrite or not os.path.exists(hpp_file):
-                self._logger.info('translating to {}'.format(hpp_file))
+                self._logger.info('stan to c++ ({})'.format(hpp_file))
                 stanc_path = os.path.join(
                     cmdstan_path(), 'bin', 'stanc' + EXTENSION
                 )
@@ -156,7 +156,7 @@ class Model(object):
                             (Path(p).as_posix() for p in include_paths)
                         )
                     )
-                self._logger.info('stan to c++')
+
                 do_command(cmd, logger=self._logger)
                 if not os.path.exists(hpp_file):
                     raise Exception('syntax error'.format(stan_file))
