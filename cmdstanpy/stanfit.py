@@ -320,7 +320,7 @@ class StanFit(object):
     def diagnose(self) -> str:
         """
         Run cmdstan/bin/diagnose over all output csv files.
-        Echo diagnose stdout/stderr to console.
+        Returns output of diagnose (stdout/stderr)
 
         The diagnose utility reads the outputs of all chains
         and checks for the following potential problems:
