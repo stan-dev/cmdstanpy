@@ -170,7 +170,7 @@ class Model(object):
             try:
                 do_command(cmd, cmdstan_path(), self._logger)
             except Exception as e:
-                self._logger.error('make cmd failed\n', e)
+                self._logger.error('make cmd failed %s', e)
 
             if is_copied:
 
