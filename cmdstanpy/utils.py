@@ -228,11 +228,16 @@ def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
+        print(lineno)
         lineno = scan_column_names(fp, dict, lineno)
+        print(lineno)
         lineno = scan_warmup(fp, dict, lineno)
+        print(lineno)
         if not is_optimizing:
             lineno = scan_metric(fp, dict, lineno)
+            print(lineno)
         lineno = scan_draws(fp, dict, lineno)
+        print(lineno)
     return dict
 
 
@@ -243,6 +248,7 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     cur_pos = fp.tell()
     line = fp.readline().strip()
+    print(config_dict)
     while len(line) > 0 and line.startswith('#'):
         lineno += 1
         if not line.endswith('(Default)'):
