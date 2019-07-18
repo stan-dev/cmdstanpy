@@ -248,6 +248,10 @@ class OptimizeArgs(object):
             )
 
         if self.init_alpha is not None:
+            if self.algorithm == "Newton":
+                raise ValueError(
+                    "init_alpha must not be set when algorithm is Newton"
+                )
             if isinstance(self.init_alpha, Real):
                 if self.init_alpha < 0:
                     raise ValueError("init_alpha must be greater than 0")
