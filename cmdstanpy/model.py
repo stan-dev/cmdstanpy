@@ -435,10 +435,10 @@ class Model(object):
                 'cores must be a positive integer value, found {}'.format(cores)
             )
         if cores > cores_avail:
-            self._logger.warn(
-                'requested {} cores, only {} available'.format(
-                    cores, cpu_count()
-                )
+            self._logger.warning(
+                'requested %u cores, only %u available',
+                cores,
+                cpu_count()
             )
             cores = cores_avail
 

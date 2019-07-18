@@ -431,7 +431,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     Throws exception on non-zero returncode.
     """
     if logger:
-        logger.debug("cmd: {}".format(cmd))
+        logger.debug('cmd: %s', cmd)
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
