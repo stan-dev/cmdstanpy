@@ -15,7 +15,7 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command, get_logger
 )
-from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs,GenerateQuantitiesArgs,SamplerArgs
 
 
 class StanFit(object):
@@ -29,7 +29,7 @@ class StanFit(object):
     ) -> None:
         """Initialize object."""
         self._args = args
-        self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
+        self._is_sampling = isinstance(self._args.method_args, SamplerArgs)
         self._chains = chains
         self._logger = logger or get_logger()
         if chains < 1:
@@ -134,9 +134,9 @@ class StanFit(object):
         return self._stepsize
 
     @property
-    def is_optimizing(self) -> bool:
-        """Returns true if we are optimizing rather than sampling"""
-        return self._is_optimizing
+    def is_sampling(self) -> bool:
+        """Returns true if we are sampling rather than optimizing or running generated quantities"""
+        return self._is_sampling
 
     @property
     def optimized_params_np(self) -> np.array:

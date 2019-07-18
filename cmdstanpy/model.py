@@ -550,5 +550,15 @@ class Model(object):
             stanfit = StanFit(args=args, chains=1)
             dummy_chain_id = 0
             self._do_sample(stanfit, dummy_chain_id)
+
+        if not stanfit._check_retcodes():
+            msg = 'Error during sampling'
+            for i in range(chains):
+                if stanfit._retcode(i) != 0:
+                    msg = '{}, chain {} returned error code {}'.format(
+                        msg, i, stanfit._retcode(i)
+                    )
+            raise RuntimeError(msg)
+        stanfit._validate_csv_files()
         return stanfit
 
