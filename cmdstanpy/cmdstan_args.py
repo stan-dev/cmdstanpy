@@ -3,7 +3,8 @@ CmdStan arguments
 """
 import os
 import tempfile
-from typing import List, Union
+from numbers import Integral, Real
+from typing import List, Union, Tuple
 
 import numpy as np
 
@@ -74,7 +75,7 @@ class SamplerArgs(object):
         * if file(s) for metric are supplied, check contents.
         * length of per-chain lists equals specified # of chains
         """
-        if type(chains) is not int or chains < 1:
+        if not isinstance(chains, Integral) or chains < 1:
             raise ValueError(
                 "sampler expects number of chains to be greater than 0"
             )
@@ -115,7 +116,7 @@ class SamplerArgs(object):
                 )
 
         if self.step_size is not None:
-            if isinstance(self.step_size, (int, float)):
+            if isinstance(self.step_size, Real):
                 if self.step_size < 0:
                     raise ValueError(
                         'step_size must be > 0, found {}'.format(self.step_size)
@@ -128,12 +129,10 @@ class SamplerArgs(object):
                             len(self.step_size), chains
                         )
                     )
-                for i in range(len(self.step_size)):
-                    if self.step_size[i] < 0:
+                for step_size in self.step_size:
+                    if step_size < 0:
                         raise ValueError(
-                            'step_size must be > 0, found {}'.format(
-                                self.step_size[i]
-                            )
+                            'step_size must be > 0, found {}'.format(step_size)
                         )
 
         if self.metric is not None:
@@ -147,7 +146,7 @@ class SamplerArgs(object):
                     if not os.path.exists(self.metric):
                         raise ValueError('no such file {}'.format(self.metric))
                     dims = read_metric(self.metric)
-            elif isinstance(self.metric, list):
+            elif isinstance(self.metric, (list, tuple)):
                 if len(self.metric) != chains:
                     raise ValueError(
                         'number of metric files must match number of chains '
@@ -161,28 +160,28 @@ class SamplerArgs(object):
                         'each chain must have its own metric file,'
                         ' found duplicates in metric files list.'
                     )
-                for i in range(len(self.metric)):
-                    if not os.path.exists(self.metric[i]):
+                for i, metric in enumerate(self.metric):
+                    if not os.path.exists(metric):
                         raise ValueError(
-                            'no such file {}'.format(self.metric[i])
+                            'no such file {}'.format(metric)
                         )
                     if i == 0:
-                        dims = read_metric(self.metric[i])
+                        dims = read_metric(metric)
                     else:
-                        dims2 = read_metric(self.metric[i])
+                        dims2 = read_metric(metric)
                         if len(dims) != len(dims2):
                             raise ValueError(
                                 'metrics files {}, {},'
                                 ' inconsistent metrics'.format(
-                                    self.metric[0], self.metric[i]
+                                    self.metric[0], metric
                                 )
                             )
-                        for j in range(len(dims)):
+                        for j, dim in enumerate(dims):
                             if dims[j] != dims2[j]:
                                 raise ValueError(
                                     'metrics files {}, {},'
                                     ' inconsistent metrics'.format(
-                                        self.metric[0], self.metric[i]
+                                        self.metric[0], metric
                                     )
                                 )
             if dims is not None:
@@ -195,12 +194,11 @@ class SamplerArgs(object):
                     self.metric = 'dense_e'
 
         if self.adapt_delta is not None:
-            if self.adapt_delta < 0.0 or self.adapt_delta > 1.0:
+            if not 0 < self.adapt_delta < 1:
                 raise ValueError(
                     'adapt_delta must be between 0 and 1,'
                     ' found {}'.format(self.adapt_delta)
                 )
-        pass
 
     def compose(self, idx: int, cmd: str) -> str:
         """
@@ -253,6 +251,61 @@ class FixedParamArgs(object):
         pass
 
 
+class OptimizeArgs(object):
+    """Container for arguments for the optimizer."""
+
+    OPTIMIZE_ALGOS = {"BFGS", "LBFGS", "Newton"}
+
+    def __init__(
+            self,
+            algorithm: str = None,
+            init_alpha: Real = None,
+            iter: int = None
+            ) -> None:
+
+        self.algorithm = algorithm
+        self.init_alpha = init_alpha
+        self.iter = iter
+
+    def validate(self, chains=None) -> None:
+        """
+        Check arguments correctness and consistency.
+        """
+        if self.algorithm is not None and \
+                self.algorithm not in self.OPTIMIZE_ALGOS:
+            raise ValueError(
+                "Please specify optimizer algorithms as one of [{}]"
+                .format(", ".join(self.OPTIMIZE_ALGOS))
+            )
+
+        if self.init_alpha is not None:
+            if isinstance(self.init_alpha, Real):
+                if self.init_alpha < 0:
+                    raise ValueError("init_alpha must be greater than 0")
+            else:
+                raise ValueError("init_alpha must be type of float")
+
+        if self.iter is not None:
+            if isinstance(self.iter, Integral):
+                if self.iter < 0:
+                    raise ValueError("iter must be greater than 0")
+            else:
+                raise ValueError("iter must be type of int")
+
+    def compose(self, idx: int, cmd: str) -> str:
+        """compose command string for CmdStan for non-default arg values.
+        """
+
+        cmd = cmd + ' method=optimize'
+        if self.algorithm:
+            cmd += ' algorithm={}'.format(self.algorithm.lower())
+        if self.init_alpha is not None:
+            cmd += ' init_alpha={}'.format(self.init_alpha)
+        if self.iter is not None:
+            cmd += ' iter={}'.format(self.iter)
+        return cmd
+
+
 class CmdStanArgs(object):
     """
     Container for CmdStan command line arguments.
@@ -265,7 +318,7 @@ class CmdStanArgs(object):
         model_name: str,
         model_exe: str,
         chain_ids: Union[List[int], None],
-        method_args: Union[SamplerArgs, FixedParamArgs],
+        method_args: Union[SamplerArgs, FixedParamArgs, OptimizeArgs],
         data: str = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
@@ -319,8 +372,7 @@ class CmdStanArgs(object):
                     'invalid path for output files: {}'.format(
                         self.output_basename)
                 )
-            if self.output_basename.endswith('.csv'):
-                self.output_basename = self.output_basename[:-4]
+            self.output_basename, _ = os.path.splitext(self.output_basename)
 
         if self.seed is None:
             rng = np.random.RandomState()
@@ -363,7 +415,7 @@ class CmdStanArgs(object):
                 raise ValueError('no such file {}'.format(self.data))
 
         if self.inits is not None:
-            if isinstance(self.inits, (int, float)):
+            if isinstance(self.inits, Real):
                 if self.inits < 0:
                     raise ValueError(
                         'inits must be > 0, found {}'.format(self.inits)
@@ -371,7 +423,7 @@ class CmdStanArgs(object):
             elif isinstance(self.inits, str):
                 if not os.path.exists(self.inits):
                     raise ValueError('no such file {}'.format(self.inits))
-            elif isinstance(self.inits, List):
+            elif isinstance(self.inits, list):
                 if self.chain_ids is None:
                     raise ValueError(
                         "inits must not be a list when no chains are used"

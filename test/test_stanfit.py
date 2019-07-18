@@ -12,17 +12,18 @@ datafiles_path = os.path.join('test', 'data')
 goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
+
 class StanFitTest(unittest.TestCase):
     def test_check_retcodes(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [1, 2, 3, 4],
-            data = jdata,
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            data=jdata,
+            method_args=sampler_args)
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
         self.assertEqual(4, len(retcodes))
@@ -48,13 +49,13 @@ class StanFitTest(unittest.TestCase):
             adapt_delta=0.95
         )
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
+            model_name='bernoulli',
+            model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args = sampler_args
+            method_args=sampler_args
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
@@ -89,12 +90,12 @@ class StanFitTest(unittest.TestCase):
         output = os.path.join(datafiles_path, 'runset-big', 'output_icar_nyc')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
+            model_name='bernoulli',
+            model_exe=exe,
             chain_ids=[1, 2],
             seed=12345,
             output_basename=output,
-            method_args = sampler_args
+            method_args=sampler_args
         )
         fit = StanFit(args=cmdstan_args, chains=2)
         fit._validate_csv_files()
@@ -135,10 +136,10 @@ class StanFitTest(unittest.TestCase):
         bern_model = Model(stan_file=stan, exe_file=exe)
         bern_model.compile()
         bern_fit = bern_model.sample(data=jdata,
-                                         chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=200)
+                                     chains=4,
+                                     cores=2,
+                                     seed=12345,
+                                     sampling_iters=200)
 
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
@@ -160,10 +161,10 @@ class StanFitTest(unittest.TestCase):
 
         # regenerate to tmpdir, save to good dir
         bern_fit = bern_model.sample(data=jdata,
-                                         chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=200)
+                                     chains=4,
+                                     cores=2,
+                                     seed=12345,
+                                     sampling_iters=200)
         bern_fit.save_csvfiles(basename=basename)  # default dir
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
@@ -174,10 +175,10 @@ class StanFitTest(unittest.TestCase):
 
         # regenerate to tmpdir, save to no such dir
         bern_fit = bern_model.sample(data=jdata,
-                                         chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=200)
+                                     chains=4,
+                                     cores=2,
+                                     seed=12345,
+                                     sampling_iters=200)
         with self.assertRaisesRegex(Exception, 'cannot save'):
             bern_fit.save_csvfiles(
                 dir=os.path.join('no', 'such', 'dir'), basename=basename
@@ -190,11 +191,11 @@ class StanFitTest(unittest.TestCase):
         )
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
+            model_name='bernoulli',
+            model_exe=exe,
             chain_ids=[1],
             output_basename=output,
-            method_args = sampler_args
+            method_args=sampler_args
         )
         fit = StanFit(args=cmdstan_args, chains=1)
         # TODO - use cmdstan test files instead
@@ -214,7 +215,6 @@ class StanFitTest(unittest.TestCase):
         sys.stdout = sys.__stdout__
         self.assertEqual(capturedOutput.getvalue(), expected)
 
-
     def test_validate_bad_run(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
@@ -227,13 +227,13 @@ class StanFitTest(unittest.TestCase):
         # some chains had errors
         output = os.path.join(badfiles_path, 'bad-transcript-bern')
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
+            model_name='bernoulli',
+            model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args = sampler_args
+            method_args=sampler_args
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         with self.assertRaisesRegex(Exception, 'Exception'):
@@ -242,13 +242,13 @@ class StanFitTest(unittest.TestCase):
         # csv file headers inconsistent
         output = os.path.join(badfiles_path, 'bad-hdr-bern')
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
+            model_name='bernoulli',
+            model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args = sampler_args
+            method_args=sampler_args
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
@@ -261,13 +261,13 @@ class StanFitTest(unittest.TestCase):
         # bad draws
         output = os.path.join(badfiles_path, 'bad-draws-bern')
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
+            model_name='bernoulli',
+            model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args = sampler_args
+            method_args=sampler_args
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
@@ -280,13 +280,13 @@ class StanFitTest(unittest.TestCase):
         # mismatch - column headers, draws
         output = os.path.join(badfiles_path, 'bad-cols-bern')
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
+            model_name='bernoulli',
+            model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args = sampler_args
+            method_args=sampler_args
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes

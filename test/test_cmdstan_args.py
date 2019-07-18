@@ -2,9 +2,36 @@ import os
 import unittest
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs, FixedParamArgs
+from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs, \
+    FixedParamArgs, OptimizeArgs
 
 datafiles_path = os.path.join("test", "data")
+
+
+class OptimizeArgsTest(unittest.TestCase):
+    def test_args_algorithm(self):
+        args = OptimizeArgs(algorithm="xxx")
+        self.assertRaises(ValueError, lambda: args.validate())
+        args = OptimizeArgs(algorithm="Newton")
+        args.validate()
+        cmd = args.compose(None, 'output')
+        self.assertIn("algorithm=newton", cmd)
+
+    def test_args_algorithm_init_alpha(self):
+        args = OptimizeArgs(init_alpha=2e-4)
+        args.validate()
+        cmd = args.compose(None, 'output')
+        self.assertIn("init_alpha=0.0002", cmd)
+        args = OptimizeArgs(init_alpha=-1.0)
+        self.assertRaises(ValueError, lambda: args.validate())
+
+    def test_args_algorithm_iter(self):
+        args = OptimizeArgs(iter=400)
+        args.validate()
+        cmd = args.compose(None, 'output')
+        self.assertIn("iter=400", cmd)
+        args = OptimizeArgs(iter=-1)
+        self.assertRaises(ValueError, lambda: args.validate())
 
 
 class SamplerArgsTest(unittest.TestCase):
@@ -89,12 +116,12 @@ class SamplerArgsTest(unittest.TestCase):
             args.validate(chains=2)
 
     def test_adapt(self):
-        args = SamplerArgs(adapt_engaged = False)
+        args = SamplerArgs(adapt_engaged=False)
         args.validate(chains=4)
         cmd = args.compose(1, '')
         self.assertIn('method=sample algorithm=hmc adapt engaged=0', cmd)
 
-        args = SamplerArgs(adapt_engaged = True)
+        args = SamplerArgs(adapt_engaged=True)
         args.validate(chains=4)
         cmd = args.compose(1, '')
         self.assertIn('method=sample algorithm=hmc adapt engaged=1', cmd)
@@ -158,17 +185,17 @@ class SamplerArgsTest(unittest.TestCase):
         args = SamplerArgs(metric='/no/such/path/to.file')
         with self.assertRaises(ValueError):
             args.validate(chains=4)
-        
+
 
 class CmdStanArgsTest(unittest.TestCase):
     def test_compose(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [1, 2, 3, 4],
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            method_args=sampler_args)
         with self.assertRaises(ValueError):
             cmdstan_args.compose_command(idx=4, csv_file='foo')
         with self.assertRaises(ValueError):
@@ -192,7 +219,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_name='bernoulli',
                 model_exe=exe,
                 chain_ids=None,
-                seed=[1,2,3],
+                seed=[1, 2, 3],
                 inits=jinits,
                 method_args=sampler_args)
 
@@ -204,18 +231,17 @@ class CmdStanArgsTest(unittest.TestCase):
                 inits=[jinits],
                 method_args=sampler_args)
 
-
     def test_args_good(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
 
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [1, 2, 3, 4],
-            data = jdata,
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            data=jdata,
+            method_args=sampler_args)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=1 random seed=', cmd)
         self.assertIn('data file=', cmd)
@@ -223,11 +249,11 @@ class CmdStanArgsTest(unittest.TestCase):
         self.assertIn('method=sample algorithm=hmc', cmd)
 
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [7, 11, 18, 29],
-            data = jdata,
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[7, 11, 18, 29],
+            data=jdata,
+            method_args=sampler_args)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=7 random seed=', cmd)
 
@@ -241,44 +267,44 @@ class CmdStanArgsTest(unittest.TestCase):
         jinits2 = os.path.join(datafiles_path, 'bernoulli.init_2.json')
 
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [1, 2, 3, 4],
-            data = jdata,
-            inits = jinits,
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            data=jdata,
+            inits=jinits,
+            method_args=sampler_args)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('init=', cmd)
 
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [1, 2],
-            data = jdata,
-            inits = [jinits1, jinits2],
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2],
+            data=jdata,
+            inits=[jinits1, jinits2],
+            method_args=sampler_args)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('bernoulli.init_1.json', cmd)
         cmd = cmdstan_args.compose_command(idx=1, csv_file='bern-output-1.csv')
         self.assertIn('bernoulli.init_2.json', cmd)
 
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [1, 2, 3, 4],
-            data = jdata,
-            inits = 0,
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            data=jdata,
+            inits=0,
+            method_args=sampler_args)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('init=0', cmd)
 
         cmdstan_args = CmdStanArgs(
-            model_name = 'bernoulli',
-            model_exe = exe,
-            chain_ids = [1, 2, 3, 4],
-            data = jdata,
-            inits = 3.33,
-            method_args = sampler_args)
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            data=jdata,
+            inits=3.33,
+            method_args=sampler_args)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('init=3.33', cmd)
 
@@ -288,94 +314,94 @@ class CmdStanArgsTest(unittest.TestCase):
         with self.assertRaises(Exception):
             # missing
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe')
+                model_name='bernoulli',
+                model_exe='bernoulli.exe')
 
         with self.assertRaises(Exception):
             # missing
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe')
+                model_name='bernoulli',
+                model_exe='bernoulli.exe')
 
         with self.assertRaises(ValueError):
             # bad filepath
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                data = 'no/such/path/to.file',
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                data='no/such/path/to.file',
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad chain id
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, -4],
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, -4],
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad seed
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
                 seed=4294967299,
-                method_args = sampler_args)
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad seed
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                seed = [1, 2, 3],
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                seed=[1, 2, 3],
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad seed
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                seed = -3,
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                seed=-3,
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad seed
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                seed = 'badseed',
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                seed='badseed',
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad inits
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                inits = -5,
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                inits=-5,
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad inits
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                inits = 'no/such/path/to.file',
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                inits='no/such/path/to.file',
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad inits
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                inits = 'no/such/path/to.file',
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                inits='no/such/path/to.file',
+                method_args=sampler_args)
 
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
         jinits1 = os.path.join(datafiles_path, 'bernoulli.init_1.json')
@@ -384,29 +410,29 @@ class CmdStanArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             # bad inits - files must be unique
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                inits = [jinits, jinits],
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                inits=[jinits, jinits],
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad inits - files must be unique
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                inits = [jinits, jinits1, jinits2],
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                inits=[jinits, jinits1, jinits2],
+                method_args=sampler_args)
 
         with self.assertRaises(ValueError):
             # bad output basename
             cmdstan_args = CmdStanArgs(
-                model_name = 'bernoulli',
-                model_exe = 'bernoulli.exe',
-                chain_ids = [1, 2, 3, 4],
-                output_basename = 'no/such/path/to.file',
-                method_args = sampler_args)
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                output_basename='no/such/path/to.file',
+                method_args=sampler_args)
 
 
 if __name__ == '__main__':

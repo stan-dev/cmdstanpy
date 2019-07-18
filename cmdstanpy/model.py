@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import jsondump, do_command, EXTENSION, cmdstan_path
 
@@ -138,44 +138,85 @@ class Model(object):
         self._exe_file = exe_file
         print('compiled model file: {}'.format(self._exe_file))
 
-    def generate_quantities(
-        self,
-        data: Union[Dict, str] = None,
-        fitted_params_file: str = None,
+    def optimize(
+            self,
+            data: Union[Dict, str] = None,
+            seed: int = None,
+            inits: Union[Dict, float, str] = None,
+            csv_basename: str = None,
+            algorithm: str = None,
+            init_alpha: float = None,
+            iter: int = None
     ) -> StanFit:
         """
-        :param fitted_params_file: The path to a csv file that contains the fitted parameters of the STAN model
+        Wrapper for optimize call
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :param seed: The seed for random number generator Must be an integer
+            between 0 and 2^32 - 1. If unspecified, numpy.random.RandomState()
+            is used to generate a seed which will be used for all chains.
+
+        :param inits:  Specifies how the sampler initializes parameter values.
+            Initializiation is either uniform random on a range centered on 0,
+            exactly 0, or a dictionary or file of initial values for some or
+            all parameters in the model.  The default initialization behavoir
+            will initialize all parameter values on range [-2, 2] on the
+            _unconstrained_ support.  If the expected parameter values are
+            too far from this range, this option may improve adaptation.
+            The following value types are allowed:
+
+            * Single number ``n > 0`` - initialization range is [-n, n].
+            * ``0`` - all parameters are initialized to 0.
+            * dictionary - pairs parameter name : initial value.
+            * string - pathname to a JSON or Rdump data file.
+
+        :param csv_basename:  A path or file name which will be used as the
+            base name for the sampler output files.  The csv output files
+            for each chain are written to file ``<basename>-0.csv``
+            and the console output and error messages are written to file
+            ``<basename>-0.txt``.
+
+        :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
+
+        :param init_alpha: Line search step size for first iteration
+
+        :param iter: Total number of iterations
+
+        :return: StanFit object
         """
-        if not os.file.exists(fitted_params_file):
-                raise ValueError(
-                    'invalid path for fitted_params: {}'.format(
-                        fitted_params_file)
-                )
 
-        if data is not None:
-            if isinstance(data, dict):
-                with tempfile.NamedTemporaryFile(
-                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
-                ) as fd:
-                    data_file = fd.name
-                    print('input data tempfile: {}'.format(fd.name))
-                    jsondump(data_file, data)
-                data = data_file
-
-
-        generate_quantities_args = GenerateQuantitiesArgs(
-            fitted_params_file=fitted_params_file,
+        optimize_args = OptimizeArgs(
+            algorithm=algorithm,
+            init_alpha=init_alpha,
+            iter=iter
         )
 
         args = CmdStanArgs(
             self._name,
             self._exe_file,
+            chain_ids=None,
             data=data,
+            seed=seed,
+            inits=inits,
             output_basename=csv_basename,
-            method_args=generate_quantities_args,
+            method_args=optimize_args,
         )
-        stanfit = StanFit(args=args)
 
+        stanfit = StanFit(args=args, chains=1)
+        dummy_chain_id = 0
+        self._do_sample(stanfit, dummy_chain_id)
+
+        if not stanfit._check_retcodes():
+            msg = 'Error during optimizing'
+            if stanfit._retcode(dummy_chain_id) != 0:
+                msg = '{} Got returned error code {}'.format(
+                    msg, stanfit._retcode(dummy_chain_id)
+                )
+            raise Exception(msg)
+        stanfit._validate_csv_files()
+        return stanfit
 
     def sample(
         self,
