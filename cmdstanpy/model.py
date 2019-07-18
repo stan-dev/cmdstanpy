@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import (
     jsondump, do_command, EXTENSION,
@@ -186,7 +186,6 @@ class Model(object):
 
         print('compiled model file: {}'.format(self._exe_file))
 
-<<<<<<< HEAD
     def optimize(
             self,
             data: Union[Dict, str] = None,
@@ -267,21 +266,34 @@ class Model(object):
             raise Exception(msg)
         stanfit._validate_csv_files()
         return stanfit
-=======
-    def generate_quantities(
+
+    def run_generate_quantities(
         self,
         data: Union[Dict, str] = None,
         fitted_params_file: str = None,
+        seed: int = None,
+        csv_basename: str = None,
     ) -> StanFit:
         """
-        :param fitted_params_file: The path to a csv file that contains the fitted parameters of the STAN model
-        """
-        if not os.file.exists(fitted_params_file):
-                raise ValueError(
-                    'invalid path for fitted_params: {}'.format(
-                        fitted_params_file)
-                )
+        Wrapper for generate_quantities call
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
 
+        :param fitted_params_file: The path to a csv file that contains the fitted
+            parameters of the STAN model from the sample call.
+        
+        :param csv_basename: A path or file name which will be used as the
+            base name for the sampler output files.  The csv output files
+            for each chain are written to file ``<basename>-<chain_id>.csv``
+            and the console output and error messages are written to file
+            ``<basename>-<chain_id>.txt``.
+        
+        """
+        generate_quantities_args = GenerateQuantitiesArgs(
+            fitted_params_file=fitted_params_file,
+        )
+        print("generate args")
         if data is not None:
             if isinstance(data, dict):
                 with tempfile.NamedTemporaryFile(
@@ -291,22 +303,23 @@ class Model(object):
                     print('input data tempfile: {}'.format(fd.name))
                     jsondump(data_file, data)
                 data = data_file
-
-
-        generate_quantities_args = GenerateQuantitiesArgs(
-            fitted_params_file=fitted_params_file,
-        )
+        print("got data") 
+        print(data)
+        print(self._name)
+        print(self._exe_file)
+        print(generate_quantities_args)
 
         args = CmdStanArgs(
             self._name,
             self._exe_file,
+            chain_ids=None,
             data=data,
+            seed=seed,
             output_basename=csv_basename,
-            method_args=generate_quantities_args,
+            method_args=generate_quantities_args
         )
         stanfit = StanFit(args=args)
-
->>>>>>> a9c6a259fff8c6c30c6f29fe02fc32211e2db7a2
+        return stanfit
 
     def sample(
         self,
