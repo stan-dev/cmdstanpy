@@ -24,6 +24,8 @@ class OptimizeArgsTest(unittest.TestCase):
         self.assertIn("init_alpha=0.0002", cmd)
         args = OptimizeArgs(init_alpha=-1.0)
         self.assertRaises(ValueError, lambda: args.validate())
+        args = OptimizeArgs(init_alpha=1.0, algorithm="Newton")
+        self.assertRaises(ValueError, lambda: args.validate())
 
     def test_args_algorithm_iter(self):
         args = OptimizeArgs(iter=400)

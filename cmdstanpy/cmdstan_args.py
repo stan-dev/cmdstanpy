@@ -2,13 +2,11 @@
 CmdStan arguments
 """
 import os
-import tempfile
-from numbers import Integral, Real
-from typing import List, Union, Tuple
-
 import numpy as np
 
-from cmdstanpy.utils import check_csv, read_metric
+from numbers import Integral, Real
+from typing import List, Union
+from cmdstanpy.utils import read_metric
 
 class SamplerArgs(object):
     """Arguments for the NUTS adaptive sampler."""
@@ -249,6 +247,10 @@ class OptimizeArgs(object):
             )
 
         if self.init_alpha is not None:
+            if self.algorithm == "Newton":
+                raise ValueError(
+                    "init_alpha must not be set when algorithm is Newton"
+                )
             if isinstance(self.init_alpha, Real):
                 if self.init_alpha < 0:
                     raise ValueError("init_alpha must be greater than 0")

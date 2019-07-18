@@ -1,6 +1,4 @@
-import io
 import os
-import sys
 import unittest
 
 from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
@@ -77,13 +75,9 @@ class StanFitTest(unittest.TestCase):
                 len(fit.column_names),
             ),
         )
-        df = fit.summary()
-        self.assertTrue(df.shape == (2, 9))
-        capturedOutput = io.StringIO()
-        sys.stdout = capturedOutput
-        fit.diagnose()
-        sys.stdout = sys.__stdout__
-        self.assertEqual(capturedOutput.getvalue(), 'No problems detected.\n')
+        _ = fit.summary()
+
+        self.assertIsNone(fit.diagnose())
 
     def test_validate_big_run(self):
         exe = os.path.join(datafiles_path, 'bernoulli')  # fake out validation
@@ -206,14 +200,10 @@ class StanFitTest(unittest.TestCase):
                 'Trajectories that are prematurely terminated ',
                 'due to this limit will result in slow ',
                 'exploration and you should increase the ',
-                'limit to ensure optimal performance.\n',
+                'limit to ensure optimal performance.',
             ]
         )
-        capturedOutput = io.StringIO()
-        sys.stdout = capturedOutput
-        fit.diagnose()
-        sys.stdout = sys.__stdout__
-        self.assertEqual(capturedOutput.getvalue(), expected)
+        self.assertIn(expected, fit.diagnose())
 
     def test_validate_bad_run(self):
         exe = os.path.join(datafiles_path, 'bernoulli')

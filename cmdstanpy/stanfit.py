@@ -2,18 +2,18 @@ import os
 import re
 import shutil
 import tempfile
-from typing import Dict, List, Union, Tuple
+from typing import List, Tuple
 from collections import OrderedDict
 import numpy as np
 import pandas as pd
+import logging
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     check_csv,
-    read_metric,
     EXTENSION,
     cmdstan_path,
-    do_command,
+    do_command, get_logger
 )
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 
@@ -21,11 +21,17 @@ from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 class StanFit(object):
     """Record of running NUTS sampler on a model."""
 
-    def __init__(self, args: CmdStanArgs, chains: int = 4) -> None:
+    def __init__(
+            self,
+            args: CmdStanArgs,
+            chains: int = 4,
+            logger: logging.Logger = None
+    ) -> None:
         """Initialize object."""
         self._args = args
         self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
         self._chains = chains
+        self._logger = logger or get_logger()
         if chains < 1:
             raise ValueError(
                 'chains must be positive integer value, '
@@ -303,17 +309,18 @@ class StanFit(object):
         cmd = '{} --csv_file={} {}'.format(
             cmd_path, tmp_csv_path, ' '.join(self.csv_files)
         )
-        do_command(cmd.split())  # breaks on all whitespace
+        # breaks on all whitespace
+        do_command(cmd.split(), logger=self._logger)
         summary_data = pd.read_csv(
             tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
         )
         mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
 
-    def diagnose(self) -> None:
+    def diagnose(self) -> str:
         """
         Run cmdstan/bin/diagnose over all output csv files.
-        Echo diagnose stdout/stderr to console.
+        Returns output of diagnose (stdout/stderr)
 
         The diagnose utility reads the outputs of all chains
         and checks for the following potential problems:
@@ -323,17 +330,18 @@ class StanFit(object):
         + Low E-BFMI values (sampler transitions HMC potential energy)
         + Low effective sample sizes
         + High R-hat values
+
+        :return str empty if no problems found
         """
         self._sampling_only()
 
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         csv_files = ' '.join(self.csv_files)
         cmd = '{} {} '.format(cmd_path, csv_files)
-        result = do_command(cmd=cmd.split())
-        if result is None:
-            print('No problems detected.')
-        else:
-            print(result)
+        result = do_command(cmd=cmd.split(), logger=self._logger)
+        if result:
+            self._logger.warning(result)
+        return result
 
     def get_drawset(self, params: List[str] = None) -> pd.DataFrame:
         """
@@ -392,10 +400,10 @@ class StanFit(object):
                     'file exists, not overwriting: {}'.format(to_path)
                 )
             try:
-                print(
-                    'saving tmpfile: "{}" as: "{}"'.format(
-                        self.csv_files[i], to_path
-                    )
+                self._logger.debug(
+                    'saving tmpfile: "%s" as: "%s"',
+                    self.csv_files[i],
+                    to_path
                 )
                 shutil.move(self.csv_files[i], to_path)
                 self.csv_files[i] = to_path
