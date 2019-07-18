@@ -59,7 +59,7 @@ class MaybeDictToFilePath(object):
                         mode='w+', suffix='.json', dir=TMPDIR, delete=False
                 ) as fd:
                     data_file = fd.name
-                    self._logger.debug('input tempfile: {}'.format(fd.name))
+                    self._logger.debug('input tempfile: %s', fd.name)
                     jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
