@@ -535,28 +535,20 @@ class Model(object):
         generate_quantities_args = GenerateQuantitiesArgs(
         fitted_params_file=fitted_params_file,
         )
-        
-        # if data is not None:
-        #     if isinstance(data, dict):
-        #         with tempfile.NamedTemporaryFile(
-        #             mode='w+', suffix='.json', dir=TMPDIR, delete=False
-        #         ) as fd:
-        #             data_file = fd.name
-        #             print('input data tempfile: {}'.format(fd.name))
-        #             jsondump(data_file, data)
-        #         data = data_file
-        
-        args = CmdStanArgs(
-            self._name,
-            self._exe_file,
-            chain_ids=None,
-            data=data,
-            seed=seed,
-            output_basename=csv_basename,
-            method_args=generate_quantities_args
-        )
-        stanfit = StanFit(args=args, chains=1)
-        dummy_chain_id = 0
-        self._do_sample(stanfit, dummy_chain_id)
+        print(type(data))
+        with MaybeDictToFilePath(data, None) as (_data, _inits):
+            print(type(_data)) 
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=None,
+                data=_data,
+                seed=seed,
+                output_basename=csv_basename,
+                method_args=generate_quantities_args
+            )
+            stanfit = StanFit(args=args, chains=1)
+            dummy_chain_id = 0
+            self._do_sample(stanfit, dummy_chain_id)
         return stanfit
 
