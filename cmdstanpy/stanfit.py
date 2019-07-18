@@ -154,7 +154,7 @@ class StanFit(object):
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
-        if self.is_optimizing:
+        if ~self.is_sampling:
             raise RuntimeError("Method available only when sampling!")
 
     @property
@@ -212,12 +212,12 @@ class StanFit(object):
             if i == 0:
                 dzero = check_csv(
                     self.csv_files[i],
-                    is_optimizing=self.is_optimizing
+                    is_sampling=self.is_sampling
                 )
             else:
                 d = check_csv(
                     self.csv_files[i],
-                    is_optimizing=self.is_optimizing
+                    is_sampling=self.is_sampling
                 )
                 for key in dzero:
                     if key not in ('id', 'first_draw') and dzero[key] != d[key]:
