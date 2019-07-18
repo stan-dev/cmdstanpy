@@ -29,7 +29,8 @@ class StanFit(object):
     ) -> None:
         """Initialize object."""
         self._args = args
-        self._is_sampling = isinstance(self._args.method_args, SamplerArgs)
+        self.is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
+        self.do_scan_metric = isinstance(self._args.method_args,SamplerArgs)
         self._chains = chains
         self._logger = logger or get_logger()
         if chains < 1:

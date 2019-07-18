@@ -222,7 +222,7 @@ def check_csv(path: str, is_sampling: bool = True) -> Dict:
     return meta
 
 
-def scan_stan_csv(path: str, is_sampling: bool = False) -> Dict:
+def scan_stan_csv(path: str, do_scan_metric: bool = True) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
@@ -230,7 +230,7 @@ def scan_stan_csv(path: str, is_sampling: bool = False) -> Dict:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
         lineno = scan_warmup(fp, dict, lineno)
-        if is_sampling:
+        if do_scan_metric:
             lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
     return dict
