@@ -492,7 +492,7 @@ class Model(object):
         Spawn process, capture console output to file, record returncode.
         """
         cmd = stanfit.cmds[idx]
-        self._logger.info('start chain {}.  '.format(idx + 1))
+        self._logger.info('start chain %u', idx + 1)
         self._logger.debug("sampling: %s", cmd)
         proc = subprocess.Popen(
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
