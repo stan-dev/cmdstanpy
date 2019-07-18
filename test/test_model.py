@@ -1,9 +1,6 @@
-import io
 import os
-import sys
 import unittest
 
-from cmdstanpy import TMPDIR
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import Model
 import numpy as np

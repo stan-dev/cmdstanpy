@@ -10,11 +10,19 @@ import re
 import subprocess
 import shutil
 import tempfile
+import logging
 
 from typing import Dict, TextIO, List, Union
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
+
+
+def get_logger():
+    logger = logging.getLogger('cmdstanpy')
+    if len(logger.handlers) == 0:
+        logging.basicConfig(level=logging.INFO)
+    return logger
 
 
 def get_latest_cmdstan(dot_dir: str) -> str:
@@ -37,9 +45,13 @@ def get_latest_cmdstan(dot_dir: str) -> str:
 
 
 class MaybeDictToFilePath(object):
-    def __init__(self, *objs: Union[str, dict]):
+    def __init__(
+            self,
+            *objs: Union[str, dict],
+            logger: logging.Logger = None):
         self._unlink = [False] * len(objs)
         self._paths = [""] * len(objs)
+        self._logger = logger or get_logger()
         i = 0
         for o in objs:
             if isinstance(o, dict):
@@ -47,7 +59,7 @@ class MaybeDictToFilePath(object):
                         mode='w+', suffix='.json', dir=TMPDIR, delete=False
                 ) as fd:
                     data_file = fd.name
-                    print('input tempfile: {}'.format(fd.name))
+                    self._logger.debug('input tempfile: {}'.format(fd.name))
                     jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
@@ -413,11 +425,13 @@ def read_rdump_metric(path: str) -> List[int]:
         return [int(d) for d in dims]
 
 
-def do_command(cmd: str, cwd: str = None) -> str:
+def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     """
     Spawn process, print stdout/stderr to console.
     Throws exception on non-zero returncode.
     """
+    if logger:
+        logger.debug("cmd: {}".format(cmd))
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
