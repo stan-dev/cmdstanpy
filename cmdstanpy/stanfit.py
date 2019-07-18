@@ -154,7 +154,7 @@ class StanFit(object):
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
-        if ~self.is_sampling:
+        if not self.is_sampling:
             raise RuntimeError("Method available only when sampling!")
 
     @property

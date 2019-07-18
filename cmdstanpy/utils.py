@@ -207,7 +207,7 @@ def check_csv(path: str, is_sampling: bool = True) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_stan_csv(path, is_sampling=is_sampling)
     # check draws against spec
-    if ~is_sampling:
+    if not is_sampling:
         draws_spec = 1
     else:
         draws_spec = int(meta.get('num_samples',1000))
