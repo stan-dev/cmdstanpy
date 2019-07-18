@@ -29,7 +29,7 @@ class StanFit(object):
     ) -> None:
         """Initialize object."""
         self._args = args
-        self._is_sampling = isinstance(self._args.method_args, SamplerArgs)
+        self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
         self._chains = chains
         self._logger = logger or get_logger()
         if chains < 1:
@@ -134,9 +134,9 @@ class StanFit(object):
         return self._stepsize
 
     @property
-    def is_sampling(self) -> bool:
+    def is_optimizing(self) -> bool:
         """Returns true if we are sampling rather than optimizing or running generated quantities"""
-        return self._is_sampling
+        return self._is_optimizing
 
     @property
     def optimized_params_np(self) -> np.array:
@@ -154,7 +154,7 @@ class StanFit(object):
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
-        if not self.is_sampling:
+        if self.is_optimizing:
             raise RuntimeError("Method available only when sampling!")
 
     @property
@@ -212,12 +212,12 @@ class StanFit(object):
             if i == 0:
                 dzero = check_csv(
                     self.csv_files[i],
-                    is_sampling=self.is_sampling
+                    is_optimizing=self.is_optimizing
                 )
             else:
                 d = check_csv(
                     self.csv_files[i],
-                    is_sampling=self.is_sampling
+                    is_optimizing=self.is_optimizing
                 )
                 for key in dzero:
                     if key not in ('id', 'first_draw') and dzero[key] != d[key]:
