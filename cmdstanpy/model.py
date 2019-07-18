@@ -130,7 +130,7 @@ class Model(object):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()
             if overwrite or not os.path.exists(hpp_file):
-                self._logger.info('stan to c++ ({})'.format(hpp_file))
+                self._logger.info('stan to c++ (%s)', hpp_file)
                 stanc_path = os.path.join(
                     cmdstan_path(), 'bin', 'stanc' + EXTENSION
                 )
@@ -190,7 +190,7 @@ class Model(object):
             else:
                 self._exe_file = exe_file
 
-        self._logger.info('compiled model file: {}'.format(self._exe_file))
+        self._logger.info('compiled model file: %s', self._exe_file)
 
     def optimize(
             self,
@@ -269,7 +269,7 @@ class Model(object):
                 msg = '{} Got returned error code {}'.format(
                     msg, stanfit._retcode(dummy_chain_id)
                 )
-            raise Exception(msg)
+            raise RuntimeError(msg)
         stanfit._validate_csv_files()
         return stanfit
 
@@ -435,10 +435,10 @@ class Model(object):
                 'cores must be a positive integer value, found {}'.format(cores)
             )
         if cores > cores_avail:
-            self._logger.warn(
-                'requested {} cores, only {} available'.format(
-                    cores, cpu_count()
-                )
+            self._logger.warning(
+                'requested %u cores, only %u available',
+                cores,
+                cpu_count()
             )
             cores = cores_avail
 
@@ -482,7 +482,7 @@ class Model(object):
                         msg = '{}, chain {} returned error code {}'.format(
                             msg, i, stanfit._retcode(i)
                         )
-                raise Exception(msg)
+                raise RuntimeError(msg)
             stanfit._validate_csv_files()
         return stanfit
 
@@ -492,14 +492,15 @@ class Model(object):
         Spawn process, capture console output to file, record returncode.
         """
         cmd = stanfit.cmds[idx]
-        self._logger.info('start chain {}.  '.format(idx + 1))
+        self._logger.info('start chain %u', idx + 1)
+        self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         proc.wait()
         stdout, stderr = proc.communicate()
         transcript_file = stanfit.console_files[idx]
-        self._logger.info('finish chain {}.  '.format(idx + 1))
+        self._logger.info('finish chain %u', idx + 1)
         with open(transcript_file, 'w+') as transcript:
             if stdout:
                 transcript.write(stdout.decode('utf-8'))
