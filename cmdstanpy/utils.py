@@ -8,8 +8,11 @@ import numpy as np
 import platform
 import re
 import subprocess
+import shutil
+import tempfile
 
-from typing import Dict, TextIO, List
+from typing import Dict, TextIO, List, Union
+from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -33,6 +36,40 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     return latest
 
 
+class MaybeDictToFilePath(object):
+    def __init__(self, *objs: Union[str, dict]):
+        self._unlink = [False] * len(objs)
+        self._paths = [""] * len(objs)
+        i = 0
+        for o in objs:
+            if isinstance(o, dict):
+                with tempfile.NamedTemporaryFile(
+                        mode='w+', suffix='.json', dir=TMPDIR, delete=False
+                ) as fd:
+                    data_file = fd.name
+                    print('input tempfile: {}'.format(fd.name))
+                    jsondump(data_file, o)
+                self._paths[i] = data_file
+                self._unlink[i] = True
+            elif isinstance(o, str):
+                if not os.path.exists(o):
+                    raise ValueError("File doesn't exists {}".format(o))
+                self._paths[i] = o
+            elif o is None:
+                self._paths[i] = None
+            else:
+                raise ValueError("data must be string or dict")
+            i += 1
+
+    def __enter__(self):
+        return self._paths
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for can_unlink, path in zip(self._unlink, self._paths):
+            if can_unlink and path:
+                os.remove(path)
+
+
 def validate_cmdstan_path(path: str) -> None:
     """
     Validate that CmdStan directory exists and binaries have been built.
@@ -45,6 +82,35 @@ def validate_cmdstan_path(path: str) -> None:
             'no CmdStan binaries found, '
             'run command line script "install_cmdstan"'
         )
+
+
+class TemporaryCopiedFile(object):
+    def __init__(self, file_path: str):
+        self._path = None
+        self._tmpdir = None
+        if " " in file_path:
+            tmpdir = tempfile.mkdtemp()
+            if " " in tmpdir:
+                raise RuntimeError(
+                    "Unable to generate temporary path without spaces! \n" +
+                    "Please move your stan file to location without spaces."
+                )
+
+            _, path = tempfile.mkstemp(suffix=".stan", dir=tmpdir)
+
+            shutil.copy(file_path, path)
+            self._path = path
+            self._tmpdir = tmpdir
+        else:
+            self._changed = False
+            self._path = file_path
+
+    def __enter__(self):
+        return self._path, self._tmpdir is not None
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._tmpdir:
+            shutil.rmtree(self._tmpdir, ignore_errors=True)
 
 
 def set_cmdstan_path(path: str) -> None:

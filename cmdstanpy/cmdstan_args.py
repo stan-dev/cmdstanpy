@@ -10,36 +10,6 @@ import numpy as np
 
 from cmdstanpy.utils import check_csv, read_metric
 
-class GenerateQuantitiesArgs(object):
-    """Arguments for the generated quantities block."""
-    def __init__(
-        self,
-        fitted_params_file: str = None,
-    ) -> None:
-        """Initialize object."""
-        self.fitted_params_file = fitted_params_file
-
-    def validate(self):
-        """
-        Check arguments correctness and consistency.
-        * file for fitted_params exists
-        """
-        if not os.file.exists(self.fitted_params_file):
-                raise ValueError(
-                    'invalid path for fitted_params: {}'.format(
-                        self.fitted_params_file)
-                )
-    def compose(self, idx: int, cmd: str) -> str:
-        """
-        Compose CmdStan command for method-specific non-default arguments.
-        """
-        cmd = cmd + ' method=generate_quantities'
-        cmd = '{} fitted_params="{}"'.format(cmd, self.fitted_params_file)
-        return cmd
-        
-
-
-
 class SamplerArgs(object):
     """Arguments for the NUTS adaptive sampler."""
 
@@ -305,7 +275,35 @@ class OptimizeArgs(object):
             cmd += ' iter={}'.format(self.iter)
         return cmd
 
+class GenerateQuantitiesArgs(object):
+    """Arguments for the generated quantities block."""
+    def __init__(
+        self,
+        fitted_params_file: str = None,
+    ) -> None:
+        """Initialize object."""
+        self.fitted_params_file  = fitted_params_file
 
+    def validate(self):
+        """
+        Check arguments correctness and consistency.
+        * file for fitted_params exists
+        """
+        if self.fitted_params_file is not None:
+            if not os.path.exists(self.fitted_params_file):
+                raise ValueError(
+                    'Invalid path for fitted_params: {}'.format(
+                        self.fitted_params_file)
+                )
+    def compose(self, idx: int, cmd: str) -> str:
+        """
+        Compose CmdStan command for method-specific non-default arguments.
+        """
+        if self.fitted_params_file is not None:
+            cmd = cmd + ' method=generate_quantities'
+            cmd = '{} fitted_params="{}"'.format(cmd, self.fitted_params_file)
+            return cmd
+        
 class CmdStanArgs(object):
     """
     Container for CmdStan command line arguments.
@@ -318,8 +316,8 @@ class CmdStanArgs(object):
         model_name: str,
         model_exe: str,
         chain_ids: Union[List[int], None],
-        method_args: Union[SamplerArgs, FixedParamArgs, OptimizeArgs],
-        data: str = None,
+        method_args: Union[SamplerArgs, FixedParamArgs, OptimizeArgs, GenerateQuantitiesArgs],
+        data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
         output_basename: str = None,
@@ -410,9 +408,14 @@ class CmdStanArgs(object):
                             ' found {}'.format(self.seed[i])
                         )
 
-        if self.data is not None:
+        if isinstance(self.data, str):
             if not os.path.exists(self.data):
                 raise ValueError('no such file {}'.format(self.data))
+        elif self.data is None:
+            if isinstance(self.method_args, OptimizeArgs):
+                raise ValueError('data must be set when optimizing')
+        elif not isinstance(self.data, dict):
+            raise ValueError('data must be string or dict')
 
         if self.inits is not None:
             if isinstance(self.inits, Real):

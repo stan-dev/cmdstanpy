@@ -1,16 +1,19 @@
 import os
 import os.path
 import unittest
+import tempfile
+import shutil
 import json
 
-from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     cmdstan_path,
     set_cmdstan_path,
     validate_cmdstan_path,
     get_latest_cmdstan,
     check_csv,
+    MaybeDictToFilePath,
     read_metric,
+    TemporaryCopiedFile
 )
 
 
@@ -27,6 +30,35 @@ class CmdStanPathTest(unittest.TestCase):
             os.path.join('~', '.cmdstanpy', 'cmdstan')
         )
         self.assertTrue(cmdstan_path().startswith(abs_rel_path))
+
+    def test_non_spaces_location(self):
+        good_path = "/tmp/"
+        with TemporaryCopiedFile(good_path) as (p, is_changed):
+            self.assertEqual(p, good_path)
+            self.assertFalse(is_changed)
+
+        # prepare files for test
+        bad_path = os.path.join(tempfile.mkdtemp(), "bad dir")
+        os.mkdir(bad_path)
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        stan_bad = os.path.join(bad_path, "bad name.stan")
+        shutil.copy(stan, stan_bad)
+
+        stan_copied = None
+        try:
+            with TemporaryCopiedFile(stan_bad) as (p, is_changed):
+                stan_copied = p
+                self.assertTrue(os.path.exists(stan_copied))
+                self.assertTrue(" " not in stan_copied)
+                self.assertTrue(is_changed)
+                raise RuntimeError
+        except RuntimeError:
+            pass
+
+        self.assertFalse(os.path.exists(stan_copied))
+
+        # cleanup after test
+        shutil.rmtree(bad_path, ignore_errors=True)
 
     def test_set_path(self):
         install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
@@ -49,6 +81,23 @@ class CmdStanPathTest(unittest.TestCase):
         path_test = os.path.abspath('test')
         with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
             validate_cmdstan_path(path_test)
+
+    def test_dict_to_file(self):
+        file_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
+        dict_good = {"a": "A"}
+        created_tmp = None
+        with MaybeDictToFilePath(file_good, dict_good) as (f1, f2):
+            self.assertTrue(os.path.exists(f1))
+            self.assertTrue(os.path.exists(f2))
+            with open(f2) as f2_d:
+                self.assertEqual(json.load(f2_d), dict_good)
+            created_tmp = f2
+        self.assertTrue(os.path.exists(file_good))
+        self.assertFalse(os.path.exists(created_tmp))
+
+        with self.assertRaises(ValueError):
+            with MaybeDictToFilePath(123, dict_good) as (f1, f2):
+                pass
 
 
 class ReadStanCsvTest(unittest.TestCase):
