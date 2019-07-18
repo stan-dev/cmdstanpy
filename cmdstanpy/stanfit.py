@@ -15,7 +15,7 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command, get_logger
 )
-from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs,GenerateQuantitiesArgs,SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs,SamplerArgs
 
 
 class StanFit(object):
@@ -29,8 +29,8 @@ class StanFit(object):
     ) -> None:
         """Initialize object."""
         self._args = args
-        self.is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
-        self.do_scan_metric = isinstance(self._args.method_args,SamplerArgs)
+        self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
+        self._do_scan_metric = isinstance(self._args.method_args, SamplerArgs)
         self._chains = chains
         self._logger = logger or get_logger()
         if chains < 1:
@@ -135,9 +135,14 @@ class StanFit(object):
         return self._stepsize
 
     @property
-    def is_sampling(self) -> bool:
+    def is_optimizing(self) -> bool:
+        """Returns true if we are optimizing rather than sampling"""
+        return self._is_optimizing
+
+    @property
+    def do_scan_metric(self) -> bool:
         """Returns true if we are sampling rather than optimizing or running generated quantities"""
-        return self._is_sampling
+        return self._do_scan_metric
 
     @property
     def optimized_params_np(self) -> np.array:
@@ -155,7 +160,7 @@ class StanFit(object):
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
-        if not self.is_sampling:
+        if self.is_optimizing:
             raise RuntimeError("Method available only when sampling!")
 
     @property
@@ -171,6 +176,20 @@ class StanFit(object):
         if self._sample is None:
             self._assemble_sample()
         return self._sample
+
+    @property
+    def generated_quantities(self) -> pd.core.frame.DataFrame:
+        """
+        A 3-D numpy ndarray which contains all draws across all chain arranged
+        as (draws, chains, columns) stored column major so that the values
+        for each parameter are stored contiguously in memory, likewise
+        all draws from a chain are contiguous.
+        """
+        
+
+        if self._generated_quantities is None:
+            self._assemble_generated_quantities()
+        return self._generated_quantities
 
     def _check_retcodes(self) -> bool:
         """True when all chains have retcode 0."""
@@ -213,12 +232,14 @@ class StanFit(object):
             if i == 0:
                 dzero = check_csv(
                     self.csv_files[i],
-                    is_sampling=self.is_sampling
+                    is_optimizing=self.is_optimizing,
+                    do_scan_metric=self.do_scan_metric
                 )
             else:
                 d = check_csv(
                     self.csv_files[i],
-                    is_sampling=self.is_sampling
+                    is_optimizing=self.is_optimizing,
+                    do_scan_metric=self.do_scan_metric
                 )
                 for key in dzero:
                     if key not in ('id', 'first_draw') and dzero[key] != d[key]:
@@ -233,6 +254,14 @@ class StanFit(object):
         self._num_params = dzero['num_params']
         self._first_draw = dzero.get('first_draw')
         self._metric_type = dzero.get('metric')
+
+    def _assemble_generated_quantities(self) -> None:
+        df_list = []
+        for chain in range(self._chains):
+            df_list.append(pd.read_csv(self.csv_files[chain], comment='#'))
+        self._generated_quantities = pd.concat(df_list).to_numpy()
+
+
 
     def _assemble_sample(self) -> None:
         """
