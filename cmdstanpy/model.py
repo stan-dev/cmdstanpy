@@ -536,21 +536,16 @@ class Model(object):
         fitted_params_file=fitted_params_file,
         )
         
-        if data is not None:
-            if isinstance(data, dict):
-                with tempfile.NamedTemporaryFile(
-                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
-                ) as fd:
-                    data_file = fd.name
-                    print('input data tempfile: {}'.format(fd.name))
-                    jsondump(data_file, data)
-                data = data_file
-        print("got data") 
-        print(data)
-        print(self._name)
-        print(self._exe_file)
-        print(generate_quantities_args)
-
+        # if data is not None:
+        #     if isinstance(data, dict):
+        #         with tempfile.NamedTemporaryFile(
+        #             mode='w+', suffix='.json', dir=TMPDIR, delete=False
+        #         ) as fd:
+        #             data_file = fd.name
+        #             print('input data tempfile: {}'.format(fd.name))
+        #             jsondump(data_file, data)
+        #         data = data_file
+        
         args = CmdStanArgs(
             self._name,
             self._exe_file,
@@ -560,6 +555,8 @@ class Model(object):
             output_basename=csv_basename,
             method_args=generate_quantities_args
         )
-        stanfit = StanFit(args=args)
+        stanfit = StanFit(args=args, chains=1)
+        dummy_chain_id = 0
+        self._do_sample(stanfit, dummy_chain_id)
         return stanfit
 

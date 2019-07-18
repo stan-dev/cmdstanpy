@@ -286,7 +286,7 @@ class GenerateQuantitiesArgs(object):
         """Initialize object."""
         self.fitted_params_file  = fitted_params_file
 
-    def validate(self):
+    def validate(self,chains=None) -> None:
         """
         Check arguments correctness and consistency.
         * file for fitted_params exists
@@ -303,7 +303,7 @@ class GenerateQuantitiesArgs(object):
         """
         if self.fitted_params_file is not None:
             cmd = cmd + ' method=generate_quantities'
-            cmd = '{} fitted_params="{}"'.format(cmd, self.fitted_params_file)
+            cmd = '{} fitted_params={}'.format(cmd, self.fitted_params_file)
             return cmd
         
 class CmdStanArgs(object):

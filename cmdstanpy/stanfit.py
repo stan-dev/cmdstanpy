@@ -73,6 +73,7 @@ class StanFit(object):
         self._stepsize = None
         self._sample = None
         self._first_draw = None
+        self._generated_quantities = None
 
     def __repr__(self) -> str:
         repr = 'StanFit(args={}, chains={}'.format(self._args, self._chains)
