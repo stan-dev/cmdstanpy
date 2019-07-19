@@ -59,7 +59,7 @@ class MaybeDictToFilePath(object):
                         mode='w+', suffix='.json', dir=TMPDIR, delete=False
                 ) as fd:
                     data_file = fd.name
-                    self._logger.debug('input tempfile: {}'.format(fd.name))
+                    self._logger.debug('input tempfile: %s', fd.name)
                     jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
@@ -431,7 +431,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     Throws exception on non-zero returncode.
     """
     if logger:
-        logger.debug("cmd: {}".format(cmd))
+        logger.debug('cmd: %s', cmd)
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )

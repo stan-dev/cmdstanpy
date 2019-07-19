@@ -401,9 +401,9 @@ class StanFit(object):
                 )
             try:
                 self._logger.debug(
-                    'saving tmpfile: "{}" as: "{}"'.format(
-                        self.csv_files[i], to_path
-                    )
+                    'saving tmpfile: "%s" as: "%s"',
+                    self.csv_files[i],
+                    to_path
                 )
                 shutil.move(self.csv_files[i], to_path)
                 self.csv_files[i] = to_path
