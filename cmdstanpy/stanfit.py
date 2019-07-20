@@ -383,6 +383,8 @@ class StanFit(object):
             dir = '.'
         test_path = os.path.join(dir, '.{}-test.tmp'.format(basename))
         try:
+            if not os.path.exists(dir):
+                os.makedirs(dir, exist_ok=True)
             with open(test_path, 'w') as fd:
                 pass
             os.remove(test_path)  # cleanup
