@@ -166,17 +166,7 @@ class StanFitTest(unittest.TestCase):
         for i in range(bern_fit.chains):  # cleanup default dir
             os.remove(bern_fit.csv_files[i])
             os.remove(bern_fit.console_files[i])
-
-        # regenerate to tmpdir, save to no such dir
-        bern_fit = bern_model.sample(data=jdata,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=200)
-        with self.assertRaisesRegex(Exception, 'cannot save'):
-            bern_fit.save_csvfiles(
-                dir=os.path.join('no', 'such', 'dir'), basename=basename
-            )
+                
 
     def test_diagnose_divergences(self):
         exe = os.path.join(datafiles_path, 'bernoulli')  # fake out validation
