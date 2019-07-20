@@ -13,7 +13,8 @@ from cmdstanpy.utils import (
     check_csv,
     EXTENSION,
     cmdstan_path,
-    do_command, get_logger
+    do_command,
+    get_logger,
 )
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 
@@ -22,10 +23,7 @@ class StanFit(object):
     """Record of running NUTS sampler on a model."""
 
     def __init__(
-            self,
-            args: CmdStanArgs,
-            chains: int = 4,
-            logger: logging.Logger = None
+        self, args: CmdStanArgs, chains: int = 4, logger: logging.Logger = None
     ) -> None:
         """Initialize object."""
         self._args = args
@@ -210,13 +208,11 @@ class StanFit(object):
         for i in range(self._chains):
             if i == 0:
                 dzero = check_csv(
-                    self.csv_files[i],
-                    is_optimizing=self.is_optimizing
+                    self.csv_files[i], is_optimizing=self.is_optimizing
                 )
             else:
                 d = check_csv(
-                    self.csv_files[i],
-                    is_optimizing=self.is_optimizing
+                    self.csv_files[i], is_optimizing=self.is_optimizing
                 )
                 for key in dzero:
                     if key not in ('id', 'first_draw') and dzero[key] != d[key]:
@@ -402,9 +398,7 @@ class StanFit(object):
                 )
             try:
                 self._logger.debug(
-                    'saving tmpfile: "%s" as: "%s"',
-                    self.csv_files[i],
-                    to_path
+                    'saving tmpfile: "%s" as: "%s"', self.csv_files[i], to_path
                 )
                 shutil.move(self.csv_files[i], to_path)
                 self.csv_files[i] = to_path

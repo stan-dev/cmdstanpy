@@ -131,9 +131,7 @@ class SamplerArgs(object):
                     )
                 for i, metric in enumerate(self.metric):
                     if not os.path.exists(metric):
-                        raise ValueError(
-                            'no such file {}'.format(metric)
-                        )
+                        raise ValueError('no such file {}'.format(metric))
                     if i == 0:
                         dims = read_metric(metric)
                     else:
@@ -226,11 +224,8 @@ class OptimizeArgs(object):
     OPTIMIZE_ALGOS = {"BFGS", "LBFGS", "Newton"}
 
     def __init__(
-            self,
-            algorithm: str = None,
-            init_alpha: Real = None,
-            iter: int = None
-            ) -> None:
+        self, algorithm: str = None, init_alpha: Real = None, iter: int = None
+    ) -> None:
 
         self.algorithm = algorithm
         self.init_alpha = init_alpha
@@ -240,11 +235,14 @@ class OptimizeArgs(object):
         """
         Check arguments correctness and consistency.
         """
-        if self.algorithm is not None and \
-                self.algorithm not in self.OPTIMIZE_ALGOS:
+        if (
+            self.algorithm is not None
+            and self.algorithm not in self.OPTIMIZE_ALGOS
+        ):
             raise ValueError(
-                "Please specify optimizer algorithms as one of [{}]"
-                .format(", ".join(self.OPTIMIZE_ALGOS))
+                "Please specify optimizer algorithms as one of [{}]".format(
+                    ", ".join(self.OPTIMIZE_ALGOS)
+                )
             )
 
         if self.init_alpha is not None:
@@ -334,7 +332,8 @@ class CmdStanArgs(object):
             if not os.path.exists(os.path.dirname(self.output_basename)):
                 raise ValueError(
                     'invalid path for output files: {}'.format(
-                        self.output_basename)
+                        self.output_basename
+                    )
                 )
             try:
                 with open(self.output_basename, 'w+') as fd:
@@ -343,7 +342,8 @@ class CmdStanArgs(object):
             except Exception:
                 raise ValueError(
                     'invalid path for output files: {}'.format(
-                        self.output_basename)
+                        self.output_basename
+                    )
                 )
             self.output_basename, _ = os.path.splitext(self.output_basename)
 
@@ -434,7 +434,8 @@ class CmdStanArgs(object):
             if idx < 0 or idx > len(self.chain_ids) - 1:
                 raise ValueError(
                     'index ({}) exceeds number of chains ({})'.format(
-                        idx, len(self.chain_ids))
+                        idx, len(self.chain_ids)
+                    )
                 )
             cmd = '{} id={}'.format(self.model_exe, self.chain_ids[idx])
         else:
