@@ -51,7 +51,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
 class MaybeDictToFilePath(object):
     def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
         self._unlink = [False] * len(objs)
-        self._paths = [""] * len(objs)
+        self._paths = [''] * len(objs)
         self._logger = logger or get_logger()
         i = 0
         for o in objs:
@@ -71,7 +71,7 @@ class MaybeDictToFilePath(object):
             elif o is None:
                 self._paths[i] = None
             else:
-                raise ValueError("data must be string or dict")
+                raise ValueError('data must be string or dict')
             i += 1
 
     def __enter__(self):
@@ -101,7 +101,7 @@ class TemporaryCopiedFile(object):
     def __init__(self, file_path: str):
         self._path = None
         self._tmpdir = None
-        if " " in os.path.abspath(file_path) and platform.system() == "Windows":
+        if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
             base_path, file_name = os.path.split(os.path.abspath(file_path))
             os.makedirs(base_path, exist_ok=True)
             try:
@@ -111,15 +111,15 @@ class TemporaryCopiedFile(object):
             except RuntimeError:
                 pass
 
-        if " " in os.path.abspath(file_path):
+        if ' ' in os.path.abspath(file_path):
             tmpdir = tempfile.mkdtemp()
-            if " " in tmpdir:
+            if ' ' in tmpdir:
                 raise RuntimeError(
-                    "Unable to generate temporary path without spaces! \n"
-                    + "Please move your stan file to location without spaces."
+                    'Unable to generate temporary path without spaces! \n'
+                    + 'Please move your stan file to location without spaces.'
                 )
 
-            _, path = tempfile.mkstemp(suffix=".stan", dir=tmpdir)
+            _, path = tempfile.mkstemp(suffix='.stan', dir=tmpdir)
 
             shutil.copy(file_path, path)
             self._path = path
@@ -462,18 +462,18 @@ def windows_short_path(path: str) -> str:
 
     If (base)path does not exist, function raises RuntimeError
     """
-    if platform.system() != "Windows":
+    if platform.system() != 'Windows':
         return path
 
-    if os.path.isfile(path) or os.path.splitext(path)[1] != "":
-        basepath, filename = os.path.split(path)
+    if os.path.isfile(path) or os.path.splitext(path)[1] != '':
+        base_path, file_name = os.path.split(path)
     else:
-        basepath, filename = path, ''
+        base_path, file_name = path, ''
 
-    if not os.path.exists(basepath):
+    if not os.path.exists(base_path):
         raise RuntimeError(
             'Windows short path function needs a valid directory. Base directory does not exist: "{}"'.format(
-                basepath
+                base_path
             )
         )
 
@@ -491,14 +491,14 @@ def windows_short_path(path: str) -> str:
     output_buf_size = 0
     while True:
         output_buf = ctypes.create_unicode_buffer(output_buf_size)
-        needed = _GetShortPathNameW(basepath, output_buf, output_buf_size)
+        needed = _GetShortPathNameW(base_path, output_buf, output_buf_size)
         if output_buf_size >= needed:
-            short_basepath = output_buf.value
+            short_base_path = output_buf.value
             break
         else:
             output_buf_size = needed
 
     short_path = (
-        os.path.join(short_basepath, filename) if filename else short_basepath
+        os.path.join(short_base_path, file_name) if file_name else short_base_path
     )
     return short_path

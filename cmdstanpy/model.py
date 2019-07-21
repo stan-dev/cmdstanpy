@@ -76,7 +76,7 @@ class Model(object):
     def code(self) -> str:
         """Return Stan program as a string."""
         if not self._stan_file:
-            raise RuntimeError("Please specify source file")
+            raise RuntimeError('Please specify source file')
 
         code = None
         try:
@@ -123,13 +123,12 @@ class Model(object):
             look for files to include in compilation of the C++ executable.
         """
         if not self._stan_file:
-            raise RuntimeError("Please specify source file")
+            raise RuntimeError('Please specify source file')
 
         if self._exe_file is not None and not overwrite:
             self._logger.warning('model is already compiled')
             return
 
-        print(self._stan_file)
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()
