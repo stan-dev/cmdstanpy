@@ -1,5 +1,7 @@
 import os
 import re
+from pathlib import Path
+import platform
 import shutil
 import tempfile
 from typing import List, Tuple
@@ -11,6 +13,7 @@ import logging
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     check_csv,
+    create_named_text_file,
     EXTENSION,
     cmdstan_path,
     do_command,
@@ -40,14 +43,12 @@ class StanFit(object):
         if args.output_basename is None:
             csv_basename = 'stan-{}-draws'.format(args.model_name)
             for i in range(chains):
-                fd = tempfile.NamedTemporaryFile(
-                    mode='w+',
+                fd_name = create_named_text_file(
+                    dir=TMPDIR,
                     prefix='{}-{}-'.format(csv_basename, i + 1),
                     suffix='.csv',
-                    dir=TMPDIR,
-                    delete=False,
                 )
-                self.csv_files.append(fd.name)
+                self.csv_files.append(fd_name)
         else:
             for i in range(chains):
                 self.csv_files.append(
@@ -299,14 +300,11 @@ class StanFit(object):
         tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
             self._args.model_name, self.chains
         )
-        fd, tmp_csv_path = tempfile.mkstemp(
-            suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True
+        tmp_csv_path = create_named_text_file(
+            dir=TMPDIR, prefix=tmp_csv_file, suffix='.csv'
         )
-        cmd = '{} --csv_file={} {}'.format(
-            cmd_path, tmp_csv_path, ' '.join(self.csv_files)
-        )
-        # breaks on all whitespace
-        do_command(cmd.split(), logger=self._logger)
+        cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self.csv_files
+        do_command(cmd, logger=self._logger)
         summary_data = pd.read_csv(
             tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
         )
@@ -332,7 +330,7 @@ class StanFit(object):
         self._sampling_only()
 
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
-        csv_files = ' '.join(self.csv_files)
+        csv_files = ' '.join(map('"{}"'.format, self.csv_files))
         cmd = '{} {} '.format(cmd_path, csv_files)
         result = do_command(cmd=cmd.split(), logger=self._logger)
         if result:

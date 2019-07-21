@@ -56,12 +56,11 @@ class MaybeDictToFilePath(object):
         i = 0
         for o in objs:
             if isinstance(o, dict):
-                with tempfile.NamedTemporaryFile(
-                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
-                ) as fd:
-                    data_file = fd.name
-                    self._logger.debug('input tempfile: %s', fd.name)
-                    jsondump(data_file, o)
+                data_file = create_named_text_file(
+                    dir=TMPDIR, prefix="", suffix=".json"
+                )
+                self._logger.debug('input tempfile: %s', data_file)
+                jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(o, str):
@@ -80,7 +79,10 @@ class MaybeDictToFilePath(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         for can_unlink, path in zip(self._unlink, self._paths):
             if can_unlink and path:
-                os.remove(path)
+                try:
+                    os.remove(path)
+                except PermissionError:
+                    pass
 
 
 def validate_cmdstan_path(path: str) -> None:
@@ -442,7 +444,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    proc.wait()
+    # proc.wait()
     stdout, stderr = proc.communicate()
     if proc.returncode:
         if stderr:
@@ -503,3 +505,17 @@ def windows_short_path(path: str) -> str:
         else short_base_path
     )
     return short_path
+
+
+def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
+    """
+    Create a named unique file.
+    """
+    _, path = tempfile._mkstemp_inner(
+        dir=dir,
+        pre=prefix,
+        suf=suffix,
+        flags=tempfile._bin_openflags,
+        output_type=str,
+    )
+    return path

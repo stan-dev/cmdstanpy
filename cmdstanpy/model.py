@@ -60,7 +60,7 @@ class Model(object):
             if self._name is None:
                 self._name, _ = os.path.splitext(exename)
             else:
-                if self._name != ''.join([exename, EXTENSION]):
+                if self._name != os.path.splitext(exename)[0]:
                     raise ValueError(
                         'name mismatch between Stan file and compiled'
                         ' executable, expecting basename: {}'
