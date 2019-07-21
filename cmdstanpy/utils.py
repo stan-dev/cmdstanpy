@@ -499,6 +499,8 @@ def windows_short_path(path: str) -> str:
             output_buf_size = needed
 
     short_path = (
-        os.path.join(short_base_path, file_name) if file_name else short_base_path
+        os.path.join(short_base_path, file_name)
+        if file_name
+        else short_base_path
     )
     return short_path
