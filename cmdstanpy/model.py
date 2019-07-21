@@ -129,6 +129,7 @@ class Model(object):
             self._logger.warning('model is already compiled')
             return
 
+        print(self._stan_file)
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()

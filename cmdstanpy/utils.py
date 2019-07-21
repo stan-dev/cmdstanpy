@@ -101,7 +101,17 @@ class TemporaryCopiedFile(object):
     def __init__(self, file_path: str):
         self._path = None
         self._tmpdir = None
-        if " " in file_path:
+        if " " in os.path.abspath(file_path) and platform.system() == "Windows":
+            base_path, file_name = os.path.split(os.path.abspath(file_path))
+            os.makedirs(base_path, exist_ok=True)
+            try:
+                short_base_path = windows_short_path(base_path)
+                if os.path.exists(short_base_path):
+                    file_path = os.path.join(short_base_path, file_name)
+            except RuntimeError:
+                pass
+
+        if " " in os.path.abspath(file_path):
             tmpdir = tempfile.mkdtemp()
             if " " in tmpdir:
                 raise RuntimeError(
@@ -441,3 +451,54 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if stdout:
         return stdout.decode('utf-8').strip()
     return None
+
+
+def windows_short_path(path: str) -> str:
+    """
+    Gets the short path name of a given long path.
+    http://stackoverflow.com/a/23598461/200291
+
+    On non-Windows platforms, returns the path
+
+    If (base)path does not exist, function raises RuntimeError
+    """
+    if platform.system() != "Windows":
+        return path
+
+    if os.path.isfile(path) or os.path.splitext(path)[1] != "":
+        basepath, filename = os.path.split(path)
+    else:
+        basepath, filename = path, ''
+
+    if not os.path.exists(basepath):
+        raise RuntimeError(
+            'Windows short path function needs a valid directory. Base directory does not exist: "{}"'.format(
+                basepath
+            )
+        )
+
+    import ctypes
+    from ctypes import wintypes
+
+    _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
+    _GetShortPathNameW.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+    ]
+    _GetShortPathNameW.restype = wintypes.DWORD
+
+    output_buf_size = 0
+    while True:
+        output_buf = ctypes.create_unicode_buffer(output_buf_size)
+        needed = _GetShortPathNameW(basepath, output_buf, output_buf_size)
+        if output_buf_size >= needed:
+            short_basepath = output_buf.value
+            break
+        else:
+            output_buf_size = needed
+
+    short_path = (
+        os.path.join(short_basepath, filename) if filename else short_basepath
+    )
+    return short_path
