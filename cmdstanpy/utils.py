@@ -472,9 +472,8 @@ def windows_short_path(path: str) -> str:
 
     if not os.path.exists(base_path):
         raise RuntimeError(
-            'Windows short path function needs a valid directory. Base directory does not exist: "{}"'.format(
-                base_path
-            )
+            'Windows short path function needs a valid directory. '
+            'Base directory does not exist: "{}"'.format(base_path)
         )
 
     import ctypes
