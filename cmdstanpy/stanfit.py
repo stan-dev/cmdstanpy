@@ -1,6 +1,5 @@
 import os
 import re
-from pathlib import Path
 import platform
 import shutil
 import tempfile
@@ -330,9 +329,8 @@ class StanFit(object):
         self._sampling_only()
 
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
-        csv_files = ' '.join(map('"{}"'.format, self.csv_files))
-        cmd = '{} {} '.format(cmd_path, csv_files)
-        result = do_command(cmd=cmd.split(), logger=self._logger)
+        cmd = [cmd_path] + self.csv_files
+        result = do_command(cmd=cmd, logger=self._logger)
         if result:
             self._logger.warning(result)
         return result
