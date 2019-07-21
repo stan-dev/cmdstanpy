@@ -444,7 +444,6 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    # proc.wait()
     stdout, stderr = proc.communicate()
     if proc.returncode:
         if stderr:
