@@ -21,7 +21,8 @@ class StanFitTest(unittest.TestCase):
             model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             data=jdata,
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
         self.assertEqual(4, len(retcodes))
@@ -42,9 +43,7 @@ class StanFitTest(unittest.TestCase):
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(goodfiles_path, 'bern')
         sampler_args = SamplerArgs(
-            sampling_iters=100,
-            max_treedepth=11,
-            adapt_delta=0.95
+            sampling_iters=100, max_treedepth=11, adapt_delta=0.95
         )
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -53,7 +52,7 @@ class StanFitTest(unittest.TestCase):
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
@@ -69,15 +68,23 @@ class StanFitTest(unittest.TestCase):
 
         df = fit.get_drawset()
         self.assertEqual(
-            df.shape,
-            (
-                fit.chains * fit.draws,
-                len(fit.column_names),
-            ),
+            df.shape, (fit.chains * fit.draws, len(fit.column_names))
         )
         _ = fit.summary()
 
-        self.assertIsNone(fit.diagnose())
+        # TODO - use cmdstan test files instead
+        expected = '\n'.join(
+            [
+                'Checking sampler transitions treedepth.',
+                'Treedepth satisfactory for all transitions.',
+                '\nChecking sampler transitions for divergences.',
+                'No divergent transitions found.',
+                '\nChecking E-BFMI - sampler transitions HMC potential energy.',
+                'E-BFMI satisfactory for all transitions.',
+                '\nEffective sample size satisfactory.',
+            ]
+        )
+        self.assertIn(expected, fit.diagnose())
 
     def test_validate_big_run(self):
         exe = os.path.join(datafiles_path, 'bernoulli')  # fake out validation
@@ -89,7 +96,7 @@ class StanFitTest(unittest.TestCase):
             chain_ids=[1, 2],
             seed=12345,
             output_basename=output,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
         fit = StanFit(args=cmdstan_args, chains=2)
         fit._validate_csv_files()
@@ -129,11 +136,9 @@ class StanFitTest(unittest.TestCase):
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_model = Model(stan_file=stan, exe_file=exe)
         bern_model.compile()
-        bern_fit = bern_model.sample(data=jdata,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=200)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
+        )
 
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
@@ -154,11 +159,9 @@ class StanFitTest(unittest.TestCase):
             os.remove(bern_fit.console_files[i])
 
         # regenerate to tmpdir, save to good dir
-        bern_fit = bern_model.sample(data=jdata,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=200)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
+        )
         bern_fit.save_csvfiles(basename=basename)  # default dir
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
@@ -166,17 +169,6 @@ class StanFitTest(unittest.TestCase):
         for i in range(bern_fit.chains):  # cleanup default dir
             os.remove(bern_fit.csv_files[i])
             os.remove(bern_fit.console_files[i])
-
-        # regenerate to tmpdir, save to no such dir
-        bern_fit = bern_model.sample(data=jdata,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=200)
-        with self.assertRaisesRegex(Exception, 'cannot save'):
-            bern_fit.save_csvfiles(
-                dir=os.path.join('no', 'such', 'dir'), basename=basename
-            )
 
     def test_diagnose_divergences(self):
         exe = os.path.join(datafiles_path, 'bernoulli')  # fake out validation
@@ -189,18 +181,18 @@ class StanFitTest(unittest.TestCase):
             model_exe=exe,
             chain_ids=[1],
             output_basename=output,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
         fit = StanFit(args=cmdstan_args, chains=1)
         # TODO - use cmdstan test files instead
-        expected = ''.join(
+        expected = '\n'.join(
             [
-                '424 of 1000 (42%) transitions hit the maximum ',
-                'treedepth limit of 8, or 2^8 leapfrog steps. ',
-                'Trajectories that are prematurely terminated ',
-                'due to this limit will result in slow ',
-                'exploration and you should increase the ',
-                'limit to ensure optimal performance.',
+                'Checking sampler transitions treedepth.',
+                '424 of 1000 (42%) transitions hit the maximum '
+                'treedepth limit of 8, or 2^8 leapfrog steps.',
+                'Trajectories that are prematurely terminated '
+                'due to this limit will result in slow exploration.',
+                'For optimal performance, increase this limit.',
             ]
         )
         self.assertIn(expected, fit.diagnose())
@@ -209,9 +201,7 @@ class StanFitTest(unittest.TestCase):
         exe = os.path.join(datafiles_path, 'bernoulli')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         sampler_args = SamplerArgs(
-            sampling_iters=100,
-            max_treedepth=11,
-            adapt_delta=0.95
+            sampling_iters=100, max_treedepth=11, adapt_delta=0.95
         )
 
         # some chains had errors
@@ -223,7 +213,7 @@ class StanFitTest(unittest.TestCase):
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         with self.assertRaisesRegex(Exception, 'Exception'):
@@ -238,7 +228,7 @@ class StanFitTest(unittest.TestCase):
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
@@ -257,7 +247,7 @@ class StanFitTest(unittest.TestCase):
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
@@ -276,7 +266,7 @@ class StanFitTest(unittest.TestCase):
             seed=12345,
             data=jdata,
             output_basename=output,
-            method_args=sampler_args
+            method_args=sampler_args,
         )
         fit = StanFit(args=cmdstan_args, chains=4)
         retcodes = fit._retcodes
