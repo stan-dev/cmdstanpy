@@ -32,16 +32,16 @@ class CmdStanPathTest(unittest.TestCase):
         self.assertTrue(cmdstan_path().startswith(abs_rel_path))
 
     def test_non_spaces_location(self):
-        good_path = "/tmp/"
+        good_path = '/tmp/'
         with TemporaryCopiedFile(good_path) as (p, is_changed):
             self.assertEqual(p, good_path)
             self.assertFalse(is_changed)
 
         # prepare files for test
-        bad_path = os.path.join(tempfile.mkdtemp(), "bad dir")
+        bad_path = os.path.join(tempfile.mkdtemp(), 'bad dir')
         os.mkdir(bad_path)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        stan_bad = os.path.join(bad_path, "bad name.stan")
+        stan_bad = os.path.join(bad_path, 'bad name.stan')
         shutil.copy(stan, stan_bad)
 
         stan_copied = None
@@ -49,7 +49,7 @@ class CmdStanPathTest(unittest.TestCase):
             with TemporaryCopiedFile(stan_bad) as (p, is_changed):
                 stan_copied = p
                 self.assertTrue(os.path.exists(stan_copied))
-                self.assertTrue(" " not in stan_copied)
+                self.assertTrue(' ' not in stan_copied)
                 self.assertTrue(is_changed)
                 raise RuntimeError
         except RuntimeError:
@@ -84,7 +84,7 @@ class CmdStanPathTest(unittest.TestCase):
 
     def test_dict_to_file(self):
         file_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
-        dict_good = {"a": "A"}
+        dict_good = {'a': 'A'}
         created_tmp = None
         with MaybeDictToFilePath(file_good, dict_good) as (f1, f2):
             self.assertTrue(os.path.exists(f1))

@@ -109,7 +109,7 @@ class OptimizeTest(unittest.TestCase):
             data=jdata,
             seed=1239812093,
             inits=jinit,
-            algorithm="BFGS",
+            algorithm='BFGS',
             init_alpha=0.001,
             iter=100,
         )
@@ -128,18 +128,18 @@ class OptimizeTest(unittest.TestCase):
 
         # test pandas output
         self.assertEqual(
-            fit.optimized_params_np[0], fit.optimized_params_pd["lp__"][0]
+            fit.optimized_params_np[0], fit.optimized_params_pd['lp__'][0]
         )
         self.assertEqual(
-            fit.optimized_params_np[1], fit.optimized_params_pd["theta"][0]
+            fit.optimized_params_np[1], fit.optimized_params_pd['theta'][0]
         )
 
         # test dict output
         self.assertEqual(
-            fit.optimized_params_np[0], fit.optimized_params_dict["lp__"]
+            fit.optimized_params_np[0], fit.optimized_params_dict['lp__']
         )
         self.assertEqual(
-            fit.optimized_params_np[1], fit.optimized_params_dict["theta"]
+            fit.optimized_params_np[1], fit.optimized_params_dict['theta']
         )
 
     def test_optimize_works_dict(self):
@@ -156,7 +156,7 @@ class OptimizeTest(unittest.TestCase):
             data=data,
             seed=1239812093,
             inits=init,
-            algorithm="BFGS",
+            algorithm='BFGS',
             init_alpha=0.001,
             iter=100,
         )

@@ -38,7 +38,7 @@ class StanFit(object):
                 'found {i]}'.format(chains)
             )
         self.csv_files = []
-        """per-chain sample csv files."""
+        # per-chain sample csv files.
         if args.output_basename is None:
             csv_basename = 'stan-{}-draws'.format(args.model_name)
             for i in range(chains):
@@ -54,14 +54,14 @@ class StanFit(object):
                     '{}-{}.csv'.format(args.output_basename, i + 1)
                 )
         self.console_files = []
-        """per-chain sample console output files."""
+        # per-chain sample console output files.
         for i in range(chains):
             txt_file = ''.join([os.path.splitext(self.csv_files[i])[0], '.txt'])
             self.console_files.append(txt_file)
         self.cmds = [
             args.compose_command(i, self.csv_files[i]) for i in range(chains)
         ]
-        """per-chain sampler command."""
+        # per-chain sampler command.
         self._retcodes = [-1 for _ in range(chains)]
         self._draws = None
         self._column_names = None
@@ -81,7 +81,7 @@ class StanFit(object):
 
     @property
     def model(self) -> str:
-        """Stan model name"""
+        """Stan model name."""
         return self._args.model_name
 
     @property
@@ -113,7 +113,7 @@ class StanFit(object):
 
     @property
     def metric_type(self) -> str:
-        """Metric type, either 'diag_e' or 'dense_e'"""
+        """Metric type, either 'diag_e' or 'dense_e'."""
         return self._metric_type
 
     @property
@@ -132,27 +132,28 @@ class StanFit(object):
 
     @property
     def is_optimizing(self) -> bool:
-        """Returns true if we are optimizing rather than sampling"""
+        """Returns true if we are optimizing rather than sampling."""
         return self._is_optimizing
 
     @property
     def optimized_params_np(self) -> np.array:
-        """returns optimized params as numpy array"""
+        """Returns optimized params as numpy array."""
         return self._first_draw
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
-        """returns optimized params as pandas DataFrame"""
+        """Returns optimized params as pandas DataFrame."""
         return pd.DataFrame([self._first_draw], columns=self.column_names)
 
     @property
     def optimized_params_dict(self) -> OrderedDict:
-        """returns optimized params as Dict"""
+        """Returns optimized params as Dict."""
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
+        """Raise RuntimeError if method is not sampling."""
         if self.is_optimizing:
-            raise RuntimeError("Method available only when sampling!")
+            raise RuntimeError('Method available only when sampling!')
 
     @property
     def sample(self) -> np.ndarray:
@@ -176,7 +177,7 @@ class StanFit(object):
         return True
 
     def _retcode(self, idx: int) -> int:
-        """get retcode for chain[idx]."""
+        """Get retcode for chain[idx]."""
         return self._retcodes[idx]
 
     def _set_retcode(self, idx: int, val: int) -> None:
@@ -304,7 +305,7 @@ class StanFit(object):
         )
         cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self.csv_files
         do_command(cmd, logger=self._logger)
-        with open(tmp_csv_path, "rb") as fd:
+        with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
                 fd, delimiter=',', header=0, index_col=0, comment='#'
             )
@@ -314,7 +315,7 @@ class StanFit(object):
     def diagnose(self) -> str:
         """
         Run cmdstan/bin/diagnose over all output csv files.
-        Returns output of diagnose (stdout/stderr)
+        Returns output of diagnose (stdout/stderr).
 
         The diagnose utility reads the outputs of all chains
         and checks for the following potential problems:

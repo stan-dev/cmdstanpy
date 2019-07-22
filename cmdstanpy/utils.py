@@ -57,7 +57,7 @@ class MaybeDictToFilePath(object):
         for o in objs:
             if isinstance(o, dict):
                 data_file = create_named_text_file(
-                    dir=TMPDIR, prefix="", suffix=".json"
+                    dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
                 jsondump(data_file, o)
