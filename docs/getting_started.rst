@@ -67,7 +67,7 @@ To use custom ``make``-tool use ``set_make_env`` function.
 
 .. code-block:: python
 
-    from cmdstanpy.utils import set_make_env
+    from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
 
 For faster IO cmdstanpy will use ``ujson`` package if it's installed
