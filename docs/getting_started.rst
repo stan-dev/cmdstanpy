@@ -28,12 +28,19 @@ By default this script installs the latest version of CmdStan into a directory n
     install_cmdstan
     ls -F ~/.cmdstanpy
 
+On Windows
+
+.. code-block:: bash
+
+    python install_cmdstan
+    dir "%HOME%/.cmdstanpy"
+
 The named arguments: `-d <directory>` and  `-v <version>`
 can be used to override these defaults:
 
 .. code-block:: bash
 
-    install_cmdstan -d my_local_cmdstan -v 2.19.1
+    install_cmdstan -d my_local_cmdstan -v 2.20.0
     ls -F my_local_cmdstan
 
 If you already have CmdStan installed in a directory
@@ -42,7 +49,7 @@ location and it will be picked up by CmdStanPy:
 
 .. code-block:: bash
 
-    export CMDSTAN='/path/to/cmdstan-2.19.1'
+    export CMDSTAN='/path/to/cmdstan-2.20.0'
 
 
 The CmdStanPy commands ``cmdstan_path`` and ``set_cmdstan_path``
@@ -53,9 +60,21 @@ get and set this environment variable:
     from cmdstanpy import cmdstan_path, set_cmdstan_path
 
     oldpath = cmdstan_path()
-    set_cmdstan_path(os.join('path','to','cmdstan'))
+    set_cmdstan_path(os.path.join('path','to','cmdstan'))
     newpath = cmdstan_path()
 
+To use custom ``make``-tool use ``set_make_env`` function.
+
+.. code-block:: python
+
+    from cmdstanpy.utils import set_make_env
+    set_make_env("mingw32-make.exe") # On Windows with mingw32-make
+
+For faster IO cmdstanpy will use ``ujson`` package if it's installed
+
+.. code-block:: bash
+
+    pip install ujson
 
 
 CmdStanPy's "Hello World"
@@ -101,7 +120,7 @@ and returns a ``StanFit`` object:
 
     bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
-    
+
 By default, the ``sample`` command runs 4 sampler chains.
 The ``StanFit`` object records the results of each sampler chain.
 If no output file path is specified, the sampler outputs
