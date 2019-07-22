@@ -8,7 +8,7 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install flake8 pytest
-  - ./bin/install_cmdstan
+  - travis_retry ./bin/install_cmdstan
 
 after install:
 
