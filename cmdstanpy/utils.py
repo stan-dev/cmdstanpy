@@ -512,12 +512,9 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     """
     Create a named unique file.
     """
-    fd, path = tempfile._mkstemp_inner(
-        dir=dir,
-        pre=prefix,
-        suf=suffix,
-        flags=tempfile._bin_openflags,
-        output_type=str,
+    fd = tempfile.NamedTemporaryFile(
+        mode='w+', prefix=prefix, suffix=suffix, dir=TMPDIR, delete=False
     )
-    os.close(fd)
+    path = fd.name
+    fd.close()
     return path
