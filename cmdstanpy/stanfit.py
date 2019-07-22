@@ -304,9 +304,10 @@ class StanFit(object):
         )
         cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self.csv_files
         do_command(cmd, logger=self._logger)
-        summary_data = pd.read_csv(
-            tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
-        )
+        with open(tmp_csv_path, "rb") as fd:
+            summary_data = pd.read_csv(
+                fd, delimiter=',', header=0, index_col=0, comment='#'
+            )
         mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
 
@@ -398,7 +399,7 @@ class StanFit(object):
                 )
                 shutil.move(self.csv_files[i], to_path)
                 self.csv_files[i] = to_path
-            except (IOError, OSError) as e:
+            except (IOError, OSError, PermissionError) as e:
                 raise ValueError(
                     'cannot save to file: {}'.format(to_path)
                 ) from e

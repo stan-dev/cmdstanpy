@@ -426,12 +426,14 @@ def read_rdump_metric(path: str) -> List[int]:
         data = fp.read().replace('\n', '')
         m1 = re.search(r'inv_metric\s*<-\s*structure\(\s*c\(', data)
         if not m1:
-            return None
-        m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
-        if not m2:
-            return None
-        dims = m2.group(1).split(',')
-        return [int(d) for d in dims]
+            return_value = None
+        else:
+            m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
+            if not m2:
+                return_value = None
+            dims = m2.group(1).split(',')
+            return_value = [int(d) for d in dims]
+    return return_value
 
 
 def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
@@ -510,11 +512,12 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     """
     Create a named unique file.
     """
-    _, path = tempfile._mkstemp_inner(
+    fd, path = tempfile._mkstemp_inner(
         dir=dir,
         pre=prefix,
         suf=suffix,
         flags=tempfile._bin_openflags,
         output_type=str,
     )
+    os.close(fd)
     return path
