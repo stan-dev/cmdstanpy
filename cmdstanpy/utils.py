@@ -513,7 +513,7 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     Create a named unique file.
     """
     fd = tempfile.NamedTemporaryFile(
-        mode='w+', prefix=prefix, suffix=suffix, dir=TMPDIR, delete=False
+        mode='w+', prefix=prefix, suffix=suffix, dir=dir, delete=False
     )
     path = fd.name
     fd.close()
