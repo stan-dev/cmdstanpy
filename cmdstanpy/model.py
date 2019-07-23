@@ -7,7 +7,7 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Union
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs,GenerateQuantitiesArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import (
     do_command, EXTENSION,
@@ -524,13 +524,15 @@ class Model(object):
             or as the path of a data file in JSON or Rdump format.
         :param fitted_params_file: The path to a csv file that contains the fitted
             parameters of the STAN model from the sample call.
-        
+        :param seed: The seed for random number generator or a list of per-chain
+            seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
+            numpy.random.RandomState() is used to generate a seed which will be
+            used for all chains.
         :param csv_basename: A path or file name which will be used as the
             base name for the sampler output files.  The csv output files
             for each chain are written to file ``<basename>-<chain_id>.csv``
             and the console output and error messages are written to file
             ``<basename>-<chain_id>.txt``.
-        
         """
         generate_quantities_args = GenerateQuantitiesArgs(
         fitted_params_file=fitted_params_file,
