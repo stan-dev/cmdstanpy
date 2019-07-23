@@ -2,7 +2,11 @@
 Utility functions
 """
 import os
-import json
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 import math
 import numpy as np
 import platform
