@@ -56,7 +56,8 @@ install:
 
   - "python -m pip install --disable-pip-version-check --upgrade pip"
   - "python -m pip install -r requirements.txt"
-
+  - "python -m pip install pytest" 
+  
   - "python .\\bin\\install_cmdstan"
 
   - "python -m pip install -e ."
