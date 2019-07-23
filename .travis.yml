@@ -5,6 +5,10 @@ language: python
 python:
   - "3.6"
 
+cache:
+  directories:
+  - $HOME/.cmdstanpy
+
 install:
   - pip install -r requirements.txt
   - pip install flake8 pytest
