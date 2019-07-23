@@ -16,7 +16,7 @@ from cmdstanpy.utils import (
     do_command,
     get_logger,
 )
-from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs,SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs, SamplerArgs
 
 
 class StanFit(object):
