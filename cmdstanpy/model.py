@@ -535,9 +535,7 @@ class Model(object):
         generate_quantities_args = GenerateQuantitiesArgs(
         fitted_params_file=fitted_params_file,
         )
-        print(type(data))
         with MaybeDictToFilePath(data, None) as (_data, _inits):
-            print(type(_data)) 
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,

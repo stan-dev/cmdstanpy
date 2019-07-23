@@ -3,7 +3,7 @@ import unittest
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs, \
-    FixedParamArgs, OptimizeArgs
+    FixedParamArgs, OptimizeArgs, GenerateQuantitiesArgs
 
 datafiles_path = os.path.join("test", "data")
 
@@ -436,6 +436,16 @@ class CmdStanArgsTest(unittest.TestCase):
                 output_basename='no/such/path/to.file',
                 method_args=sampler_args)
 
+class GenerateQuantitesTest(unittest.TestCase):
+   def test_args_fitted_params(self):
+        args = GenerateQuantitiesArgs(fitted_params_file="abcd")
+        self.assertRaises(ValueError, lambda: args.validate())
+        param_file = os.path.join(datafiles_path, "bernoulli_ppc/sampling_output.csv")
+        args = GenerateQuantitiesArgs(fitted_params_file=param_file)
+        args.validate()
+        cmd = args.compose(None, 'output')
+        self.assertIn("method=generate_quantities", cmd)
+        self.assertIn("fitted_params={}".format(param_file), cmd) 
 
 if __name__ == '__main__':
     unittest.main()

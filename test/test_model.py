@@ -263,6 +263,50 @@ class SampleTest(unittest.TestCase):
                                          seed=12345,
                                          sampling_iters=100)
 
+class GenerateQuantitiesTest(unittest.TestCase):
+    def test_optimize_works(self):
+        ppc_datafiles_path = os.path.join(datafiles_path, 'bernoulli_ppc') 
+        exe = os.path.join(ppc_datafiles_path, 'bernoulli_ppc')
+        stan = os.path.join(ppc_datafiles_path, 'bernoulli_ppc.stan')
+        model = Model(stan_file=stan, exe_file=exe)
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        sampler_output =os.path.join(ppc_datafiles_path, 'sampling_output.csv')  
+        bern_fit = model.run_generate_quantities(
+            fitted_params_file=sampler_output,
+            data=jdata,
+            seed=123456)
+        #Test column names
+        column_names = [
+            'mu',
+            'y_rep.1',
+            'y_rep.2',
+            'y_rep.3',
+            'y_rep.4',
+            'y_rep.5',
+            'y_rep.6',
+            'y_rep.7',
+            'y_rep.8',
+            'y_rep.9',
+            'y_rep.10'
+        ]
+        
+        self.assertEqual(bern_fit.column_names, tuple(column_names))
+        self.num_params = 10
+        self.assertEqual(bern_fit.chains, 1)
+        self.assertEqual(bern_fit.draws, 1000) 
+        
+        #Check if output files got created
+        csv_file = bern_fit.csv_files[0]
+        txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+        self.assertTrue(os.path.exists(csv_file))
+        self.assertTrue(os.path.exists(txt_file))
+
+        # check return code
+        self.assertEqual(bern_fit._retcodes[0], 0)
+
+        # test numpy output
+        self.assertAlmostEqual(bern_fit.generated_quantities[0][0], 0.17, 2)
+        self.assertEqual(bern_fit.generated_quantities.shape, (1000, len(column_names)))
 
 if __name__ == '__main__':
     unittest.main()

@@ -30,7 +30,7 @@ class StanFit(object):
         """Initialize object."""
         self._args = args
         self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
-        self._do_scan_metric = isinstance(self._args.method_args, SamplerArgs)
+        self._is_sampling = isinstance(self._args.method_args, SamplerArgs)
         self._chains = chains
         self._logger = logger or get_logger()
         if chains < 1:
@@ -140,9 +140,9 @@ class StanFit(object):
         return self._is_optimizing
 
     @property
-    def do_scan_metric(self) -> bool:
+    def is_sampling(self) -> bool:
         """Returns true if we are sampling rather than optimizing or running generated quantities"""
-        return self._do_scan_metric
+        return self._is_sampling
 
     @property
     def optimized_params_np(self) -> np.array:
@@ -160,7 +160,7 @@ class StanFit(object):
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
-        if self.is_optimizing:
+        if not self.is_sampling:
             raise RuntimeError("Method available only when sampling!")
 
     @property
@@ -178,15 +178,13 @@ class StanFit(object):
         return self._sample
 
     @property
-    def generated_quantities(self) -> pd.core.frame.DataFrame:
+    def generated_quantities(self) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains all draws across all chain arranged
+        A 2-D numpy ndarray(with 1 chain) which contains all draws across all chain arranged
         as (draws, chains, columns) stored column major so that the values
         for each parameter are stored contiguously in memory, likewise
         all draws from a chain are contiguous.
         """
-        
-
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
         return self._generated_quantities
@@ -233,13 +231,13 @@ class StanFit(object):
                 dzero = check_csv(
                     self.csv_files[i],
                     is_optimizing=self.is_optimizing,
-                    do_scan_metric=self.do_scan_metric
+                    is_sampling=self.is_sampling
                 )
             else:
                 d = check_csv(
                     self.csv_files[i],
                     is_optimizing=self.is_optimizing,
-                    do_scan_metric=self.do_scan_metric
+                    is_sampling=self.is_sampling
                 )
                 for key in dzero:
                     if key not in ('id', 'first_draw') and dzero[key] != d[key]:
