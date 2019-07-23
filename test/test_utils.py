@@ -13,7 +13,7 @@ from cmdstanpy.utils import (
     check_csv,
     MaybeDictToFilePath,
     read_metric,
-    TemporaryCopiedFile
+    TemporaryCopiedFile,
 )
 
 

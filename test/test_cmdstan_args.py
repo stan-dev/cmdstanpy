@@ -2,8 +2,14 @@ import os
 import unittest
 
 from cmdstanpy import TMPDIR
-from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs, \
-    FixedParamArgs, OptimizeArgs, GenerateQuantitiesArgs
+
+from cmdstanpy.cmdstan_args import (
+    SamplerArgs, 
+    CmdStanArgs,
+    FixedParamArgs, 
+    OptimizeArgs, 
+    GenerateQuantitiesArgs
+)
 
 datafiles_path = os.path.join("test", "data")
 
@@ -197,7 +203,8 @@ class CmdStanArgsTest(unittest.TestCase):
             model_name='bernoulli',
             model_exe=exe,
             chain_ids=[1, 2, 3, 4],
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         with self.assertRaises(ValueError):
             cmdstan_args.compose_command(idx=4, csv_file='foo')
         with self.assertRaises(ValueError):
@@ -213,7 +220,8 @@ class CmdStanArgsTest(unittest.TestCase):
             model_exe=exe,
             chain_ids=None,
             inits=jinits,
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         self.assertIn("init=", cmdstan_args.compose_command(None, "out.csv"))
 
         with self.assertRaises(ValueError):
@@ -223,7 +231,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 chain_ids=None,
                 seed=[1, 2, 3],
                 inits=jinits,
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             CmdStanArgs(
@@ -231,7 +240,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe=exe,
                 chain_ids=None,
                 inits=[jinits],
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
     def test_args_good(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
@@ -243,7 +253,8 @@ class CmdStanArgsTest(unittest.TestCase):
             model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             data=jdata,
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=1 random seed=', cmd)
         self.assertIn('data file=', cmd)
@@ -255,7 +266,8 @@ class CmdStanArgsTest(unittest.TestCase):
             model_exe=exe,
             chain_ids=[7, 11, 18, 29],
             data=jdata,
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=7 random seed=', cmd)
 
@@ -274,7 +286,8 @@ class CmdStanArgsTest(unittest.TestCase):
             chain_ids=[1, 2, 3, 4],
             data=jdata,
             inits=jinits,
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('init=', cmd)
 
@@ -284,7 +297,8 @@ class CmdStanArgsTest(unittest.TestCase):
             chain_ids=[1, 2],
             data=jdata,
             inits=[jinits1, jinits2],
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('bernoulli.init_1.json', cmd)
         cmd = cmdstan_args.compose_command(idx=1, csv_file='bern-output-1.csv')
@@ -296,7 +310,8 @@ class CmdStanArgsTest(unittest.TestCase):
             chain_ids=[1, 2, 3, 4],
             data=jdata,
             inits=0,
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('init=0', cmd)
 
@@ -306,7 +321,8 @@ class CmdStanArgsTest(unittest.TestCase):
             chain_ids=[1, 2, 3, 4],
             data=jdata,
             inits=3.33,
-            method_args=sampler_args)
+            method_args=sampler_args,
+        )
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('init=3.33', cmd)
 
@@ -316,14 +332,14 @@ class CmdStanArgsTest(unittest.TestCase):
         with self.assertRaises(Exception):
             # missing
             cmdstan_args = CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe')
+                model_name='bernoulli', model_exe='bernoulli.exe'
+            )
 
         with self.assertRaises(Exception):
             # missing
             cmdstan_args = CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe')
+                model_name='bernoulli', model_exe='bernoulli.exe'
+            )
 
         with self.assertRaises(ValueError):
             # bad filepath
@@ -332,7 +348,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 data='no/such/path/to.file',
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad chain id
@@ -340,7 +357,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, -4],
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad seed
@@ -349,7 +367,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 seed=4294967299,
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad seed
@@ -358,7 +377,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 seed=[1, 2, 3],
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad seed
@@ -367,7 +387,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 seed=-3,
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad seed
@@ -376,7 +397,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 seed='badseed',
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad inits
@@ -385,7 +407,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 inits=-5,
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad inits
@@ -394,7 +417,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 inits='no/such/path/to.file',
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad inits
@@ -403,7 +427,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 inits='no/such/path/to.file',
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
         jinits1 = os.path.join(datafiles_path, 'bernoulli.init_1.json')
@@ -416,7 +441,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 inits=[jinits, jinits],
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad inits - files must be unique
@@ -425,7 +451,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 inits=[jinits, jinits1, jinits2],
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
         with self.assertRaises(ValueError):
             # bad output basename
@@ -434,7 +461,8 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 output_basename='no/such/path/to.file',
-                method_args=sampler_args)
+                method_args=sampler_args,
+            )
 
 class GenerateQuantitesTest(unittest.TestCase):
    def test_args_fitted_params(self):

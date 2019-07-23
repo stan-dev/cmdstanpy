@@ -10,9 +10,12 @@ from typing import Dict, List, Union
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs,GenerateQuantitiesArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import (
-    do_command, EXTENSION,
-    cmdstan_path, MaybeDictToFilePath,
-    TemporaryCopiedFile, get_logger
+    do_command,
+    EXTENSION,
+    cmdstan_path,
+    MaybeDictToFilePath,
+    TemporaryCopiedFile,
+    get_logger,
 )
 
 
@@ -25,10 +28,10 @@ class Model(object):
     """
 
     def __init__(
-            self,
-            stan_file: str = None,
-            exe_file: str = None,
-            logger: logging.Logger = None
+        self,
+        stan_file: str = None,
+        exe_file: str = None,
+        logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self._stan_file = stan_file
@@ -152,9 +155,7 @@ class Model(object):
                         )
                     cmd.append(
                         '--include_paths='
-                        + ','.join(
-                            (Path(p).as_posix() for p in include_paths)
-                        )
+                        + ','.join((Path(p).as_posix() for p in include_paths))
                     )
 
                 do_command(cmd, logger=self._logger)
@@ -176,13 +177,13 @@ class Model(object):
 
                 original_target_dir = os.path.dirname(self._stan_file)
                 # reconstruct the output file name
-                new_exec_name = os.path.basename(
-                    os.path.splitext(self._stan_file)[0]
-                ) + EXTENSION
+                new_exec_name = (
+                    os.path.basename(os.path.splitext(self._stan_file)[0])
+                    + EXTENSION
+                )
 
                 self._exe_file = os.path.join(
-                    original_target_dir,
-                    new_exec_name
+                    original_target_dir, new_exec_name
                 )
 
                 # copy the generated file back to the original directory
@@ -193,14 +194,14 @@ class Model(object):
         self._logger.info('compiled model file: %s', self._exe_file)
 
     def optimize(
-            self,
-            data: Union[Dict, str] = None,
-            seed: int = None,
-            inits: Union[Dict, float, str] = None,
-            csv_basename: str = None,
-            algorithm: str = None,
-            init_alpha: float = None,
-            iter: int = None
+        self,
+        data: Union[Dict, str] = None,
+        seed: int = None,
+        inits: Union[Dict, float, str] = None,
+        csv_basename: str = None,
+        algorithm: str = None,
+        init_alpha: float = None,
+        iter: int = None,
     ) -> StanFit:
         """
         Wrapper for optimize call
@@ -242,9 +243,7 @@ class Model(object):
         """
 
         optimize_args = OptimizeArgs(
-            algorithm=algorithm,
-            init_alpha=init_alpha,
-            iter=iter
+            algorithm=algorithm, init_alpha=init_alpha, iter=iter
         )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
@@ -436,9 +435,7 @@ class Model(object):
             )
         if cores > cores_avail:
             self._logger.warning(
-                'requested %u cores, only %u available',
-                cores,
-                cpu_count()
+                'requested %u cores, only %u available', cores, cpu_count()
             )
             cores = cores_avail
 

@@ -13,7 +13,8 @@ from cmdstanpy.utils import (
     check_csv,
     EXTENSION,
     cmdstan_path,
-    do_command, get_logger
+    do_command,
+    get_logger,
 )
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs,SamplerArgs
 
@@ -22,10 +23,7 @@ class StanFit(object):
     """Record of running NUTS sampler on a model."""
 
     def __init__(
-            self,
-            args: CmdStanArgs,
-            chains: int = 4,
-            logger: logging.Logger = None
+        self, args: CmdStanArgs, chains: int = 4, logger: logging.Logger = None
     ) -> None:
         """Initialize object."""
         self._args = args
@@ -412,6 +410,7 @@ class StanFit(object):
             dir = '.'
         test_path = os.path.join(dir, '.{}-test.tmp'.format(basename))
         try:
+            os.makedirs(dir, exist_ok=True)
             with open(test_path, 'w') as fd:
                 pass
             os.remove(test_path)  # cleanup
@@ -430,9 +429,7 @@ class StanFit(object):
                 )
             try:
                 self._logger.debug(
-                    'saving tmpfile: "%s" as: "%s"',
-                    self.csv_files[i],
-                    to_path
+                    'saving tmpfile: "%s" as: "%s"', self.csv_files[i], to_path
                 )
                 shutil.move(self.csv_files[i], to_path)
                 self.csv_files[i] = to_path
