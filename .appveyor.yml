@@ -46,25 +46,26 @@ install:
   - ps: Start-FileDownload 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
   - "Rtools35.exe /VERYSILENT /SP- /NORESTART"  #TODO: dont download and install if c:\rtools folder exists.
   - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
-
+  - "SET MAKE=mingw32-make.exe"
   - "gcc --version"
-  - "make --version"
+  - "mingw32-make --version"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  - "python -m pip install --disable-pip-version-check --upgrade pip"
-  - "python -m pip install -r requirements.txt"
-  - "python -m pip install pytest" 
-  
+  - "python -m pip install --quiet --disable-pip-version-check --upgrade pip"
+  - "python -m pip install --quiet -r requirements.txt"
+  - "python -m pip install --quiet pytest"
+
   - "python .\\bin\\install_cmdstan"
 
-  - "python -m pip install -e ."
+  - "python -m pip install --quiet -e ."
+  - "pip freeze"
 
 build: false
 
 test_script:
-  #- "SET PATH=C:\\mingw-w64\\x86_64-7.2.0-posix-seh-rt_v5-rev1\\mingw64\\bin;%PATH%"
-  - "SET PATH=C:\\Rtools\bin;c:\\Rtools\\mingw_64\\bin;%PATH%"
-  - "python -m pytest test"
+  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "SET MAKE=mingw32-make.exe"
+  - "python -m pytest ."
