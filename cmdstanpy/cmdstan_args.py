@@ -289,12 +289,12 @@ class GenerateQuantitiesArgs(object):
     def validate(self,chains=None) -> None:
         """
         Check arguments correctness and consistency.
-        * file for fitted_params exists
+        * file for fitted_params_file exists
         """
         if self.fitted_params_file is not None:
             if not os.path.exists(self.fitted_params_file):
                 raise ValueError(
-                    'Invalid path for fitted_params: {}'.format(
+                    'Invalid path for fitted_params_file: {}'.format(
                         self.fitted_params_file)
                 )
     def compose(self, idx: int, cmd: str) -> str:
