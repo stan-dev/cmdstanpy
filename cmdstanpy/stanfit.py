@@ -139,9 +139,8 @@ class StanFit(object):
 
     @property
     def is_sampling(self) -> bool:
-        """Returns true if we are sampling rather than 
+        """Returns true if we are sampling rather than
         optimizing or running generated quantities"""
-        
         return self._is_sampling
 
     @property
@@ -180,9 +179,9 @@ class StanFit(object):
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        A 2-D numpy ndarray(with 1 chain) which contains all 
-        draws across all chain arranged as (draws, chains, columns) 
-        stored column major so that the values for each parameter 
+        A 2-D numpy ndarray(with 1 chain) which contains all
+        draws across all chain arranged as (draws, chains, columns)
+        stored column major so that the values for each parameter
         are stored contiguously in memory, likewise all draws from a
         chain are contiguous.
         """

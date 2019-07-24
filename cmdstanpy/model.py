@@ -513,13 +513,13 @@ class Model(object):
         fitted_params_file: str = None,
         seed: int = None,
         csv_basename: str = None,
-        ) -> StanFit:
+    ) -> StanFit:
         """
         Wrapper for generate_quantities call
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
-        :param fitted_params_file: The path to a csv file that contains the 
+        :param fitted_params_file: The path to a csv file that contains the
             fitted parameters of the STAN model from the sample call.
         :param seed: The seed for random number generator or a list of per-chain
             seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
@@ -532,7 +532,7 @@ class Model(object):
             ``<basename>-<chain_id>.txt``.
         """
         generate_quantities_args = GenerateQuantitiesArgs(
-        fitted_params_file=fitted_params_file,
+            fitted_params_file=fitted_params_file,
         )
         with MaybeDictToFilePath(data, None) as (_data, _inits):
             args = CmdStanArgs(

@@ -284,7 +284,7 @@ class GenerateQuantitiesArgs(object):
         fitted_params_file: str = None,
     ) -> None:
         """Initialize object."""
-        self.fitted_params_file  = fitted_params_file
+        self.fitted_params_file = fitted_params_file
 
     def validate(self,chains=None) -> None:
         """
