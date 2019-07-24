@@ -5,7 +5,8 @@ from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import Model
 import numpy as np
 
-datafiles_path = os.path.join('test', 'data')
+here = os.path.dirname(os.path.abspath(__file__))
+datafiles_path = os.path.join(here, 'data')
 
 code = '''data {
   int<lower=0> N;
@@ -74,13 +75,13 @@ class ModelTest(unittest.TestCase):
         model = Model(stan_file=stan)
         self.assertEqual(None, model.exe_file)
         model.compile()
-        self.assertTrue(model.exe_file.endswith(exe))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
         model = Model(stan_file=stan)
         if os.path.exists(exe):
             os.remove(exe)
         model.compile()
-        self.assertTrue(model.exe_file.endswith(exe))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
         stan = os.path.join(datafiles_path, 'bernoulli_include.stan')
         exe = os.path.join(datafiles_path, 'bernoulli_include' + EXTENSION)
@@ -92,7 +93,7 @@ class ModelTest(unittest.TestCase):
         model = Model(stan_file=stan)
         model.compile(include_paths=include_paths)
         self.assertEqual(stan, model.stan_file)
-        self.assertTrue(model.exe_file.endswith(exe))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
     # TODO: test compile with existing exe - timestamp on exe unchanged
     # TODO: test overwrite with existing exe - timestamp on exe updated

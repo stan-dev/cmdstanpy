@@ -6,6 +6,7 @@ import tempfile
 import shutil
 import json
 
+from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     cmdstan_path,
     set_cmdstan_path,
@@ -18,8 +19,8 @@ from cmdstanpy.utils import (
     windows_short_path,
 )
 
-
-datafiles_path = os.path.join('test', 'data')
+here = os.path.dirname(os.path.abspath(__file__))
+datafiles_path = os.path.join(here, 'data')
 
 rdump = '''N <- 10
 y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
@@ -34,14 +35,14 @@ class CmdStanPathTest(unittest.TestCase):
         self.assertTrue(cmdstan_path().startswith(abs_rel_path))
 
     def test_non_spaces_location(self):
-        good_path = '/tmp/'
+        good_path = os.path.join(TMPDIR, 'good_dir')
         with TemporaryCopiedFile(good_path) as (p, is_changed):
             self.assertEqual(p, good_path)
             self.assertFalse(is_changed)
 
         # prepare files for test
-        bad_path = os.path.join(tempfile.mkdtemp(), 'bad dir')
-        os.mkdir(bad_path)
+        bad_path = os.path.join(TMPDIR, 'bad dir')
+        os.makedirs(bad_path, exist_ok=True)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         stan_bad = os.path.join(bad_path, 'bad name.stan')
         shutil.copy(stan, stan_bad)
@@ -57,7 +58,8 @@ class CmdStanPathTest(unittest.TestCase):
         except RuntimeError:
             pass
 
-        self.assertFalse(os.path.exists(stan_copied))
+        if platform.system() != 'Windows':
+            self.assertFalse(os.path.exists(stan_copied))
 
         # cleanup after test
         shutil.rmtree(bad_path, ignore_errors=True)
@@ -208,23 +210,25 @@ class WindowsShortPath(unittest.TestCase):
     def test_windows_short_path_directory(self):
         if platform.system() != 'Windows':
             return
-        original_path = 'C:\\new path'
-        os.makedirs(original_path)
+        original_path = os.path.join(TMPDIR, 'new path')
+        os.makedirs(original_path, exist_ok=True)
         assert os.path.exists(original_path)
         assert ' ' in original_path
         short_path = windows_short_path(original_path)
+        assert os.path.exists(short_path)
         assert original_path != short_path
         assert ' ' not in short_path
 
     def test_windows_short_path_file(self):
         if platform.system() != 'Windows':
             return
-        original_path = 'C:\\new path\\my_file.csv'
-        os.makedirs(original_path)
-        assert os.path.exists(original_path)
+        original_path = os.path.join(TMPDIR, 'new path', 'my_file.csv')
+        os.makedirs(os.path.split(original_path)[0], exist_ok=True)
+        assert os.path.exists(os.path.split(original_path)[0])
         assert ' ' in original_path
         assert '.csv' == os.path.splitext(original_path)[1]
         short_path = windows_short_path(original_path)
+        assert os.path.exists(os.path.split(short_path)[0])
         assert original_path != short_path
         assert ' ' not in short_path
         assert '.csv' == os.path.splitext(short_path)[1]
@@ -233,11 +237,12 @@ class WindowsShortPath(unittest.TestCase):
         """Test that the function doesn't touch filename."""
         if platform.system() != 'Windows':
             return
-        original_path = 'C:\\new path\\my file.csv'
-        os.makedirs(original_path)
-        assert os.path.exists(original_path)
+        original_path = os.path.join(TMPDIR, 'new path', 'my file.csv')
+        os.makedirs(os.path.split(original_path)[0], exist_ok=True)
+        assert os.path.exists(os.path.split(original_path)[0])
         assert ' ' in original_path
         short_path = windows_short_path(original_path)
+        assert os.path.exists(os.path.split(short_path)[0])
         assert original_path != short_path
         assert ' ' in short_path
         assert '.csv' == os.path.splitext(short_path)[1]

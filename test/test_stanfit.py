@@ -6,7 +6,8 @@ from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.model import Model
 
-datafiles_path = os.path.join('test', 'data')
+here = os.path.dirname(os.path.abspath(__file__))
+datafiles_path = os.path.join(here, 'data')
 goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
