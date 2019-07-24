@@ -9,33 +9,33 @@ from cmdstanpy.cmdstan_args import (
     OptimizeArgs,
 )
 
-datafiles_path = os.path.join("test", "data")
+datafiles_path = os.path.join('test', 'data')
 
 
 class OptimizeArgsTest(unittest.TestCase):
     def test_args_algorithm(self):
-        args = OptimizeArgs(algorithm="xxx")
+        args = OptimizeArgs(algorithm='non-valid_algorithm')
         self.assertRaises(ValueError, lambda: args.validate())
-        args = OptimizeArgs(algorithm="Newton")
+        args = OptimizeArgs(algorithm='Newton')
         args.validate()
         cmd = args.compose(None, 'output')
-        self.assertIn("algorithm=newton", cmd)
+        self.assertIn('algorithm=newton', cmd)
 
     def test_args_algorithm_init_alpha(self):
         args = OptimizeArgs(init_alpha=2e-4)
         args.validate()
         cmd = args.compose(None, 'output')
-        self.assertIn("init_alpha=0.0002", cmd)
+        self.assertIn('init_alpha=0.0002', cmd)
         args = OptimizeArgs(init_alpha=-1.0)
         self.assertRaises(ValueError, lambda: args.validate())
-        args = OptimizeArgs(init_alpha=1.0, algorithm="Newton")
+        args = OptimizeArgs(init_alpha=1.0, algorithm='Newton')
         self.assertRaises(ValueError, lambda: args.validate())
 
     def test_args_algorithm_iter(self):
         args = OptimizeArgs(iter=400)
         args.validate()
         cmd = args.compose(None, 'output')
-        self.assertIn("iter=400", cmd)
+        self.assertIn('iter=400', cmd)
         args = OptimizeArgs(iter=-1)
         self.assertRaises(ValueError, lambda: args.validate())
 
@@ -220,7 +220,7 @@ class CmdStanArgsTest(unittest.TestCase):
             inits=jinits,
             method_args=sampler_args,
         )
-        self.assertIn("init=", cmdstan_args.compose_command(None, "out.csv"))
+        self.assertIn('init=', cmdstan_args.compose_command(None, 'out.csv'))
 
         with self.assertRaises(ValueError):
             CmdStanArgs(

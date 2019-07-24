@@ -51,17 +51,16 @@ def get_latest_cmdstan(dot_dir: str) -> str:
 class MaybeDictToFilePath(object):
     def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
         self._unlink = [False] * len(objs)
-        self._paths = [""] * len(objs)
+        self._paths = [''] * len(objs)
         self._logger = logger or get_logger()
         i = 0
         for o in objs:
             if isinstance(o, dict):
-                with tempfile.NamedTemporaryFile(
-                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
-                ) as fd:
-                    data_file = fd.name
-                    self._logger.debug('input tempfile: %s', fd.name)
-                    jsondump(data_file, o)
+                data_file = create_named_text_file(
+                    dir=TMPDIR, prefix='', suffix='.json'
+                )
+                self._logger.debug('input tempfile: %s', data_file)
+                jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(o, str):
@@ -71,7 +70,7 @@ class MaybeDictToFilePath(object):
             elif o is None:
                 self._paths[i] = None
             else:
-                raise ValueError("data must be string or dict")
+                raise ValueError('data must be string or dict')
             i += 1
 
     def __enter__(self):
@@ -80,7 +79,10 @@ class MaybeDictToFilePath(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         for can_unlink, path in zip(self._unlink, self._paths):
             if can_unlink and path:
-                os.remove(path)
+                try:
+                    os.remove(path)
+                except PermissionError:
+                    pass
 
 
 def validate_cmdstan_path(path: str) -> None:
@@ -101,15 +103,25 @@ class TemporaryCopiedFile(object):
     def __init__(self, file_path: str):
         self._path = None
         self._tmpdir = None
-        if " " in file_path:
+        if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
+            base_path, file_name = os.path.split(os.path.abspath(file_path))
+            os.makedirs(base_path, exist_ok=True)
+            try:
+                short_base_path = windows_short_path(base_path)
+                if os.path.exists(short_base_path):
+                    file_path = os.path.join(short_base_path, file_name)
+            except RuntimeError:
+                pass
+
+        if ' ' in os.path.abspath(file_path):
             tmpdir = tempfile.mkdtemp()
-            if " " in tmpdir:
+            if ' ' in tmpdir:
                 raise RuntimeError(
-                    "Unable to generate temporary path without spaces! \n"
-                    + "Please move your stan file to location without spaces."
+                    'Unable to generate temporary path without spaces! \n'
+                    + 'Please move your stan file to location without spaces.'
                 )
 
-            _, path = tempfile.mkstemp(suffix=".stan", dir=tmpdir)
+            _, path = tempfile.mkstemp(suffix='.stan', dir=tmpdir)
 
             shutil.copy(file_path, path)
             self._path = path
@@ -414,12 +426,14 @@ def read_rdump_metric(path: str) -> List[int]:
         data = fp.read().replace('\n', '')
         m1 = re.search(r'inv_metric\s*<-\s*structure\(\s*c\(', data)
         if not m1:
-            return None
-        m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
-        if not m2:
-            return None
-        dims = m2.group(1).split(',')
-        return [int(d) for d in dims]
+            return_value = None
+        else:
+            m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
+            if not m2:
+                return_value = None
+            dims = m2.group(1).split(',')
+            return_value = [int(d) for d in dims]
+    return return_value
 
 
 def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
@@ -432,7 +446,6 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     proc = subprocess.Popen(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    proc.wait()
     stdout, stderr = proc.communicate()
     if proc.returncode:
         if stderr:
@@ -441,3 +454,69 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if stdout:
         return stdout.decode('utf-8').strip()
     return None
+
+
+def windows_short_path(path: str) -> str:
+    """
+    Gets the short path name of a given long path.
+    http://stackoverflow.com/a/23598461/200291
+
+    On non-Windows platforms, returns the path
+
+    If (base)path does not exist, function raises RuntimeError
+    """
+    if platform.system() != 'Windows':
+        return path
+
+    if os.path.isfile(path) or (
+        not os.path.isdir(path) and os.path.splitext(path)[1] != ''
+    ):
+        base_path, file_name = os.path.split(path)
+    else:
+        base_path, file_name = path, ''
+
+    if not os.path.exists(base_path):
+        raise RuntimeError(
+            'Windows short path function needs a valid directory. '
+            'Base directory does not exist: "{}"'.format(base_path)
+        )
+
+    import ctypes
+    from ctypes import wintypes
+
+    _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
+    _GetShortPathNameW.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.LPWSTR,
+        wintypes.DWORD,
+    ]
+    _GetShortPathNameW.restype = wintypes.DWORD
+
+    output_buf_size = 0
+    while True:
+        output_buf = ctypes.create_unicode_buffer(output_buf_size)
+        needed = _GetShortPathNameW(base_path, output_buf, output_buf_size)
+        if output_buf_size >= needed:
+            short_base_path = output_buf.value
+            break
+        else:
+            output_buf_size = needed
+
+    short_path = (
+        os.path.join(short_base_path, file_name)
+        if file_name
+        else short_base_path
+    )
+    return short_path
+
+
+def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
+    """
+    Create a named unique file.
+    """
+    fd = tempfile.NamedTemporaryFile(
+        mode='w+', prefix=prefix, suffix=suffix, dir=dir, delete=False
+    )
+    path = fd.name
+    fd.close()
+    return path
