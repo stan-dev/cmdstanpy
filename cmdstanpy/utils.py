@@ -203,8 +203,10 @@ def rdump(path: str, data: Dict) -> None:
             fd.write(line)
             fd.write('\n')
 
-
-def check_csv(path: str, is_optimizing: bool = False, is_sampling: bool = True) -> Dict:
+def check_csv(
+    path: str,
+    is_optimizing: bool = False,
+    is_sampling: bool = True) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_stan_csv(path, is_sampling=is_sampling)
     # check draws against spec
@@ -222,8 +224,6 @@ def check_csv(path: str, is_optimizing: bool = False, is_sampling: bool = True) 
         )
     return meta
 
-
-
 def scan_stan_csv(path: str, is_sampling: bool = True) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
@@ -237,7 +237,6 @@ def scan_stan_csv(path: str, is_sampling: bool = True) -> Dict:
             lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
     return dict
-
 
 def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """

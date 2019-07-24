@@ -139,7 +139,9 @@ class StanFit(object):
 
     @property
     def is_sampling(self) -> bool:
-        """Returns true if we are sampling rather than optimizing or running generated quantities"""
+        """Returns true if we are sampling rather than 
+        optimizing or running generated quantities"""
+        
         return self._is_sampling
 
     @property
@@ -178,10 +180,11 @@ class StanFit(object):
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        A 2-D numpy ndarray(with 1 chain) which contains all draws across all chain arranged
-        as (draws, chains, columns) stored column major so that the values
-        for each parameter are stored contiguously in memory, likewise
-        all draws from a chain are contiguous.
+        A 2-D numpy ndarray(with 1 chain) which contains all 
+        draws across all chain arranged as (draws, chains, columns) 
+        stored column major so that the values for each parameter 
+        are stored contiguously in memory, likewise all draws from a
+        chain are contiguous.
         """
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
@@ -256,8 +259,6 @@ class StanFit(object):
         for chain in range(self._chains):
             df_list.append(pd.read_csv(self.csv_files[chain], comment='#'))
         self._generated_quantities = pd.concat(df_list).to_numpy()
-
-
 
     def _assemble_sample(self) -> None:
         """

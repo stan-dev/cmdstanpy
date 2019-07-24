@@ -8,6 +8,7 @@ from numbers import Integral, Real
 from typing import List, Union
 from cmdstanpy.utils import read_metric
 
+
 class SamplerArgs(object):
     """Arguments for the NUTS adaptive sampler."""
 
@@ -275,6 +276,7 @@ class OptimizeArgs(object):
             cmd += ' iter={}'.format(self.iter)
         return cmd
 
+
 class GenerateQuantitiesArgs(object):
     """Arguments for the generated quantities block."""
     def __init__(
@@ -293,8 +295,10 @@ class GenerateQuantitiesArgs(object):
             if not os.path.exists(self.fitted_params_file):
                 raise ValueError(
                     'Invalid path for fitted_params_file: {}'.format(
-                        self.fitted_params_file)
+                        self.fitted_params_file
+                        )
                 )
+
     def compose(self, idx: int, cmd: str) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
@@ -303,7 +307,8 @@ class GenerateQuantitiesArgs(object):
             cmd = cmd + ' method=generate_quantities'
             cmd = '{} fitted_params={}'.format(cmd, self.fitted_params_file)
             return cmd
-        
+
+
 class CmdStanArgs(object):
     """
     Container for CmdStan command line arguments.
@@ -316,7 +321,12 @@ class CmdStanArgs(object):
         model_name: str,
         model_exe: str,
         chain_ids: Union[List[int], None],
-        method_args: Union[SamplerArgs, FixedParamArgs, OptimizeArgs, GenerateQuantitiesArgs],
+        method_args: Union[
+            SamplerArgs,
+            FixedParamArgs,
+            OptimizeArgs,
+            GenerateQuantitiesArgs
+            ],
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,

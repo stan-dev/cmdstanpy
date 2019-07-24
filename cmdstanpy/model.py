@@ -7,7 +7,8 @@ from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Union
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs,\
+ OptimizeArgs, GenerateQuantitiesArgs
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import (
     do_command,
@@ -506,7 +507,6 @@ class Model(object):
                 transcript.write(stderr.decode('utf-8'))
         stanfit._set_retcode(idx, proc.returncode)
 
-
     def run_generate_quantities(
         self,
         data: Union[Dict, str] = None,
@@ -519,8 +519,8 @@ class Model(object):
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
-        :param fitted_params_file: The path to a csv file that contains the fitted
-            parameters of the STAN model from the sample call.
+        :param fitted_params_file: The path to a csv file that contains the 
+            fitted parameters of the STAN model from the sample call.
         :param seed: The seed for random number generator or a list of per-chain
             seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
             numpy.random.RandomState() is used to generate a seed which will be
@@ -550,12 +550,12 @@ class Model(object):
 
         if not stanfit._check_retcodes():
             msg = 'Error during sampling'
-            for i in range(chains):
-                if stanfit._retcode(i) != 0:
-                    msg = '{}, chain {} returned error code {}'.format(
-                        msg, i, stanfit._retcode(i)
-                    )
+            # We have only 1 chain for generate_quantities
+            # So we check retcode for just that chain
+            if stanfit._retcode(0) != 0:
+                msg = '{}, chain {} returned error code {}'.format(
+                    msg, 0, stanfit._retcode(0)
+                )
             raise RuntimeError(msg)
         stanfit._validate_csv_files()
         return stanfit
-
