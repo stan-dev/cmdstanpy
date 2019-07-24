@@ -83,7 +83,7 @@ class ModelTest(unittest.TestCase):
         self.assertTrue(model.exe_file.endswith(exe))
 
         stan = os.path.join(datafiles_path, 'bernoulli_include.stan')
-        exe = os.path.join(datafiles_path, 'bernoulli_include')
+        exe = os.path.join(datafiles_path, 'bernoulli_include' + EXTENSION)
         here = os.path.dirname(os.path.abspath(__file__))
         datafiles_abspath = os.path.join(here, 'data')
         include_paths = [datafiles_abspath]
@@ -100,7 +100,7 @@ class ModelTest(unittest.TestCase):
 
 class OptimizeTest(unittest.TestCase):
     def test_optimize_works(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = Model(stan_file=stan, exe_file=exe)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
@@ -145,7 +145,7 @@ class OptimizeTest(unittest.TestCase):
     def test_optimize_works_dict(self):
         import json
 
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = Model(stan_file=stan, exe_file=exe)
         with open(os.path.join(datafiles_path, 'bernoulli.data.json')) as d:
