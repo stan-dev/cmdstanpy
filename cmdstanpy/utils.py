@@ -468,7 +468,9 @@ def windows_short_path(path: str) -> str:
     if platform.system() != 'Windows':
         return path
 
-    if os.path.isfile(path) or os.path.splitext(path)[1] != '':
+    if os.path.isfile(path) or (
+        not os.path.isdir(path) and os.path.splitext(path)[1] != ''
+    ):
         base_path, file_name = os.path.split(path)
     else:
         base_path, file_name = path, ''

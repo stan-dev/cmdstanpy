@@ -87,7 +87,9 @@ class StanFitTest(unittest.TestCase):
         self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
 
     def test_validate_big_run(self):
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)  # fake out validation
+        exe = os.path.join(
+            datafiles_path, 'bernoulli' + EXTENSION
+        )  # fake out validation
         output = os.path.join(datafiles_path, 'runset-big', 'output_icar_nyc')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
@@ -171,7 +173,9 @@ class StanFitTest(unittest.TestCase):
             os.remove(bern_fit.console_files[i])
 
     def test_diagnose_divergences(self):
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)  # fake out validation
+        exe = os.path.join(
+            datafiles_path, 'bernoulli' + EXTENSION
+        )  # fake out validation
         output = os.path.join(
             datafiles_path, 'diagnose-good', 'corr_gauss_depth8'
         )

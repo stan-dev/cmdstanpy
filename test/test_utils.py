@@ -1,6 +1,7 @@
 import os
 import os.path
 import unittest
+import platform
 import tempfile
 import shutil
 import json
@@ -14,6 +15,7 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     read_metric,
     TemporaryCopiedFile,
+    windows_short_path,
 )
 
 
@@ -200,6 +202,45 @@ class ReadMetricTest(unittest.TestCase):
         metric_file = os.path.join(datafiles_path, 'no_such_file.json')
         with self.assertRaisesRegex(Exception, 'No such file or directory'):
             dims = read_metric(metric_file)
+
+
+class WindowsShortPath(unittest.TestCase):
+    def test_windows_short_path_directory(self):
+        if platform.system() != 'Windows':
+            return
+        original_path = 'C:\\new path'
+        os.makedirs(original_path)
+        assert os.path.exists(original_path)
+        assert ' ' in original_path
+        short_path = windows_short_path(original_path)
+        assert original_path != short_path
+        assert ' ' not in short_path
+
+    def test_windows_short_path_file(self):
+        if platform.system() != 'Windows':
+            return
+        original_path = 'C:\\new path\\my_file.csv'
+        os.makedirs(original_path)
+        assert os.path.exists(original_path)
+        assert ' ' in original_path
+        assert '.csv' == os.path.splitext(original_path)[1]
+        short_path = windows_short_path(original_path)
+        assert original_path != short_path
+        assert ' ' not in short_path
+        assert '.csv' == os.path.splitext(short_path)[1]
+
+    def test_windows_short_path_file_with_space(self):
+        """Test that the function doesn't touch filename."""
+        if platform.system() != 'Windows':
+            return
+        original_path = 'C:\\new path\\my file.csv'
+        os.makedirs(original_path)
+        assert os.path.exists(original_path)
+        assert ' ' in original_path
+        short_path = windows_short_path(original_path)
+        assert original_path != short_path
+        assert ' ' in short_path
+        assert '.csv' == os.path.splitext(short_path)[1]
 
 
 if __name__ == '__main__':
