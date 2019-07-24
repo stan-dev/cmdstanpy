@@ -257,15 +257,15 @@ class SampleTest(unittest.TestCase):
             )
 
 class GenerateQuantitiesTest(unittest.TestCase):
-    def test_optimize_works(self):
-        ppc_datafiles_path = os.path.join(datafiles_path, 'bernoulli_ppc') 
-        exe = os.path.join(ppc_datafiles_path, 'bernoulli_ppc' + EXTENSION)
-        stan = os.path.join(ppc_datafiles_path, 'bernoulli_ppc.stan')
+    def test_gen_quantities_works(self):
+        # ppc_datafiles_path = os.path.join(datafiles_path, 'bernoulli_ppc') 
+        exe = os.path.join(datafiles_path, 'bernoulli_ppc' + EXTENSION)
+        stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
         model = Model(stan_file=stan, exe_file=exe)
         model.compile()
-        
+
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        sampler_output =os.path.join(ppc_datafiles_path, 'sampling_output.csv')  
+        sampler_output =os.path.join(datafiles_path, 'sampling_output.csv')  
         bern_fit = model.run_generate_quantities(
             fitted_params_file=sampler_output,
             data=jdata,

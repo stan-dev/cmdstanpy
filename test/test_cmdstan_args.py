@@ -468,7 +468,7 @@ class GenerateQuantitesTest(unittest.TestCase):
    def test_args_fitted_params(self):
         args = GenerateQuantitiesArgs(fitted_params_file="abcd")
         self.assertRaises(ValueError, lambda: args.validate())
-        param_file = os.path.join(datafiles_path, "bernoulli_ppc/sampling_output.csv")
+        param_file = os.path.join(datafiles_path, "bernoulli_ppc_files/sampling_output.csv")
         args = GenerateQuantitiesArgs(fitted_params_file=param_file)
         args.validate()
         cmd = args.compose(None, 'output')
