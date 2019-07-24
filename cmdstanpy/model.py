@@ -60,7 +60,7 @@ class Model(object):
             if self._name is None:
                 self._name, _ = os.path.splitext(exename)
             else:
-                if self._name != ''.join([exename, EXTENSION]):
+                if self._name != os.path.splitext(exename)[0]:
                     raise ValueError(
                         'name mismatch between Stan file and compiled'
                         ' executable, expecting basename: {}'
@@ -76,7 +76,7 @@ class Model(object):
     def code(self) -> str:
         """Return Stan program as a string."""
         if not self._stan_file:
-            raise RuntimeError("Please specify source file")
+            raise RuntimeError('Please specify source file')
 
         code = None
         try:
@@ -123,7 +123,7 @@ class Model(object):
             look for files to include in compilation of the C++ executable.
         """
         if not self._stan_file:
-            raise RuntimeError("Please specify source file")
+            raise RuntimeError('Please specify source file')
 
         if self._exe_file is not None and not overwrite:
             self._logger.warning('model is already compiled')

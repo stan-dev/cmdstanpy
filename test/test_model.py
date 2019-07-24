@@ -5,7 +5,8 @@ from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import Model
 import numpy as np
 
-datafiles_path = os.path.join('test', 'data')
+here = os.path.dirname(os.path.abspath(__file__))
+datafiles_path = os.path.join(here, 'data')
 
 code = '''data {
   int<lower=0> N;
@@ -74,16 +75,16 @@ class ModelTest(unittest.TestCase):
         model = Model(stan_file=stan)
         self.assertEqual(None, model.exe_file)
         model.compile()
-        self.assertTrue(model.exe_file.endswith(exe))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
         model = Model(stan_file=stan)
         if os.path.exists(exe):
             os.remove(exe)
         model.compile()
-        self.assertTrue(model.exe_file.endswith(exe))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
         stan = os.path.join(datafiles_path, 'bernoulli_include.stan')
-        exe = os.path.join(datafiles_path, 'bernoulli_include')
+        exe = os.path.join(datafiles_path, 'bernoulli_include' + EXTENSION)
         here = os.path.dirname(os.path.abspath(__file__))
         datafiles_abspath = os.path.join(here, 'data')
         include_paths = [datafiles_abspath]
@@ -92,7 +93,7 @@ class ModelTest(unittest.TestCase):
         model = Model(stan_file=stan)
         model.compile(include_paths=include_paths)
         self.assertEqual(stan, model.stan_file)
-        self.assertTrue(model.exe_file.endswith(exe))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
     # TODO: test compile with existing exe - timestamp on exe unchanged
     # TODO: test overwrite with existing exe - timestamp on exe updated
@@ -100,7 +101,7 @@ class ModelTest(unittest.TestCase):
 
 class OptimizeTest(unittest.TestCase):
     def test_optimize_works(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = Model(stan_file=stan, exe_file=exe)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
@@ -109,7 +110,7 @@ class OptimizeTest(unittest.TestCase):
             data=jdata,
             seed=1239812093,
             inits=jinit,
-            algorithm="BFGS",
+            algorithm='BFGS',
             init_alpha=0.001,
             iter=100,
         )
@@ -128,24 +129,24 @@ class OptimizeTest(unittest.TestCase):
 
         # test pandas output
         self.assertEqual(
-            fit.optimized_params_np[0], fit.optimized_params_pd["lp__"][0]
+            fit.optimized_params_np[0], fit.optimized_params_pd['lp__'][0]
         )
         self.assertEqual(
-            fit.optimized_params_np[1], fit.optimized_params_pd["theta"][0]
+            fit.optimized_params_np[1], fit.optimized_params_pd['theta'][0]
         )
 
         # test dict output
         self.assertEqual(
-            fit.optimized_params_np[0], fit.optimized_params_dict["lp__"]
+            fit.optimized_params_np[0], fit.optimized_params_dict['lp__']
         )
         self.assertEqual(
-            fit.optimized_params_np[1], fit.optimized_params_dict["theta"]
+            fit.optimized_params_np[1], fit.optimized_params_dict['theta']
         )
 
     def test_optimize_works_dict(self):
         import json
 
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = Model(stan_file=stan, exe_file=exe)
         with open(os.path.join(datafiles_path, 'bernoulli.data.json')) as d:
@@ -156,7 +157,7 @@ class OptimizeTest(unittest.TestCase):
             data=data,
             seed=1239812093,
             inits=init,
-            algorithm="BFGS",
+            algorithm='BFGS',
             init_alpha=0.001,
             iter=100,
         )

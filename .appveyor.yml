@@ -1,0 +1,71 @@
+skip_branch_with_pr: true
+version: '{build}'
+image: Visual Studio 2017
+
+platform:
+  - x64
+
+cache:
+  - C:\Users\appveyor\.cmdstanpy
+  #- C:\RTools
+
+init:
+  - git config --global core.autocrlf input
+
+clone_folder: c:\projects\cmdstanpy
+shallow_clone: true
+clone_depth: 1
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7"
+      PYTHON_ARCH: "64"
+
+install:
+  # If there is a newer build queued for the same PR, cancel this one.
+  # The AppVeyor 'rollout builds' option is supposed to serve the same
+  # purpose but it is problematic because it tends to cancel builds pushed
+  # directly to master instead of just PR builds (or the converse).
+  # credits: JuliaLang developers.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+      https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+      Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+        throw "There are newer queued builds for this pull request, failing early." }
+
+  # Install Python (from the official .msi of https://python.org) and pip when
+  # not already installed.
+  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
+
+  # Prepend newly installed Python to the PATH of this build (this cannot be
+  # done from inside the powershell script as it would require to restart
+  # the parent CMD process).
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Install RTools
+  - ps: Start-FileDownload 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
+  - "Rtools35.exe /VERYSILENT /SP- /NORESTART"  #TODO: dont download and install if c:\rtools folder exists.
+  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "SET MAKE=mingw32-make.exe"
+  - "gcc --version"
+  - "mingw32-make --version"
+
+  # Check that we have the expected version and architecture for Python
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  - "python -m pip install --quiet --disable-pip-version-check --upgrade pip"
+  - "python -m pip install --quiet -r requirements.txt"
+  - "python -m pip install --quiet pytest"
+
+  - "python .\\bin\\install_cmdstan"
+
+  - "python -m pip install --quiet -e ."
+  - "pip freeze"
+
+build: false
+
+test_script:
+  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "SET MAKE=mingw32-make.exe"
+  - "python -m pytest test"
