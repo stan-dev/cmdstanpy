@@ -99,7 +99,7 @@ class Model(object):
 
     def compile(
         self,
-        opt_lvl: int = 2,
+        opt_lvl: int = 3,
         overwrite: bool = False,
         include_paths: List[str] = None,
     ) -> None:
