@@ -2,7 +2,11 @@
 Utility functions
 """
 import os
-import json
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 import math
 import numpy as np
 import platform
@@ -45,10 +49,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
 
 
 class MaybeDictToFilePath(object):
-    def __init__(
-            self,
-            *objs: Union[str, dict],
-            logger: logging.Logger = None):
+    def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
         self._unlink = [False] * len(objs)
         self._paths = [""] * len(objs)
         self._logger = logger or get_logger()
@@ -56,7 +57,7 @@ class MaybeDictToFilePath(object):
         for o in objs:
             if isinstance(o, dict):
                 with tempfile.NamedTemporaryFile(
-                        mode='w+', suffix='.json', dir=TMPDIR, delete=False
+                    mode='w+', suffix='.json', dir=TMPDIR, delete=False
                 ) as fd:
                     data_file = fd.name
                     self._logger.debug('input tempfile: %s', fd.name)
@@ -104,8 +105,8 @@ class TemporaryCopiedFile(object):
             tmpdir = tempfile.mkdtemp()
             if " " in tmpdir:
                 raise RuntimeError(
-                    "Unable to generate temporary path without spaces! \n" +
-                    "Please move your stan file to location without spaces."
+                    "Unable to generate temporary path without spaces! \n"
+                    + "Please move your stan file to location without spaces."
                 )
 
             _, path = tempfile.mkstemp(suffix=".stan", dir=tmpdir)
@@ -210,7 +211,7 @@ def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     if is_optimizing:
         draws_spec = 1
     else:
-        draws_spec = int(meta.get('num_samples',1000))
+        draws_spec = int(meta.get('num_samples', 1000))
         if 'thin' in meta:
             draws_spec = int(math.ceil(draws_spec / meta['thin']))
     if meta['draws'] != draws_spec:
@@ -350,11 +351,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(
-        fp: TextIO,
-        config_dict: Dict,
-        lineno: int
-) -> int:
+def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Parse draws, check elements per draw, save num draws to config_dict.
     """

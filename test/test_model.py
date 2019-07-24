@@ -111,7 +111,8 @@ class OptimizeTest(unittest.TestCase):
             inits=jinit,
             algorithm="BFGS",
             init_alpha=0.001,
-            iter=100)
+            iter=100,
+        )
 
         # check if calling sample related stuff fails
         with self.assertRaises(RuntimeError):
@@ -127,26 +128,23 @@ class OptimizeTest(unittest.TestCase):
 
         # test pandas output
         self.assertEqual(
-            fit.optimized_params_np[0],
-            fit.optimized_params_pd["lp__"][0]
+            fit.optimized_params_np[0], fit.optimized_params_pd["lp__"][0]
         )
         self.assertEqual(
-            fit.optimized_params_np[1],
-            fit.optimized_params_pd["theta"][0]
+            fit.optimized_params_np[1], fit.optimized_params_pd["theta"][0]
         )
 
         # test dict output
         self.assertEqual(
-            fit.optimized_params_np[0],
-            fit.optimized_params_dict["lp__"]
+            fit.optimized_params_np[0], fit.optimized_params_dict["lp__"]
         )
         self.assertEqual(
-            fit.optimized_params_np[1],
-            fit.optimized_params_dict["theta"]
+            fit.optimized_params_np[1], fit.optimized_params_dict["theta"]
         )
 
     def test_optimize_works_dict(self):
         import json
+
         exe = os.path.join(datafiles_path, 'bernoulli')
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = Model(stan_file=stan, exe_file=exe)
@@ -160,7 +158,8 @@ class OptimizeTest(unittest.TestCase):
             inits=init,
             algorithm="BFGS",
             init_alpha=0.001,
-            iter=100)
+            iter=100,
+        )
 
         # test numpy output
         self.assertAlmostEqual(fit.optimized_params_np[0], -5, places=2)
@@ -175,11 +174,9 @@ class SampleTest(unittest.TestCase):
         bern_model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        bern_fit = bern_model.sample(data=jdata,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=100)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
 
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
@@ -209,12 +206,14 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.metric.shape, (4, 1))
 
         output = os.path.join(datafiles_path, 'test1-bernoulli-output')
-        bern_fit = bern_model.sample(data=jdata,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=100,
-                                     csv_basename=output)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=4,
+            cores=2,
+            seed=12345,
+            sampling_iters=100,
+            csv_basename=output,
+        )
         for i in range(bern_fit.chains):
             csv_file = bern_fit.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -227,28 +226,23 @@ class SampleTest(unittest.TestCase):
             os.remove(bern_fit.console_files[i])
 
         rdata = os.path.join(datafiles_path, 'bernoulli.data.R')
-        bern_fit = bern_model.sample(data=rdata,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=100)
+        bern_fit = bern_model.sample(
+            data=rdata, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
-        bern_fit = bern_model.sample(data=data_dict,
-                                     chains=4,
-                                     cores=2,
-                                     seed=12345,
-                                     sampling_iters=100)
+        bern_fit = bern_model.sample(
+            data=data_dict, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
         # check if  optimized_params_np returns first draw
         # (actually first row from csv)
         np.testing.assert_equal(
-            bern_fit.get_drawset().iloc[0].values,
-            bern_fit.optimized_params_np
+            bern_fit.get_drawset().iloc[0].values, bern_fit.optimized_params_np
         )
 
     def test_bernoulli_bad(self):
@@ -258,10 +252,9 @@ class SampleTest(unittest.TestCase):
         bern_model.compile()
 
         with self.assertRaisesRegex(Exception, 'Error during sampling'):
-            bern_fit = bern_model.sample(chains=4,
-                                         cores=2,
-                                         seed=12345,
-                                         sampling_iters=100)
+            bern_fit = bern_model.sample(
+                chains=4, cores=2, seed=12345, sampling_iters=100
+            )
 
 
 if __name__ == '__main__':

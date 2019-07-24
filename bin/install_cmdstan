@@ -16,6 +16,7 @@ import sys
 import tarfile
 import urllib.request
 from pathlib import Path
+from time import sleep
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -84,14 +85,20 @@ def is_installed(cmdstan_version):
 
 
 def latest_version():
-    try:
-        file_tmp, _ = urllib.request.urlretrieve(
-            'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
-        )
-    except urllib.error.URLError as err:
-        print('Cannot connect to github.')
-        print(err)
-        sys.exit(3)
+    for i in range(6):
+        try:
+            file_tmp, _ = urllib.request.urlretrieve(
+                'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
+            )
+            break
+        except urllib.error.URLError as err:
+            print('Cannot connect to github.')
+            print(err)
+            if i < 5:
+                print('retry ({}/5)'.format(i+1))
+                sleep(1)
+                continue
+            sys.exit(3)
     with open(file_tmp, 'r') as fd:
         response = fd.read()
         start_idx = response.find('\"tag_name\":\"v') + len('"tag_name":"v')
@@ -105,16 +112,22 @@ def retrieve_latest_version(version):
         'https://github.com/stan-dev/cmdstan/releases/download/'
         'v{0}/cmdstan-{0}.tar.gz'.format(version)
     )
-    try:
-        file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
-    except urllib.error.URLError as err:
-        print(
-            'Failed to download CmdStan version {} from github.com'.format(
-                version
+    for i in range(6):
+        try:
+            file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
+            break
+        except urllib.error.URLError as err:
+            print(
+                'Failed to download CmdStan version {} from github.com'.format(
+                    version
+                )
             )
-        )
-        print(err)
-        sys.exit(3)
+            print(err)
+            if i < 5:
+                print('retry ({}/5)'.format(i+1))
+                sleep(1)
+                continue
+            sys.exit(3)
     print('Download successful, file: {}'.format(file_tmp))
     try:
         tar = tarfile.open(file_tmp)
@@ -178,8 +191,8 @@ def main():
             retrieve_latest_version(version)
         if is_installed(cmdstan_version):
             print('CmdStan version {} already installed'.format(version))
-            sys.exit()
-        install_version(cmdstan_version)
+        else:
+            install_version(cmdstan_version)
 
 
 if __name__ == "__main__":
