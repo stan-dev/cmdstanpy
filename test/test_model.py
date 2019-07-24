@@ -259,9 +259,9 @@ class SampleTest(unittest.TestCase):
 class GenerateQuantitiesTest(unittest.TestCase):
     def test_gen_quantities_works(self):
         # ppc_datafiles_path = os.path.join(datafiles_path, 'bernoulli_ppc') 
-        exe = os.path.join(datafiles_path, 'bernoulli_ppc' + EXTENSION)
+        # exe = os.path.join(datafiles_path, 'bernoulli_ppc' + EXTENSION)
         stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
-        model = Model(stan_file=stan, exe_file=exe)
+        model = Model(stan_file=stan)
         model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
