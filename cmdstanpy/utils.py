@@ -249,10 +249,10 @@ def rload(fname: str) -> dict:
         else:
             try:
                 val = int(rhs)
-            except:
+            except TypeError:
                 try:
                     val = float(rhs)
-                except:
+                except TypeError:
                     raise ValueError(rhs)
         data_dict[lhs] = val
 
