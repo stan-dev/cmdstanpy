@@ -17,6 +17,7 @@ from cmdstanpy.utils import (
     read_metric,
     TemporaryCopiedFile,
     windows_short_path,
+    rload, rdump
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -246,6 +247,11 @@ class WindowsShortPath(unittest.TestCase):
         assert original_path != short_path
         assert ' ' in short_path
         assert '.csv' == os.path.splitext(short_path)[1]
+
+
+class RdumpTest(unittest.TestCase):
+    """Test load Rdump file, dump Rdump file."""
+    
 
 
 if __name__ == '__main__':

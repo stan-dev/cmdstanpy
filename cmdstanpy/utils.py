@@ -216,6 +216,53 @@ def rdump(path: str, data: Dict) -> None:
             fd.write('\n')
 
 
+
+
+def rload(fname: str) -> dict:
+    """Populate data dict from an R dump format file.
+       Process lines into chunks, one per variable definition.
+       Assumes that definition start '<var_name> <-' found on same line.
+    """
+    data_dict = {}
+    with open(fname, 'r') as fp:
+        lines = fp.readlines()
+
+    idx = 0
+    while idx < len(lines) and '<-' not in lines[idx]:
+        idx += 1
+    start_def = idx
+    idx += 1
+    while True:
+        while idx < len(lines) and '<-' not in lines[idx]:
+            idx += 1
+        next_def = idx
+
+        var_def = ''.join(lines[start_def:next_def]).replace('\n', '')
+        lhs, rhs = [_.strip() for _ in var_def.split('<-')]
+        if rhs.startswith('structure'):
+            *_, vals, dim = rhs.replace('(', ' ').replace(')', ' ').split('c')
+            vals = [float(v) for v in vals.split(',')[:-1]]
+            dim = [int(v) for v in dim.split(',')]
+            val = np.array(vals).reshape(dim[::-1]).T
+        elif rhs.startswith('c'):
+            val = np.array([float(_) for _ in rhs[2:-1].split(',')])
+        else:
+            try:
+                val = int(rhs)
+            except:
+                try:
+                    val = float(rhs)
+                except:
+                    raise ValueError(rhs)
+        data_dict[lhs] = val
+
+        if idx == len(lines):
+            break
+        start_def = next_def
+        idx += 1
+
+    return data_dict
+
 def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_stan_csv(path, is_optimizing=is_optimizing)
@@ -390,6 +437,12 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     config_dict['first_draw'] = first_draw
     fp.seek(cur_pos)
     return lineno
+
+def scan_rdump_var(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+    """
+    extract pattern <name> -> <decl> from lines in file
+    """
+    return -1
 
 
 def read_metric(path: str) -> List[int]:
