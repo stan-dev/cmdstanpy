@@ -291,9 +291,9 @@ class RloadTest(unittest.TestCase):
         rdump(dfile_tmp, data_dict_1)
         data_dict_2 = rload(dfile_tmp)
         
-        self.assertTrue('inv_metric' in data_dict_1)
-        for i,x in enumerate(data_dict_1['inv_metric']):
-            self.assertEqual(x, data_dict_1['inv_metric'][i]) 
+        self.assertTrue('inv_metric' in data_dict_2)
+        for i,x in enumerate(data_dict_2['inv_metric']):
+            self.assertEqual(x, data_dict_2['inv_metric'][i]) 
 
         os.remove(dfile_tmp)
 
