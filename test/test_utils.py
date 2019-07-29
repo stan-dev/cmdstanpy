@@ -23,10 +23,6 @@ from cmdstanpy.utils import (
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
 
-rdump = '''N <- 10
-y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
-'''
-
 
 class CmdStanPathTest(unittest.TestCase):
     def test_default_path(self):
@@ -249,10 +245,57 @@ class WindowsShortPath(unittest.TestCase):
         assert '.csv' == os.path.splitext(short_path)[1]
 
 
-class RdumpTest(unittest.TestCase):
-    """Test load Rdump file, dump Rdump file."""
-    
+class RloadTest(unittest.TestCase):
+    def test_rload_metric(self):
+        dfile = os.path.join(datafiles_path, 'metric_diag.data.R')
+        data_dict = rload(dfile)
+        self.assertEqual(data_dict['inv_metric'].shape,(3,))
 
+        dfile = os.path.join(datafiles_path, 'metric_dense.data.R')
+        data_dict = rload(dfile)
+        self.assertEqual(data_dict['inv_metric'].shape,(3,3))
+
+    def test_rload_data(self):
+        dfile = os.path.join(datafiles_path, 'rdump_test.data.R')
+        data_dict = rload(dfile)
+        self.assertEqual(data_dict['N'],128)
+        self.assertEqual(data_dict['M'],2)
+        self.assertEqual(data_dict['x'].shape,(128,2))
+
+    def test_rload_wrong_data(self):
+        dfile = os.path.join(datafiles_path, 'metric_diag.data.json')
+        data_dict = rload(dfile)
+        self.assertEqual(data_dict,None)
+
+    def test_rload_bad_data_1(self):
+        dfile = os.path.join(datafiles_path, 'rdump_bad_1.data.R')
+        with self.assertRaises(ValueError):
+            data_dict = rload(dfile)
+
+    def test_rload_bad_data_2(self):
+        dfile = os.path.join(datafiles_path, 'rdump_bad_2.data.R')
+        with self.assertRaises(ValueError):
+            data_dict = rload(dfile)
+
+    def test_rload_bad_data_3(self):
+        dfile = os.path.join(datafiles_path, 'rdump_bad_3.data.R')
+        with self.assertRaises(ValueError):
+            data_dict = rload(dfile)
+
+    def test_roundtrip_metric(self):
+        dfile = os.path.join(datafiles_path, 'metric_diag.data.R')
+        data_dict_1 = rload(dfile)
+        self.assertEqual(data_dict_1['inv_metric'].shape,(3,))
+
+        dfile_tmp = os.path.join(datafiles_path, 'tmp.data.R')
+        rdump(dfile_tmp, data_dict_1)
+        data_dict_2 = rload(dfile_tmp)
+        
+        self.assertTrue('inv_metric' in data_dict_1)
+        for i,x in enumerate(data_dict_1['inv_metric']):
+            self.assertEqual(x, data_dict_1['inv_metric'][i]) 
+
+        os.remove(dfile_tmp)
 
 if __name__ == '__main__':
     unittest.main()

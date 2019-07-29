@@ -216,8 +216,6 @@ def rdump(path: str, data: Dict) -> None:
             fd.write('\n')
 
 
-
-
 def rload(fname: str) -> dict:
     """Populate data dict from an R dump format file.
        Process lines into chunks, one per variable definition.
@@ -230,15 +228,17 @@ def rload(fname: str) -> dict:
     idx = 0
     while idx < len(lines) and '<-' not in lines[idx]:
         idx += 1
+    if idx == len(lines):
+        return None
     start_def = idx
     idx += 1
     while True:
         while idx < len(lines) and '<-' not in lines[idx]:
             idx += 1
         next_def = idx
-
         var_def = ''.join(lines[start_def:next_def]).replace('\n', '')
         lhs, rhs = [_.strip() for _ in var_def.split('<-')]
+        rhs = rhs.replace('L','')
         if rhs.startswith('structure'):
             *_, vals, dim = rhs.replace('(', ' ').replace(')', ' ').split('c')
             vals = [float(v) for v in vals.split(',')[:-1]]
@@ -262,6 +262,7 @@ def rload(fname: str) -> dict:
         idx += 1
 
     return data_dict
+
 
 def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
@@ -437,6 +438,7 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     config_dict['first_draw'] = first_draw
     fp.seek(cur_pos)
     return lineno
+
 
 def scan_rdump_var(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
