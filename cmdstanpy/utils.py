@@ -217,27 +217,30 @@ def rdump(path: str, data: Dict) -> None:
 
 
 def rload(fname: str) -> dict:
-    """Populate data dict from an R dump format file.
-       Process lines into chunks, one per variable definition.
-       Assumes that definition start '<var_name> <-' found on same line.
+    """Parse data and parameter variable values from an R dump format file.
+       This parser only supports the subset of R dump data as described
+       in the "Dump Data Format" section of the CmdStan manual, i.e.,
+       scalar, vector, matrix, and array data types.
     """
     data_dict = {}
     with open(fname, 'r') as fp:
         lines = fp.readlines()
 
+    # Variable data may span multiple lines, parse accordingly
     idx = 0
     while idx < len(lines) and '<-' not in lines[idx]:
         idx += 1
     if idx == len(lines):
         return None
-    start_def = idx
+    start_idx = idx
     idx += 1
     while True:
         while idx < len(lines) and '<-' not in lines[idx]:
             idx += 1
-        next_def = idx
-        var_def = ''.join(lines[start_def:next_def]).replace('\n', '')
-        lhs, rhs = [_.strip() for _ in var_def.split('<-')]
+        next_var = idx
+        var_data = ''.join(lines[start_idx:next_var]).replace('\n', '')
+        lhs, rhs = [_.strip() for _ in var_data.split('<-')]
+        lhs = lhs.replace('"','')
         rhs = rhs.replace('L','')
         if rhs.startswith('structure'):
             *_, vals, dim = rhs.replace('(', ' ').replace(')', ' ').split('c')
@@ -255,10 +258,9 @@ def rload(fname: str) -> dict:
                 except TypeError:
                     raise ValueError(rhs)
         data_dict[lhs] = val
-
         if idx == len(lines):
             break
-        start_def = next_def
+        start_idx = next_var
         idx += 1
 
     return data_dict

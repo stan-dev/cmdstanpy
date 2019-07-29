@@ -262,6 +262,13 @@ class RloadTest(unittest.TestCase):
         self.assertEqual(data_dict['M'],2)
         self.assertEqual(data_dict['x'].shape,(128,2))
 
+    def test_rload_jags_data(self):
+        dfile = os.path.join(datafiles_path, 'rdump_jags.data.R')
+        data_dict = rload(dfile)
+        self.assertEqual(data_dict['N'],128)
+        self.assertEqual(data_dict['M'],2)
+        self.assertEqual(data_dict['y'].shape,(128,))
+
     def test_rload_wrong_data(self):
         dfile = os.path.join(datafiles_path, 'metric_diag.data.json')
         data_dict = rload(dfile)
