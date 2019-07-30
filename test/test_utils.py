@@ -17,11 +17,14 @@ from cmdstanpy.utils import (
     read_metric,
     TemporaryCopiedFile,
     windows_short_path,
-    rload, rdump, parse_rdump_value
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
+
+rdump = '''N <- 10
+y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
+'''
 
 
 class CmdStanPathTest(unittest.TestCase):
@@ -322,6 +325,7 @@ class RloadTest(unittest.TestCase):
         self.assertEqual(v_s3[7,0], 8)
         self.assertEqual(v_s3[0,1], 9)
         self.assertEqual(v_s3[6,1], 15)
+
 
 if __name__ == '__main__':
     unittest.main()
