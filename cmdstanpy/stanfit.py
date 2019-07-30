@@ -257,7 +257,7 @@ class StanFit(object):
         df_list = []
         for chain in range(self._chains):
             df_list.append(pd.read_csv(self.csv_files[chain], comment='#'))
-        self._generated_quantities = pd.concat(df_list).to_numpy()
+        self._generated_quantities = pd.concat(df_list).values
 
     def _assemble_sample(self) -> None:
         """
