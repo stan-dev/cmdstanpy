@@ -17,14 +17,11 @@ from cmdstanpy.utils import (
     read_metric,
     TemporaryCopiedFile,
     windows_short_path,
+    rdump, rload, parse_rdump_value
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
-
-rdump = '''N <- 10
-y <- c(0, 1, 0, 0, 0, 0, 0, 0, 0, 1)
-'''
 
 
 class CmdStanPathTest(unittest.TestCase):
