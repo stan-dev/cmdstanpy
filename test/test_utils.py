@@ -17,7 +17,7 @@ from cmdstanpy.utils import (
     read_metric,
     TemporaryCopiedFile,
     windows_short_path,
-    rload, rdump
+    rload, rdump, parse_rdump_value
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -303,6 +303,25 @@ class RloadTest(unittest.TestCase):
             self.assertEqual(x, data_dict_2['inv_metric'][i]) 
 
         os.remove(dfile_tmp)
+
+    def test_parse_rdump_value(self):
+        s1 = 'structure(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),.Dim=c(2,8))'
+        v_s1 = parse_rdump_value(s1)
+        self.assertEqual(v_s1.shape,(2,8))
+        self.assertEqual(v_s1[1,0], 2)
+        self.assertEqual(v_s1[0,7], 15)
+        
+        s2 = 'structure(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),.Dim=c(1,16))'
+        v_s2 = parse_rdump_value(s2)
+        self.assertEqual(v_s2.shape,(1,16))
+
+        s3 = 'structure(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),.Dim = c(8, 2))'
+        v_s3 = parse_rdump_value(s3)
+        self.assertEqual(v_s3.shape,(8,2))
+        self.assertEqual(v_s3[1,0], 2)
+        self.assertEqual(v_s3[7,0], 8)
+        self.assertEqual(v_s3[0,1], 9)
+        self.assertEqual(v_s3[6,1], 15)
 
 if __name__ == '__main__':
     unittest.main()

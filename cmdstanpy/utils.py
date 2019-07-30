@@ -225,7 +225,6 @@ def rload(fname: str) -> dict:
     data_dict = {}
     with open(fname, 'r') as fp:
         lines = fp.readlines()
-
     # Variable data may span multiple lines, parse accordingly
     idx = 0
     while idx < len(lines) and '<-' not in lines[idx]:
@@ -239,31 +238,46 @@ def rload(fname: str) -> dict:
             idx += 1
         next_var = idx
         var_data = ''.join(lines[start_idx:next_var]).replace('\n', '')
-        lhs, rhs = [_.strip() for _ in var_data.split('<-')]
-        lhs = lhs.replace('"','')
-        rhs = rhs.replace('L','')
-        if rhs.startswith('structure'):
-            *_, vals, dim = rhs.replace('(', ' ').replace(')', ' ').split('c')
-            vals = [float(v) for v in vals.split(',')[:-1]]
-            dim = [int(v) for v in dim.split(',')]
-            val = np.array(vals).reshape(dim[::-1]).T
-        elif rhs.startswith('c'):
-            val = np.array([float(_) for _ in rhs[2:-1].split(',')])
-        else:
-            try:
-                val = int(rhs)
-            except TypeError:
-                try:
-                    val = float(rhs)
-                except TypeError:
-                    raise ValueError(rhs)
-        data_dict[lhs] = val
+        lhs, rhs = [item.strip() for item in var_data.split('<-')]
+        lhs = lhs.replace('"', '')  # strip optional Jags double quotes
+        rhs = rhs.replace('L', '')  # strip R long int qualifier
+        data_dict[lhs] = parse_rdump_value(rhs)
         if idx == len(lines):
             break
         start_idx = next_var
         idx += 1
-
     return data_dict
+
+
+def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
+    """Process right hand side of Rdump variable assignment statement.
+       Value is either scalar, vector, or multi-dim structure.
+       Use regex to capture structure values, dimensions.
+    """
+    pat = re.compile(
+        r'structure\(\s*c\((?P<vals>[^)]*)\)'
+        r'(,\s*\.Dim\s*=\s*c\s*\((?P<dims>[^)]*)\s*\))?\)'
+    )
+    if rhs.startswith('structure'):
+        parse = pat.match(rhs)
+        if parse is None or parse.group('vals') is None:
+            raise ValueError(rhs)
+        vals = [float(v) for v in parse.group('vals').split(',')]
+        val = np.array(vals, order='F')
+        if parse.group('dims') is not None:
+            dims = [int(v) for v in parse.group('dims').split(',')]
+            val = np.array(vals).reshape(dims, order='F')
+    elif rhs.startswith('c'):
+        val = np.array([float(item) for item in rhs[2:-1].split(',')])
+    else:
+        try:
+            val = int(rhs)
+        except TypeError:
+            try:
+                val = float(rhs)
+            except TypeError:
+                raise ValueError(rhs)
+    return val
 
 
 def check_csv(path: str, is_optimizing: bool = False) -> Dict:
