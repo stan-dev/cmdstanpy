@@ -1,5 +1,6 @@
 import os
 import re
+import platform
 import shutil
 import tempfile
 from typing import List, Tuple
@@ -11,6 +12,7 @@ import logging
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     check_csv,
+    create_named_text_file,
     EXTENSION,
     cmdstan_path,
     do_command,
@@ -37,32 +39,30 @@ class StanFit(object):
                 'found {i]}'.format(chains)
             )
         self.csv_files = []
-        """per-chain sample csv files."""
+        # per-chain sample csv files.
         if args.output_basename is None:
             csv_basename = 'stan-{}-draws'.format(args.model_name)
             for i in range(chains):
-                fd = tempfile.NamedTemporaryFile(
-                    mode='w+',
+                fd_name = create_named_text_file(
+                    dir=TMPDIR,
                     prefix='{}-{}-'.format(csv_basename, i + 1),
                     suffix='.csv',
-                    dir=TMPDIR,
-                    delete=False,
                 )
-                self.csv_files.append(fd.name)
+                self.csv_files.append(fd_name)
         else:
             for i in range(chains):
                 self.csv_files.append(
                     '{}-{}.csv'.format(args.output_basename, i + 1)
                 )
         self.console_files = []
-        """per-chain sample console output files."""
+        # per-chain sample console output files.
         for i in range(chains):
             txt_file = ''.join([os.path.splitext(self.csv_files[i])[0], '.txt'])
             self.console_files.append(txt_file)
         self.cmds = [
             args.compose_command(i, self.csv_files[i]) for i in range(chains)
         ]
-        """per-chain sampler command."""
+        # per-chain sampler command.
         self._retcodes = [-1 for _ in range(chains)]
         self._draws = None
         self._column_names = None
@@ -83,7 +83,7 @@ class StanFit(object):
 
     @property
     def model(self) -> str:
-        """Stan model name"""
+        """Stan model name."""
         return self._args.model_name
 
     @property
@@ -115,7 +115,7 @@ class StanFit(object):
 
     @property
     def metric_type(self) -> str:
-        """Metric type, either 'diag_e' or 'dense_e'"""
+        """Metric type, either 'diag_e' or 'dense_e'."""
         return self._metric_type
 
     @property
@@ -134,7 +134,7 @@ class StanFit(object):
 
     @property
     def is_optimizing(self) -> bool:
-        """Returns true if we are optimizing rather than sampling"""
+        """Returns true if we are optimizing rather than sampling."""
         return self._is_optimizing
 
     @property
@@ -145,17 +145,17 @@ class StanFit(object):
 
     @property
     def optimized_params_np(self) -> np.array:
-        """returns optimized params as numpy array"""
+        """Returns optimized params as numpy array."""
         return self._first_draw
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
-        """returns optimized params as pandas DataFrame"""
+        """Returns optimized params as pandas DataFrame."""
         return pd.DataFrame([self._first_draw], columns=self.column_names)
 
     @property
     def optimized_params_dict(self) -> OrderedDict:
-        """returns optimized params as Dict"""
+        """Returns optimized params as Dict."""
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
@@ -197,7 +197,7 @@ class StanFit(object):
         return True
 
     def _retcode(self, idx: int) -> int:
-        """get retcode for chain[idx]."""
+        """Get retcode for chain[idx]."""
         return self._retcodes[idx]
 
     def _set_retcode(self, idx: int, val: int) -> None:
@@ -330,24 +330,22 @@ class StanFit(object):
         tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
             self._args.model_name, self.chains
         )
-        fd, tmp_csv_path = tempfile.mkstemp(
-            suffix='.csv', prefix=tmp_csv_file, dir=TMPDIR, text=True
+        tmp_csv_path = create_named_text_file(
+            dir=TMPDIR, prefix=tmp_csv_file, suffix='.csv'
         )
-        cmd = '{} --csv_file={} {}'.format(
-            cmd_path, tmp_csv_path, ' '.join(self.csv_files)
-        )
-        # breaks on all whitespace
-        do_command(cmd.split(), logger=self._logger)
-        summary_data = pd.read_csv(
-            tmp_csv_path, delimiter=',', header=0, index_col=0, comment='#'
-        )
+        cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self.csv_files
+        do_command(cmd, logger=self._logger)
+        with open(tmp_csv_path, 'rb') as fd:
+            summary_data = pd.read_csv(
+                fd, delimiter=',', header=0, index_col=0, comment='#'
+            )
         mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
 
     def diagnose(self) -> str:
         """
         Run cmdstan/bin/diagnose over all output csv files.
-        Returns output of diagnose (stdout/stderr)
+        Returns output of diagnose (stdout/stderr).
 
         The diagnose utility reads the outputs of all chains
         and checks for the following potential problems:
@@ -363,9 +361,8 @@ class StanFit(object):
         self._sampling_only()
 
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
-        csv_files = ' '.join(self.csv_files)
-        cmd = '{} {} '.format(cmd_path, csv_files)
-        result = do_command(cmd=cmd.split(), logger=self._logger)
+        cmd = [cmd_path] + self.csv_files
+        result = do_command(cmd=cmd, logger=self._logger)
         if result:
             self._logger.warning(result)
         return result
@@ -433,7 +430,7 @@ class StanFit(object):
                 )
                 shutil.move(self.csv_files[i], to_path)
                 self.csv_files[i] = to_path
-            except (IOError, OSError) as e:
+            except (IOError, OSError, PermissionError) as e:
                 raise ValueError(
                     'cannot save to file: {}'.format(to_path)
                 ) from e

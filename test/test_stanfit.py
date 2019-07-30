@@ -6,14 +6,15 @@ from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.model import Model
 
-datafiles_path = os.path.join('test', 'data')
+here = os.path.dirname(os.path.abspath(__file__))
+datafiles_path = os.path.join(here, 'data')
 goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
 
 class StanFitTest(unittest.TestCase):
     def test_check_retcodes(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
@@ -39,7 +40,7 @@ class StanFitTest(unittest.TestCase):
 
     def test_validate_good_run(self):
         # construct fit using existing sampler output
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         output = os.path.join(goodfiles_path, 'bern')
         sampler_args = SamplerArgs(
@@ -84,10 +85,12 @@ class StanFitTest(unittest.TestCase):
                 '\nEffective sample size satisfactory.',
             ]
         )
-        self.assertIn(expected, fit.diagnose())
+        self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
 
     def test_validate_big_run(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')  # fake out validation
+        exe = os.path.join(
+            datafiles_path, 'bernoulli' + EXTENSION
+        )  # fake out validation
         output = os.path.join(datafiles_path, 'runset-big', 'output_icar_nyc')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
@@ -171,7 +174,9 @@ class StanFitTest(unittest.TestCase):
             os.remove(bern_fit.console_files[i])
 
     def test_diagnose_divergences(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')  # fake out validation
+        exe = os.path.join(
+            datafiles_path, 'bernoulli' + EXTENSION
+        )  # fake out validation
         output = os.path.join(
             datafiles_path, 'diagnose-good', 'corr_gauss_depth8'
         )
@@ -195,10 +200,10 @@ class StanFitTest(unittest.TestCase):
                 'For optimal performance, increase this limit.',
             ]
         )
-        self.assertIn(expected, fit.diagnose())
+        self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
 
     def test_validate_bad_run(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         sampler_args = SamplerArgs(
             sampling_iters=100, max_treedepth=11, adapt_delta=0.95
