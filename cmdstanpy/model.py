@@ -507,7 +507,7 @@ class Model(object):
                 transcript.write(stderr.decode('utf-8'))
         stanfit._set_retcode(idx, proc.returncode)
 
-    def run_generate_quantities(
+    def run_generated_quantities(
         self,
         data: Union[Dict, str] = None,
         fitted_params_file: str = None,
@@ -515,7 +515,7 @@ class Model(object):
         csv_basename: str = None,
     ) -> StanFit:
         """
-        Wrapper for generate_quantities call
+        Wrapper for generated quantities call
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
@@ -550,7 +550,7 @@ class Model(object):
 
         if not stanfit._check_retcodes():
             msg = 'Error during sampling'
-            # We have only 1 chain for generate_quantities
+            # We have only 1 chain for generated quantities
             # So we check retcode for just that chain
             if stanfit._retcode(0) != 0:
                 msg = '{}, chain {} returned error code {}'.format(

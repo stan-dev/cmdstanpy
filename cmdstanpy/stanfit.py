@@ -140,7 +140,7 @@ class StanFit(object):
     @property
     def is_sampling(self) -> bool:
         """Returns true if we are sampling rather than
-        optimizing or running generated quantities"""
+        optimizing or running generate quantities"""
         return self._is_sampling
 
     @property

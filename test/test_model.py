@@ -6,7 +6,6 @@ from cmdstanpy.model import Model
 import numpy as np
 
 datafiles_path = os.path.join('test', 'data')
-print(datafiles_path)
 code = '''data {
   int<lower=0> N;
   int<lower=0,upper=1> y[N];
@@ -265,7 +264,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         sampler_output =os.path.join(ppc_datafiles_path, 'sampling_output.csv')  
-        bern_fit = model.run_generate_quantities(
+        bern_fit = model.run_generated_quantities(
             fitted_params_file=sampler_output,
             data=jdata,
             seed=123456)

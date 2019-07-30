@@ -278,7 +278,7 @@ class OptimizeArgs(object):
 
 
 class GenerateQuantitiesArgs(object):
-    """Arguments for the generated quantities block."""
+    """Arguments for the generate quantities block."""
     def __init__(
         self,
         fitted_params_file: str = None,
