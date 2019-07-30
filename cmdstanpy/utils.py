@@ -16,7 +16,7 @@ import shutil
 import tempfile
 import logging
 
-from typing import Dict, TextIO, List, Union
+from typing import Dict, TextIO, List, Union, Tuple
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -258,25 +258,27 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
         r'structure\(\s*c\((?P<vals>[^)]*)\)'
         r'(,\s*\.Dim\s*=\s*c\s*\((?P<dims>[^)]*)\s*\))?\)'
     )
-    if rhs.startswith('structure'):
-        parse = pat.match(rhs)
-        if parse is None or parse.group('vals') is None:
-            raise ValueError(rhs)
-        vals = [float(v) for v in parse.group('vals').split(',')]
-        val = np.array(vals, order='F')
-        if parse.group('dims') is not None:
-            dims = [int(v) for v in parse.group('dims').split(',')]
-            val = np.array(vals).reshape(dims, order='F')
-    elif rhs.startswith('c'):
-        val = np.array([float(item) for item in rhs[2:-1].split(',')])
-    else:
-        try:
-            val = int(rhs)
-        except TypeError:
-            try:
-                val = float(rhs)
-            except TypeError:
+    val = None
+    try:
+        if rhs.startswith('structure'):
+            parse = pat.match(rhs)
+            if parse is None or parse.group('vals') is None:
                 raise ValueError(rhs)
+            vals = [float(v) for v in parse.group('vals').split(',')]
+            val = np.array(vals, order='F')
+            if parse.group('dims') is not None:
+                dims = [int(v) for v in parse.group('dims').split(',')]
+                val = np.array(vals).reshape(dims, order='F')
+        elif rhs.startswith('c(') and rhs.endswith(')'):
+            val = np.array([float(item) for item in rhs[2:-1].split(',')])
+        elif '.' in rhs or 'e' in rhs:
+            val = float(rhs)
+        else:
+            val = int(rhs)
+    except TypeError:
+        raise ValueError(
+            'bad value in Rdump file: {}'.format(rhs)
+            )
     return val
 
 
@@ -456,13 +458,6 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_rdump_var(fp: TextIO, config_dict: Dict, lineno: int) -> int:
-    """
-    extract pattern <name> -> <decl> from lines in file
-    """
-    return -1
-
-
 def read_metric(path: str) -> List[int]:
     """
     Read metric file in JSON or Rdump format.
@@ -480,7 +475,7 @@ def read_metric(path: str) -> List[int]:
                 ' entry "inv_metric"'.format(path)
             )
     else:
-        dims = read_rdump_metric(path)
+        dims = list(read_rdump_metric(path))
         if dims is None:
             raise ValueError(
                 'metric file {}, bad or missing'
@@ -491,20 +486,15 @@ def read_metric(path: str) -> List[int]:
 
 def read_rdump_metric(path: str) -> List[int]:
     """
-    Find dimensions of variable named 'inv_metric' using regex search.
+    Find dimensions of variable named 'inv_metric' in Rdump data file.
     """
-    with open(path, 'r') as fp:
-        data = fp.read().replace('\n', '')
-        m1 = re.search(r'inv_metric\s*<-\s*structure\(\s*c\(', data)
-        if not m1:
-            return_value = None
-        else:
-            m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
-            if not m2:
-                return_value = None
-            dims = m2.group(1).split(',')
-            return_value = [int(d) for d in dims]
-    return return_value
+    metric_dict = rload(path)
+    if not ('inv_metric' in metric_dict and
+            isinstance(metric_dict['inv_metric'], np.ndarray)):
+        raise ValueError(
+            'metric file {}, bad or missing entry "inv_metric"'.format(path)
+            )
+    return list(metric_dict['inv_metric'].shape)
 
 
 def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
