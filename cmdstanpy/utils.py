@@ -16,7 +16,7 @@ import shutil
 import tempfile
 import logging
 
-from typing import Dict, TextIO, List, Union, Tuple
+from typing import Dict, TextIO, List, Union
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
