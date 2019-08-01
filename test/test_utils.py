@@ -252,10 +252,10 @@ def test_install_script():
     """Test that install_scripts are the same."""
     import cmdstanpy
 
-    cmdstanpy_folder, _ = os.path.dirname(cmdstanpy.__file__)
-    install_script1 = os.path.join(main_folder, 'install_cmdstan.py')
+    cmdstanpy_folder = os.path.dirname(cmdstanpy.__file__)
+    install_script1 = os.path.join(cmdstanpy_folder, 'install_cmdstan.py')
 
-    bin_folder = os.normpath(os.path.join(cmdstanpy_folder, '..', 'bin'))
+    bin_folder = os.path.normpath(os.path.join(cmdstanpy_folder, '..', 'bin'))
     install_script2 = os.path.join(bin_folder, 'install_cmdstan')
 
     if not os.path.exists(install_script2):
