@@ -15,6 +15,7 @@ import subprocess
 import shutil
 import tempfile
 import logging
+import sys
 
 from typing import Dict, TextIO, List, Union
 from cmdstanpy import TMPDIR
@@ -520,3 +521,28 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     path = fd.name
     fd.close()
     return path
+
+
+def install_cmdstan(version: str = None, dir: str = None) -> bool:
+    """
+    Run 'install_cmdstan' -script
+    """
+    logger = get_logger()
+    python = sys.executable
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(here, 'install_cmdstan.py')
+    cmd = [python, path]
+    if version is not None:
+        cmd.extend(['--version', version])
+    if dir is not None:
+        cmd.extend(['--dir', dir])
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while proc.poll() is None:
+        output = proc.stdout.readline().decode('utf-8').strip()
+        if output:
+            logger.info(output)
+    proc.communicate()
+    if proc.returncode:
+        logger.warning('CmdStan installation failed')
+        return False
+    return True
