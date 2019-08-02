@@ -129,6 +129,8 @@ class Model(object):
             self._logger.warning('model is already compiled')
             return
 
+        compilation_failed = False
+
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()
@@ -172,8 +174,8 @@ class Model(object):
                 do_command(cmd, cmdstan_path(), self._logger)
             except Exception as e:
                 self._logger.error('make cmd failed %s', e)
-
-            if is_copied and os.path.exists(exe_file):
+                compilation_failed = True
+            if is_copied and not compilation_failed:
 
                 original_target_dir = os.path.dirname(self._stan_file)
                 # reconstruct the output file name
@@ -187,13 +189,12 @@ class Model(object):
                 )
                 # copy the generated file back to the original directory
                 shutil.copy(exe_file, self._exe_file)
-            elif os.path.exists(exe_file):
+            elif not compilation_failed:
                 self._exe_file = exe_file
-
-        if os.path.exists(self._exe_file):
-            self._logger.info('compiled model file: %s', self._exe_file)
-        else:
+        if compilation_failed:
             self._logger.error('model compilation failed')
+        else:
+            self._logger.info('compiled model file: %s', self._exe_file)
 
     def optimize(
         self,
