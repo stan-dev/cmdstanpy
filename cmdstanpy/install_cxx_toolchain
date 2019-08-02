@@ -2,7 +2,7 @@
 """
 Download and install a C++ toolchain.
 Currently implemented platforms (platform.system)
-    Windows: RTools 3.5, 4.0 (4.0 by default) 
+    Windows: RTools 3.5 (default), 4.0 
     Darwin (macOS): Not implemented
     Linux: Not implemented 
 Optional command line arguments:
