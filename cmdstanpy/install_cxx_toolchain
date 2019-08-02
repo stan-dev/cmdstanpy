@@ -2,9 +2,9 @@
 """
 Download and install a C++ toolchain.
 Currently implemented platforms (platform.system)
-    Windows: RTools 3.5 (default), 4.0 
+    Windows: RTools 3.5 (default), 4.0
     Darwin (macOS): Not implemented
-    Linux: Not implemented 
+    Linux: Not implemented
 Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
@@ -152,7 +152,7 @@ def get_toolchain_name():
 def get_url(version):
     if platform.system() == 'Windows':
         if version == '4.0':
-            
+
             if IS_64BITS:
                 url = 'https://cran.r-project.org/bin/windows/testing/rtools40-x86_64.exe'
             else:
@@ -167,14 +167,14 @@ def get_toolchain_version(name, version):
     if platform.system() == "Windows":
         root_folder = "RTools"
         toolchain_folder = "{}{}".format(name, version.replace(".", ""))
-    
+
     return root_folder, toolchain_folder
 
 def main():
     if platform.system() not in {'Windows'}:
         msg = 'Download for the C++ toolchain on the current platform has not been implemented: %s'
         raise NotImplementedError(msg % platform.system())
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')
@@ -187,9 +187,9 @@ def main():
         version = latest_version()
     version = normalize_version(version)
     print("C++ toolchain '{}' version: {}".format(toolchain, version))
-    
+
     url = get_url(version)
-    
+
     install_dir = vars(args)['dir']
     if install_dir is None:
         install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
@@ -199,7 +199,7 @@ def main():
     silent = 'silent' in vars(args)
     if 'silent' not in vars(args) and version == "4.0":
         silent = True
-    
+
     root_folder, toolchain_version = get_toolchain_version(toolchain, version)
     toolchain_loc = os.path.join(root_folder, toolchain_version)
     with pushd(install_dir):
