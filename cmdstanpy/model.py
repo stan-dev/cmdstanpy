@@ -173,7 +173,7 @@ class Model(object):
             except Exception as e:
                 self._logger.error('make cmd failed %s', e)
 
-            if is_copied:
+            if is_copied and os.path.exists(exe_file):
 
                 original_target_dir = os.path.dirname(self._stan_file)
                 # reconstruct the output file name
@@ -185,13 +185,15 @@ class Model(object):
                 self._exe_file = os.path.join(
                     original_target_dir, new_exec_name
                 )
-
                 # copy the generated file back to the original directory
                 shutil.copy(exe_file, self._exe_file)
-            else:
+            elif os.path.exists(exe_file):
                 self._exe_file = exe_file
 
-        self._logger.info('compiled model file: %s', self._exe_file)
+        if os.path.exists(self._exe_file):
+            self._logger.info('compiled model file: %s', self._exe_file)
+        else:
+            self._logger.error('model compilation failed')
 
     def optimize(
         self,
