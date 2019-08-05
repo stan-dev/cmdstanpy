@@ -3,8 +3,8 @@ import subprocess
 import shutil
 import logging
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
-from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Union
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
@@ -465,13 +465,9 @@ class Model(object):
             )
 
             stanfit = StanFit(args=args, chains=chains)
-            try:
-                tp = ThreadPool(cores)
+            with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    tp.apply_async(self._do_sample, (stanfit, i))
-            finally:
-                tp.close()
-                tp.join()
+                    executor.submit(self._do_sample(stanfit, i))
             if not stanfit._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
