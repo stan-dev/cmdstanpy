@@ -3,7 +3,7 @@ import subprocess
 import shutil
 import logging
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Dict, List, Union
