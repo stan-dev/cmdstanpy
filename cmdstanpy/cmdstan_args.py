@@ -278,35 +278,30 @@ class OptimizeArgs(object):
 
 
 class GenerateQuantitiesArgs(object):
-    """Arguments for the generate quantities block."""
-    def __init__(
-        self,
-        fitted_params_file: str = None,
-    ) -> None:
+    """Arguments needed for generate_quantities method."""
+    def __init__(self, csv_files: List[str]) -> None:
         """Initialize object."""
-        self.fitted_params_file = fitted_params_file
+        self.sample_csv_files = csv_files
 
-    def validate(self,chains=None) -> None:
+    def validate(self) -> None:
         """
         Check arguments correctness and consistency.
-        * file for fitted_params_file exists
+
+        * check that sample csv files exist
         """
-        if self.fitted_params_file is not None:
-            if not os.path.exists(self.fitted_params_file):
+        for i, csv in enumerate(self.sample_csv_files):
+            if not os.path.exists(csv):
                 raise ValueError(
-                    'Invalid path for fitted_params_file: {}'.format(
-                        self.fitted_params_file
-                        )
+                    'Invalid path for sample csv file: {}'.format(csv)
                 )
 
     def compose(self, idx: int, cmd: str) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
-        if self.fitted_params_file is not None:
-            cmd = cmd + ' method=generate_quantities'
-            cmd = '{} fitted_params={}'.format(cmd, self.fitted_params_file)
-            return cmd
+        cmd = cmd + ' method=generate_quantities'
+        cmd = '{} fitted_params={}'.format(cmd, self.sample_csv_files[idx-1])
+        return cmd
 
 
 class CmdStanArgs(object):

@@ -267,7 +267,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         sampler_output =os.path.join(ppc_datafiles_path, 'sampling_output.csv')  
         bern_fit = model.run_generated_quantities(
-            fitted_params_file=sampler_output,
+            csv_files=[sampler_output],
             data=jdata,
             seed=123456)
         #Test column names

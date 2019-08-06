@@ -464,16 +464,18 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
+
 class GenerateQuantitesTest(unittest.TestCase):
-   def test_args_fitted_params(self):
-        args = GenerateQuantitiesArgs(fitted_params_file="abcd")
-        self.assertRaises(ValueError, lambda: args.validate())
-        param_file = os.path.join(datafiles_path, "bernoulli_ppc_files/sampling_output.csv")
-        args = GenerateQuantitiesArgs(fitted_params_file=param_file)
+    def test_args_fitted_params(self):
+        args = GenerateQuantitiesArgs(csv_files=['abcd'])
+        with self.assertRaises(ValueError):
+            args.validate()
+        sample_file = os.path.join(datafiles_path, 'bernoulli_ppc_files/sampling_output.csv')
+        args = GenerateQuantitiesArgs(csv_files=[sample_file])
         args.validate()
-        cmd = args.compose(None, 'output')
-        self.assertIn("method=generate_quantities", cmd)
-        self.assertIn("fitted_params={}".format(param_file), cmd) 
+        cmd = args.compose(0, 'output')
+        self.assertIn('method=generate_quantities', cmd)
+        self.assertIn('fitted_params={}'.format(sample_file), cmd) 
 
 if __name__ == '__main__':
     unittest.main()

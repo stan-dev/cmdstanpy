@@ -165,10 +165,10 @@ class StanFit(object):
     @property
     def sample(self) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains all draws across all chain arranged
-        as (draws, chains, columns) stored column major so that the values
-        for each parameter are stored contiguously in memory, likewise
-        all draws from a chain are contiguous.
+        A 3-D numpy ndarray which contains all draws across all chains
+        arranged as (draws, chains, columns) stored column major
+        so that the values for each parameter are stored contiguously
+        in memory, likewise all draws from a chain are contiguous.
         """
         self._sampling_only()
 
@@ -179,11 +179,10 @@ class StanFit(object):
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        A 2-D numpy ndarray(with 1 chain) which contains all
-        draws across all chain arranged as (draws, chains, columns)
-        stored column major so that the values for each parameter
-        are stored contiguously in memory, likewise all draws from a
-        chain are contiguous.
+        A 3-D numpy ndarray which contains all draws across all chains
+        arranged as (draws, chains, columns) stored column major
+        so that the values for each parameter are stored contiguously
+        in memory, likewise all draws from a chain are contiguous.
         """
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
@@ -204,6 +203,8 @@ class StanFit(object):
         """Set retcode for chain[idx] to val."""
         self._retcodes[idx] = val
 
+    # redo - better error handling
+    # only used by unit tests...
     def _check_console_msgs(self) -> bool:
         """Checks console messages for each chain."""
         valid = True
