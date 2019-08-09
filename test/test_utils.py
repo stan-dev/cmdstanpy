@@ -248,29 +248,5 @@ class WindowsShortPath(unittest.TestCase):
         assert '.csv' == os.path.splitext(short_path)[1]
 
 
-def test_install_script():
-    """Test that install_scripts are the same."""
-    import cmdstanpy
-
-    cmdstanpy_folder = os.path.dirname(cmdstanpy.__file__)
-    install_script1 = os.path.join(cmdstanpy_folder, 'install_cmdstan.py')
-
-    bin_folder = os.path.normpath(os.path.join(cmdstanpy_folder, '..', 'bin'))
-    install_script2 = os.path.join(bin_folder, 'install_cmdstan')
-
-    if not os.path.exists(install_script2):
-        msg = 'Could not find "bin/install_cmdstan". Test is ignored.'
-        logger.warning(msg)
-        return  # ignore test if bin/install_cmdstan not found
-
-    with open(install_script1) as fd:
-        install_script1_txt = fd.read()
-
-    with open(install_script2) as fd:
-        install_script2_txt = fd.read()
-
-    assert install_script1_txt == install_script2_txt
-
-
 if __name__ == '__main__':
     unittest.main()
