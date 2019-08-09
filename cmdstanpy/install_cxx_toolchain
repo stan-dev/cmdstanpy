@@ -74,7 +74,7 @@ def install_version(installation_dir, installation_file, version, silent):
                 print("Installation files found at the installation location.")
             sys.exit(3)
     # check installation
-    if is_installed(installation_dir):
+    if is_installed(installation_dir, version):
         os.remove(installation_file)
     print('Installed {}'.format(os.path.splitext(installation_file)[0]))
 
