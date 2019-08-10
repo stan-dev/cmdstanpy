@@ -15,6 +15,7 @@ import subprocess
 import shutil
 import tempfile
 import logging
+import sys
 
 from typing import Dict, TextIO, List, Union
 from cmdstanpy import TMPDIR
@@ -216,6 +217,72 @@ def rdump(path: str, data: Dict) -> None:
             fd.write('\n')
 
 
+def rload(fname: str) -> dict:
+    """Parse data and parameter variable values from an R dump format file.
+       This parser only supports the subset of R dump data as described
+       in the "Dump Data Format" section of the CmdStan manual, i.e.,
+       scalar, vector, matrix, and array data types.
+    """
+    data_dict = {}
+    with open(fname, 'r') as fp:
+        lines = fp.readlines()
+    # Variable data may span multiple lines, parse accordingly
+    idx = 0
+    while idx < len(lines) and '<-' not in lines[idx]:
+        idx += 1
+    if idx == len(lines):
+        return None
+    start_idx = idx
+    idx += 1
+    while True:
+        while idx < len(lines) and '<-' not in lines[idx]:
+            idx += 1
+        next_var = idx
+        var_data = ''.join(lines[start_idx:next_var]).replace('\n', '')
+        lhs, rhs = [item.strip() for item in var_data.split('<-')]
+        lhs = lhs.replace('"', '')  # strip optional Jags double quotes
+        rhs = rhs.replace('L', '')  # strip R long int qualifier
+        data_dict[lhs] = parse_rdump_value(rhs)
+        if idx == len(lines):
+            break
+        start_idx = next_var
+        idx += 1
+    return data_dict
+
+
+def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
+    """Process right hand side of Rdump variable assignment statement.
+       Value is either scalar, vector, or multi-dim structure.
+       Use regex to capture structure values, dimensions.
+    """
+    pat = re.compile(
+        r'structure\(\s*c\((?P<vals>[^)]*)\)'
+        r'(,\s*\.Dim\s*=\s*c\s*\((?P<dims>[^)]*)\s*\))?\)'
+    )
+    val = None
+    try:
+        if rhs.startswith('structure'):
+            parse = pat.match(rhs)
+            if parse is None or parse.group('vals') is None:
+                raise ValueError(rhs)
+            vals = [float(v) for v in parse.group('vals').split(',')]
+            val = np.array(vals, order='F')
+            if parse.group('dims') is not None:
+                dims = [int(v) for v in parse.group('dims').split(',')]
+                val = np.array(vals).reshape(dims, order='F')
+        elif rhs.startswith('c(') and rhs.endswith(')'):
+            val = np.array([float(item) for item in rhs[2:-1].split(',')])
+        elif '.' in rhs or 'e' in rhs:
+            val = float(rhs)
+        else:
+            val = int(rhs)
+    except TypeError:
+        raise ValueError(
+            'bad value in Rdump file: {}'.format(rhs)
+            )
+    return val
+
+
 def check_csv(
     path: str,
     is_optimizing: bool = False,
@@ -414,7 +481,7 @@ def read_metric(path: str) -> List[int]:
                 ' entry "inv_metric"'.format(path)
             )
     else:
-        dims = read_rdump_metric(path)
+        dims = list(read_rdump_metric(path))
         if dims is None:
             raise ValueError(
                 'metric file {}, bad or missing'
@@ -425,20 +492,15 @@ def read_metric(path: str) -> List[int]:
 
 def read_rdump_metric(path: str) -> List[int]:
     """
-    Find dimensions of variable named 'inv_metric' using regex search.
+    Find dimensions of variable named 'inv_metric' in Rdump data file.
     """
-    with open(path, 'r') as fp:
-        data = fp.read().replace('\n', '')
-        m1 = re.search(r'inv_metric\s*<-\s*structure\(\s*c\(', data)
-        if not m1:
-            return_value = None
-        else:
-            m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
-            if not m2:
-                return_value = None
-            dims = m2.group(1).split(',')
-            return_value = [int(d) for d in dims]
-    return return_value
+    metric_dict = rload(path)
+    if not ('inv_metric' in metric_dict and
+            isinstance(metric_dict['inv_metric'], np.ndarray)):
+        raise ValueError(
+            'metric file {}, bad or missing entry "inv_metric"'.format(path)
+            )
+    return list(metric_dict['inv_metric'].shape)
 
 
 def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
@@ -525,3 +587,28 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     path = fd.name
     fd.close()
     return path
+
+
+def install_cmdstan(version: str = None, dir: str = None) -> bool:
+    """
+    Run 'install_cmdstan' -script
+    """
+    logger = get_logger()
+    python = sys.executable
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(here, 'install_cmdstan.py')
+    cmd = [python, path]
+    if version is not None:
+        cmd.extend(['--version', version])
+    if dir is not None:
+        cmd.extend(['--dir', dir])
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while proc.poll() is None:
+        output = proc.stdout.readline().decode('utf-8').strip()
+        if output:
+            logger.info(output)
+    proc.communicate()
+    if proc.returncode:
+        logger.warning('CmdStan installation failed')
+        return False
+    return True
