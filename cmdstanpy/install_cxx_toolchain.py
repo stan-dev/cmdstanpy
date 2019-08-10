@@ -8,6 +8,7 @@ Currently implemented platforms (platform.system)
 Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
+   -s (--silent) : use /SILENT instead of /VERYSILENT for RTools installation
 """
 import argparse
 import contextlib
@@ -23,7 +24,8 @@ from pathlib import Path
 from time import sleep
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
-IS_64BITS = sys.maxsize > 2**32
+IS_64BITS = sys.maxsize > 2 ** 32
+
 
 @contextlib.contextmanager
 def pushd(new_dir):
@@ -38,10 +40,11 @@ def usage():
         """Arguments:
         -v (--version) :CmdStan version
         -d (--dir) : install directory
-        -s (--silent) : use /SILENT instead of /VERYSILENT for RTools installation
+        -s (--silent) : use /VERYSILENT instead of /SILENT for RTools installation
         -h (--help) : this message
         """
     )
+
 
 def get_config(dir, silent):
     config = []
@@ -49,12 +52,26 @@ def get_config(dir, silent):
         _, dir = os.path.splitdrive(os.path.abspath(dir))
         if dir.startswith("\\"):
             dir = dir[1:]
-        config = ['/SP-', '/VERYSILENT' if silent else '/SILENT', '/SUPPRESSMSGBOXES', '/CURRENTUSER', 'LANG="English"', '/DIR="{}"'.format(dir), '/NOICONS', '/NORESTART']
+        config = [
+            '/SP-',
+            '/VERYSILENT' if silent else '/SILENT',
+            '/SUPPRESSMSGBOXES',
+            '/CURRENTUSER',
+            'LANG="English"',
+            '/DIR="{}"'.format(dir),
+            '/NOICONS',
+            '/NORESTART',
+        ]
     return config
+
 
 def install_version(installation_dir, installation_file, version, silent):
     with pushd("."):
-        print('Installing the C++ toolchain: {}'.format(os.path.splitext(installation_file)[0]))
+        print(
+            'Installing the C++ toolchain: {}'.format(
+                os.path.splitext(installation_file)[0]
+            )
+        )
         cmd = [installation_file]
         cmd.extend(get_config(installation_dir, silent))
         print(" ".join(cmd))
@@ -64,7 +81,7 @@ def install_version(installation_dir, installation_file, version, silent):
         while proc.poll() is None:
             output = proc.stdout.readline().decode('utf-8').strip()
             if output:
-                print(output)
+                print(output, flush=True)
         stdout, stderr = proc.communicate()
         if proc.returncode:
             print('Installation failed: returncode={}'.format(proc.returncode))
@@ -78,19 +95,32 @@ def install_version(installation_dir, installation_file, version, silent):
         os.remove(installation_file)
     print('Installed {}'.format(os.path.splitext(installation_file)[0]))
 
+
 def is_installed(toolchain_loc, version):
-    if version == "3.5":
-        if not os.path.exists(os.path.join(toolchain_loc, 'bin')):
-            return False
-        return os.path.exists(
-            os.path.join(
-                toolchain_loc, 'mingw_64' if IS_64BITS else 'mingw_32', 'bin', 'g++' + EXTENSION
+    if platform.system() == "Windows":
+        if version == "3.5":
+            if not os.path.exists(os.path.join(toolchain_loc, 'bin')):
+                return False
+            return os.path.exists(
+                os.path.join(
+                    toolchain_loc,
+                    'mingw_64' if IS_64BITS else 'mingw_32',
+                    'bin',
+                    'g++' + EXTENSION,
+                )
             )
-        )
-    elif version == "4.0":
-        return os.path.exists(os.path.join(toolchain_loc, 'mingw64' if IS_64BITS else 'mingw32', 'bin', 'g++' + EXTENSION))
-    else:
-        return False
+        elif version == "4.0":
+            return os.path.exists(
+                os.path.join(
+                    toolchain_loc,
+                    'mingw64' if IS_64BITS else 'mingw32',
+                    'bin',
+                    'g++' + EXTENSION,
+                )
+            )
+        else:
+            return False
+    return False
 
 
 def latest_version():
@@ -108,7 +138,7 @@ def retrieve_toolchain(filename, url):
             print('Failed to download C++ toolchain')
             print(err)
             if i < 5:
-                print('retry ({}/5)'.format(i+1))
+                print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
             sys.exit(3)
@@ -137,6 +167,7 @@ def validate_dir(install_dir):
                 'Cannot write files to directory {}'.format(install_dir)
             ) from e
 
+
 def normalize_version(version):
     if platform.system() == 'Windows':
         if version in ['4', '40']:
@@ -145,9 +176,11 @@ def normalize_version(version):
             version = "3.5"
     return version
 
+
 def get_toolchain_name():
     if platform.system() == "Windows":
         return "RTools"
+
 
 def get_url(version):
     if platform.system() == 'Windows':
@@ -161,6 +194,7 @@ def get_url(version):
             url = 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
     return url
 
+
 def get_toolchain_version(name, version):
     root_folder = None
     toolchain_folder = None
@@ -169,6 +203,7 @@ def get_toolchain_version(name, version):
         toolchain_folder = "{}{}".format(name, version.replace(".", ""))
 
     return root_folder, toolchain_folder
+
 
 def main():
     if platform.system() not in {'Windows'}:
@@ -196,20 +231,28 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    silent = 'silent' in vars(args)
-    if 'silent' not in vars(args) and version == "4.0":
-        silent = True
+    if platform.system() == "Windows":
+        silent = 'silent' in vars(args)
+        # force silent == False for 4.0 version
+        if 'silent' not in vars(args) and version == "4.0":
+            silent = False
+    else:
+        silent = False
 
     root_folder, toolchain_version = get_toolchain_version(toolchain, version)
     toolchain_loc = os.path.join(root_folder, toolchain_version)
     with pushd(install_dir):
         if is_installed(toolchain_loc, version):
-            print('C++ toolchain {} already installed'.format(toolchain_version))
+            print(
+                'C++ toolchain {} already installed'.format(toolchain_version)
+            )
         else:
             if os.path.exists(toolchain_loc):
                 shutil.rmtree(toolchain_loc, ignore_errors=False)
             retrieve_toolchain(toolchain_version + EXTENSION, url)
-            install_version(toolchain_loc, toolchain_version + EXTENSION, version, silent)
+            install_version(
+                toolchain_loc, toolchain_version + EXTENSION, version, silent
+            )
 
 
 if __name__ == '__main__':
