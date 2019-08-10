@@ -94,7 +94,7 @@ def latest_version():
             print('Cannot connect to github.')
             print(err)
             if i < 5:
-                print('retry ({}/5)'.format(i+1))
+                print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
             sys.exit(3)
@@ -123,7 +123,7 @@ def retrieve_latest_version(version):
             )
             print(err)
             if i < 5:
-                print('retry ({}/5)'.format(i+1))
+                print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
             sys.exit(3)
