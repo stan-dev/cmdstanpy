@@ -58,7 +58,7 @@ install:
   - "python -m pip install --quiet -r requirements.txt"
   - "python -m pip install --quiet pytest"
 
-  - "python .\\bin\\install_cmdstan"
+  - "python .\\cmdstanpy\\install_cmdstan.py"
 
   - "python -m pip install --quiet -e ."
   - "pip freeze"

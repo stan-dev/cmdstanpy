@@ -17,6 +17,9 @@ for CmdStanPy sampler function.
 
 - Modular - CmdStanPy produces a sample from the posterior, downstream modules do the analysis.
 
+### Docs
+
+See https://cmdstanpy.readthedocs.io/en/latest/index.html
 
 ### Source Repository
 

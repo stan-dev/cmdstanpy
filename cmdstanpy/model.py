@@ -3,8 +3,8 @@ import subprocess
 import shutil
 import logging
 
+from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
-from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Union
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
@@ -129,6 +129,8 @@ class Model(object):
             self._logger.warning('model is already compiled')
             return
 
+        compilation_failed = False
+
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
             hpp_file = Path(hpp_file).as_posix()
@@ -172,8 +174,8 @@ class Model(object):
                 do_command(cmd, cmdstan_path(), self._logger)
             except Exception as e:
                 self._logger.error('make cmd failed %s', e)
-
-            if is_copied:
+                compilation_failed = True
+            if is_copied and not compilation_failed:
 
                 original_target_dir = os.path.dirname(self._stan_file)
                 # reconstruct the output file name
@@ -185,13 +187,14 @@ class Model(object):
                 self._exe_file = os.path.join(
                     original_target_dir, new_exec_name
                 )
-
                 # copy the generated file back to the original directory
                 shutil.copy(exe_file, self._exe_file)
-            else:
+            elif not compilation_failed:
                 self._exe_file = exe_file
-
-        self._logger.info('compiled model file: %s', self._exe_file)
+        if compilation_failed:
+            self._logger.error('model compilation failed')
+        else:
+            self._logger.info('compiled model file: %s', self._exe_file)
 
     def optimize(
         self,
@@ -465,13 +468,9 @@ class Model(object):
             )
 
             stanfit = StanFit(args=args, chains=chains)
-            try:
-                tp = ThreadPool(cores)
+            with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    tp.apply_async(self._do_sample, (stanfit, i))
-            finally:
-                tp.close()
-                tp.join()
+                    executor.submit(self._do_sample(stanfit, i))
             if not stanfit._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
