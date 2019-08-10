@@ -214,7 +214,7 @@ class FixedParamArgs(object):
         cmd = cmd + ' method=fixed_param'
         return cmd
 
-    def validate(self, chains):
+    def validate(self, chains: int) -> None:
         pass
 
 
@@ -283,7 +283,7 @@ class GenerateQuantitiesArgs(object):
         """Initialize object."""
         self.sample_csv_files = csv_files
 
-    def validate(self) -> None:
+    def validate(self, chains: int) -> None:
         """
         Check arguments correctness and consistency.
 

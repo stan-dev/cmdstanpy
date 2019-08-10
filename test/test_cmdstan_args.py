@@ -467,12 +467,12 @@ class CmdStanArgsTest(unittest.TestCase):
 
 class GenerateQuantitesTest(unittest.TestCase):
     def test_args_fitted_params(self):
-        args = GenerateQuantitiesArgs(csv_files=['abcd'])
+        args = GenerateQuantitiesArgs(csv_files=['no_such_file'])
         with self.assertRaises(ValueError):
-            args.validate()
+            args.validate(chains=1)
         sample_file = os.path.join(datafiles_path, 'bernoulli_ppc_files/sampling_output.csv')
         args = GenerateQuantitiesArgs(csv_files=[sample_file])
-        args.validate()
+        args.validate(chains=1)
         cmd = args.compose(0, 'output')
         self.assertIn('method=generate_quantities', cmd)
         self.assertIn('fitted_params={}'.format(sample_file), cmd) 

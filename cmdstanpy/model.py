@@ -265,7 +265,7 @@ class Model(object):
 
             stanfit = StanFit(args=args, chains=1)
             dummy_chain_id = 0
-            self._do_sample(stanfit, dummy_chain_id)
+            self._run_cmdstan(stanfit, dummy_chain_id)
 
         if not stanfit._check_retcodes():
             msg = 'Error during optimizing'
@@ -432,10 +432,8 @@ class Model(object):
                         )
 
         cores_avail = cpu_count()
-
         if cores is None:
             cores = max(min(cores_avail - 2, chains), 1)
-
         if cores < 1:
             raise ValueError(
                 'cores must be a positive integer value, found {}'.format(cores)
@@ -446,7 +444,7 @@ class Model(object):
             )
             cores = cores_avail
 
-            # TODO:  issue 49: inits can be initialization function
+        # TODO:  issue 49: inits can be initialization function
 
         sampler_args = SamplerArgs(
             warmup_iters=warmup_iters,
@@ -474,7 +472,7 @@ class Model(object):
             stanfit = StanFit(args=args, chains=chains)
             with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    executor.submit(self._do_sample(stanfit, i))
+                    executor.submit(self._run_cmdstan(stanfit, i))
             if not stanfit._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
@@ -485,29 +483,6 @@ class Model(object):
                 raise RuntimeError(msg)
             stanfit._validate_csv_files()
         return stanfit
-
-    def _do_sample(self, stanfit: StanFit, idx: int) -> None:
-        """
-        Encapsulates call to sampler.
-        Spawn process, capture console output to file, record returncode.
-        """
-        cmd = stanfit.cmds[idx]
-        self._logger.info('start chain %u', idx + 1)
-        self._logger.debug('sampling: %s', cmd)
-        proc = subprocess.Popen(
-            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        proc.wait()
-        stdout, stderr = proc.communicate()
-        transcript_file = stanfit.console_files[idx]
-        self._logger.info('finish chain %u', idx + 1)
-        with open(transcript_file, 'w+') as transcript:
-            if stdout:
-                transcript.write(stdout.decode('utf-8'))
-            if stderr:
-                transcript.write('ERROR')
-                transcript.write(stderr.decode('utf-8'))
-        stanfit._set_retcode(idx, proc.returncode)
 
     def run_generated_quantities(
         self,
@@ -547,26 +522,28 @@ class Model(object):
         :return: StanFit object
         """
         generate_quantities_args = GenerateQuantitiesArgs(
-            csv_files
+            csv_files = csv_files
         )
+        chains = len(csv_files)
+        
         with MaybeDictToFilePath(data, None) as (_data, _inits):
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,
-                chain_ids=[x + 1 for x in range(len(csv_files))],
+                chain_ids=[x + 1 for x in range(chains)],
                 data=_data,
                 seed=seed,
                 output_basename=gq_csv_basename,
                 method_args=generate_quantities_args
             )
-            stanfit = StanFit(args=args, chains=len(csv_files))
-            try:
-                tp = ThreadPool(cores)
+            stanfit = StanFit(args=args, chains=chains)
+
+            cores_avail = cpu_count()
+            cores = max(min(cores_avail - 2, chains), 1)
+
+            with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    tp.apply_async(self._do_sample, (stanfit, i))
-            finally:
-                tp.close()
-                tp.join()
+                    executor.submit(self._run_cmdstan(stanfit, i))
             if not stanfit._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
@@ -577,3 +554,26 @@ class Model(object):
                 raise RuntimeError(msg)
             stanfit._validate_csv_files()
         return stanfit
+
+    def _run_cmdstan(self, stanfit: StanFit, idx: int) -> None:
+        """
+        Encapsulates call to cmdstan.
+        Spawn process, capture console output to file, record returncode.
+        """
+        cmd = stanfit.cmds[idx]
+        self._logger.info('start chain %u', idx + 1)
+        self._logger.debug('sampling: %s', cmd)
+        proc = subprocess.Popen(
+            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        proc.wait()
+        stdout, stderr = proc.communicate()
+        transcript_file = stanfit.console_files[idx]
+        self._logger.info('finish chain %u', idx + 1)
+        with open(transcript_file, 'w+') as transcript:
+            if stdout:
+                transcript.write(stdout.decode('utf-8'))
+            if stderr:
+                transcript.write('ERROR')
+                transcript.write(stderr.decode('utf-8'))
+        stanfit._set_retcode(idx, proc.returncode)
