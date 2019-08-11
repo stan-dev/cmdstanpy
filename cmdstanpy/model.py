@@ -508,10 +508,10 @@ class Model(object):
         :param seed: The seed for random number generator Must be an integer
             between 0 and 2^32 - 1. If unspecified, numpy.random.RandomState()
             is used to generate a seed which will be used for all chains.
-            *NOTE: Specifying the seed will guarantee the same result for multiple
-            invocations of this method with the same inputs.  However this
-            will not reproduce results from the sample method given the same
-            inputs because the RNG will be in a different state.*
+            *NOTE: Specifying the seed will guarantee the same result for
+            multiple invocations of this method with the same inputs.  However
+            this will not reproduce results from the sample method given
+            the same inputs because the RNG will be in a different state.*
 
         :param gq_csv_basename: A path or file name which will be used as the
             basename for the sampler output files.  The csv output files
@@ -522,10 +522,10 @@ class Model(object):
         :return: StanFit object
         """
         generate_quantities_args = GenerateQuantitiesArgs(
-            csv_files = csv_files
+            csv_files=csv_files
         )
         chains = len(csv_files)
-        
+
         with MaybeDictToFilePath(data, None) as (_data, _inits):
             args = CmdStanArgs(
                 self._name,
