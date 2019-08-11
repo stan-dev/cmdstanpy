@@ -160,7 +160,7 @@ class StanFit(object):
 
     def _sampling_only(self):
         if not self.is_sampling:
-            raise RuntimeError("Method available only when sampling!")
+            raise RuntimeError('Method available only when sampling!')
 
     @property
     def sample(self) -> np.ndarray:
