@@ -8,7 +8,7 @@ Currently implemented platforms (platform.system)
 Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
-   -s (--silent) : use /SILENT instead of /VERYSILENT for RTools installation
+   -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
 """
 import argparse
 import contextlib
@@ -40,7 +40,7 @@ def usage():
         """Arguments:
         -v (--version) :CmdStan version
         -d (--dir) : install directory
-        -s (--silent) : use /VERYSILENT instead of /SILENT for RTools installation
+        -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -h (--help) : this message
         """
     )
@@ -187,9 +187,9 @@ def get_url(version):
         if version == '4.0':
 
             if IS_64BITS:
-                url = 'https://cran.r-project.org/bin/windows/testing/rtools40-x86_64.exe'
+                url = 'https://cran.r-project.org/bin/windows/testing/rtools40-x86_64.exe'  # noqa: disable=E501
             else:
-                url = 'https://cran.r-project.org/bin/windows/testing/rtools40-i686.exe'
+                url = 'https://cran.r-project.org/bin/windows/testing/rtools40-i686.exe'  # noqa: disable=E501
         elif version == '3.5':
             url = 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
     return url
@@ -207,7 +207,10 @@ def get_toolchain_version(name, version):
 
 def main():
     if platform.system() not in {'Windows'}:
-        msg = 'Download for the C++ toolchain on the current platform has not been implemented: %s'
+        msg = (
+            'Download for the C++ toolchain'
+            ' on the current platform has not been implemented: %s'
+        )
         raise NotImplementedError(msg % platform.system())
 
     parser = argparse.ArgumentParser()
