@@ -60,7 +60,9 @@ class StanFit(object):
         self.console_files = []
         # per-chain sample console output files.
         for i in range(chains):
-            txt_file = ''.join([os.path.splitext(self._csv_files[i])[0], '.txt'])
+            txt_file = ''.join(
+                [os.path.splitext(self._csv_files[i])[0], '.txt']
+            )
             self.console_files.append(txt_file)
         self.cmds = [
             args.compose_command(i, self._csv_files[i]) for i in range(chains)
@@ -242,13 +244,13 @@ class StanFit(object):
                 dzero = check_csv(
                     self._csv_files[i],
                     is_optimizing=self.is_optimizing,
-                    is_sampling=self.is_sampling
+                    is_sampling=self.is_sampling,
                 )
             else:
                 d = check_csv(
                     self._csv_files[i],
                     is_optimizing=self.is_optimizing,
-                    is_sampling=self.is_sampling
+                    is_sampling=self.is_sampling,
                 )
                 for key in dzero:
                     if key not in ('id', 'first_draw') and dzero[key] != d[key]:
@@ -270,18 +272,13 @@ class StanFit(object):
         returned by run_generated_quantities.
         """
         sample_meta = check_csv(
-            sample_csv_0,
-            is_optimizing=False,
-            is_sampling=True
-            )
+            sample_csv_0, is_optimizing=False, is_sampling=True
+        )
         self._draws = sample_meta['draws']
         self._num_params = sample_meta['num_params']
         self._first_draw = sample_meta.get('first_draw')
         self._metric_type = sample_meta.get('metric')
-        dzero = scan_stan_csv(
-            self._csv_files[0],
-            is_sampling=False
-            )
+        dzero = scan_stan_csv(self._csv_files[0], is_sampling=False)
         self._column_names = dzero['column_names']
 
     def _assemble_generated_quantities(self) -> None:
