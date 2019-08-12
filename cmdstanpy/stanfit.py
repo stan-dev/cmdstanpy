@@ -12,6 +12,7 @@ import logging
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     check_csv,
+    scan_stan_csv,
     create_named_text_file,
     EXTENSION,
     cmdstan_path,
@@ -253,6 +254,26 @@ class StanFit(object):
         self._num_params = dzero['num_params']
         self._first_draw = dzero.get('first_draw')
         self._metric_type = dzero.get('metric')
+
+    def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
+        """
+        Propogate information from original sample to additional sample
+        returned by run_generated_quantities.
+        """
+        sample_meta = check_csv(
+            sample_csv_0,
+            is_optimizing=False,
+            is_sampling=True
+            )
+        self._draws = sample_meta['draws']
+        self._num_params = sample_meta['num_params']
+        self._first_draw = sample_meta.get('first_draw')
+        self._metric_type = sample_meta.get('metric')
+        dzero = scan_stan_csv(
+            self.csv_files[0],
+            is_sampling=False
+            )
+        self._column_names = dzero['column_names']
 
     def _assemble_generated_quantities(self) -> None:
         df_list = []

@@ -524,8 +524,8 @@ class Model(object):
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=csv_files
         )
+        generate_quantities_args.validate(len(csv_files))
         chains = len(csv_files)
-
         with MaybeDictToFilePath(data, None) as (_data, _inits):
             args = CmdStanArgs(
                 self._name,
@@ -540,7 +540,6 @@ class Model(object):
 
             cores_avail = cpu_count()
             cores = max(min(cores_avail - 2, chains), 1)
-
             with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
                     executor.submit(self._run_cmdstan(stanfit, i))
@@ -552,7 +551,7 @@ class Model(object):
                             msg, i, stanfit._retcode(i)
                         )
                 raise RuntimeError(msg)
-            stanfit._validate_csv_files()
+            stanfit._set_attrs_gq_csv_files(csv_files[0])
         return stanfit
 
     def _run_cmdstan(self, stanfit: StanFit, idx: int) -> None:
