@@ -12,17 +12,20 @@ import logging
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     check_csv,
+    scan_stan_csv,
     create_named_text_file,
     EXTENSION,
     cmdstan_path,
     do_command,
     get_logger,
 )
-from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs, SamplerArgs
 
 
 class StanFit(object):
-    """Record of running NUTS sampler on a model."""
+    """
+    Record of CmdStan run for a specified configuration and number of chains.
+    """
 
     def __init__(
         self, args: CmdStanArgs, chains: int = 4, logger: logging.Logger = None
@@ -30,6 +33,7 @@ class StanFit(object):
         """Initialize object."""
         self._args = args
         self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
+        self._is_sampling = isinstance(self._args.method_args, SamplerArgs)
         self._chains = chains
         self._logger = logger or get_logger()
         if chains < 1:
@@ -37,7 +41,7 @@ class StanFit(object):
                 'chains must be positive integer value, '
                 'found {i]}'.format(chains)
             )
-        self.csv_files = []
+        self._csv_files = []
         # per-chain sample csv files.
         if args.output_basename is None:
             csv_basename = 'stan-{}-draws'.format(args.model_name)
@@ -47,19 +51,21 @@ class StanFit(object):
                     prefix='{}-{}-'.format(csv_basename, i + 1),
                     suffix='.csv',
                 )
-                self.csv_files.append(fd_name)
+                self._csv_files.append(fd_name)
         else:
             for i in range(chains):
-                self.csv_files.append(
+                self._csv_files.append(
                     '{}-{}.csv'.format(args.output_basename, i + 1)
                 )
         self.console_files = []
         # per-chain sample console output files.
         for i in range(chains):
-            txt_file = ''.join([os.path.splitext(self.csv_files[i])[0], '.txt'])
+            txt_file = ''.join(
+                [os.path.splitext(self._csv_files[i])[0], '.txt']
+            )
             self.console_files.append(txt_file)
         self.cmds = [
-            args.compose_command(i, self.csv_files[i]) for i in range(chains)
+            args.compose_command(i, self._csv_files[i]) for i in range(chains)
         ]
         # per-chain sampler command.
         self._retcodes = [-1 for _ in range(chains)]
@@ -71,11 +77,12 @@ class StanFit(object):
         self._stepsize = None
         self._sample = None
         self._first_draw = None
+        self._generated_quantities = None
 
     def __repr__(self) -> str:
         repr = 'StanFit(args={}, chains={}'.format(self._args, self._chains)
         repr = '{}\n csv_files={}\nconsole_files={})'.format(
-            repr, '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files)
+            repr, '\n\t'.join(self._csv_files), '\n\t'.join(self.console_files)
         )
         return repr
 
@@ -112,6 +119,13 @@ class StanFit(object):
         return self._column_names
 
     @property
+    def csv_files(self) -> List[str]:
+        """
+        List of paths to CmdStan output files.
+        """
+        return self._csv_files
+
+    @property
     def metric_type(self) -> str:
         """Metric type, either 'diag_e' or 'dense_e'."""
         return self._metric_type
@@ -136,6 +150,12 @@ class StanFit(object):
         return self._is_optimizing
 
     @property
+    def is_sampling(self) -> bool:
+        """Returns true if we are sampling rather than
+        optimizing or running generate quantities"""
+        return self._is_sampling
+
+    @property
     def optimized_params_np(self) -> np.array:
         """Returns optimized params as numpy array."""
         return self._first_draw
@@ -151,23 +171,34 @@ class StanFit(object):
         return OrderedDict(zip(self.column_names, self._first_draw))
 
     def _sampling_only(self):
-        """Raise RuntimeError if method is not sampling."""
-        if self.is_optimizing:
+        if not self.is_sampling:
             raise RuntimeError('Method available only when sampling!')
 
     @property
     def sample(self) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains all draws across all chain arranged
-        as (draws, chains, columns) stored column major so that the values
-        for each parameter are stored contiguously in memory, likewise
-        all draws from a chain are contiguous.
+        A 3-D numpy ndarray which contains all draws across all chains
+        arranged as (draws, chains, columns) stored column major
+        so that the values for each parameter are stored contiguously
+        in memory, likewise all draws from a chain are contiguous.
         """
         self._sampling_only()
 
         if self._sample is None:
             self._assemble_sample()
         return self._sample
+
+    @property
+    def generated_quantities(self) -> np.ndarray:
+        """
+        A 3-D numpy ndarray which contains all draws across all chains
+        arranged as (draws, chains, columns) stored column major
+        so that the values for each parameter are stored contiguously
+        in memory, likewise all draws from a chain are contiguous.
+        """
+        if self._generated_quantities is None:
+            self._assemble_generated_quantities()
+        return self._generated_quantities
 
     def _check_retcodes(self) -> bool:
         """True when all chains have retcode 0."""
@@ -184,6 +215,8 @@ class StanFit(object):
         """Set retcode for chain[idx] to val."""
         self._retcodes[idx] = val
 
+    # redo - better error handling
+    # only used by unit tests...
     def _check_console_msgs(self) -> bool:
         """Checks console messages for each chain."""
         valid = True
@@ -209,18 +242,22 @@ class StanFit(object):
         for i in range(self._chains):
             if i == 0:
                 dzero = check_csv(
-                    self.csv_files[i], is_optimizing=self.is_optimizing
+                    self._csv_files[i],
+                    is_optimizing=self.is_optimizing,
+                    is_sampling=self.is_sampling,
                 )
             else:
                 d = check_csv(
-                    self.csv_files[i], is_optimizing=self.is_optimizing
+                    self._csv_files[i],
+                    is_optimizing=self.is_optimizing,
+                    is_sampling=self.is_sampling,
                 )
                 for key in dzero:
                     if key not in ('id', 'first_draw') and dzero[key] != d[key]:
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
-                                self.csv_files[i], key, dzero[key], d[key]
+                                self._csv_files[i], key, dzero[key], d[key]
                             )
                         )
         self._draws = dzero['draws']
@@ -228,6 +265,27 @@ class StanFit(object):
         self._num_params = dzero['num_params']
         self._first_draw = dzero.get('first_draw')
         self._metric_type = dzero.get('metric')
+
+    def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
+        """
+        Propogate information from original sample to additional sample
+        returned by run_generated_quantities.
+        """
+        sample_meta = check_csv(
+            sample_csv_0, is_optimizing=False, is_sampling=True
+        )
+        self._draws = sample_meta['draws']
+        self._num_params = sample_meta['num_params']
+        self._first_draw = sample_meta.get('first_draw')
+        self._metric_type = sample_meta.get('metric')
+        dzero = scan_stan_csv(self._csv_files[0], is_sampling=False)
+        self._column_names = dzero['column_names']
+
+    def _assemble_generated_quantities(self) -> None:
+        df_list = []
+        for chain in range(self._chains):
+            df_list.append(pd.read_csv(self._csv_files[chain], comment='#'))
+        self._generated_quantities = pd.concat(df_list).values
 
     def _assemble_sample(self) -> None:
         """
@@ -255,7 +313,7 @@ class StanFit(object):
             order='F',
         )
         for chain in range(self._chains):
-            with open(self.csv_files[chain], 'r') as fp:
+            with open(self._csv_files[chain], 'r') as fp:
                 # skip initial comments, reads thru column header
                 line = fp.readline().strip()
                 while len(line) > 0 and line.startswith('#'):
@@ -303,7 +361,7 @@ class StanFit(object):
         tmp_csv_path = create_named_text_file(
             dir=TMPDIR, prefix=tmp_csv_file, suffix='.csv'
         )
-        cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self.csv_files
+        cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self._csv_files
         do_command(cmd, logger=self._logger)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
@@ -331,7 +389,7 @@ class StanFit(object):
         self._sampling_only()
 
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
-        cmd = [cmd_path] + self.csv_files
+        cmd = [cmd_path] + self._csv_files
         result = do_command(cmd=cmd, logger=self._logger)
         if result:
             self._logger.warning(result)
@@ -385,9 +443,9 @@ class StanFit(object):
             raise Exception('cannot save to path: {}'.format(dir))
 
         for i in range(self.chains):
-            if not os.path.exists(self.csv_files[i]):
+            if not os.path.exists(self._csv_files[i]):
                 raise ValueError(
-                    'cannot access csv file {}'.format(self.csv_files[i])
+                    'cannot access csv file {}'.format(self._csv_files[i])
                 )
             to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i + 1))
             if os.path.exists(to_path):
@@ -396,10 +454,10 @@ class StanFit(object):
                 )
             try:
                 self._logger.debug(
-                    'saving tmpfile: "%s" as: "%s"', self.csv_files[i], to_path
+                    'saving tmpfile: "%s" as: "%s"', self._csv_files[i], to_path
                 )
-                shutil.move(self.csv_files[i], to_path)
-                self.csv_files[i] = to_path
+                shutil.move(self._csv_files[i], to_path)
+                self._csv_files[i] = to_path
             except (IOError, OSError, PermissionError) as e:
                 raise ValueError(
                     'cannot save to file: {}'.format(to_path)

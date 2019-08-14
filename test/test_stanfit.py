@@ -60,7 +60,6 @@ class StanFitTest(unittest.TestCase):
         for i in range(len(retcodes)):
             fit._set_retcode(i, 0)
         self.assertTrue(fit._check_retcodes())
-        fit._check_console_msgs()
         fit._validate_csv_files()
         self.assertEqual(4, fit.chains)
         self.assertEqual(100, fit.draws)
@@ -202,6 +201,7 @@ class StanFitTest(unittest.TestCase):
         )
         self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
 
+    # redo - better error handling
     def test_validate_bad_run(self):
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
