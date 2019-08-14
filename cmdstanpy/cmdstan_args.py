@@ -46,7 +46,7 @@ class SamplerArgs(object):
         """
         if not isinstance(chains, Integral) or chains < 1:
             raise ValueError(
-                "sampler expects number of chains to be greater than 0"
+                'sampler expects number of chains to be greater than 0'
             )
 
         if self.warmup_iters is not None:
@@ -214,14 +214,14 @@ class FixedParamArgs(object):
         cmd = cmd + ' method=fixed_param'
         return cmd
 
-    def validate(self, chains):
+    def validate(self, chains: int) -> None:
         pass
 
 
 class OptimizeArgs(object):
     """Container for arguments for the optimizer."""
 
-    OPTIMIZE_ALGOS = {"BFGS", "LBFGS", "Newton"}
+    OPTIMIZE_ALGOS = {'BFGS', 'LBFGS', 'Newton'}
 
     def __init__(
         self, algorithm: str = None, init_alpha: Real = None, iter: int = None
@@ -240,28 +240,28 @@ class OptimizeArgs(object):
             and self.algorithm not in self.OPTIMIZE_ALGOS
         ):
             raise ValueError(
-                "Please specify optimizer algorithms as one of [{}]".format(
-                    ", ".join(self.OPTIMIZE_ALGOS)
+                'Please specify optimizer algorithms as one of [{}]'.format(
+                    ', '.join(self.OPTIMIZE_ALGOS)
                 )
             )
 
         if self.init_alpha is not None:
-            if self.algorithm == "Newton":
+            if self.algorithm == 'Newton':
                 raise ValueError(
-                    "init_alpha must not be set when algorithm is Newton"
+                    'init_alpha must not be set when algorithm is Newton'
                 )
             if isinstance(self.init_alpha, Real):
                 if self.init_alpha < 0:
-                    raise ValueError("init_alpha must be greater than 0")
+                    raise ValueError('init_alpha must be greater than 0')
             else:
-                raise ValueError("init_alpha must be type of float")
+                raise ValueError('init_alpha must be type of float')
 
         if self.iter is not None:
             if isinstance(self.iter, Integral):
                 if self.iter < 0:
-                    raise ValueError("iter must be greater than 0")
+                    raise ValueError('iter must be greater than 0')
             else:
-                raise ValueError("iter must be type of int")
+                raise ValueError('iter must be type of int')
 
     def compose(self, idx: int, cmd: str) -> str:
         """compose command string for CmdStan for non-default arg values.
@@ -277,6 +277,34 @@ class OptimizeArgs(object):
         return cmd
 
 
+class GenerateQuantitiesArgs(object):
+    """Arguments needed for generate_quantities method."""
+
+    def __init__(self, csv_files: List[str]) -> None:
+        """Initialize object."""
+        self.sample_csv_files = csv_files
+
+    def validate(self, chains: int) -> None:
+        """
+        Check arguments correctness and consistency.
+
+        * check that sample csv files exist
+        """
+        for i, csv in enumerate(self.sample_csv_files):
+            if not os.path.exists(csv):
+                raise ValueError(
+                    'Invalid path for sample csv file: {}'.format(csv)
+                )
+
+    def compose(self, idx: int, cmd: str) -> str:
+        """
+        Compose CmdStan command for method-specific non-default arguments.
+        """
+        cmd = cmd + ' method=generate_quantities'
+        cmd = '{} fitted_params={}'.format(cmd, self.sample_csv_files[idx - 1])
+        return cmd
+
+
 class CmdStanArgs(object):
     """
     Container for CmdStan command line arguments.
@@ -289,7 +317,9 @@ class CmdStanArgs(object):
         model_name: str,
         model_exe: str,
         chain_ids: Union[List[int], None],
-        method_args: Union[SamplerArgs, FixedParamArgs, OptimizeArgs],
+        method_args: Union[
+            SamplerArgs, FixedParamArgs, OptimizeArgs, GenerateQuantitiesArgs
+        ],
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
@@ -365,7 +395,7 @@ class CmdStanArgs(object):
             else:
                 if self.chain_ids is None:
                     raise ValueError(
-                        "seed must not be a list when no chains used"
+                        'seed must not be a list when no chains used'
                     )
 
                 if len(self.seed) != len(self.chain_ids):
@@ -404,7 +434,7 @@ class CmdStanArgs(object):
             elif isinstance(self.inits, list):
                 if self.chain_ids is None:
                     raise ValueError(
-                        "inits must not be a list when no chains are used"
+                        'inits must not be a list when no chains are used'
                     )
 
                 if len(self.inits) != len(self.chain_ids):

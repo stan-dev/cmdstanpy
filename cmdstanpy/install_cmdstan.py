@@ -194,5 +194,5 @@ def main():
             install_version(cmdstan_version)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

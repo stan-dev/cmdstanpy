@@ -283,9 +283,13 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     return val
 
 
-def check_csv(path: str, is_optimizing: bool = False) -> Dict:
+def check_csv(
+    path: str,
+    is_optimizing: bool = False,
+    is_sampling: bool = True
+) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    meta = scan_stan_csv(path, is_optimizing=is_optimizing)
+    meta = scan_stan_csv(path, is_sampling=is_sampling)
     # check draws against spec
     if is_optimizing:
         draws_spec = 1
@@ -302,7 +306,7 @@ def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     return meta
 
 
-def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
+def scan_stan_csv(path: str, is_sampling: bool = True) -> Dict:
     """Process stan_csv file line by line."""
     dict = {}
     lineno = 0
@@ -310,7 +314,8 @@ def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
         lineno = scan_warmup(fp, dict, lineno)
-        if not is_optimizing:
+
+        if is_sampling:
             lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
     return dict
