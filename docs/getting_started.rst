@@ -105,8 +105,8 @@ If you already have a compiled executable, you can construct a ``Model`` object 
 .. code-block:: python
 
     bernoulli_model = Model(
-            stan_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
-            stan_exe=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli')
+            stan_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan'),
+            exe_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli')
             )
 
 
@@ -152,6 +152,7 @@ the index '0' corresponds to the first chain in the ``StanFit``:
 .. code-block:: python
 
     chain_1 = bern_fit.sample[:,0,:]
+    chain_1
 
 
 CmdStan is distributed with a posterior analysis utility ``stansummary``
