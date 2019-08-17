@@ -277,16 +277,12 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
         else:
             val = int(rhs)
     except TypeError:
-        raise ValueError(
-            'bad value in Rdump file: {}'.format(rhs)
-            )
+        raise ValueError('bad value in Rdump file: {}'.format(rhs))
     return val
 
 
 def check_csv(
-    path: str,
-    is_optimizing: bool = False,
-    is_sampling: bool = True
+    path: str, is_optimizing: bool = False, is_sampling: bool = True
 ) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_stan_csv(path, is_sampling=is_sampling)
@@ -495,11 +491,13 @@ def read_rdump_metric(path: str) -> List[int]:
     Find dimensions of variable named 'inv_metric' in Rdump data file.
     """
     metric_dict = rload(path)
-    if not ('inv_metric' in metric_dict and
-            isinstance(metric_dict['inv_metric'], np.ndarray)):
+    if not (
+        'inv_metric' in metric_dict
+        and isinstance(metric_dict['inv_metric'], np.ndarray)
+    ):
         raise ValueError(
             'metric file {}, bad or missing entry "inv_metric"'.format(path)
-            )
+        )
     return list(metric_dict['inv_metric'].shape)
 
 
