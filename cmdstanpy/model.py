@@ -565,7 +565,6 @@ class Model(object):
         proc = subprocess.Popen(
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        proc.wait()
         stdout, stderr = proc.communicate()
         transcript_file = stanfit.console_files[idx]
         self._logger.info('finish chain %u', idx + 1)
