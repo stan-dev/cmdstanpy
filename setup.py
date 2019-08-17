@@ -31,6 +31,7 @@ Topic :: Scientific/Engineering :: Information Analysis
 INSTALL_REQUIRES = ['numpy', 'pandas']
 
 EXTRAS_REQUIRE = {
+    'all' : ['tqdm', 'ujson'],
     'tests': ['pytest', 'pytest-cov'],
     'docs': [
         'sphinx',
