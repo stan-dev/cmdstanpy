@@ -819,7 +819,10 @@ class Model(object):
         self._logger.info('start chain %u', idx + 1)
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
-            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd.split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         if pbar:
             stdout_pbar = self._read_progress(proc, pbar, idx)
