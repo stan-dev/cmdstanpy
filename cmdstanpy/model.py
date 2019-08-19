@@ -528,12 +528,14 @@ class Model(object):
                                 desc="Chain {} - warmup".format(i + 1),
                                 position=i * 2,
                                 total=sampler_args.warmup_iters,
+                                dynamic_ncols=True,
                             ),
                             # sampling
                             tqdm_pbar(
                                 desc="Chain {} - sample".format(i + 1),
                                 position=i * 2 + 1,
                                 total=sampler_args.sampling_iters,
+                                dynamic_ncols=True,
                             ),
                         ]
 
