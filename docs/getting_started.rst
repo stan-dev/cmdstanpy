@@ -17,6 +17,13 @@ or from GitHub
 
     pip install -e git+https://github.com/stan-dev/cmdstanpy#egg=cmdstanpy
 
+To install CmdStanPy with all the optional packages
+(ujson; json processing, tqdm; progress bar)
+
+.. code-block:: bash
+
+    pip install --upgrade cmdstanpy[all]
+
 CmdStanPy requires a local install of CmdStan.
 If you don't have CmdStan installed, you can run the CmdStanPy script ``install_cmdstan``
 which downloads CmdStan from GitHub and builds the CmdStan utilities.
@@ -32,7 +39,7 @@ On Windows
 
 .. code-block:: bash
 
-    python install_cmdstan
+    python -m cmdstanpy.install_cmdstan
     dir "%HOME%/.cmdstanpy"
 
 The named arguments: `-d <directory>` and  `-v <version>`
@@ -70,11 +77,25 @@ To use custom ``make``-tool use ``set_make_env`` function.
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
 
+User can install optional packages with pip with the CmdStanPy installation
+
+.. code-block:: bash
+
+    pip install --upgrade cmdstanpy[all]
+
+or by installing packages manually.
+
 For faster IO cmdstanpy will use ``ujson`` package if it's installed
 
 .. code-block:: bash
 
     pip install ujson
+
+To enable progress bar user can install ``tqdm`` package
+
+.. code-block:: bash
+
+    pip install tqdm
 
 
 CmdStanPy's "Hello World"
@@ -191,3 +212,43 @@ to the specified location, renaming them using a specified basename.
 .. code-block:: python
 
     bern_fit.save_csvfiles(dir='some/path', basename='descriptive-name')
+
+
+Progress bar
+------------
+
+User can enable progress bar for the sampling if ``tqdm`` package
+has been installed.
+
+.. code-block:: python
+
+    bern_fit = bernoulli_model.sample(data=bernoulli_data, show_progress=True)
+
+On Jupyter Notebook environment user should use notebook version
+by using ``show_progress='notebook'``.
+
+.. code-block:: python
+
+    bern_fit = bernoulli_model.sample(data=bernoulli_data, show_progress='notebook')
+
+To enable javascript progress bar on Jupyter Lab Notebook user needs to install
+nodejs and ipywidgets. Following the instructions in
+`tqdm issue #394 <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`
+For ``conda`` users installing nodejs can be done with ``conda``.
+
+.. code-block:: bash
+
+    conda install nodejs
+
+After nodejs has been installed, user needs to install ipywidgets and enable it.
+
+.. code-block:: bash
+
+    pip install ipywidgets
+    jupyter nbextension enable --py widgetsnbextension
+
+Jupyter Lab still needs widgets manager.
+
+.. code-block:: bash
+
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager
