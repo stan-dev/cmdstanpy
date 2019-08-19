@@ -276,7 +276,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 toolchain_root = ''
         if (
             not toolchain_root or version in ('4', '40', '4.0')
-        ) and ps.path.exists(os.path.join(rtools_dir, 'RTools40')):
+        ) and os.path.exists(os.path.join(rtools_dir, 'RTools40')):
             toolchain_root = os.path.join(rtools_dir, 'RTools40')
             compiler_path = os.path.join(
                 toolchain_root,
