@@ -2,6 +2,7 @@
 Utility functions
 """
 import os
+from numbers import Integral, Real
 
 try:
     import ujson as json
@@ -17,7 +18,7 @@ import tempfile
 import logging
 import sys
 
-from typing import Dict, TextIO, List, Union
+from typing import Dict, TextIO, List, Union, Tuple
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -34,7 +35,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script `bin/install_cmdstan`.
+    Assumes directory populated via script `install_cmdstan`.
     """
     versions = [
         name.split('-')[1]
@@ -178,6 +179,90 @@ def cmdstan_path() -> str:
     validate_cmdstan_path(cmdstan_path)
     return cmdstan_path
 
+
+def cxx_toolchain_path(version: str = None) -> Tuple[str]:
+    """
+    Validate, then activate C++ toolchain directory path.
+    """
+    if platform.system() != "Windows":
+        raise RuntimeError("Functionality is currently only supported on Windows")
+    if version is not None and not isinstance(version, str):
+        raise TypeError("Format version number as a string")
+    logger = get_logger()
+    toolchain_root = ''
+    if 'CMDSTAN_TOOLCHAIN' in os.environ:
+        toolchain_root = os.environ['CMDSTAN_TOOLCHAIN']
+        if os.path.exists(os.path.join(toolchain_root, "mingw_64")):
+            compiler_path = os.path.join(toolchain_root, 'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32', 'bin')
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning("Found invalid installion for RTools35 on %", toolchain_root)
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning("Found invalid installion for RTools35 on %", toolchain_root)
+                toolchain_root = ''
+        elif os.path.exist(os.path.join(toolchain_root, 'mingw64')):
+            compiler_path = os.path.join(toolchain_root, 'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32', 'bin')
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'usr', 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning("Found invalid installion for RTools40 on %", toolchain_root)
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning("Found invalid installion for RTools40 on %", toolchain_root)
+                toolchain_root = ''
+    else:
+        rtools_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy', 'RTools'))
+        if not os.path.exists(rtools_dir):
+            raise ValueError(
+                'no RTools installation found, '
+                'run command line script "install_cxx_toolchain"'
+            )
+        compiler_path = ''
+        tool_path = ''
+        if version not in ('4', '40', '4.0') and os.path.join(rtools_dir, "RTools35"):
+            toolchain_root = os.path.join(rtools_dir, "RTools35")
+            compiler_path = os.path.join(toolchain_root, 'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32', 'bin')
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning("Found invalid installion for RTools35 on %", toolchain_root)
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning("Found invalid installion for RTools35 on %", toolchain_root)
+                toolchain_root = ''
+        if toolchain_root and version not in ('4', '40', '4.0') and os.path.join(rtools_dir, 'RTools40'):
+            toolchain_root = os.path.join(rtools_dir, 'RTools40')
+            compiler_path = os.path.join(toolchain_root, 'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32', 'bin')
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'usr', 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning("Found invalid installion for RTools40 on %", toolchain_root)
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning("Found invalid installion for RTools40 on %", toolchain_root)
+                toolchain_root = ''
+    if not toolchain_root:
+        raise ValueError(
+            'no C++ toolchain installation found, '
+            'run command line script "install_cxx_toolchain"'
+        )
+    logger.info("Adding toolchain paths to $PATH.")
+    os.environ["PATH"] = "{};{};{}".format(compiler_path, tool_path, os.environ["PATH"])
+    return compiler_path, tool_path
 
 def _rdump_array(key: str, val: np.ndarray) -> str:
     """Flatten numpy ndarray, format as Rdump variable declaration."""
