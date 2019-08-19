@@ -152,7 +152,10 @@ the index '0' corresponds to the first chain in the ``StanFit``:
 .. code-block:: python
 
     chain_1 = bern_fit.sample[:,0,:]
-    chain_1
+    chain_1.shape       # (1000, 8)
+    chain_1[0]          # sample first draw:
+                        # array([-7.99462  ,  0.578072 ,  0.955103 ,  2.       ,  7.       ,
+                        # 0.       ,  9.44788  ,  0.0934208])
 
 
 CmdStan is distributed with a posterior analysis utility ``stansummary``
