@@ -26,8 +26,13 @@ To install CmdStanPy with all the optional packages
 
 CmdStanPy requires a local install of CmdStan.
 If you don't have CmdStan installed, you can run the CmdStanPy script ``install_cmdstan``
-which downloads CmdStan from GitHub and builds the CmdStan utilities.
-By default this script installs the latest version of CmdStan into a directory named
+which downloads CmdStan from GitHub and builds the CmdStan utilities. Latest CmdStan (2.19+)
+needs a C++14 compatible C++ -toolchain. On Windows, it is recommended to use RTools 3.5+.
+It is possible to install latest RTools with ``install_cxx_toolchain`` script.
+
+    python -m cmdstanpy.install_cxx_toolchain
+
+By default ``install_cmdstan`` script installs the latest version of CmdStan into a directory named
 ``.cmdstanpy`` in your ``$HOME`` directory:
 
 .. code-block:: bash
@@ -77,13 +82,14 @@ To use custom ``make``-tool use ``set_make_env`` function.
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
 
-User can install optional packages with pip with the CmdStanPy installation
+On Windows, to use ``install_cxx_toolchain`` version of RTools user can
+call ``cmdstan.utils.cxx_toolchain_path`` function, which adds the correct
+subfolders on the $PATH
 
-.. code-block:: bash
+.. code-block:: python
 
-    pip install --upgrade cmdstanpy[all]
-
-or by installing packages manually.
+    from cmdstanpy.utils import cxx_toolchain_path
+    cxx_toolchain_path()
 
 For faster IO cmdstanpy will use ``ujson`` package if it's installed
 

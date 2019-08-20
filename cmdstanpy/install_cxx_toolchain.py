@@ -171,15 +171,15 @@ def validate_dir(install_dir):
 def normalize_version(version):
     if platform.system() == 'Windows':
         if version in ['4', '40']:
-            version = "4.0"
-        elif version == "35":
-            version = "3.5"
+            version = '4.0'
+        elif version == '35':
+            version = '3.5'
     return version
 
 
 def get_toolchain_name():
-    if platform.system() == "Windows":
-        return "RTools"
+    if platform.system() == 'Windows':
+        return 'RTools'
 
 
 def get_url(version):
@@ -198,9 +198,9 @@ def get_url(version):
 def get_toolchain_version(name, version):
     root_folder = None
     toolchain_folder = None
-    if platform.system() == "Windows":
-        root_folder = "RTools"
-        toolchain_folder = "{}{}".format(name, version.replace(".", ""))
+    if platform.system() == 'Windows':
+        root_folder = 'RTools'
+        toolchain_folder = '{}{}'.format(name, version.replace(".", ""))
 
     return root_folder, toolchain_folder
 
@@ -224,7 +224,7 @@ def main():
     if version is None:
         version = latest_version()
     version = normalize_version(version)
-    print("C++ toolchain '{}' version: {}".format(toolchain, version))
+    print('C++ toolchain '{}' version: {}'.format(toolchain, version))
 
     url = get_url(version)
 
@@ -234,10 +234,10 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    if platform.system() == "Windows":
+    if platform.system() == 'Windows':
         silent = 'silent' in vars(args)
         # force silent == False for 4.0 version
-        if 'silent' not in vars(args) and version == "4.0":
+        if 'silent' not in vars(args) and version in ('4.0', '4', '40'):
             silent = False
     else:
         silent = False
