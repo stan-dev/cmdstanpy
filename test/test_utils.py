@@ -1,10 +1,11 @@
+import json
 import os
-import os.path
 import unittest
 import platform
 import tempfile
 import shutil
-import json
+import string
+import random
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
@@ -81,9 +82,18 @@ class CmdStanPathTest(unittest.TestCase):
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
         with self.assertRaisesRegex(ValueError, 'no such CmdStan directory'):
             validate_cmdstan_path(path_foo)
-        path_test = os.path.abspath('test')
+        folder_name = "".join(
+            random.choice(string.ascii_letters) for _ in range(10)
+        )
+        while os.path.exists(folder_name):
+            folder_name = "".join(
+                random.choice(string.ascii_letters) for _ in range(10)
+            )
+        os.makedirs(folder_name)
+        path_test = os.path.abspath(folder_name)
         with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
             validate_cmdstan_path(path_test)
+        shutil.rmtree(folder_name)
 
     def test_dict_to_file(self):
         file_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')

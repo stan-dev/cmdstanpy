@@ -11,7 +11,8 @@ from cmdstanpy.cmdstan_args import (
     GenerateQuantitiesArgs,
 )
 
-datafiles_path = os.path.join('test', 'data')
+here = os.path.dirname(os.path.abspath(__file__))
+datafiles_path = os.path.join(here, 'data')
 
 
 class OptimizeArgsTest(unittest.TestCase):

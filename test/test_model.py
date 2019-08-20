@@ -265,11 +265,10 @@ class SampleTest(unittest.TestCase):
             )
 
     def test_multi_proc(self):
-        logistic_path = os.path.join('test', 'data')
-        logistic_stan = os.path.join(logistic_path, 'logistic.stan')
+        logistic_stan = os.path.join(datafiles_path, 'logistic.stan')
         logistic_model = Model(stan_file=logistic_stan)
         logistic_model.compile()
-        logistic_data = os.path.join(logistic_path, 'logistic.data.R')
+        logistic_data = os.path.join(datafiles_path, 'logistic.data.R')
 
         with LogCapture() as log:
             logger = logging.getLogger()
