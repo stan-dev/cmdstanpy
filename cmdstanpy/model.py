@@ -1,14 +1,20 @@
 import os
+import re
 import subprocess
 import shutil
+import sys
 import logging
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
-from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Dict, List, Union
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs,\
- OptimizeArgs, GenerateQuantitiesArgs
+from typing import Any, Dict, List, Union
+from cmdstanpy.cmdstan_args import (
+    CmdStanArgs,
+    SamplerArgs,
+    OptimizeArgs,
+    GenerateQuantitiesArgs,
+)
 from cmdstanpy.stanfit import StanFit
 from cmdstanpy.utils import (
     do_command,
@@ -295,7 +301,7 @@ class Model(object):
         adapt_engaged: bool = True,
         adapt_delta: float = None,
         csv_basename: str = None,
-        show_progress: bool = False,
+        show_progress: Union[bool, str] = False,
     ) -> StanFit:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -396,6 +402,10 @@ class Model(object):
             and the console output and error messages are written to file
             ``<basename>-<chain_id>.txt``.
 
+        :param show_progress: Use tqdm progress bar to show sampling progress.
+            If show_progress=='notebook' use tqdm_notebook
+            (needs nodejs for jupyter).
+
         :return: StanFit object
         """
         if chains < 1:
@@ -470,13 +480,79 @@ class Model(object):
             )
 
             stanfit = StanFit(args=args, chains=chains)
-            try:
-                tp = ThreadPool(cores)
+            if show_progress:
+                try:
+                    import tqdm
+
+                    # disable logger for console (temporary)
+                    # use tqdm
+                    self._logger.propagate = False
+                except ImportError:
+                    self._logger.warning(
+                        (
+                            'tqdm not installed, progress information is not '
+                            'shown. Please install tqdm with '
+                            "'pip install tqdm'"
+                        )
+                    )
+                    show_progress = False
+
+            pbar = None
+            pbar_dict = {}
+            with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    tp.apply_async(self._run_cmdstan, (stanfit, i))
-            finally:
-                tp.close()
-                tp.join()
+                    if show_progress:
+                        if (
+                            isinstance(show_progress, str)
+                            and show_progress.lower() == 'notebook'
+                        ):
+                            try:
+                                tqdm_pbar = tqdm.tqdm_notebook
+                            except ImportError:
+                                msg = (
+                                    "'tqdm_notebook' could not be imported. "
+                                    'Functionality is only supported on the '
+                                    'Jupyter Notebook and compatible platforms'
+                                    '.\nPlease follow the instructions in '
+                                    'https://github.com/tqdm/tqdm/issues/394#'
+                                    'issuecomment-384743637 and remember to '
+                                    'stop & start your jupyter server.'
+                                )
+                                self._logger.warning(msg)
+                                tqdm_pbar = tqdm.tqdm
+                        else:
+                            tqdm_pbar = tqdm.tqdm
+                        pbar = [
+                            # warmup
+                            tqdm_pbar(
+                                desc="Chain {} - warmup".format(i + 1),
+                                position=i * 2,
+                                total=sampler_args.warmup_iters,
+                                dynamic_ncols=True,
+                            ),
+                            # sampling
+                            tqdm_pbar(
+                                desc="Chain {} - sample".format(i + 1),
+                                position=i * 2 + 1,
+                                total=sampler_args.sampling_iters,
+                                dynamic_ncols=True,
+                            ),
+                        ]
+
+                    future = executor.submit(
+                        self._run_cmdstan, stanfit, i, pbar
+                    )
+                    pbar_dict[future] = pbar
+                if show_progress:
+                    for future in as_completed(pbar_dict):
+                        pbar = pbar_dict[future]
+                        for pbar_item in pbar:
+                            # close here to just to be sure
+                            pbar_item.close()
+
+            if show_progress:
+                # re-enable logger for console
+                self._logger.propagate = True
             if not stanfit._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
@@ -525,9 +601,7 @@ class Model(object):
 
         :return: StanFit object
         """
-        generate_quantities_args = GenerateQuantitiesArgs(
-            csv_files=csv_files
-        )
+        generate_quantities_args = GenerateQuantitiesArgs(csv_files=csv_files)
         generate_quantities_args.validate(len(csv_files))
         chains = len(csv_files)
         with MaybeDictToFilePath(data, None) as (_data, _inits):
@@ -538,19 +612,16 @@ class Model(object):
                 data=_data,
                 seed=seed,
                 output_basename=gq_csv_basename,
-                method_args=generate_quantities_args
+                method_args=generate_quantities_args,
             )
             stanfit = StanFit(args=args, chains=chains)
 
             cores_avail = cpu_count()
             cores = max(min(cores_avail - 2, chains), 1)
-            try:
-                tp = ThreadPool(cores)
+            with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    tp.apply_async(self._run_cmdstan, (stanfit, i))
-            finally:
-                tp.close()
-                tp.join()
+                    executor.submit(self._run_cmdstan, stanfit, i)
+
             if not stanfit._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
@@ -562,7 +633,120 @@ class Model(object):
             stanfit._set_attrs_gq_csv_files(csv_files[0])
         return stanfit
 
-    def _run_cmdstan(self, stanfit: StanFit, idx: int) -> None:
+    def _read_progress(self, proc: subprocess.Popen, pbar: List[Any]) -> bytes:
+        # compile re pattern
+        # read iteration 'count' and 'warmup' or 'sampling'
+        pattern = (
+            r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
+        )
+        pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
+
+        # gather information and init counts
+        pbar_warmup, pbar_sampling = pbar
+        num_warmup = pbar_warmup.total
+        num_sampling = pbar_sampling.total
+
+        count_warmup = 0
+        count_sampling = 0
+
+        # gather stdout
+        stdout = b''
+
+        # iterate while process is sampling
+        # process stdout line by line
+        while proc.poll() is None:
+            # read line
+            output = proc.stdout.readline()
+            # gather stdout
+            stdout += output
+            # decode bytes to string
+            output = output.decode('utf-8').strip()
+
+            # force refresh warmup_pbar after warmup has ended
+            refresh_warmup = True
+            # process Iteration output
+            if output.startswith('Iteration'):
+                # run regular expression
+                match = re.search(pattern_compiled, output)
+                if match:
+                    # raw_count = warmup + sampling
+                    raw_count = int(match.group(1))
+                    if match.group(2).lower() == 'warmup':
+                        count, count_warmup = (
+                            # steps
+                            raw_count - count_warmup,
+                            # cumulative count
+                            raw_count,
+                        )
+                        # increment progressbar by 'count'
+                        pbar_warmup.update(count)
+                    elif match.group(2).lower() == 'sampling':
+                        # refresh warmup and close the progress bar if
+                        # all the warmup samples are seen
+                        if refresh_warmup:
+                            pbar_warmup.refresh()
+                            if count_warmup == num_warmup:
+                                pbar_warmup.close()
+                            refresh_warmup = False
+
+                        count, count_sampling = (
+                            # steps
+                            raw_count - num_warmup - count_sampling,
+                            # cumulative count
+                            raw_count - num_warmup,
+                        )
+                        # increment progressbar by 'count'
+                        pbar_sampling.update(count)
+
+        # read and process rest of the stdout if needed
+        warmup_cumulative_count = 0
+        sampling_cumulative_count = 0
+        for output in proc.stdout:
+            stdout += output
+            # decode bytes to string
+            output = output.decode('utf-8').strip()
+            if output.startswith('Iteration'):
+                # run regular expression
+                match = re.search(pattern_compiled, output)
+                if match:
+                    # raw_count = warmup + sampling
+                    raw_count = int(match.group(1))
+                    if match.group(2).lower() == 'warmup':
+                        count, count_warmup = (
+                            # steps
+                            raw_count - count_warmup,
+                            # cumulative count
+                            raw_count,
+                        )
+                        # increment warmup_cumcount by 'count'
+                        warmup_cumulative_count += count
+                    elif match.group(2).lower() == 'sampling':
+                        count, count_sampling = (
+                            # steps
+                            raw_count - num_warmup - count_sampling,
+                            # cumulative count
+                            raw_count - num_warmup,
+                        )
+                        # increment progressbar by 'count'
+                        sampling_cumulative_count += count
+        # update warmup pbar if needed
+        if warmup_cumulative_count:
+            pbar_warmup.update(warmup_cumulative_count)
+            pbar_warmup.refresh()
+        # update sampling pbar if needed
+        if sampling_cumulative_count:
+            pbar_sampling.update(sampling_cumulative_count)
+            pbar_sampling.refresh()
+        # close both pbar
+        pbar_warmup.close()
+        pbar_sampling.close()
+
+        # return stdout
+        return stdout
+
+    def _run_cmdstan(
+        self, stanfit: StanFit, idx: int, pbar: List[Any] = None
+    ) -> None:
         """
         Encapsulates call to cmdstan.
         Spawn process, capture console output to file, record returncode.
@@ -573,8 +757,11 @@ class Model(object):
         proc = subprocess.Popen(
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        proc.wait()
+        if pbar:
+            stdout_pbar = self._read_progress(proc, pbar)
         stdout, stderr = proc.communicate()
+        if pbar:
+            stdout = stdout_pbar + stdout
         transcript_file = stanfit.console_files[idx]
         self._logger.info('finish chain %u', idx + 1)
         with open(transcript_file, 'w+') as transcript:

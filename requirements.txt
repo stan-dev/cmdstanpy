@@ -1,4 +1,2 @@
 pandas
 numpy>=1.15
-backports.tempfile==1.0
-

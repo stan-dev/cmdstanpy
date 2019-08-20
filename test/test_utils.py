@@ -1,10 +1,11 @@
+import json
 import os
-import os.path
 import unittest
 import platform
 import tempfile
 import shutil
-import json
+import string
+import random
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
@@ -17,7 +18,9 @@ from cmdstanpy.utils import (
     read_metric,
     TemporaryCopiedFile,
     windows_short_path,
-    rdump, rload, parse_rdump_value
+    rdump,
+    rload,
+    parse_rdump_value,
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -79,9 +82,18 @@ class CmdStanPathTest(unittest.TestCase):
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
         with self.assertRaisesRegex(ValueError, 'no such CmdStan directory'):
             validate_cmdstan_path(path_foo)
-        path_test = os.path.abspath('test')
+        folder_name = "".join(
+            random.choice(string.ascii_letters) for _ in range(10)
+        )
+        while os.path.exists(folder_name):
+            folder_name = "".join(
+                random.choice(string.ascii_letters) for _ in range(10)
+            )
+        os.makedirs(folder_name)
+        path_test = os.path.abspath(folder_name)
         with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
             validate_cmdstan_path(path_test)
+        shutil.rmtree(folder_name)
 
     def test_dict_to_file(self):
         file_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
@@ -249,30 +261,30 @@ class RloadTest(unittest.TestCase):
     def test_rload_metric(self):
         dfile = os.path.join(datafiles_path, 'metric_diag.data.R')
         data_dict = rload(dfile)
-        self.assertEqual(data_dict['inv_metric'].shape,(3,))
+        self.assertEqual(data_dict['inv_metric'].shape, (3,))
 
         dfile = os.path.join(datafiles_path, 'metric_dense.data.R')
         data_dict = rload(dfile)
-        self.assertEqual(data_dict['inv_metric'].shape,(3,3))
+        self.assertEqual(data_dict['inv_metric'].shape, (3, 3))
 
     def test_rload_data(self):
         dfile = os.path.join(datafiles_path, 'rdump_test.data.R')
         data_dict = rload(dfile)
-        self.assertEqual(data_dict['N'],128)
-        self.assertEqual(data_dict['M'],2)
-        self.assertEqual(data_dict['x'].shape,(128,2))
+        self.assertEqual(data_dict['N'], 128)
+        self.assertEqual(data_dict['M'], 2)
+        self.assertEqual(data_dict['x'].shape, (128, 2))
 
     def test_rload_jags_data(self):
         dfile = os.path.join(datafiles_path, 'rdump_jags.data.R')
         data_dict = rload(dfile)
-        self.assertEqual(data_dict['N'],128)
-        self.assertEqual(data_dict['M'],2)
-        self.assertEqual(data_dict['y'].shape,(128,))
+        self.assertEqual(data_dict['N'], 128)
+        self.assertEqual(data_dict['M'], 2)
+        self.assertEqual(data_dict['y'].shape, (128,))
 
     def test_rload_wrong_data(self):
         dfile = os.path.join(datafiles_path, 'metric_diag.data.json')
         data_dict = rload(dfile)
-        self.assertEqual(data_dict,None)
+        self.assertEqual(data_dict, None)
 
     def test_rload_bad_data_1(self):
         dfile = os.path.join(datafiles_path, 'rdump_bad_1.data.R')
@@ -292,36 +304,36 @@ class RloadTest(unittest.TestCase):
     def test_roundtrip_metric(self):
         dfile = os.path.join(datafiles_path, 'metric_diag.data.R')
         data_dict_1 = rload(dfile)
-        self.assertEqual(data_dict_1['inv_metric'].shape,(3,))
+        self.assertEqual(data_dict_1['inv_metric'].shape, (3,))
 
         dfile_tmp = os.path.join(datafiles_path, 'tmp.data.R')
         rdump(dfile_tmp, data_dict_1)
         data_dict_2 = rload(dfile_tmp)
-        
+
         self.assertTrue('inv_metric' in data_dict_2)
-        for i,x in enumerate(data_dict_2['inv_metric']):
-            self.assertEqual(x, data_dict_2['inv_metric'][i]) 
+        for i, x in enumerate(data_dict_2['inv_metric']):
+            self.assertEqual(x, data_dict_2['inv_metric'][i])
 
         os.remove(dfile_tmp)
 
     def test_parse_rdump_value(self):
         s1 = 'structure(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),.Dim=c(2,8))'
         v_s1 = parse_rdump_value(s1)
-        self.assertEqual(v_s1.shape,(2,8))
-        self.assertEqual(v_s1[1,0], 2)
-        self.assertEqual(v_s1[0,7], 15)
-        
+        self.assertEqual(v_s1.shape, (2, 8))
+        self.assertEqual(v_s1[1, 0], 2)
+        self.assertEqual(v_s1[0, 7], 15)
+
         s2 = 'structure(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),.Dim=c(1,16))'
         v_s2 = parse_rdump_value(s2)
-        self.assertEqual(v_s2.shape,(1,16))
+        self.assertEqual(v_s2.shape, (1, 16))
 
         s3 = 'structure(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),.Dim = c(8, 2))'
         v_s3 = parse_rdump_value(s3)
-        self.assertEqual(v_s3.shape,(8,2))
-        self.assertEqual(v_s3[1,0], 2)
-        self.assertEqual(v_s3[7,0], 8)
-        self.assertEqual(v_s3[0,1], 9)
-        self.assertEqual(v_s3[6,1], 15)
+        self.assertEqual(v_s3.shape, (8, 2))
+        self.assertEqual(v_s3[1, 0], 2)
+        self.assertEqual(v_s3[7, 0], 8)
+        self.assertEqual(v_s3[0, 1], 9)
+        self.assertEqual(v_s3[6, 1], 15)
 
 
 if __name__ == '__main__':
