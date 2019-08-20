@@ -56,11 +56,11 @@ install:
 
   - "python -m pip install --quiet --disable-pip-version-check --upgrade pip"
   - "python -m pip install --quiet -r requirements.txt"
-  - "python -m pip install --quiet pytest"
+  - "python -m pip install --quiet -r requirements-test.txt"
 
   - "python .\\cmdstanpy\\install_cmdstan.py"
 
-  - "python -m pip install --quiet -e ."
+  - "python -m pip install --quiet ."
   - "pip freeze"
 
 build: false
@@ -68,4 +68,6 @@ build: false
 test_script:
   - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
   - "SET MAKE=mingw32-make.exe"
-  - "python -m pytest test"
+  - "mkdir new_dir"
+  - "cd new_dir"
+  - "python -m pytest ../test"

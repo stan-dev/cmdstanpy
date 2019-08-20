@@ -5,7 +5,12 @@ from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import Model
 from cmdstanpy.stanfit import StanFit
+from contextlib import contextmanager
+import logging
+from multiprocessing import cpu_count
 import numpy as np
+import sys
+from testfixtures import LogCapture
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
@@ -259,6 +264,40 @@ class SampleTest(unittest.TestCase):
                 chains=4, cores=2, seed=12345, sampling_iters=100
             )
 
+    def test_multi_proc(self):
+        logistic_stan = os.path.join(datafiles_path, 'logistic.stan')
+        logistic_model = Model(stan_file=logistic_stan)
+        logistic_model.compile()
+        logistic_data = os.path.join(datafiles_path, 'logistic.data.R')
+
+        with LogCapture() as log:
+            logger = logging.getLogger()
+            fit = logistic_model.sample(data=logistic_data, chains=4, cores=1)
+        log.check_present(
+            ('cmdstanpy', 'INFO', 'finish chain 1'),
+            ('cmdstanpy', 'INFO', 'start chain 2'),
+        )
+        with LogCapture() as log:
+            logger = logging.getLogger()
+            fit = logistic_model.sample(data=logistic_data, chains=4, cores=2)
+        if cpu_count() >= 4:
+            # finish chains 1, 2 before starting chains 3, 4
+            log.check_present(
+                ('cmdstanpy', 'INFO', 'finish chain 1'),
+                ('cmdstanpy', 'INFO', 'start chain 4'),
+            )
+        if cpu_count() >= 4:
+            with LogCapture() as log:
+                logger = logging.getLogger()
+                fit = logistic_model.sample(
+                    data=logistic_data, chains=4, cores=4
+                )
+                log.check_present(
+                    ('cmdstanpy', 'INFO', 'start chain 4'),
+                    ('cmdstanpy', 'INFO', 'finish chain 1'),
+                )
+
+
 class GenerateQuantitiesTest(unittest.TestCase):
     def test_gen_quantities_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
@@ -288,8 +327,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
             sampler_fit._set_retcode(i, 0)
 
         bern_fit = model.run_generated_quantities(
-            csv_files=sampler_fit.csv_files,
-            data=jdata)
+            csv_files=sampler_fit.csv_files, data=jdata
+        )
 
         # check results - ouput files, quantities of interest, draws
         self.assertEqual(bern_fit.chains, 4)
@@ -307,10 +346,11 @@ class GenerateQuantitiesTest(unittest.TestCase):
             'y_rep.7',
             'y_rep.8',
             'y_rep.9',
-            'y_rep.10'
+            'y_rep.10',
         ]
         self.assertEqual(bern_fit.column_names, tuple(column_names))
-        self.assertEqual(bern_fit.draws, 100) 
+        self.assertEqual(bern_fit.draws, 100)
+
 
 if __name__ == '__main__':
     unittest.main()

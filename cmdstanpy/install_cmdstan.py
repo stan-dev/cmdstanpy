@@ -63,7 +63,6 @@ def install_version(cmdstan_version):
         proc = subprocess.Popen(
             cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        proc.wait()
         stdout, stderr = proc.communicate()
         if proc.returncode:
             print('Failed to compile example model bernoulli.stan')
