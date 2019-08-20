@@ -29,6 +29,7 @@ model {
 }
 '''
 
+
 class ModelTest(unittest.TestCase):
     def test_model_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -265,10 +266,10 @@ class SampleTest(unittest.TestCase):
 
     def test_multi_proc(self):
         logistic_path = os.path.join('test', 'data')
-        logistic_stan = os.path.join(logistic_path,'logistic.stan')
+        logistic_stan = os.path.join(logistic_path, 'logistic.stan')
         logistic_model = Model(stan_file=logistic_stan)
         logistic_model.compile()
-        logistic_data = os.path.join(logistic_path,'logistic.data.R')
+        logistic_data = os.path.join(logistic_path, 'logistic.data.R')
 
         with LogCapture() as log:
             logger = logging.getLogger()
@@ -280,22 +281,22 @@ class SampleTest(unittest.TestCase):
         with LogCapture() as log:
             logger = logging.getLogger()
             fit = logistic_model.sample(data=logistic_data, chains=4, cores=2)
-        if (cpu_count() >= 4):
+        if cpu_count() >= 4:
             # finish chains 1, 2 before starting chains 3, 4
             log.check_present(
                 ('cmdstanpy', 'INFO', 'finish chain 1'),
                 ('cmdstanpy', 'INFO', 'start chain 4'),
             )
-        if (cpu_count() >= 4):
+        if cpu_count() >= 4:
             with LogCapture() as log:
                 logger = logging.getLogger()
-                fit = logistic_model.sample(data=logistic_data, chains=4, cores=4)
+                fit = logistic_model.sample(
+                    data=logistic_data, chains=4, cores=4
+                )
                 log.check_present(
                     ('cmdstanpy', 'INFO', 'start chain 4'),
                     ('cmdstanpy', 'INFO', 'finish chain 1'),
                 )
-
-
 
 
 class GenerateQuantitiesTest(unittest.TestCase):
@@ -327,8 +328,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
             sampler_fit._set_retcode(i, 0)
 
         bern_fit = model.run_generated_quantities(
-            csv_files=sampler_fit.csv_files,
-            data=jdata)
+            csv_files=sampler_fit.csv_files, data=jdata
+        )
 
         # check results - ouput files, quantities of interest, draws
         self.assertEqual(bern_fit.chains, 4)
@@ -346,10 +347,11 @@ class GenerateQuantitiesTest(unittest.TestCase):
             'y_rep.7',
             'y_rep.8',
             'y_rep.9',
-            'y_rep.10'
+            'y_rep.10',
         ]
         self.assertEqual(bern_fit.column_names, tuple(column_names))
-        self.assertEqual(bern_fit.draws, 100) 
+        self.assertEqual(bern_fit.draws, 100)
+
 
 if __name__ == '__main__':
     unittest.main()

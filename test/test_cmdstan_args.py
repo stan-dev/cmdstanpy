@@ -4,11 +4,11 @@ import unittest
 from cmdstanpy import TMPDIR
 
 from cmdstanpy.cmdstan_args import (
-    SamplerArgs, 
+    SamplerArgs,
     CmdStanArgs,
-    FixedParamArgs, 
-    OptimizeArgs, 
-    GenerateQuantitiesArgs
+    FixedParamArgs,
+    OptimizeArgs,
+    GenerateQuantitiesArgs,
 )
 
 datafiles_path = os.path.join('test', 'data')
@@ -470,14 +470,20 @@ class GenerateQuantitesTest(unittest.TestCase):
         args = GenerateQuantitiesArgs(csv_files=['no_such_file'])
         with self.assertRaises(ValueError):
             args.validate(chains=1)
-        csv_files = [os.path.join(datafiles_path, 'runset-good', 'bern-{}.csv'.format(i+1)) for i in range(4)]
+        csv_files = [
+            os.path.join(
+                datafiles_path, 'runset-good', 'bern-{}.csv'.format(i + 1)
+            )
+            for i in range(4)
+        ]
         print(csv_files)
         args = GenerateQuantitiesArgs(csv_files=csv_files)
         args.validate(chains=4)
         cmd = args.compose(idx=1, cmd='')
         print(cmd)
         self.assertIn('method=generate_quantities', cmd)
-        self.assertIn('fitted_params={}'.format(csv_files[0]), cmd) 
+        self.assertIn('fitted_params={}'.format(csv_files[0]), cmd)
+
 
 if __name__ == '__main__':
     unittest.main()
