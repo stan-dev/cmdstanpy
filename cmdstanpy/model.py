@@ -536,20 +536,29 @@ class Model(object):
                                 tqdm_pbar = tqdm.tqdm
                         else:
                             tqdm_pbar = tqdm.tqdm
+                        # enable dynamic_ncols for advanced users
+                        # currently hidden feature
+                        dynamic_ncols = os.environ.get(
+                            "TQDM_DYNAMIC_NCOLS", False
+                        )
+                        if dynamic_ncols.lower() in ["0", "false"]:
+                            dynamic_ncols = False
+                        else:
+                            dynamic_ncols = True
                         pbar = [
                             # warmup
                             tqdm_pbar(
                                 desc="Chain {} - warmup".format(i + 1),
                                 position=i * 2,
                                 total=sampler_args.warmup_iters,
-                                dynamic_ncols=True,
+                                dynamic_ncols=dynamic_ncols,
                             ),
                             # sampling
                             tqdm_pbar(
                                 desc="Chain {} - sample".format(i + 1),
                                 position=i * 2 + 1,
                                 total=sampler_args.sampling_iters,
-                                dynamic_ncols=True,
+                                dynamic_ncols=dynamic_ncols,
                             ),
                         ]
 
