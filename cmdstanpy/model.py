@@ -701,7 +701,6 @@ class Model(object):
                             else:
                                 num_sampling = total_count - num_warmup
                                 pbar_sampling.total = num_sampling
-
                         # raw_count = warmup + sampling
                         raw_count = int(match.group(1))
                         if match.group(3).lower() == 'warmup':
@@ -714,12 +713,12 @@ class Model(object):
                             # increment progressbar by 'count'
                             pbar_warmup.update(count)
                         elif match.group(3).lower() == 'sampling':
-                            # refresh warmup and close the progress bar if
-                            # all the warmup samples are seen
+                            # refresh warmup and close the progress bar
+                            # update values to full
                             if refresh_warmup:
+                                pbar_warmup.update(num_warmup - count_warmup)
                                 pbar_warmup.refresh()
-                                if count_warmup == num_warmup:
-                                    pbar_warmup.close()
+                                pbar_warmup.close()
                                 refresh_warmup = False
 
                             count, count_sampling = (
