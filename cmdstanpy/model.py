@@ -454,6 +454,35 @@ class Model(object):
             )
             cores = cores_avail
 
+        refresh = None
+        if show_progress:
+            try:
+                import tqdm
+
+                # These need update if CmdStan changes the defaults
+                # refresh every 0.5% --> 200 updates
+                if warmup_iters is None and sampling_iters is None:
+                    refresh = 10  # 2000 // 200 => 0.5 %
+                elif warmup_iters is None:
+                    refresh = (1000 + sampling_iters) // 200
+                elif sampling_iters is None:
+                    refresh = (warmup_iters + 1000) // 200
+                else:
+                    refresh = max((warmup_iters + sampling_iters) // 200, 1)
+
+                # disable logger for console (temporary)
+                # use tqdm
+                self._logger.propagate = False
+            except ImportError:
+                self._logger.warning(
+                    (
+                        'tqdm not installed, progress information is not '
+                        'shown. Please install tqdm with '
+                        "'pip install tqdm'"
+                    )
+                )
+                show_progress = False
+
         # TODO:  issue 49: inits can be initialization function
 
         sampler_args = SamplerArgs(
@@ -477,25 +506,10 @@ class Model(object):
                 inits=_inits,
                 output_basename=csv_basename,
                 method_args=sampler_args,
+                refresh=refresh,
             )
 
             stanfit = StanFit(args=args, chains=chains)
-            if show_progress:
-                try:
-                    import tqdm
-
-                    # disable logger for console (temporary)
-                    # use tqdm
-                    self._logger.propagate = False
-                except ImportError:
-                    self._logger.warning(
-                        (
-                            'tqdm not installed, progress information is not '
-                            'shown. Please install tqdm with '
-                            "'pip install tqdm'"
-                        )
-                    )
-                    show_progress = False
 
             pbar = None
             pbar_dict = {}
