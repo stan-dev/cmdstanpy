@@ -539,7 +539,7 @@ class Model(object):
                         # enable dynamic_ncols for advanced users
                         # currently hidden feature
                         dynamic_ncols = os.environ.get(
-                            "TQDM_DYNAMIC_NCOLS", False
+                            "TQDM_DYNAMIC_NCOLS", "False"
                         )
                         if dynamic_ncols.lower() in ["0", "false"]:
                             dynamic_ncols = False
