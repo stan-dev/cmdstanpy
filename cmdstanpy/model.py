@@ -454,6 +454,35 @@ class Model(object):
             )
             cores = cores_avail
 
+        refresh = None
+        if show_progress:
+            try:
+                import tqdm
+
+                # These need update if CmdStan changes the defaults
+                # refresh every 0.5% --> 200 updates
+                if warmup_iters is None and sampling_iters is None:
+                    refresh = 10  # 2000 // 200 => 0.5 %
+                elif warmup_iters is None:
+                    refresh = (1000 + sampling_iters) // 200
+                elif sampling_iters is None:
+                    refresh = (warmup_iters + 1000) // 200
+                else:
+                    refresh = max((warmup_iters + sampling_iters) // 200, 1)
+
+                # disable logger for console (temporary)
+                # use tqdm
+                self._logger.propagate = False
+            except ImportError:
+                self._logger.warning(
+                    (
+                        'tqdm not installed, progress information is not '
+                        'shown. Please install tqdm with '
+                        "'pip install tqdm'"
+                    )
+                )
+                show_progress = False
+
         # TODO:  issue 49: inits can be initialization function
 
         sampler_args = SamplerArgs(
@@ -477,25 +506,10 @@ class Model(object):
                 inits=_inits,
                 output_basename=csv_basename,
                 method_args=sampler_args,
+                refresh=refresh,
             )
 
             stanfit = StanFit(args=args, chains=chains)
-            if show_progress:
-                try:
-                    import tqdm
-
-                    # disable logger for console (temporary)
-                    # use tqdm
-                    self._logger.propagate = False
-                except ImportError:
-                    self._logger.warning(
-                        (
-                            'tqdm not installed, progress information is not '
-                            'shown. Please install tqdm with '
-                            "'pip install tqdm'"
-                        )
-                    )
-                    show_progress = False
 
             pbar = None
             pbar_dict = {}
@@ -522,20 +536,29 @@ class Model(object):
                                 tqdm_pbar = tqdm.tqdm
                         else:
                             tqdm_pbar = tqdm.tqdm
+                        # enable dynamic_ncols for advanced users
+                        # currently hidden feature
+                        dynamic_ncols = os.environ.get(
+                            "TQDM_DYNAMIC_NCOLS", "False"
+                        )
+                        if dynamic_ncols.lower() in ["0", "false"]:
+                            dynamic_ncols = False
+                        else:
+                            dynamic_ncols = True
                         pbar = [
                             # warmup
                             tqdm_pbar(
                                 desc="Chain {} - warmup".format(i + 1),
                                 position=i * 2,
                                 total=sampler_args.warmup_iters,
-                                dynamic_ncols=True,
+                                dynamic_ncols=dynamic_ncols,
                             ),
                             # sampling
                             tqdm_pbar(
                                 desc="Chain {} - sample".format(i + 1),
                                 position=i * 2 + 1,
                                 total=sampler_args.sampling_iters,
-                                dynamic_ncols=True,
+                                dynamic_ncols=dynamic_ncols,
                             ),
                         ]
 
@@ -633,11 +656,13 @@ class Model(object):
             stanfit._set_attrs_gq_csv_files(csv_files[0])
         return stanfit
 
-    def _read_progress(self, proc: subprocess.Popen, pbar: List[Any]) -> bytes:
+    def _read_progress(
+        self, proc: subprocess.Popen, pbar: List[Any], idx: int
+    ) -> bytes:
         # compile re pattern
         # read iteration 'count' and 'warmup' or 'sampling'
         pattern = (
-            r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
+            r'^Iteration\:\s*(\d+)\s*/\s*(\d+)\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
         )
         pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
 
@@ -652,91 +677,130 @@ class Model(object):
         # gather stdout
         stdout = b''
 
-        # iterate while process is sampling
-        # process stdout line by line
-        while proc.poll() is None:
-            # read line
-            output = proc.stdout.readline()
-            # gather stdout
-            stdout += output
-            # decode bytes to string
-            output = output.decode('utf-8').strip()
+        try:
+            # iterate while process is sampling
+            # process stdout line by line
+            while proc.poll() is None:
+                # read line
+                output = proc.stdout.readline()
+                # gather stdout
+                stdout += output
+                # decode bytes to string
+                output = output.decode('utf-8').strip()
+                # force refresh warmup_pbar after warmup has ended
+                refresh_warmup = True
+                # process Iteration output
+                if output.startswith('Iteration'):
+                    # run regular expression
+                    match = re.search(pattern_compiled, output)
 
-            # force refresh warmup_pbar after warmup has ended
-            refresh_warmup = True
-            # process Iteration output
-            if output.startswith('Iteration'):
-                # run regular expression
-                match = re.search(pattern_compiled, output)
-                if match:
-                    # raw_count = warmup + sampling
-                    raw_count = int(match.group(1))
-                    if match.group(2).lower() == 'warmup':
-                        count, count_warmup = (
-                            # steps
-                            raw_count - count_warmup,
-                            # cumulative count
-                            raw_count,
-                        )
-                        # increment progressbar by 'count'
-                        pbar_warmup.update(count)
-                    elif match.group(2).lower() == 'sampling':
-                        # refresh warmup and close the progress bar if
-                        # all the warmup samples are seen
-                        if refresh_warmup:
-                            pbar_warmup.refresh()
-                            if count_warmup == num_warmup:
+                    if match:
+
+                        # check if pbars need reset
+                        if num_warmup is None or num_sampling is None:
+                            total_count = int(match.group(2))
+                            if num_warmup is None and num_sampling is None:
+                                num_warmup = total_count // 2
+                                num_sampling = total_count - num_warmup
+                                pbar_warmup.total = num_warmup
+                                pbar_sampling.total = num_sampling
+                            elif num_warmup is None:
+                                num_warmup = total_count - num_sampling
+                                pbar_warmup.total = num_warmup
+                            else:
+                                num_sampling = total_count - num_warmup
+                                pbar_sampling.total = num_sampling
+                        # raw_count = warmup + sampling
+                        raw_count = int(match.group(1))
+                        if match.group(3).lower() == 'warmup':
+                            count, count_warmup = (
+                                # steps
+                                raw_count - count_warmup,
+                                # cumulative count
+                                raw_count,
+                            )
+                            # increment progressbar by 'count'
+                            pbar_warmup.update(count)
+                        elif match.group(3).lower() == 'sampling':
+                            # refresh warmup and close the progress bar
+                            # update values to full
+                            if refresh_warmup:
+                                pbar_warmup.update(num_warmup - count_warmup)
+                                pbar_warmup.refresh()
                                 pbar_warmup.close()
-                            refresh_warmup = False
+                                refresh_warmup = False
 
-                        count, count_sampling = (
-                            # steps
-                            raw_count - num_warmup - count_sampling,
-                            # cumulative count
-                            raw_count - num_warmup,
-                        )
-                        # increment progressbar by 'count'
-                        pbar_sampling.update(count)
+                            count, count_sampling = (
+                                # steps
+                                raw_count - num_warmup - count_sampling,
+                                # cumulative count
+                                raw_count - num_warmup,
+                            )
+                            # increment progressbar by 'count'
+                            pbar_sampling.update(count)
 
-        # read and process rest of the stdout if needed
-        warmup_cumulative_count = 0
-        sampling_cumulative_count = 0
-        for output in proc.stdout:
-            stdout += output
-            # decode bytes to string
-            output = output.decode('utf-8').strip()
-            if output.startswith('Iteration'):
-                # run regular expression
-                match = re.search(pattern_compiled, output)
-                if match:
-                    # raw_count = warmup + sampling
-                    raw_count = int(match.group(1))
-                    if match.group(2).lower() == 'warmup':
-                        count, count_warmup = (
-                            # steps
-                            raw_count - count_warmup,
-                            # cumulative count
-                            raw_count,
-                        )
-                        # increment warmup_cumcount by 'count'
-                        warmup_cumulative_count += count
-                    elif match.group(2).lower() == 'sampling':
-                        count, count_sampling = (
-                            # steps
-                            raw_count - num_warmup - count_sampling,
-                            # cumulative count
-                            raw_count - num_warmup,
-                        )
-                        # increment progressbar by 'count'
-                        sampling_cumulative_count += count
-        # update warmup pbar if needed
-        if warmup_cumulative_count:
-            pbar_warmup.update(warmup_cumulative_count)
-            pbar_warmup.refresh()
-        # update sampling pbar if needed
-        if sampling_cumulative_count:
-            pbar_sampling.update(sampling_cumulative_count)
-            pbar_sampling.refresh()
+            # read and process rest of the stdout if needed
+            warmup_cumulative_count = 0
+            sampling_cumulative_count = 0
+            for output in proc.stdout:
+                stdout += output
+                # decode bytes to string
+                output = output.decode('utf-8').strip()
+                if output.startswith('Iteration'):
+                    # run regular expression
+                    match = re.search(pattern_compiled, output)
+                    if match:
+
+                        # check if pbars need reset
+                        if num_warmup is None or num_sampling is None:
+                            total_count = int(match.group(2))
+                            if num_warmup is None and num_sampling is None:
+                                num_warmup = total_count // 2
+                                num_sampling = total_count - num_warmup
+                                pbar_warmup.total = num_warmup
+                                pbar_sampling.total = num_sampling
+                            elif num_warmup is None:
+                                num_warmup = total_count - num_sampling
+                                pbar_warmup.total = num_warmup
+                            else:
+                                num_sampling = total_count - num_warmup
+                                pbar_sampling.total = num_sampling
+
+                        # raw_count = warmup + sampling
+                        raw_count = int(match.group(1))
+                        if match.group(3).lower() == 'warmup':
+                            count, count_warmup = (
+                                # steps
+                                raw_count - count_warmup,
+                                # cumulative count
+                                raw_count,
+                            )
+                            # increment warmup_cumcount by 'count'
+                            warmup_cumulative_count += count
+                        elif match.group(3).lower() == 'sampling':
+                            count, count_sampling = (
+                                # steps
+                                raw_count - num_warmup - count_sampling,
+                                # cumulative count
+                                raw_count - num_warmup,
+                            )
+                            # increment progressbar by 'count'
+                            sampling_cumulative_count += count
+            # update warmup pbar if needed
+            if warmup_cumulative_count:
+                pbar_warmup.update(warmup_cumulative_count)
+                pbar_warmup.refresh()
+            # update sampling pbar if needed
+            if sampling_cumulative_count:
+                pbar_sampling.update(sampling_cumulative_count)
+                pbar_sampling.refresh()
+
+        except Exception as e:
+            self._logger.warning(
+                "Chain %s: Failed to read the progress on the fly. Error: %s",
+                idx,
+                e,
+            )
         # close both pbar
         pbar_warmup.close()
         pbar_sampling.close()
@@ -758,7 +822,7 @@ class Model(object):
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if pbar:
-            stdout_pbar = self._read_progress(proc, pbar)
+            stdout_pbar = self._read_progress(proc, pbar, idx)
         stdout, stderr = proc.communicate()
         if pbar:
             stdout = stdout_pbar + stdout
