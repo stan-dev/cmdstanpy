@@ -18,6 +18,9 @@ clone_depth: 1
 
 environment:
   matrix:
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
     - PYTHON: "C:\\Python37-x64"
       PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "64"
@@ -71,3 +74,5 @@ test_script:
   - "mkdir new_dir"
   - "cd new_dir"
   - "python -m pytest ../test"
+  - "python -m pip install -r ../requirements-optional.txt"
+  - "python ../test/example_script.py"

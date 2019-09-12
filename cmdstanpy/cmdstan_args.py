@@ -324,6 +324,7 @@ class CmdStanArgs(object):
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
         output_basename: str = None,
+        refresh: str = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
@@ -335,6 +336,7 @@ class CmdStanArgs(object):
         self.seed = seed
         self.inits = inits
         self.output_basename = output_basename
+        self.refresh = refresh
         self.validate()
 
     def validate(self) -> None:
@@ -484,5 +486,7 @@ class CmdStanArgs(object):
             else:
                 cmd = '{} init={}'.format(cmd, self.inits[idx])
         cmd = '{} output file={}'.format(cmd, csv_file)
+        if self.refresh is not None:
+            cmd = '{} refresh={}'.format(cmd, self.refresh)
         cmd = self.method_args.compose(idx, cmd)
         return cmd
