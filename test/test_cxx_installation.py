@@ -1,14 +1,12 @@
 import argparse
 import os
 import unittest
+from unittest import mock
 import platform
-import tempfile
+import shutil
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.install_cxx_toolchain import main as install_cxx
-
-here = os.path.dirname(os.path.abspath(__file__))
-datafiles_path = os.path.join(here, 'data')
 
 
 class install_cxx_script(unittest.TestCase):
@@ -31,7 +29,8 @@ class install_cxx_script(unittest.TestCase):
             return
 
         install_cxx()
-        assertTrue(os.path.exists(os.path.join(TMPDIR, "RTools")))
+        self.assertTrue(os.path.exists(os.path.join(TMPDIR, "RTools")))
+        shutil.rmtree(os.path.join(TMPDIR, "RTools"), ignore_errors=True)
 
 
 if __name__ == '__main__':

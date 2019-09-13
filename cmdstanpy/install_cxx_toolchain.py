@@ -48,9 +48,9 @@ def usage():
 
 def get_config(dir, silent):
     config = []
-    if platform.system() == "Windows":
+    if platform.system() == 'Windows':
         _, dir = os.path.splitdrive(os.path.abspath(dir))
-        if dir.startswith("\\"):
+        if dir.startswith('\\'):
             dir = dir[1:]
         config = [
             '/SP-',
@@ -66,7 +66,7 @@ def get_config(dir, silent):
 
 
 def install_version(installation_dir, installation_file, version, silent):
-    with pushd("."):
+    with pushd('.'):
         print(
             'Installing the C++ toolchain: {}'.format(
                 os.path.splitext(installation_file)[0]
@@ -74,7 +74,7 @@ def install_version(installation_dir, installation_file, version, silent):
         )
         cmd = [installation_file]
         cmd.extend(get_config(installation_dir, silent))
-        print(" ".join(cmd))
+        print(' '.join(cmd))
         proc = subprocess.Popen(
             cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -88,7 +88,7 @@ def install_version(installation_dir, installation_file, version, silent):
             if stderr:
                 print(stderr.decode('utf-8').strip())
             if is_installed(installation_dir, version):
-                print("Installation files found at the installation location.")
+                print('Installation files found at the installation location.')
             sys.exit(3)
     # check installation
     if is_installed(installation_dir, version):
@@ -97,8 +97,8 @@ def install_version(installation_dir, installation_file, version, silent):
 
 
 def is_installed(toolchain_loc, version):
-    if platform.system() == "Windows":
-        if version == "3.5":
+    if platform.system() == 'Windows':
+        if version == '3.5':
             if not os.path.exists(os.path.join(toolchain_loc, 'bin')):
                 return False
             return os.path.exists(
@@ -109,7 +109,7 @@ def is_installed(toolchain_loc, version):
                     'g++' + EXTENSION,
                 )
             )
-        elif version == "4.0":
+        elif version == '4.0':
             return os.path.exists(
                 os.path.join(
                     toolchain_loc,
@@ -200,7 +200,7 @@ def get_toolchain_version(name, version):
     toolchain_folder = None
     if platform.system() == 'Windows':
         root_folder = 'RTools'
-        toolchain_folder = '{}{}'.format(name, version.replace(".", ""))
+        toolchain_folder = '{}{}'.format(name, version.replace('.', ''))
 
     return root_folder, toolchain_folder
 
@@ -224,7 +224,7 @@ def main():
     if version is None:
         version = latest_version()
     version = normalize_version(version)
-    print('C++ toolchain '{}' version: {}'.format(toolchain, version))
+    print("C++ toolchain '{}' version: {}".format(toolchain, version))
 
     url = get_url(version)
 
