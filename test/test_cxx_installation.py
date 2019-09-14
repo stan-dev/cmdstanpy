@@ -37,7 +37,7 @@ class install_cxx_script(unittest.TestCase):
 
         with self.assertRaisesRegex(
             NotImplementedError,
-            r'Download for the C++ toolchain on the current platform has not been implemented:\s*\S+',
+            r'Download for the C\+\+ toolchain on the current platform has not been implemented:\s*\S+',
         ):
             install_cxx_toolchain.main()
 
