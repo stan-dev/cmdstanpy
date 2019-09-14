@@ -292,7 +292,7 @@ def check_csv(
     else:
         draws_spec = int(meta.get('num_samples', 1000))
         if 'thin' in meta:
-            draws_spec = int(math.ceil(draws_spec / meta['thin']))
+            draws_spec = int(math.ceil(draws_spec / int(meta['thin'])))
     if meta['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
