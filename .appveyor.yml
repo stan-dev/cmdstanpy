@@ -47,8 +47,8 @@ install:
 
   # Install RTools
   - "python .\\cmdstanpy\\install_cxx_toolchain.py --silent --dir C:\\"
-  - "dir C:\\Rtools"
-  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "dir C:\\Rtools\\RTools35"
+  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
   - "SET MAKE=mingw32-make.exe"
   - "gcc --version"
   - "mingw32-make --version"
