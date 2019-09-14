@@ -7,6 +7,8 @@ import shutil
 import string
 import random
 
+import numpy as np
+
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     cmdstan_path,
@@ -21,6 +23,7 @@ from cmdstanpy.utils import (
     rdump,
     rload,
     parse_rdump_value,
+    jsondump,
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -334,6 +337,23 @@ class RloadTest(unittest.TestCase):
         self.assertEqual(v_s3[7, 0], 8)
         self.assertEqual(v_s3[0, 1], 9)
         self.assertEqual(v_s3[6, 1], 15)
+
+
+class NumpyToListTest(unittest.TestCase):
+    """Check correct order."""
+
+    def test_jsondumps_order(self):
+        path_handle = tempfile.NamedTemporaryFile(suffix=".json", dir=TMPDIR)
+        path = path_handle.name
+        path_handle.close()
+
+        numpy_array = np.random.randn(10, 11, 3).round(3)
+        jsondump(path, {'theta': numpy_array})
+        with open(path, "r") as fd:
+            # create with fortran order
+            new_numpy_array = np.array(json.load(fd)['theta']).T
+        np.testing.assert_array_equal(numpy_array, new_numpy_array)
+        os.remove(path)
 
 
 if __name__ == '__main__':

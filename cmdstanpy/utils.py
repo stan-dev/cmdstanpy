@@ -193,7 +193,7 @@ def _rdump_array(key: str, val: np.ndarray) -> str:
 def jsondump(path: str, data: Dict) -> None:
     """Dump a dict of data to a JSON file."""
     for key, val in data.items():
-        if isinstance(val, np.ndarray):
+        if isinstance(val, np.ndarray) and val.size > 1:
             # .T for Fortran order
             data[key] = val.T.tolist()
     with open(path, 'w') as fd:
