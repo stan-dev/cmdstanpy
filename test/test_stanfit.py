@@ -3,7 +3,7 @@ import unittest
 
 from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
-from cmdstanpy.stanfit import StanFit
+from cmdstanpy.stanfit import RunSet, StanFit
 from cmdstanpy.model import Model
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +12,7 @@ goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
 
-class StanFitTest(unittest.TestCase):
+class RunSetTest(unittest.TestCase):
     def test_check_retcodes(self):
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
@@ -24,20 +24,21 @@ class StanFitTest(unittest.TestCase):
             data=jdata,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=4)
-        retcodes = fit._retcodes
+        runset = RunSet(args=cmdstan_args, chains=4)
+        retcodes = runset._retcodes
         self.assertEqual(4, len(retcodes))
         for i in range(len(retcodes)):
-            self.assertEqual(-1, fit._retcode(i))
-        fit._set_retcode(0, 0)
-        self.assertEqual(0, fit._retcode(0))
+            self.assertEqual(-1, runset._retcode(i))
+        runset._set_retcode(0, 0)
+        self.assertEqual(0, runset._retcode(0))
         for i in range(1, len(retcodes)):
-            self.assertEqual(-1, fit._retcode(i))
-        self.assertFalse(fit._check_retcodes())
+            self.assertEqual(-1, runset._retcode(i))
+        self.assertFalse(runset._check_retcodes())
         for i in range(1, len(retcodes)):
-            fit._set_retcode(i, 0)
-        self.assertTrue(fit._check_retcodes())
+            runset._set_retcode(i, 0)
+        self.assertTrue(runset._check_retcodes())
 
+class StanFitTest(unittest.TestCase):
     def test_validate_good_run(self):
         # construct fit using existing sampler output
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
@@ -55,20 +56,22 @@ class StanFitTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=4)
-        retcodes = fit._retcodes
+        runset = RunSet(args=cmdstan_args, chains=4)
+        self.assertEqual(4, runset.chains)
+        retcodes = runset._retcodes
         for i in range(len(retcodes)):
-            fit._set_retcode(i, 0)
-        self.assertTrue(fit._check_retcodes())
+            runset._set_retcode(i, 0)
+        self.assertTrue(runset._check_retcodes())
+
+        fit = StanFit(runset)
         fit._validate_csv_files()
-        self.assertEqual(4, fit.chains)
         self.assertEqual(100, fit.draws)
         self.assertEqual(8, len(fit.column_names))
         self.assertEqual('lp__', fit.column_names[0])
 
         df = fit.get_drawset()
         self.assertEqual(
-            df.shape, (fit.chains * fit.draws, len(fit.column_names))
+            df.shape, (fit.runset.chains * fit.draws, len(fit.column_names))
         )
         _ = fit.summary()
 
@@ -100,7 +103,8 @@ class StanFitTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=2)
+        runset = RunSet(args=cmdstan_args, chains=2)
+        fit = StanFit(runset)
         fit._validate_csv_files()
         sampler_state = [
             'lp__',
@@ -142,8 +146,8 @@ class StanFitTest(unittest.TestCase):
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
         )
 
-        for i in range(bern_fit.chains):
-            csv_file = bern_fit.csv_files[i]
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
@@ -151,26 +155,26 @@ class StanFitTest(unittest.TestCase):
         # save files to good dir
         basename = 'bern_save_csvfiles_test'
         bern_fit.save_csvfiles(dir=datafiles_path, basename=basename)
-        for i in range(bern_fit.chains):
-            csv_file = bern_fit.csv_files[i]
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
         with self.assertRaisesRegex(Exception, 'file exists'):
             bern_fit.save_csvfiles(dir=datafiles_path, basename=basename)
-        for i in range(bern_fit.chains):  # cleanup datafile_path dir
-            os.remove(bern_fit.csv_files[i])
-            os.remove(bern_fit.console_files[i])
+        for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
+            os.remove(bern_fit.runset.csv_files[i])
+            os.remove(bern_fit.runset.console_files[i])
 
         # regenerate to tmpdir, save to good dir
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
         )
         bern_fit.save_csvfiles(basename=basename)  # default dir
-        for i in range(bern_fit.chains):
-            csv_file = bern_fit.csv_files[i]
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
-        for i in range(bern_fit.chains):  # cleanup default dir
-            os.remove(bern_fit.csv_files[i])
-            os.remove(bern_fit.console_files[i])
+        for i in range(bern_fit.runset.chains):  # cleanup default dir
+            os.remove(bern_fit.runset.csv_files[i])
+            os.remove(bern_fit.runset.console_files[i])
 
     def test_diagnose_divergences(self):
         exe = os.path.join(
@@ -187,7 +191,8 @@ class StanFitTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=1)
+        sampler_runset = RunSet(args=cmdstan_args, chains=1)
+        fit = StanFit(sampler_runset)
         # TODO - use cmdstan test files instead
         expected = '\n'.join(
             [
@@ -200,6 +205,7 @@ class StanFitTest(unittest.TestCase):
             ]
         )
         self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
+
 
     # redo - better error handling
     def test_validate_bad_run(self):
@@ -220,9 +226,9 @@ class StanFitTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args, chains=4)
         with self.assertRaisesRegex(Exception, 'Exception'):
-            fit._check_console_msgs()
+            runset._check_console_msgs()
 
         # csv file headers inconsistent
         output = os.path.join(badfiles_path, 'bad-hdr-bern')
@@ -235,11 +241,12 @@ class StanFitTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=4)
-        retcodes = fit._retcodes
+        runset = RunSet(args=cmdstan_args, chains=4)
+        retcodes = runset._retcodes
         for i in range(len(retcodes)):
-            fit._set_retcode(i, 0)
-        self.assertTrue(fit._check_retcodes())
+            runset._set_retcode(i, 0)
+        self.assertTrue(runset._check_retcodes())
+        fit = StanFit(runset)
         with self.assertRaisesRegex(ValueError, 'header mismatch'):
             fit._validate_csv_files()
 
@@ -254,11 +261,12 @@ class StanFitTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=4)
-        retcodes = fit._retcodes
+        runset = RunSet(args=cmdstan_args, chains=4)
+        retcodes = runset._retcodes
         for i in range(len(retcodes)):
-            fit._set_retcode(i, 0)
-        self.assertTrue(fit._check_retcodes())
+            runset._set_retcode(i, 0)
+        self.assertTrue(runset._check_retcodes())
+        fit = StanFit(runset)
         with self.assertRaisesRegex(ValueError, 'draws'):
             fit._validate_csv_files()
 
@@ -273,11 +281,12 @@ class StanFitTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        fit = StanFit(args=cmdstan_args, chains=4)
-        retcodes = fit._retcodes
+        runset = RunSet(args=cmdstan_args, chains=4)
+        retcodes = runset._retcodes
         for i in range(len(retcodes)):
-            fit._set_retcode(i, 0)
-        self.assertTrue(fit._check_retcodes())
+            runset._set_retcode(i, 0)
+        self.assertTrue(runset._check_retcodes())
+        fit = StanFit(runset)
         with self.assertRaisesRegex(ValueError, 'bad draw'):
             fit._validate_csv_files()
 

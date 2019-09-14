@@ -1,10 +1,10 @@
 import os
 import unittest
 
-from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
+from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import Model
-from cmdstanpy.stanfit import StanFit
+from cmdstanpy.stanfit import RunSet
 from contextlib import contextmanager
 import logging
 from multiprocessing import cpu_count
@@ -106,74 +106,6 @@ class ModelTest(unittest.TestCase):
     # TODO: test overwrite with existing exe - timestamp on exe updated
 
 
-class OptimizeTest(unittest.TestCase):
-    def test_optimize_works(self):
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        model = Model(stan_file=stan, exe_file=exe)
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        jinit = os.path.join(datafiles_path, 'bernoulli.init.json')
-        fit = model.optimize(
-            data=jdata,
-            seed=1239812093,
-            inits=jinit,
-            algorithm='BFGS',
-            init_alpha=0.001,
-            iter=100,
-        )
-
-        # check if calling sample related stuff fails
-        with self.assertRaises(RuntimeError):
-            fit.summary()
-        with self.assertRaises(RuntimeError):
-            _ = fit.sample
-        with self.assertRaises(RuntimeError):
-            fit.diagnose()
-
-        # test numpy output
-        self.assertAlmostEqual(fit.optimized_params_np[0], -5, places=2)
-        self.assertAlmostEqual(fit.optimized_params_np[1], 0.2, places=3)
-
-        # test pandas output
-        self.assertEqual(
-            fit.optimized_params_np[0], fit.optimized_params_pd['lp__'][0]
-        )
-        self.assertEqual(
-            fit.optimized_params_np[1], fit.optimized_params_pd['theta'][0]
-        )
-
-        # test dict output
-        self.assertEqual(
-            fit.optimized_params_np[0], fit.optimized_params_dict['lp__']
-        )
-        self.assertEqual(
-            fit.optimized_params_np[1], fit.optimized_params_dict['theta']
-        )
-
-    def test_optimize_works_dict(self):
-        import json
-
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        model = Model(stan_file=stan, exe_file=exe)
-        with open(os.path.join(datafiles_path, 'bernoulli.data.json')) as d:
-            data = json.load(d)
-        with open(os.path.join(datafiles_path, 'bernoulli.init.json')) as d:
-            init = json.load(d)
-        fit = model.optimize(
-            data=data,
-            seed=1239812093,
-            inits=init,
-            algorithm='BFGS',
-            init_alpha=0.001,
-            iter=100,
-        )
-
-        # test numpy output
-        self.assertAlmostEqual(fit.optimized_params_np[0], -5, places=2)
-        self.assertAlmostEqual(fit.optimized_params_np[1], 0.2, places=3)
-
-
 class SampleTest(unittest.TestCase):
     def test_bernoulli_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -185,14 +117,15 @@ class SampleTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
         )
+        self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
 
-        for i in range(bern_fit.chains):
-            csv_file = bern_fit.csv_files[i]
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
 
-        self.assertEqual(bern_fit.chains, 4)
+        self.assertEqual(bern_fit.runset.chains, 4)
         self.assertEqual(bern_fit.draws, 100)
         column_names = [
             'lp__',
@@ -222,16 +155,16 @@ class SampleTest(unittest.TestCase):
             sampling_iters=100,
             csv_basename=output,
         )
-        for i in range(bern_fit.chains):
-            csv_file = bern_fit.csv_files[i]
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
-        for i in range(bern_fit.chains):  # cleanup datafile_path dir
-            os.remove(bern_fit.csv_files[i])
-            os.remove(bern_fit.console_files[i])
+        for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
+            os.remove(bern_fit.runset.csv_files[i])
+            os.remove(bern_fit.runset.console_files[i])
 
         rdata = os.path.join(datafiles_path, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
@@ -247,11 +180,6 @@ class SampleTest(unittest.TestCase):
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
-        # check if  optimized_params_np returns first draw
-        # (actually first row from csv)
-        np.testing.assert_equal(
-            bern_fit.get_drawset().iloc[0].values, bern_fit.optimized_params_np
-        )
 
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -306,8 +234,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
 
-        # synthesize stanfit object -
-        # see test_stanfit.py, method 'test_validate_good_run'
+        # synthesize runset for existing sample
         goodfiles_path = os.path.join(datafiles_path, 'runset-good')
         output = os.path.join(goodfiles_path, 'bern')
         sampler_args = SamplerArgs(
@@ -322,19 +249,20 @@ class GenerateQuantitiesTest(unittest.TestCase):
             output_basename=output,
             method_args=sampler_args,
         )
-        sampler_fit = StanFit(args=cmdstan_args, chains=4)
+        sampler_runset = RunSet(args=cmdstan_args, chains=4)
         for i in range(4):
-            sampler_fit._set_retcode(i, 0)
+            sampler_runset._set_retcode(i, 0)
 
-        bern_fit = model.run_generated_quantities(
-            csv_files=sampler_fit.csv_files, data=jdata
+        bern_gqs = model.run_generated_quantities(
+            csv_files=sampler_runset.csv_files, data=jdata
         )
+        self.assertEqual(bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES)
 
         # check results - ouput files, quantities of interest, draws
-        self.assertEqual(bern_fit.chains, 4)
-        for i in range(4):
-            self.assertEqual(bern_fit._retcodes[i], 0)
-            csv_file = bern_fit.csv_files[i]
+        self.assertEqual(bern_gqs.runset.chains, 4)
+        for i in range(bern_gqs.runset.chains):
+            self.assertEqual(bern_gqs.runset._retcode(i), 0)
+            csv_file = bern_gqs.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
         column_names = [
             'y_rep.1',
@@ -348,8 +276,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             'y_rep.9',
             'y_rep.10',
         ]
-        self.assertEqual(bern_fit.column_names, tuple(column_names))
-        self.assertEqual(bern_fit.draws, 100)
+        self.assertEqual(bern_gqs.column_names, tuple(column_names))
 
 
 if __name__ == '__main__':

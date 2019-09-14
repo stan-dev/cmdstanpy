@@ -13,7 +13,7 @@ from cmdstanpy.utils import (
     set_cmdstan_path,
     validate_cmdstan_path,
     get_latest_cmdstan,
-    check_csv,
+    check_sampler_csv,
     MaybeDictToFilePath,
     read_metric,
     TemporaryCopiedFile,
@@ -114,53 +114,53 @@ class CmdStanPathTest(unittest.TestCase):
 
 
 class ReadStanCsvTest(unittest.TestCase):
-    def test_check_csv_1(self):
+    def test_check_sampler_csv_1(self):
         csv_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
-        dict = check_csv(csv_good)
+        dict = check_sampler_csv(csv_good)
         self.assertEqual('bernoulli_model', dict['model'])
         self.assertEqual('10', dict['num_samples'])
         self.assertFalse('save_warmup' in dict)
         self.assertEqual(10, dict['draws'])
         self.assertEqual(8, len(dict['column_names']))
 
-    def test_check_csv_2(self):
+    def test_check_sampler_csv_2(self):
         csv_bad = os.path.join(datafiles_path, 'no_such_file.csv')
         with self.assertRaises(Exception):
-            dict = check_csv(csv_bad)
+            dict = check_sampler_csv(csv_bad)
 
-    def test_check_csv_3(self):
+    def test_check_sampler_csv_3(self):
         csv_bad = os.path.join(datafiles_path, 'output_bad_cols.csv')
         with self.assertRaisesRegex(Exception, '8 items'):
-            dict = check_csv(csv_bad)
+            dict = check_sampler_csv(csv_bad)
 
-    def test_check_csv_4(self):
+    def test_check_sampler_csv_4(self):
         csv_bad = os.path.join(datafiles_path, 'output_bad_rows.csv')
         with self.assertRaisesRegex(Exception, 'found 9'):
-            dict = check_csv(csv_bad)
+            dict = check_sampler_csv(csv_bad)
 
-    def test_check_csv_metric_1(self):
+    def test_check_sampler_csv_metric_1(self):
         csv_bad = os.path.join(datafiles_path, 'output_bad_metric_1.csv')
         with self.assertRaisesRegex(Exception, 'expecting metric'):
-            dict = check_csv(csv_bad)
+            dict = check_sampler_csv(csv_bad)
 
-    def test_check_csv_metric_2(self):
+    def test_check_sampler_csv_metric_2(self):
         csv_bad = os.path.join(datafiles_path, 'output_bad_metric_2.csv')
         with self.assertRaisesRegex(Exception, 'invalid stepsize'):
-            dict = check_csv(csv_bad)
+            dict = check_sampler_csv(csv_bad)
 
-    def test_check_csv_metric_3(self):
+    def test_check_sampler_csv_metric_3(self):
         csv_bad = os.path.join(datafiles_path, 'output_bad_metric_3.csv')
         with self.assertRaisesRegex(
             Exception, 'invalid or missing mass matrix specification'
         ):
-            dict = check_csv(csv_bad)
+            dict = check_sampler_csv(csv_bad)
 
-    def test_check_csv_metric_4(self):
+    def test_check_sampler_csv_metric_4(self):
         csv_bad = os.path.join(datafiles_path, 'output_bad_metric_4.csv')
         with self.assertRaisesRegex(
             Exception, 'invalid or missing mass matrix specification'
         ):
-            dict = check_csv(csv_bad)
+            dict = check_sampler_csv(csv_bad)
 
 
 class ReadMetricTest(unittest.TestCase):

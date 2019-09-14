@@ -281,18 +281,12 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     return val
 
 
-def check_csv(
-    path: str, is_optimizing: bool = False, is_sampling: bool = True
-) -> Dict:
+def check_sampler_csv(path: str) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    meta = scan_stan_csv(path, is_sampling=is_sampling)
-    # check draws against spec
-    if is_optimizing:
-        draws_spec = 1
-    else:
-        draws_spec = int(meta.get('num_samples', 1000))
-        if 'thin' in meta:
-            draws_spec = int(math.ceil(draws_spec / meta['thin']))
+    meta = scan_sampler_csv(path)
+    draws_spec = int(meta.get('num_samples', 1000))
+    if 'thin' in meta:
+        draws_spec = int(math.ceil(draws_spec / meta['thin']))
     if meta['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
@@ -302,18 +296,25 @@ def check_csv(
     return meta
 
 
-def scan_stan_csv(path: str, is_sampling: bool = True) -> Dict:
-    """Process stan_csv file line by line."""
+def scan_sampler_csv(path: str) -> Dict:
+    """Process sampler stan_csv output file line by line."""
     dict = {}
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
         lineno = scan_warmup(fp, dict, lineno)
-
-        if is_sampling:
-            lineno = scan_metric(fp, dict, lineno)
+        lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
+    return dict
+
+def scan_generated_quantities_csv(path: str) -> Dict:
+    """Process sampler stan_csv output file line by line."""
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
     return dict
 
 
@@ -439,7 +440,6 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     num_cols = len(config_dict['column_names'])
     cur_pos = fp.tell()
     line = fp.readline().strip()
-    first_draw = None
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
@@ -450,12 +450,9 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                     lineno, num_cols, len(line.split(','))
                 )
             )
-        if first_draw is None:
-            first_draw = np.array(data, dtype=np.float64)
         cur_pos = fp.tell()
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
-    config_dict['first_draw'] = first_draw
     fp.seek(cur_pos)
     return lineno
 

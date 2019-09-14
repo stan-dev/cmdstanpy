@@ -4,9 +4,21 @@ CmdStan arguments
 import os
 import numpy as np
 
+from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
 from cmdstanpy.utils import read_metric
+
+
+class Method(Enum):
+    SAMPLE = auto()
+    OPTIMIZE = auto()
+    GENERATE_QUANTITIES = auto()
+    FIXED_PARAMS = auto()
+    ADVI = auto()
+
+    def __repr__(self):
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
 class SamplerArgs(object):
@@ -330,14 +342,24 @@ class CmdStanArgs(object):
         self.model_name = model_name
         self.model_exe = model_exe
         self.chain_ids = chain_ids
-        self.method_args = method_args
-        self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.data = data
         self.seed = seed
         self.inits = inits
         self.output_basename = output_basename
         self.refresh = refresh
+        self.method_args = method_args
+        if isinstance(method_args, SamplerArgs):
+            self.method = Method.SAMPLE
+        elif isinstance(method_args, OptimizeArgs):
+            self.method = Method.OPTIMIZE
+        elif isinstance(method_args, GenerateQuantitiesArgs):
+            self.method = Method.GENERATE_QUANTITIES
+        elif isinstance(method_args, FixedParamArgs):
+            self.method = Method.FIXED_PARAMS
+        self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.validate()
+
+
 
     def validate(self) -> None:
         """

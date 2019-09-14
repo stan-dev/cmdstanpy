@@ -9,13 +9,19 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Dict, List, Union
+
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     SamplerArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
 )
-from cmdstanpy.stanfit import StanFit
+from cmdstanpy.stanfit import (
+    RunSet,
+    StanFit,
+    StanMLE,
+    StanQuantities,
+)
 from cmdstanpy.utils import (
     do_command,
     EXTENSION,
@@ -212,7 +218,7 @@ class Model(object):
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
-    ) -> StanFit:
+    ) -> StanMLE:
         """
         Wrapper for optimize call
 
@@ -250,9 +256,8 @@ class Model(object):
 
         :param iter: Total number of iterations
 
-        :return: StanFit object
+        :return: StanMLE object
         """
-
         optimize_args = OptimizeArgs(
             algorithm=algorithm, init_alpha=init_alpha, iter=iter
         )
@@ -269,19 +274,23 @@ class Model(object):
                 method_args=optimize_args,
             )
 
-            stanfit = StanFit(args=args, chains=1)
-            dummy_chain_id = 0
-            self._run_cmdstan(stanfit, dummy_chain_id)
+            runset = RunSet(args=args, chains=1)
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                executor.submit(self._run_cmdstan, runset)
 
-        if not stanfit._check_retcodes():
+        if not runset._check_retcodes():
             msg = 'Error during optimizing'
-            if stanfit._retcode(dummy_chain_id) != 0:
-                msg = '{} Got returned error code {}'.format(
-                    msg, stanfit._retcode(dummy_chain_id)
+            dummy_chain_id = 1
+            if runset._retcode(dummy_chain_id) != 0:
+                msg = '{}, error code {}'.format(
+                    msg,
+                    runset._retcode(dummy_chain_id)
                 )
-            raise RuntimeError(msg)
-        stanfit._validate_csv_files()
-        return stanfit
+                raise RuntimeError(msg)
+        mle = StanMLE(runset)
+        # stanfit._validate_csv_files() #NEEDS CHANGING
+        return mle
+
 
     def sample(
         self,
@@ -458,20 +467,27 @@ class Model(object):
         if show_progress:
             try:
                 import tqdm
-
-                # These need update if CmdStan changes the defaults
-                # refresh every 0.5% --> 200 updates
+                # need 200 progress bar updates - 100 per warmup, sampling
+                # refresh = total iters * (1/200)
+                default_warmup = 1000
+                default_sampling = 1000
+                default_total = default_warmup + default_sampling
                 if warmup_iters is None and sampling_iters is None:
-                    refresh = 10  # 2000 // 200 => 0.5 %
+                    refresh = int(math.floor(default_total * 0.005))
                 elif warmup_iters is None:
-                    refresh = (1000 + sampling_iters) // 200
+                    refresh = int(math.floor(
+                        (default_warmup + sampling_iters) * 0.005
+                        ))
                 elif sampling_iters is None:
-                    refresh = (warmup_iters + 1000) // 200
+                    refresh = int(math.floor(
+                        (warmup_iters + default_sampling) * 0.005
+                        ))
                 else:
-                    refresh = max((warmup_iters + sampling_iters) // 200, 1)
-
-                # disable logger for console (temporary)
-                # use tqdm
+                    refresh = max(
+                        int(math.floor((warmup_iters + sampling_iters) * 0.005),
+                        1
+                        ))
+                # disable logger for console (temporary) - use tqdm
                 self._logger.propagate = False
             except ImportError:
                 self._logger.warning(
@@ -509,7 +525,7 @@ class Model(object):
                 refresh=refresh,
             )
 
-            stanfit = StanFit(args=args, chains=chains)
+            runset = RunSet(args=args, chains=chains)
 
             pbar = None
             pbar_dict = {}
@@ -563,7 +579,7 @@ class Model(object):
                         ]
 
                     future = executor.submit(
-                        self._run_cmdstan, stanfit, i, pbar
+                        self._run_cmdstan, runset, i, pbar
                     )
                     pbar_dict[future] = pbar
                 if show_progress:
@@ -576,14 +592,15 @@ class Model(object):
             if show_progress:
                 # re-enable logger for console
                 self._logger.propagate = True
-            if not stanfit._check_retcodes():
+            if not runset._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
-                    if stanfit._retcode(i) != 0:
+                    if runset._retcode(i) != 0:
                         msg = '{}, chain {} returned error code {}'.format(
-                            msg, i, stanfit._retcode(i)
+                            msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
+            stanfit = StanFit(runset)
             stanfit._validate_csv_files()
         return stanfit
 
@@ -593,7 +610,7 @@ class Model(object):
         csv_files: List[str] = None,
         seed: int = None,
         gq_csv_basename: str = None,
-    ) -> StanFit:
+    ) -> StanQuantities:
         """
         Wrapper for generated quantities call.  Given a StanFit object
         containing a sample from the fitted model, along with the
@@ -622,7 +639,7 @@ class Model(object):
             and the console output and error messages are written to file
             ``<basename>-<chain_id>.txt``.
 
-        :return: StanFit object
+        :return: StanQuantities object
         """
         generate_quantities_args = GenerateQuantitiesArgs(csv_files=csv_files)
         generate_quantities_args.validate(len(csv_files))
@@ -637,65 +654,86 @@ class Model(object):
                 output_basename=gq_csv_basename,
                 method_args=generate_quantities_args,
             )
-            stanfit = StanFit(args=args, chains=chains)
+            runset = RunSet(args=args, chains=chains)
 
             cores_avail = cpu_count()
             cores = max(min(cores_avail - 2, chains), 1)
             with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    executor.submit(self._run_cmdstan, stanfit, i)
+                    executor.submit(self._run_cmdstan, runset, i)
 
-            if not stanfit._check_retcodes():
-                msg = 'Error during sampling'
+            if not runset._check_retcodes():
+                msg = 'Error during generate_quantities'
                 for i in range(chains):
-                    if stanfit._retcode(i) != 0:
+                    if runset._retcode(i) != 0:
                         msg = '{}, chain {} returned error code {}'.format(
-                            msg, i, stanfit._retcode(i)
+                            msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
-            stanfit._set_attrs_gq_csv_files(csv_files[0])
-        return stanfit
+            quantities = StanQuantities(runset)
+            quantities._set_attrs_gq_csv_files(csv_files[0])
+        return quantities
+
+
+    def _run_cmdstan(
+        self, runset: RunSet, idx: int = 0, pbar: List[Any] = None
+    ) -> None:
+        """
+        Encapsulates call to cmdstan.
+        Spawn process, capture console output to file, record returncode.
+        """
+        cmd = runset.cmds[idx]
+        self._logger.info('start chain %u', idx + 1)
+        self._logger.debug('sampling: %s', cmd)
+        proc = subprocess.Popen(
+            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        if pbar:
+            stdout_pbar = self._read_progress(proc, pbar, idx)
+        stdout, stderr = proc.communicate()
+        if pbar:
+            stdout = stdout_pbar + stdout
+        transcript_file = runset.console_files[idx]
+        self._logger.info('finish chain %u', idx + 1)
+        with open(transcript_file, 'w+') as transcript:
+            if stdout:
+                transcript.write(stdout.decode('utf-8'))
+            if stderr:
+                transcript.write('ERROR')
+                transcript.write(stderr.decode('utf-8'))
+        runset._set_retcode(idx, proc.returncode)
+
 
     def _read_progress(
         self, proc: subprocess.Popen, pbar: List[Any], idx: int
     ) -> bytes:
-        # compile re pattern
-        # read iteration 'count' and 'warmup' or 'sampling'
+        """
+        Update tqdm progress bars according to CmdStan console progress msgs.
+        Poll process to get CmdStan console outputs,
+        check for output lines that start with 'Iteration: '.
+        NOTE: if CmdStan output messages change, this will break.
+        """
         pattern = (
             r'^Iteration\:\s*(\d+)\s*/\s*(\d+)\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
         )
         pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
-
-        # gather information and init counts
         pbar_warmup, pbar_sampling = pbar
         num_warmup = pbar_warmup.total
         num_sampling = pbar_sampling.total
-
         count_warmup = 0
         count_sampling = 0
-
-        # gather stdout
         stdout = b''
 
         try:
             # iterate while process is sampling
-            # process stdout line by line
             while proc.poll() is None:
-                # read line
                 output = proc.stdout.readline()
-                # gather stdout
                 stdout += output
-                # decode bytes to string
                 output = output.decode('utf-8').strip()
-                # force refresh warmup_pbar after warmup has ended
                 refresh_warmup = True
-                # process Iteration output
                 if output.startswith('Iteration'):
-                    # run regular expression
                     match = re.search(pattern_compiled, output)
-
                     if match:
-
                         # check if pbars need reset
                         if num_warmup is None or num_sampling is None:
                             total_count = int(match.group(2))
@@ -714,29 +752,22 @@ class Model(object):
                         raw_count = int(match.group(1))
                         if match.group(3).lower() == 'warmup':
                             count, count_warmup = (
-                                # steps
                                 raw_count - count_warmup,
-                                # cumulative count
                                 raw_count,
                             )
-                            # increment progressbar by 'count'
                             pbar_warmup.update(count)
                         elif match.group(3).lower() == 'sampling':
                             # refresh warmup and close the progress bar
-                            # update values to full
                             if refresh_warmup:
                                 pbar_warmup.update(num_warmup - count_warmup)
                                 pbar_warmup.refresh()
                                 pbar_warmup.close()
                                 refresh_warmup = False
-
+                            # update values to full
                             count, count_sampling = (
-                                # steps
                                 raw_count - num_warmup - count_sampling,
-                                # cumulative count
                                 raw_count - num_warmup,
                             )
-                            # increment progressbar by 'count'
                             pbar_sampling.update(count)
 
             # read and process rest of the stdout if needed
@@ -744,13 +775,10 @@ class Model(object):
             sampling_cumulative_count = 0
             for output in proc.stdout:
                 stdout += output
-                # decode bytes to string
                 output = output.decode('utf-8').strip()
                 if output.startswith('Iteration'):
-                    # run regular expression
                     match = re.search(pattern_compiled, output)
                     if match:
-
                         # check if pbars need reset
                         if num_warmup is None or num_sampling is None:
                             total_count = int(match.group(2))
@@ -765,26 +793,19 @@ class Model(object):
                             else:
                                 num_sampling = total_count - num_warmup
                                 pbar_sampling.total = num_sampling
-
                         # raw_count = warmup + sampling
                         raw_count = int(match.group(1))
                         if match.group(3).lower() == 'warmup':
                             count, count_warmup = (
-                                # steps
                                 raw_count - count_warmup,
-                                # cumulative count
                                 raw_count,
                             )
-                            # increment warmup_cumcount by 'count'
                             warmup_cumulative_count += count
                         elif match.group(3).lower() == 'sampling':
                             count, count_sampling = (
-                                # steps
                                 raw_count - num_warmup - count_sampling,
-                                # cumulative count
                                 raw_count - num_warmup,
                             )
-                            # increment progressbar by 'count'
                             sampling_cumulative_count += count
             # update warmup pbar if needed
             if warmup_cumulative_count:
@@ -807,31 +828,3 @@ class Model(object):
 
         # return stdout
         return stdout
-
-    def _run_cmdstan(
-        self, stanfit: StanFit, idx: int, pbar: List[Any] = None
-    ) -> None:
-        """
-        Encapsulates call to cmdstan.
-        Spawn process, capture console output to file, record returncode.
-        """
-        cmd = stanfit.cmds[idx]
-        self._logger.info('start chain %u', idx + 1)
-        self._logger.debug('sampling: %s', cmd)
-        proc = subprocess.Popen(
-            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        if pbar:
-            stdout_pbar = self._read_progress(proc, pbar, idx)
-        stdout, stderr = proc.communicate()
-        if pbar:
-            stdout = stdout_pbar + stdout
-        transcript_file = stanfit.console_files[idx]
-        self._logger.info('finish chain %u', idx + 1)
-        with open(transcript_file, 'w+') as transcript:
-            if stdout:
-                transcript.write(stdout.decode('utf-8'))
-            if stderr:
-                transcript.write('ERROR')
-                transcript.write(stderr.decode('utf-8'))
-        stanfit._set_retcode(idx, proc.returncode)
