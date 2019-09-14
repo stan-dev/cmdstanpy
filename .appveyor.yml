@@ -69,7 +69,7 @@ install:
 build: false
 
 test_script:
-  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
   - "SET MAKE=mingw32-make.exe"
   - "mkdir new_dir"
   - "cd new_dir"
