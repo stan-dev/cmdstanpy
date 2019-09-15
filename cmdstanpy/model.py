@@ -1,3 +1,4 @@
+import math
 import os
 import re
 import subprocess
@@ -535,7 +536,7 @@ class Model(object):
                                 tqdm_pbar = tqdm.tqdm_notebook
                             except ImportError:
                                 msg = (
-                                    "'tqdm_notebook' could not be imported. "
+                                    'Cannot import package tqdm_notebook.\n'
                                     'Functionality is only supported on the '
                                     'Jupyter Notebook and compatible platforms'
                                     '.\nPlease follow the instructions in '
@@ -550,23 +551,23 @@ class Model(object):
                         # enable dynamic_ncols for advanced users
                         # currently hidden feature
                         dynamic_ncols = os.environ.get(
-                            "TQDM_DYNAMIC_NCOLS", "False"
+                            'TQDM_DYNAMIC_NCOLS', 'False'
                         )
-                        if dynamic_ncols.lower() in ["0", "false"]:
+                        if dynamic_ncols.lower() in ['0', 'false']:
                             dynamic_ncols = False
                         else:
                             dynamic_ncols = True
                         pbar = [
                             # warmup
                             tqdm_pbar(
-                                desc="Chain {} - warmup".format(i + 1),
+                                desc='Chain {} - warmup'.format(i + 1),
                                 position=i * 2,
                                 total=sampler_args.warmup_iters,
                                 dynamic_ncols=dynamic_ncols,
                             ),
                             # sampling
                             tqdm_pbar(
-                                desc="Chain {} - sample".format(i + 1),
+                                desc='Chain {} - sample'.format(i + 1),
                                 position=i * 2 + 1,
                                 total=sampler_args.sampling_iters,
                                 dynamic_ncols=dynamic_ncols,
@@ -809,7 +810,7 @@ class Model(object):
 
         except Exception as e:
             self._logger.warning(
-                "Chain %s: Failed to read the progress on the fly. Error: %s",
+                'Chain %s: Failed to read the progress on the fly. Error: %s',
                 idx,
                 e,
             )
