@@ -172,17 +172,24 @@ class ReadStanCsvTest(unittest.TestCase):
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
-            data=jdata, chains=1, cores=1, seed=12345, sampling_iters=490,
-            warmup_iters = 490, thin=7, max_treedepth=11, adapt_delta=0.98
+            data=jdata,
+            chains=1,
+            cores=1,
+            seed=12345,
+            sampling_iters=490,
+            warmup_iters=490,
+            thin=7,
+            max_treedepth=11,
+            adapt_delta=0.98,
         )
         csv_file = bern_fit.runset.csv_files[0]
         dict = check_sampler_csv(csv_file)
-        self.assertEqual(dict['num_samples'],490)
-        self.assertEqual(dict['thin'],7)
-        self.assertEqual(dict['draws'],70)
-        self.assertEqual(dict['seed'],12345)
-        self.assertEqual(dict['max_depth'],11)
-        self.assertEqual(dict['delta'],0.98)
+        self.assertEqual(dict['num_samples'], 490)
+        self.assertEqual(dict['thin'], 7)
+        self.assertEqual(dict['draws'], 70)
+        self.assertEqual(dict['seed'], 12345)
+        self.assertEqual(dict['max_depth'], 11)
+        self.assertEqual(dict['delta'], 0.98)
 
 
 class ReadMetricTest(unittest.TestCase):

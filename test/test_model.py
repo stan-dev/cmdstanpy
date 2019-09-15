@@ -180,7 +180,6 @@ class SampleTest(unittest.TestCase):
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
-
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
@@ -256,7 +255,9 @@ class GenerateQuantitiesTest(unittest.TestCase):
         bern_gqs = model.run_generated_quantities(
             csv_files=sampler_runset.csv_files, data=jdata
         )
-        self.assertEqual(bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES)
+        self.assertEqual(
+            bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
+        )
 
         # check results - ouput files, quantities of interest, draws
         self.assertEqual(bern_gqs.runset.chains, 4)

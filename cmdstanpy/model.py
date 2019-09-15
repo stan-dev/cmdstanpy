@@ -16,12 +16,7 @@ from cmdstanpy.cmdstan_args import (
     OptimizeArgs,
     GenerateQuantitiesArgs,
 )
-from cmdstanpy.stanfit import (
-    RunSet,
-    StanFit,
-    StanMLE,
-    StanQuantities,
-)
+from cmdstanpy.stanfit import RunSet, StanFit, StanMLE, StanQuantities
 from cmdstanpy.utils import (
     do_command,
     EXTENSION,
@@ -282,14 +277,12 @@ class Model(object):
             msg = 'Error during optimizing'
             if runset._retcode(dummy_chain_id) != 0:
                 msg = '{}, error code {}'.format(
-                    msg,
-                    runset._retcode(dummy_chain_id)
+                    msg, runset._retcode(dummy_chain_id)
                 )
                 raise RuntimeError(msg)
         mle = StanMLE(runset)
         # stanfit._validate_csv_files() #NEEDS CHANGING
         return mle
-
 
     def sample(
         self,
@@ -466,6 +459,7 @@ class Model(object):
         if show_progress:
             try:
                 import tqdm
+
                 # need 200 progress bar updates - 100 per warmup, sampling
                 # refresh = total iters * (1/200)
                 default_warmup = 1000
@@ -474,18 +468,20 @@ class Model(object):
                 if warmup_iters is None and sampling_iters is None:
                     refresh = int(math.floor(default_total * 0.005))
                 elif warmup_iters is None:
-                    refresh = int(math.floor(
-                        (default_warmup + sampling_iters) * 0.005
-                        ))
+                    refresh = int(
+                        math.floor((default_warmup + sampling_iters) * 0.005)
+                    )
                 elif sampling_iters is None:
-                    refresh = int(math.floor(
-                        (warmup_iters + default_sampling) * 0.005
-                        ))
+                    refresh = int(
+                        math.floor((warmup_iters + default_sampling) * 0.005)
+                    )
                 else:
                     refresh = max(
-                        int(math.floor((warmup_iters + sampling_iters) * 0.005),
-                        1
-                        ))
+                        int(
+                            math.floor((warmup_iters + sampling_iters) * 0.005),
+                            1,
+                        )
+                    )
                 # disable logger for console (temporary) - use tqdm
                 self._logger.propagate = False
             except ImportError:
@@ -577,9 +573,7 @@ class Model(object):
                             ),
                         ]
 
-                    future = executor.submit(
-                        self._run_cmdstan, runset, i, pbar
-                    )
+                    future = executor.submit(self._run_cmdstan, runset, i, pbar)
                     pbar_dict[future] = pbar
                 if show_progress:
                     for future in as_completed(pbar_dict):
@@ -673,7 +667,6 @@ class Model(object):
             quantities._set_attrs_gq_csv_files(csv_files[0])
         return quantities
 
-
     def _run_cmdstan(
         self, runset: RunSet, idx: int = 0, pbar: List[Any] = None
     ) -> None:
@@ -701,7 +694,6 @@ class Model(object):
                 transcript.write('ERROR')
                 transcript.write(stderr.decode('utf-8'))
         runset._set_retcode(idx, proc.returncode)
-
 
     def _read_progress(
         self, proc: subprocess.Popen, pbar: List[Any], idx: int

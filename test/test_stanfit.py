@@ -38,6 +38,7 @@ class RunSetTest(unittest.TestCase):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
 
+
 class StanFitTest(unittest.TestCase):
     def test_validate_good_run(self):
         # construct fit using existing sampler output
@@ -206,7 +207,6 @@ class StanFitTest(unittest.TestCase):
             ]
         )
         self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
-
 
     def test_validate_bad_run(self):
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)

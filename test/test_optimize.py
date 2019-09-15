@@ -16,6 +16,7 @@ from testfixtures import LogCapture
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
 
+
 class OptimizeTest(unittest.TestCase):
     def test_optimize_works(self):
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
@@ -71,6 +72,7 @@ class OptimizeTest(unittest.TestCase):
         # test numpy output
         self.assertAlmostEqual(fit.optimized_params_np[0], -5, places=2)
         self.assertAlmostEqual(fit.optimized_params_np[1], 0.2, places=3)
+
 
 if __name__ == '__main__':
     unittest.main()

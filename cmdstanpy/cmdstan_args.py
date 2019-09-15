@@ -359,8 +359,6 @@ class CmdStanArgs(object):
         self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.validate()
 
-
-
     def validate(self) -> None:
         """
         Check arguments correctness and consistency.

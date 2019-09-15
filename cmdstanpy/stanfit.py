@@ -20,16 +20,14 @@ from cmdstanpy.utils import (
     do_command,
     get_logger,
 )
-from cmdstanpy.cmdstan_args import (
-    Method,
-    CmdStanArgs,
-)
+from cmdstanpy.cmdstan_args import Method, CmdStanArgs
 
 
 class RunSet(object):
     """
     Record of CmdStan run for a specified configuration and number of chains.
     """
+
     def __init__(
         self, args: CmdStanArgs, chains: int = 4, logger: logging.Logger = None
     ) -> None:
@@ -44,10 +42,7 @@ class RunSet(object):
             )
         self._csv_files = []
         if args.output_basename is None:
-            csv_basename = 'stan-{}-{}'.format(
-                args.model_name,
-                args.method
-                )
+            csv_basename = 'stan-{}-{}'.format(args.model_name, args.method)
             for i in range(chains):
                 fd_name = create_named_text_file(
                     dir=TMPDIR,
@@ -184,10 +179,12 @@ class RunSet(object):
                     'cannot save to file: {}'.format(to_path)
                 ) from e
 
+
 class StanFit(object):
     """
     Container for outputs from CmdStan sampler run.
     """
+
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not (runset.method == Method.SAMPLE):
@@ -266,19 +263,18 @@ class StanFit(object):
         dzero = {}
         for i in range(self.runset.chains):
             if i == 0:
-                dzero = check_sampler_csv(
-                    self.runset.csv_files[i],
-                )
+                dzero = check_sampler_csv(self.runset.csv_files[i])
             else:
-                d = check_sampler_csv(
-                    self.runset.csv_files[i],
-                )
+                d = check_sampler_csv(self.runset.csv_files[i])
                 for key in dzero:
                     if key != 'id' and dzero[key] != d[key]:
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
-                                self.runset.csv_files[i], key, dzero[key], d[key]
+                                self.runset.csv_files[i],
+                                key,
+                                dzero[key],
+                                d[key],
                             )
                         )
         self._draws = dzero['draws']
@@ -304,7 +300,8 @@ class StanFit(object):
             )
         else:
             self._metric = np.empty(
-                (self.runset.chains, self._num_params, self._num_params), dtype=float
+                (self.runset.chains, self._num_params, self._num_params),
+                dtype=float,
             )
         self._sample = np.empty(
             (self._draws, self.runset.chains, len(self._column_names)),
@@ -358,7 +355,10 @@ class StanFit(object):
         tmp_csv_path = create_named_text_file(
             dir=TMPDIR, prefix=tmp_csv_file, suffix='.csv'
         )
-        cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self.runset.csv_files
+        cmd = [
+            cmd_path,
+            '--csv_file={}'.format(tmp_csv_path),
+        ] + self.runset.csv_files
         do_command(cmd, logger=self.runset._logger)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
@@ -426,10 +426,12 @@ class StanFit(object):
         """
         self.runset.save_csvfiles(dir, basename)
 
+
 class StanMLE(object):
     """
     Container for outputs from CmdStan optimization.
     """
+
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not (runset.method == Method.OPTIMIZE):
@@ -461,7 +463,6 @@ class StanMLE(object):
             self._set_mle_attrs(self.runset.csv_files[0])
         return self._mle
 
-
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
         """Returns optimized params as pandas DataFrame."""
@@ -476,7 +477,6 @@ class StanMLE(object):
             self._set_mle_attrs(self.runset.csv_files[0])
         return OrderedDict(zip(self.column_names, self._mle))
 
-
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
         """
         Moves csvfiles to specified directory using specified basename,
@@ -487,10 +487,12 @@ class StanMLE(object):
         """
         self.runset.save_csvfiles(dir, basename)
 
+
 class StanQuantities(object):
     """
     Container for outputs from CmdStan generate_quantities run.
     """
+
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not (runset.method == Method.GENERATE_QUANTITIES):
@@ -536,7 +538,9 @@ class StanQuantities(object):
     def _assemble_generated_quantities(self) -> None:
         df_list = []
         for chain in range(self.runset.chains):
-            df_list.append(pd.read_csv(self.runset.csv_files[chain], comment='#'))
+            df_list.append(
+                pd.read_csv(self.runset.csv_files[chain], comment='#')
+            )
         self._generated_quantities = pd.concat(df_list).values
 
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
@@ -548,6 +552,3 @@ class StanQuantities(object):
         :param basename:  base filename
         """
         self.runset.save_csvfiles(dir, basename)
-
-
-

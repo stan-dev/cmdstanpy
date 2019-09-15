@@ -308,6 +308,7 @@ def scan_sampler_csv(path: str) -> Dict:
         lineno = scan_draws(fp, dict, lineno)
     return dict
 
+
 def scan_optimize_csv(path: str) -> Dict:
     """Process sampler stan_csv output file line by line."""
     dict = {}
@@ -320,6 +321,7 @@ def scan_optimize_csv(path: str) -> Dict:
         mle = [float(x) for x in xs]
         dict['mle'] = mle
     return dict
+
 
 def scan_generated_quantities_csv(path: str) -> Dict:
     """Process sampler stan_csv output file line by line."""
