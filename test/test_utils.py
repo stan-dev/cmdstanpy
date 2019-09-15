@@ -9,6 +9,7 @@ import random
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
+    EXTENSION,
     cmdstan_path,
     set_cmdstan_path,
     validate_cmdstan_path,
@@ -22,6 +23,7 @@ from cmdstanpy.utils import (
     rload,
     parse_rdump_value,
 )
+from cmdstanpy.model import Model
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
@@ -118,7 +120,7 @@ class ReadStanCsvTest(unittest.TestCase):
         csv_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
         dict = check_sampler_csv(csv_good)
         self.assertEqual('bernoulli_model', dict['model'])
-        self.assertEqual('10', dict['num_samples'])
+        self.assertEqual(10, dict['num_samples'])
         self.assertFalse('save_warmup' in dict)
         self.assertEqual(10, dict['draws'])
         self.assertEqual(8, len(dict['column_names']))
@@ -161,6 +163,26 @@ class ReadStanCsvTest(unittest.TestCase):
             Exception, 'invalid or missing mass matrix specification'
         ):
             dict = check_sampler_csv(csv_bad)
+
+    def test_check_sampler_csv_thin(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
+        bern_model = Model(stan_file=stan, exe_file=exe)
+        bern_model.compile()
+
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        bern_fit = bern_model.sample(
+            data=jdata, chains=1, cores=1, seed=12345, sampling_iters=490,
+            warmup_iters = 490, thin=7, max_treedepth=11, adapt_delta=0.98
+        )
+        csv_file = bern_fit.runset.csv_files[0]
+        dict = check_sampler_csv(csv_file)
+        self.assertEqual(dict['num_samples'],490)
+        self.assertEqual(dict['thin'],7)
+        self.assertEqual(dict['draws'],70)
+        self.assertEqual(dict['seed'],12345)
+        self.assertEqual(dict['max_depth'],11)
+        self.assertEqual(dict['delta'],0.98)
 
 
 class ReadMetricTest(unittest.TestCase):

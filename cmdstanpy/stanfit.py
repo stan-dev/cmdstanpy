@@ -12,6 +12,7 @@ import logging
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     check_sampler_csv,
+    scan_optimize_csv,
     scan_generated_quantities_csv,
     create_named_text_file,
     EXTENSION,
@@ -190,8 +191,9 @@ class StanFit(object):
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not (runset.method == Method.SAMPLE):
-            raise RuntimeError('Bad runset method {}, expecting {}'.format(
-                runset.method, Method.SAMPLE)
+            raise RuntimeError(
+                'Wrong runset method, expecting sample runset, '
+                'found method {}'.format(runset.method)
             )
         self.runset = runset
         self._draws = None
@@ -431,36 +433,48 @@ class StanMLE(object):
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not (runset.method == Method.OPTIMIZE):
-            raise RuntimeError('Bad runset method {}, expecting {}'.format(
-                runset.method, Method.OPTIMIZE)
+            raise RuntimeError(
+                'Wrong runset method, expecting optimize runset, '
+                'found method {}'.format(runset.method)
             )
         self.runset = runset
         self._column_names = None
-        self._first_draw = None  # change this....
+        self._mle = None
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
-        pass
+        meta = scan_optimize_csv(sample_csv_0)
+        self._column_names = meta['column_names']
+        self._mle = meta['mle']
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """
+        Names of estimated quantities, includes joint log probability,
+        and all parameters, transformed parameters, and generated quantitites.
+        """
+        return self._column_names
 
     @property
     def optimized_params_np(self) -> np.array:
         """Returns optimized params as numpy array."""
-        return self._first_draw
+        if self._mle is None:
+            self._set_mle_attrs(self.runset.csv_files[0])
+        return self._mle
+
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
         """Returns optimized params as pandas DataFrame."""
-        if not (self.method == Method.OPTIMIZE):
-            raise RuntimeError('StanFit method {} doesn\'t produce '
-                                   'MLE estimate'.format(self.method.value))
-        return pd.DataFrame([self._first_draw], columns=self.column_names)
+        if self._mle is None:
+            self._set_mle_attrs(self.runset.csv_files[0])
+        return pd.DataFrame([self._mle], columns=self.column_names)
 
     @property
     def optimized_params_dict(self) -> OrderedDict:
         """Returns optimized params as Dict."""
-        if not (self.method == Method.OPTIMIZE):
-            raise RuntimeError('StanFit method {} doesn\'t produce '
-                                   'MLE estimate'.format(self.method.value))
-        return OrderedDict(zip(self.column_names, self._first_draw))
+        if self._mle is None:
+            self._set_mle_attrs(self.runset.csv_files[0])
+        return OrderedDict(zip(self.column_names, self._mle))
 
 
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
@@ -479,6 +493,11 @@ class StanQuantities(object):
     """
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
+        if not (runset.method == Method.GENERATE_QUANTITIES):
+            raise RuntimeError(
+                'Wrong runset method, expecting generate_quantities runset, '
+                'found method {}'.format(runset.method)
+            )
         self.runset = runset
         self._column_names = None
 

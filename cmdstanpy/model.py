@@ -274,13 +274,12 @@ class Model(object):
                 method_args=optimize_args,
             )
 
+            dummy_chain_id = 0
             runset = RunSet(args=args, chains=1)
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                executor.submit(self._run_cmdstan, runset)
+            self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
             msg = 'Error during optimizing'
-            dummy_chain_id = 1
             if runset._retcode(dummy_chain_id) != 0:
                 msg = '{}, error code {}'.format(
                     msg,

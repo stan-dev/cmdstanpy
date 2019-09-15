@@ -308,6 +308,19 @@ def scan_sampler_csv(path: str) -> Dict:
         lineno = scan_draws(fp, dict, lineno)
     return dict
 
+def scan_optimize_csv(path: str) -> Dict:
+    """Process sampler stan_csv output file line by line."""
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
+        line = fp.readline().lstrip(' #\t')
+        xs = line.split(',')
+        mle = [float(x) for x in xs]
+        dict['mle'] = mle
+    return dict
+
 def scan_generated_quantities_csv(path: str) -> Dict:
     """Process sampler stan_csv output file line by line."""
     dict = {}
@@ -336,7 +349,15 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                 ):
                     config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
-                    config_dict[key_val[0].strip()] = key_val[1].strip()
+                    raw_val = key_val[1].strip()
+                    try:
+                        val = int(raw_val)
+                    except ValueError:
+                        try:
+                            val = float(raw_val)
+                        except ValueError:
+                            val = raw_val
+                    config_dict[key_val[0].strip()] = val
         cur_pos = fp.tell()
         line = fp.readline().strip()
     fp.seek(cur_pos)

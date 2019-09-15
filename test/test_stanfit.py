@@ -74,6 +74,7 @@ class StanFitTest(unittest.TestCase):
             df.shape, (fit.runset.chains * fit.draws, len(fit.column_names))
         )
         _ = fit.summary()
+        self.assertTrue(True)
 
         # TODO - use cmdstan test files instead
         expected = '\n'.join(
@@ -207,7 +208,6 @@ class StanFitTest(unittest.TestCase):
         self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
 
 
-    # redo - better error handling
     def test_validate_bad_run(self):
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
