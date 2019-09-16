@@ -52,7 +52,10 @@ setuptools.setup(
     url='https://github.com/stan-dev/cmdstanpy',
     packages=['cmdstanpy'],
     entry_points={
-        'console_scripts': ['install_cmdstan=cmdstanpy.install_cmdstan:main']
+        'console_scripts': [
+            'install_cmdstan=cmdstanpy.install_cmdstan:main',
+            'install_cxx_toolchain=cmdstanpy.install_cxx_toolchain:main',
+        ]
     },
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,

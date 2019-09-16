@@ -7,7 +7,7 @@ platform:
 
 cache:
   - C:\Users\appveyor\.cmdstanpy
-  #- C:\RTools
+  - C:\RTools
 
 init:
   - git config --global core.autocrlf input
@@ -46,9 +46,9 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Install RTools
-  - ps: Start-FileDownload 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
-  - "Rtools35.exe /VERYSILENT /SP- /NORESTART"  #TODO: dont download and install if c:\rtools folder exists.
-  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "python .\\cmdstanpy\\install_cxx_toolchain.py --silent --dir C:\\"
+  - "dir C:\\Rtools\\RTools35"
+  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
   - "SET MAKE=mingw32-make.exe"
   - "gcc --version"
   - "mingw32-make --version"
@@ -69,7 +69,7 @@ install:
 build: false
 
 test_script:
-  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
   - "SET MAKE=mingw32-make.exe"
   - "mkdir new_dir"
   - "cd new_dir"
