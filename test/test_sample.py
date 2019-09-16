@@ -1,7 +1,11 @@
 import os
 import unittest
 
-from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
+import logging
+from testfixtures import LogCapture
+from multiprocessing import cpu_count
+
+from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import RunSet, StanFit
 from cmdstanpy.model import Model
@@ -11,32 +15,123 @@ datafiles_path = os.path.join(here, 'data')
 goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
-
-class RunSetTest(unittest.TestCase):
-    def test_check_retcodes(self):
+class SampleTest(unittest.TestCase):
+    def test_bernoulli_good(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
+        bern_model = Model(stan_file=stan, exe_file=exe)
+        bern_model.compile()
+
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe=exe,
-            chain_ids=[1, 2, 3, 4],
-            data=jdata,
-            method_args=sampler_args,
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
-        retcodes = runset._retcodes
-        self.assertEqual(4, len(retcodes))
-        for i in range(len(retcodes)):
-            self.assertEqual(-1, runset._retcode(i))
-        runset._set_retcode(0, 0)
-        self.assertEqual(0, runset._retcode(0))
-        for i in range(1, len(retcodes)):
-            self.assertEqual(-1, runset._retcode(i))
-        self.assertFalse(runset._check_retcodes())
-        for i in range(1, len(retcodes)):
-            runset._set_retcode(i, 0)
-        self.assertTrue(runset._check_retcodes())
+        self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
+
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(txt_file))
+
+        self.assertEqual(bern_fit.runset.chains, 4)
+        self.assertEqual(bern_fit.draws, 100)
+        column_names = [
+            'lp__',
+            'accept_stat__',
+            'stepsize__',
+            'treedepth__',
+            'n_leapfrog__',
+            'divergent__',
+            'energy__',
+            'theta',
+        ]
+        self.assertEqual(bern_fit.column_names, tuple(column_names))
+
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+
+        self.assertEqual(bern_fit.metric_type, 'diag_e')
+        self.assertEqual(bern_fit.stepsize.shape, (4,))
+        self.assertEqual(bern_fit.metric.shape, (4, 1))
+
+        output = os.path.join(datafiles_path, 'test1-bernoulli-output')
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=4,
+            cores=2,
+            seed=12345,
+            sampling_iters=100,
+            csv_basename=output,
+        )
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(txt_file))
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
+            os.remove(bern_fit.runset.csv_files[i])
+            os.remove(bern_fit.runset.console_files[i])
+
+        rdata = os.path.join(datafiles_path, 'bernoulli.data.R')
+        bern_fit = bern_model.sample(
+            data=rdata, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+
+        data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
+        bern_fit = bern_model.sample(
+            data=data_dict, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+
+    def test_bernoulli_bad(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
+        bern_model = Model(stan_file=stan, exe_file=exe)
+        bern_model.compile()
+
+        with self.assertRaisesRegex(Exception, 'Error during sampling'):
+            bern_fit = bern_model.sample(
+                chains=4, cores=2, seed=12345, sampling_iters=100
+            )
+
+    def test_multi_proc(self):
+        logistic_stan = os.path.join(datafiles_path, 'logistic.stan')
+        logistic_model = Model(stan_file=logistic_stan)
+        logistic_model.compile()
+        logistic_data = os.path.join(datafiles_path, 'logistic.data.R')
+
+        with LogCapture() as log:
+            logger = logging.getLogger()
+            fit = logistic_model.sample(data=logistic_data, chains=4, cores=1)
+        log.check_present(
+            ('cmdstanpy', 'INFO', 'finish chain 1'),
+            ('cmdstanpy', 'INFO', 'start chain 2'),
+        )
+        with LogCapture() as log:
+            logger = logging.getLogger()
+            fit = logistic_model.sample(data=logistic_data, chains=4, cores=2)
+        if cpu_count() >= 4:
+            # finish chains 1, 2 before starting chains 3, 4
+            log.check_present(
+                ('cmdstanpy', 'INFO', 'finish chain 1'),
+                ('cmdstanpy', 'INFO', 'start chain 4'),
+            )
+        if cpu_count() >= 4:
+            with LogCapture() as log:
+                logger = logging.getLogger()
+                fit = logistic_model.sample(
+                    data=logistic_data, chains=4, cores=4
+                )
+                log.check_present(
+                    ('cmdstanpy', 'INFO', 'start chain 4'),
+                    ('cmdstanpy', 'INFO', 'finish chain 1'),
+                )
 
 
 class StanFitTest(unittest.TestCase):

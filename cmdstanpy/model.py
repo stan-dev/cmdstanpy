@@ -282,7 +282,7 @@ class Model(object):
                 )
                 raise RuntimeError(msg)
         mle = StanMLE(runset)
-        # stanfit._validate_csv_files() #NEEDS CHANGING
+        mle._set_mle_attrs(runset.csv_files[0])
         return mle
 
     def sample(
