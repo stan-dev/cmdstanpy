@@ -4,6 +4,7 @@ import unittest
 from cmdstanpy import TMPDIR
 
 from cmdstanpy.cmdstan_args import (
+    Method,
     SamplerArgs,
     CmdStanArgs,
     FixedParamArgs,
@@ -212,16 +213,15 @@ class CmdStanArgsTest(unittest.TestCase):
             cmdstan_args.compose_command(idx=-1, csv_file='foo')
 
     def test_no_chains(self):
-        # we don't have chains for optimize
         exe = os.path.join(datafiles_path, 'bernoulli')
-        sampler_args = FixedParamArgs()
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
+        fp_args = FixedParamArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
             chain_ids=None,
             inits=jinits,
-            method_args=sampler_args,
+            method_args=fp_args,
         )
         self.assertIn('init=', cmdstan_args.compose_command(None, 'out.csv'))
 
@@ -232,7 +232,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 chain_ids=None,
                 seed=[1, 2, 3],
                 inits=jinits,
-                method_args=sampler_args,
+                method_args=fp_args,
             )
 
         with self.assertRaises(ValueError):
@@ -241,7 +241,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe=exe,
                 chain_ids=None,
                 inits=[jinits],
-                method_args=sampler_args,
+                method_args=fp_args,
             )
 
     def test_args_good(self):
@@ -256,6 +256,7 @@ class CmdStanArgsTest(unittest.TestCase):
             data=jdata,
             method_args=sampler_args,
         )
+        self.assertEqual(cmdstan_args.method, Method.SAMPLE)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=1 random seed=', cmd)
         self.assertIn('data file=', cmd)
@@ -477,11 +478,9 @@ class GenerateQuantitesTest(unittest.TestCase):
             )
             for i in range(4)
         ]
-        print(csv_files)
         args = GenerateQuantitiesArgs(csv_files=csv_files)
         args.validate(chains=4)
         cmd = args.compose(idx=1, cmd='')
-        print(cmd)
         self.assertIn('method=generate_quantities', cmd)
         self.assertIn('fitted_params={}'.format(csv_files[0]), cmd)
 
