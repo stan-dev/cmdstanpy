@@ -467,20 +467,15 @@ class Model(object):
                 default_sampling = 1000
                 default_total = default_warmup + default_sampling
                 if warmup_iters is None and sampling_iters is None:
-                    refresh = int(math.floor(default_total * 0.005))
+                    refresh = int(default_total * 0.005)
                 elif warmup_iters is None:
-                    refresh = int(
-                        math.floor((default_warmup + sampling_iters) * 0.005)
-                    )
+                    refresh = int((default_warmup + sampling_iters) * 0.005)
                 elif sampling_iters is None:
-                    refresh = int(
-                        math.floor((warmup_iters + default_sampling) * 0.005)
-                    )
+                    refresh = int((warmup_iters + default_sampling) * 0.005)
                 else:
                     refresh = max(
-                        int(
-                            math.floor((warmup_iters + sampling_iters) * 0.005),
-                            1,
+                        int((warmup_iters + sampling_iters) * 0.005),
+                        1,
                         )
                     )
                 # disable logger for console (temporary) - use tqdm
@@ -536,7 +531,7 @@ class Model(object):
                                 tqdm_pbar = tqdm.tqdm_notebook
                             except ImportError:
                                 msg = (
-                                    'Cannot import package tqdm_notebook.\n'
+                                    'Cannot import tqdm.tqdm_notebook.\n'
                                     'Functionality is only supported on the '
                                     'Jupyter Notebook and compatible platforms'
                                     '.\nPlease follow the instructions in '
