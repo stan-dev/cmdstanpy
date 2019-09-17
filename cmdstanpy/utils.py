@@ -2,6 +2,7 @@
 Utility functions
 """
 import os
+from numbers import Integral, Real
 
 try:
     import ujson as json
@@ -17,7 +18,7 @@ import tempfile
 import logging
 import sys
 
-from typing import Dict, TextIO, List, Union
+from typing import Dict, TextIO, List, Union, Tuple
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -34,7 +35,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script `bin/install_cmdstan`.
+    Assumes directory populated via script `install_cmdstan`.
     """
     versions = [
         name.split('-')[1]
@@ -179,6 +180,137 @@ def cmdstan_path() -> str:
     return cmdstan_path
 
 
+def cxx_toolchain_path(version: str = None) -> Tuple[str]:
+    """
+    Validate, then activate C++ toolchain directory path.
+    """
+    if platform.system() != 'Windows':
+        raise RuntimeError(
+            'Functionality is currently only supported on Windows'
+        )
+    if version is not None and not isinstance(version, str):
+        raise TypeError('Format version number as a string')
+    logger = get_logger()
+    toolchain_root = ''
+    if 'CMDSTAN_TOOLCHAIN' in os.environ:
+        toolchain_root = os.environ['CMDSTAN_TOOLCHAIN']
+        if os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools35 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools35 on %', toolchain_root
+                )
+                toolchain_root = ''
+        elif os.path.exist(os.path.join(toolchain_root, 'mingw64')):
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'usr', 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools40 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools40 on %', toolchain_root
+                )
+                toolchain_root = ''
+    else:
+        rtools_dir = os.path.expanduser(
+            os.path.join('~', '.cmdstanpy', 'RTools')
+        )
+        if not os.path.exists(rtools_dir):
+            raise ValueError(
+                'no RTools installation found, '
+                'run command line script "install_cxx_toolchain"'
+            )
+        compiler_path = ''
+        tool_path = ''
+        if version not in ('4', '40', '4.0') and os.path.exists(
+            os.path.join(rtools_dir, 'RTools35')
+        ):
+            toolchain_root = os.path.join(rtools_dir, 'RTools35')
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools35 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools35 on %', toolchain_root
+                )
+                toolchain_root = ''
+        if (
+            not toolchain_root or version in ('4', '40', '4.0')
+        ) and os.path.exists(os.path.join(rtools_dir, 'RTools40')):
+            toolchain_root = os.path.join(rtools_dir, 'RTools40')
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'usr', 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools40 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools40 on %', toolchain_root
+                )
+                toolchain_root = ''
+    if not toolchain_root:
+        raise ValueError(
+            'no C++ toolchain installation found, '
+            'run command line script "install_cxx_toolchain"'
+        )
+    logger.info('Adds C++ toolchain to $PATH: %s', toolchain_root)
+    os.environ['PATH'] = '{};{};{}'.format(
+        compiler_path, tool_path, os.environ['PATH']
+    )
+    return compiler_path, tool_path
+
+
 def _rdump_array(key: str, val: np.ndarray) -> str:
     """Flatten numpy ndarray, format as Rdump variable declaration."""
     c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'
@@ -281,18 +413,12 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     return val
 
 
-def check_csv(
-    path: str, is_optimizing: bool = False, is_sampling: bool = True
-) -> Dict:
+def check_sampler_csv(path: str) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    meta = scan_stan_csv(path, is_sampling=is_sampling)
-    # check draws against spec
-    if is_optimizing:
-        draws_spec = 1
-    else:
-        draws_spec = int(meta.get('num_samples', 1000))
-        if 'thin' in meta:
-            draws_spec = int(math.ceil(draws_spec / meta['thin']))
+    meta = scan_sampler_csv(path)
+    draws_spec = int(meta.get('num_samples', 1000))
+    if 'thin' in meta:
+        draws_spec = int(math.ceil(draws_spec / meta['thin']))
     if meta['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
@@ -302,18 +428,40 @@ def check_csv(
     return meta
 
 
-def scan_stan_csv(path: str, is_sampling: bool = True) -> Dict:
-    """Process stan_csv file line by line."""
+def scan_sampler_csv(path: str) -> Dict:
+    """Process sampler stan_csv output file line by line."""
     dict = {}
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
         lineno = scan_warmup(fp, dict, lineno)
-
-        if is_sampling:
-            lineno = scan_metric(fp, dict, lineno)
+        lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
+    return dict
+
+
+def scan_optimize_csv(path: str) -> Dict:
+    """Process sampler stan_csv output file line by line."""
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
+        line = fp.readline().lstrip(' #\t')
+        xs = line.split(',')
+        mle = [float(x) for x in xs]
+        dict['mle'] = mle
+    return dict
+
+
+def scan_generated_quantities_csv(path: str) -> Dict:
+    """Process sampler stan_csv output file line by line."""
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
     return dict
 
 
@@ -335,7 +483,15 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                 ):
                     config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
-                    config_dict[key_val[0].strip()] = key_val[1].strip()
+                    raw_val = key_val[1].strip()
+                    try:
+                        val = int(raw_val)
+                    except ValueError:
+                        try:
+                            val = float(raw_val)
+                        except ValueError:
+                            val = raw_val
+                    config_dict[key_val[0].strip()] = val
         cur_pos = fp.tell()
         line = fp.readline().strip()
     fp.seek(cur_pos)
@@ -439,7 +595,6 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     num_cols = len(config_dict['column_names'])
     cur_pos = fp.tell()
     line = fp.readline().strip()
-    first_draw = None
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
@@ -450,12 +605,9 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                     lineno, num_cols, len(line.split(','))
                 )
             )
-        if first_draw is None:
-            first_draw = np.array(data, dtype=np.float64)
         cur_pos = fp.tell()
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
-    config_dict['first_draw'] = first_draw
     fp.seek(cur_pos)
     return lineno
 
