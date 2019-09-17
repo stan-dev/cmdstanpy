@@ -184,17 +184,17 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
     """
     Validate, then activate C++ toolchain directory path.
     """
-    if platform.system() != "Windows":
+    if platform.system() != 'Windows':
         raise RuntimeError(
-            "Functionality is currently only supported on Windows"
+            'Functionality is currently only supported on Windows'
         )
     if version is not None and not isinstance(version, str):
-        raise TypeError("Format version number as a string")
+        raise TypeError('Format version number as a string')
     logger = get_logger()
     toolchain_root = ''
     if 'CMDSTAN_TOOLCHAIN' in os.environ:
         toolchain_root = os.environ['CMDSTAN_TOOLCHAIN']
-        if os.path.exists(os.path.join(toolchain_root, "mingw_64")):
+        if os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
             compiler_path = os.path.join(
                 toolchain_root,
                 'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
@@ -206,14 +206,14 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        "Found invalid installion for RTools35 on %",
+                        'Found invalid installion for RTools35 on %',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    "Found invalid installion for RTools35 on %", toolchain_root
+                    'Found invalid installion for RTools35 on %', toolchain_root
                 )
                 toolchain_root = ''
         elif os.path.exist(os.path.join(toolchain_root, 'mingw64')):
@@ -228,14 +228,14 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        "Found invalid installion for RTools40 on %",
+                        'Found invalid installion for RTools40 on %',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    "Found invalid installion for RTools40 on %", toolchain_root
+                    'Found invalid installion for RTools40 on %', toolchain_root
                 )
                 toolchain_root = ''
     else:
@@ -250,9 +250,9 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
         compiler_path = ''
         tool_path = ''
         if version not in ('4', '40', '4.0') and os.path.exists(
-            os.path.join(rtools_dir, "RTools35")
+            os.path.join(rtools_dir, 'RTools35')
         ):
-            toolchain_root = os.path.join(rtools_dir, "RTools35")
+            toolchain_root = os.path.join(rtools_dir, 'RTools35')
             compiler_path = os.path.join(
                 toolchain_root,
                 'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
@@ -264,14 +264,14 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        "Found invalid installion for RTools35 on %",
+                        'Found invalid installion for RTools35 on %',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    "Found invalid installion for RTools35 on %", toolchain_root
+                    'Found invalid installion for RTools35 on %', toolchain_root
                 )
                 toolchain_root = ''
         if (
@@ -289,14 +289,14 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        "Found invalid installion for RTools40 on %",
+                        'Found invalid installion for RTools40 on %',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    "Found invalid installion for RTools40 on %", toolchain_root
+                    'Found invalid installion for RTools40 on %', toolchain_root
                 )
                 toolchain_root = ''
     if not toolchain_root:
@@ -304,9 +304,9 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
             'no C++ toolchain installation found, '
             'run command line script "install_cxx_toolchain"'
         )
-    logger.info("Adds C++ toolchain to $PATH: %s", toolchain_root)
-    os.environ["PATH"] = "{};{};{}".format(
-        compiler_path, tool_path, os.environ["PATH"]
+    logger.info('Adds C++ toolchain to $PATH: %s', toolchain_root)
+    os.environ['PATH'] = '{};{};{}'.format(
+        compiler_path, tool_path, os.environ['PATH']
     )
     return compiler_path, tool_path
 

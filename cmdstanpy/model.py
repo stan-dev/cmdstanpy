@@ -477,7 +477,6 @@ class Model(object):
                         int((warmup_iters + sampling_iters) * 0.005),
                         1,
                         )
-                    )
                 # disable logger for console (temporary) - use tqdm
                 self._logger.propagate = False
             except ImportError:
