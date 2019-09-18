@@ -14,7 +14,6 @@ class Method(Enum):
     SAMPLE = auto()
     OPTIMIZE = auto()
     GENERATE_QUANTITIES = auto()
-    FIXED_PARAMS = auto()
     ADVI = auto()
 
     def __repr__(self):
@@ -35,6 +34,7 @@ class SamplerArgs(object):
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = None,
         adapt_delta: float = None,
+        fixed_param: bool = False,
     ) -> None:
         """Initialize object."""
         self.warmup_iters = warmup_iters
@@ -47,6 +47,7 @@ class SamplerArgs(object):
         self.step_size = step_size
         self.adapt_engaged = adapt_engaged
         self.adapt_delta = adapt_delta
+        self.fixed_param = fixed_param
 
     def validate(self, chains: int) -> None:
         """
@@ -97,6 +98,10 @@ class SamplerArgs(object):
                 )
 
         if self.step_size is not None:
+            if self.fixed_param:
+                raise ValueError(
+                    'when fixed_param=True, cannot specify max_treedepth.'
+                )
             if isinstance(self.step_size, Real):
                 if self.step_size < 0:
                     raise ValueError(
@@ -179,6 +184,17 @@ class SamplerArgs(object):
                     ' found {}'.format(self.adapt_delta)
                 )
 
+        if self.fixed_param and (
+                (self.warmup_iters is not None and self.warmup_iters > 0) or
+                self.max_treedepth is not None or
+                self.metric is not None or
+                self.step_size is not None or
+                self.adapt_delta is not None):
+            raise ValueError(
+                'when fixed_param=True, cannot specify warmup or'
+                ' or any adaptation parameters.'
+            )
+
     def compose(self, idx: int, cmd: str) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
@@ -192,7 +208,11 @@ class SamplerArgs(object):
             cmd = cmd + ' save_warmup=1'
         if self.thin is not None:
             cmd = '{} thin={}'.format(cmd, self.thin)
-        cmd = cmd + ' algorithm=hmc'
+        if self.fixed_param:
+            cmd = cmd + ' algorithm=fixed_param'
+            return cmd
+        else:
+            cmd = cmd + ' algorithm=hmc'
         if self.max_treedepth is not None:
             cmd = '{} engine=nuts max_depth={}'.format(cmd, self.max_treedepth)
         if self.step_size is not None:
@@ -217,17 +237,6 @@ class SamplerArgs(object):
         if self.adapt_delta is not None:
             cmd = '{} delta={}'.format(cmd, self.adapt_delta)
         return cmd
-
-
-class FixedParamArgs(object):
-    """Arguments for the NUTS adaptive sampler."""
-
-    def compose(self, idx: int, cmd: str) -> str:
-        cmd = cmd + ' method=fixed_param'
-        return cmd
-
-    def validate(self, chains: int) -> None:
-        pass
 
 
 class OptimizeArgs(object):
@@ -330,7 +339,7 @@ class CmdStanArgs(object):
         model_exe: str,
         chain_ids: Union[List[int], None],
         method_args: Union[
-            SamplerArgs, FixedParamArgs, OptimizeArgs, GenerateQuantitiesArgs
+            SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs
         ],
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
@@ -354,8 +363,6 @@ class CmdStanArgs(object):
             self.method = Method.OPTIMIZE
         elif isinstance(method_args, GenerateQuantitiesArgs):
             self.method = Method.GENERATE_QUANTITIES
-        elif isinstance(method_args, FixedParamArgs):
-            self.method = Method.FIXED_PARAMS
         self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.validate()
 

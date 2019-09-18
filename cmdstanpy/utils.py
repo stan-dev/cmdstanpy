@@ -413,9 +413,9 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     return val
 
 
-def check_sampler_csv(path: str) -> Dict:
+def check_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    meta = scan_sampler_csv(path)
+    meta = scan_sampler_csv(path, is_fixed_param)
     draws_spec = int(meta.get('num_samples', 1000))
     if 'thin' in meta:
         draws_spec = int(math.ceil(draws_spec / meta['thin']))
@@ -428,15 +428,16 @@ def check_sampler_csv(path: str) -> Dict:
     return meta
 
 
-def scan_sampler_csv(path: str) -> Dict:
+def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     """Process sampler stan_csv output file line by line."""
     dict = {}
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
-        lineno = scan_warmup(fp, dict, lineno)
-        lineno = scan_metric(fp, dict, lineno)
+        if not is_fixed_param:
+            lineno = scan_warmup(fp, dict, lineno)
+            lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
     return dict
 

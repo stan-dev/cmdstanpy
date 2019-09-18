@@ -7,7 +7,6 @@ from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
     CmdStanArgs,
-    FixedParamArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
 )
@@ -215,16 +214,8 @@ class CmdStanArgsTest(unittest.TestCase):
     def test_no_chains(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
-        fp_args = FixedParamArgs()
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe=exe,
-            chain_ids=None,
-            inits=jinits,
-            method_args=fp_args,
-        )
-        self.assertIn('init=', cmdstan_args.compose_command(None, 'out.csv'))
 
+        sampler_args = SamplerArgs()
         with self.assertRaises(ValueError):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -232,7 +223,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 chain_ids=None,
                 seed=[1, 2, 3],
                 inits=jinits,
-                method_args=fp_args,
+                method_args=sampler_args
             )
 
         with self.assertRaises(ValueError):
@@ -241,7 +232,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe=exe,
                 chain_ids=None,
                 inits=[jinits],
-                method_args=fp_args,
+                method_args=sampler_args
             )
 
     def test_args_good(self):
