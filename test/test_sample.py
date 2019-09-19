@@ -243,7 +243,6 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.stepsize, None)
-        self.assertTrue(True)
 
 
 class StanFitTest(unittest.TestCase):
