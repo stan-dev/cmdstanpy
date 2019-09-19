@@ -477,6 +477,9 @@ class Model(object):
             try:
                 import tqdm
                 # progress bar updates - 100 per warmup, sampling
+                tmp_thin = thin
+                if tmp_thin is None:
+                    tmp_thin = 1
                 if fixed_param or not adapt_engaged or warmup_iters == 0:
                     num_updates = 100
                 else:
@@ -487,9 +490,9 @@ class Model(object):
                 s_iters = sampling_iters
                 if s_iters is None:
                     s_iters = 1000
-                if thin > 1:
-                    s_iters = s_iters // thin
-                    w_iters = w_iters // thin
+                if tmp_thin > 1:
+                    s_iters = s_iters // tmp_thin
+                    w_iters = w_iters // tmp_thin
                 refresh = max(
                     int((s_iters + w_iters) // num_updates),
                     1,
