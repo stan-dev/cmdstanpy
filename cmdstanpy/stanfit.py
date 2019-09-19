@@ -248,7 +248,7 @@ class StanFit(object):
         Stepsize used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, stepsize is None.
         """
-        if self._stepsize is None:
+        if not self._is_fixed_param and self._stepsize is None:
             self._assemble_sample()
         return self._stepsize
 
