@@ -124,6 +124,30 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
+        args = SamplerArgs(warmup_iters=100, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(save_warmup=True, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(max_treedepth=12, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(metric='dense', fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(step_size=0.5, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_delta=0.88, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
     def test_adapt(self):
         args = SamplerArgs(adapt_engaged=False)
         args.validate(chains=4)
@@ -194,6 +218,12 @@ class SamplerArgsTest(unittest.TestCase):
         args = SamplerArgs(metric='/no/such/path/to.file')
         with self.assertRaises(ValueError):
             args.validate(chains=4)
+
+    def test_fixed_param(self):
+        args = SamplerArgs(fixed_param=True)
+        args.validate(chains=1)
+        cmd = args.compose(0, '')
+        self.assertIn('method=sample algorithm=fixed_param', cmd)
 
 
 class CmdStanArgsTest(unittest.TestCase):

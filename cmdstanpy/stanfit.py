@@ -227,8 +227,6 @@ class StanFit(object):
     @property
     def metric_type(self) -> str:
         """Metric type, either 'diag_e' or 'dense_e'."""
-        if self._is_fixed_param:
-            return 'N/A'
         return self._metric_type
 
     @property

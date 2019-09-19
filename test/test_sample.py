@@ -149,7 +149,7 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(txt_file))
 
         self.assertEqual(datagen_fit.runset.chains, 1)
-        self.assertEqual(datagen_fit.draws, 100)
+                             
         column_names = [
             'lp__',
             'accept_stat__',
@@ -238,6 +238,12 @@ class SampleTest(unittest.TestCase):
             'eta.20'
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
+        self.assertEqual(datagen_fit.draws, 100)
+        self.assertEqual(datagen_fit.sample.shape,(100,1,len(column_names)))
+        self.assertEqual(datagen_fit.metric, None)
+        self.assertEqual(datagen_fit.metric_type, None)
+        self.assertEqual(datagen_fit.stepsize, None)
+        self.assertTrue(True)
 
 
 class StanFitTest(unittest.TestCase):
