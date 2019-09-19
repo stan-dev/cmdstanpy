@@ -226,19 +226,28 @@ class StanFit(object):
 
     @property
     def metric_type(self) -> str:
-        """Metric type, either 'diag_e' or 'dense_e'."""
+        """
+        Metric type used for adaptation, either 'diag_e' or 'dense_e'.
+        When sampler algorithm 'fixed_param' is specified, metric_type is None.
+        """
         return self._metric_type
 
     @property
     def metric(self) -> np.ndarray:
-        """Metric used by sampler for each chain."""
+        """
+        Metric used by sampler for each chain.
+        When sampler algorithm 'fixed_param' is specified, metric is None.
+        """
         if not self._is_fixed_param and self._metric is None:
             self._assemble_sample()
         return self._metric
 
     @property
     def stepsize(self) -> np.ndarray:
-        """Stepsize used by sampler for each chain."""
+        """
+        Stepsize used by sampler for each chain.
+        When sampler algorithm 'fixed_param' is specified, stepsize is None.
+        """
         if self._stepsize is None:
             self._assemble_sample()
         return self._stepsize
