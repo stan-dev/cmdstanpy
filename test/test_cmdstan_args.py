@@ -7,9 +7,9 @@ from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
     CmdStanArgs,
-    FixedParamArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
+    VariationalArgs
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -483,6 +483,15 @@ class GenerateQuantitesTest(unittest.TestCase):
         cmd = args.compose(idx=1, cmd='')
         self.assertIn('method=generate_quantities', cmd)
         self.assertIn('fitted_params={}'.format(csv_files[0]), cmd)
+
+class VariationalTest(unittest.TestCase):
+    def test_args_variational(self):
+        args = VariationalArgs(output_samples=1)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd='')
+        print(cmd)
+        self.assertIn('method=variational', cmd)
+        self.assertIn('output_samples=1', cmd)
 
 
 if __name__ == '__main__':
