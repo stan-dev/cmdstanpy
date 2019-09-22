@@ -25,6 +25,12 @@ StanMLE
 .. autoclass:: cmdstanpy.StanMLE
    :members:
 
+StanADVI
+========
+
+.. autoclass:: cmdstanpy.StanADVI
+   :members:
+
 StanQuantities
 ==============
 

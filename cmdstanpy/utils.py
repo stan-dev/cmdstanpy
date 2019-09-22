@@ -10,6 +10,7 @@ except ImportError:
     import json
 import math
 import numpy as np
+import pandas as pd
 import platform
 import re
 import subprocess
@@ -442,7 +443,7 @@ def scan_sampler_csv(path: str) -> Dict:
 
 
 def scan_optimize_csv(path: str) -> Dict:
-    """Process sampler stan_csv output file line by line."""
+    """Process optimizer stan_csv output file line by line."""
     dict = {}
     lineno = 0
     with open(path, 'r') as fp:
@@ -456,12 +457,30 @@ def scan_optimize_csv(path: str) -> Dict:
 
 
 def scan_generated_quantities_csv(path: str) -> Dict:
-    """Process sampler stan_csv output file line by line."""
+    """
+    Process standalone generated quantities stan_csv output file line by line.
+    """
     dict = {}
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
+    return dict
+
+
+def scan_advi_csv(path: str) -> Dict:
+    """Process advi stan_csv output file line by line."""
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
+        line = fp.readline().lstrip(' #\t')
+        xs = line.split(',')
+        advi_mean = [float(x) for x in xs]
+        dict['advi_mean'] = advi_mean
+        lineno += 1
+        dict['output_samples'] = pd.read_csv(path, comment='#', skiprows=lineno)
     return dict
 
 

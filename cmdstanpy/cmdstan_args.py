@@ -300,7 +300,7 @@ class VariationalArgs(object):
     """Arguments needed for variational method."""
 
     VARIATIONAL = {'meanfield', 'fullrank'}
-    
+
     def __init__(
             self,
             algorithm: str = None,
@@ -308,7 +308,6 @@ class VariationalArgs(object):
             grad_samples: int = None,
             elbo_samples: int = None,
             eta: Real = None,
-            adapt_engaged: bool = True,
             adapt_iter: int = None,
             tol_rel_obj: Real = None,
             eval_elbo: int = None,
@@ -318,7 +317,6 @@ class VariationalArgs(object):
         self.grad_samples = grad_samples
         self.elbo_samples = elbo_samples
         self.eta = eta
-        self.adapt_engaged = adapt_engaged
         self.adapt_iter = adapt_iter
         self.tol_rel_obj = tol_rel_obj
         self.eval_elbo = eval_elbo
@@ -361,12 +359,6 @@ class VariationalArgs(object):
                     'eta must be a non-negative number,'
                     ' found {}'.format(self.eta)
                 )
-        if not self.adapt_engaged and self.adapt_iter is not None:
-            if self.adapt_iter > 0:
-                raise ValueError(
-                    'adaptation not engaged, adapt_iter must be 0,'
-                    ' found {}'.format(self.adapt_iter)
-                )
         if self.adapt_iter is not None:
             if self.adapt_iter < 1:
                 raise ValueError(
@@ -392,7 +384,6 @@ class VariationalArgs(object):
                     ' found {}'.format(self.output_samples)
                 )
 
-
     def compose(self, idx: int, cmd: str) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
@@ -408,10 +399,8 @@ class VariationalArgs(object):
             cmd = '{} elbo_samples={}'.format(cmd, self.elbo_samples)
         if self.eta is not None:
             cmd = '{} eta={}'.format(cmd, self.eta)
-        if self.adapt_engaged and self.adapt_iter is not None:
+        if self.adapt_iter is not None:
             cmd = '{} adapt iter={}'.format(cmd, self.adapt_iter)
-        else:
-            cmd = '{} adapt engaged=0'.format(cmd)
         if self.tol_rel_obj is not None:
             cmd = '{} tol_rel_obj={}'.format(cmd, self.tol_rel_obj)
         if self.eval_elbo is not None:
