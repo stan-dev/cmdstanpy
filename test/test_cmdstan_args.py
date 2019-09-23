@@ -214,14 +214,16 @@ class CmdStanArgsTest(unittest.TestCase):
 
     def test_no_chains(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
-        fp_args = FixedParamArgs()
+        args = OptimizeArgs(algorithm='Newton')
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
             chain_ids=None,
+            data=jdata,
             inits=jinits,
-            method_args=fp_args,
+            method_args=args,
         )
         self.assertIn('init=', cmdstan_args.compose_command(None, 'out.csv'))
 
@@ -231,8 +233,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe=exe,
                 chain_ids=None,
                 seed=[1, 2, 3],
+                data=jdata,
                 inits=jinits,
-                method_args=fp_args,
+                method_args=args,
             )
 
         with self.assertRaises(ValueError):
@@ -240,8 +243,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_name='bernoulli',
                 model_exe=exe,
                 chain_ids=None,
+                data=jdata,
                 inits=[jinits],
-                method_args=fp_args,
+                method_args=args,
             )
 
     def test_args_good(self):
