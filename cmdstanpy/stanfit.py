@@ -14,7 +14,7 @@ from cmdstanpy.utils import (
     check_sampler_csv,
     scan_optimize_csv,
     scan_generated_quantities_csv,
-    scan_advi_csv,
+    scan_variational_csv,
     create_named_text_file,
     EXTENSION,
     cmdstan_path,
@@ -565,27 +565,28 @@ class StanQuantities(object):
         self.runset.save_csvfiles(dir, basename)
 
 
-class StanADVI(object):
+class StanVariational(object):
     """
-    Container for outputs from CmdStan advi run.
+    Container for outputs from CmdStan variational run.
     """
 
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
-        if not (runset.method == Method.ADVI):
+        if not (runset.method == Method.VARIATIONAL):
             raise RuntimeError(
                 'Wrong runset method, expecting variational inference, '
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
         self._column_names = None
-        self._advi_mean = None
+        self._variational_mean = None
         self._output_samples = None
 
-    def _set_advi_attrs(self) -> None:
-        meta = scan_advi_csv(self.runset.csv_files[0])
+    def _set_variational_attrs(self, sample_csv_0: str) -> None:
+        meta = scan_variational_csv(sample_csv_0)
         self._column_names = meta['column_names']
-        self._advi_mean = meta['advi_mean']
+        self._variational_mean = meta['variational_mean']
+        self._output_samples = meta['output_samples']
 
     @property
     def columns(self) -> int:
@@ -606,30 +607,30 @@ class StanADVI(object):
         return self._column_names
 
     @property
-    def advi_parameter_means_np(self) -> np.array:
+    def variational_params_np(self) -> np.array:
         """Returns inferred parameter means as numpy array."""
-        if self._advi_mean is None:
-            self._set_advi_attrs(self.runset.csv_files)
-        return self._advi_mean
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return self._variational_mean
 
     @property
-    def advi_parameter_means_pd(self) -> pd.DataFrame:
+    def variational_params_pd(self) -> pd.DataFrame:
         """Returns inferred parameter means as pandas DataFrame."""
-        if self._advi_mean is None:
-            self._set_advi_attrs(self.runset.csv_files)
-        return pd.DataFrame([self._advi_mean], columns=self.column_names)
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return pd.DataFrame([self._variational_mean], columns=self.column_names)
 
     @property
-    def advi_parameter_means_dict(self) -> OrderedDict:
+    def variational_params_dict(self) -> OrderedDict:
         """Returns inferred parameter means as Dict."""
-        if self._advi_mean is None:
-            self._set_advi_attrs(self.runset.csv_files)
-        return OrderedDict(zip(self.column_names, self._advi_mean))
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return OrderedDict(zip(self.column_names, self._variational_mean))
 
     def output_samples(self) -> np.array:
         """Returns the set of approximate posterior output draws."""
         if self._output_samples is None:
-            self._set_advi_attrs(self.runset.csv_files)
+            self._set_variational_attrs(self.runset.csv_files[0])
         return self._output_samples
 
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:

@@ -468,7 +468,7 @@ def scan_generated_quantities_csv(path: str) -> Dict:
     return dict
 
 
-def scan_advi_csv(path: str) -> Dict:
+def scan_variational_csv(path: str) -> Dict:
     """Process advi stan_csv output file line by line."""
     dict = {}
     lineno = 0
@@ -476,11 +476,23 @@ def scan_advi_csv(path: str) -> Dict:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
         line = fp.readline().lstrip(' #\t')
-        xs = line.split(',')
-        advi_mean = [float(x) for x in xs]
-        dict['advi_mean'] = advi_mean
         lineno += 1
-        dict['output_samples'] = pd.read_csv(path, comment='#', skiprows=lineno)
+        if not line.startswith('Stepsize adaptation complete.'):
+            raise ValueError(
+                'line {}: expecting adaptation msg, found:\n\t "{}"'.format(lineno, line)
+            )
+        line = fp.readline().lstrip(' #\t\n')
+        lineno += 1
+        if not line.startswith('eta = 1'):
+            raise ValueError(
+                'line {}: expecting eta = 1, found:\n\t "{}"'.format(lineno, line)
+            )
+        line = fp.readline().lstrip(' #\t\n')
+        lineno += 1
+        xs = line.split(',')
+        variational_mean = [float(x) for x in xs]
+        dict['variational_mean'] = variational_mean
+        dict['output_samples'] = pd.read_csv(path, comment='#', skiprows=lineno, header=None)
     return dict
 
 

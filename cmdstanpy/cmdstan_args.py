@@ -14,7 +14,7 @@ class Method(Enum):
     SAMPLE = auto()
     OPTIMIZE = auto()
     GENERATE_QUANTITIES = auto()
-    ADVI = auto()
+    VARIATIONAL = auto()
 
     def __repr__(self):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
@@ -299,7 +299,7 @@ class GenerateQuantitiesArgs(object):
 class VariationalArgs(object):
     """Arguments needed for variational method."""
 
-    VARIATIONAL = {'meanfield', 'fullrank'}
+    VARIATIONAL_ALGOS = {'meanfield', 'fullrank'}
 
     def __init__(
             self,
@@ -448,7 +448,7 @@ class CmdStanArgs(object):
         elif isinstance(method_args, GenerateQuantitiesArgs):
             self.method = Method.GENERATE_QUANTITIES
         elif isinstance(method_args, VariationalArgs):
-            self.method = Method.ADVI
+            self.method = Method.VARIATIONAL
         self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.validate()
 

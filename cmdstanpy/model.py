@@ -19,7 +19,13 @@ from cmdstanpy.cmdstan_args import (
     GenerateQuantitiesArgs,
     VariationalArgs
 )
-from cmdstanpy.stanfit import RunSet, StanFit, StanMLE, StanQuantities, StanADVI
+from cmdstanpy.stanfit import (
+    RunSet,
+    StanFit,
+    StanMLE,
+    StanQuantities,
+    StanVariational
+)
 from cmdstanpy.utils import (
     do_command,
     EXTENSION,
@@ -662,7 +668,7 @@ class Model(object):
             quantities._set_attrs_gq_csv_files(csv_files[0])
         return quantities
 
-    def run_variational(
+    def variational(
         self,
         data: Union[Dict, str] = None,
         seed: int = None,
@@ -677,7 +683,7 @@ class Model(object):
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
         output_samples: int = None,
-    ) -> StanADVI:
+    ) -> StanVariational:
         """
         Run CmdStan's variational inference algorithm to approximate
         the posterior distribution of the model conditioned on the data.
@@ -721,7 +727,7 @@ class Model(object):
         :param output_samples: Number of approximate posterior output draws
         to save.
 
-        :return: StanADVI object
+        :return: StanVariational object
         """
         variational_args = VariationalArgs(
             algorithm=algorithm,
@@ -758,9 +764,9 @@ class Model(object):
                     msg, runset._retcode(dummy_chain_id)
                 )
                 raise RuntimeError(msg)
-        advi = StanADVI(runset)
-        advi._set_advi_attrs(runset.csv_files[0])
-        return advi
+        vi = StanVariational(runset)
+        vi._set_variational_attrs(runset.csv_files[0])
+        return vi
 
     def _run_cmdstan(
         self, runset: RunSet, idx: int = 0, pbar: List[Any] = None
