@@ -63,7 +63,7 @@ class MaybeDictToFilePath(object):
                     dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
-                jsondump(data_file, o)
+                rdump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(o, str):
@@ -331,7 +331,9 @@ def jsondump(path: str, data: Dict) -> None:
             data[key] = val
         if isinstance(val, Sequence) and not val:
             raise ValueError(
-                'variable: {}, error: empty array not allowed'.format(val)
+                'variable: {}, error: empty array not allowed with JSON interface'.format(
+                    val
+                )
             )
     with open(path, 'w') as fd:
         json.dump(data, fd)
@@ -342,12 +344,6 @@ def rdump(path: str, data: Dict) -> None:
     with open(path, 'w') as fd:
         for key, val in data.items():
             if isinstance(val, (np.ndarray, Sequence)):
-                if len(val) == 0:
-                    raise ValueError(
-                        'variable: {}, error: empty array not allowed'.format(
-                            val
-                        )
-                    )
                 line = _rdump_array(key, np.asarray(val))
             else:
                 line = '{} <- {}'.format(key, val)
