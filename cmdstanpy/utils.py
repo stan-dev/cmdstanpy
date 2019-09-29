@@ -63,7 +63,11 @@ class MaybeDictToFilePath(object):
                     dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
-                if any(not item for item in o if isinstance(item, (Sequence, np.ndarray))):
+                if any(
+                    not item
+                    for item in o
+                    if isinstance(item, (Sequence, np.ndarray))
+                ):
                     rdump(data_file, o)
                 else:
                     jsondump(data_file, o)
