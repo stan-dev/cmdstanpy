@@ -479,20 +479,26 @@ def scan_variational_csv(path: str) -> Dict:
         lineno += 1
         if not line.startswith('Stepsize adaptation complete.'):
             raise ValueError(
-                'line {}: expecting adaptation msg, found:\n\t "{}"'.format(lineno, line)
+                'line {}: expecting adaptation msg, found:\n\t "{}"'.format(
+                    lineno, line
+                )
             )
         line = fp.readline().lstrip(' #\t\n')
         lineno += 1
         if not line.startswith('eta = 1'):
             raise ValueError(
-                'line {}: expecting eta = 1, found:\n\t "{}"'.format(lineno, line)
+                'line {}: expecting eta = 1, found:\n\t "{}"'.format(
+                    lineno, line
+                )
             )
         line = fp.readline().lstrip(' #\t\n')
         lineno += 1
         xs = line.split(',')
         variational_mean = [float(x) for x in xs]
         dict['variational_mean'] = variational_mean
-        dict['output_samples'] = pd.read_csv(path, comment='#', skiprows=lineno, header=None)
+        dict['output_samples'] = pd.read_csv(
+            path, comment='#', skiprows=lineno, header=None
+        )
     return dict
 
 
