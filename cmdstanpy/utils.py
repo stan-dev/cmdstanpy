@@ -338,7 +338,8 @@ def jsondump(path: str, data: Dict) -> None:
             data[key] = val
         if isinstance(val, Sequence) and not val:
             raise ValueError(
-                'variable: {}, error: empty array not allowed with JSON interface'.format(
+                'variable: {}, error: '\
+                'empty array not allowed with JSON interface'.format(
                     val
                 )
             )
