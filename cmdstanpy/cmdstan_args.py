@@ -60,7 +60,7 @@ class SamplerArgs(object):
                 'sampler expects number of chains to be greater than 0'
             )
         if self.warmup_iters is not None:
-            if self.warmup_iters < 0:
+            if self.warmup_iters < 0 or not isinstance(self.warmup_iters, Integral):
                 raise ValueError(
                     'warmup_iters must be a non-negative integer,'
                     ' found {}'.format(self.warmup_iters)
@@ -71,20 +71,20 @@ class SamplerArgs(object):
                     'must run warmup iterations'
                 )
         if self.sampling_iters is not None:
-            if self.sampling_iters < 0:
+            if self.sampling_iters < 0 or not isinstance(self.sampling_iters, Integral):
                 raise ValueError(
                     'sampling_iters must be a non-negative integer,'
                     ' found {}'.format(self.sampling_iters)
                 )
         if self.thin is not None:
-            if self.thin < 1:
+            if self.thin < 1 or not isinstance(self.thin, Integral):
                 raise ValueError(
-                    'thin must be at least 1, found {}'.format(self.thin)
+                    'thin must be a positive integer greater than 0, found {}'.format(self.thin)
                 )
         if self.max_treedepth is not None:
-            if self.max_treedepth < 1:
+            if self.max_treedepth < 1 or not isinstance(self.max_treedepth, Integral):
                 raise ValueError(
-                    'max_treedepth must be at least 1, found {}'.format(
+                    'max_treedepth must be a positive integer greater than 0, found {}'.format(
                         self.max_treedepth
                     )
                 )

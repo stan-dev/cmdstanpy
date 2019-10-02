@@ -68,7 +68,7 @@ class RunSet(object):
         self._retcodes = [-1 for _ in range(chains)]
 
     def __repr__(self) -> str:
-        repr = 'StanFit(args={}, chains={}'.format(self._args, self._chains)
+        repr = 'RunSet(args={}, chains={}'.format(self._args, self._chains)
         repr = '{}\n csv_files={}\nconsole_files={})'.format(
             repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)
         )
