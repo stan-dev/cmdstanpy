@@ -336,49 +336,49 @@ class VariationalArgs(object):
                 )
             )
         if self.iter is not None:
-            if self.iter < 1:
+            if self.iter < 1 or not isinstance(self.iter, Integral):
                 raise ValueError(
                     'iter must be a positive integer,'
                     ' found {}'.format(self.iter)
                 )
         if self.grad_samples is not None:
-            if self.grad_samples < 1:
+            if self.grad_samples < 1 or not isinstance(self.grad_samples, Integral):
                 raise ValueError(
                     'grad_samples must be a positive integer,'
                     ' found {}'.format(self.grad_samples)
                 )
         if self.elbo_samples is not None:
-            if self.elbo_samples < 1:
+            if self.elbo_samples < 1 or not isinstance(self.elbo_samples, Integral):
                 raise ValueError(
                     'elbo_samples must be a positive integer,'
                     ' found {}'.format(self.elbo_samples)
                 )
         if self.eta is not None:
-            if self.eta < 0:
+            if self.eta < 1 or not isinstance(self.eta, (Integral, Real)):
                 raise ValueError(
                     'eta must be a non-negative number,'
                     ' found {}'.format(self.eta)
                 )
         if self.adapt_iter is not None:
-            if self.adapt_iter < 1:
+            if self.adapt_iter < 1 or not isinstance(self.eta, Integral):
                 raise ValueError(
                     'adapt_iter must be a positive integer,'
                     ' found {}'.format(self.adapt_iter)
                 )
         if self.tol_rel_obj is not None:
-            if self.tol_rel_obj < 1:
+            if self.tol_rel_obj < 1 or not isinstance(self.tol_rel_obj, (Integral, Real)):
                 raise ValueError(
                     'tol_rel_obj must be a positive number,'
                     ' found {}'.format(self.tol_rel_obj)
                 )
         if self.eval_elbo is not None:
-            if self.eval_elbo < 1:
+            if self.eval_elbo < 1 or not isinstance(self.eval_elbo, Integral):
                 raise ValueError(
                     'eval_elbo must be a positive integer,'
                     ' found {}'.format(self.eval_elbo)
                 )
         if self.output_samples is not None:
-            if self.output_samples < 1:
+            if self.output_samples < 1 or not isinstance(self.output_samples, Integral):
                 raise ValueError(
                     'output_samples must be a positive integer,'
                     ' found {}'.format(self.output_samples)

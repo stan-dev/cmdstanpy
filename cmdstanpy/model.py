@@ -757,6 +757,18 @@ class Model(object):
             runset = RunSet(args=args, chains=1)
             self._run_cmdstan(runset, dummy_chain_id)
 
+        # treat failure to converge as failure
+        transcript_file = runset.console_files[dummy_chain_id]
+        valid = True
+        pat = re.compile(r'The maximum number of iterations is reached! The algorithm may not have converged.', re.M)
+        with open(transcript_file, 'r') as transcript:
+            contents = transcript.read()
+            errors = re.findall(pat, contents)
+            if len(errors) > 0:
+                valid = False
+        if not valid:
+            raise RuntimeError('The maximum number of iterations is reached! The algorithm may not have converged.')
+
         if not runset._check_retcodes():
             msg = 'Error during variational inference'
             if runset._retcode(dummy_chain_id) != 0:
@@ -764,6 +776,10 @@ class Model(object):
                     msg, runset._retcode(dummy_chain_id)
                 )
                 raise RuntimeError(msg)
+
+
+
+
         vi = StanVariational(runset)
         vi._set_variational_attrs(runset.csv_files[0])
         return vi

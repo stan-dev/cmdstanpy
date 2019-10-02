@@ -33,8 +33,8 @@ class StanMLETest(unittest.TestCase):
         )
         runset = RunSet(args=cmdstan_args, chains=1)
         mle = StanMLE(runset)
-        self.assertEqual(mle._column_names,None)
-        self.assertEqual(mle._mle,None)
+        self.assertEqual(mle._column_names,())
+        self.assertEqual(mle._mle,{})
 
         output = os.path.join(datafiles_path, 'optimize', 'rosenbrock_mle.csv')
         mle._set_mle_attrs(output)

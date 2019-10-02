@@ -195,7 +195,7 @@ class StanFit(object):
             )
         self.runset = runset
         self._draws = None
-        self._column_names = None
+        self._column_names = ()
         self._num_params = None  # metric dim(s)
         self._metric_type = None
         self._metric = None
@@ -446,8 +446,8 @@ class StanMLE(object):
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._column_names = None
-        self._mle = None
+        self._column_names = ()
+        self._mle = {}
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
         meta = scan_optimize_csv(sample_csv_0)
@@ -578,8 +578,8 @@ class StanVariational(object):
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._column_names = None
-        self._variational_mean = None
+        self._column_names = ()
+        self._variational_mean = {}
         self._output_samples = None
 
     def _set_variational_attrs(self, sample_csv_0: str) -> None:

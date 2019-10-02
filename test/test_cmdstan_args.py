@@ -490,12 +490,77 @@ class GenerateQuantitesTest(unittest.TestCase):
 
 class VariationalTest(unittest.TestCase):
     def test_args_variational(self):
+        args = VariationalArgs()
+        self.assertTrue(True)
+
         args = VariationalArgs(output_samples=1)
         args.validate(chains=1)
         cmd = args.compose(idx=0, cmd='')
-        print(cmd)
         self.assertIn('method=variational', cmd)
         self.assertIn('output_samples=1', cmd)
+
+        args = VariationalArgs(tol_rel_obj=1)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd='')
+        self.assertIn('method=variational', cmd)
+        self.assertIn('tol_rel_obj=1', cmd)
+
+    def test_args_bad(self):
+        args = VariationalArgs(algorithm='no_such_algo')
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(iter=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(iter=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(grad_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(grad_samples=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(elbo_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(elbo_samples=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eta=-0.00003)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(adapt_iter=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(adapt_iter=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(tol_rel_obj=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eval_elbo=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eval_elbo=1.5)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(output_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
 
 
 if __name__ == '__main__':
