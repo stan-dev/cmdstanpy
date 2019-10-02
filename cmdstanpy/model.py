@@ -689,24 +689,24 @@ class Model(object):
         the posterior distribution of the model conditioned on the data.
 
         :param data: Values for all data variables in the model, specified
-        either as a dictionary with entries matching the data variables,
-        or as the path of a data file in JSON or Rdump format.
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
 
         :param seed: The seed for random number generator or a list of per-chain
-        seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
-        numpy.random.RandomState() is used to generate a seed which will be
-        used for all chains. When the same seed is used across all chains,
-        the chain-id is used to advance the RNG to avoid dependent samples.
+            seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
+            numpy.random.RandomState() is used to generate a seed which will be
+            used for all chains. When the same seed is used across all chains,
+            the chain-id is used to advance the RNG to avoid dependent samples.
 
         :param inits:  Specifies how the sampler initializes parameter values.
-        Initializiation is uniform random on a range centered on 0 with
-        default range of 2. Specifying a single number ``n > 0`` changes
-        the initialization range to [-n, n].
+            Initializiation is uniform random on a range centered on 0 with
+            default range of 2. Specifying a single number ``n > 0`` changes
+            the initialization range to [-n, n].
 
         :param csv_basename:  A path or file name which will be used as the
-        basename for the CmdStan output files.  The csv output files
-        are written to file ``<basename>-0.csv`` and the console output
-        and error messages are written to file ``<basename>-0.txt``.
+            basename for the CmdStan output files.  The csv output files
+            are written to file ``<basename>-0.csv`` and the console output
+            and error messages are written to file ``<basename>-0.txt``.
 
         :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
 
@@ -725,7 +725,7 @@ class Model(object):
         :param eval_elbo: Number of interations between ELBO evaluations.
 
         :param output_samples: Number of approximate posterior output draws
-        to save.
+            to save.
 
         :return: StanVariational object
         """

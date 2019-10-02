@@ -25,15 +25,15 @@ StanMLE
 .. autoclass:: cmdstanpy.StanMLE
    :members:
 
-StanADVI
-========
-
-.. autoclass:: cmdstanpy.StanADVI
-   :members:
-
 StanQuantities
 ==============
 
 .. autoclass:: cmdstanpy.StanQuantities
    :members:
    
+StanVariational
+===============
+
+.. autoclass:: cmdstanpy.StanVariational
+   :members:
+
