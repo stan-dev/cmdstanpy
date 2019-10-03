@@ -18,6 +18,7 @@
    :caption: Contents:
 
    getting_started
+   advi
    api
 
 

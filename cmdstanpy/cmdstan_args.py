@@ -14,7 +14,7 @@ class Method(Enum):
     SAMPLE = auto()
     OPTIMIZE = auto()
     GENERATE_QUANTITIES = auto()
-    ADVI = auto()
+    VARIATIONAL = auto()
 
     def __repr__(self):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
@@ -61,42 +61,41 @@ class SamplerArgs(object):
             raise ValueError(
                 'sampler expects number of chains to be greater than 0'
             )
-
         if self.warmup_iters is not None:
-            if self.warmup_iters < 0:
+            if self.warmup_iters < 0 or not isinstance(
+                self.warmup_iters, Integral
+            ):
                 raise ValueError(
-                    'warmup_iters must be a non-negative integer'.format(
-                        self.warmup_iters
-                    )
+                    'warmup_iters must be a non-negative integer,'
+                    ' found {}'.format(self.warmup_iters)
                 )
             if self.adapt_engaged and self.warmup_iters == 0:
                 raise ValueError(
                     'adaptation requested but 0 warmup iterations specified, '
                     'must run warmup iterations'
                 )
-
         if self.sampling_iters is not None:
-            if self.sampling_iters < 0:
+            if self.sampling_iters < 0 or not isinstance(
+                self.sampling_iters, Integral
+            ):
                 raise ValueError(
-                    'sampling_iters must be a non-negative integer'.format(
-                        self.sampling_iters
-                    )
+                    'sampling_iters must be a non-negative integer,'
+                    ' found {}'.format(self.sampling_iters)
                 )
-
         if self.thin is not None:
-            if self.thin < 1:
+            if self.thin < 1 or not isinstance(self.thin, Integral):
                 raise ValueError(
-                    'thin must be at least 1, found {}'.format(self.thin)
+                    'thin must be a positive integer greater than 0,'
+                    'found {}'.format(self.thin)
                 )
-
         if self.max_treedepth is not None:
-            if self.max_treedepth < 1:
+            if self.max_treedepth < 1 or not isinstance(
+                self.max_treedepth, Integral
+            ):
                 raise ValueError(
-                    'max_treedepth must be at least 1, found {}'.format(
-                        self.max_treedepth
-                    )
+                    'max_treedepth must be a positive integer greater than 0,'
+                    ' found {}'.format(self.max_treedepth)
                 )
-
         if self.step_size is not None:
             if self.fixed_param:
                 raise ValueError(
@@ -120,7 +119,6 @@ class SamplerArgs(object):
                         raise ValueError(
                             'step_size must be > 0, found {}'.format(step_size)
                         )
-
         if self.metric is not None:
             dims = None
             if isinstance(self.metric, str):
@@ -176,7 +174,6 @@ class SamplerArgs(object):
                     self.metric = 'diag_e'
                 elif len(dims) == 2:
                     self.metric = 'dense_e'
-
         if self.adapt_delta is not None:
             if not 0 < self.adapt_delta < 1:
                 raise ValueError(
@@ -327,6 +324,129 @@ class GenerateQuantitiesArgs(object):
         return cmd
 
 
+class VariationalArgs(object):
+    """Arguments needed for variational method."""
+
+    VARIATIONAL_ALGOS = {'meanfield', 'fullrank'}
+
+    def __init__(
+        self,
+        algorithm: str = None,
+        iter: int = None,
+        grad_samples: int = None,
+        elbo_samples: int = None,
+        eta: Real = None,
+        adapt_iter: int = None,
+        tol_rel_obj: Real = None,
+        eval_elbo: int = None,
+        output_samples: int = None,
+    ) -> None:
+        self.algorithm = algorithm
+        self.iter = iter
+        self.grad_samples = grad_samples
+        self.elbo_samples = elbo_samples
+        self.eta = eta
+        self.adapt_iter = adapt_iter
+        self.tol_rel_obj = tol_rel_obj
+        self.eval_elbo = eval_elbo
+        self.output_samples = output_samples
+
+    def validate(self, chains=None) -> None:
+        """
+        Check arguments correctness and consistency.
+        """
+        if (
+            self.algorithm is not None
+            and self.algorithm not in self.VARIATIONAL_ALGOS
+        ):
+            raise ValueError(
+                'Please specify variational algorithms as one of [{}]'.format(
+                    ', '.join(self.VARIATIONAL_ALGOS)
+                )
+            )
+        if self.iter is not None:
+            if self.iter < 1 or not isinstance(self.iter, Integral):
+                raise ValueError(
+                    'iter must be a positive integer,'
+                    ' found {}'.format(self.iter)
+                )
+        if self.grad_samples is not None:
+            if self.grad_samples < 1 or not isinstance(
+                self.grad_samples, Integral
+            ):
+                raise ValueError(
+                    'grad_samples must be a positive integer,'
+                    ' found {}'.format(self.grad_samples)
+                )
+        if self.elbo_samples is not None:
+            if self.elbo_samples < 1 or not isinstance(
+                self.elbo_samples, Integral
+            ):
+                raise ValueError(
+                    'elbo_samples must be a positive integer,'
+                    ' found {}'.format(self.elbo_samples)
+                )
+        if self.eta is not None:
+            if self.eta < 1 or not isinstance(self.eta, (Integral, Real)):
+                raise ValueError(
+                    'eta must be a non-negative number,'
+                    ' found {}'.format(self.eta)
+                )
+        if self.adapt_iter is not None:
+            if self.adapt_iter < 1 or not isinstance(self.eta, Integral):
+                raise ValueError(
+                    'adapt_iter must be a positive integer,'
+                    ' found {}'.format(self.adapt_iter)
+                )
+        if self.tol_rel_obj is not None:
+            if self.tol_rel_obj < 1 or not isinstance(
+                self.tol_rel_obj, (Integral, Real)
+            ):
+                raise ValueError(
+                    'tol_rel_obj must be a positive number,'
+                    ' found {}'.format(self.tol_rel_obj)
+                )
+        if self.eval_elbo is not None:
+            if self.eval_elbo < 1 or not isinstance(self.eval_elbo, Integral):
+                raise ValueError(
+                    'eval_elbo must be a positive integer,'
+                    ' found {}'.format(self.eval_elbo)
+                )
+        if self.output_samples is not None:
+            if self.output_samples < 1 or not isinstance(
+                self.output_samples, Integral
+            ):
+                raise ValueError(
+                    'output_samples must be a positive integer,'
+                    ' found {}'.format(self.output_samples)
+                )
+
+    def compose(self, idx: int, cmd: str) -> str:
+        """
+        Compose CmdStan command for method-specific non-default arguments.
+        """
+        cmd = cmd + ' method=variational'
+        if self.algorithm is not None:
+            cmd = '{} algorithm={}'.format(cmd, self.algorithm)
+        if self.iter is not None:
+            cmd = '{} iter={}'.format(cmd, self.iter)
+        if self.grad_samples is not None:
+            cmd = '{} grad_samples={}'.format(cmd, self.grad_samples)
+        if self.elbo_samples is not None:
+            cmd = '{} elbo_samples={}'.format(cmd, self.elbo_samples)
+        if self.eta is not None:
+            cmd = '{} eta={}'.format(cmd, self.eta)
+        if self.adapt_iter is not None:
+            cmd = '{} adapt iter={}'.format(cmd, self.adapt_iter)
+        if self.tol_rel_obj is not None:
+            cmd = '{} tol_rel_obj={}'.format(cmd, self.tol_rel_obj)
+        if self.eval_elbo is not None:
+            cmd = '{} eval_elbo={}'.format(cmd, self.eval_elbo)
+        if self.output_samples is not None:
+            cmd = '{} output_samples={}'.format(cmd, self.output_samples)
+        return cmd
+
+
 class CmdStanArgs(object):
     """
     Container for CmdStan command line arguments.
@@ -340,7 +460,7 @@ class CmdStanArgs(object):
         model_exe: str,
         chain_ids: Union[List[int], None],
         method_args: Union[
-            SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs
+            SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
         ],
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
@@ -364,6 +484,8 @@ class CmdStanArgs(object):
             self.method = Method.OPTIMIZE
         elif isinstance(method_args, GenerateQuantitiesArgs):
             self.method = Method.GENERATE_QUANTITIES
+        elif isinstance(method_args, VariationalArgs):
+            self.method = Method.VARIATIONAL
         self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.validate()
 
