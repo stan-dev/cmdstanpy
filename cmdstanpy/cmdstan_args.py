@@ -60,7 +60,9 @@ class SamplerArgs(object):
                 'sampler expects number of chains to be greater than 0'
             )
         if self.warmup_iters is not None:
-            if self.warmup_iters < 0 or not isinstance(self.warmup_iters, Integral):
+            if self.warmup_iters < 0 or not isinstance(
+                self.warmup_iters, Integral
+            ):
                 raise ValueError(
                     'warmup_iters must be a non-negative integer,'
                     ' found {}'.format(self.warmup_iters)
@@ -71,7 +73,9 @@ class SamplerArgs(object):
                     'must run warmup iterations'
                 )
         if self.sampling_iters is not None:
-            if self.sampling_iters < 0 or not isinstance(self.sampling_iters, Integral):
+            if self.sampling_iters < 0 or not isinstance(
+                self.sampling_iters, Integral
+            ):
                 raise ValueError(
                     'sampling_iters must be a non-negative integer,'
                     ' found {}'.format(self.sampling_iters)
@@ -79,14 +83,16 @@ class SamplerArgs(object):
         if self.thin is not None:
             if self.thin < 1 or not isinstance(self.thin, Integral):
                 raise ValueError(
-                    'thin must be a positive integer greater than 0, found {}'.format(self.thin)
+                    'thin must be a positive integer greater than 0,'
+                    'found {}'.format(self.thin)
                 )
         if self.max_treedepth is not None:
-            if self.max_treedepth < 1 or not isinstance(self.max_treedepth, Integral):
+            if self.max_treedepth < 1 or not isinstance(
+                self.max_treedepth, Integral
+            ):
                 raise ValueError(
-                    'max_treedepth must be a positive integer greater than 0, found {}'.format(
-                        self.max_treedepth
-                    )
+                    'max_treedepth must be a positive integer greater than 0,'
+                    ' found {}'.format(self.max_treedepth)
                 )
         if self.step_size is not None:
             if isinstance(self.step_size, Real):
@@ -302,16 +308,17 @@ class VariationalArgs(object):
     VARIATIONAL_ALGOS = {'meanfield', 'fullrank'}
 
     def __init__(
-            self,
-            algorithm: str = None,
-            iter: int = None,
-            grad_samples: int = None,
-            elbo_samples: int = None,
-            eta: Real = None,
-            adapt_iter: int = None,
-            tol_rel_obj: Real = None,
-            eval_elbo: int = None,
-            output_samples: int = None) -> None:
+        self,
+        algorithm: str = None,
+        iter: int = None,
+        grad_samples: int = None,
+        elbo_samples: int = None,
+        eta: Real = None,
+        adapt_iter: int = None,
+        tol_rel_obj: Real = None,
+        eval_elbo: int = None,
+        output_samples: int = None,
+    ) -> None:
         self.algorithm = algorithm
         self.iter = iter
         self.grad_samples = grad_samples
@@ -342,13 +349,17 @@ class VariationalArgs(object):
                     ' found {}'.format(self.iter)
                 )
         if self.grad_samples is not None:
-            if self.grad_samples < 1 or not isinstance(self.grad_samples, Integral):
+            if self.grad_samples < 1 or not isinstance(
+                self.grad_samples, Integral
+            ):
                 raise ValueError(
                     'grad_samples must be a positive integer,'
                     ' found {}'.format(self.grad_samples)
                 )
         if self.elbo_samples is not None:
-            if self.elbo_samples < 1 or not isinstance(self.elbo_samples, Integral):
+            if self.elbo_samples < 1 or not isinstance(
+                self.elbo_samples, Integral
+            ):
                 raise ValueError(
                     'elbo_samples must be a positive integer,'
                     ' found {}'.format(self.elbo_samples)
@@ -366,7 +377,9 @@ class VariationalArgs(object):
                     ' found {}'.format(self.adapt_iter)
                 )
         if self.tol_rel_obj is not None:
-            if self.tol_rel_obj < 1 or not isinstance(self.tol_rel_obj, (Integral, Real)):
+            if self.tol_rel_obj < 1 or not isinstance(
+                self.tol_rel_obj, (Integral, Real)
+            ):
                 raise ValueError(
                     'tol_rel_obj must be a positive number,'
                     ' found {}'.format(self.tol_rel_obj)
@@ -378,7 +391,9 @@ class VariationalArgs(object):
                     ' found {}'.format(self.eval_elbo)
                 )
         if self.output_samples is not None:
-            if self.output_samples < 1 or not isinstance(self.output_samples, Integral):
+            if self.output_samples < 1 or not isinstance(
+                self.output_samples, Integral
+            ):
                 raise ValueError(
                     'output_samples must be a positive integer,'
                     ' found {}'.format(self.output_samples)
