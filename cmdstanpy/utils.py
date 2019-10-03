@@ -2,6 +2,7 @@
 Utility functions
 """
 import os
+from collections.abc import Sequence
 from numbers import Integral, Real
 
 try:
@@ -62,7 +63,14 @@ class MaybeDictToFilePath(object):
                     dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
-                jsondump(data_file, o)
+                if any(
+                    not item
+                    for item in o
+                    if isinstance(item, (Sequence, np.ndarray))
+                ):
+                    rdump(data_file, o)
+                else:
+                    jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(o, str):
@@ -325,8 +333,16 @@ def _rdump_array(key: str, val: np.ndarray) -> str:
 def jsondump(path: str, data: Dict) -> None:
     """Dump a dict of data to a JSON file."""
     for key, val in data.items():
-        if isinstance(val, np.ndarray) and val.size > 1:
-            data[key] = val.tolist()
+        if isinstance(val, np.ndarray):
+            val = val.tolist()
+            data[key] = val
+        if isinstance(val, Sequence) and not val:
+            raise ValueError(
+                'variable: {}, error: '
+                'empty array not allowed with JSON interface'.format(
+                    val
+                )
+            )
     with open(path, 'w') as fd:
         json.dump(data, fd)
 
@@ -335,18 +351,11 @@ def rdump(path: str, data: Dict) -> None:
     """Dump a dict of data to a R dump format file."""
     with open(path, 'w') as fd:
         for key, val in data.items():
-            if isinstance(val, np.ndarray) and val.size > 1:
-                line = _rdump_array(key, val)
-            elif isinstance(val, list) and len(val) > 1:
+            if isinstance(val, (np.ndarray, Sequence)):
                 line = _rdump_array(key, np.asarray(val))
             else:
-                try:
-                    val = val.flat[0]
-                except AttributeError:
-                    pass
                 line = '{} <- {}'.format(key, val)
-            fd.write(line)
-            fd.write('\n')
+            print(line, file=fd)
 
 
 def rload(fname: str) -> dict:
