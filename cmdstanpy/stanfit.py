@@ -14,6 +14,7 @@ from cmdstanpy.utils import (
     check_sampler_csv,
     scan_optimize_csv,
     scan_generated_quantities_csv,
+    scan_variational_csv,
     create_named_text_file,
     EXTENSION,
     cmdstan_path,
@@ -67,7 +68,7 @@ class RunSet(object):
         self._retcodes = [-1 for _ in range(chains)]
 
     def __repr__(self) -> str:
-        repr = 'StanFit(args={}, chains={}'.format(self._args, self._chains)
+        repr = 'RunSet(args={}, chains={}'.format(self._args, self._chains)
         repr = '{}\n csv_files={}\nconsole_files={})'.format(
             repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)
         )
@@ -194,13 +195,18 @@ class StanFit(object):
             )
         self.runset = runset
         self._draws = None
-        self._column_names = None
+        self._column_names = ()
         self._num_params = None  # metric dim(s)
         self._metric_type = None
         self._metric = None
         self._stepsize = None
         self._sample = None
         self._is_fixed_param = is_fixed_param
+
+    @property
+    def chains(self) -> int:
+        """Number of chains."""
+        return self.runset.chains
 
     @property
     def draws(self) -> int:
@@ -453,8 +459,8 @@ class StanMLE(object):
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._column_names = None
-        self._mle = None
+        self._column_names = ()
+        self._mle = {}
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
         meta = scan_optimize_csv(sample_csv_0)
@@ -517,6 +523,11 @@ class StanQuantities(object):
         self._column_names = None
 
     @property
+    def chains(self) -> int:
+        """Number of chains."""
+        return self.runset.chains
+
+    @property
     def column_names(self) -> Tuple[str, ...]:
         """
         Names of generated quantities of interest.
@@ -555,6 +566,85 @@ class StanQuantities(object):
                 pd.read_csv(self.runset.csv_files[chain], comment='#')
             )
         self._generated_quantities = pd.concat(df_list).values
+
+    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+        """
+        Moves csvfiles to specified directory using specified basename,
+        appending suffix '-<id>.csv' to each.
+
+        :param dir: directory path
+        :param basename:  base filename
+        """
+        self.runset.save_csvfiles(dir, basename)
+
+
+class StanVariational(object):
+    """
+    Container for outputs from CmdStan variational run.
+    """
+
+    def __init__(self, runset: RunSet) -> None:
+        """Initialize object."""
+        if not (runset.method == Method.VARIATIONAL):
+            raise RuntimeError(
+                'Wrong runset method, expecting variational inference, '
+                'found method {}'.format(runset.method)
+            )
+        self.runset = runset
+        self._column_names = ()
+        self._variational_mean = {}
+        self._output_samples = None
+
+    def _set_variational_attrs(self, sample_csv_0: str) -> None:
+        meta = scan_variational_csv(sample_csv_0)
+        self._column_names = meta['column_names']
+        self._variational_mean = meta['variational_mean']
+        self._output_samples = meta['output_samples']
+
+    @property
+    def columns(self) -> int:
+        """
+        Total number of information items returned by sampler.
+        Includes approximation information and names of model parameters
+        and computed quantities.
+        """
+        return len(self._column_names)
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """
+        Names of information items returned by sampler for each draw.
+        Includes approximation information and names of model parameters
+        and computed quantities.
+        """
+        return self._column_names
+
+    @property
+    def variational_params_np(self) -> np.array:
+        """Returns inferred parameter means as numpy array."""
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return self._variational_mean
+
+    @property
+    def variational_params_pd(self) -> pd.DataFrame:
+        """Returns inferred parameter means as pandas DataFrame."""
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return pd.DataFrame([self._variational_mean], columns=self.column_names)
+
+    @property
+    def variational_params_dict(self) -> OrderedDict:
+        """Returns inferred parameter means as Dict."""
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return OrderedDict(zip(self.column_names, self._variational_mean))
+
+    def output_samples(self) -> np.array:
+        """Returns the set of approximate posterior output draws."""
+        if self._output_samples is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return self._output_samples
 
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
         """

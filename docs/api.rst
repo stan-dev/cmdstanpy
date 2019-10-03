@@ -31,3 +31,9 @@ StanQuantities
 .. autoclass:: cmdstanpy.StanQuantities
    :members:
    
+StanVariational
+===============
+
+.. autoclass:: cmdstanpy.StanVariational
+   :members:
+

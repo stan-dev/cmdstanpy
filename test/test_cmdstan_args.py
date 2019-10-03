@@ -9,6 +9,7 @@ from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
+    VariationalArgs
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -243,6 +244,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
     def test_no_chains(self):
         exe = os.path.join(datafiles_path, 'bernoulli')
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
 
         sampler_args = SamplerArgs()
@@ -252,6 +254,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe=exe,
                 chain_ids=None,
                 seed=[1, 2, 3],
+                data=jdata,
                 inits=jinits,
                 method_args=sampler_args
             )
@@ -261,6 +264,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_name='bernoulli',
                 model_exe=exe,
                 chain_ids=None,
+                data=jdata,
                 inits=[jinits],
                 method_args=sampler_args
             )
@@ -504,6 +508,80 @@ class GenerateQuantitesTest(unittest.TestCase):
         cmd = args.compose(idx=1, cmd='')
         self.assertIn('method=generate_quantities', cmd)
         self.assertIn('fitted_params={}'.format(csv_files[0]), cmd)
+
+class VariationalTest(unittest.TestCase):
+    def test_args_variational(self):
+        args = VariationalArgs()
+        self.assertTrue(True)
+
+        args = VariationalArgs(output_samples=1)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd='')
+        self.assertIn('method=variational', cmd)
+        self.assertIn('output_samples=1', cmd)
+
+        args = VariationalArgs(tol_rel_obj=1)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd='')
+        self.assertIn('method=variational', cmd)
+        self.assertIn('tol_rel_obj=1', cmd)
+
+    def test_args_bad(self):
+        args = VariationalArgs(algorithm='no_such_algo')
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(iter=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(iter=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(grad_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(grad_samples=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(elbo_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(elbo_samples=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eta=-0.00003)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(adapt_iter=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(adapt_iter=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(tol_rel_obj=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eval_elbo=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eval_elbo=1.5)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(output_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
 
 
 if __name__ == '__main__':

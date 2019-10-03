@@ -8,6 +8,7 @@ import logging
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
+from numbers import Real
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
@@ -16,8 +17,15 @@ from cmdstanpy.cmdstan_args import (
     SamplerArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
+    VariationalArgs
 )
-from cmdstanpy.stanfit import RunSet, StanFit, StanMLE, StanQuantities
+from cmdstanpy.stanfit import (
+    RunSet,
+    StanFit,
+    StanMLE,
+    StanQuantities,
+    StanVariational
+)
 from cmdstanpy.utils import (
     do_command,
     EXTENSION,
@@ -241,10 +249,9 @@ class Model(object):
             * string - pathname to a JSON or Rdump data file.
 
         :param csv_basename:  A path or file name which will be used as the
-            basename for the sampler output files.  The csv output files
-            for each chain are written to file ``<basename>-0.csv``
-            and the console output and error messages are written to file
-            ``<basename>-0.txt``.
+            basename for the CmdStan output files.  The csv output files
+            are written to file ``<basename>-0.csv`` and the console output
+            and error messages are written to file ``<basename>-0.txt``.
 
         :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
 
@@ -479,11 +486,11 @@ class Model(object):
                 # progress bar updates - 100 per warmup, sampling
                 if fixed_param or not adapt_engaged or warmup_iters == 0:
                     num_updates = 100
+                    w_iters = 0
                 else:
                     num_updates = 200
-                w_iters = warmup_iters
-                if w_iters is None:
-                    w_iters = 1000
+                    if warmup_iters is None:
+                        w_iters = 1000
                 s_iters = sampling_iters
                 if s_iters is None:
                     s_iters = 1000
@@ -676,6 +683,117 @@ class Model(object):
             quantities = StanQuantities(runset)
             quantities._set_attrs_gq_csv_files(csv_files[0])
         return quantities
+
+    def variational(
+        self,
+        data: Union[Dict, str] = None,
+        seed: int = None,
+        inits: float = None,
+        csv_basename: str = None,
+        algorithm: str = None,
+        iter: int = None,
+        grad_samples: int = None,
+        elbo_samples: int = None,
+        eta: Real = None,
+        adapt_iter: int = None,
+        tol_rel_obj: Real = None,
+        eval_elbo: int = None,
+        output_samples: int = None,
+    ) -> StanVariational:
+        """
+        Run CmdStan's variational inference algorithm to approximate
+        the posterior distribution of the model conditioned on the data.
+
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :param seed: The seed for random number generator or a list of per-chain
+            seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
+            numpy.random.RandomState() is used to generate a seed which will be
+            used for all chains. When the same seed is used across all chains,
+            the chain-id is used to advance the RNG to avoid dependent samples.
+
+        :param inits:  Specifies how the sampler initializes parameter values.
+            Initializiation is uniform random on a range centered on 0 with
+            default range of 2. Specifying a single number ``n > 0`` changes
+            the initialization range to [-n, n].
+
+        :param csv_basename:  A path or file name which will be used as the
+            basename for the CmdStan output files.  The csv output files
+            are written to file ``<basename>-0.csv`` and the console output
+            and error messages are written to file ``<basename>-0.txt``.
+
+        :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
+
+        :param iter: Maximum number of ADVI iterations.
+
+        :param grad_samples: Number of MC draws for computing the gradient.
+
+        :param elbo_samples: Number of MC draws for estimate of ELBO.
+
+        :param eta: Stepsize scaling parameter.
+
+        :param adapt_iter: Number of iterations for eta adaptation.
+
+        :param tol_rel_obj: Relative tolerance parameter for convergence.
+
+        :param eval_elbo: Number of interations between ELBO evaluations.
+
+        :param output_samples: Number of approximate posterior output draws
+            to save.
+
+        :return: StanVariational object
+        """
+        variational_args = VariationalArgs(
+            algorithm=algorithm,
+            iter=iter,
+            grad_samples=grad_samples,
+            elbo_samples=elbo_samples,
+            eta=eta,
+            adapt_iter=adapt_iter,
+            tol_rel_obj=tol_rel_obj,
+            eval_elbo=eval_elbo,
+            output_samples=output_samples,
+        )
+
+        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=None,
+                data=_data,
+                seed=seed,
+                inits=_inits,
+                output_basename=csv_basename,
+                method_args=variational_args,
+            )
+
+            dummy_chain_id = 0
+            runset = RunSet(args=args, chains=1)
+            self._run_cmdstan(runset, dummy_chain_id)
+
+        # treat failure to converge as failure
+        transcript_file = runset.console_files[dummy_chain_id]
+        valid = True
+        pat = re.compile(r'The algorithm may not have converged.', re.M)
+        with open(transcript_file, 'r') as transcript:
+            contents = transcript.read()
+            errors = re.findall(pat, contents)
+            if len(errors) > 0:
+                valid = False
+        if not valid:
+            raise RuntimeError('The algorithm may not have converged.')
+        if not runset._check_retcodes():
+            msg = 'Error during variational inference'
+            if runset._retcode(dummy_chain_id) != 0:
+                msg = '{}, error code {}'.format(
+                    msg, runset._retcode(dummy_chain_id)
+                )
+                raise RuntimeError(msg)
+        vi = StanVariational(runset)
+        vi._set_variational_attrs(runset.csv_files[0])
+        return vi
 
     def _run_cmdstan(
         self, runset: RunSet, idx: int = 0, pbar: List[Any] = None

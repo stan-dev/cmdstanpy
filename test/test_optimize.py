@@ -20,20 +20,21 @@ datafiles_path = os.path.join(here, 'data')
 class StanMLETest(unittest.TestCase):
     def test_set_mle_attrs(self):
         stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
-        exe = os.path.join(datafiles_path, 'optimize', 'rosenbrock')
+        model = Model(stan_file=stan)
+        model.compile()
         no_data = {}
         args = OptimizeArgs(algorithm='Newton')
         cmdstan_args = CmdStanArgs(
-            model_name='rosenbrock',
-            model_exe=exe,
+            model_name=model.name,
+            model_exe=model.exe_file,
             chain_ids=None,
             data=no_data,
             method_args=args,
         )
         runset = RunSet(args=cmdstan_args, chains=1)
         mle = StanMLE(runset)
-        self.assertEqual(mle._column_names,None)
-        self.assertEqual(mle._mle,None)
+        self.assertEqual(mle._column_names,())
+        self.assertEqual(mle._mle,{})
 
         output = os.path.join(datafiles_path, 'optimize', 'rosenbrock_mle.csv')
         mle._set_mle_attrs(output)
@@ -45,9 +46,9 @@ class StanMLETest(unittest.TestCase):
 
 class OptimizeTest(unittest.TestCase):
     def test_optimize_good(self):
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        model = Model(stan_file=stan, exe_file=exe)
+        model = Model(stan_file=stan)
+        model.compile()
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinit = os.path.join(datafiles_path, 'bernoulli.init.json')
         mle = model.optimize(
