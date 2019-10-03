@@ -186,7 +186,7 @@ class StanFit(object):
     Container for outputs from CmdStan sampler run.
     """
 
-    def __init__(self, runset: RunSet) -> None:
+    def __init__(self, runset: RunSet, is_fixed_param: bool = False) -> None:
         """Initialize object."""
         if not (runset.method == Method.SAMPLE):
             raise RuntimeError(
@@ -201,6 +201,7 @@ class StanFit(object):
         self._metric = None
         self._stepsize = None
         self._sample = None
+        self._is_fixed_param = is_fixed_param
 
     @property
     def chains(self) -> int:
@@ -231,20 +232,29 @@ class StanFit(object):
 
     @property
     def metric_type(self) -> str:
-        """Metric type, either 'diag_e' or 'dense_e'."""
+        """
+        Metric type used for adaptation, either 'diag_e' or 'dense_e'.
+        When sampler algorithm 'fixed_param' is specified, metric_type is None.
+        """
         return self._metric_type
 
     @property
     def metric(self) -> np.ndarray:
-        """Metric used by sampler for each chain."""
-        if self._metric is None:
+        """
+        Metric used by sampler for each chain.
+        When sampler algorithm 'fixed_param' is specified, metric is None.
+        """
+        if not self._is_fixed_param and self._metric is None:
             self._assemble_sample()
         return self._metric
 
     @property
     def stepsize(self) -> np.ndarray:
-        """Stepsize used by sampler for each chain."""
-        if self._stepsize is None:
+        """
+        Stepsize used by sampler for each chain.
+        When sampler algorithm 'fixed_param' is specified, stepsize is None.
+        """
+        if not self._is_fixed_param and self._stepsize is None:
             self._assemble_sample()
         return self._stepsize
 
@@ -269,9 +279,13 @@ class StanFit(object):
         dzero = {}
         for i in range(self.runset.chains):
             if i == 0:
-                dzero = check_sampler_csv(self.runset.csv_files[i])
+                dzero = check_sampler_csv(
+                    self.runset.csv_files[i], self._is_fixed_param
+                )
             else:
-                d = check_sampler_csv(self.runset.csv_files[i])
+                d = check_sampler_csv(
+                    self.runset.csv_files[i], self._is_fixed_param
+                )
                 for key in dzero:
                     if key != 'id' and dzero[key] != d[key]:
                         raise ValueError(
@@ -285,60 +299,59 @@ class StanFit(object):
                         )
         self._draws = dzero['draws']
         self._column_names = dzero['column_names']
-        self._num_params = dzero['num_params']
-        self._metric_type = dzero.get('metric')
+        if not self._is_fixed_param:
+            self._num_params = dzero['num_params']
+            self._metric_type = dzero.get('metric')
 
     def _assemble_sample(self) -> None:
         """
         Allocates and populates the stepsize, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
-        if not (
-            self._stepsize is None
-            and self._metric is None
-            and self._sample is None
-        ):
+        if self._sample is not None:
             return
-        self._stepsize = np.empty(self.runset.chains, dtype=float)
-        if self._metric_type == 'diag_e':
-            self._metric = np.empty(
-                (self.runset.chains, self._num_params), dtype=float
-            )
-        else:
-            self._metric = np.empty(
-                (self.runset.chains, self._num_params, self._num_params),
-                dtype=float,
-            )
         self._sample = np.empty(
             (self._draws, self.runset.chains, len(self._column_names)),
             dtype=float,
             order='F',
         )
+        if not self._is_fixed_param:
+            self._stepsize = np.empty(self.runset.chains, dtype=float)
+            if self._metric_type == 'diag_e':
+                self._metric = np.empty(
+                    (self.runset.chains, self._num_params), dtype=float
+                )
+            else:
+                self._metric = np.empty(
+                    (self.runset.chains, self._num_params, self._num_params),
+                    dtype=float,
+                )
         for chain in range(self.runset.chains):
             with open(self.runset.csv_files[chain], 'r') as fp:
                 # skip initial comments, reads thru column header
                 line = fp.readline().strip()
                 while len(line) > 0 and line.startswith('#'):
                     line = fp.readline().strip()
-                # skip warmup draws, if any, read to adaptation msg
-                line = fp.readline().strip()
-                if line != '# Adaptation terminated':
-                    while line != '# Adaptation terminated':
-                        line = fp.readline().strip()
-                line = fp.readline().strip()  # stepsize
-                label, stepsize = line.split('=')
-                self._stepsize[chain] = float(stepsize.strip())
-                line = fp.readline().strip()  # metric header
-                # process metric
-                if self._metric_type == 'diag_e':
-                    line = fp.readline().lstrip(' #\t')
-                    xs = line.split(',')
-                    self._metric[chain, :] = [float(x) for x in xs]
-                else:
-                    for i in range(self._num_params):
+                if not self._is_fixed_param:
+                    # skip warmup draws, if any, read to adaptation msg
+                    line = fp.readline().strip()
+                    if line != '# Adaptation terminated':
+                        while line != '# Adaptation terminated':
+                            line = fp.readline().strip()
+                    line = fp.readline().strip()  # stepsize
+                    label, stepsize = line.split('=')
+                    self._stepsize[chain] = float(stepsize.strip())
+                    line = fp.readline().strip()  # metric header
+                    # process metric
+                    if self._metric_type == 'diag_e':
                         line = fp.readline().lstrip(' #\t')
                         xs = line.split(',')
-                        self._metric[chain, i, :] = [float(x) for x in xs]
+                        self._metric[chain, :] = [float(x) for x in xs]
+                    else:
+                        for i in range(self._num_params):
+                            line = fp.readline().lstrip(' #\t')
+                            xs = line.split(',')
+                            self._metric[chain, i, :] = [float(x) for x in xs]
                 # process draws
                 for i in range(self._draws):
                     line = fp.readline().lstrip(' #\t')

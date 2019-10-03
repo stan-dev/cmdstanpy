@@ -2,6 +2,7 @@
 Utility functions
 """
 import os
+from collections.abc import Sequence
 from numbers import Integral, Real
 
 try:
@@ -63,7 +64,14 @@ class MaybeDictToFilePath(object):
                     dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
-                jsondump(data_file, o)
+                if any(
+                    not item
+                    for item in o
+                    if isinstance(item, (Sequence, np.ndarray))
+                ):
+                    rdump(data_file, o)
+                else:
+                    jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(o, str):
@@ -326,8 +334,16 @@ def _rdump_array(key: str, val: np.ndarray) -> str:
 def jsondump(path: str, data: Dict) -> None:
     """Dump a dict of data to a JSON file."""
     for key, val in data.items():
-        if isinstance(val, np.ndarray) and val.size > 1:
-            data[key] = val.tolist()
+        if isinstance(val, np.ndarray):
+            val = val.tolist()
+            data[key] = val
+        if isinstance(val, Sequence) and not val:
+            raise ValueError(
+                'variable: {}, error: '
+                'empty array not allowed with JSON interface'.format(
+                    val
+                )
+            )
     with open(path, 'w') as fd:
         json.dump(data, fd)
 
@@ -336,18 +352,11 @@ def rdump(path: str, data: Dict) -> None:
     """Dump a dict of data to a R dump format file."""
     with open(path, 'w') as fd:
         for key, val in data.items():
-            if isinstance(val, np.ndarray) and val.size > 1:
-                line = _rdump_array(key, val)
-            elif isinstance(val, list) and len(val) > 1:
+            if isinstance(val, (np.ndarray, Sequence)):
                 line = _rdump_array(key, np.asarray(val))
             else:
-                try:
-                    val = val.flat[0]
-                except AttributeError:
-                    pass
                 line = '{} <- {}'.format(key, val)
-            fd.write(line)
-            fd.write('\n')
+            print(line, file=fd)
 
 
 def rload(fname: str) -> dict:
@@ -414,9 +423,9 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     return val
 
 
-def check_sampler_csv(path: str) -> Dict:
+def check_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    meta = scan_sampler_csv(path)
+    meta = scan_sampler_csv(path, is_fixed_param)
     draws_spec = int(meta.get('num_samples', 1000))
     if 'thin' in meta:
         draws_spec = int(math.ceil(draws_spec / meta['thin']))
@@ -429,15 +438,16 @@ def check_sampler_csv(path: str) -> Dict:
     return meta
 
 
-def scan_sampler_csv(path: str) -> Dict:
+def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     """Process sampler stan_csv output file line by line."""
     dict = {}
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
-        lineno = scan_warmup(fp, dict, lineno)
-        lineno = scan_metric(fp, dict, lineno)
+        if not is_fixed_param:
+            lineno = scan_warmup(fp, dict, lineno)
+            lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
     return dict
 

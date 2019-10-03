@@ -295,7 +295,7 @@ class Model(object):
     def sample(
         self,
         data: Union[Dict, str] = None,
-        chains: int = 4,
+        chains: Union[int, None] = None,
         cores: Union[int, None] = None,
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
@@ -309,6 +309,7 @@ class Model(object):
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = True,
         adapt_delta: float = None,
+        fixed_param: bool = False,
         csv_basename: str = None,
         show_progress: Union[bool, str] = False,
     ) -> StanFit:
@@ -405,6 +406,15 @@ class Model(object):
             It improves the effective sample size, but may increase the time
             per iteration.
 
+        :param fixed_param: Call CmdStan with argument "algorithm=fixed_param"
+            which runs the sampler without updating the Markov Chain, so that
+            the values of all parameters and transformed parameters are constant
+            across all draws and only those values in the generated quantities
+            block which are produced by RNG functions may change.  This provides
+            a way to use Stan programs to generate simulated data via the
+            generated quantities block.  This option must be used when the
+            parameters block is empty.
+
         :param csv_basename: A path or file name which will be used as the
             basename for the sampler output files.  The csv output files
             for each chain are written to file ``<basename>-<chain_id>.csv``
@@ -417,6 +427,12 @@ class Model(object):
 
         :return: StanFit object
         """
+
+        if chains is None:
+            if fixed_param:
+                chains = 1
+            else:
+                chains = 4
         if chains < 1:
             raise ValueError(
                 'chains must be a positive integer value, found {}'.format(
@@ -467,22 +483,21 @@ class Model(object):
         if show_progress:
             try:
                 import tqdm
-
-                # need 200 progress bar updates - 100 per warmup, sampling
-                # refresh = total iters * (1/200)
-                default_warmup = 1000
-                default_sampling = 1000
-                default_total = default_warmup + default_sampling
-                if warmup_iters is None and sampling_iters is None:
-                    refresh = int(default_total * 0.005)
-                elif warmup_iters is None:
-                    refresh = int((default_warmup + sampling_iters) * 0.005)
-                elif sampling_iters is None:
-                    refresh = int((warmup_iters + default_sampling) * 0.005)
+                # progress bar updates - 100 per warmup, sampling
+                if fixed_param or not adapt_engaged or warmup_iters == 0:
+                    num_updates = 100
+                    w_iters = 0
                 else:
-                    refresh = max(
-                        int((warmup_iters + sampling_iters) * 0.005), 1
-                    )
+                    num_updates = 200
+                    if warmup_iters is None:
+                        w_iters = 1000
+                s_iters = sampling_iters
+                if s_iters is None:
+                    s_iters = 1000
+                refresh = max(
+                    int((s_iters + w_iters) // num_updates),
+                    1,
+                )
                 # disable logger for console (temporary) - use tqdm
                 self._logger.propagate = False
             except ImportError:
@@ -507,6 +522,7 @@ class Model(object):
             step_size=step_size,
             adapt_engaged=adapt_engaged,
             adapt_delta=adapt_delta,
+            fixed_param=fixed_param
         )
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
@@ -594,7 +610,7 @@ class Model(object):
                             msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
-            stanfit = StanFit(runset)
+            stanfit = StanFit(runset, fixed_param)
             stanfit._validate_csv_files()
         return stanfit
 

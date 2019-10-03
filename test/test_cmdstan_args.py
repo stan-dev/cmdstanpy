@@ -125,6 +125,30 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
+        args = SamplerArgs(warmup_iters=100, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(save_warmup=True, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(max_treedepth=12, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(metric='dense', fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(step_size=0.5, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_delta=0.88, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
     def test_adapt(self):
         args = SamplerArgs(adapt_engaged=False)
         args.validate(chains=4)
@@ -196,6 +220,12 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=4)
 
+    def test_fixed_param(self):
+        args = SamplerArgs(fixed_param=True)
+        args.validate(chains=1)
+        cmd = args.compose(0, '')
+        self.assertIn('method=sample algorithm=fixed_param', cmd)
+
 
 class CmdStanArgsTest(unittest.TestCase):
     def test_compose(self):
@@ -216,17 +246,8 @@ class CmdStanArgsTest(unittest.TestCase):
         exe = os.path.join(datafiles_path, 'bernoulli')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
-        args = OptimizeArgs(algorithm='Newton')
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe=exe,
-            chain_ids=None,
-            data=jdata,
-            inits=jinits,
-            method_args=args,
-        )
-        self.assertIn('init=', cmdstan_args.compose_command(None, 'out.csv'))
 
+        sampler_args = SamplerArgs()
         with self.assertRaises(ValueError):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -235,7 +256,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 seed=[1, 2, 3],
                 data=jdata,
                 inits=jinits,
-                method_args=args,
+                method_args=sampler_args
             )
 
         with self.assertRaises(ValueError):
@@ -245,7 +266,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 chain_ids=None,
                 data=jdata,
                 inits=[jinits],
-                method_args=args,
+                method_args=sampler_args
             )
 
     def test_args_good(self):
