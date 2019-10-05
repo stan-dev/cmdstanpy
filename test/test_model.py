@@ -96,14 +96,6 @@ class ModelTest(unittest.TestCase):
         model2.compile()
         self.assertEqual(exe_time,os.path.getmtime(model2.exe_file))
 
-
-        # test overwrite with existing exe - timestamp on exe updated
-        self.assertTrue(os.path.exists(exe))
-        exe_time = os.path.getmtime(exe)
-        model3 = Model(stan_file=stan, exe_file=exe)
-        model3.compile(overwrite=True)
-        self.assertNotEqual(exe_time,os.path.getmtime(model3.exe_file))
-
         stan = os.path.join(datafiles_path, 'bernoulli_include.stan')
         exe = os.path.join(datafiles_path, 'bernoulli_include' + EXTENSION)
         here = os.path.dirname(os.path.abspath(__file__))

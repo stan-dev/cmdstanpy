@@ -120,7 +120,6 @@ class Model(object):
     def compile(
         self,
         opt_lvl: int = 3,
-        overwrite: bool = False,
         include_paths: List[str] = None,
     ) -> None:
         """
@@ -133,18 +132,11 @@ class Model(object):
             Higher optimization levels increase runtime performance but will
             take longer to compile.
 
-        :param overwrite: When True, existing executable will be overwritten.
-            Defaults to False.
-
         :param include_paths: List of paths to directories where Stan should
             look for files to include in compilation of the C++ executable.
         """
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
-
-        if self._exe_file is not None and not overwrite:
-            self._logger.warning('model is already compiled')
-            return
 
         compilation_failed = False
 
@@ -156,14 +148,14 @@ class Model(object):
             if os.path.exists(exe_file):
                 src_time = os.path.getmtime(self._stan_file)
                 exe_time = os.path.getmtime(exe_file)
-                if exe_time > src_time and not overwrite:
+                if exe_time > src_time:
                     do_compile = False
                     self._logger.info('found newer exe file, not recompiling')
 
             if do_compile:
                 hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
                 hpp_file = Path(hpp_file).as_posix()
-                if overwrite or not os.path.exists(hpp_file):
+                if not os.path.exists(hpp_file):
                     self._logger.info('stan to c++ (%s)', hpp_file)
                     stanc_path = os.path.join(
                         cmdstan_path(), 'bin', 'stanc' + EXTENSION
