@@ -17,14 +17,14 @@ from cmdstanpy.cmdstan_args import (
     SamplerArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
-    VariationalArgs
+    VariationalArgs,
 )
 from cmdstanpy.stanfit import (
     RunSet,
     StanFit,
     StanMLE,
     StanQuantities,
-    StanVariational
+    StanVariational,
 )
 from cmdstanpy.utils import (
     do_command,
@@ -149,69 +149,79 @@ class Model(object):
         compilation_failed = False
 
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
-            hpp_file = Path(hpp_file).as_posix()
-            if overwrite or not os.path.exists(hpp_file):
-                self._logger.info('stan to c++ (%s)', hpp_file)
-                stanc_path = os.path.join(
-                    cmdstan_path(), 'bin', 'stanc' + EXTENSION
-                )
-                stanc_path = Path(stanc_path).as_posix()
-                cmd = [
-                    stanc_path,
-                    '--o={}'.format(hpp_file),
-                    Path(stan_file).as_posix(),
-                ]
-                if include_paths is not None:
-                    bad_paths = [
-                        d for d in include_paths if not os.path.exists(d)
-                    ]
-                    if any(bad_paths):
-                        raise Exception(
-                            'invalid include paths: {}'.format(
-                                ', '.join(bad_paths)
-                            )
-                        )
-                    cmd.append(
-                        '--include_paths='
-                        + ','.join((Path(p).as_posix() for p in include_paths))
-                    )
-
-                do_command(cmd, logger=self._logger)
-                if not os.path.exists(hpp_file):
-                    raise Exception('syntax error'.format(stan_file))
-
             exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
             exe_file = Path(exe_file).as_posix()
             exe_file += EXTENSION
-            make = os.getenv('MAKE', 'make')
-            cmd = [make, 'O={}'.format(opt_lvl), exe_file]
-            self._logger.info('compiling c++')
-            try:
-                do_command(cmd, cmdstan_path(), self._logger)
-            except Exception as e:
-                self._logger.error('make cmd failed %s', e)
-                compilation_failed = True
-            if is_copied and not compilation_failed:
+            do_compile = True
+            if os.path.exists(exe_file):
+                src_time = os.path.getmtime(self._stan_file)
+                exe_time = os.path.getmtime(exe_file)
+                if exe_time > src_time and not overwrite:
+                    do_compile = False
+                    self._logger.info('found newer exe file, not recompiling')
 
-                original_target_dir = os.path.dirname(self._stan_file)
-                # reconstruct the output file name
-                new_exec_name = (
-                    os.path.basename(os.path.splitext(self._stan_file)[0])
-                    + EXTENSION
-                )
+            if do_compile:
+                hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
+                hpp_file = Path(hpp_file).as_posix()
+                if overwrite or not os.path.exists(hpp_file):
+                    self._logger.info('stan to c++ (%s)', hpp_file)
+                    stanc_path = os.path.join(
+                        cmdstan_path(), 'bin', 'stanc' + EXTENSION
+                    )
+                    stanc_path = Path(stanc_path).as_posix()
+                    cmd = [
+                        stanc_path,
+                        '--o={}'.format(hpp_file),
+                        Path(stan_file).as_posix(),
+                    ]
+                    if include_paths is not None:
+                        bad_paths = [
+                            d for d in include_paths if not os.path.exists(d)
+                        ]
+                        if any(bad_paths):
+                            raise Exception(
+                                'invalid include paths: {}'.format(
+                                    ', '.join(bad_paths)
+                                )
+                            )
+                        cmd.append(
+                            '--include_paths='
+                            + ','.join(
+                                (Path(p).as_posix() for p in include_paths)
+                            )
+                        )
+                    try:
+                        do_command(cmd, logger=self._logger)
+                    except Exception as e:
+                        self._logger.error('file {}, {}'.format(stan_file, e))
+                        compilation_failed = True
 
-                self._exe_file = os.path.join(
-                    original_target_dir, new_exec_name
-                )
-                # copy the generated file back to the original directory
-                shutil.copy(exe_file, self._exe_file)
-            elif not compilation_failed:
-                self._exe_file = exe_file
-        if compilation_failed:
-            self._logger.error('model compilation failed')
-        else:
-            self._logger.info('compiled model file: %s', self._exe_file)
+                if not compilation_failed:
+                    make = os.getenv('MAKE', 'make')
+                    cmd = [make, 'O={}'.format(opt_lvl), exe_file]
+                    self._logger.info('compiling c++')
+                    try:
+                        do_command(cmd, cmdstan_path(), self._logger)
+                    except Exception as e:
+                        self._logger.error('make cmd failed %s', e)
+                        compilation_failed = True
+
+            if not compilation_failed:
+                if is_copied:
+                    original_target_dir = os.path.dirname(self._stan_file)
+                    new_exec_name = (
+                        os.path.basename(os.path.splitext(self._stan_file)[0])
+                        + EXTENSION
+                        )
+                    self._exe_file = os.path.join(
+                        original_target_dir, new_exec_name
+                        )
+                    shutil.copy(exe_file, self._exe_file)
+                else:
+                    self._exe_file = exe_file
+                self._logger.info('compiled model file: %s', self._exe_file)
+            else:
+                self._logger.error('model compilation failed')
 
     def optimize(
         self,
@@ -483,6 +493,7 @@ class Model(object):
         if show_progress:
             try:
                 import tqdm
+
                 # progress bar updates - 100 per warmup, sampling
                 if fixed_param or not adapt_engaged or warmup_iters == 0:
                     num_updates = 100
@@ -494,10 +505,7 @@ class Model(object):
                 s_iters = sampling_iters
                 if s_iters is None:
                     s_iters = 1000
-                refresh = max(
-                    int((s_iters + w_iters) // num_updates),
-                    1,
-                )
+                refresh = max(int((s_iters + w_iters) // num_updates), 1)
                 # disable logger for console (temporary) - use tqdm
                 self._logger.propagate = False
             except ImportError:
@@ -522,7 +530,7 @@ class Model(object):
             step_size=step_size,
             adapt_engaged=adapt_engaged,
             adapt_delta=adapt_delta,
-            fixed_param=fixed_param
+            fixed_param=fixed_param,
         )
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
