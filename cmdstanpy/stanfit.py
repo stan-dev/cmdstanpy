@@ -69,8 +69,8 @@ class RunSet(object):
 
     def __repr__(self) -> str:		
          repr = 'RunSet: chains={}'.format(self._chains)		
-         repr = '{}\n cmd: {}'.format(repr, self._cmds[0])
-         repr = '{}\n csv_files={}\n console_files={}'.format(		
+         repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
+         repr = '{}\n csv_files:\n\t{}\n console_files:\n\t{}'.format(		
              repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)		
          )		
          return repr
