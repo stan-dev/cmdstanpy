@@ -67,13 +67,6 @@ class RunSet(object):
         ]
         self._retcodes = [-1 for _ in range(chains)]
 
-    def __repr__(self) -> str:
-        repr = 'RunSet(args={}, chains={}'.format(self._args, self._chains)
-        repr = '{}\n csv_files={}\nconsole_files={})'.format(
-            repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)
-        )
-        return repr
-
     @property
     def model(self) -> str:
         """Stan model name."""
@@ -181,7 +174,7 @@ class RunSet(object):
                 ) from e
 
 
-class StanFit(object):
+class StanMCMC(object):
     """
     Container for outputs from CmdStan sampler run.
     """
@@ -202,6 +195,19 @@ class StanFit(object):
         self._stepsize = None
         self._sample = None
         self._is_fixed_param = is_fixed_param
+
+    def __repr__(self) -> str:
+        repr = 'StanMCMC: model={} chains={}{}'.format(
+            self.runset.model,
+            self.runset.chains,
+            self.runset._args.method_args.compose(0, ''),
+        )
+        repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
 
     @property
     def chains(self) -> int:
@@ -462,6 +468,17 @@ class StanMLE(object):
         self._column_names = ()
         self._mle = {}
 
+    def __repr__(self) -> str:
+        repr = 'StanMLE: model={}{}'.format(
+            self.runset.model, self.runset._args.method_args.compose(0, '')
+        )
+        repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
+
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
         meta = scan_optimize_csv(sample_csv_0)
         self._column_names = meta['column_names']
@@ -521,6 +538,19 @@ class StanQuantities(object):
             )
         self.runset = runset
         self._column_names = None
+
+    def __repr__(self) -> str:
+        repr = 'StanQuantities: model={} chains={}{}'.format(
+            self.runset.model,
+            self.runset.chains,
+            self.runset._args.method_args.compose(0, ''),
+        )
+        repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
 
     @property
     def chains(self) -> int:
@@ -594,6 +624,17 @@ class StanVariational(object):
         self._column_names = ()
         self._variational_mean = {}
         self._output_samples = None
+
+    def __repr__(self) -> str:
+        repr = 'StanVariational: model={}{}'.format(
+            self.runset.model, self.runset._args.method_args.compose(0, '')
+        )
+        repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
 
     def _set_variational_attrs(self, sample_csv_0: str) -> None:
         meta = scan_variational_csv(sample_csv_0)

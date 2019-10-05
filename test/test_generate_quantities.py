@@ -49,6 +49,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertEqual(
             bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
         )
+        self.assertIn('StanQuantities: model=bernoulli_ppc', bern_gqs.__repr__())
+        self.assertIn('method=generate_quantities', bern_gqs.__repr__())
 
         # check results - ouput files, quantities of interest, draws
         self.assertEqual(bern_gqs.runset.chains, 4)

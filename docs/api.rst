@@ -13,10 +13,10 @@ Model
 .. autoclass:: cmdstanpy.Model
    :members:
 
-StanFit
+StanMCMC
 =======
 
-.. autoclass:: cmdstanpy.StanFit
+.. autoclass:: cmdstanpy.StanMCMC
    :members:
 
 StanMLE
