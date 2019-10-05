@@ -5,6 +5,9 @@ Getting Started
 Installation
 ____________
 
+Install package CmdStanPy
+-------------------------
+
 CmdStanPy is a pure-Python package which can be installed from PyPI
 
 .. code-block:: bash
@@ -24,23 +27,64 @@ To install CmdStanPy with all the optional packages
 
     pip install --upgrade cmdstanpy[all]
 
+*Note for PyStan users:*  PyStan and CmdStanPy should be installed in separate environments.
+If you already have PyStan installed, you should take care to install CmdStanPy in its own
+virtual environment.
+
+User can install optional packages with pip with the CmdStanPy installation
+
+.. code-block:: bash
+
+    pip install --upgrade cmdstanpy[all]
+
+
+The optional packages are
+
+  * ``ujson`` which provides faster IO
+  * ``tqdm`` which displays a progress during sampling
+
+To install these manually
+
+.. code-block:: bash
+
+    pip install ujson
+    pip install tqdm
+
+
+Install CmdStan
+---------------
+
 CmdStanPy requires a local install of CmdStan.
-If you don't have CmdStan installed, you can run the CmdStanPy script ``install_cmdstan``
-which downloads CmdStan from GitHub and builds the CmdStan utilities. Latest CmdStan (2.19+)
-needs a C++14 compatible C++ -toolchain. On Windows, it is recommended to use RTools 3.5+.
-It is possible to install latest RTools with ``install_cxx_toolchain`` script.
 
-    python -m cmdstanpy.install_cxx_toolchain
+Prerequisites
+^^^^^^^^^^^^^
 
-By default ``install_cmdstan`` script installs the latest version of CmdStan into a directory named
+CmdStanPy requires an installed C++ toolchain.
+
+Fuction ``install_cmdstan``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+CmdStanPy provides the function ``install_cmdstan`` which
+downloads CmdStan from GitHub and builds the CmdStan utilities.
+It can be can be called from within Python or from the command line.
+By default it installs the latest version of CmdStan into a directory named
 ``.cmdstanpy`` in your ``$HOME`` directory:
+
++ From Python
+
+.. code-block:: python
+
+    import cmdstanpy
+    cmdstanpy.install_cmdstan()
+
++ From the command line on Linux or MacOSX
 
 .. code-block:: bash
 
     install_cmdstan
     ls -F ~/.cmdstanpy
 
-On Windows
++ On Windows
 
 .. code-block:: bash
 
@@ -55,7 +99,14 @@ can be used to override these defaults:
     install_cmdstan -d my_local_cmdstan -v 2.20.0
     ls -F my_local_cmdstan
 
-If you already have CmdStan installed in a directory
+
+Specifying CmdStan installation location
+""""""""""""""""""""""""""""""""""""""""
+
+The default for the CmdStan installation location
+is a directory named ``.cmdstanpy`` in your ``$HOME`` directory.
+
+If you have installed CmdStan in a different directory,
 then you can set the environment variable ``CMDSTAN`` to this
 location and it will be picked up by CmdStanPy:
 
@@ -75,6 +126,10 @@ get and set this environment variable:
     set_cmdstan_path(os.path.join('path','to','cmdstan'))
     newpath = cmdstan_path()
 
+
+Specifying a custom ``make`` tool
+"""""""""""""""""""""""""""""""""
+
 To use custom ``make``-tool use ``set_make_env`` function.
 
 .. code-block:: python
@@ -82,26 +137,6 @@ To use custom ``make``-tool use ``set_make_env`` function.
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
 
-On Windows, to use ``install_cxx_toolchain`` version of RTools user can
-call ``cmdstan.utils.cxx_toolchain_path`` function, which adds the correct
-subfolders on the $PATH
-
-.. code-block:: python
-
-    from cmdstanpy.utils import cxx_toolchain_path
-    cxx_toolchain_path()
-
-For faster IO cmdstanpy will use ``ujson`` package if it's installed
-
-.. code-block:: bash
-
-    pip install ujson
-
-To enable progress bar user can install ``tqdm`` package
-
-.. code-block:: bash
-
-    pip install tqdm
 
 
 CmdStanPy's "Hello World"
@@ -121,7 +156,7 @@ The method ``compile`` is used to compile or or recompile a Stan program.
 .. code-block:: python
 
     import os
-    from cmdstanpy import cmdstan_path, Model, StanFit
+    from cmdstanpy import cmdstan_path, Model
 
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = Model(stan_file=bernoulli_stan)
@@ -149,7 +184,6 @@ and returns a ``StanFit`` object:
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
 
 By default, the ``sample`` command runs 4 sampler chains.
-The ``StanFit`` object records the results of each sampler chain.
 If no output file path is specified, the sampler outputs
 are written to a temporary directory which is deleted
 when the current Python session is terminated.
@@ -158,6 +192,7 @@ when the current Python session is terminated.
 Summarize or save the results
 -----------------------------
 
+The ``StanFit`` object records the results of each sampler chain.
 The ``get_drawset`` method returns the draws from
 all chains as a ``pandas.DataFrame``, one draw per row, one column per
 model parameter, transformed parameter, generated quantity variable.
@@ -223,42 +258,42 @@ to the specified location, renaming them using a specified basename.
 
     bern_fit.save_csvfiles(dir='some/path', basename='descriptive-name')
 
-
-Progress bar
-------------
-
-User can enable progress bar for the sampling if ``tqdm`` package
-has been installed.
-
-.. code-block:: python
-
-    bern_fit = bernoulli_model.sample(data=bernoulli_data, show_progress=True)
-
-On Jupyter Notebook environment user should use notebook version
-by using ``show_progress='notebook'``.
-
-.. code-block:: python
-
-    bern_fit = bernoulli_model.sample(data=bernoulli_data, show_progress='notebook')
-
-To enable javascript progress bar on Jupyter Lab Notebook user needs to install
-nodejs and ipywidgets. Following the instructions in
-`tqdm issue #394 <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`
-For ``conda`` users installing nodejs can be done with ``conda``.
-
-.. code-block:: bash
-
-    conda install nodejs
-
-After nodejs has been installed, user needs to install ipywidgets and enable it.
-
-.. code-block:: bash
-
-    pip install ipywidgets
-    jupyter nbextension enable --py widgetsnbextension
-
-Jupyter Lab still needs widgets manager.
-
-.. code-block:: bash
-
-    jupyter labextension install @jupyter-widgets/jupyterlab-manager
+.. comment
+  Progress bar
+  ------------
+  
+  User can enable progress bar for the sampling if ``tqdm`` package
+  has been installed.
+  
+  .. code-block:: python
+  
+      bern_fit = bernoulli_model.sample(data=bernoulli_data, show_progress=True)
+  
+  On Jupyter Notebook environment user should use notebook version
+  by using ``show_progress='notebook'``.
+  
+  .. code-block:: python
+  
+      bern_fit = bernoulli_model.sample(data=bernoulli_data, show_progress='notebook')
+  
+  To enable javascript progress bar on Jupyter Lab Notebook user needs to install
+  nodejs and ipywidgets. Following the instructions in
+  `tqdm issue #394 <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`
+  For ``conda`` users installing nodejs can be done with ``conda``.
+  
+  .. code-block:: bash
+  
+      conda install nodejs
+  
+  After nodejs has been installed, user needs to install ipywidgets and enable it.
+  
+  .. code-block:: bash
+  
+      pip install ipywidgets
+      jupyter nbextension enable --py widgetsnbextension
+  
+  Jupyter Lab still needs widgets manager.
+  
+  .. code-block:: bash
+  
+      jupyter labextension install @jupyter-widgets/jupyterlab-manager
