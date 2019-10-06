@@ -285,7 +285,6 @@ class OptimizeArgs(object):
     def compose(self, idx: int, cmd: str) -> str:
         """compose command string for CmdStan for non-default arg values.
         """
-
         cmd = cmd + ' method=optimize'
         if self.algorithm:
             cmd += ' algorithm={}'.format(self.algorithm.lower())

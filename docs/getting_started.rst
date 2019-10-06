@@ -176,7 +176,7 @@ Run the HMC-NUTS sampler
 ------------------------
 
 The ``Model`` method ``sample`` runs the Stan HMC-NUTS sampler on the model and data
-and returns a ``StanFit`` object:
+and returns a ``StanMCMC`` object:
 
 .. code-block:: python
 
@@ -192,7 +192,7 @@ when the current Python session is terminated.
 Summarize or save the results
 -----------------------------
 
-The ``StanFit`` object records the results of each sampler chain.
+The ``StanMCMC`` object records the results of each sampler chain.
 The ``get_drawset`` method returns the draws from
 all chains as a ``pandas.DataFrame``, one draw per row, one column per
 model parameter, transformed parameter, generated quantity variable.
@@ -204,12 +204,12 @@ columns to just the specified parameter names.
     bern_fit.get_drawset(params=['theta'])
 
 Underlyingly, this information is stored in the ``sample`` property
-of a ``StanFit`` object as a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
+of a ``StanMCMC`` object as a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
 with dimensions: (draws, chains, columns).
 Python's index slicing operations can be used to access the information by chain.
 For example, to select all draws and all output columns from the first chain,
 we specify the chain index (2nd index dimension).  As arrays indexing starts at 0,
-the index '0' corresponds to the first chain in the ``StanFit``:
+the index '0' corresponds to the first chain in the ``StanMCMC``:
 
 .. code-block:: python
 
@@ -222,7 +222,7 @@ the index '0' corresponds to the first chain in the ``StanFit``:
 
 CmdStan is distributed with a posterior analysis utility ``stansummary``
 that reads the outputs of all chains and computes summary statistics
-on the model fit for all parameters. The ``StanFit`` method ``summary``
+on the model fit for all parameters. The ``StanMCMC`` method ``summary``
 runs the CmdStan ``stansummary`` utility and returns the output as a pandas.DataFrame:
 
 .. code-block:: python
@@ -239,7 +239,7 @@ potential problems:
 + Low effective sample sizes
 + High R-hat values
 
-The ``StanFit`` method ``diagnose`` runs the CmdStan ``diagnose`` utility
+The ``StanMCMC`` method ``diagnose`` runs the CmdStan ``diagnose`` utility
 and prints the output to the console.
 
 .. code-block:: python
