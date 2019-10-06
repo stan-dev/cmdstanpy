@@ -21,7 +21,7 @@ from cmdstanpy.cmdstan_args import (
 )
 from cmdstanpy.stanfit import (
     RunSet,
-    StanFit,
+    StanMCMC,
     StanMLE,
     StanQuantities,
     StanVariational
@@ -312,7 +312,7 @@ class Model(object):
         fixed_param: bool = False,
         csv_basename: str = None,
         show_progress: Union[bool, str] = False,
-    ) -> StanFit:
+    ) -> StanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
         from the posterior distribution of a model conditioned on some data.
@@ -323,7 +323,7 @@ class Model(object):
         Unspecified arguments are not included in the call to CmdStan, i.e.,
         those arguments will have CmdStan default values.
 
-        For each chain, the ``StanFit`` object records the command,
+        For each chain, the ``StanMCMC`` object records the command,
         the return code, the sampler output file paths, and the corresponding
         subprocess console outputs, if any.
 
@@ -425,7 +425,7 @@ class Model(object):
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
-        :return: StanFit object
+        :return: StanMCMC object
         """
 
         if chains is None:
@@ -610,9 +610,9 @@ class Model(object):
                             msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
-            stanfit = StanFit(runset, fixed_param)
-            stanfit._validate_csv_files()
-        return stanfit
+            mcmc = StanMCMC(runset, fixed_param)
+            mcmc._validate_csv_files()
+        return mcmc
 
     def run_generated_quantities(
         self,
@@ -622,7 +622,7 @@ class Model(object):
         gq_csv_basename: str = None,
     ) -> StanQuantities:
         """
-        Wrapper for generated quantities call.  Given a StanFit object
+        Wrapper for generated quantities call.  Given a StanMCMC object
         containing a sample from the fitted model, along with the
         corresponding dataset for that fit, run just the generated quantities
         block of the model in order to get additional quantities of interest.

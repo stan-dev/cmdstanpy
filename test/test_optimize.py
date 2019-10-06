@@ -33,6 +33,9 @@ class StanMLETest(unittest.TestCase):
         )
         runset = RunSet(args=cmdstan_args, chains=1)
         mle = StanMLE(runset)
+        self.assertIn('StanMLE: model=rosenbrock', mle.__repr__())
+        self.assertIn('method=optimize', mle.__repr__())
+
         self.assertEqual(mle._column_names,())
         self.assertEqual(mle._mle,{})
 

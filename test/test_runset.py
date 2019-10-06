@@ -22,6 +22,9 @@ class RunSetTest(unittest.TestCase):
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=4)
+        self.assertIn('RunSet: chains=4', runset.__repr__())
+        self.assertIn('method=sample', runset.__repr__())
+
         retcodes = runset._retcodes
         self.assertEqual(4, len(retcodes))
         for i in range(len(retcodes)):

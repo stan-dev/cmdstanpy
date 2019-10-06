@@ -33,6 +33,8 @@ class StanVariationalTest(unittest.TestCase):
         )
         runset = RunSet(args=cmdstan_args, chains=1)
         vi = StanVariational(runset)
+        self.assertIn('StanVariational: model=eta_should_be_big', vi.__repr__())
+        self.assertIn('method=variational', vi.__repr__())
 
         # check StanVariational.__init__ state
         self.assertEqual(vi._column_names,())
