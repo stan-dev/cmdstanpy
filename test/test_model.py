@@ -60,6 +60,10 @@ class ModelTest(unittest.TestCase):
         with self.assertRaises(Exception):
             model = Model(stan_file=stan)
 
+        stan = os.path.join(datafiles_path, 'bad_syntax.stan')
+        model = Model(stan_file=stan)
+        model.compile()
+
     def test_repr(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = Model(stan_file=stan)
@@ -74,6 +78,7 @@ class ModelTest(unittest.TestCase):
     def test_model_compile(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
+
         model = Model(stan_file=stan)
         self.assertEqual(None, model.exe_file)
         model.compile()
@@ -84,6 +89,12 @@ class ModelTest(unittest.TestCase):
             os.remove(exe)
         model.compile()
         self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
+
+        # test compile with existing exe - timestamp on exe unchanged
+        exe_time = os.path.getmtime(model.exe_file)
+        model2 = Model(stan_file=stan)
+        model2.compile()
+        self.assertEqual(exe_time,os.path.getmtime(model2.exe_file))
 
         stan = os.path.join(datafiles_path, 'bernoulli_include.stan')
         exe = os.path.join(datafiles_path, 'bernoulli_include' + EXTENSION)
@@ -96,9 +107,6 @@ class ModelTest(unittest.TestCase):
         model.compile(include_paths=include_paths)
         self.assertEqual(stan, model.stan_file)
         self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
-
-    # TODO: test compile with existing exe - timestamp on exe unchanged
-    # TODO: test overwrite with existing exe - timestamp on exe updated
 
 
 if __name__ == '__main__':
