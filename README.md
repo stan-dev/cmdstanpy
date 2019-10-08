@@ -17,6 +17,9 @@ for CmdStanPy sampler function.
 
 - Modular - CmdStanPy produces a sample from the posterior, downstream modules do the analysis.
 
+### Docs
+
+See https://cmdstanpy.readthedocs.io/en/latest/index.html
 
 ### Source Repository
 
@@ -31,7 +34,7 @@ The CmdStanPy, CmdStan, and the core Stan C++ code are licensed under new BSD.
 ::
 
     import os
-    from cmdstanpy import Model, StanFit, cmdstan_path
+    from cmdstanpy import Model, cmdstan_path
 
     # specify Stan file, create, compile Model object
     bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')

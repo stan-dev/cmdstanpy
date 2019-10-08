@@ -13,8 +13,27 @@ Model
 .. autoclass:: cmdstanpy.Model
    :members:
 
-StanFit
+StanMCMC
 =======
 
-.. autoclass:: cmdstanpy.StanFit
+.. autoclass:: cmdstanpy.StanMCMC
    :members:
+
+StanMLE
+=======
+
+.. autoclass:: cmdstanpy.StanMLE
+   :members:
+
+StanQuantities
+==============
+
+.. autoclass:: cmdstanpy.StanQuantities
+   :members:
+   
+StanVariational
+===============
+
+.. autoclass:: cmdstanpy.StanVariational
+   :members:
+

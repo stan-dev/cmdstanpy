@@ -63,7 +63,6 @@ def install_version(cmdstan_version):
         proc = subprocess.Popen(
             cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        proc.wait()
         stdout, stderr = proc.communicate()
         if proc.returncode:
             print('Failed to compile example model bernoulli.stan')
@@ -94,7 +93,7 @@ def latest_version():
             print('Cannot connect to github.')
             print(err)
             if i < 5:
-                print('retry ({}/5)'.format(i+1))
+                print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
             sys.exit(3)
@@ -123,7 +122,7 @@ def retrieve_latest_version(version):
             )
             print(err)
             if i < 5:
-                print('retry ({}/5)'.format(i+1))
+                print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
             sys.exit(3)
@@ -194,5 +193,5 @@ def main():
             install_version(cmdstan_version)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

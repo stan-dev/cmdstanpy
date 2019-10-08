@@ -1,14 +1,31 @@
+import math
 import os
+import re
 import subprocess
 import shutil
+import sys
 import logging
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
-from multiprocessing.pool import ThreadPool
+from numbers import Real
 from pathlib import Path
-from typing import Dict, List, Union
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs, OptimizeArgs
-from cmdstanpy.stanfit import StanFit
+from typing import Any, Dict, List, Union
+
+from cmdstanpy.cmdstan_args import (
+    CmdStanArgs,
+    SamplerArgs,
+    OptimizeArgs,
+    GenerateQuantitiesArgs,
+    VariationalArgs,
+)
+from cmdstanpy.stanfit import (
+    RunSet,
+    StanMCMC,
+    StanMLE,
+    StanQuantities,
+    StanVariational,
+)
 from cmdstanpy.utils import (
     do_command,
     EXTENSION,
@@ -103,7 +120,6 @@ class Model(object):
     def compile(
         self,
         opt_lvl: int = 3,
-        overwrite: bool = False,
         include_paths: List[str] = None,
     ) -> None:
         """
@@ -116,82 +132,88 @@ class Model(object):
             Higher optimization levels increase runtime performance but will
             take longer to compile.
 
-        :param overwrite: When True, existing executable will be overwritten.
-            Defaults to False.
-
         :param include_paths: List of paths to directories where Stan should
             look for files to include in compilation of the C++ executable.
         """
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
 
-        if self._exe_file is not None and not overwrite:
-            self._logger.warning('model is already compiled')
-            return
+        compilation_failed = False
 
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
-            hpp_file = Path(hpp_file).as_posix()
-            if overwrite or not os.path.exists(hpp_file):
-                self._logger.info('stan to c++ (%s)', hpp_file)
-                stanc_path = os.path.join(
-                    cmdstan_path(), 'bin', 'stanc' + EXTENSION
-                )
-                stanc_path = Path(stanc_path).as_posix()
-                cmd = [
-                    stanc_path,
-                    '--o={}'.format(hpp_file),
-                    Path(stan_file).as_posix(),
-                ]
-                if include_paths is not None:
-                    bad_paths = [
-                        d for d in include_paths if not os.path.exists(d)
-                    ]
-                    if any(bad_paths):
-                        raise Exception(
-                            'invalid include paths: {}'.format(
-                                ', '.join(bad_paths)
-                            )
-                        )
-                    cmd.append(
-                        '--include_paths='
-                        + ','.join((Path(p).as_posix() for p in include_paths))
-                    )
-
-                do_command(cmd, logger=self._logger)
-                if not os.path.exists(hpp_file):
-                    raise Exception('syntax error'.format(stan_file))
-
             exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
             exe_file = Path(exe_file).as_posix()
             exe_file += EXTENSION
-            make = os.getenv('MAKE', 'make')
-            cmd = [make, 'O={}'.format(opt_lvl), exe_file]
-            self._logger.info('compiling c++')
-            try:
-                do_command(cmd, cmdstan_path(), self._logger)
-            except Exception as e:
-                self._logger.error('make cmd failed %s', e)
+            do_compile = True
+            if os.path.exists(exe_file):
+                src_time = os.path.getmtime(self._stan_file)
+                exe_time = os.path.getmtime(exe_file)
+                if exe_time > src_time:
+                    do_compile = False
+                    self._logger.info('found newer exe file, not recompiling')
 
-            if is_copied:
+            if do_compile:
+                hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
+                hpp_file = Path(hpp_file).as_posix()
+                if not os.path.exists(hpp_file):
+                    self._logger.info('stan to c++ (%s)', hpp_file)
+                    stanc_path = os.path.join(
+                        cmdstan_path(), 'bin', 'stanc' + EXTENSION
+                    )
+                    stanc_path = Path(stanc_path).as_posix()
+                    cmd = [
+                        stanc_path,
+                        '--o={}'.format(hpp_file),
+                        Path(stan_file).as_posix(),
+                    ]
+                    if include_paths is not None:
+                        bad_paths = [
+                            d for d in include_paths if not os.path.exists(d)
+                        ]
+                        if any(bad_paths):
+                            raise Exception(
+                                'invalid include paths: {}'.format(
+                                    ', '.join(bad_paths)
+                                )
+                            )
+                        cmd.append(
+                            '--include_paths='
+                            + ','.join(
+                                (Path(p).as_posix() for p in include_paths)
+                            )
+                        )
+                    try:
+                        do_command(cmd, logger=self._logger)
+                    except Exception as e:
+                        self._logger.error('file {}, {}'.format(stan_file, e))
+                        compilation_failed = True
 
-                original_target_dir = os.path.dirname(self._stan_file)
-                # reconstruct the output file name
-                new_exec_name = (
-                    os.path.basename(os.path.splitext(self._stan_file)[0])
-                    + EXTENSION
-                )
+                if not compilation_failed:
+                    make = os.getenv('MAKE', 'make')
+                    cmd = [make, 'O={}'.format(opt_lvl), exe_file]
+                    self._logger.info('compiling c++')
+                    try:
+                        do_command(cmd, cmdstan_path(), self._logger)
+                    except Exception as e:
+                        self._logger.error('make cmd failed %s', e)
+                        compilation_failed = True
 
-                self._exe_file = os.path.join(
-                    original_target_dir, new_exec_name
-                )
-
-                # copy the generated file back to the original directory
-                shutil.copy(exe_file, self._exe_file)
+            if not compilation_failed:
+                if is_copied:
+                    original_target_dir = os.path.dirname(self._stan_file)
+                    new_exec_name = (
+                        os.path.basename(os.path.splitext(self._stan_file)[0])
+                        + EXTENSION
+                        )
+                    self._exe_file = os.path.join(
+                        original_target_dir, new_exec_name
+                        )
+                    shutil.copy(exe_file, self._exe_file)
+                else:
+                    self._exe_file = exe_file
+                self._logger.info('compiled model file: %s', self._exe_file)
             else:
-                self._exe_file = exe_file
-
-        self._logger.info('compiled model file: %s', self._exe_file)
+                self._logger.error('model compilation failed')
 
     def optimize(
         self,
@@ -202,9 +224,10 @@ class Model(object):
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
-    ) -> StanFit:
+    ) -> StanMLE:
         """
         Wrapper for optimize call
+
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
@@ -228,10 +251,9 @@ class Model(object):
             * string - pathname to a JSON or Rdump data file.
 
         :param csv_basename:  A path or file name which will be used as the
-            base name for the sampler output files.  The csv output files
-            for each chain are written to file ``<basename>-0.csv``
-            and the console output and error messages are written to file
-            ``<basename>-0.txt``.
+            basename for the CmdStan output files.  The csv output files
+            are written to file ``<basename>-0.csv`` and the console output
+            and error messages are written to file ``<basename>-0.txt``.
 
         :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
 
@@ -239,9 +261,8 @@ class Model(object):
 
         :param iter: Total number of iterations
 
-        :return: StanFit object
+        :return: StanMLE object
         """
-
         optimize_args = OptimizeArgs(
             algorithm=algorithm, init_alpha=init_alpha, iter=iter
         )
@@ -258,24 +279,25 @@ class Model(object):
                 method_args=optimize_args,
             )
 
-            stanfit = StanFit(args=args, chains=1)
             dummy_chain_id = 0
-            self._do_sample(stanfit, dummy_chain_id)
+            runset = RunSet(args=args, chains=1)
+            self._run_cmdstan(runset, dummy_chain_id)
 
-        if not stanfit._check_retcodes():
+        if not runset._check_retcodes():
             msg = 'Error during optimizing'
-            if stanfit._retcode(dummy_chain_id) != 0:
-                msg = '{} Got returned error code {}'.format(
-                    msg, stanfit._retcode(dummy_chain_id)
+            if runset._retcode(dummy_chain_id) != 0:
+                msg = '{}, error code {}'.format(
+                    msg, runset._retcode(dummy_chain_id)
                 )
-            raise RuntimeError(msg)
-        stanfit._validate_csv_files()
-        return stanfit
+                raise RuntimeError(msg)
+        mle = StanMLE(runset)
+        mle._set_mle_attrs(runset.csv_files[0])
+        return mle
 
     def sample(
         self,
         data: Union[Dict, str] = None,
-        chains: int = 4,
+        chains: Union[int, None] = None,
         cores: Union[int, None] = None,
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
@@ -289,9 +311,10 @@ class Model(object):
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = True,
         adapt_delta: float = None,
+        fixed_param: bool = False,
         csv_basename: str = None,
-        show_progress: bool = False,
-    ) -> StanFit:
+        show_progress: Union[bool, str] = False,
+    ) -> StanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
         from the posterior distribution of a model conditioned on some data.
@@ -302,7 +325,7 @@ class Model(object):
         Unspecified arguments are not included in the call to CmdStan, i.e.,
         those arguments will have CmdStan default values.
 
-        For each chain, the ``StanFit`` object records the command,
+        For each chain, the ``StanMCMC`` object records the command,
         the return code, the sampler output file paths, and the corresponding
         subprocess console outputs, if any.
 
@@ -385,12 +408,33 @@ class Model(object):
             It improves the effective sample size, but may increase the time
             per iteration.
 
+        :param fixed_param: Call CmdStan with argument "algorithm=fixed_param"
+            which runs the sampler without updating the Markov Chain, so that
+            the values of all parameters and transformed parameters are constant
+            across all draws and only those values in the generated quantities
+            block which are produced by RNG functions may change.  This provides
+            a way to use Stan programs to generate simulated data via the
+            generated quantities block.  This option must be used when the
+            parameters block is empty.
+
         :param csv_basename: A path or file name which will be used as the
-            base name for the sampler output files.  The csv output files
+            basename for the sampler output files.  The csv output files
             for each chain are written to file ``<basename>-<chain_id>.csv``
             and the console output and error messages are written to file
             ``<basename>-<chain_id>.txt``.
+
+        :param show_progress: Use tqdm progress bar to show sampling progress.
+            If show_progress=='notebook' use tqdm_notebook
+            (needs nodejs for jupyter).
+
+        :return: StanMCMC object
         """
+
+        if chains is None:
+            if fixed_param:
+                chains = 1
+            else:
+                chains = 4
         if chains < 1:
             raise ValueError(
                 'chains must be a positive integer value, found {}'.format(
@@ -425,10 +469,8 @@ class Model(object):
                         )
 
         cores_avail = cpu_count()
-
         if cores is None:
             cores = max(min(cores_avail - 2, chains), 1)
-
         if cores < 1:
             raise ValueError(
                 'cores must be a positive integer value, found {}'.format(cores)
@@ -439,7 +481,36 @@ class Model(object):
             )
             cores = cores_avail
 
-            # TODO:  issue 49: inits can be initialization function
+        refresh = None
+        if show_progress:
+            try:
+                import tqdm
+
+                # progress bar updates - 100 per warmup, sampling
+                if fixed_param or not adapt_engaged or warmup_iters == 0:
+                    num_updates = 100
+                    w_iters = 0
+                else:
+                    num_updates = 200
+                    if warmup_iters is None:
+                        w_iters = 1000
+                s_iters = sampling_iters
+                if s_iters is None:
+                    s_iters = 1000
+                refresh = max(int((s_iters + w_iters) // num_updates), 1)
+                # disable logger for console (temporary) - use tqdm
+                self._logger.propagate = False
+            except ImportError:
+                self._logger.warning(
+                    (
+                        'tqdm not installed, progress information is not '
+                        'shown. Please install tqdm with '
+                        "'pip install tqdm'"
+                    )
+                )
+                show_progress = False
+
+        # TODO:  issue 49: inits can be initialization function
 
         sampler_args = SamplerArgs(
             warmup_iters=warmup_iters,
@@ -451,6 +522,7 @@ class Model(object):
             step_size=step_size,
             adapt_engaged=adapt_engaged,
             adapt_delta=adapt_delta,
+            fixed_param=fixed_param,
         )
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
@@ -462,41 +534,286 @@ class Model(object):
                 inits=_inits,
                 output_basename=csv_basename,
                 method_args=sampler_args,
+                refresh=refresh,
             )
 
-            stanfit = StanFit(args=args, chains=chains)
-            try:
-                tp = ThreadPool(cores)
+            runset = RunSet(args=args, chains=chains)
+
+            pbar = None
+            pbar_dict = {}
+            with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
-                    tp.apply_async(self._do_sample, (stanfit, i))
-            finally:
-                tp.close()
-                tp.join()
-            if not stanfit._check_retcodes():
+                    if show_progress:
+                        if (
+                            isinstance(show_progress, str)
+                            and show_progress.lower() == 'notebook'
+                        ):
+                            try:
+                                tqdm_pbar = tqdm.tqdm_notebook
+                            except ImportError:
+                                msg = (
+                                    'Cannot import tqdm.tqdm_notebook.\n'
+                                    'Functionality is only supported on the '
+                                    'Jupyter Notebook and compatible platforms'
+                                    '.\nPlease follow the instructions in '
+                                    'https://github.com/tqdm/tqdm/issues/394#'
+                                    'issuecomment-384743637 and remember to '
+                                    'stop & start your jupyter server.'
+                                )
+                                self._logger.warning(msg)
+                                tqdm_pbar = tqdm.tqdm
+                        else:
+                            tqdm_pbar = tqdm.tqdm
+                        # enable dynamic_ncols for advanced users
+                        # currently hidden feature
+                        dynamic_ncols = os.environ.get(
+                            'TQDM_DYNAMIC_NCOLS', 'False'
+                        )
+                        if dynamic_ncols.lower() in ['0', 'false']:
+                            dynamic_ncols = False
+                        else:
+                            dynamic_ncols = True
+                        pbar = [
+                            # warmup
+                            tqdm_pbar(
+                                desc='Chain {} - warmup'.format(i + 1),
+                                position=i * 2,
+                                total=sampler_args.warmup_iters,
+                                dynamic_ncols=dynamic_ncols,
+                            ),
+                            # sampling
+                            tqdm_pbar(
+                                desc='Chain {} - sample'.format(i + 1),
+                                position=i * 2 + 1,
+                                total=sampler_args.sampling_iters,
+                                dynamic_ncols=dynamic_ncols,
+                            ),
+                        ]
+
+                    future = executor.submit(self._run_cmdstan, runset, i, pbar)
+                    pbar_dict[future] = pbar
+                if show_progress:
+                    for future in as_completed(pbar_dict):
+                        pbar = pbar_dict[future]
+                        for pbar_item in pbar:
+                            # close here to just to be sure
+                            pbar_item.close()
+
+            if show_progress:
+                # re-enable logger for console
+                self._logger.propagate = True
+            if not runset._check_retcodes():
                 msg = 'Error during sampling'
                 for i in range(chains):
-                    if stanfit._retcode(i) != 0:
+                    if runset._retcode(i) != 0:
                         msg = '{}, chain {} returned error code {}'.format(
-                            msg, i, stanfit._retcode(i)
+                            msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
-            stanfit._validate_csv_files()
-        return stanfit
+            mcmc = StanMCMC(runset, fixed_param)
+            mcmc._validate_csv_files()
+        return mcmc
 
-    def _do_sample(self, stanfit: StanFit, idx: int) -> None:
+    def run_generated_quantities(
+        self,
+        data: Union[Dict, str] = None,
+        csv_files: List[str] = None,
+        seed: int = None,
+        gq_csv_basename: str = None,
+    ) -> StanQuantities:
         """
-        Encapsulates call to sampler.
+        Wrapper for generated quantities call.  Given a StanMCMC object
+        containing a sample from the fitted model, along with the
+        corresponding dataset for that fit, run just the generated quantities
+        block of the model in order to get additional quantities of interest.
+
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :param csv_files: A list of sampler output csv files generated by
+            fitting the model to the data, either using CmdStanPy's `sample`
+            method or via another Stan interface.
+
+        :param seed: The seed for random number generator Must be an integer
+            between 0 and 2^32 - 1. If unspecified, numpy.random.RandomState()
+            is used to generate a seed which will be used for all chains.
+            *NOTE: Specifying the seed will guarantee the same result for
+            multiple invocations of this method with the same inputs.  However
+            this will not reproduce results from the sample method given
+            the same inputs because the RNG will be in a different state.*
+
+        :param gq_csv_basename: A path or file name which will be used as the
+            basename for the sampler output files.  The csv output files
+            for each chain are written to file ``<basename>-<chain_id>.csv``
+            and the console output and error messages are written to file
+            ``<basename>-<chain_id>.txt``.
+
+        :return: StanQuantities object
+        """
+        generate_quantities_args = GenerateQuantitiesArgs(csv_files=csv_files)
+        generate_quantities_args.validate(len(csv_files))
+        chains = len(csv_files)
+        with MaybeDictToFilePath(data, None) as (_data, _inits):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=[x + 1 for x in range(chains)],
+                data=_data,
+                seed=seed,
+                output_basename=gq_csv_basename,
+                method_args=generate_quantities_args,
+            )
+            runset = RunSet(args=args, chains=chains)
+
+            cores_avail = cpu_count()
+            cores = max(min(cores_avail - 2, chains), 1)
+            with ThreadPoolExecutor(max_workers=cores) as executor:
+                for i in range(chains):
+                    executor.submit(self._run_cmdstan, runset, i)
+
+            if not runset._check_retcodes():
+                msg = 'Error during generate_quantities'
+                for i in range(chains):
+                    if runset._retcode(i) != 0:
+                        msg = '{}, chain {} returned error code {}'.format(
+                            msg, i, runset._retcode(i)
+                        )
+                raise RuntimeError(msg)
+            quantities = StanQuantities(runset)
+            quantities._set_attrs_gq_csv_files(csv_files[0])
+        return quantities
+
+    def variational(
+        self,
+        data: Union[Dict, str] = None,
+        seed: int = None,
+        inits: float = None,
+        csv_basename: str = None,
+        algorithm: str = None,
+        iter: int = None,
+        grad_samples: int = None,
+        elbo_samples: int = None,
+        eta: Real = None,
+        adapt_iter: int = None,
+        tol_rel_obj: Real = None,
+        eval_elbo: int = None,
+        output_samples: int = None,
+    ) -> StanVariational:
+        """
+        Run CmdStan's variational inference algorithm to approximate
+        the posterior distribution of the model conditioned on the data.
+
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :param seed: The seed for random number generator or a list of per-chain
+            seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
+            numpy.random.RandomState() is used to generate a seed which will be
+            used for all chains. When the same seed is used across all chains,
+            the chain-id is used to advance the RNG to avoid dependent samples.
+
+        :param inits:  Specifies how the sampler initializes parameter values.
+            Initializiation is uniform random on a range centered on 0 with
+            default range of 2. Specifying a single number ``n > 0`` changes
+            the initialization range to [-n, n].
+
+        :param csv_basename:  A path or file name which will be used as the
+            basename for the CmdStan output files.  The csv output files
+            are written to file ``<basename>-0.csv`` and the console output
+            and error messages are written to file ``<basename>-0.txt``.
+
+        :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
+
+        :param iter: Maximum number of ADVI iterations.
+
+        :param grad_samples: Number of MC draws for computing the gradient.
+
+        :param elbo_samples: Number of MC draws for estimate of ELBO.
+
+        :param eta: Stepsize scaling parameter.
+
+        :param adapt_iter: Number of iterations for eta adaptation.
+
+        :param tol_rel_obj: Relative tolerance parameter for convergence.
+
+        :param eval_elbo: Number of interations between ELBO evaluations.
+
+        :param output_samples: Number of approximate posterior output draws
+            to save.
+
+        :return: StanVariational object
+        """
+        variational_args = VariationalArgs(
+            algorithm=algorithm,
+            iter=iter,
+            grad_samples=grad_samples,
+            elbo_samples=elbo_samples,
+            eta=eta,
+            adapt_iter=adapt_iter,
+            tol_rel_obj=tol_rel_obj,
+            eval_elbo=eval_elbo,
+            output_samples=output_samples,
+        )
+
+        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=None,
+                data=_data,
+                seed=seed,
+                inits=_inits,
+                output_basename=csv_basename,
+                method_args=variational_args,
+            )
+
+            dummy_chain_id = 0
+            runset = RunSet(args=args, chains=1)
+            self._run_cmdstan(runset, dummy_chain_id)
+
+        # treat failure to converge as failure
+        transcript_file = runset.console_files[dummy_chain_id]
+        valid = True
+        pat = re.compile(r'The algorithm may not have converged.', re.M)
+        with open(transcript_file, 'r') as transcript:
+            contents = transcript.read()
+            errors = re.findall(pat, contents)
+            if len(errors) > 0:
+                valid = False
+        if not valid:
+            raise RuntimeError('The algorithm may not have converged.')
+        if not runset._check_retcodes():
+            msg = 'Error during variational inference'
+            if runset._retcode(dummy_chain_id) != 0:
+                msg = '{}, error code {}'.format(
+                    msg, runset._retcode(dummy_chain_id)
+                )
+                raise RuntimeError(msg)
+        vi = StanVariational(runset)
+        vi._set_variational_attrs(runset.csv_files[0])
+        return vi
+
+    def _run_cmdstan(
+        self, runset: RunSet, idx: int = 0, pbar: List[Any] = None
+    ) -> None:
+        """
+        Encapsulates call to cmdstan.
         Spawn process, capture console output to file, record returncode.
         """
-        cmd = stanfit.cmds[idx]
+        cmd = runset.cmds[idx]
         self._logger.info('start chain %u', idx + 1)
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
             cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        proc.wait()
+        if pbar:
+            stdout_pbar = self._read_progress(proc, pbar, idx)
         stdout, stderr = proc.communicate()
-        transcript_file = stanfit.console_files[idx]
+        if pbar:
+            stdout = stdout_pbar + stdout
+        transcript_file = runset.console_files[idx]
         self._logger.info('finish chain %u', idx + 1)
         with open(transcript_file, 'w+') as transcript:
             if stdout:
@@ -504,4 +821,129 @@ class Model(object):
             if stderr:
                 transcript.write('ERROR')
                 transcript.write(stderr.decode('utf-8'))
-        stanfit._set_retcode(idx, proc.returncode)
+        runset._set_retcode(idx, proc.returncode)
+
+    def _read_progress(
+        self, proc: subprocess.Popen, pbar: List[Any], idx: int
+    ) -> bytes:
+        """
+        Update tqdm progress bars according to CmdStan console progress msgs.
+        Poll process to get CmdStan console outputs,
+        check for output lines that start with 'Iteration: '.
+        NOTE: if CmdStan output messages change, this will break.
+        """
+        pattern = (
+            r'^Iteration\:\s*(\d+)\s*/\s*(\d+)\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
+        )
+        pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
+        pbar_warmup, pbar_sampling = pbar
+        num_warmup = pbar_warmup.total
+        num_sampling = pbar_sampling.total
+        count_warmup = 0
+        count_sampling = 0
+        stdout = b''
+
+        try:
+            # iterate while process is sampling
+            while proc.poll() is None:
+                output = proc.stdout.readline()
+                stdout += output
+                output = output.decode('utf-8').strip()
+                refresh_warmup = True
+                if output.startswith('Iteration'):
+                    match = re.search(pattern_compiled, output)
+                    if match:
+                        # check if pbars need reset
+                        if num_warmup is None or num_sampling is None:
+                            total_count = int(match.group(2))
+                            if num_warmup is None and num_sampling is None:
+                                num_warmup = total_count // 2
+                                num_sampling = total_count - num_warmup
+                                pbar_warmup.total = num_warmup
+                                pbar_sampling.total = num_sampling
+                            elif num_warmup is None:
+                                num_warmup = total_count - num_sampling
+                                pbar_warmup.total = num_warmup
+                            else:
+                                num_sampling = total_count - num_warmup
+                                pbar_sampling.total = num_sampling
+                        # raw_count = warmup + sampling
+                        raw_count = int(match.group(1))
+                        if match.group(3).lower() == 'warmup':
+                            count, count_warmup = (
+                                raw_count - count_warmup,
+                                raw_count,
+                            )
+                            pbar_warmup.update(count)
+                        elif match.group(3).lower() == 'sampling':
+                            # refresh warmup and close the progress bar
+                            if refresh_warmup:
+                                pbar_warmup.update(num_warmup - count_warmup)
+                                pbar_warmup.refresh()
+                                pbar_warmup.close()
+                                refresh_warmup = False
+                            # update values to full
+                            count, count_sampling = (
+                                raw_count - num_warmup - count_sampling,
+                                raw_count - num_warmup,
+                            )
+                            pbar_sampling.update(count)
+
+            # read and process rest of the stdout if needed
+            warmup_cumulative_count = 0
+            sampling_cumulative_count = 0
+            for output in proc.stdout:
+                stdout += output
+                output = output.decode('utf-8').strip()
+                if output.startswith('Iteration'):
+                    match = re.search(pattern_compiled, output)
+                    if match:
+                        # check if pbars need reset
+                        if num_warmup is None or num_sampling is None:
+                            total_count = int(match.group(2))
+                            if num_warmup is None and num_sampling is None:
+                                num_warmup = total_count // 2
+                                num_sampling = total_count - num_warmup
+                                pbar_warmup.total = num_warmup
+                                pbar_sampling.total = num_sampling
+                            elif num_warmup is None:
+                                num_warmup = total_count - num_sampling
+                                pbar_warmup.total = num_warmup
+                            else:
+                                num_sampling = total_count - num_warmup
+                                pbar_sampling.total = num_sampling
+                        # raw_count = warmup + sampling
+                        raw_count = int(match.group(1))
+                        if match.group(3).lower() == 'warmup':
+                            count, count_warmup = (
+                                raw_count - count_warmup,
+                                raw_count,
+                            )
+                            warmup_cumulative_count += count
+                        elif match.group(3).lower() == 'sampling':
+                            count, count_sampling = (
+                                raw_count - num_warmup - count_sampling,
+                                raw_count - num_warmup,
+                            )
+                            sampling_cumulative_count += count
+            # update warmup pbar if needed
+            if warmup_cumulative_count:
+                pbar_warmup.update(warmup_cumulative_count)
+                pbar_warmup.refresh()
+            # update sampling pbar if needed
+            if sampling_cumulative_count:
+                pbar_sampling.update(sampling_cumulative_count)
+                pbar_sampling.refresh()
+
+        except Exception as e:
+            self._logger.warning(
+                'Chain %s: Failed to read the progress on the fly. Error: %s',
+                idx,
+                e,
+            )
+        # close both pbar
+        pbar_warmup.close()
+        pbar_sampling.close()
+
+        # return stdout
+        return stdout

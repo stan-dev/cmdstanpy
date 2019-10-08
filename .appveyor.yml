@@ -7,7 +7,7 @@ platform:
 
 cache:
   - C:\Users\appveyor\.cmdstanpy
-  #- C:\RTools
+  - C:\RTools
 
 init:
   - git config --global core.autocrlf input
@@ -18,6 +18,9 @@ clone_depth: 1
 
 environment:
   matrix:
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
     - PYTHON: "C:\\Python37-x64"
       PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "64"
@@ -43,9 +46,9 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Install RTools
-  - ps: Start-FileDownload 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
-  - "Rtools35.exe /VERYSILENT /SP- /NORESTART"  #TODO: dont download and install if c:\rtools folder exists.
-  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "python .\\cmdstanpy\\install_cxx_toolchain.py --silent --dir C:\\"
+  - "dir C:\\Rtools\\RTools35"
+  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
   - "SET MAKE=mingw32-make.exe"
   - "gcc --version"
   - "mingw32-make --version"
@@ -56,16 +59,20 @@ install:
 
   - "python -m pip install --quiet --disable-pip-version-check --upgrade pip"
   - "python -m pip install --quiet -r requirements.txt"
-  - "python -m pip install --quiet pytest"
+  - "python -m pip install --quiet -r requirements-test.txt"
 
-  - "python .\\bin\\install_cmdstan"
+  - "python .\\cmdstanpy\\install_cmdstan.py"
 
-  - "python -m pip install --quiet -e ."
+  - "python -m pip install --quiet ."
   - "pip freeze"
 
 build: false
 
 test_script:
-  - "SET PATH=C:\\Rtools\\bin;C:\\Rtools\\mingw_64\\bin;%PATH%"
+  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
   - "SET MAKE=mingw32-make.exe"
-  - "python -m pytest test"
+  - "mkdir new_dir"
+  - "cd new_dir"
+  - "python -m pytest ../test"
+  - "python -m pip install -r ../requirements-optional.txt"
+  - "python ../test/example_script.py"

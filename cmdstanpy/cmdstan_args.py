@@ -4,9 +4,20 @@ CmdStan arguments
 import os
 import numpy as np
 
+from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
 from cmdstanpy.utils import read_metric
+
+
+class Method(Enum):
+    SAMPLE = auto()
+    OPTIMIZE = auto()
+    GENERATE_QUANTITIES = auto()
+    VARIATIONAL = auto()
+
+    def __repr__(self):
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
 class SamplerArgs(object):
@@ -23,6 +34,7 @@ class SamplerArgs(object):
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = None,
         adapt_delta: float = None,
+        fixed_param: bool = False,
     ) -> None:
         """Initialize object."""
         self.warmup_iters = warmup_iters
@@ -35,6 +47,7 @@ class SamplerArgs(object):
         self.step_size = step_size
         self.adapt_engaged = adapt_engaged
         self.adapt_delta = adapt_delta
+        self.fixed_param = fixed_param
 
     def validate(self, chains: int) -> None:
         """
@@ -46,45 +59,48 @@ class SamplerArgs(object):
         """
         if not isinstance(chains, Integral) or chains < 1:
             raise ValueError(
-                "sampler expects number of chains to be greater than 0"
+                'sampler expects number of chains to be greater than 0'
             )
-
         if self.warmup_iters is not None:
-            if self.warmup_iters < 0:
+            if self.warmup_iters < 0 or not isinstance(
+                self.warmup_iters, Integral
+            ):
                 raise ValueError(
-                    'warmup_iters must be a non-negative integer'.format(
-                        self.warmup_iters
-                    )
+                    'warmup_iters must be a non-negative integer,'
+                    ' found {}'.format(self.warmup_iters)
                 )
             if self.adapt_engaged and self.warmup_iters == 0:
                 raise ValueError(
                     'adaptation requested but 0 warmup iterations specified, '
                     'must run warmup iterations'
                 )
-
         if self.sampling_iters is not None:
-            if self.sampling_iters < 0:
+            if self.sampling_iters < 0 or not isinstance(
+                self.sampling_iters, Integral
+            ):
                 raise ValueError(
-                    'sampling_iters must be a non-negative integer'.format(
-                        self.sampling_iters
-                    )
+                    'sampling_iters must be a non-negative integer,'
+                    ' found {}'.format(self.sampling_iters)
                 )
-
         if self.thin is not None:
-            if self.thin < 1:
+            if self.thin < 1 or not isinstance(self.thin, Integral):
                 raise ValueError(
-                    'thin must be at least 1, found {}'.format(self.thin)
+                    'thin must be a positive integer greater than 0,'
+                    'found {}'.format(self.thin)
                 )
-
         if self.max_treedepth is not None:
-            if self.max_treedepth < 1:
+            if self.max_treedepth < 1 or not isinstance(
+                self.max_treedepth, Integral
+            ):
                 raise ValueError(
-                    'max_treedepth must be at least 1, found {}'.format(
-                        self.max_treedepth
-                    )
+                    'max_treedepth must be a positive integer greater than 0,'
+                    ' found {}'.format(self.max_treedepth)
                 )
-
         if self.step_size is not None:
+            if self.fixed_param:
+                raise ValueError(
+                    'when fixed_param=True, cannot specify max_treedepth.'
+                )
             if isinstance(self.step_size, Real):
                 if self.step_size < 0:
                     raise ValueError(
@@ -103,7 +119,6 @@ class SamplerArgs(object):
                         raise ValueError(
                             'step_size must be > 0, found {}'.format(step_size)
                         )
-
         if self.metric is not None:
             dims = None
             if isinstance(self.metric, str):
@@ -159,13 +174,24 @@ class SamplerArgs(object):
                     self.metric = 'diag_e'
                 elif len(dims) == 2:
                     self.metric = 'dense_e'
-
         if self.adapt_delta is not None:
             if not 0 < self.adapt_delta < 1:
                 raise ValueError(
                     'adapt_delta must be between 0 and 1,'
                     ' found {}'.format(self.adapt_delta)
                 )
+
+        if self.fixed_param and (
+                (self.warmup_iters is not None and self.warmup_iters > 0) or
+                self.save_warmup or
+                self.max_treedepth is not None or
+                self.metric is not None or
+                self.step_size is not None or
+                self.adapt_delta is not None):
+            raise ValueError(
+                'when fixed_param=True, cannot specify warmup or'
+                ' or any adaptation parameters.'
+            )
 
     def compose(self, idx: int, cmd: str) -> str:
         """
@@ -180,7 +206,11 @@ class SamplerArgs(object):
             cmd = cmd + ' save_warmup=1'
         if self.thin is not None:
             cmd = '{} thin={}'.format(cmd, self.thin)
-        cmd = cmd + ' algorithm=hmc'
+        if self.fixed_param:
+            cmd = cmd + ' algorithm=fixed_param'
+            return cmd
+        else:
+            cmd = cmd + ' algorithm=hmc'
         if self.max_treedepth is not None:
             cmd = '{} engine=nuts max_depth={}'.format(cmd, self.max_treedepth)
         if self.step_size is not None:
@@ -207,21 +237,10 @@ class SamplerArgs(object):
         return cmd
 
 
-class FixedParamArgs(object):
-    """Arguments for the NUTS adaptive sampler."""
-
-    def compose(self, idx: int, cmd: str) -> str:
-        cmd = cmd + ' method=fixed_param'
-        return cmd
-
-    def validate(self, chains):
-        pass
-
-
 class OptimizeArgs(object):
     """Container for arguments for the optimizer."""
 
-    OPTIMIZE_ALGOS = {"BFGS", "LBFGS", "Newton"}
+    OPTIMIZE_ALGOS = {'BFGS', 'LBFGS', 'Newton'}
 
     def __init__(
         self, algorithm: str = None, init_alpha: Real = None, iter: int = None
@@ -240,33 +259,32 @@ class OptimizeArgs(object):
             and self.algorithm not in self.OPTIMIZE_ALGOS
         ):
             raise ValueError(
-                "Please specify optimizer algorithms as one of [{}]".format(
-                    ", ".join(self.OPTIMIZE_ALGOS)
+                'Please specify optimizer algorithms as one of [{}]'.format(
+                    ', '.join(self.OPTIMIZE_ALGOS)
                 )
             )
 
         if self.init_alpha is not None:
-            if self.algorithm == "Newton":
+            if self.algorithm == 'Newton':
                 raise ValueError(
-                    "init_alpha must not be set when algorithm is Newton"
+                    'init_alpha must not be set when algorithm is Newton'
                 )
             if isinstance(self.init_alpha, Real):
                 if self.init_alpha < 0:
-                    raise ValueError("init_alpha must be greater than 0")
+                    raise ValueError('init_alpha must be greater than 0')
             else:
-                raise ValueError("init_alpha must be type of float")
+                raise ValueError('init_alpha must be type of float')
 
         if self.iter is not None:
             if isinstance(self.iter, Integral):
                 if self.iter < 0:
-                    raise ValueError("iter must be greater than 0")
+                    raise ValueError('iter must be greater than 0')
             else:
-                raise ValueError("iter must be type of int")
+                raise ValueError('iter must be type of int')
 
     def compose(self, idx: int, cmd: str) -> str:
         """compose command string for CmdStan for non-default arg values.
         """
-
         cmd = cmd + ' method=optimize'
         if self.algorithm:
             cmd += ' algorithm={}'.format(self.algorithm.lower())
@@ -274,6 +292,157 @@ class OptimizeArgs(object):
             cmd += ' init_alpha={}'.format(self.init_alpha)
         if self.iter is not None:
             cmd += ' iter={}'.format(self.iter)
+        return cmd
+
+
+class GenerateQuantitiesArgs(object):
+    """Arguments needed for generate_quantities method."""
+
+    def __init__(self, csv_files: List[str]) -> None:
+        """Initialize object."""
+        self.sample_csv_files = csv_files
+
+    def validate(self, chains: int) -> None:
+        """
+        Check arguments correctness and consistency.
+
+        * check that sample csv files exist
+        """
+        for i, csv in enumerate(self.sample_csv_files):
+            if not os.path.exists(csv):
+                raise ValueError(
+                    'Invalid path for sample csv file: {}'.format(csv)
+                )
+
+    def compose(self, idx: int, cmd: str) -> str:
+        """
+        Compose CmdStan command for method-specific non-default arguments.
+        """
+        cmd = cmd + ' method=generate_quantities'
+        cmd = '{} fitted_params={}'.format(cmd, self.sample_csv_files[idx - 1])
+        return cmd
+
+
+class VariationalArgs(object):
+    """Arguments needed for variational method."""
+
+    VARIATIONAL_ALGOS = {'meanfield', 'fullrank'}
+
+    def __init__(
+        self,
+        algorithm: str = None,
+        iter: int = None,
+        grad_samples: int = None,
+        elbo_samples: int = None,
+        eta: Real = None,
+        adapt_iter: int = None,
+        tol_rel_obj: Real = None,
+        eval_elbo: int = None,
+        output_samples: int = None,
+    ) -> None:
+        self.algorithm = algorithm
+        self.iter = iter
+        self.grad_samples = grad_samples
+        self.elbo_samples = elbo_samples
+        self.eta = eta
+        self.adapt_iter = adapt_iter
+        self.tol_rel_obj = tol_rel_obj
+        self.eval_elbo = eval_elbo
+        self.output_samples = output_samples
+
+    def validate(self, chains=None) -> None:
+        """
+        Check arguments correctness and consistency.
+        """
+        if (
+            self.algorithm is not None
+            and self.algorithm not in self.VARIATIONAL_ALGOS
+        ):
+            raise ValueError(
+                'Please specify variational algorithms as one of [{}]'.format(
+                    ', '.join(self.VARIATIONAL_ALGOS)
+                )
+            )
+        if self.iter is not None:
+            if self.iter < 1 or not isinstance(self.iter, Integral):
+                raise ValueError(
+                    'iter must be a positive integer,'
+                    ' found {}'.format(self.iter)
+                )
+        if self.grad_samples is not None:
+            if self.grad_samples < 1 or not isinstance(
+                self.grad_samples, Integral
+            ):
+                raise ValueError(
+                    'grad_samples must be a positive integer,'
+                    ' found {}'.format(self.grad_samples)
+                )
+        if self.elbo_samples is not None:
+            if self.elbo_samples < 1 or not isinstance(
+                self.elbo_samples, Integral
+            ):
+                raise ValueError(
+                    'elbo_samples must be a positive integer,'
+                    ' found {}'.format(self.elbo_samples)
+                )
+        if self.eta is not None:
+            if self.eta < 1 or not isinstance(self.eta, (Integral, Real)):
+                raise ValueError(
+                    'eta must be a non-negative number,'
+                    ' found {}'.format(self.eta)
+                )
+        if self.adapt_iter is not None:
+            if self.adapt_iter < 1 or not isinstance(self.eta, Integral):
+                raise ValueError(
+                    'adapt_iter must be a positive integer,'
+                    ' found {}'.format(self.adapt_iter)
+                )
+        if self.tol_rel_obj is not None:
+            if self.tol_rel_obj < 1 or not isinstance(
+                self.tol_rel_obj, (Integral, Real)
+            ):
+                raise ValueError(
+                    'tol_rel_obj must be a positive number,'
+                    ' found {}'.format(self.tol_rel_obj)
+                )
+        if self.eval_elbo is not None:
+            if self.eval_elbo < 1 or not isinstance(self.eval_elbo, Integral):
+                raise ValueError(
+                    'eval_elbo must be a positive integer,'
+                    ' found {}'.format(self.eval_elbo)
+                )
+        if self.output_samples is not None:
+            if self.output_samples < 1 or not isinstance(
+                self.output_samples, Integral
+            ):
+                raise ValueError(
+                    'output_samples must be a positive integer,'
+                    ' found {}'.format(self.output_samples)
+                )
+
+    def compose(self, idx: int, cmd: str) -> str:
+        """
+        Compose CmdStan command for method-specific non-default arguments.
+        """
+        cmd = cmd + ' method=variational'
+        if self.algorithm is not None:
+            cmd = '{} algorithm={}'.format(cmd, self.algorithm)
+        if self.iter is not None:
+            cmd = '{} iter={}'.format(cmd, self.iter)
+        if self.grad_samples is not None:
+            cmd = '{} grad_samples={}'.format(cmd, self.grad_samples)
+        if self.elbo_samples is not None:
+            cmd = '{} elbo_samples={}'.format(cmd, self.elbo_samples)
+        if self.eta is not None:
+            cmd = '{} eta={}'.format(cmd, self.eta)
+        if self.adapt_iter is not None:
+            cmd = '{} adapt iter={}'.format(cmd, self.adapt_iter)
+        if self.tol_rel_obj is not None:
+            cmd = '{} tol_rel_obj={}'.format(cmd, self.tol_rel_obj)
+        if self.eval_elbo is not None:
+            cmd = '{} eval_elbo={}'.format(cmd, self.eval_elbo)
+        if self.output_samples is not None:
+            cmd = '{} output_samples={}'.format(cmd, self.output_samples)
         return cmd
 
 
@@ -289,22 +458,34 @@ class CmdStanArgs(object):
         model_name: str,
         model_exe: str,
         chain_ids: Union[List[int], None],
-        method_args: Union[SamplerArgs, FixedParamArgs, OptimizeArgs],
+        method_args: Union[
+            SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
+        ],
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
         inits: Union[float, str, List[str]] = None,
         output_basename: str = None,
+        refresh: str = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
         self.model_exe = model_exe
         self.chain_ids = chain_ids
-        self.method_args = method_args
-        self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.data = data
         self.seed = seed
         self.inits = inits
         self.output_basename = output_basename
+        self.refresh = refresh
+        self.method_args = method_args
+        if isinstance(method_args, SamplerArgs):
+            self.method = Method.SAMPLE
+        elif isinstance(method_args, OptimizeArgs):
+            self.method = Method.OPTIMIZE
+        elif isinstance(method_args, GenerateQuantitiesArgs):
+            self.method = Method.GENERATE_QUANTITIES
+        elif isinstance(method_args, VariationalArgs):
+            self.method = Method.VARIATIONAL
+        self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.validate()
 
     def validate(self) -> None:
@@ -365,7 +546,7 @@ class CmdStanArgs(object):
             else:
                 if self.chain_ids is None:
                     raise ValueError(
-                        "seed must not be a list when no chains used"
+                        'seed must not be a list when no chains used'
                     )
 
                 if len(self.seed) != len(self.chain_ids):
@@ -404,7 +585,7 @@ class CmdStanArgs(object):
             elif isinstance(self.inits, list):
                 if self.chain_ids is None:
                     raise ValueError(
-                        "inits must not be a list when no chains are used"
+                        'inits must not be a list when no chains are used'
                     )
 
                 if len(self.inits) != len(self.chain_ids):
@@ -454,5 +635,7 @@ class CmdStanArgs(object):
             else:
                 cmd = '{} init={}'.format(cmd, self.inits[idx])
         cmd = '{} output file={}'.format(cmd, csv_file)
+        if self.refresh is not None:
+            cmd = '{} refresh={}'.format(cmd, self.refresh)
         cmd = self.method_args.compose(idx, cmd)
         return cmd

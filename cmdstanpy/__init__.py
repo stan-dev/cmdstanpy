@@ -25,7 +25,7 @@ def cleanup_tmpdir():
 
 atexit.register(cleanup_tmpdir)
 
-from .utils import set_cmdstan_path, cmdstan_path, set_make_env
-from .stanfit import StanFit
+from .utils import set_cmdstan_path, cmdstan_path, set_make_env, install_cmdstan
+from .stanfit import StanMCMC, StanMLE, StanQuantities, StanVariational
 from .model import Model
 from ._version import __version__

@@ -2,14 +2,18 @@ import os
 import unittest
 
 from cmdstanpy import TMPDIR
+
 from cmdstanpy.cmdstan_args import (
+    Method,
     SamplerArgs,
     CmdStanArgs,
-    FixedParamArgs,
     OptimizeArgs,
+    GenerateQuantitiesArgs,
+    VariationalArgs
 )
 
-datafiles_path = os.path.join('test', 'data')
+here = os.path.dirname(os.path.abspath(__file__))
+datafiles_path = os.path.join(here, 'data')
 
 
 class OptimizeArgsTest(unittest.TestCase):
@@ -121,6 +125,30 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
+        args = SamplerArgs(warmup_iters=100, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(save_warmup=True, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(max_treedepth=12, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(metric='dense', fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(step_size=0.5, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_delta=0.88, fixed_param=True)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
     def test_adapt(self):
         args = SamplerArgs(adapt_engaged=False)
         args.validate(chains=4)
@@ -192,6 +220,12 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=4)
 
+    def test_fixed_param(self):
+        args = SamplerArgs(fixed_param=True)
+        args.validate(chains=1)
+        cmd = args.compose(0, '')
+        self.assertIn('method=sample algorithm=fixed_param', cmd)
+
 
 class CmdStanArgsTest(unittest.TestCase):
     def test_compose(self):
@@ -209,27 +243,20 @@ class CmdStanArgsTest(unittest.TestCase):
             cmdstan_args.compose_command(idx=-1, csv_file='foo')
 
     def test_no_chains(self):
-        # we don't have chains for optimize
         exe = os.path.join(datafiles_path, 'bernoulli')
-        sampler_args = FixedParamArgs()
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe=exe,
-            chain_ids=None,
-            inits=jinits,
-            method_args=sampler_args,
-        )
-        self.assertIn('init=', cmdstan_args.compose_command(None, 'out.csv'))
 
+        sampler_args = SamplerArgs()
         with self.assertRaises(ValueError):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe=exe,
                 chain_ids=None,
                 seed=[1, 2, 3],
+                data=jdata,
                 inits=jinits,
-                method_args=sampler_args,
+                method_args=sampler_args
             )
 
         with self.assertRaises(ValueError):
@@ -237,8 +264,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_name='bernoulli',
                 model_exe=exe,
                 chain_ids=None,
+                data=jdata,
                 inits=[jinits],
-                method_args=sampler_args,
+                method_args=sampler_args
             )
 
     def test_args_good(self):
@@ -253,6 +281,7 @@ class CmdStanArgsTest(unittest.TestCase):
             data=jdata,
             method_args=sampler_args,
         )
+        self.assertEqual(cmdstan_args.method, Method.SAMPLE)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=1 random seed=', cmd)
         self.assertIn('data file=', cmd)
@@ -461,6 +490,98 @@ class CmdStanArgsTest(unittest.TestCase):
                 output_basename='no/such/path/to.file',
                 method_args=sampler_args,
             )
+
+
+class GenerateQuantitesTest(unittest.TestCase):
+    def test_args_fitted_params(self):
+        args = GenerateQuantitiesArgs(csv_files=['no_such_file'])
+        with self.assertRaises(ValueError):
+            args.validate(chains=1)
+        csv_files = [
+            os.path.join(
+                datafiles_path, 'runset-good', 'bern-{}.csv'.format(i + 1)
+            )
+            for i in range(4)
+        ]
+        args = GenerateQuantitiesArgs(csv_files=csv_files)
+        args.validate(chains=4)
+        cmd = args.compose(idx=1, cmd='')
+        self.assertIn('method=generate_quantities', cmd)
+        self.assertIn('fitted_params={}'.format(csv_files[0]), cmd)
+
+class VariationalTest(unittest.TestCase):
+    def test_args_variational(self):
+        args = VariationalArgs()
+        self.assertTrue(True)
+
+        args = VariationalArgs(output_samples=1)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd='')
+        self.assertIn('method=variational', cmd)
+        self.assertIn('output_samples=1', cmd)
+
+        args = VariationalArgs(tol_rel_obj=1)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd='')
+        self.assertIn('method=variational', cmd)
+        self.assertIn('tol_rel_obj=1', cmd)
+
+    def test_args_bad(self):
+        args = VariationalArgs(algorithm='no_such_algo')
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(iter=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(iter=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(grad_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(grad_samples=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(elbo_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(elbo_samples=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eta=-0.00003)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(adapt_iter=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(adapt_iter=1.1)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(tol_rel_obj=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eval_elbo=0)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(eval_elbo=1.5)
+        with self.assertRaises(ValueError):
+            args.validate()
+
+        args = VariationalArgs(output_samples=0)
+        with self.assertRaises(ValueError):
+            args.validate()
 
 
 if __name__ == '__main__':

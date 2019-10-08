@@ -4,18 +4,26 @@ language: python
 
 python:
   - "3.6"
+  - "3.7"
 
 cache:
   directories:
   - $HOME/.cmdstanpy
 
 install:
-  - pip install -r requirements.txt
-  - pip install flake8 pytest
-  - ./bin/install_cmdstan
+  - pip install --quiet -r requirements.txt
+  - pip install --quiet -r requirements-test.txt
+  - python cmdstanpy/install_cmdstan.py
+  # install cmdstanpy
+  - pip install .
 
 after install:
 
 script:
-  - flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E266,E402,E999,F401,F841,W503,W605 --max-line-length=80 cmdstanpy
-  - pytest test
+  # change dir and use installed version
+  - mkdir new_dir
+  - cd new_dir
+  - flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E266,E402,E999,F401,F841,W503,W605 --max-line-length=80 ../cmdstanpy
+  - pytest ../test
+  - python -m pip install -r ../requirements-optional.txt
+  - python ../test/example_script.py

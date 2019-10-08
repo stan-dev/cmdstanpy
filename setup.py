@@ -19,7 +19,7 @@ def get_version() -> str:
 
 _classifiers = """
 Programming Language :: Python :: 3
-License :: OSI Approved :: Apache Software License
+License :: OSI Approved :: BSD License
 Operating System :: OS Independent
 Development Status :: 4 - Beta
 Intended Audience :: Science/Research
@@ -31,7 +31,8 @@ Topic :: Scientific/Engineering :: Information Analysis
 INSTALL_REQUIRES = ['numpy', 'pandas']
 
 EXTRAS_REQUIRE = {
-    'tests': ['pytest', 'pytest-cov'],
+    'all': ['tqdm', 'ujson'],
+    'tests': ['pytest', 'pytest-cov', 'testfixtures'],
     'docs': [
         'sphinx',
         'sphinx-gallery',
@@ -50,7 +51,12 @@ setuptools.setup(
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
     packages=['cmdstanpy'],
-    scripts=['bin/install_cmdstan'],
+    entry_points={
+        'console_scripts': [
+            'install_cmdstan=cmdstanpy.install_cmdstan:main',
+            'install_cxx_toolchain=cmdstanpy.install_cxx_toolchain:main',
+        ]
+    },
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
     classifiers=_classifiers.strip().split('\n'),

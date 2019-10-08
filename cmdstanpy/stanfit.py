@@ -11,25 +11,29 @@ import logging
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
-    check_csv,
+    check_sampler_csv,
+    scan_optimize_csv,
+    scan_generated_quantities_csv,
+    scan_variational_csv,
     create_named_text_file,
     EXTENSION,
     cmdstan_path,
     do_command,
     get_logger,
 )
-from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
+from cmdstanpy.cmdstan_args import Method, CmdStanArgs
 
 
-class StanFit(object):
-    """Record of running NUTS sampler on a model."""
+class RunSet(object):
+    """
+    Record of CmdStan run for a specified configuration and number of chains.
+    """
 
     def __init__(
         self, args: CmdStanArgs, chains: int = 4, logger: logging.Logger = None
     ) -> None:
         """Initialize object."""
         self._args = args
-        self._is_optimizing = isinstance(self._args.method_args, OptimizeArgs)
         self._chains = chains
         self._logger = logger or get_logger()
         if chains < 1:
@@ -37,46 +41,38 @@ class StanFit(object):
                 'chains must be positive integer value, '
                 'found {i]}'.format(chains)
             )
-        self.csv_files = []
-        # per-chain sample csv files.
+        self._csv_files = []
         if args.output_basename is None:
-            csv_basename = 'stan-{}-draws'.format(args.model_name)
+            csv_basename = 'stan-{}-{}'.format(args.model_name, args.method)
             for i in range(chains):
                 fd_name = create_named_text_file(
                     dir=TMPDIR,
                     prefix='{}-{}-'.format(csv_basename, i + 1),
                     suffix='.csv',
                 )
-                self.csv_files.append(fd_name)
+                self._csv_files.append(fd_name)
         else:
             for i in range(chains):
-                self.csv_files.append(
+                self._csv_files.append(
                     '{}-{}.csv'.format(args.output_basename, i + 1)
                 )
-        self.console_files = []
-        # per-chain sample console output files.
+        self._console_files = []
         for i in range(chains):
-            txt_file = ''.join([os.path.splitext(self.csv_files[i])[0], '.txt'])
-            self.console_files.append(txt_file)
-        self.cmds = [
-            args.compose_command(i, self.csv_files[i]) for i in range(chains)
+            txt_file = ''.join(
+                [os.path.splitext(self._csv_files[i])[0], '.txt']
+            )
+            self._console_files.append(txt_file)
+        self._cmds = [
+            args.compose_command(i, self._csv_files[i]) for i in range(chains)
         ]
-        # per-chain sampler command.
         self._retcodes = [-1 for _ in range(chains)]
-        self._draws = None
-        self._column_names = None
-        self._num_params = None  # metric dim(s)
-        self._metric_type = None
-        self._metric = None
-        self._stepsize = None
-        self._sample = None
-        self._first_draw = None
 
     def __repr__(self) -> str:
-        repr = 'StanFit(args={}, chains={}'.format(self._args, self._chains)
-        repr = '{}\n csv_files={}\nconsole_files={})'.format(
-            repr, '\n\t'.join(self.csv_files), '\n\t'.join(self.console_files)
-        )
+        repr = 'RunSet: chains={}'.format(self._chains)
+        repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
+        repr = '{}\n csv_files:\n\t{}\n console_files:\n\t{}'.format(
+            repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)
+            )
         return repr
 
     @property
@@ -85,9 +81,146 @@ class StanFit(object):
         return self._args.model_name
 
     @property
+    def method(self) -> Method:
+        """Returns the CmdStan method used to generate this fit."""
+        return self._args.method
+
+    @property
     def chains(self) -> int:
         """Number of sampler chains."""
         return self._chains
+
+    @property
+    def cmds(self) -> List[str]:
+        """Per-chain call to CmdStan."""
+        return self._cmds
+
+    @property
+    def csv_files(self) -> List[str]:
+        """
+        List of paths to CmdStan output files.
+        """
+        return self._csv_files
+
+    @property
+    def console_files(self) -> List[str]:
+        """
+        List of paths to CmdStan console transcript files.
+        """
+        return self._console_files
+
+    def _check_retcodes(self) -> bool:
+        """True when all chains have retcode 0."""
+        for i in range(self._chains):
+            if self._retcodes[i] != 0:
+                return False
+        return True
+
+    def _retcode(self, idx: int) -> int:
+        """Get retcode for chain[idx]."""
+        return self._retcodes[idx]
+
+    def _set_retcode(self, idx: int, val: int) -> None:
+        """Set retcode for chain[idx] to val."""
+        self._retcodes[idx] = val
+
+    # redo - better error handling
+    # only used by unit tests...
+    def _check_console_msgs(self) -> bool:
+        """Checks console messages for each chain."""
+        valid = True
+        msg = ''
+        for i in range(self._chains):
+            with open(self._console_files[i], 'r') as fp:
+                contents = fp.read()
+                pat = re.compile(r'^Exception.*$', re.M)
+                errors = re.findall(pat, contents)
+                if len(errors) > 0:
+                    valid = False
+                    msg = '{}chain {}: {}\n'.format(msg, i + 1, errors)
+        if not valid:
+            raise Exception(msg)
+
+    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+        """
+        Moves csvfiles to specified directory using specified basename,
+        appending suffix '-<id>.csv' to each.
+
+        :param dir: directory path
+        :param basename:  base filename
+        """
+        if dir is None:
+            dir = '.'
+        test_path = os.path.join(dir, '.{}-test.tmp'.format(basename))
+        try:
+            os.makedirs(dir, exist_ok=True)
+            with open(test_path, 'w') as fd:
+                pass
+            os.remove(test_path)  # cleanup
+        except OSError:
+            raise Exception('cannot save to path: {}'.format(dir))
+
+        for i in range(self.chains):
+            if not os.path.exists(self._csv_files[i]):
+                raise ValueError(
+                    'cannot access csv file {}'.format(self._csv_files[i])
+                )
+            to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i + 1))
+            if os.path.exists(to_path):
+                raise ValueError(
+                    'file exists, not overwriting: {}'.format(to_path)
+                )
+            try:
+                self._logger.debug(
+                    'saving tmpfile: "%s" as: "%s"', self._csv_files[i], to_path
+                )
+                shutil.move(self._csv_files[i], to_path)
+                self._csv_files[i] = to_path
+            except (IOError, OSError, PermissionError) as e:
+                raise ValueError(
+                    'cannot save to file: {}'.format(to_path)
+                ) from e
+
+
+class StanMCMC(object):
+    """
+    Container for outputs from CmdStan sampler run.
+    """
+
+    def __init__(self, runset: RunSet, is_fixed_param: bool = False) -> None:
+        """Initialize object."""
+        if not (runset.method == Method.SAMPLE):
+            raise RuntimeError(
+                'Wrong runset method, expecting sample runset, '
+                'found method {}'.format(runset.method)
+            )
+        self.runset = runset
+        self._draws = None
+        self._column_names = ()
+        self._num_params = None  # metric dim(s)
+        self._metric_type = None
+        self._metric = None
+        self._stepsize = None
+        self._sample = None
+        self._is_fixed_param = is_fixed_param
+
+    def __repr__(self) -> str:
+        repr = 'StanMCMC: model={} chains={}{}'.format(
+            self.runset.model,
+            self.runset.chains,
+            self.runset._args.method_args.compose(0, ''),
+        )
+        repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
+
+    @property
+    def chains(self) -> int:
+        """Number of chains."""
+        return self.runset.chains
 
     @property
     def draws(self) -> int:
@@ -113,91 +246,43 @@ class StanFit(object):
 
     @property
     def metric_type(self) -> str:
-        """Metric type, either 'diag_e' or 'dense_e'."""
+        """
+        Metric type used for adaptation, either 'diag_e' or 'dense_e'.
+        When sampler algorithm 'fixed_param' is specified, metric_type is None.
+        """
         return self._metric_type
 
     @property
     def metric(self) -> np.ndarray:
-        """Metric used by sampler for each chain."""
-        if self._metric is None:
+        """
+        Metric used by sampler for each chain.
+        When sampler algorithm 'fixed_param' is specified, metric is None.
+        """
+        if not self._is_fixed_param and self._metric is None:
             self._assemble_sample()
         return self._metric
 
     @property
     def stepsize(self) -> np.ndarray:
-        """Stepsize used by sampler for each chain."""
-        if self._stepsize is None:
+        """
+        Stepsize used by sampler for each chain.
+        When sampler algorithm 'fixed_param' is specified, stepsize is None.
+        """
+        if not self._is_fixed_param and self._stepsize is None:
             self._assemble_sample()
         return self._stepsize
 
     @property
-    def is_optimizing(self) -> bool:
-        """Returns true if we are optimizing rather than sampling."""
-        return self._is_optimizing
-
-    @property
-    def optimized_params_np(self) -> np.array:
-        """Returns optimized params as numpy array."""
-        return self._first_draw
-
-    @property
-    def optimized_params_pd(self) -> pd.DataFrame:
-        """Returns optimized params as pandas DataFrame."""
-        return pd.DataFrame([self._first_draw], columns=self.column_names)
-
-    @property
-    def optimized_params_dict(self) -> OrderedDict:
-        """Returns optimized params as Dict."""
-        return OrderedDict(zip(self.column_names, self._first_draw))
-
-    def _sampling_only(self):
-        """Raise RuntimeError if method is not sampling."""
-        if self.is_optimizing:
-            raise RuntimeError('Method available only when sampling!')
-
-    @property
     def sample(self) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains all draws across all chain arranged
-        as (draws, chains, columns) stored column major so that the values
-        for each parameter are stored contiguously in memory, likewise
-        all draws from a chain are contiguous.
+        A 3-D numpy ndarray which contains all draws across all chains
+        arranged as (draws, chains, columns) stored column major
+        so that the values for each parameter are stored contiguously
+        in memory, likewise all draws from a chain are contiguous.
         """
-        self._sampling_only()
-
         if self._sample is None:
             self._assemble_sample()
         return self._sample
-
-    def _check_retcodes(self) -> bool:
-        """True when all chains have retcode 0."""
-        for i in range(self._chains):
-            if self._retcodes[i] != 0:
-                return False
-        return True
-
-    def _retcode(self, idx: int) -> int:
-        """Get retcode for chain[idx]."""
-        return self._retcodes[idx]
-
-    def _set_retcode(self, idx: int, val: int) -> None:
-        """Set retcode for chain[idx] to val."""
-        self._retcodes[idx] = val
-
-    def _check_console_msgs(self) -> bool:
-        """Checks console messages for each chain."""
-        valid = True
-        msg = ''
-        for i in range(self._chains):
-            with open(self.console_files[i], 'r') as fp:
-                contents = fp.read()
-                pat = re.compile(r'^Exception.*$', re.M)
-                errors = re.findall(pat, contents)
-                if len(errors) > 0:
-                    valid = False
-                    msg = '{}chain {}: {}\n'.format(msg, i + 1, errors)
-        if not valid:
-            raise Exception(msg)
 
     def _validate_csv_files(self) -> None:
         """
@@ -206,79 +291,81 @@ class StanFit(object):
         Raises exception when inconsistencies detected.
         """
         dzero = {}
-        for i in range(self._chains):
+        for i in range(self.runset.chains):
             if i == 0:
-                dzero = check_csv(
-                    self.csv_files[i], is_optimizing=self.is_optimizing
+                dzero = check_sampler_csv(
+                    self.runset.csv_files[i], self._is_fixed_param
                 )
             else:
-                d = check_csv(
-                    self.csv_files[i], is_optimizing=self.is_optimizing
+                d = check_sampler_csv(
+                    self.runset.csv_files[i], self._is_fixed_param
                 )
                 for key in dzero:
-                    if key not in ('id', 'first_draw') and dzero[key] != d[key]:
+                    if key != 'id' and dzero[key] != d[key]:
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
-                                self.csv_files[i], key, dzero[key], d[key]
+                                self.runset.csv_files[i],
+                                key,
+                                dzero[key],
+                                d[key],
                             )
                         )
         self._draws = dzero['draws']
         self._column_names = dzero['column_names']
-        self._num_params = dzero['num_params']
-        self._first_draw = dzero.get('first_draw')
-        self._metric_type = dzero.get('metric')
+        if not self._is_fixed_param:
+            self._num_params = dzero['num_params']
+            self._metric_type = dzero.get('metric')
 
     def _assemble_sample(self) -> None:
         """
         Allocates and populates the stepsize, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
-        if not (
-            self._stepsize is None
-            and self._metric is None
-            and self._sample is None
-        ):
+        if self._sample is not None:
             return
-        self._stepsize = np.empty(self._chains, dtype=float)
-        if self._metric_type == 'diag_e':
-            self._metric = np.empty(
-                (self._chains, self._num_params), dtype=float
-            )
-        else:
-            self._metric = np.empty(
-                (self._chains, self._num_params, self._num_params), dtype=float
-            )
         self._sample = np.empty(
-            (self._draws, self._chains, len(self._column_names)),
+            (self._draws, self.runset.chains, len(self._column_names)),
             dtype=float,
             order='F',
         )
-        for chain in range(self._chains):
-            with open(self.csv_files[chain], 'r') as fp:
+        if not self._is_fixed_param:
+            self._stepsize = np.empty(self.runset.chains, dtype=float)
+            if self._metric_type == 'diag_e':
+                self._metric = np.empty(
+                    (self.runset.chains, self._num_params), dtype=float
+                )
+            else:
+                self._metric = np.empty(
+                    (self.runset.chains, self._num_params, self._num_params),
+                    dtype=float,
+                )
+        for chain in range(self.runset.chains):
+            with open(self.runset.csv_files[chain], 'r') as fp:
                 # skip initial comments, reads thru column header
                 line = fp.readline().strip()
                 while len(line) > 0 and line.startswith('#'):
                     line = fp.readline().strip()
-                # skip warmup draws, if any, read to adaptation msg
-                line = fp.readline().strip()
-                if line != '# Adaptation terminated':
-                    while line != '# Adaptation terminated':
-                        line = fp.readline().strip()
-                line = fp.readline().strip()  # stepsize
-                label, stepsize = line.split('=')
-                self._stepsize[chain] = float(stepsize.strip())
-                line = fp.readline().strip()  # metric header
-                # process metric
-                if self._metric_type == 'diag_e':
-                    line = fp.readline().lstrip(' #\t')
-                    xs = line.split(',')
-                    self._metric[chain, :] = [float(x) for x in xs]
-                else:
-                    for i in range(self._num_params):
+                if not self._is_fixed_param:
+                    # skip warmup draws, if any, read to adaptation msg
+                    line = fp.readline().strip()
+                    if line != '# Adaptation terminated':
+                        while line != '# Adaptation terminated':
+                            line = fp.readline().strip()
+                    line = fp.readline().strip()  # stepsize
+                    label, stepsize = line.split('=')
+                    self._stepsize[chain] = float(stepsize.strip())
+                    line = fp.readline().strip()  # metric header
+                    # process metric
+                    if self._metric_type == 'diag_e':
                         line = fp.readline().lstrip(' #\t')
                         xs = line.split(',')
-                        self._metric[chain, i, :] = [float(x) for x in xs]
+                        self._metric[chain, :] = [float(x) for x in xs]
+                    else:
+                        for i in range(self._num_params):
+                            line = fp.readline().lstrip(' #\t')
+                            xs = line.split(',')
+                            self._metric[chain, i, :] = [float(x) for x in xs]
                 # process draws
                 for i in range(self._draws):
                     line = fp.readline().lstrip(' #\t')
@@ -291,20 +378,21 @@ class StanFit(object):
         Echo stansummary stdout/stderr to console.
         Assemble csv tempfile contents into pandasDataFrame.
         """
-        self._sampling_only()
-
         names = self.column_names
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
-        tmp_csv_file = 'stansummary-{}-{}-chains-'.format(
-            self._args.model_name, self.chains
+        tmp_csv_file = 'stansummary-{}-{}-chain-'.format(
+            self.runset._args.model_name, self.runset.chains
         )
         tmp_csv_path = create_named_text_file(
             dir=TMPDIR, prefix=tmp_csv_file, suffix='.csv'
         )
-        cmd = [cmd_path, '--csv_file={}'.format(tmp_csv_path)] + self.csv_files
-        do_command(cmd, logger=self._logger)
+        cmd = [
+            cmd_path,
+            '--csv_file={}'.format(tmp_csv_path),
+        ] + self.runset.csv_files
+        do_command(cmd, logger=self.runset._logger)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
                 fd, delimiter=',', header=0, index_col=0, comment='#'
@@ -328,13 +416,11 @@ class StanFit(object):
 
         :return str empty if no problems found
         """
-        self._sampling_only()
-
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
-        cmd = [cmd_path] + self.csv_files
-        result = do_command(cmd=cmd, logger=self._logger)
+        cmd = [cmd_path] + self.runset.csv_files
+        result = do_command(cmd=cmd, logger=self.runset._logger)
         if result:
-            self._logger.warning(result)
+            self.runset._logger.warning(result)
         return result
 
     def get_drawset(self, params: List[str] = None) -> pd.DataFrame:
@@ -344,8 +430,6 @@ class StanFit(object):
 
         :param params: list of model parameter names.
         """
-        self._sampling_only()
-
         pnames_base = [name.split('.')[0] for name in self.column_names]
         if params is not None:
             for p in params:
@@ -353,7 +437,7 @@ class StanFit(object):
                     raise ValueError('unknown parameter: {}'.format(p))
         self._assemble_sample()
         data = self.sample.reshape(
-            (self.draws * self.chains), len(self.column_names), order='A'
+            (self.draws * self.runset.chains), len(self.column_names), order='A'
         )
         df = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
@@ -373,34 +457,250 @@ class StanFit(object):
         :param dir: directory path
         :param basename:  base filename
         """
-        if dir is None:
-            dir = '.'
-        test_path = os.path.join(dir, '.{}-test.tmp'.format(basename))
-        try:
-            os.makedirs(dir, exist_ok=True)
-            with open(test_path, 'w') as fd:
-                pass
-            os.remove(test_path)  # cleanup
-        except OSError:
-            raise Exception('cannot save to path: {}'.format(dir))
+        self.runset.save_csvfiles(dir, basename)
 
-        for i in range(self.chains):
-            if not os.path.exists(self.csv_files[i]):
-                raise ValueError(
-                    'cannot access csv file {}'.format(self.csv_files[i])
-                )
-            to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i + 1))
-            if os.path.exists(to_path):
-                raise ValueError(
-                    'file exists, not overwriting: {}'.format(to_path)
-                )
-            try:
-                self._logger.debug(
-                    'saving tmpfile: "%s" as: "%s"', self.csv_files[i], to_path
-                )
-                shutil.move(self.csv_files[i], to_path)
-                self.csv_files[i] = to_path
-            except (IOError, OSError, PermissionError) as e:
-                raise ValueError(
-                    'cannot save to file: {}'.format(to_path)
-                ) from e
+
+class StanMLE(object):
+    """
+    Container for outputs from CmdStan optimization.
+    """
+
+    def __init__(self, runset: RunSet) -> None:
+        """Initialize object."""
+        if not (runset.method == Method.OPTIMIZE):
+            raise RuntimeError(
+                'Wrong runset method, expecting optimize runset, '
+                'found method {}'.format(runset.method)
+            )
+        self.runset = runset
+        self._column_names = ()
+        self._mle = {}
+
+    def __repr__(self) -> str:
+        repr = 'StanMLE: model={}{}'.format(
+            self.runset.model, self.runset._args.method_args.compose(0, '')
+        )
+        repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
+
+    def _set_mle_attrs(self, sample_csv_0: str) -> None:
+        meta = scan_optimize_csv(sample_csv_0)
+        self._column_names = meta['column_names']
+        self._mle = meta['mle']
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """
+        Names of estimated quantities, includes joint log probability,
+        and all parameters, transformed parameters, and generated quantitites.
+        """
+        return self._column_names
+
+    @property
+    def optimized_params_np(self) -> np.array:
+        """Returns optimized params as numpy array."""
+        if self._mle is None:
+            self._set_mle_attrs(self.runset.csv_files[0])
+        return self._mle
+
+    @property
+    def optimized_params_pd(self) -> pd.DataFrame:
+        """Returns optimized params as pandas DataFrame."""
+        if self._mle is None:
+            self._set_mle_attrs(self.runset.csv_files[0])
+        return pd.DataFrame([self._mle], columns=self.column_names)
+
+    @property
+    def optimized_params_dict(self) -> OrderedDict:
+        """Returns optimized params as Dict."""
+        if self._mle is None:
+            self._set_mle_attrs(self.runset.csv_files[0])
+        return OrderedDict(zip(self.column_names, self._mle))
+
+    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+        """
+        Moves csvfiles to specified directory using specified basename,
+        appending suffix '-<id>.csv' to each.
+
+        :param dir: directory path
+        :param basename:  base filename
+        """
+        self.runset.save_csvfiles(dir, basename)
+
+
+class StanQuantities(object):
+    """
+    Container for outputs from CmdStan generate_quantities run.
+    """
+
+    def __init__(self, runset: RunSet) -> None:
+        """Initialize object."""
+        if not (runset.method == Method.GENERATE_QUANTITIES):
+            raise RuntimeError(
+                'Wrong runset method, expecting generate_quantities runset, '
+                'found method {}'.format(runset.method)
+            )
+        self.runset = runset
+        self._column_names = None
+
+    def __repr__(self) -> str:
+        repr = 'StanQuantities: model={} chains={}{}'.format(
+            self.runset.model,
+            self.runset.chains,
+            self.runset._args.method_args.compose(0, ''),
+        )
+        repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
+
+    @property
+    def chains(self) -> int:
+        """Number of chains."""
+        return self.runset.chains
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """
+        Names of generated quantities of interest.
+        """
+        return self._column_names
+
+    @property
+    def generated_quantities(self) -> np.ndarray:
+        """
+        A 3-D numpy ndarray which contains all draws across all chains
+        arranged as (draws, chains, columns) stored column major
+        so that the values for each parameter are stored contiguously
+        in memory, likewise all draws from a chain are contiguous.
+        """
+        if not (self.runset.method == Method.GENERATED_QUANTITIES):
+            raise RuntimeError(
+                'Bad runset method {}.'.format(self.runset.method)
+            )
+        if self._generated_quantities is None:
+            self._assemble_generated_quantities()
+        return self._generated_quantities
+
+    def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
+        """
+        Propogate information from original sample to additional sample
+        returned by run_generated_quantities.
+        """
+        sample_meta = check_sampler_csv(sample_csv_0)
+        dzero = scan_generated_quantities_csv(self.runset.csv_files[0])
+        self._column_names = dzero['column_names']
+
+    def _assemble_generated_quantities(self) -> None:
+        df_list = []
+        for chain in range(self.runset.chains):
+            df_list.append(
+                pd.read_csv(self.runset.csv_files[chain], comment='#')
+            )
+        self._generated_quantities = pd.concat(df_list).values
+
+    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+        """
+        Moves csvfiles to specified directory using specified basename,
+        appending suffix '-<id>.csv' to each.
+
+        :param dir: directory path
+        :param basename:  base filename
+        """
+        self.runset.save_csvfiles(dir, basename)
+
+
+class StanVariational(object):
+    """
+    Container for outputs from CmdStan variational run.
+    """
+
+    def __init__(self, runset: RunSet) -> None:
+        """Initialize object."""
+        if not (runset.method == Method.VARIATIONAL):
+            raise RuntimeError(
+                'Wrong runset method, expecting variational inference, '
+                'found method {}'.format(runset.method)
+            )
+        self.runset = runset
+        self._column_names = ()
+        self._variational_mean = {}
+        self._output_samples = None
+
+    def __repr__(self) -> str:
+        repr = 'StanVariational: model={}{}'.format(
+            self.runset.model, self.runset._args.method_args.compose(0, '')
+        )
+        repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
+            repr,
+            '\n\t'.join(self.runset.csv_files),
+            '\n\t'.join(self.runset.console_files),
+        )
+        return repr
+
+    def _set_variational_attrs(self, sample_csv_0: str) -> None:
+        meta = scan_variational_csv(sample_csv_0)
+        self._column_names = meta['column_names']
+        self._variational_mean = meta['variational_mean']
+        self._output_samples = meta['output_samples']
+
+    @property
+    def columns(self) -> int:
+        """
+        Total number of information items returned by sampler.
+        Includes approximation information and names of model parameters
+        and computed quantities.
+        """
+        return len(self._column_names)
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """
+        Names of information items returned by sampler for each draw.
+        Includes approximation information and names of model parameters
+        and computed quantities.
+        """
+        return self._column_names
+
+    @property
+    def variational_params_np(self) -> np.array:
+        """Returns inferred parameter means as numpy array."""
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return self._variational_mean
+
+    @property
+    def variational_params_pd(self) -> pd.DataFrame:
+        """Returns inferred parameter means as pandas DataFrame."""
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return pd.DataFrame([self._variational_mean], columns=self.column_names)
+
+    @property
+    def variational_params_dict(self) -> OrderedDict:
+        """Returns inferred parameter means as Dict."""
+        if self._variational_mean is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return OrderedDict(zip(self.column_names, self._variational_mean))
+
+    def output_samples(self) -> np.array:
+        """Returns the set of approximate posterior output draws."""
+        if self._output_samples is None:
+            self._set_variational_attrs(self.runset.csv_files[0])
+        return self._output_samples
+
+    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+        """
+        Moves csvfiles to specified directory using specified basename,
+        appending suffix '-<id>.csv' to each.
+
+        :param dir: directory path
+        :param basename:  base filename
+        """
+        self.runset.save_csvfiles(dir, basename)

@@ -2,6 +2,8 @@
 Utility functions
 """
 import os
+from collections.abc import Sequence
+from numbers import Integral, Real
 
 try:
     import ujson as json
@@ -9,14 +11,16 @@ except ImportError:
     import json
 import math
 import numpy as np
+import pandas as pd
 import platform
 import re
 import subprocess
 import shutil
 import tempfile
 import logging
+import sys
 
-from typing import Dict, TextIO, List, Union
+from typing import Dict, TextIO, List, Union, Tuple
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -33,7 +37,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script `bin/install_cmdstan`.
+    Assumes directory populated via script `install_cmdstan`.
     """
     versions = [
         name.split('-')[1]
@@ -60,7 +64,14 @@ class MaybeDictToFilePath(object):
                     dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
-                jsondump(data_file, o)
+                if any(
+                    not item
+                    for item in o
+                    if isinstance(item, (Sequence, np.ndarray))
+                ):
+                    rdump(data_file, o)
+                else:
+                    jsondump(data_file, o)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(o, str):
@@ -178,6 +189,137 @@ def cmdstan_path() -> str:
     return cmdstan_path
 
 
+def cxx_toolchain_path(version: str = None) -> Tuple[str]:
+    """
+    Validate, then activate C++ toolchain directory path.
+    """
+    if platform.system() != 'Windows':
+        raise RuntimeError(
+            'Functionality is currently only supported on Windows'
+        )
+    if version is not None and not isinstance(version, str):
+        raise TypeError('Format version number as a string')
+    logger = get_logger()
+    toolchain_root = ''
+    if 'CMDSTAN_TOOLCHAIN' in os.environ:
+        toolchain_root = os.environ['CMDSTAN_TOOLCHAIN']
+        if os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools35 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools35 on %', toolchain_root
+                )
+                toolchain_root = ''
+        elif os.path.exist(os.path.join(toolchain_root, 'mingw64')):
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'usr', 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools40 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools40 on %', toolchain_root
+                )
+                toolchain_root = ''
+    else:
+        rtools_dir = os.path.expanduser(
+            os.path.join('~', '.cmdstanpy', 'RTools')
+        )
+        if not os.path.exists(rtools_dir):
+            raise ValueError(
+                'no RTools installation found, '
+                'run command line script "install_cxx_toolchain"'
+            )
+        compiler_path = ''
+        tool_path = ''
+        if version not in ('4', '40', '4.0') and os.path.exists(
+            os.path.join(rtools_dir, 'RTools35')
+        ):
+            toolchain_root = os.path.join(rtools_dir, 'RTools35')
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools35 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools35 on %', toolchain_root
+                )
+                toolchain_root = ''
+        if (
+            not toolchain_root or version in ('4', '40', '4.0')
+        ) and os.path.exists(os.path.join(rtools_dir, 'RTools40')):
+            toolchain_root = os.path.join(rtools_dir, 'RTools40')
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'usr', 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installion for RTools40 on %',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installion for RTools40 on %', toolchain_root
+                )
+                toolchain_root = ''
+    if not toolchain_root:
+        raise ValueError(
+            'no C++ toolchain installation found, '
+            'run command line script "install_cxx_toolchain"'
+        )
+    logger.info('Adds C++ toolchain to $PATH: %s', toolchain_root)
+    os.environ['PATH'] = '{};{};{}'.format(
+        compiler_path, tool_path, os.environ['PATH']
+    )
+    return compiler_path, tool_path
+
+
 def _rdump_array(key: str, val: np.ndarray) -> str:
     """Flatten numpy ndarray, format as Rdump variable declaration."""
     c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'
@@ -192,8 +334,16 @@ def _rdump_array(key: str, val: np.ndarray) -> str:
 def jsondump(path: str, data: Dict) -> None:
     """Dump a dict of data to a JSON file."""
     for key, val in data.items():
-        if isinstance(val, np.ndarray) and val.size > 1:
-            data[key] = val.tolist()
+        if isinstance(val, np.ndarray):
+            val = val.tolist()
+            data[key] = val
+        if isinstance(val, Sequence) and not val:
+            raise ValueError(
+                'variable: {}, error: '
+                'empty array not allowed with JSON interface'.format(
+                    val
+                )
+            )
     with open(path, 'w') as fd:
         json.dump(data, fd)
 
@@ -202,30 +352,83 @@ def rdump(path: str, data: Dict) -> None:
     """Dump a dict of data to a R dump format file."""
     with open(path, 'w') as fd:
         for key, val in data.items():
-            if isinstance(val, np.ndarray) and val.size > 1:
-                line = _rdump_array(key, val)
-            elif isinstance(val, list) and len(val) > 1:
+            if isinstance(val, (np.ndarray, Sequence)):
                 line = _rdump_array(key, np.asarray(val))
             else:
-                try:
-                    val = val.flat[0]
-                except AttributeError:
-                    pass
                 line = '{} <- {}'.format(key, val)
-            fd.write(line)
-            fd.write('\n')
+            print(line, file=fd)
 
 
-def check_csv(path: str, is_optimizing: bool = False) -> Dict:
+def rload(fname: str) -> dict:
+    """Parse data and parameter variable values from an R dump format file.
+       This parser only supports the subset of R dump data as described
+       in the "Dump Data Format" section of the CmdStan manual, i.e.,
+       scalar, vector, matrix, and array data types.
+    """
+    data_dict = {}
+    with open(fname, 'r') as fp:
+        lines = fp.readlines()
+    # Variable data may span multiple lines, parse accordingly
+    idx = 0
+    while idx < len(lines) and '<-' not in lines[idx]:
+        idx += 1
+    if idx == len(lines):
+        return None
+    start_idx = idx
+    idx += 1
+    while True:
+        while idx < len(lines) and '<-' not in lines[idx]:
+            idx += 1
+        next_var = idx
+        var_data = ''.join(lines[start_idx:next_var]).replace('\n', '')
+        lhs, rhs = [item.strip() for item in var_data.split('<-')]
+        lhs = lhs.replace('"', '')  # strip optional Jags double quotes
+        rhs = rhs.replace('L', '')  # strip R long int qualifier
+        data_dict[lhs] = parse_rdump_value(rhs)
+        if idx == len(lines):
+            break
+        start_idx = next_var
+        idx += 1
+    return data_dict
+
+
+def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
+    """Process right hand side of Rdump variable assignment statement.
+       Value is either scalar, vector, or multi-dim structure.
+       Use regex to capture structure values, dimensions.
+    """
+    pat = re.compile(
+        r'structure\(\s*c\((?P<vals>[^)]*)\)'
+        r'(,\s*\.Dim\s*=\s*c\s*\((?P<dims>[^)]*)\s*\))?\)'
+    )
+    val = None
+    try:
+        if rhs.startswith('structure'):
+            parse = pat.match(rhs)
+            if parse is None or parse.group('vals') is None:
+                raise ValueError(rhs)
+            vals = [float(v) for v in parse.group('vals').split(',')]
+            val = np.array(vals, order='F')
+            if parse.group('dims') is not None:
+                dims = [int(v) for v in parse.group('dims').split(',')]
+                val = np.array(vals).reshape(dims, order='F')
+        elif rhs.startswith('c(') and rhs.endswith(')'):
+            val = np.array([float(item) for item in rhs[2:-1].split(',')])
+        elif '.' in rhs or 'e' in rhs:
+            val = float(rhs)
+        else:
+            val = int(rhs)
+    except TypeError:
+        raise ValueError('bad value in Rdump file: {}'.format(rhs))
+    return val
+
+
+def check_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     """Capture essential config, shape from stan_csv file."""
-    meta = scan_stan_csv(path, is_optimizing=is_optimizing)
-    # check draws against spec
-    if is_optimizing:
-        draws_spec = 1
-    else:
-        draws_spec = int(meta.get('num_samples', 1000))
-        if 'thin' in meta:
-            draws_spec = int(math.ceil(draws_spec / meta['thin']))
+    meta = scan_sampler_csv(path, is_fixed_param)
+    draws_spec = int(meta.get('num_samples', 1000))
+    if 'thin' in meta:
+        draws_spec = int(math.ceil(draws_spec / meta['thin']))
     if meta['draws'] != draws_spec:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
@@ -235,17 +438,77 @@ def check_csv(path: str, is_optimizing: bool = False) -> Dict:
     return meta
 
 
-def scan_stan_csv(path: str, is_optimizing: bool = False) -> Dict:
-    """Process stan_csv file line by line."""
+def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
+    """Process sampler stan_csv output file line by line."""
     dict = {}
     lineno = 0
     with open(path, 'r') as fp:
         lineno = scan_config(fp, dict, lineno)
         lineno = scan_column_names(fp, dict, lineno)
-        lineno = scan_warmup(fp, dict, lineno)
-        if not is_optimizing:
+        if not is_fixed_param:
+            lineno = scan_warmup(fp, dict, lineno)
             lineno = scan_metric(fp, dict, lineno)
         lineno = scan_draws(fp, dict, lineno)
+    return dict
+
+
+def scan_optimize_csv(path: str) -> Dict:
+    """Process optimizer stan_csv output file line by line."""
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
+        line = fp.readline().lstrip(' #\t')
+        xs = line.split(',')
+        mle = [float(x) for x in xs]
+        dict['mle'] = mle
+    return dict
+
+
+def scan_generated_quantities_csv(path: str) -> Dict:
+    """
+    Process standalone generated quantities stan_csv output file line by line.
+    """
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
+    return dict
+
+
+def scan_variational_csv(path: str) -> Dict:
+    """Process advi stan_csv output file line by line."""
+    dict = {}
+    lineno = 0
+    with open(path, 'r') as fp:
+        lineno = scan_config(fp, dict, lineno)
+        lineno = scan_column_names(fp, dict, lineno)
+        line = fp.readline().lstrip(' #\t')
+        lineno += 1
+        if not line.startswith('Stepsize adaptation complete.'):
+            raise ValueError(
+                'line {}: expecting adaptation msg, found:\n\t "{}"'.format(
+                    lineno, line
+                )
+            )
+        line = fp.readline().lstrip(' #\t\n')
+        lineno += 1
+        if not line.startswith('eta = 1'):
+            raise ValueError(
+                'line {}: expecting eta = 1, found:\n\t "{}"'.format(
+                    lineno, line
+                )
+            )
+        line = fp.readline().lstrip(' #\t\n')
+        lineno += 1
+        xs = line.split(',')
+        variational_mean = [float(x) for x in xs]
+        dict['variational_mean'] = variational_mean
+        dict['output_samples'] = pd.read_csv(
+            path, comment='#', skiprows=lineno, header=None
+        )
     return dict
 
 
@@ -267,7 +530,15 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                 ):
                     config_dict['data_file'] = key_val[1].strip()
                 elif key_val[0].strip() != 'file':
-                    config_dict[key_val[0].strip()] = key_val[1].strip()
+                    raw_val = key_val[1].strip()
+                    try:
+                        val = int(raw_val)
+                    except ValueError:
+                        try:
+                            val = float(raw_val)
+                        except ValueError:
+                            val = raw_val
+                    config_dict[key_val[0].strip()] = val
         cur_pos = fp.tell()
         line = fp.readline().strip()
     fp.seek(cur_pos)
@@ -371,7 +642,6 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     num_cols = len(config_dict['column_names'])
     cur_pos = fp.tell()
     line = fp.readline().strip()
-    first_draw = None
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
@@ -382,12 +652,9 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                     lineno, num_cols, len(line.split(','))
                 )
             )
-        if first_draw is None:
-            first_draw = np.array(data, dtype=np.float64)
         cur_pos = fp.tell()
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
-    config_dict['first_draw'] = first_draw
     fp.seek(cur_pos)
     return lineno
 
@@ -409,7 +676,7 @@ def read_metric(path: str) -> List[int]:
                 ' entry "inv_metric"'.format(path)
             )
     else:
-        dims = read_rdump_metric(path)
+        dims = list(read_rdump_metric(path))
         if dims is None:
             raise ValueError(
                 'metric file {}, bad or missing'
@@ -420,20 +687,17 @@ def read_metric(path: str) -> List[int]:
 
 def read_rdump_metric(path: str) -> List[int]:
     """
-    Find dimensions of variable named 'inv_metric' using regex search.
+    Find dimensions of variable named 'inv_metric' in Rdump data file.
     """
-    with open(path, 'r') as fp:
-        data = fp.read().replace('\n', '')
-        m1 = re.search(r'inv_metric\s*<-\s*structure\(\s*c\(', data)
-        if not m1:
-            return_value = None
-        else:
-            m2 = re.search(r'\.Dim\s*=\s*c\(([^)]+)\)', data, m1.end())
-            if not m2:
-                return_value = None
-            dims = m2.group(1).split(',')
-            return_value = [int(d) for d in dims]
-    return return_value
+    metric_dict = rload(path)
+    if not (
+        'inv_metric' in metric_dict
+        and isinstance(metric_dict['inv_metric'], np.ndarray)
+    ):
+        raise ValueError(
+            'metric file {}, bad or missing entry "inv_metric"'.format(path)
+        )
+    return list(metric_dict['inv_metric'].shape)
 
 
 def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
@@ -520,3 +784,28 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     path = fd.name
     fd.close()
     return path
+
+
+def install_cmdstan(version: str = None, dir: str = None) -> bool:
+    """
+    Run 'install_cmdstan' -script
+    """
+    logger = get_logger()
+    python = sys.executable
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(here, 'install_cmdstan.py')
+    cmd = [python, path]
+    if version is not None:
+        cmd.extend(['--version', version])
+    if dir is not None:
+        cmd.extend(['--dir', dir])
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while proc.poll() is None:
+        output = proc.stdout.readline().decode('utf-8').strip()
+        if output:
+            logger.info(output)
+    proc.communicate()
+    if proc.returncode:
+        logger.warning('CmdStan installation failed')
+        return False
+    return True
