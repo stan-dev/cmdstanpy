@@ -1,4 +1,5 @@
 import os
+import time
 import unittest
 
 import logging
@@ -298,6 +299,30 @@ class StanMCMCTest(unittest.TestCase):
         )
         self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
 
+    def test_assemble_sample_big(self):
+        exe = os.path.join(
+            datafiles_path, 'bernoulli' + EXTENSION
+        )
+        output = os.path.join(datafiles_path, 'runset-big', 'output_icar_nyc')
+        sampler_args = SamplerArgs()
+        cmdstan_args = CmdStanArgs(
+            model_name='bym2',
+            model_exe=exe,
+            chain_ids=[1, 2],
+            seed=12345,
+            output_basename=output,
+            method_args=sampler_args,
+        )
+        runset = RunSet(args=cmdstan_args, chains=2)
+        fit = StanMCMC(runset)
+        fit._validate_csv_files()
+        self.assertTrue(True)
+        start = time.time()
+        fit._assemble_sample()
+        end = time.time()
+        # print('summary time elapsed: {}'.format(end - start))
+        self.assertTrue(True)
+
     def test_validate_big_run(self):
         exe = os.path.join(
             datafiles_path, 'bernoulli' + EXTENSION
@@ -305,7 +330,7 @@ class StanMCMCTest(unittest.TestCase):
         output = os.path.join(datafiles_path, 'runset-big', 'output_icar_nyc')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
+            model_name='bym2',
             model_exe=exe,
             chain_ids=[1, 2],
             seed=12345,

@@ -368,9 +368,8 @@ class StanMCMC(object):
                             self._metric[chain, i, :] = [float(x) for x in xs]
                 # process draws
                 for i in range(self._draws):
-                    line = fp.readline().lstrip(' #\t')
-                    xs = line.split(',')
-                    self._sample[i, chain, :] = [float(x) for x in xs]
+                    line = fp.readline().strip()
+                    self._sample[i, chain, :] = [float(x) for x in line.split(',')]
 
     def summary(self) -> pd.DataFrame:
         """

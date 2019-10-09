@@ -640,22 +640,18 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     draws_found = 0
     num_cols = len(config_dict['column_names'])
-    cur_pos = fp.tell()
     line = fp.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
-        data = line.split(',')
-        if len(data) != num_cols:
-            raise ValueError(
-                'line {}: bad draw, expecting {} items, found {}'.format(
-                    lineno, num_cols, len(line.split(','))
-                )
-            )
-        cur_pos = fp.tell()
+        if len(line.split(',')) != num_cols:
+           raise ValueError(
+               'line {}: bad draw, expecting {} items, found {}'.format(
+                  lineno, num_cols, len(line.split(','))
+               )
+           )
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
-    fp.seek(cur_pos)
     return lineno
 
 
