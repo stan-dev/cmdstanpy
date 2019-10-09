@@ -72,7 +72,7 @@ class RunSet(object):
         repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
         repr = '{}\n csv_files:\n\t{}\n console_files:\n\t{}'.format(
             repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)
-            )
+        )
         return repr
 
     @property
@@ -369,7 +369,9 @@ class StanMCMC(object):
                 # process draws
                 for i in range(self._draws):
                     line = fp.readline().strip()
-                    self._sample[i, chain, :] = [float(x) for x in line.split(',')]
+                    self._sample[i, chain, :] = [
+                        float(x) for x in line.split(',')
+                    ]
 
     def summary(self) -> pd.DataFrame:
         """

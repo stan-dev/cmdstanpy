@@ -645,11 +645,11 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         lineno += 1
         draws_found += 1
         if len(line.split(',')) != num_cols:
-           raise ValueError(
-               'line {}: bad draw, expecting {} items, found {}'.format(
-                  lineno, num_cols, len(line.split(','))
-               )
-           )
+            raise ValueError(
+                'line {}: bad draw, expecting {} items, found {}'.format(
+                    lineno, num_cols, len(line.split(','))
+                )
+            )
         line = fp.readline().strip()
     config_dict['draws'] = draws_found
     return lineno
