@@ -17,14 +17,14 @@ from cmdstanpy.cmdstan_args import (
     SamplerArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
-    VariationalArgs
+    VariationalArgs,
 )
 from cmdstanpy.stanfit import (
     RunSet,
-    StanFit,
+    StanMCMC,
     StanMLE,
     StanQuantities,
-    StanVariational
+    StanVariational,
 )
 from cmdstanpy.utils import (
     do_command,
@@ -120,7 +120,6 @@ class Model(object):
     def compile(
         self,
         opt_lvl: int = 3,
-        overwrite: bool = False,
         include_paths: List[str] = None,
     ) -> None:
         """
@@ -133,85 +132,88 @@ class Model(object):
             Higher optimization levels increase runtime performance but will
             take longer to compile.
 
-        :param overwrite: When True, existing executable will be overwritten.
-            Defaults to False.
-
         :param include_paths: List of paths to directories where Stan should
             look for files to include in compilation of the C++ executable.
         """
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
 
-        if self._exe_file is not None and not overwrite:
-            self._logger.warning('model is already compiled')
-            return
-
         compilation_failed = False
 
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
-            hpp_file = Path(hpp_file).as_posix()
-            if overwrite or not os.path.exists(hpp_file):
-                self._logger.info('stan to c++ (%s)', hpp_file)
-                stanc_path = os.path.join(
-                    cmdstan_path(), 'bin', 'stanc' + EXTENSION
-                )
-                stanc_path = Path(stanc_path).as_posix()
-                cmd = [
-                    stanc_path,
-                    '--o={}'.format(hpp_file),
-                    Path(stan_file).as_posix(),
-                ]
-                if include_paths is not None:
-                    bad_paths = [
-                        d for d in include_paths if not os.path.exists(d)
-                    ]
-                    if any(bad_paths):
-                        raise Exception(
-                            'invalid include paths: {}'.format(
-                                ', '.join(bad_paths)
-                            )
-                        )
-                    cmd.append(
-                        '--include_paths='
-                        + ','.join((Path(p).as_posix() for p in include_paths))
-                    )
-
-                do_command(cmd, logger=self._logger)
-                if not os.path.exists(hpp_file):
-                    raise Exception('syntax error'.format(stan_file))
-
             exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
             exe_file = Path(exe_file).as_posix()
             exe_file += EXTENSION
-            make = os.getenv('MAKE', 'make')
-            cmd = [make, 'O={}'.format(opt_lvl), exe_file]
-            self._logger.info('compiling c++')
-            try:
-                do_command(cmd, cmdstan_path(), self._logger)
-            except Exception as e:
-                self._logger.error('make cmd failed %s', e)
-                compilation_failed = True
-            if is_copied and not compilation_failed:
+            do_compile = True
+            if os.path.exists(exe_file):
+                src_time = os.path.getmtime(self._stan_file)
+                exe_time = os.path.getmtime(exe_file)
+                if exe_time > src_time:
+                    do_compile = False
+                    self._logger.info('found newer exe file, not recompiling')
 
-                original_target_dir = os.path.dirname(self._stan_file)
-                # reconstruct the output file name
-                new_exec_name = (
-                    os.path.basename(os.path.splitext(self._stan_file)[0])
-                    + EXTENSION
-                )
+            if do_compile:
+                hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
+                hpp_file = Path(hpp_file).as_posix()
+                if not os.path.exists(hpp_file):
+                    self._logger.info('stan to c++ (%s)', hpp_file)
+                    stanc_path = os.path.join(
+                        cmdstan_path(), 'bin', 'stanc' + EXTENSION
+                    )
+                    stanc_path = Path(stanc_path).as_posix()
+                    cmd = [
+                        stanc_path,
+                        '--o={}'.format(hpp_file),
+                        Path(stan_file).as_posix(),
+                    ]
+                    if include_paths is not None:
+                        bad_paths = [
+                            d for d in include_paths if not os.path.exists(d)
+                        ]
+                        if any(bad_paths):
+                            raise Exception(
+                                'invalid include paths: {}'.format(
+                                    ', '.join(bad_paths)
+                                )
+                            )
+                        cmd.append(
+                            '--include_paths='
+                            + ','.join(
+                                (Path(p).as_posix() for p in include_paths)
+                            )
+                        )
+                    try:
+                        do_command(cmd, logger=self._logger)
+                    except Exception as e:
+                        self._logger.error('file {}, {}'.format(stan_file, e))
+                        compilation_failed = True
 
-                self._exe_file = os.path.join(
-                    original_target_dir, new_exec_name
-                )
-                # copy the generated file back to the original directory
-                shutil.copy(exe_file, self._exe_file)
-            elif not compilation_failed:
-                self._exe_file = exe_file
-        if compilation_failed:
-            self._logger.error('model compilation failed')
-        else:
-            self._logger.info('compiled model file: %s', self._exe_file)
+                if not compilation_failed:
+                    make = os.getenv('MAKE', 'make')
+                    cmd = [make, 'O={}'.format(opt_lvl), exe_file]
+                    self._logger.info('compiling c++')
+                    try:
+                        do_command(cmd, cmdstan_path(), self._logger)
+                    except Exception as e:
+                        self._logger.error('make cmd failed %s', e)
+                        compilation_failed = True
+
+            if not compilation_failed:
+                if is_copied:
+                    original_target_dir = os.path.dirname(self._stan_file)
+                    new_exec_name = (
+                        os.path.basename(os.path.splitext(self._stan_file)[0])
+                        + EXTENSION
+                        )
+                    self._exe_file = os.path.join(
+                        original_target_dir, new_exec_name
+                        )
+                    shutil.copy(exe_file, self._exe_file)
+                else:
+                    self._exe_file = exe_file
+                self._logger.info('compiled model file: %s', self._exe_file)
+            else:
+                self._logger.error('model compilation failed')
 
     def optimize(
         self,
@@ -312,7 +314,7 @@ class Model(object):
         fixed_param: bool = False,
         csv_basename: str = None,
         show_progress: Union[bool, str] = False,
-    ) -> StanFit:
+    ) -> StanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
         from the posterior distribution of a model conditioned on some data.
@@ -323,7 +325,7 @@ class Model(object):
         Unspecified arguments are not included in the call to CmdStan, i.e.,
         those arguments will have CmdStan default values.
 
-        For each chain, the ``StanFit`` object records the command,
+        For each chain, the ``StanMCMC`` object records the command,
         the return code, the sampler output file paths, and the corresponding
         subprocess console outputs, if any.
 
@@ -425,7 +427,7 @@ class Model(object):
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
-        :return: StanFit object
+        :return: StanMCMC object
         """
 
         if chains is None:
@@ -483,6 +485,7 @@ class Model(object):
         if show_progress:
             try:
                 import tqdm
+
                 # progress bar updates - 100 per warmup, sampling
                 if fixed_param or not adapt_engaged or warmup_iters == 0:
                     num_updates = 100
@@ -494,10 +497,7 @@ class Model(object):
                 s_iters = sampling_iters
                 if s_iters is None:
                     s_iters = 1000
-                refresh = max(
-                    int((s_iters + w_iters) // num_updates),
-                    1,
-                )
+                refresh = max(int((s_iters + w_iters) // num_updates), 1)
                 # disable logger for console (temporary) - use tqdm
                 self._logger.propagate = False
             except ImportError:
@@ -522,7 +522,7 @@ class Model(object):
             step_size=step_size,
             adapt_engaged=adapt_engaged,
             adapt_delta=adapt_delta,
-            fixed_param=fixed_param
+            fixed_param=fixed_param,
         )
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
@@ -610,9 +610,9 @@ class Model(object):
                             msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
-            stanfit = StanFit(runset, fixed_param)
-            stanfit._validate_csv_files()
-        return stanfit
+            mcmc = StanMCMC(runset, fixed_param)
+            mcmc._validate_csv_files()
+        return mcmc
 
     def run_generated_quantities(
         self,
@@ -622,7 +622,7 @@ class Model(object):
         gq_csv_basename: str = None,
     ) -> StanQuantities:
         """
-        Wrapper for generated quantities call.  Given a StanFit object
+        Wrapper for generated quantities call.  Given a StanMCMC object
         containing a sample from the fitted model, along with the
         corresponding dataset for that fit, run just the generated quantities
         block of the model in order to get additional quantities of interest.

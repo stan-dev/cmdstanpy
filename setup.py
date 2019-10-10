@@ -19,7 +19,7 @@ def get_version() -> str:
 
 _classifiers = """
 Programming Language :: Python :: 3
-License :: OSI Approved :: Apache Software License
+License :: OSI Approved :: BSD License
 Operating System :: OS Independent
 Development Status :: 4 - Beta
 Intended Audience :: Science/Research
