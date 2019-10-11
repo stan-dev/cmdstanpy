@@ -506,7 +506,7 @@ def scan_variational_csv(path: str) -> Dict:
         xs = line.split(',')
         variational_mean = [float(x) for x in xs]
         dict['variational_mean'] = variational_mean
-        dict['output_samples'] = pd.read_csv(
+        dict['variational_sample'] = pd.read_csv(
             path, comment='#', skiprows=lineno, header=None
         )
     return dict
