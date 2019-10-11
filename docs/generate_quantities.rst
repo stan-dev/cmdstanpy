@@ -1,10 +1,10 @@
-Running Generated Quantities
-============================
+Run Generated Quantities
+========================
 
-The `generated
-quantities <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__
-block computes quantities of interest based on the data, transformed
-data, parameters, and transformed parameters. It allows us to:
+The `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__
+computes quantities of interest based on the data,
+transformed data, parameters, and transformed parameters.
+It can be used to:
 
 -  generate simulated data for model testing by forward sampling
 -  generate predictions for new data
@@ -15,15 +15,14 @@ data, parameters, and transformed parameters. It allows us to:
 -  apply full Bayesian decision theory
 -  calculate log likelihoods, deviances, etc. for model comparison
 
-If we have already obtained a sample from a model conditioned on a
-dataset and are satisfied with the model and the fit of the sample, but
-would like to compute new quantities of interest, the
-:ref:`class_model` class method ``run_generated_quantities``
-allows us to do so without the
-expense of re-running the sampler. Instead it takes the existing sample,
-and for each draw in the drawset, runs the generated quantities block of
-the program using the per-draw parameter estimates to compute the
-quantities of interest.
+When you have already successfully fit a model to the data,
+and are satisfied with the model but would like to compute
+new quantities of interest, the :ref:`class_model` class method ``run_generated_quantities``
+lets you do this without the expense of re-running the sampler.
+It takes the existing sample as input, and for each draw it
+runs the generated quantities block of the program using the
+per-draw parameter estimates to compute the quantities of interest.
+
 
 Example: add posterior predictive checks to ``bernoulli.stan``
 --------------------------------------------------------------

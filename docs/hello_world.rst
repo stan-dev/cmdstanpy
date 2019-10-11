@@ -60,8 +60,8 @@ Access the sample
 -----------------
 
 The ``sample`` command returns a ``StanMCMC`` object
-which provides a set of methods to access the sampler output.
-The output consists of information about the call to CmdStan,
+which provides methods to retrieve the sampler outputs,
+the arguments used to run Cmdstan, and names of the
 the per-chain stan-csv output files, and per-chain console messages files.
 
 .. code-block:: python
