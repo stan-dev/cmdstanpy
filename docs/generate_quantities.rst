@@ -2,7 +2,7 @@ Run Generated Quantities
 ========================
 
 The `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__
-computes quantities of interest based on the data,
+computes *quantities of interest* (QOIs) based on the data,
 transformed data, parameters, and transformed parameters.
 It can be used to:
 
@@ -15,14 +15,15 @@ It can be used to:
 -  apply full Bayesian decision theory
 -  calculate log likelihoods, deviances, etc. for model comparison
 
-When you have already successfully fit a model to the data,
-and are satisfied with the model but would like to compute
-new quantities of interest, the :ref:`class_model` class method ``run_generated_quantities``
-lets you do this without the expense of re-running the sampler.
+The :ref:`class_model` class ``run_generated_quantities`` method is useful once you
+have successfully fit a model to your data and have a valid
+sample from the posterior.
+If you need to compute additional quantities of interest,
+you can do this using the existing parameter estimates.
 It takes the existing sample as input, and for each draw it
 runs the generated quantities block of the program using the
 per-draw parameter estimates to compute the quantities of interest.
-
+In this way you add more columns of information to an existing sample.
 
 Example: add posterior predictive checks to ``bernoulli.stan``
 --------------------------------------------------------------

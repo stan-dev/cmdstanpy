@@ -580,7 +580,7 @@ class StanQuantities(object):
         so that the values for each parameter are stored contiguously
         in memory, likewise all draws from a chain are contiguous.
         """
-        if not (self.runset.method == Method.GENERATED_QUANTITIES):
+        if not (self.runset.method == Method.GENERATE_QUANTITIES):
             raise RuntimeError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
