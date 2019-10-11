@@ -11,8 +11,8 @@ from the approximate posterior density.
 
 ADVI approximates the variational objective function, the evidence lower bound or ELBO,
 using stochastic gradient ascent.
-The algorithm ascends these gradients using an adaptive stepsize sequence,
-which has one parameter ``eta``, which is adjusted during warmup.
+The algorithm ascends these gradients using an adaptive stepsize sequence
+that has one parameter ``eta`` which is adjusted during warmup.
 The number of draws used to approximate the ELBO is denoted by ``elbo_samples``. 
 ADVI heuristically determines a rolling window over which it computes
 the average and the median change of the ELBO.
@@ -64,8 +64,8 @@ the returned set of draws from this approximate posterior (if any):
     print(vi.variational_params_dict['theta'])
     print(vi.sample.shape)
 
-These estimates are only valid is the algorigthm has convered to a good
-approximation. When the algorighm fails to do so, the ``variational``
+These estimates are only valid if the algorithm has converged to a good
+approximation. When the algorithm fails to do so, the ``variational``
 method will throw a ``RuntimeError``.
 
 .. code:: ipython3
