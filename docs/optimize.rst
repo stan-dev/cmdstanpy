@@ -53,7 +53,7 @@ In the following example, we instantiate a model and do optimization using the d
     # instantiate bernoulli model, compile Stan program
     bernoulli_model = Model(stan_file=bernoulli_path)
     bernoulli_model.compile()
-    # run CmdStan's otpimize method, returns object `StanMLE`
+    # run CmdStan's optimize method, returns object `StanMLE`
     mle = bernoulli_model.optimize(data=bernoulli_data)
     print(mle.column_names)
     print(mle.optimized_params_dict)

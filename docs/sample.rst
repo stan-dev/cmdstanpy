@@ -10,7 +10,7 @@ In order to evaluate the fit of the model to the data, it is necessary to run
 several Monte Carlo chains and compare the set of draws returned by each.
 By default, the ``sample`` command runs 4 sampler chains, i.e.,
 CmdStanPy invokes CmdStan 4 times.
-CmdStanPy uses Python's ``subprocess`` and ``multiprocesing`` libraries
+CmdStanPy uses Python's ``subprocess`` and ``multiprocessing`` libraries
 to run these chains in separate processes.
 This processing can be done in parallel, up to the number of
 processor cores available.
