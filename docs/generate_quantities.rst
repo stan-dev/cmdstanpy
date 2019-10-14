@@ -93,9 +93,6 @@ Therefore the first step is to fit the bernoulli model to the data:
     bern_fit = bernoulli_model.sample(data=bern_data)
 
 
-
-
-
 .. code:: ipython3
 
     bernoulli_ppc_model = Model(stan_file='bernoulli_ppc.stan')

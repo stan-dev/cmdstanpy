@@ -39,7 +39,7 @@ penalized maximum likelihood estaimate of all model parameters:
 - ``optimized_params_np``
 - ``optimized_params_pd``
 
-In the following example, we run the ADVI algorithm specifying only the input data:
+In the following example, we instantiate a model and do optimization using the default CmdStan settings:
 
 .. code:: ipython3
 

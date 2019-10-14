@@ -70,7 +70,7 @@ and the returned set of draws from this approximate posterior (if any):
 
 - ``save_csvfiles()``
 
-In the following example, we run the ADVI algorithm specifying only the requisite input data:
+In the following example, we instantiate a model and run variational inference using the default CmdStan settings:
 
 .. code:: ipython3
 

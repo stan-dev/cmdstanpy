@@ -6,18 +6,13 @@ sampler which uses the Hamiltonian Monte Carlo (HMC) algorithm
 and its adaptive variant the no-U-turn sampler (NUTS) to produce a set of
 draws from the posterior distribution of the model parameters conditioned on the data.
 
-
-As in the :ref:`hello_world` section, we show how to use the ``sample`` method
-by fitting the CmdStan example model
-`bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan>`__
-to the data in file
-`bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
-
-The :ref:`class_model` class method  ``sample`` runs the Stan HMC-NUTS sampler on the model and data
-and returns a ``StanMCMC`` object.
-By default, the ``sample`` command runs 4 sampler chains, i.e., CmdStanPy invokes CmdStan 4 times.
-CmdStanPy uses Python's ``subprocess`` and ``multiprocesing`` libraries to run these chains in separate
-processes. It can be configured to run these chains in parallel, depending on the number of
+In order to evaluate the fit of the model to the data, it is necessary to run
+several Monte Carlo chains and compare the set of draws returned by each.
+By default, the ``sample`` command runs 4 sampler chains, i.e.,
+CmdStanPy invokes CmdStan 4 times.
+CmdStanPy uses Python's ``subprocess`` and ``multiprocesing`` libraries
+to run these chains in separate processes.
+This processing can be done in parallel, up to the number of
 processor cores available.
 
 NUTS-HMC sampler configuration
