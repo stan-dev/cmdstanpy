@@ -1,5 +1,8 @@
-"Hello World" - compiling and fitting a Stan model
-__________________________________________________
+"Hello World"
+_____________
+
+Bayesian estimation via Stan's HMC-NUTS sampler 
+------------------------------------------------
 
 To exercise the essential functions of CmdStanPy, we will
 compile the example Stan model ``bernoulli.stan``, which is
@@ -9,11 +12,8 @@ Stan's HMC-NUTS sampler in order to estimate the posterior probability
 of the model parameters conditioned on the data.
 
 
-.. _hello_world_model:
-
-
 Specify a Stan model
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 The ``Model`` class specifies the Stan program and its corresponding compiled executable.
 The method ``compile`` is used to compile or or recompile a Stan program.
@@ -36,9 +36,9 @@ If you already have a compiled executable, you can construct a ``Model`` object 
             exe_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli')
             )
 
-
+            
 Run the HMC-NUTS sampler
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``Model`` method ``sample`` runs the Stan HMC-NUTS sampler on the model and data
 and returns a ``StanMCMC`` object:
@@ -57,7 +57,7 @@ when the current Python session is terminated.
 
 
 Access the sample
------------------
+^^^^^^^^^^^^^^^^^
 
 The ``sample`` command returns a ``StanMCMC`` object
 which provides methods to retrieve the sampler outputs,
@@ -108,7 +108,7 @@ the index '0' corresponds to the first chain in the ``StanMCMC``:
                         # 0.       ,  9.44788  ,  0.0934208])
 
 Summarize or save the results
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CmdStan is distributed with a posterior analysis utility ``stansummary``
 that reads the outputs of all chains and computes summary statistics
@@ -150,7 +150,7 @@ to the specified location, renaming them using a specified basename.
 
 .. comment
   Progress bar
-  ------------
+  ^^^^^^^^^^^^
   
   User can enable progress bar for the sampling if ``tqdm`` package
   has been installed.

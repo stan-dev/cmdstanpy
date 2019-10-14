@@ -6,3 +6,118 @@ sampler which uses the Hamiltonian Monte Carlo (HMC) algorithm
 and its adaptive variant the no-U-turn sampler (NUTS) to produce a set of
 draws from the posterior distribution of the model parameters conditioned on the data.
 
+
+As in the :ref:`hello_world` section, we show how to use the ``sample`` method
+by fitting the CmdStan example model
+`bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan>`__
+to the data in file
+`bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
+
+The :ref:`class_model` class method  ``sample`` runs the Stan HMC-NUTS sampler on the model and data
+and returns a ``StanMCMC`` object.
+By default, the ``sample`` command runs 4 sampler chains, i.e., CmdStanPy invokes CmdStan 4 times.
+CmdStanPy uses Python's ``subprocess`` and ``multiprocesing`` libraries to run these chains in separate
+processes. It can be configured to run these chains in parallel, depending on the number of
+processor cores available.
+
+NUTS-HMC sampler configuration
+------------------------------
+
+- ``chains``: Number of sampler chains.
+
+- ``cores``: Number of processes to run in parallel.
+
+- ``seed``: The seed or list of per-chain seeds for the sampler's random number generator.
+
+- ``chain_ids``: The offset or list of per-chain offsets for the random number generator.
+
+- ``inits``: Specifies how the sampler initializes parameter values.
+
+- ``warmup_iters``: Number of warmup iterations for each chain.
+
+- ``sampling_iters``: Number of draws from the posterior for each chain.
+
+- ``save_warmup``: When True, sampler saves warmup draws as part of output csv file.
+
+- ``thin``: Period between saved samples.
+
+- ``max_treedepth``: Maximum depth of trees evaluated by NUTS sampler per iteration.
+
+- ``metric``: Specification of the mass matrix.
+
+- ``step_size``: Initial stepsize for HMC sampler.
+
+- ``adapt_engaged``: When ``True``, adapt stepsize and metric.
+
+- ``fixed_param``: When ``True``, call CmdStan with argument "algorithm=fixed_param".  
+
+.. include:: common_config.rst
+
+All of these arguments are optional; when unspecified, the CmdStan defaults will be used.
+
+
+Example: fit model - sampler defaults
+-------------------------------------
+
+By default the sampler runs 4 chains.
+It will use 2 less than that number of cores available, as determined by Python's ``multiprocessing.cpu_count()`` function.  For example, on a dual-processor machine with 4 virtual cores, the defaults will result a run of 4 chains, but only 2 chains will be run parallel.
+
+.. code-block:: python
+
+    bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
+    bern_fit = bernoulli_model.sample(data=bernoulli_data)
+
+
+Example: generate data - `fixed_param=True`
+-------------------------------------------
+
+
+The Stan programming language can be used to write Stan programs which generate
+simulated data for a set of known parameter values by calling Stan's RNG functions.
+Such programs don't need to declare parameters or model blocks because all
+computation is done in the generated quantities block.
+
+For example, the Stan program
+`bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_datagen.stan>`__
+can be used to generate a dataset of simulated data, where each row in the dataset consists of ``N`` draws from a Bernoulli distribution given probability ``theta``:
+
+.. code-block::
+
+    data { 
+      int<lower=0> N; 
+      real<lower=0,upper=1> theta;
+    } 
+    generated quantities {
+      int y_sim[N];
+      for (n in 1:N)
+        y_sim[n] = bernoulli_rng(theta);
+    }
+
+This program doesn't contain parameters or a model block, therefore
+we run the sampler without ding any MCMC estimation by
+specifying ``fixed_param=True``.
+The sampler runs without updating the Markov Chain,
+thus the values of all parameters and
+transformed parameters are constant across all draws and
+only those values in the generated quantities block that are
+produced by RNG functions may change.
+
+.. code-block:: python
+
+    bern_datagen_stan = os.path.join('test', 'data', 'bernoulli_datagen.stan')
+    bern_gen_model = Model(stan_file=bern_gen_stan)
+    bern_gen_model.compile()
+    bern_datagen_data = { 'N' : 10, 'theta' : 0.33 }
+    sim_data = bern_gen_model.sample(data=bern_gen_data, fixed_param=True)
+
+When ``fixed_param=True``, the ``sample`` method only runs 1 chain by default.
+
+Compute statistics on returned drawset
+
+.. code-block:: python
+
+    sim_data_summary = sim_data.summary()
+    thetas_rep = sim_summary['Mean'][1:]
+    thetas_rep.plot.density()
+    sample_draw = sim_data.sample[1,0,:]
+    sample_draw

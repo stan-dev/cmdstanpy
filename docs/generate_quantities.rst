@@ -25,6 +25,18 @@ runs the generated quantities block of the program using the
 per-draw parameter estimates to compute the quantities of interest.
 In this way you add more columns of information to an existing sample.
 
+Configuration
+-------------
+
+- ``csv_files``: A list of sampler output csv files.
+
+- ``data``: Values for all data variables in the model, specified either as a dictionary with entries matching the data variables, or as the path of a data file in JSON or Rdump format.
+
+- ``seed``: The seed for random number generator.
+            
+- ``gq_csv_basename``:  A path or file name which will be used as the basename for the CmdStan output files.
+
+
 Example: add posterior predictive checks to ``bernoulli.stan``
 --------------------------------------------------------------
 
