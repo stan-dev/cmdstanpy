@@ -59,6 +59,30 @@ All of these arguments are optional; when unspecified, the CmdStan defaults will
 Example: fit model - sampler defaults
 -------------------------------------
 
+In this example we use the CmdStan example model
+`bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan>`__
+and data file
+`bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
+
+The :ref:`class_model` class method  ``sample`` returns a ``StanMCMC`` object
+which provides properties to retrieve information about the sample, as well as methods
+to run CmdStan's summary and diagnostics tools:
+
+- ``chains``
+- ``draws``
+- ``columns``   
+- ``column_names``
+- ``metric_type``
+- ``metric``
+- ``sample``
+- ``stepsize``
+
+- ``get_drawset``
+- ``summary()``
+- ``diagnose()``
+- ``save_csvfiles()``
+
+  
 By default the sampler runs 4 chains.
 It will use 2 less than that number of cores available, as determined by Python's ``multiprocessing.cpu_count()`` function.  For example, on a dual-processor machine with 4 virtual cores, the defaults will result a run of 4 chains, but only 2 chains will be run parallel.
 
@@ -66,7 +90,9 @@ It will use 2 less than that number of cores available, as determined by Python'
 
     bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
-
+    bern_fit.sample.shape
+    bern_fit.summary()
+    
 
 Example: generate data - `fixed_param=True`
 -------------------------------------------

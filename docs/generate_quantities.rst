@@ -45,9 +45,40 @@ In this example we use the CmdStan example model
 and data file
 `bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__
 as our existing model and data.
-We instantiate the model ``bernoulli``, as in the “Hello World”, and produce a sample
-from the model conditioned on the data.
+We create the program
+`bernoulli_ppc.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_ppc.stan>`__
+by adding a ``generated quantities`` block to ``bernoulli.stan``
+which generates a new data vector ``y_rep`` using the current estimate of theta.
 
+.. code::
+
+    generated quantities {
+      int y_sim[N];
+      real<lower=0,upper=1> theta_rep;
+      for (n in 1:N)
+        y_sim[n] = bernoulli_rng(theta);
+      theta_rep = sum(y) / N;
+    }
+
+
+The :ref:`class_model` class method  ``run_generated_quantities`` returns a ``StanQuantities`` object
+which provides properties to retrieve information about the sample:
+
+
+- ``chains``
+- ``column_names``
+- ``generated_quantities``
+
+- ``save_csvfiles()``
+
+
+The arguments to the ``run_generated_quantities`` method are:
+
+- the data used to fit the model (``bern_data``)
+- the list of the resulting stan csv files (``bern_fit.csv_files``)
+
+
+Therefore the first step is to fit the bernoulli model to the data:
 
 .. code:: ipython3
 
@@ -63,16 +94,7 @@ from the model conditioned on the data.
 
 
 
-We create program
-`bernoulli_ppc.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_ppc.stan>`__
-by adding a ``generated quantities`` block which generates a new data
-vector ``y_rep`` using the current estimate of theta.
 
-
-The arguments to the ``run_generated_quantities`` method are:
-
-- the data used to fit the model (``bern_data``)
-- the list of the resulting stan csv files (``bern_fit.csv_files``)
 
 .. code:: ipython3
 
@@ -80,6 +102,8 @@ The arguments to the ``run_generated_quantities`` method are:
     bernoulli_ppc_model.compile()
 
     new_quantities = bernoulli_ppc_model.run_generated_quantities(data=bern_data, csv_files=bern_fit.csv_files)
+
+
 
 The ``StanQuantities`` object contains the values for all variables in
 the generated quantities block of the program ``bernoulli_ppc.stan``.
