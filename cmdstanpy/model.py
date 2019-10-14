@@ -118,9 +118,7 @@ class Model(object):
         return self._exe_file
 
     def compile(
-        self,
-        opt_lvl: int = 3,
-        include_paths: List[str] = None,
+        self, opt_lvl: int = 3, include_paths: List[str] = None
     ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
@@ -204,10 +202,10 @@ class Model(object):
                     new_exec_name = (
                         os.path.basename(os.path.splitext(self._stan_file)[0])
                         + EXTENSION
-                        )
+                    )
                     self._exe_file = os.path.join(
                         original_target_dir, new_exec_name
-                        )
+                    )
                     shutil.copy(exe_file, self._exe_file)
                 else:
                     self._exe_file = exe_file
@@ -233,7 +231,7 @@ class Model(object):
             or as the path of a data file in JSON or Rdump format.
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified, 
+            between ``0`` and ``2^32 - 1``. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
 
@@ -342,7 +340,7 @@ class Model(object):
             than `total_cpu_count - 2`
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified, 
+            between ``0`` and ``2^32 - 1``. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
             When the same seed is used across all chains,
@@ -639,7 +637,7 @@ class Model(object):
             method or via another Stan interface.
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified, 
+            between ``0`` and ``2^32 - 1``. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
             *NOTE: Specifying the seed will guarantee the same result for
@@ -713,7 +711,7 @@ class Model(object):
             or as the path of a data file in JSON or Rdump format.
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified, 
+            between ``0`` and ``2^32 - 1``. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
 
