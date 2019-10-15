@@ -57,7 +57,7 @@ In this example we use the CmdStan example model
 and data file
 `bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
 
-The :ref:`class_model` class method  ``variational`` returns a ``CmdStanVB`` object which provides properties
+The :ref:`class_cmdstanmodel` class method  ``variational`` returns a ``CmdStanVB`` object which provides properties
 to retrieve the estimate of the
 approximate posterior mean of all model parameters,
 and the returned set of draws from this approximate posterior (if any):
@@ -81,14 +81,16 @@ In the following example, we instantiate a model and run variational inference u
     bernoulli_dir = os.path.join(cmdstan_path(), 'examples', 'bernoulli')
     bernoulli_path = os.path.join(bernoulli_dir, 'bernoulli.stan')
     bernoulli_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')
+
     # instantiate bernoulli model, compile Stan program
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
+
     # run CmdStan's variational inference method, returns object `CmdStanVB`
-    vi = bernoulli_model.variational(data=bernoulli_data)
-    print(vi.column_names)
-    print(vi.variational_params_dict)
-    vi.variational_sample.shape
+    vb = bernoulli_model.variational(data=bernoulli_data)
+    print(vb.column_names)
+    print(vb.variational_params_dict)
+    vb.variational_sample.shape
 
 These estimates are only valid if the algorithm has converged to a good
 approximation. When the algorithm fails to do so, the ``variational``
@@ -99,7 +101,7 @@ method will throw a ``RuntimeError``.
     fail_stan = os.path.join(datafiles_path, 'variational', 'eta_should_fail.stan')
     fail_model = CmdStanModel(stan_file=fail_stan)
     model.compile()
-    vi = model.variational()
+    vb = model.variational()
 
 
 References
