@@ -104,9 +104,9 @@ can be used to generate a dataset of simulated data, where each row in the datas
 
 .. code-block::
 
-    data { 
-      int<lower=0> N; 
-      real<lower=0,upper=1> theta;
+    transformed data { 
+      int<lower=0> N = 10;
+      real<lower=0,upper=1> theta = 0.35;
     } 
     generated quantities {
       int y_sim[N];
@@ -117,6 +117,7 @@ can be used to generate a dataset of simulated data, where each row in the datas
 This program doesn't contain parameters or a model block, therefore
 we run the sampler without ding any MCMC estimation by
 specifying ``fixed_param=True``.
+When ``fixed_param=True``, the ``sample`` method only runs 1 chain.
 The sampler runs without updating the Markov Chain,
 thus the values of all parameters and
 transformed parameters are constant across all draws and
@@ -125,20 +126,18 @@ produced by RNG functions may change.
 
 .. code-block:: python
 
-    bern_datagen_stan = os.path.join('test', 'data', 'bernoulli_datagen.stan')
-    bern_gen_model = Model(stan_file=bern_gen_stan)
-    bern_gen_model.compile()
-    bern_datagen_data = { 'N' : 10, 'theta' : 0.33 }
-    sim_data = bern_gen_model.sample(data=bern_gen_data, fixed_param=True)
+    datagen_stan = os.path.join('..', '..', 'test', 'data', 'bernoulli_datagen.stan')
+    datagen_model = Model(stan_file=datagen_stan)
+    datagen_model.compile()
+    sim_data = datagen_model.sample(fixed_param=True)
+    sim_data.summary()
 
-When ``fixed_param=True``, the ``sample`` method only runs 1 chain by default.
-
-Compute statistics on returned drawset
+Compute, plot histogram of total successes for `N` Bernoulli trials with chance of success `theta`:
 
 .. code-block:: python
 
-    sim_data_summary = sim_data.summary()
-    thetas_rep = sim_summary['Mean'][1:]
-    thetas_rep.plot.density()
-    sample_draw = sim_data.sample[1,0,:]
-    sample_draw
+    drawset_pd = sim_data.get_drawset()
+    drawset_pd.columns
+    y_sims = drawset_pd.drop(columns=['lp__', 'accept_stat__'])
+    y_sums = y_sims.sum(axis=1)
+    y_sums.astype('int32').plot.hist(range(0,datagen_data['N']+1))
