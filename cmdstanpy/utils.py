@@ -43,7 +43,7 @@ def get_latest_cmdstan(dot_dir: str) -> str:
         name.split('-')[1]
         for name in os.listdir(dot_dir)
         if os.path.isdir(os.path.join(dot_dir, name))
-        and name.startswith('cmdstan-')
+        and name.startswith('cmdstan-') and name[8].isdigit()
     ]
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
@@ -506,7 +506,7 @@ def scan_variational_csv(path: str) -> Dict:
         xs = line.split(',')
         variational_mean = [float(x) for x in xs]
         dict['variational_mean'] = variational_mean
-        dict['output_samples'] = pd.read_csv(
+        dict['variational_sample'] = pd.read_csv(
             path, comment='#', skiprows=lineno, header=None
         )
     return dict

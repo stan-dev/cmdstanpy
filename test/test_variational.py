@@ -39,7 +39,7 @@ class StanVariationalTest(unittest.TestCase):
         # check StanVariational.__init__ state
         self.assertEqual(vi._column_names,())
         self.assertEqual(vi._variational_mean,{})
-        self.assertEqual(vi._output_samples,None)
+        self.assertEqual(vi._variational_sample,None)
 
         # process csv file, check attrs
         output = os.path.join(datafiles_path, 'variational', 'eta_big_output.csv')
@@ -47,7 +47,7 @@ class StanVariationalTest(unittest.TestCase):
         self.assertEqual(vi.column_names,('lp__', 'log_p__', 'log_g__', 'mu.1', 'mu.2'))
         self.assertAlmostEqual(vi.variational_params_dict['mu.1'], 31.0299, places=2)
         self.assertAlmostEqual(vi.variational_params_dict['mu.2'], 28.8141, places=2)
-        self.assertEqual(vi.output_samples().shape, (1000, 5))
+        self.assertEqual(vi.variational_sample.shape, (1000, 5))
 
 
 class VariationalTest(unittest.TestCase):
@@ -74,7 +74,7 @@ class VariationalTest(unittest.TestCase):
             vi.variational_params_np[4], vi.variational_params_pd['mu.2'][0]
         )
 
-        self.assertEqual(vi.output_samples().shape, (1000, 5))
+        self.assertEqual(vi.variational_sample.shape, (1000, 5))
 
     def test_variational_missing_args(self):
         self.assertTrue(True)

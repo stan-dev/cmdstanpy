@@ -580,7 +580,7 @@ class StanQuantities(object):
         so that the values for each parameter are stored contiguously
         in memory, likewise all draws from a chain are contiguous.
         """
-        if not (self.runset.method == Method.GENERATED_QUANTITIES):
+        if not (self.runset.method == Method.GENERATE_QUANTITIES):
             raise RuntimeError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
@@ -631,7 +631,7 @@ class StanVariational(object):
         self.runset = runset
         self._column_names = ()
         self._variational_mean = {}
-        self._output_samples = None
+        self._variational_sample = None
 
     def __repr__(self) -> str:
         repr = 'StanVariational: model={}{}'.format(
@@ -648,7 +648,7 @@ class StanVariational(object):
         meta = scan_variational_csv(sample_csv_0)
         self._column_names = meta['column_names']
         self._variational_mean = meta['variational_mean']
-        self._output_samples = meta['output_samples']
+        self._variational_sample = meta['variational_sample']
 
     @property
     def columns(self) -> int:
@@ -689,11 +689,12 @@ class StanVariational(object):
             self._set_variational_attrs(self.runset.csv_files[0])
         return OrderedDict(zip(self.column_names, self._variational_mean))
 
-    def output_samples(self) -> np.array:
+    @property
+    def variational_sample(self) -> np.array:
         """Returns the set of approximate posterior output draws."""
-        if self._output_samples is None:
+        if self._variational_sample is None:
             self._set_variational_attrs(self.runset.csv_files[0])
-        return self._output_samples
+        return self._variational_sample
 
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
         """

@@ -118,9 +118,7 @@ class Model(object):
         return self._exe_file
 
     def compile(
-        self,
-        opt_lvl: int = 3,
-        include_paths: List[str] = None,
+        self, opt_lvl: int = 3, include_paths: List[str] = None
     ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
@@ -204,10 +202,10 @@ class Model(object):
                     new_exec_name = (
                         os.path.basename(os.path.splitext(self._stan_file)[0])
                         + EXTENSION
-                        )
+                    )
                     self._exe_file = os.path.join(
                         original_target_dir, new_exec_name
-                        )
+                    )
                     shutil.copy(exe_file, self._exe_file)
                 else:
                     self._exe_file = exe_file
@@ -232,8 +230,9 @@ class Model(object):
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
-        :param seed: The seed for random number generator Must be an integer
-            between 0 and 2^32 - 1. If unspecified, numpy.random.RandomState()
+        :param seed: The seed for random number generator. Must be an integer
+            between ``0`` and ``2^32 - 1``. If unspecified,
+            ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
 
         :param inits:  Specifies how the sampler initializes parameter values.
@@ -242,7 +241,7 @@ class Model(object):
             all parameters in the model.  The default initialization behavoir
             will initialize all parameter values on range [-2, 2] on the
             _unconstrained_ support.  If the expected parameter values are
-            too far from this range, this option may improve adaptation.
+            too far from this range, this option may improve estimation.
             The following value types are allowed:
 
             * Single number ``n > 0`` - initialization range is [-n, n].
@@ -340,10 +339,11 @@ class Model(object):
             If none then set automatically to `chains` but no more
             than `total_cpu_count - 2`
 
-        :param seed: The seed for random number generator or a list of per-chain
-            seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
-            numpy.random.RandomState() is used to generate a seed which will be
-            used for all chains. When the same seed is used across all chains,
+        :param seed: The seed for random number generator. Must be an integer
+            between ``0`` and ``2^32 - 1``. If unspecified,
+            ``numpy.random.RandomState()``
+            is used to generate a seed which will be used for all chains.
+            When the same seed is used across all chains,
             the chain-id is used to advance the RNG to avoid dependent samples.
 
         :param chain_ids: The offset for the random number generator, either
@@ -408,14 +408,15 @@ class Model(object):
             It improves the effective sample size, but may increase the time
             per iteration.
 
-        :param fixed_param: Call CmdStan with argument "algorithm=fixed_param"
-            which runs the sampler without updating the Markov Chain, so that
-            the values of all parameters and transformed parameters are constant
-            across all draws and only those values in the generated quantities
-            block which are produced by RNG functions may change.  This provides
+        :param fixed_param: When True, call CmdStan with argument
+            "algorithm=fixed_param" which runs the sampler without
+            updating the Markov Chain, thus the values of all parameters and
+            transformed parameters are constant across all draws and
+            only those values in the generated quantities block that are
+            produced by RNG functions may change.  This provides
             a way to use Stan programs to generate simulated data via the
             generated quantities block.  This option must be used when the
-            parameters block is empty.
+            parameters block is empty.  Default value is False.
 
         :param csv_basename: A path or file name which will be used as the
             basename for the sampler output files.  The csv output files
@@ -635,8 +636,9 @@ class Model(object):
             fitting the model to the data, either using CmdStanPy's `sample`
             method or via another Stan interface.
 
-        :param seed: The seed for random number generator Must be an integer
-            between 0 and 2^32 - 1. If unspecified, numpy.random.RandomState()
+        :param seed: The seed for random number generator. Must be an integer
+            between ``0`` and ``2^32 - 1``. If unspecified,
+            ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
             *NOTE: Specifying the seed will guarantee the same result for
             multiple invocations of this method with the same inputs.  However
@@ -708,16 +710,15 @@ class Model(object):
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
-        :param seed: The seed for random number generator or a list of per-chain
-            seeds. Must be an integer between 0 and 2^32 - 1. If unspecified,
-            numpy.random.RandomState() is used to generate a seed which will be
-            used for all chains. When the same seed is used across all chains,
-            the chain-id is used to advance the RNG to avoid dependent samples.
+        :param seed: The seed for random number generator. Must be an integer
+            between ``0`` and ``2^32 - 1``. If unspecified,
+            ``numpy.random.RandomState()``
+            is used to generate a seed which will be used for all chains.
 
         :param inits:  Specifies how the sampler initializes parameter values.
-            Initializiation is uniform random on a range centered on 0 with
-            default range of 2. Specifying a single number ``n > 0`` changes
-            the initialization range to [-n, n].
+            Initializiation is uniform random on a range centered on ``0`` with
+            default range of ``2``. Specifying a single number ``n > 0`` changes
+            the initialization range to ``[-n, n]``.
 
         :param csv_basename:  A path or file name which will be used as the
             basename for the CmdStan output files.  The csv output files
