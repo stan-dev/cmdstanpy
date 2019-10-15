@@ -6,12 +6,44 @@ API Reference
 Classes
 *******
 
-.. _class_model:
+.. _class_cmdstanmodel:
 
-Model
+CmdStanModel
 =====
 
-.. autoclass:: cmdstanpy.Model
+.. autoclass:: cmdstanpy.CmdStanModel
+   :members:
+
+.. _class_cmdstanstanmcmc:
+
+CmdStanMCMC
+========
+
+.. autoclass:: cmdstanpy.CmdStanMCMC
+   :members:
+
+.. _class_cmdstanstanmle:
+
+CmdStanMLE
+=======
+
+.. autoclass:: cmdstanpy.CmdStanMLE
+   :members:
+
+.. _class_cmdstanstanqq:
+
+CmdStanGQ
+==============
+
+.. autoclass:: cmdstanpy.CmdStanGQ
+   :members:
+
+.. _class_cmdstanstanvb:
+
+CmdStanVB
+===============
+
+.. autoclass:: cmdstanpy.CmdStanVB
    :members:
 
 .. _class_runset:
@@ -21,36 +53,3 @@ RunSet
 
 .. autoclass:: cmdstanpy.stanfit.RunSet
    :members:
-
-.. _class_stanmcmc:
-
-StanMCMC
-========
-
-.. autoclass:: cmdstanpy.StanMCMC
-   :members:
-
-.. _class_stanmle:
-
-StanMLE
-=======
-
-.. autoclass:: cmdstanpy.StanMLE
-   :members:
-
-.. _class_stanquantities:
-
-StanQuantities
-==============
-
-.. autoclass:: cmdstanpy.StanQuantities
-   :members:
-
-.. _class_stanvariational:
-
-StanVariational
-===============
-
-.. autoclass:: cmdstanpy.StanVariational
-   :members:
-

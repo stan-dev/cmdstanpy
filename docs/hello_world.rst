@@ -15,23 +15,23 @@ of the model parameters conditioned on the data.
 Specify a Stan model
 ^^^^^^^^^^^^^^^^^^^^
 
-The ``Model`` class specifies the Stan program and its corresponding compiled executable.
+The ``CmdStanModel`` class specifies the Stan program and its corresponding compiled executable.
 The method ``compile`` is used to compile or or recompile a Stan program.
 
 .. code-block:: python
 
     import os
-    from cmdstanpy import cmdstan_path, Model
+    from cmdstanpy import cmdstan_path, CmdStanModel
 
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
-    bernoulli_model = Model(stan_file=bernoulli_stan)
+    bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
     bernoulli_model.compile()
 
-If you already have a compiled executable, you can construct a ``Model`` object directly:
+If you already have a compiled executable, you can construct a ``CmdStanModel`` object directly:
 
 .. code-block:: python
 
-    bernoulli_model = Model(
+    bernoulli_model = CmdStanModel(
             stan_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan'),
             exe_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli')
             )
@@ -40,8 +40,8 @@ If you already have a compiled executable, you can construct a ``Model`` object 
 Run the HMC-NUTS sampler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``Model`` method ``sample`` runs the Stan HMC-NUTS sampler on the model and data
-and returns a ``StanMCMC`` object:
+The ``CmdStanModel`` method ``sample`` runs the Stan HMC-NUTS sampler on the model and data
+and returns a ``CmdStanMCMC`` object:
 
 .. code-block:: python
 
@@ -59,7 +59,7 @@ when the current Python session is terminated.
 Access the sample
 ^^^^^^^^^^^^^^^^^
 
-The ``sample`` command returns a ``StanMCMC`` object
+The ``sample`` command returns a ``CmdStanMCMC`` object
 which provides methods to retrieve the sampler outputs,
 the arguments used to run Cmdstan, and names of the
 the per-chain stan-csv output files, and per-chain console messages files.
@@ -74,7 +74,7 @@ the first time that any of the properties
 At this point the stan-csv output files are read into memory.
 For large files this may take several seconds; for the example
 dataset, this should take less than a second.
-The ``sample`` property of the ``StanMCMC`` object
+The ``sample`` property of the ``CmdStanMCMC`` object
 is a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
 which contains the set of all draws from all chains 
 arranged as dimensions: (draws, chains, columns).
@@ -97,7 +97,7 @@ columns to just the specified parameter names.
 Python's index slicing operations can be used to access the information by chain.
 For example, to select all draws and all output columns from the first chain,
 we specify the chain index (2nd index dimension).  As arrays indexing starts at 0,
-the index '0' corresponds to the first chain in the ``StanMCMC``:
+the index '0' corresponds to the first chain in the ``CmdStanMCMC``:
 
 .. code-block:: python
 
@@ -112,7 +112,7 @@ Summarize or save the results
 
 CmdStan is distributed with a posterior analysis utility ``stansummary``
 that reads the outputs of all chains and computes summary statistics
-on the model fit for all parameters. The ``StanMCMC`` method ``summary``
+on the model fit for all parameters. The ``CmdStanMCMC`` method ``summary``
 runs the CmdStan ``stansummary`` utility and returns the output as a pandas.DataFrame:
 
 .. code-block:: python
@@ -129,7 +129,7 @@ potential problems:
 + Low effective sample sizes
 + High R-hat values
 
-The ``StanMCMC`` method ``diagnose`` runs the CmdStan ``diagnose`` utility
+The ``CmdStanMCMC`` method ``diagnose`` runs the CmdStan ``diagnose`` utility
 and prints the output to the console.
 
 .. code-block:: python

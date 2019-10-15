@@ -4,8 +4,8 @@ import json
 
 from cmdstanpy.cmdstan_args import Method, OptimizeArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
-from cmdstanpy.model import Model
-from cmdstanpy.stanfit import RunSet, StanMLE
+from cmdstanpy.model import CmdStanModel
+from cmdstanpy.stanfit import RunSet, CmdStanMLE
 from contextlib import contextmanager
 import logging
 from multiprocessing import cpu_count
@@ -17,10 +17,10 @@ here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
 
 
-class StanMLETest(unittest.TestCase):
+class CmdStanMLETest(unittest.TestCase):
     def test_set_mle_attrs(self):
         stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
         no_data = {}
         args = OptimizeArgs(algorithm='Newton')
@@ -32,8 +32,8 @@ class StanMLETest(unittest.TestCase):
             method_args=args,
         )
         runset = RunSet(args=cmdstan_args, chains=1)
-        mle = StanMLE(runset)
-        self.assertIn('StanMLE: model=rosenbrock', mle.__repr__())
+        mle = CmdStanMLE(runset)
+        self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
         self.assertIn('method=optimize', mle.__repr__())
 
         self.assertEqual(mle._column_names,())
@@ -50,7 +50,7 @@ class StanMLETest(unittest.TestCase):
 class OptimizeTest(unittest.TestCase):
     def test_optimize_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinit = os.path.join(datafiles_path, 'bernoulli.init.json')
@@ -86,7 +86,7 @@ class OptimizeTest(unittest.TestCase):
     def test_optimize_good_dict(self):
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        model = Model(stan_file=stan, exe_file=exe)
+        model = CmdStanModel(stan_file=stan, exe_file=exe)
         with open(os.path.join(datafiles_path, 'bernoulli.data.json')) as d:
             data = json.load(d)
         with open(os.path.join(datafiles_path, 'bernoulli.init.json')) as d:
@@ -106,7 +106,7 @@ class OptimizeTest(unittest.TestCase):
 
     def test_optimize_rosenbrock(self):
         stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
-        rose_model = Model(stan_file=stan)
+        rose_model = CmdStanModel(stan_file=stan)
         rose_model.compile()
         no_data = {}
         mle = rose_model.optimize(
@@ -122,7 +122,7 @@ class OptimizeTest(unittest.TestCase):
 
     def test_optimize_bad(self):
         stan = os.path.join(datafiles_path, 'optimize', 'exponential_boundary.stan')
-        exp_bound_model = Model(stan_file=stan)
+        exp_bound_model = CmdStanModel(stan_file=stan)
         exp_bound_model.compile()
         no_data = {}
         with self.assertRaisesRegex(Exception, 'Error during optimizing, error code 70'):

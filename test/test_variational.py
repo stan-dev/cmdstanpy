@@ -4,8 +4,8 @@ import json
 from math import fabs
 from cmdstanpy.cmdstan_args import Method, VariationalArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
-from cmdstanpy.model import Model
-from cmdstanpy.stanfit import RunSet, StanVariational
+from cmdstanpy.model import CmdStanModel
+from cmdstanpy.stanfit import RunSet, CmdStanVB
 from contextlib import contextmanager
 import logging
 from multiprocessing import cpu_count
@@ -17,10 +17,10 @@ here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
 
 
-class StanVariationalTest(unittest.TestCase):
+class CmdStanVBTest(unittest.TestCase):
     def test_set_variational_attrs(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_be_big.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
         no_data = {}
         args = VariationalArgs(algorithm='meanfield')
@@ -32,11 +32,11 @@ class StanVariationalTest(unittest.TestCase):
             method_args=args
         )
         runset = RunSet(args=cmdstan_args, chains=1)
-        vi = StanVariational(runset)
-        self.assertIn('StanVariational: model=eta_should_be_big', vi.__repr__())
+        vi = CmdStanVB(runset)
+        self.assertIn('CmdStanVB: model=eta_should_be_big', vi.__repr__())
         self.assertIn('method=variational', vi.__repr__())
 
-        # check StanVariational.__init__ state
+        # check CmdStanVB.__init__ state
         self.assertEqual(vi._column_names,())
         self.assertEqual(vi._variational_mean,{})
         self.assertEqual(vi._variational_sample,None)
@@ -53,7 +53,7 @@ class StanVariationalTest(unittest.TestCase):
 class VariationalTest(unittest.TestCase):
     def test_variational_good(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_be_big.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
         vi = model.variational(algorithm='meanfield', seed=12345)
         self.assertEqual(vi.column_names,('lp__', 'log_p__', 'log_g__', 'mu.1', 'mu.2'))
@@ -82,7 +82,7 @@ class VariationalTest(unittest.TestCase):
 
     def test_variational_eta_small(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_be_small.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
         vi = model.variational(algorithm='meanfield', seed=12345)
         self.assertEqual(vi.column_names,('lp__', 'log_p__', 'log_g__', 'mu.1', 'mu.2'))
@@ -93,7 +93,7 @@ class VariationalTest(unittest.TestCase):
 
     def test_variational_eta_fail(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_fail.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
         with self.assertRaisesRegex(RuntimeError, 'algorithm may not have converged'):
             vi = model.variational(algorithm='meanfield', seed=12345)

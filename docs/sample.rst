@@ -59,7 +59,7 @@ In this example we use the CmdStan example model
 and data file
 `bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
 
-The :ref:`class_model` class method  ``sample`` returns a ``StanMCMC`` object
+The :ref:`class_model` class method  ``sample`` returns a ``CmdStanMCMC`` object
 which provides properties to retrieve information about the sample, as well as methods
 to run CmdStan's summary and diagnostics tools:
 
@@ -127,7 +127,7 @@ produced by RNG functions may change.
 .. code-block:: python
 
     datagen_stan = os.path.join('..', '..', 'test', 'data', 'bernoulli_datagen.stan')
-    datagen_model = Model(stan_file=datagen_stan)
+    datagen_model = CmdStanModel(stan_file=datagen_stan)
     datagen_model.compile()
     sim_data = datagen_model.sample(fixed_param=True)
     sim_data.summary()

@@ -7,8 +7,8 @@ from multiprocessing import cpu_count
 
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
-from cmdstanpy.stanfit import RunSet, StanMCMC
-from cmdstanpy.model import Model
+from cmdstanpy.stanfit import RunSet, CmdStanMCMC
+from cmdstanpy.model import CmdStanModel
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
@@ -18,14 +18,14 @@ badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 class SampleTest(unittest.TestCase):
     def test_bernoulli_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        bern_model = Model(stan_file=stan)
+        bern_model = CmdStanModel(stan_file=stan)
         bern_model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
         )
-        self.assertIn('StanMCMC: model=bernoulli', bern_fit.__repr__())
+        self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
         self.assertIn('method=sample', bern_fit.__repr__())
 
         self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
@@ -92,7 +92,7 @@ class SampleTest(unittest.TestCase):
 
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        bern_model = Model(stan_file=stan)
+        bern_model = CmdStanModel(stan_file=stan)
         bern_model.compile()
 
         with self.assertRaisesRegex(Exception, 'Error during sampling'):
@@ -102,7 +102,7 @@ class SampleTest(unittest.TestCase):
 
     def test_multi_proc(self):
         logistic_stan = os.path.join(datafiles_path, 'logistic.stan')
-        logistic_model = Model(stan_file=logistic_stan)
+        logistic_model = CmdStanModel(stan_file=logistic_stan)
         logistic_model.compile()
         logistic_data = os.path.join(datafiles_path, 'logistic.data.R')
 
@@ -135,7 +135,7 @@ class SampleTest(unittest.TestCase):
 
     def test_fixed_param_good(self):
         stan = os.path.join(datafiles_path, 'datagen_poisson_glm.stan')
-        datagen_model = Model(stan_file=stan)
+        datagen_model = CmdStanModel(stan_file=stan)
         datagen_model.compile()
         no_data = {}
         datagen_fit = datagen_model.sample(
@@ -246,7 +246,7 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(datagen_fit.stepsize, None)
 
 
-class StanMCMCTest(unittest.TestCase):
+class CmdStanMCMCTest(unittest.TestCase):
     def test_validate_good_run(self):
         # construct fit using existing sampler output
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
@@ -271,7 +271,7 @@ class StanMCMCTest(unittest.TestCase):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
 
-        fit = StanMCMC(runset)
+        fit = CmdStanMCMC(runset)
         fit._validate_csv_files()
         self.assertEqual(100, fit.draws)
         self.assertEqual(8, len(fit.column_names))
@@ -313,7 +313,7 @@ class StanMCMCTest(unittest.TestCase):
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=2)
-        fit = StanMCMC(runset)
+        fit = CmdStanMCMC(runset)
         fit._validate_csv_files()
         sampler_state = [
             'lp__',
@@ -348,7 +348,7 @@ class StanMCMCTest(unittest.TestCase):
     def test_save_csv(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        bern_model = Model(stan_file=stan)
+        bern_model = CmdStanModel(stan_file=stan)
         bern_model.compile()
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
@@ -400,7 +400,7 @@ class StanMCMCTest(unittest.TestCase):
             method_args=sampler_args,
         )
         sampler_runset = RunSet(args=cmdstan_args, chains=1)
-        fit = StanMCMC(sampler_runset)
+        fit = CmdStanMCMC(sampler_runset)
         # TODO - use cmdstan test files instead
         expected = '\n'.join(
             [
@@ -452,7 +452,7 @@ class StanMCMCTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
-        fit = StanMCMC(runset)
+        fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'header mismatch'):
             fit._validate_csv_files()
 
@@ -472,7 +472,7 @@ class StanMCMCTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
-        fit = StanMCMC(runset)
+        fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'draws'):
             fit._validate_csv_files()
 
@@ -492,7 +492,7 @@ class StanMCMCTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
-        fit = StanMCMC(runset)
+        fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'bad draw'):
             fit._validate_csv_files()
 

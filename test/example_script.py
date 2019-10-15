@@ -5,15 +5,15 @@ import sys
 # explicit import to test if it is installed
 import tqdm
 
-from cmdstanpy import Model, cmdstan_path, set_make_env
+from cmdstanpy import CmdStanModel, cmdstan_path, set_make_env
 
 
 def run_bernoulli_fit():
-    # specify Stan file, create, compile Model object
+    # specify Stan file, create, compile CmdStanModel object
     bernoulli_path = os.path.join(
         cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan'
     )
-    bernoulli_model = Model(stan_file=bernoulli_path)
+    bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
 
     # specify data, fit the model

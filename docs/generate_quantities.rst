@@ -61,7 +61,7 @@ which generates a new data vector ``y_rep`` using the current estimate of theta.
     }
 
 
-The :ref:`class_model` class method  ``run_generated_quantities`` returns a ``StanQuantities`` object
+The :ref:`class_model` class method  ``run_generated_quantities`` returns a ``CmdStanGQ`` object
 which provides properties to retrieve information about the sample:
 
 
@@ -83,10 +83,10 @@ Therefore the first step is to fit the bernoulli model to the data:
 .. code:: ipython3
 
     import os
-    from cmdstanpy import Model, cmdstan_path
+    from cmdstanpy import CmdStanModel, cmdstan_path
     bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     
-    bernoulli_model = Model(stan_file=bernoulli_path)
+    bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
 
     bern_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')
@@ -95,14 +95,14 @@ Therefore the first step is to fit the bernoulli model to the data:
 
 .. code:: ipython3
 
-    bernoulli_ppc_model = Model(stan_file='bernoulli_ppc.stan')
+    bernoulli_ppc_model = CmdStanModel(stan_file='bernoulli_ppc.stan')
     bernoulli_ppc_model.compile()
 
     new_quantities = bernoulli_ppc_model.run_generated_quantities(data=bern_data, csv_files=bern_fit.csv_files)
 
 
 
-The ``StanQuantities`` object contains the values for all variables in
+The ``CmdStanGQ`` object contains the values for all variables in
 the generated quantities block of the program ``bernoulli_ppc.stan``.
 Unlike the output from the ``sample`` method, it doesn’t contain any
 information on the joint log probability density, sampler state, or

@@ -3,7 +3,7 @@ import unittest
 
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
-from cmdstanpy.model import Model
+from cmdstanpy.model import CmdStanModel
 from contextlib import contextmanager
 import sys
 
@@ -25,21 +25,21 @@ model {
 '''
 
 
-class ModelTest(unittest.TestCase):
+class CmdStanModelTest(unittest.TestCase):
     def test_model_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
 
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         self.assertEqual(stan, model.stan_file)
         self.assertEqual(None, model.exe_file)
 
-        model = Model(stan_file=stan, exe_file=exe)
+        model = CmdStanModel(stan_file=stan, exe_file=exe)
         self.assertEqual(exe, model.exe_file)
 
     def test_model_good_no_source(self):
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        model = Model(exe_file=exe)
+        model = CmdStanModel(exe_file=exe)
         self.assertEqual(exe, model.exe_file)
         self.assertEqual('bernoulli', model.name)
 
@@ -50,41 +50,41 @@ class ModelTest(unittest.TestCase):
 
     def test_model_none(self):
         with self.assertRaises(ValueError):
-            _ = Model(exe_file=None, stan_file=None)
+            _ = CmdStanModel(exe_file=None, stan_file=None)
 
     def test_model_bad(self):
         with self.assertRaises(Exception):
-            model = Model(stan_file='xdlfkjx', exe_file='sdfndjsds')
+            model = CmdStanModel(stan_file='xdlfkjx', exe_file='sdfndjsds')
 
         stan = os.path.join(datafiles_path, 'b')
         with self.assertRaises(Exception):
-            model = Model(stan_file=stan)
+            model = CmdStanModel(stan_file=stan)
 
         stan = os.path.join(datafiles_path, 'bad_syntax.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
 
     def test_repr(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         s = repr(model)
         self.assertIn('name=bernoulli', s)
 
     def test_print(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         self.assertEqual(code, model.code())
 
     def test_model_compile(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
 
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         self.assertEqual(None, model.exe_file)
         model.compile()
         self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         if os.path.exists(exe):
             os.remove(exe)
         model.compile()
@@ -92,7 +92,7 @@ class ModelTest(unittest.TestCase):
 
         # test compile with existing exe - timestamp on exe unchanged
         exe_time = os.path.getmtime(model.exe_file)
-        model2 = Model(stan_file=stan)
+        model2 = CmdStanModel(stan_file=stan)
         model2.compile()
         self.assertEqual(exe_time,os.path.getmtime(model2.exe_file))
 
@@ -103,7 +103,7 @@ class ModelTest(unittest.TestCase):
         include_paths = [datafiles_abspath]
         if os.path.exists(exe):
             os.remove(exe)
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile(include_paths=include_paths)
         self.assertEqual(stan, model.stan_file)
         self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))

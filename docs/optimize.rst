@@ -30,7 +30,7 @@ In this example we use the CmdStan example model
 and data file
 `bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
 
-The :ref:`class_model` class method  ``optimize`` returns a ``StanMLE`` object
+The :ref:`class_model` class method  ``optimize`` returns a ``CmdStanMLE`` object
 which provides properties to retrieve the estimate of the
 penalized maximum likelihood estaimate of all model parameters:
 
@@ -44,16 +44,16 @@ In the following example, we instantiate a model and do optimization using the d
 .. code:: ipython3
 
     import os
-    from cmdstanpy.model import Model
+    from cmdstanpy.model import CmdStanModel
     from cmdstanpy.utils import cmdstan_path
     
     bernoulli_dir = os.path.join(cmdstan_path(), 'examples', 'bernoulli')
     bernoulli_path = os.path.join(bernoulli_dir, 'bernoulli.stan')
     bernoulli_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')
     # instantiate bernoulli model, compile Stan program
-    bernoulli_model = Model(stan_file=bernoulli_path)
+    bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
-    # run CmdStan's optimize method, returns object `StanMLE`
+    # run CmdStan's optimize method, returns object `CmdStanMLE`
     mle = bernoulli_model.optimize(data=bernoulli_data)
     print(mle.column_names)
     print(mle.optimized_params_dict)
