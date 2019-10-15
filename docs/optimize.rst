@@ -46,19 +46,17 @@ In the following example, we instantiate a model and do optimization using the d
     import os
     from cmdstanpy.model import CmdStanModel
     from cmdstanpy.utils import cmdstan_path
-    
-    bernoulli_dir = os.path.join(cmdstan_path(), 'examples', 'bernoulli')
-    bernoulli_path = os.path.join(bernoulli_dir, 'bernoulli.stan')
-    bernoulli_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')
 
     # instantiate bernoulli model, compile Stan program
+    bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
 
     # run CmdStan's optimize method, returns object `CmdStanMLE`
-    mle = bernoulli_model.optimize(data=bernoulli_data)
-    print(mle.column_names)
-    print(mle.optimized_params_dict)
+    bern_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
+    bern_mle = bernoulli_model.optimize(data=bernoulli_data)
+    print(bern_mle.column_names)
+    print(bern_mle.optimized_params_dict)
 
 
 

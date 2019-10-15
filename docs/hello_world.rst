@@ -1,5 +1,5 @@
-"Hello World"
-_____________
+"Hello, World"
+______________
 
 Bayesian estimation via Stan's HMC-NUTS sampler 
 ------------------------------------------------

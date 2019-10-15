@@ -84,14 +84,14 @@ The first step is to fit model ``bernoulli`` to the data:
 
     import os
     from cmdstanpy import CmdStanModel, cmdstan_path
-    bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     
     # instantiate bernoulli model, compile Stan program
+    bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
 
     # run CmdStan's sample method, returns object `CmdStanMCMC`
-    bern_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')
+    bern_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
     bern_fit = bernoulli_model.sample(data=bern_data)
 
 Then we compile the model ``bernoulli_ppc`` and use the fit parameter estimates

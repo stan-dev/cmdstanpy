@@ -77,20 +77,18 @@ In the following example, we instantiate a model and run variational inference u
     import os
     from cmdstanpy.model import CmdStanModel
     from cmdstanpy.utils import cmdstan_path
-    
-    bernoulli_dir = os.path.join(cmdstan_path(), 'examples', 'bernoulli')
-    bernoulli_path = os.path.join(bernoulli_dir, 'bernoulli.stan')
-    bernoulli_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')
 
     # instantiate bernoulli model, compile Stan program
+    bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
 
     # run CmdStan's variational inference method, returns object `CmdStanVB`
-    vb = bernoulli_model.variational(data=bernoulli_data)
-    print(vb.column_names)
-    print(vb.variational_params_dict)
-    vb.variational_sample.shape
+    bern_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
+    bern_vb = bernoulli_model.variational(data=bernoulli_data)
+    print(bern_vb.column_names)
+    print(bern_vb.variational_params_dict)
+    bern_vb.variational_sample.shape
 
 These estimates are only valid if the algorithm has converged to a good
 approximation. When the algorithm fails to do so, the ``variational``
