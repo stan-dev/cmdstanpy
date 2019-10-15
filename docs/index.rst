@@ -18,6 +18,10 @@
    :caption: Contents:
 
    getting_started
+   sample
+   generate_quantities
+   optimize
+   advi
    api
 
 
