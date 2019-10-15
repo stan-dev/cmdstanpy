@@ -21,10 +21,10 @@ from cmdstanpy.cmdstan_args import (
 )
 from cmdstanpy.stanfit import (
     RunSet,
-    StanMCMC,
-    StanMLE,
-    StanQuantities,
-    StanVariational,
+    CmdStanMCMC,
+    CmdStanMLE,
+    CmdStanGQ,
+    CmdStanVB,
 )
 from cmdstanpy.utils import (
     do_command,
@@ -36,7 +36,7 @@ from cmdstanpy.utils import (
 )
 
 
-class Model(object):
+class CmdStanModel(object):
     """
     Stan model.
     Stores pathnames to Stan program as well as compiled executable.
@@ -86,7 +86,7 @@ class Model(object):
             self._exe_file = exe_file
 
     def __repr__(self) -> str:
-        return 'Model(name={},  stan_file="{}", exe_file="{}")'.format(
+        return 'CmdStanModel(name={},  stan_file="{}", exe_file="{}")'.format(
             self._name, self._stan_file, self._exe_file
         )
 
@@ -222,7 +222,7 @@ class Model(object):
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
-    ) -> StanMLE:
+    ) -> CmdStanMLE:
         """
         Wrapper for optimize call
 
@@ -260,7 +260,7 @@ class Model(object):
 
         :param iter: Total number of iterations
 
-        :return: StanMLE object
+        :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
             algorithm=algorithm, init_alpha=init_alpha, iter=iter
@@ -289,7 +289,7 @@ class Model(object):
                     msg, runset._retcode(dummy_chain_id)
                 )
                 raise RuntimeError(msg)
-        mle = StanMLE(runset)
+        mle = CmdStanMLE(runset)
         mle._set_mle_attrs(runset.csv_files[0])
         return mle
 
@@ -313,7 +313,7 @@ class Model(object):
         fixed_param: bool = False,
         csv_basename: str = None,
         show_progress: Union[bool, str] = False,
-    ) -> StanMCMC:
+    ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
         from the posterior distribution of a model conditioned on some data.
@@ -324,7 +324,7 @@ class Model(object):
         Unspecified arguments are not included in the call to CmdStan, i.e.,
         those arguments will have CmdStan default values.
 
-        For each chain, the ``StanMCMC`` object records the command,
+        For each chain, the ``CmdStanMCMC`` object records the command,
         the return code, the sampler output file paths, and the corresponding
         subprocess console outputs, if any.
 
@@ -428,7 +428,7 @@ class Model(object):
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
-        :return: StanMCMC object
+        :return: CmdStanMCMC object
         """
 
         if chains is None:
@@ -611,7 +611,7 @@ class Model(object):
                             msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
-            mcmc = StanMCMC(runset, fixed_param)
+            mcmc = CmdStanMCMC(runset, fixed_param)
             mcmc._validate_csv_files()
         return mcmc
 
@@ -621,9 +621,9 @@ class Model(object):
         csv_files: List[str] = None,
         seed: int = None,
         gq_csv_basename: str = None,
-    ) -> StanQuantities:
+    ) -> CmdStanGQ:
         """
-        Wrapper for generated quantities call.  Given a StanMCMC object
+        Wrapper for generated quantities call.  Given a CmdStanMCMC object
         containing a sample from the fitted model, along with the
         corresponding dataset for that fit, run just the generated quantities
         block of the model in order to get additional quantities of interest.
@@ -651,7 +651,7 @@ class Model(object):
             and the console output and error messages are written to file
             ``<basename>-<chain_id>.txt``.
 
-        :return: StanQuantities object
+        :return: CmdStanGQ object
         """
         generate_quantities_args = GenerateQuantitiesArgs(csv_files=csv_files)
         generate_quantities_args.validate(len(csv_files))
@@ -682,7 +682,7 @@ class Model(object):
                             msg, i, runset._retcode(i)
                         )
                 raise RuntimeError(msg)
-            quantities = StanQuantities(runset)
+            quantities = CmdStanGQ(runset)
             quantities._set_attrs_gq_csv_files(csv_files[0])
         return quantities
 
@@ -701,7 +701,7 @@ class Model(object):
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
         output_samples: int = None,
-    ) -> StanVariational:
+    ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
         the posterior distribution of the model conditioned on the data.
@@ -744,7 +744,7 @@ class Model(object):
         :param output_samples: Number of approximate posterior output draws
             to save.
 
-        :return: StanVariational object
+        :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
             algorithm=algorithm,
@@ -792,7 +792,7 @@ class Model(object):
                     msg, runset._retcode(dummy_chain_id)
                 )
                 raise RuntimeError(msg)
-        vi = StanVariational(runset)
+        vi = CmdStanVB(runset)
         vi._set_variational_attrs(runset.csv_files[0])
         return vi
 

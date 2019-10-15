@@ -182,7 +182,7 @@ class RunSet(object):
                 ) from e
 
 
-class StanMCMC(object):
+class CmdStanMCMC(object):
     """
     Container for outputs from CmdStan sampler run.
     """
@@ -205,7 +205,7 @@ class StanMCMC(object):
         self._is_fixed_param = is_fixed_param
 
     def __repr__(self) -> str:
-        repr = 'StanMCMC: model={} chains={}{}'.format(
+        repr = 'CmdStanMCMC: model={} chains={}{}'.format(
             self.runset.model,
             self.runset.chains,
             self.runset._args.method_args.compose(0, ''),
@@ -460,7 +460,7 @@ class StanMCMC(object):
         self.runset.save_csvfiles(dir, basename)
 
 
-class StanMLE(object):
+class CmdStanMLE(object):
     """
     Container for outputs from CmdStan optimization.
     """
@@ -477,7 +477,7 @@ class StanMLE(object):
         self._mle = {}
 
     def __repr__(self) -> str:
-        repr = 'StanMLE: model={}{}'.format(
+        repr = 'CmdStanMLE: model={}{}'.format(
             self.runset.model, self.runset._args.method_args.compose(0, '')
         )
         repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
@@ -532,7 +532,7 @@ class StanMLE(object):
         self.runset.save_csvfiles(dir, basename)
 
 
-class StanQuantities(object):
+class CmdStanGQ(object):
     """
     Container for outputs from CmdStan generate_quantities run.
     """
@@ -548,7 +548,7 @@ class StanQuantities(object):
         self._column_names = None
 
     def __repr__(self) -> str:
-        repr = 'StanQuantities: model={} chains={}{}'.format(
+        repr = 'CmdStanGQ: model={} chains={}{}'.format(
             self.runset.model,
             self.runset.chains,
             self.runset._args.method_args.compose(0, ''),
@@ -616,7 +616,7 @@ class StanQuantities(object):
         self.runset.save_csvfiles(dir, basename)
 
 
-class StanVariational(object):
+class CmdStanVB(object):
     """
     Container for outputs from CmdStan variational run.
     """
@@ -634,7 +634,7 @@ class StanVariational(object):
         self._variational_sample = None
 
     def __repr__(self) -> str:
-        repr = 'StanVariational: model={}{}'.format(
+        repr = 'CmdStanVB: model={}{}'.format(
             self.runset.model, self.runset._args.method_args.compose(0, '')
         )
         repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(

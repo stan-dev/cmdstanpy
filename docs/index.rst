@@ -21,7 +21,7 @@
    sample
    generate_quantities
    optimize
-   advi
+   variational_bayes
    api
 
 
