@@ -23,7 +23,7 @@ from cmdstanpy.utils import (
     rload,
     parse_rdump_value,
 )
-from cmdstanpy.model import Model
+from cmdstanpy.model import CmdStanModel
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
@@ -167,7 +167,7 @@ class ReadStanCsvTest(unittest.TestCase):
     def test_check_sampler_csv_thin(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        bern_model = Model(stan_file=stan, exe_file=exe)
+        bern_model = CmdStanModel(stan_file=stan, exe_file=exe)
         bern_model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')

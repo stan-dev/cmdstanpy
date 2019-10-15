@@ -1,7 +1,7 @@
 MCMC Sampling
 =============
 
-The :ref:`class_model` class method  ``sample`` invokes Stan's adaptive HMC-NUTS
+The :ref:`class_cmdstanmodel` class method  ``sample`` invokes Stan's adaptive HMC-NUTS
 sampler which uses the Hamiltonian Monte Carlo (HMC) algorithm
 and its adaptive variant the no-U-turn sampler (NUTS) to produce a set of
 draws from the posterior distribution of the model parameters conditioned on the data.
@@ -59,7 +59,7 @@ In this example we use the CmdStan example model
 and data file
 `bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
 
-The :ref:`class_model` class method  ``sample`` returns a ``StanMCMC`` object
+The :ref:`class_cmdstanmodel` class method  ``sample`` returns a ``CmdStanMCMC`` object
 which provides properties to retrieve information about the sample, as well as methods
 to run CmdStan's summary and diagnostics tools:
 
@@ -83,10 +83,20 @@ It will use 2 less than that number of cores available, as determined by Python'
 
 .. code-block:: python
 
+    import os
+    from cmdstanpy import cmdstan_path, CmdStanModel
+    bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
+
+    # instantiate bernoulli model, compile Stan program
+    bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
+    bernoulli_model.compile()
+
+    # run CmdStan's sample method, returns object `CmdStanMCMC`
     bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
     bern_fit.sample.shape
     bern_fit.summary()
+
     
 
 Example: generate data - `fixed_param=True`
@@ -100,7 +110,7 @@ computation is done in the generated quantities block.
 
 For example, the Stan program
 `bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_datagen.stan>`__
-can be used to generate a dataset of simulated data, where each row in the dataset consists of ``N`` draws from a Bernoulli distribution given probability ``theta``:
+can be used to generate a dataset of simulated data, where each row in the dataset consists of `N` draws from a Bernoulli distribution given probability `theta`:
 
 .. code-block::
 
@@ -127,8 +137,9 @@ produced by RNG functions may change.
 .. code-block:: python
 
     datagen_stan = os.path.join('..', '..', 'test', 'data', 'bernoulli_datagen.stan')
-    datagen_model = Model(stan_file=datagen_stan)
+    datagen_model = CmdStanModel(stan_file=datagen_stan)
     datagen_model.compile()
+
     sim_data = datagen_model.sample(fixed_param=True)
     sim_data.summary()
 
@@ -138,6 +149,10 @@ Compute, plot histogram of total successes for `N` Bernoulli trials with chance 
 
     drawset_pd = sim_data.get_drawset()
     drawset_pd.columns
+
+    # extract new series of outcomes of N Bernoulli trials
     y_sims = drawset_pd.drop(columns=['lp__', 'accept_stat__'])
+
+    # plot total number of successes per draw
     y_sums = y_sims.sum(axis=1)
     y_sums.astype('int32').plot.hist(range(0,datagen_data['N']+1))

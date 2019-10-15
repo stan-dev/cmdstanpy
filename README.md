@@ -34,11 +34,11 @@ The CmdStanPy, CmdStan, and the core Stan C++ code are licensed under new BSD.
 ::
 
     import os
-    from cmdstanpy import Model, cmdstan_path
+    from cmdstanpy import CmdStanModel, cmdstan_path
 
-    # specify Stan file, create, compile Model object
+    # specify Stan file, create, compile CmdStanModel object
     bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
-    bernoulli_model = Model(stan_file=bernoulli_path)
+    bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
     bernoulli_model.compile()
 
 

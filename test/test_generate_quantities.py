@@ -3,7 +3,7 @@ import unittest
 
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
-from cmdstanpy.model import Model
+from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import RunSet
 from contextlib import contextmanager
 import logging
@@ -19,7 +19,7 @@ datafiles_path = os.path.join(here, 'data')
 class GenerateQuantitiesTest(unittest.TestCase):
     def test_gen_quantities_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
-        model = Model(stan_file=stan)
+        model = CmdStanModel(stan_file=stan)
         model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
@@ -49,7 +49,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertEqual(
             bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
         )
-        self.assertIn('StanQuantities: model=bernoulli_ppc', bern_gqs.__repr__())
+        self.assertIn('CmdStanGQ: model=bernoulli_ppc', bern_gqs.__repr__())
         self.assertIn('method=generate_quantities', bern_gqs.__repr__())
 
         # check results - ouput files, quantities of interest, draws
