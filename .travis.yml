@@ -24,6 +24,6 @@ script:
   - mkdir new_dir
   - cd new_dir
   - flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E266,E402,E999,F401,F841,W503,W605 --max-line-length=80 ../cmdstanpy
-  - pytest ../test
+  - pytest -v ../test
   - python -m pip install -r ../requirements-optional.txt
   - python ../test/example_script.py
