@@ -495,6 +495,8 @@ class CmdStanModel(object):
                     num_updates = 200
                     if warmup_iters is None:
                         w_iters = 1000
+                    else:
+                        w_iters = warmup_iters
                 s_iters = sampling_iters
                 if s_iters is None:
                     s_iters = 1000
