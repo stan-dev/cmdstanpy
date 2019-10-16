@@ -73,6 +73,6 @@ test_script:
   - "SET MAKE=mingw32-make.exe"
   - "mkdir new_dir"
   - "cd new_dir"
-  - "python -m pytest ../test"
+  - "python -m pytest -v ../test"
   - "python -m pip install -r ../requirements-optional.txt"
   - "python ../test/example_script.py"
