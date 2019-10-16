@@ -15,7 +15,7 @@ It can be used to:
 -  apply full Bayesian decision theory
 -  calculate log likelihoods, deviances, etc. for model comparison
 
-The :ref:`class_cmdstanmodel` class ``run_generated_quantities`` method is useful once you
+The :ref:`class_cmdstanmodel` class ``generate_quantities`` method is useful once you
 have successfully fit a model to your data and have a valid
 sample from the posterior.
 If you need to compute additional quantities of interest,
@@ -61,7 +61,7 @@ which generates a new data vector ``y_rep`` using the current estimate of theta.
     }
 
 
-The :ref:`class_cmdstanmodel` class method  ``run_generated_quantities`` returns a ``CmdStanGQ`` object
+The :ref:`class_cmdstanmodel` class method  ``generate_quantities`` returns a ``CmdStanGQ`` object
 which provides properties to retrieve information about the sample:
 
 
@@ -72,7 +72,7 @@ which provides properties to retrieve information about the sample:
 - ``save_csvfiles()``
 
 
-The arguments to the ``run_generated_quantities`` method are:
+The arguments to the ``generate_quantities`` method are:
 
 - the data used to fit the model (``bern_data``)
 - the list of the resulting stan csv files (``bern_fit.csv_files``)
@@ -103,7 +103,7 @@ to generate quantities of interest:
     bernoulli_ppc_model = CmdStanModel(stan_file='bernoulli_ppc.stan')
     bernoulli_ppc_model.compile()
 
-    new_quantities = bernoulli_ppc_model.run_generated_quantities(data=bern_data, csv_files=bern_fit.csv_files)
+    new_quantities = bernoulli_ppc_model.generate_quantities(data=bern_data, csv_files=bern_fit.csv_files)
 
 
 

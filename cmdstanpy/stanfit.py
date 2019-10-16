@@ -591,7 +591,7 @@ class CmdStanGQ(object):
     def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
         """
         Propogate information from original sample to additional sample
-        returned by run_generated_quantities.
+        returned by generate_quantities.
         """
         sample_meta = check_sampler_csv(sample_csv_0)
         dzero = scan_generated_quantities_csv(self.runset.csv_files[0])

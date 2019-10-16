@@ -43,7 +43,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         for i in range(4):
             sampler_runset._set_retcode(i, 0)
 
-        bern_gqs = model.run_generated_quantities(
+        bern_gqs = model.generate_quantities(
             csv_files=sampler_runset.csv_files, data=jdata
         )
         self.assertEqual(

@@ -617,7 +617,7 @@ class CmdStanModel(object):
             mcmc._validate_csv_files()
         return mcmc
 
-    def run_generated_quantities(
+    def generate_quantities(
         self,
         data: Union[Dict, str] = None,
         csv_files: List[str] = None,
