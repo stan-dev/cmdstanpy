@@ -72,7 +72,7 @@ class RunSet(object):
         repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
         repr = '{}\n csv_files:\n\t{}\n console_files:\n\t{}'.format(
             repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)
-            )
+        )
         return repr
 
     @property
@@ -537,7 +537,7 @@ class CmdStanGQ(object):
     Container for outputs from CmdStan generate_quantities run.
     """
 
-    def __init__(self, runset: RunSet) -> None:
+    def __init__(self, runset: RunSet, mcmc_sample: pd.DataFrame) -> None:
         """Initialize object."""
         if not (runset.method == Method.GENERATE_QUANTITIES):
             raise RuntimeError(
@@ -545,7 +545,9 @@ class CmdStanGQ(object):
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
+        self.mcmc_sample = mcmc_sample
         self._column_names = None
+        self._generated_quantities = None
 
     def __repr__(self) -> str:
         repr = 'CmdStanGQ: model={} chains={}{}'.format(
@@ -575,10 +577,12 @@ class CmdStanGQ(object):
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains all draws across all chains
-        arranged as (draws, chains, columns) stored column major
-        so that the values for each parameter are stored contiguously
-        in memory, likewise all draws from a chain are contiguous.
+        A 2-D numpy ndarray which contains generated quantities draws
+        for all chains where the columns correspond to the generated quantities
+        block variables and the rows correspond to the draws from all chains,
+        where first M draws are the first M draws of chain 1 and the
+        last M draws are the last M draws of chain N, i.e.,
+        flattened chain, draw ordering.
         """
         if not (self.runset.method == Method.GENERATE_QUANTITIES):
             raise RuntimeError(
@@ -587,6 +591,21 @@ class CmdStanGQ(object):
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
         return self._generated_quantities
+
+    @property
+    def concat_sample_gqs(self) -> np.ndarray:
+        """
+        Returns original sample concatenated generated quantities draws.
+        """
+        if not (self.runset.method == Method.GENERATE_QUANTITIES):
+            raise RuntimeError(
+                'Bad runset method {}.'.format(self.runset.method)
+            )
+        if self._generated_quantities is None:
+            self._assemble_generated_quantities()
+        return np.concatenate(
+            [self.mcmc_sample.values, self._generated_quantities], axis=1
+        )
 
     def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
         """
