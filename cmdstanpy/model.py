@@ -89,7 +89,9 @@ class Model(object):
             # Add tbb to the $PATH on Windows
             libtbb = os.getenv("STAN_TBB")
             if libtbb is None:
-                libtbb = os.path.join(cmdstan_path(), "stan","lib","stan_math", "lib", "tbb")
+                libtbb = os.path.join(
+                    cmdstan_path(), "stan", "lib", "stan_math", "lib", "tbb"
+                )
             os.environ["PATH"] = "{};{}".format(libtbb, os.getenv("PATH"))
 
     def __repr__(self) -> str:
@@ -125,9 +127,7 @@ class Model(object):
         return self._exe_file
 
     def compile(
-        self,
-        opt_lvl: int = 3,
-        include_paths: List[str] = None,
+        self, opt_lvl: int = 3, include_paths: List[str] = None
     ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
@@ -196,7 +196,12 @@ class Model(object):
                         compilation_failed = True
 
                 if not compilation_failed:
-                    make = os.getenv('MAKE', 'make' if platform.system() != "Windows" else "mingw32-make")
+                    make = os.getenv(
+                        'MAKE',
+                        'make'
+                        if platform.system() != "Windows"
+                        else "mingw32-make",
+                    )
                     cmd = [make, 'O={}'.format(opt_lvl), exe_file]
                     self._logger.info('compiling c++')
                     try:
@@ -211,10 +216,10 @@ class Model(object):
                     new_exec_name = (
                         os.path.basename(os.path.splitext(self._stan_file)[0])
                         + EXTENSION
-                        )
+                    )
                     self._exe_file = os.path.join(
                         original_target_dir, new_exec_name
-                        )
+                    )
                     shutil.copy(exe_file, self._exe_file)
                 else:
                     self._exe_file = exe_file
@@ -813,7 +818,10 @@ class Model(object):
         self._logger.info('start chain %u', idx + 1)
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
-            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ,
+            cmd.split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         if pbar:
             stdout_pbar = self._read_progress(proc, pbar, idx)

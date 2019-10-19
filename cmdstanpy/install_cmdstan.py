@@ -45,7 +45,11 @@ def install_version(cmdstan_version):
         make = os.getenv('MAKE', 'make')
         cmd = [make, 'build']
         proc = subprocess.Popen(
-            cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            cwd=None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         stdout, stderr = proc.communicate()
         if proc.returncode:
@@ -61,7 +65,11 @@ def install_version(cmdstan_version):
             ).as_posix(),
         ]
         proc = subprocess.Popen(
-            cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            cwd=None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         stdout, stderr = proc.communicate()
         if proc.returncode:

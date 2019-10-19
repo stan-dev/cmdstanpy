@@ -340,9 +340,7 @@ def jsondump(path: str, data: Dict) -> None:
         if isinstance(val, Sequence) and not val:
             raise ValueError(
                 'variable: {}, error: '
-                'empty array not allowed with JSON interface'.format(
-                    val
-                )
+                'empty array not allowed with JSON interface'.format(val)
             )
     with open(path, 'w') as fd:
         json.dump(data, fd)
@@ -708,7 +706,11 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if logger:
         logger.debug('cmd: %s', cmd)
     proc = subprocess.Popen(
-        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ,
+        cmd,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
     )
     stdout, stderr = proc.communicate()
     if proc.returncode:
@@ -799,7 +801,9 @@ def install_cmdstan(version: str = None, dir: str = None) -> bool:
         cmd.extend(['--version', version])
     if dir is not None:
         cmd.extend(['--dir', dir])
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
+    )
     while proc.poll() is None:
         output = proc.stdout.readline().decode('utf-8').strip()
         if output:
