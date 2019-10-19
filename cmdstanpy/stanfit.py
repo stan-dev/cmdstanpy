@@ -593,9 +593,10 @@ class CmdStanGQ(object):
         return self._generated_quantities
 
     @property
-    def concat_sample_gqs(self) -> np.ndarray:
+    def generated_quantities_pd(self) -> pd.DataFrame:
         """
-        Returns original sample concatenated generated quantities draws.
+        Returns the generated quantities as a pandas DataFrame consisting of
+        one column per quantity of interest and one row per draw.
         """
         if not (self.runset.method == Method.GENERATE_QUANTITIES):
             raise RuntimeError(
@@ -603,8 +604,22 @@ class CmdStanGQ(object):
             )
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
-        return np.concatenate(
-            [self.mcmc_sample.values, self._generated_quantities], axis=1
+        return pd.DataFrame(data=self._generated_quantities, columns=self.column_names)
+
+    @property
+    def sample_plus_quantities(self) -> pd.DataFrame:
+        """
+        Returns the column-wise concatenation of the input drawset
+        with generated quantities drawset.
+        """
+        if not (self.runset.method == Method.GENERATE_QUANTITIES):
+            raise RuntimeError(
+                'Bad runset method {}.'.format(self.runset.method)
+            )
+        if self._generated_quantities is None:
+            self._assemble_generated_quantities()
+        return pd.concat(
+            [self.mcmc_sample, self.generated_quantities_pd], axis=1
         )
 
     def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
