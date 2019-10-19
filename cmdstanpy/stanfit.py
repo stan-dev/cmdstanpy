@@ -604,7 +604,9 @@ class CmdStanGQ(object):
             )
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
-        return pd.DataFrame(data=self._generated_quantities, columns=self.column_names)
+        return pd.DataFrame(
+            data=self._generated_quantities, columns=self.column_names
+        )
 
     @property
     def sample_plus_quantities(self) -> pd.DataFrame:
