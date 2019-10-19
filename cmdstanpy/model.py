@@ -688,10 +688,11 @@ class CmdStanModel(object):
                 sample_drawset = sample_fit.get_drawset()
         except Exception as e:
             raise ValueError(
-                'Invalid mcmc_sample, error processing files\n\t{}'.format(
-                    '\n\t'.join(sample_csv_files)
+                'Invalid mcmc_sample, error:\n\t{}\n\t'
+                ' while processing files\n\t{}'.format(
+                    str(e), '\n\t'.join(sample_csv_files)
                 )
-            ) from e
+            )
 
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files
