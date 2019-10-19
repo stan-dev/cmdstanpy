@@ -1,5 +1,6 @@
 import math
 import os
+import platform
 import re
 import subprocess
 import shutil
@@ -84,6 +85,12 @@ class Model(object):
                         ' found: {}'.format(self._name, exename)
                     )
             self._exe_file = exe_file
+        if platform.system() == "Windows":
+            # Add tbb to the $PATH on Windows
+            libtbb = os.getenv("STAN_TBB")
+            if libtbb is None:
+                libtbb = os.path.join(cmdstan_path(), "stan","lib","stan_math", "lib", "tbb")
+            os.environ["PATH"] = "{};{}".format(libtbb, os.getenv("PATH"))
 
     def __repr__(self) -> str:
         return 'Model(name={},  stan_file="{}", exe_file="{}")'.format(
@@ -189,11 +196,11 @@ class Model(object):
                         compilation_failed = True
 
                 if not compilation_failed:
-                    make = os.getenv('MAKE', 'make')
+                    make = os.getenv('MAKE', 'make' if platform.system() != "Windows" else "mingw32-make")
                     cmd = [make, 'O={}'.format(opt_lvl), exe_file]
                     self._logger.info('compiling c++')
                     try:
-                        do_command(cmd, cmdstan_path(), self._logger)
+                        do_command(cmd, cmdstan_path(), logger=self._logger)
                     except Exception as e:
                         self._logger.error('make cmd failed %s', e)
                         compilation_failed = True
@@ -806,7 +813,7 @@ class Model(object):
         self._logger.info('start chain %u', idx + 1)
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
-            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ,
         )
         if pbar:
             stdout_pbar = self._read_progress(proc, pbar, idx)

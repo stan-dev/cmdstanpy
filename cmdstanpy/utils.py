@@ -708,7 +708,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if logger:
         logger.debug('cmd: %s', cmd)
     proc = subprocess.Popen(
-        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ,
     )
     stdout, stderr = proc.communicate()
     if proc.returncode:
