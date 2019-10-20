@@ -29,3 +29,4 @@ script:
   - pytest ../test
   - python -m pip install -r ../requirements-optional.txt
   - python ../test/example_script.py
+  - python ../scripts/clean_examples.py
