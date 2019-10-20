@@ -3,7 +3,7 @@ import os
 from cmdstanpy import cmdstan_path
 
 def clean_examples():
-    cmdstan_examples = s.path.join(cmdstan_path(), "examples")
+    cmdstan_examples = os.path.join(cmdstan_path(), "examples")
     for root, _, files in os.walk(cmdstan_examples):
         for filename in files:
             _, ext = os.path.splitext(filename)
