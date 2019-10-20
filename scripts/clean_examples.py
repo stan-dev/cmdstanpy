@@ -11,4 +11,4 @@ def clean_examples():
                 os.remove(os.path.join(root, filename))
 
 if __name__ == "__main__":
-    cmdstan_examples()
+    clean_examples()
