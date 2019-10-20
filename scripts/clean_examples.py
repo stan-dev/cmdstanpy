@@ -8,7 +8,9 @@ def clean_examples():
         for filename in files:
             _, ext = os.path.splitext(filename)
             if ext.lower() in (".o", ".hpp", ".exe", ""):
-                os.remove(os.path.join(root, filename))
+                filepath = os.path.join(root, filename)
+                os.remove(filepath)
+                print("Deleted {}".format(filepath))
 
 if __name__ == "__main__":
     clean_examples()
