@@ -4,7 +4,7 @@ import platform
 import shutil
 import tempfile
 from typing import List, Tuple
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 import numpy as np
 import pandas as pd
 import logging
@@ -608,11 +608,16 @@ class CmdStanGQ(object):
             data=self._generated_quantities, columns=self.column_names
         )
 
-    @property
-    def sample_plus_quantities(self) -> pd.DataFrame:
+    def sample_plus_quantities(self, dedup_columns: bool = False ) -> pd.DataFrame:
         """
         Returns the column-wise concatenation of the input drawset
         with generated quantities drawset.
+
+        :param dedup_columns: Specifies how to handle duplicate column names.
+            When ``False``, method throws a ``ValueError`` if sample and
+            generated_quantities contain duplicate columns.
+            When ``True``, the prefix ``gq_`` is added to column names in the
+            generated_quantities in order to deduplicate the column names.
         """
         if not (self.runset.method == Method.GENERATE_QUANTITIES):
             raise RuntimeError(
@@ -620,9 +625,25 @@ class CmdStanGQ(object):
             )
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
-        return pd.concat(
-            [self.mcmc_sample, self.generated_quantities_pd], axis=1
-        )
+        # find duplicated columns
+        cols_1 = [col for col in self.mcmc_sample.columns]
+        cols_2 = [col for col in self.generated_quantities_pd.columns]
+        all_cols = cols_1 + cols_2
+        dups = [item for item, count in Counter(all_cols).items() if count > 1]
+        if len(dups) == 0:
+            return pd.concat(
+                [self.mcmc_sample, self.generated_quantities_pd], axis=1
+                )
+        else:
+            if dedup_columns:
+                print("here!!!")
+                rename_map = { x: 'gq_' + x for x in dups }
+                return pd.concat([
+                    self.mcmc_sample,
+                    self.generated_quantities_pd.rename(columns=rename_map)
+                        ])
+            else:
+                raise ValueError("duplicate columns")
 
     def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
         """

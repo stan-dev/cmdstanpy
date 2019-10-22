@@ -59,7 +59,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             'y_rep.10',
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
-        self.assertEqual(bern_gqs.sample_plus_quantities.shape[1],
+        self.assertEqual(bern_gqs.sample_plus_quantities().shape[1],
                              bern_gqs.mcmc_sample.shape[1] +
                              bern_gqs.generated_quantities_pd.shape[1])
 
@@ -128,10 +128,27 @@ class GenerateQuantitiesTest(unittest.TestCase):
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
         self.assertEqual(bern_fit.get_drawset().shape, bern_gqs.mcmc_sample.shape)
-        self.assertEqual(bern_gqs.sample_plus_quantities.shape[1],
+        self.assertEqual(bern_gqs.sample_plus_quantities().shape[1],
                              bern_gqs.mcmc_sample.shape[1] +
                              bern_gqs.generated_quantities_pd.shape[1])
 
+    def test_sample_plus_quantities(self):
+        stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+        model.compile()
+
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        bern_fit = model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
+
+        bern_gqs = model.generate_quantities(
+            data=jdata,
+            mcmc_sample=bern_fit
+        )
+
+        with self.assertRaisesRegex(ValueError, 'duplicate columns'):
+            bern_gqs.sample_plus_quantities()
 
 
 if __name__ == '__main__':
