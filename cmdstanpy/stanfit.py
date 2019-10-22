@@ -4,7 +4,7 @@ import platform
 import shutil
 import tempfile
 from typing import List, Tuple
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 import numpy as np
 import pandas as pd
 import logging
@@ -612,7 +612,10 @@ class CmdStanGQ(object):
     def sample_plus_quantities(self) -> pd.DataFrame:
         """
         Returns the column-wise concatenation of the input drawset
-        with generated quantities drawset.
+        with generated quantities drawset.  If there are duplicate
+        columns in both the input and the generated quantities,
+        the input column is dropped in favor of the recomputed
+        values in the generate quantities drawset.
         """
         if not (self.runset.method == Method.GENERATE_QUANTITIES):
             raise RuntimeError(
@@ -620,8 +623,17 @@ class CmdStanGQ(object):
             )
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
+
+        cols_1 = [col for col in self.mcmc_sample.columns]
+        cols_2 = [col for col in self.generated_quantities_pd.columns]
+        dups = [
+            item
+            for item, count in Counter(cols_1 + cols_2).items()
+            if count > 1
+        ]
         return pd.concat(
-            [self.mcmc_sample, self.generated_quantities_pd], axis=1
+            [self.mcmc_sample.drop(columns=dups), self.generated_quantities_pd],
+            axis=1,
         )
 
     def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:

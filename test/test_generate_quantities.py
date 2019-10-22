@@ -132,6 +132,21 @@ class GenerateQuantitiesTest(unittest.TestCase):
                              bern_gqs.mcmc_sample.shape[1] +
                              bern_gqs.generated_quantities_pd.shape[1])
 
+    def test_sample_plus_quantities_dedup(self):
+        stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+        model.compile()
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        bern_fit = model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
+        bern_gqs = model.generate_quantities(
+            data=jdata,
+            mcmc_sample=bern_fit
+        )
+        self.assertEqual(bern_gqs.sample_plus_quantities.shape[1],
+                             bern_gqs.mcmc_sample.shape[1])
+
 
 
 if __name__ == '__main__':
