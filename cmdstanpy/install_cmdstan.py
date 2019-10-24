@@ -42,10 +42,16 @@ def usage():
 def install_version(cmdstan_version):
     with pushd(cmdstan_version):
         print('Building {} binaries'.format(cmdstan_version))
-        make = os.getenv('MAKE', 'make')
+        make = os.getenv(
+            'MAKE', 'make' if platform.system() != "Windows" else "mingw32-make"
+        )
         cmd = [make, 'build']
         proc = subprocess.Popen(
-            cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            cwd=None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         stdout, stderr = proc.communicate()
         if proc.returncode:
@@ -61,7 +67,11 @@ def install_version(cmdstan_version):
             ).as_posix(),
         ]
         proc = subprocess.Popen(
-            cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            cwd=None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         stdout, stderr = proc.communicate()
         if proc.returncode:

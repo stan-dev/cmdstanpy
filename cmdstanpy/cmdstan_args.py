@@ -182,12 +182,13 @@ class SamplerArgs(object):
                 )
 
         if self.fixed_param and (
-                (self.warmup_iters is not None and self.warmup_iters > 0) or
-                self.save_warmup or
-                self.max_treedepth is not None or
-                self.metric is not None or
-                self.step_size is not None or
-                self.adapt_delta is not None):
+            (self.warmup_iters is not None and self.warmup_iters > 0)
+            or self.save_warmup
+            or self.max_treedepth is not None
+            or self.metric is not None
+            or self.step_size is not None
+            or self.adapt_delta is not None
+        ):
             raise ValueError(
                 'when fixed_param=True, cannot specify warmup or'
                 ' or any adaptation parameters.'

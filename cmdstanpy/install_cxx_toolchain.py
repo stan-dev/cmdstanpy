@@ -76,7 +76,11 @@ def install_version(installation_dir, installation_file, version, silent):
         cmd.extend(get_config(installation_dir, silent))
         print(' '.join(cmd))
         proc = subprocess.Popen(
-            cmd, cwd=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd,
+            cwd=None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         while proc.poll() is None:
             output = proc.stdout.readline().decode('utf-8').strip()
