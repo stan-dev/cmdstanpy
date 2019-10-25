@@ -13,9 +13,11 @@ cache:
 install:
   - pip install --quiet -r requirements.txt
   - pip install --quiet -r requirements-test.txt
-  - python cmdstanpy/install_cmdstan.py
   # install cmdstanpy
   - pip install .
+  # install cmdstan
+  - python -m cmdstanpy.install_cmdstan
+  - python ./scripts/clean_examples.py
 
 after install:
 
@@ -27,3 +29,4 @@ script:
   - pytest -v ../test
   - python -m pip install -r ../requirements-optional.txt
   - python ../test/example_script.py
+  - python ../scripts/clean_examples.py
