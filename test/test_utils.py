@@ -22,6 +22,7 @@ from cmdstanpy.utils import (
     rdump,
     rload,
     parse_rdump_value,
+    jsondump
 )
 from cmdstanpy.model import CmdStanModel
 
@@ -99,7 +100,7 @@ class CmdStanPathTest(unittest.TestCase):
 
     def test_dict_to_file(self):
         file_good = os.path.join(datafiles_path, 'bernoulli_output_1.csv')
-        dict_good = {'a': 'A'}
+        dict_good = {'a': 0.5}
         created_tmp = None
         with MaybeDictToFilePath(file_good, dict_good) as (f1, f2):
             self.assertTrue(os.path.exists(f1))
@@ -113,6 +114,20 @@ class CmdStanPathTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             with MaybeDictToFilePath(123, dict_good) as (f1, f2):
                 pass
+
+    def test_json_dump(self):
+        dict_bad = {'a' : 'A'}
+        file_bad = os.path.join(datafiles_path, 'invalid.json')
+        with self.assertRaises(ValueError):
+            jsondump(file_bad, dict_bad)
+
+    def test_json_zero_vec(self):
+        dict_zero_vec = {'a' : [ ]}
+        file_zero_vec = os.path.join(TMPDIR, 'empty_vec.json')
+        jsondump(file_zero_vec, dict_zero_vec)
+        with open(file_zero_vec) as fp:
+            self.assertEqual(json.load(fp), dict_zero_vec)
+
 
 
 class ReadStanCsvTest(unittest.TestCase):
@@ -166,8 +181,7 @@ class ReadStanCsvTest(unittest.TestCase):
 
     def test_check_sampler_csv_thin(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        bern_model = CmdStanModel(stan_file=stan, exe_file=exe)
+        bern_model = CmdStanModel(stan_file=stan)
         bern_model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')

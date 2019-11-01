@@ -76,7 +76,7 @@ class MaybeDictToFilePath(object):
                 self._unlink[i] = True
             elif isinstance(o, str):
                 if not os.path.exists(o):
-                    raise ValueError("File doesn't exists {}".format(o))
+                    raise ValueError("File doesn't exist {}".format(o))
                 self._paths[i] = o
             elif o is None:
                 self._paths[i] = None
@@ -138,7 +138,6 @@ class TemporaryCopiedFile(object):
             self._path = path
             self._tmpdir = tmpdir
         else:
-            self._changed = False
             self._path = file_path
 
     def __enter__(self):
@@ -337,10 +336,10 @@ def jsondump(path: str, data: Dict) -> None:
         if isinstance(val, np.ndarray):
             val = val.tolist()
             data[key] = val
-        if isinstance(val, Sequence) and not val:
+        if isinstance(val, str):
             raise ValueError(
                 'variable: {}, error: '
-                'empty array not allowed with JSON interface'.format(val)
+                'string values not valid data inputs'.format(val)
             )
     with open(path, 'w') as fd:
         json.dump(data, fd)
