@@ -97,31 +97,28 @@ class CmdStanModel(object):
                     )
             self._exe_file = exe_file
         if include_paths is not None:
-            bad_paths = [
-                d for d in include_paths if not os.path.exists(d)
-            ]
+            bad_paths = [d for d in include_paths if not os.path.exists(d)]
             if any(bad_paths):
                 raise ValueError(
-                    'invalid include paths: {}'.format(
-                        ', '.join(bad_paths)
-                        )
+                    'invalid include paths: {}'.format(', '.join(bad_paths))
                 )
             self._include_paths = include_paths
-        if platform.system() == "Windows":
+        if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
-            libtbb = os.getenv("STAN_TBB")
+            libtbb = os.getenv('STAN_TBB')
             if libtbb is None:
                 libtbb = os.path.join(
-                    cmdstan_path(), "stan", "lib", "stan_math", "lib", "tbb"
+                    cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
                 )
-            os.environ["PATH"] = "{};{}".format(libtbb, os.getenv("PATH"))
+            os.environ['PATH'] = '{};{}'.format(libtbb, os.getenv('PATH'))
         if compile and self._exe_file is None:
             self.compile()
             if self._exe_file is None:
                 raise ValueError(
-                    'unable to compile Stan model file: {}'.format(self._stan_file)
+                    'unable to compile Stan model file: {}'.format(
+                        self._stan_file
+                    )
                 )
-            
 
     def __repr__(self) -> str:
         return 'CmdStanModel(name={},  stan_file="{}", exe_file="{}")'.format(
@@ -159,9 +156,7 @@ class CmdStanModel(object):
     def include_paths(self) -> List[str]:
         return self._include_paths
 
-    def compile(
-        self, opt_lvl: int = 3, force: bool = False
-    ) -> None:
+    def compile(self, opt_lvl: int = 3, force: bool = False) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
         C++, then calls the C++ compiler.
@@ -214,7 +209,9 @@ class CmdStanModel(object):
                     ]
                     if self._include_paths is not None:
                         bad_paths = [
-                            d for d in self._include_paths if not os.path.exists(d)
+                            d
+                            for d in self._include_paths
+                            if not os.path.exists(d)
                         ]
                         if any(bad_paths):
                             raise ValueError(
@@ -225,7 +222,10 @@ class CmdStanModel(object):
                         cmd.append(
                             '--include_paths='
                             + ','.join(
-                                (Path(p).as_posix() for p in self._include_paths)
+                                (
+                                    Path(p).as_posix()
+                                    for p in self._include_paths
+                                )
                             )
                         )
                     try:
@@ -238,8 +238,8 @@ class CmdStanModel(object):
                     make = os.getenv(
                         'MAKE',
                         'make'
-                        if platform.system() != "Windows"
-                        else "mingw32-make",
+                        if platform.system() != 'Windows'
+                        else 'mingw32-make',
                     )
                     cmd = [make, 'O={}'.format(opt_lvl), exe_file]
                     self._logger.info('compiling c++')
