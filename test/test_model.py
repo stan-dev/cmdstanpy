@@ -40,12 +40,12 @@ class CmdStanModelTest(unittest.TestCase):
         # compile on instantiation
         model = CmdStanModel(stan_file=stan)
         self.assertEqual(stan, model.stan_file)
-        self.assertEqual(exe, model.exe_file)
+        self.assertEqual(exe, model.exe_file.replace('\\', '/'))
 
         # instantiate with existing exe
         model = CmdStanModel(stan_file=stan, exe_file=exe)
         self.assertEqual(stan, model.stan_file)
-        self.assertEqual(exe, model.exe_file)
+        self.assertEqual(exe, model.exe_file.replace('\\', '/'))
         
         # instantiate, don't compile
         os.remove(exe)
