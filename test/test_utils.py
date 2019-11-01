@@ -7,6 +7,8 @@ import shutil
 import string
 import random
 
+import numpy as np
+
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
     EXTENSION,
@@ -115,18 +117,37 @@ class CmdStanPathTest(unittest.TestCase):
             with MaybeDictToFilePath(123, dict_good) as (f1, f2):
                 pass
 
-    def test_json_dump(self):
-        dict_bad = {'a' : 'A'}
-        file_bad = os.path.join(datafiles_path, 'invalid.json')
-        with self.assertRaises(ValueError):
-            jsondump(file_bad, dict_bad)
+    def test_jsondump(self):
+        dict_list = {'a' : [ 1.0, 2.0, 3.0 ]}
+        file_list = os.path.join(TMPDIR, 'list.json')
+        jsondump(file_list, dict_list)
+        with open(file_list) as fp:
+            self.assertEqual(json.load(fp), dict_list)
 
-    def test_json_zero_vec(self):
+        dict_vec = {'a' : np.repeat(3,4)}
+        file_vec = os.path.join(TMPDIR, 'vec.json')
+        jsondump(file_vec, dict_vec)
+        with open(file_vec) as fp:
+            self.assertEqual(json.load(fp), dict_vec)
+
         dict_zero_vec = {'a' : [ ]}
         file_zero_vec = os.path.join(TMPDIR, 'empty_vec.json')
         jsondump(file_zero_vec, dict_zero_vec)
         with open(file_zero_vec) as fp:
             self.assertEqual(json.load(fp), dict_zero_vec)
+
+        dict_zero_matrix = {'a' : [[], [], []]}
+        file_zero_matrix = os.path.join(TMPDIR, 'empty_matrix.json')
+        jsondump(file_zero_matrix, dict_zero_matrix)
+        with open(file_zero_matrix) as fp:
+            self.assertEqual(json.load(fp), dict_zero_matrix)
+
+        a = np.zeros(shape=(5,0))
+        dict_zero_matrix = {'a' : a}
+        file_zero_matrix = os.path.join(TMPDIR, 'empty_matrix.json')
+        jsondump(file_zero_matrix, dict_zero_matrix)
+        with open(file_zero_matrix) as fp:
+            self.assertEqual(json.load(fp), dict_zero_matrix)
 
 
 

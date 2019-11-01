@@ -336,11 +336,6 @@ def jsondump(path: str, data: Dict) -> None:
         if isinstance(val, np.ndarray):
             val = val.tolist()
             data[key] = val
-        if isinstance(val, str):
-            raise ValueError(
-                'variable: {}, error: '
-                'string values not valid data inputs'.format(val)
-            )
     with open(path, 'w') as fd:
         json.dump(data, fd)
 
