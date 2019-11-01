@@ -87,7 +87,7 @@ It will use 2 less than that number of cores available, as determined by Python'
     from cmdstanpy import cmdstan_path, CmdStanModel
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
 
-    # instantiate compile bernoulli model
+    # instantiate, compile bernoulli model
     bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
 
     # run CmdStan's sample method, returns object `CmdStanMCMC`
@@ -137,7 +137,6 @@ produced by RNG functions may change.
 
     datagen_stan = os.path.join('..', '..', 'test', 'data', 'bernoulli_datagen.stan')
     datagen_model = CmdStanModel(stan_file=datagen_stan)
-    datagen_model.compile()
 
     sim_data = datagen_model.sample(fixed_param=True)
     sim_data.summary()

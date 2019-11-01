@@ -42,13 +42,13 @@ class CmdStanModel(object):
     Stan model.
 
     + Stores pathnames to Stan program, compiled executable, and list of
-    paths for directories which contain included Stan programs.
+        paths for directories which contain included Stan programs.
 
     + Provides functions to compile the model and perform inference on the
-    model given data.
+        model given data.
 
     + By default, compiles model on instantiation - override with argument
-    ``compile=False``
+        ``compile=False``
     """
 
     def __init__(
