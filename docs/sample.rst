@@ -87,7 +87,7 @@ It will use 2 less than that number of cores available, as determined by Python'
     from cmdstanpy import cmdstan_path, CmdStanModel
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
 
-    # instantiate bernoulli model, compile Stan program
+    # instantiate compile bernoulli model
     bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
 
     # run CmdStan's sample method, returns object `CmdStanMCMC`

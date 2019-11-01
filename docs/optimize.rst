@@ -47,7 +47,7 @@ In the following example, we instantiate a model and do optimization using the d
     from cmdstanpy.model import CmdStanModel
     from cmdstanpy.utils import cmdstan_path
 
-    # instantiate bernoulli model, compile Stan program
+    # instantiate compile bernoulli model
     bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
 
