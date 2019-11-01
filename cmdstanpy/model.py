@@ -40,27 +40,38 @@ from cmdstanpy.utils import (
 class CmdStanModel(object):
     """
     Stan model.
-    Stores pathnames to Stan program as well as compiled executable.
-    Provides functions to compile the model and perform inference on the
+
+    + Stores pathnames to Stan program, compiled executable, and list of
+    paths for directories which contain included Stan programs.
+
+    + Provides functions to compile the model and perform inference on the
     model given data.
+
+    + By default, compiles model on instantiation - override with argument
+    ``compile=False``
     """
 
     def __init__(
         self,
         stan_file: str = None,
         exe_file: str = None,
+        include_paths: List[str] = None,
+        compile: bool = True,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self._stan_file = stan_file
         self._name = None
         self._exe_file = None
+        self._include_paths = None
         self._logger = logger or get_logger()
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
                     'must specify Stan source or executable program file'
                 )
+            else:
+                self._stan_file = None
         else:
             if not os.path.exists(stan_file):
                 raise ValueError('no such file {}'.format(self._stan_file))
@@ -85,6 +96,17 @@ class CmdStanModel(object):
                         ' found: {}'.format(self._name, exename)
                     )
             self._exe_file = exe_file
+        if include_paths is not None:
+            bad_paths = [
+                d for d in include_paths if not os.path.exists(d)
+            ]
+            if any(bad_paths):
+                raise ValueError(
+                    'invalid include paths: {}'.format(
+                        ', '.join(bad_paths)
+                        )
+                )
+            self._include_paths = include_paths
         if platform.system() == "Windows":
             # Add tbb to the $PATH on Windows
             libtbb = os.getenv("STAN_TBB")
@@ -93,6 +115,13 @@ class CmdStanModel(object):
                     cmdstan_path(), "stan", "lib", "stan_math", "lib", "tbb"
                 )
             os.environ["PATH"] = "{};{}".format(libtbb, os.getenv("PATH"))
+        if compile and self._exe_file is None:
+            self.compile()
+            if self._exe_file is None:
+                raise ValueError(
+                    'unable to compile Stan model file: {}'.format(self._stan_file)
+                )
+            
 
     def __repr__(self) -> str:
         return 'CmdStanModel(name={},  stan_file="{}", exe_file="{}")'.format(
@@ -126,12 +155,20 @@ class CmdStanModel(object):
     def exe_file(self) -> str:
         return self._exe_file
 
+    @property
+    def include_paths(self) -> List[str]:
+        return self._include_paths
+
     def compile(
-        self, opt_lvl: int = 3, include_paths: List[str] = None
+        self, opt_lvl: int = 3, force: bool = False
     ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
         C++, then calls the C++ compiler.
+
+        By default, this function compares the timestamps on the source and
+        executable files; if the executable is newer than the source file, it
+        will not recompile the file, unless argument ``force`` is True.
 
         :param opt_lvl: Optimization level used by the C++ compiler, one of
             {0, 1, 2, 3}.  Defaults to level 2. Level 0 optimization results
@@ -139,8 +176,10 @@ class CmdStanModel(object):
             Higher optimization levels increase runtime performance but will
             take longer to compile.
 
-        :param include_paths: List of paths to directories where Stan should
-            look for files to include in compilation of the C++ executable.
+        :param force: When ``True``, always compile, even if the executable file
+            is newer than the source file.  Used for Stan models which have
+            ``#include`` directives in order to force recompilation when changes
+            are made to the included files.
         """
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
@@ -155,7 +194,7 @@ class CmdStanModel(object):
             if os.path.exists(exe_file):
                 src_time = os.path.getmtime(self._stan_file)
                 exe_time = os.path.getmtime(exe_file)
-                if exe_time > src_time:
+                if exe_time > src_time and not force:
                     do_compile = False
                     self._logger.info('found newer exe file, not recompiling')
 
@@ -173,12 +212,12 @@ class CmdStanModel(object):
                         '--o={}'.format(hpp_file),
                         Path(stan_file).as_posix(),
                     ]
-                    if include_paths is not None:
+                    if self._include_paths is not None:
                         bad_paths = [
-                            d for d in include_paths if not os.path.exists(d)
+                            d for d in self._include_paths if not os.path.exists(d)
                         ]
                         if any(bad_paths):
-                            raise Exception(
+                            raise ValueError(
                                 'invalid include paths: {}'.format(
                                     ', '.join(bad_paths)
                                 )
@@ -186,7 +225,7 @@ class CmdStanModel(object):
                         cmd.append(
                             '--include_paths='
                             + ','.join(
-                                (Path(p).as_posix() for p in include_paths)
+                                (Path(p).as_posix() for p in self._include_paths)
                             )
                         )
                     try:

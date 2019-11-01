@@ -81,7 +81,6 @@ In the following example, we instantiate a model and run variational inference u
     # instantiate bernoulli model, compile Stan program
     bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
-    bernoulli_model.compile()
 
     # run CmdStan's variational inference method, returns object `CmdStanVB`
     bern_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')

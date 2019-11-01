@@ -20,7 +20,6 @@ class GenerateQuantitiesTest(unittest.TestCase):
     def test_gen_quantities_csv_files(self):
         stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
 
@@ -68,7 +67,6 @@ class GenerateQuantitiesTest(unittest.TestCase):
     def test_gen_quantities_csv_files_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
 
         # synthesize list of filenames
@@ -87,7 +85,6 @@ class GenerateQuantitiesTest(unittest.TestCase):
     def test_gen_quanties_mcmc_sample(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
-        bern_model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
@@ -96,7 +93,6 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
 
         bern_gqs = model.generate_quantities(
             data=jdata,
@@ -135,7 +131,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
     def test_sample_plus_quantities_dedup(self):
         stan = os.path.join(datafiles_path, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
+
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_fit = model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100

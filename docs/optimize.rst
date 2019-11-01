@@ -50,7 +50,6 @@ In the following example, we instantiate a model and do optimization using the d
     # instantiate bernoulli model, compile Stan program
     bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
-    bernoulli_model.compile()
 
     # run CmdStan's optimize method, returns object `CmdStanMLE`
     bern_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')

@@ -89,7 +89,6 @@ It will use 2 less than that number of cores available, as determined by Python'
 
     # instantiate bernoulli model, compile Stan program
     bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
-    bernoulli_model.compile()
 
     # run CmdStan's sample method, returns object `CmdStanMCMC`
     bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
