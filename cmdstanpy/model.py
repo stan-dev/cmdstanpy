@@ -71,8 +71,6 @@ class CmdStanModel(object):
                 raise ValueError(
                     'must specify Stan source or executable program file'
                 )
-            else:
-                self._stan_file = None
         else:
             if not os.path.exists(stan_file):
                 raise ValueError('no such file {}'.format(self._stan_file))
