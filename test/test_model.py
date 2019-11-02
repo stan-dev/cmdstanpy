@@ -36,18 +36,17 @@ class CmdStanModelTest(unittest.TestCase):
     def test_model_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-
+        
         # compile on instantiation
         model = CmdStanModel(stan_file=stan)
         self.assertEqual(stan, model.stan_file)
         self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
-
         # instantiate with existing exe
         model = CmdStanModel(stan_file=stan, exe_file=exe)
         self.assertEqual(stan, model.stan_file)
-        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
-        
+        self.assertTrue(model.exe_file.endswith(exe))
+
         # instantiate, don't compile
         os.remove(exe)
         model = CmdStanModel(stan_file=stan, compile=False)
