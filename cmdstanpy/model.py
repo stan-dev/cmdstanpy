@@ -83,6 +83,15 @@ class CmdStanModel(object):
                 )
             self._name, _ = os.path.splitext(filename)
             self._exe_file = None
+            # if program has #includes, search program dir
+            with open(stan_file, 'r') as fp:
+                program = fp.read()
+            if '#include' in program:
+                path, _ = os.path.split(stan_file)
+                if include_paths is None:
+                    include_paths = []
+                if path not in include_paths:
+                    include_paths.append(path)
 
         if exe_file is not None:
             if not os.path.exists(exe_file):
@@ -106,15 +115,7 @@ class CmdStanModel(object):
                     'invalid include paths: {}'.format(', '.join(bad_paths))
                 )
             self._include_paths = include_paths
-        elif stan_file is not None:
-            # if program has #includes, search program dir
-            with open(stan_file, 'r') as fp:
-                program = fp.read()
-            if '#include' in program:
-                self._include_paths = []
-                path, _ = os.path.split(stan_file)
-                self._include_paths.append(path)
-        
+
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
             libtbb = os.getenv('STAN_TBB')

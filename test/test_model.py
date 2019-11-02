@@ -130,8 +130,8 @@ class CmdStanModelTest(unittest.TestCase):
 
         os.remove(os.path.join(datafiles_path, 'bernoulli_include' + '.hpp'))
         os.remove(exe)
-        with self.assertRaises(ValueError):
-            model2 = CmdStanModel(stan_file=stan, include_paths=[])
+        model2 = CmdStanModel(stan_file=stan)
+        self.assertEqual(model2.include_paths, include_paths)
 
         model3 = CmdStanModel(stan_file=stan)
         self.assertTrue(model3.exe_file.endswith(exe.replace('\\', '/')))
