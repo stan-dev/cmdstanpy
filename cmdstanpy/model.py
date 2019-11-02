@@ -65,6 +65,7 @@ class CmdStanModel(object):
         self._exe_file = None
         self._include_paths = None
         self._logger = logger or get_logger()
+
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -82,6 +83,7 @@ class CmdStanModel(object):
                 )
             self._name, _ = os.path.splitext(filename)
             self._exe_file = None
+
         if exe_file is not None:
             if not os.path.exists(exe_file):
                 raise ValueError('no such file {}'.format(exe_file))
@@ -96,6 +98,7 @@ class CmdStanModel(object):
                         ' found: {}'.format(self._name, exename)
                     )
             self._exe_file = exe_file
+
         if include_paths is not None:
             bad_paths = [d for d in include_paths if not os.path.exists(d)]
             if any(bad_paths):
@@ -103,6 +106,15 @@ class CmdStanModel(object):
                     'invalid include paths: {}'.format(', '.join(bad_paths))
                 )
             self._include_paths = include_paths
+        elif stan_file is not None:
+            # if program has #includes, search program dir
+            with open(stan_file, 'r') as fp:
+                program = fp.read()
+            if '#include' in program:
+                self._include_paths = []
+                path, _ = os.path.split(stan_file)
+                self._include_paths.append(path)
+        
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
             libtbb = os.getenv('STAN_TBB')
@@ -111,6 +123,7 @@ class CmdStanModel(object):
                     cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
                 )
             os.environ['PATH'] = '{};{}'.format(libtbb, os.getenv('PATH'))
+
         if compile and self._exe_file is None:
             self.compile()
             if self._exe_file is None:

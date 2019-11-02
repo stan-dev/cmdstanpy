@@ -40,12 +40,13 @@ class CmdStanModelTest(unittest.TestCase):
         # compile on instantiation
         model = CmdStanModel(stan_file=stan)
         self.assertEqual(stan, model.stan_file)
-        self.assertEqual(exe, model.exe_file.replace('\\', '/'))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
+
 
         # instantiate with existing exe
         model = CmdStanModel(stan_file=stan, exe_file=exe)
         self.assertEqual(stan, model.stan_file)
-        self.assertEqual(exe, model.exe_file.replace('\\', '/'))
+        self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
         
         # instantiate, don't compile
         os.remove(exe)
@@ -130,7 +131,10 @@ class CmdStanModelTest(unittest.TestCase):
         os.remove(os.path.join(datafiles_path, 'bernoulli_include' + '.hpp'))
         os.remove(exe)
         with self.assertRaises(ValueError):
-            model2 = CmdStanModel(stan_file=stan)
+            model2 = CmdStanModel(stan_file=stan, include_paths=[])
+
+        model3 = CmdStanModel(stan_file=stan)
+        self.assertTrue(model3.exe_file.endswith(exe.replace('\\', '/')))
 
 
 
