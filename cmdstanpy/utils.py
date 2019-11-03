@@ -314,12 +314,8 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
             'run command line script "install_cxx_toolchain"'
         )
     logger.info('Adds C++ toolchain to $PATH: %s', toolchain_root)
-    os.environ['PATH'] = ';'.join(
-        list(
-            dict.fromkeys(
-                [compiler_path, tool_path] + os.environ['PATH'].split(';')
-            )
-        )
+    os.environ['PATH'] = '{};{};{}'.format(
+        compiler_path, tool_path, os.environ['PATH']
     )
     return compiler_path, tool_path
 
