@@ -225,7 +225,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     'Found invalid installion for RTools35 on %', toolchain_root
                 )
                 toolchain_root = ''
-        elif os.path.exist(os.path.join(toolchain_root, 'mingw64')):
+        elif os.path.exists(os.path.join(toolchain_root, 'mingw64')):
             compiler_path = os.path.join(
                 toolchain_root,
                 'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
