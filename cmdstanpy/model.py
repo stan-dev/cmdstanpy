@@ -93,9 +93,9 @@ class CmdStanModel(object):
                 libtbb = os.path.join(
                     cmdstan_path(), "stan", "lib", "stan_math", "lib", "tbb"
                 )
-            os.environ["PATH"] = ";".join(
-                list(OrderedDict.fromkeys([libtbb, ] + os.getenv("PATH", "").split(";")))
-            )
+            os.environ["PATH"] = ";".join(list(OrderedDict.fromkeys(
+                [libtbb, ] + os.getenv("PATH", "").split(";")
+            )))
 
     def __repr__(self) -> str:
         return 'CmdStanModel(name={},  stan_file="{}", exe_file="{}")'.format(
