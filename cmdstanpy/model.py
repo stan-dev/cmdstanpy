@@ -7,6 +7,7 @@ import shutil
 import sys
 import logging
 
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
 from numbers import Real
@@ -92,8 +93,8 @@ class CmdStanModel(object):
                 libtbb = os.path.join(
                     cmdstan_path(), "stan", "lib", "stan_math", "lib", "tbb"
                 )
-            os.environ["PATH"] =  ";".join(
-                list(dict.fromkeys([libtbb,] + os.getenv("PATH").split(";")))
+            os.environ["PATH"] = ";".join(
+                list(OrderedDict.fromkeys([libtbb, ] + os.getenv("PATH", "").split(";")))
             )
 
     def __repr__(self) -> str:
