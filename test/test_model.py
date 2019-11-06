@@ -115,15 +115,19 @@ class CmdStanModelTest(unittest.TestCase):
         model2 = CmdStanModel(stan_file=stan)
         self.assertEqual(exe_time,os.path.getmtime(model2.exe_file))
 
-    def test_model_includes(self):
+    def test_model_compile_includes(self):
         stan = os.path.join(datafiles_path, 'bernoulli_include.stan')
         exe = os.path.join(datafiles_path, 'bernoulli_include' + EXTENSION)
+        if os.path.exists(exe):
+            os.remove(exe)
+
         here = os.path.dirname(os.path.abspath(__file__))
         datafiles_abspath = os.path.join(here, 'data')
         include_paths = [datafiles_abspath]
-        if os.path.exists(exe):
-            os.remove(exe)
-        model = CmdStanModel(stan_file=stan, include_paths=include_paths)
+
+        model = CmdStanModel(stan_file=stan)
+        model.compile(include_paths=include_paths)
+
         self.assertEqual(stan, model.stan_file)
         self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 

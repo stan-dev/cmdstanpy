@@ -76,7 +76,7 @@ class MaybeDictToFilePath(object):
                 self._unlink[i] = True
             elif isinstance(o, str):
                 if not os.path.exists(o):
-                    raise ValueError("File doesn't exists {}".format(o))
+                    raise ValueError("File doesn't exist {}".format(o))
                 self._paths[i] = o
             elif o is None:
                 self._paths[i] = None
@@ -138,7 +138,6 @@ class TemporaryCopiedFile(object):
             self._path = path
             self._tmpdir = tmpdir
         else:
-            self._changed = False
             self._path = file_path
 
     def __enter__(self):
@@ -225,7 +224,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     'Found invalid installion for RTools35 on %', toolchain_root
                 )
                 toolchain_root = ''
-        elif os.path.exist(os.path.join(toolchain_root, 'mingw64')):
+        elif os.path.exists(os.path.join(toolchain_root, 'mingw64')):
             compiler_path = os.path.join(
                 toolchain_root,
                 'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
@@ -314,8 +313,12 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
             'run command line script "install_cxx_toolchain"'
         )
     logger.info('Adds C++ toolchain to $PATH: %s', toolchain_root)
-    os.environ['PATH'] = '{};{};{}'.format(
-        compiler_path, tool_path, os.environ['PATH']
+    os.environ['PATH'] = ';'.join(
+        list(
+            dict.fromkeys(
+                [compiler_path, tool_path] + os.environ['PATH'].split(';')
+            )
+        )
     )
     return compiler_path, tool_path
 
@@ -337,11 +340,6 @@ def jsondump(path: str, data: Dict) -> None:
         if isinstance(val, np.ndarray):
             val = val.tolist()
             data[key] = val
-        if isinstance(val, Sequence) and not val:
-            raise ValueError(
-                'variable: {}, error: '
-                'empty array not allowed with JSON interface'.format(val)
-            )
     with open(path, 'w') as fd:
         json.dump(data, fd)
 
