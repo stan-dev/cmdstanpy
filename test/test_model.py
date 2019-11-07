@@ -125,17 +125,18 @@ class CmdStanModelTest(unittest.TestCase):
         datafiles_abspath = os.path.join(here, 'data')
         include_paths = [datafiles_abspath]
 
-        model = CmdStanModel(stan_file=stan)
-        model.compile(include_paths=include_paths)
-
+        # test compile with explicit include paths
+        model = CmdStanModel(stan_file=stan, include_paths=include_paths)
         self.assertEqual(stan, model.stan_file)
         self.assertTrue(model.exe_file.endswith(exe.replace('\\', '/')))
 
+        # test compile - implicit include path is current dir
         os.remove(os.path.join(datafiles_path, 'bernoulli_include' + '.hpp'))
         os.remove(exe)
         model2 = CmdStanModel(stan_file=stan)
         self.assertEqual(model2.include_paths, include_paths)
 
+        # already compiled
         model3 = CmdStanModel(stan_file=stan)
         self.assertTrue(model3.exe_file.endswith(exe.replace('\\', '/')))
 
