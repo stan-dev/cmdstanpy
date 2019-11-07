@@ -39,7 +39,6 @@ The CmdStanPy, CmdStan, and the core Stan C++ code are licensed under new BSD.
     # specify Stan file, create, compile CmdStanModel object
     bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
-    bernoulli_model.compile()
 
 
     # specify data, fit the model

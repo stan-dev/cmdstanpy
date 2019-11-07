@@ -16,7 +16,7 @@ Specify a Stan model
 ^^^^^^^^^^^^^^^^^^^^
 
 The ``CmdStanModel`` class specifies the Stan program and its corresponding compiled executable.
-The method ``compile`` is used to compile or or recompile a Stan program.
+By default, the Stan program is compiled on instantiation.
 
 .. code-block:: python
 
@@ -25,16 +25,16 @@ The method ``compile`` is used to compile or or recompile a Stan program.
 
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
-    bernoulli_model.compile()
 
-If you already have a compiled executable, you can construct a ``CmdStanModel`` object directly:
+The ``CmdStanModel`` class provides properties and functions to inspect the model code and filepaths.
 
 .. code-block:: python
 
-    bernoulli_model = CmdStanModel(
-            stan_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan'),
-            exe_file=os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli')
-            )
+    bernoulli_model.name
+    bernoulli_model.stan_file
+    bernoulli_model.exe_file
+    bernoulli_model.code()
+
 
             
 Run the HMC-NUTS sampler
