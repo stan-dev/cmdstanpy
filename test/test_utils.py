@@ -204,7 +204,6 @@ class ReadStanCsvTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
         bern_model.compile()
-
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
             data=jdata,
