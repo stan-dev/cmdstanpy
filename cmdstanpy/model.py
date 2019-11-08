@@ -148,7 +148,7 @@ class CmdStanModel(object):
         compilation_failed = False
 
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            exe_file, _ = os.path.splitext(stan_file)
+            exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
             exe_file = Path(exe_file).as_posix()
             exe_file += EXTENSION
             do_compile = True
