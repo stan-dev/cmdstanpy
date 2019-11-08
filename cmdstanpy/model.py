@@ -148,7 +148,7 @@ class CmdStanModel(object):
         compilation_failed = False
 
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
+            exe_file, _ = os.path.splitext(stan_file)
             exe_file = Path(exe_file).as_posix()
             exe_file += EXTENSION
             do_compile = True
@@ -212,7 +212,7 @@ class CmdStanModel(object):
 
             if not compilation_failed:
                 if is_copied:
-                    original_target_dir = os.path.dirname(self._stan_file)
+                    original_target_dir = os.path.dirname(os.path.abspath(self._stan_file))
                     new_exec_name = (
                         os.path.basename(os.path.splitext(self._stan_file)[0])
                         + EXTENSION
@@ -863,7 +863,7 @@ class CmdStanModel(object):
         self._logger.info('start chain %u', idx + 1)
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
-            cmd.split(),
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
