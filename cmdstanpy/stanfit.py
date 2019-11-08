@@ -208,7 +208,7 @@ class CmdStanMCMC(object):
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
             self.runset.model,
             self.runset.chains,
-            self.runset._args.method_args.compose(0),
+            self.runset._args.method_args.compose(0, cmd=[]),
         )
         repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
             repr,
@@ -478,7 +478,7 @@ class CmdStanMLE(object):
 
     def __repr__(self) -> str:
         repr = 'CmdStanMLE: model={}{}'.format(
-            self.runset.model, self.runset._args.method_args.compose(0)
+            self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
         )
         repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
             repr,
@@ -553,7 +553,7 @@ class CmdStanGQ(object):
         repr = 'CmdStanGQ: model={} chains={}{}'.format(
             self.runset.model,
             self.runset.chains,
-            self.runset._args.method_args.compose(0),
+            self.runset._args.method_args.compose(0, cmd=[]),
         )
         repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
             repr,
@@ -683,7 +683,7 @@ class CmdStanVB(object):
 
     def __repr__(self) -> str:
         repr = 'CmdStanVB: model={}{}'.format(
-            self.runset.model, self.runset._args.method_args.compose(0)
+            self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
         )
         repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
             repr,

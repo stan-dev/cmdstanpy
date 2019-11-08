@@ -22,13 +22,13 @@ class OptimizeArgsTest(unittest.TestCase):
         self.assertRaises(ValueError, lambda: args.validate())
         args = OptimizeArgs(algorithm='Newton')
         args.validate()
-        cmd = args.compose(None, ['output'])
+        cmd = args.compose(None, cmd=['output'])
         self.assertIn('algorithm=newton', ' '.join(cmd))
 
     def test_args_algorithm_init_alpha(self):
         args = OptimizeArgs(init_alpha=2e-4)
         args.validate()
-        cmd = args.compose(None, ['output'])
+        cmd = args.compose(None, cmd=['output'])
 
 
         self.assertIn('init_alpha=0.0002', ' '.join(cmd))
@@ -40,7 +40,7 @@ class OptimizeArgsTest(unittest.TestCase):
     def test_args_algorithm_iter(self):
         args = OptimizeArgs(iter=400)
         args.validate()
-        cmd = args.compose(None, ['output'])
+        cmd = args.compose(None, cmd=['output'])
         self.assertIn('iter=400', ' '.join(cmd))
         args = OptimizeArgs(iter=-1)
         self.assertRaises(ValueError, lambda: args.validate())
@@ -50,7 +50,7 @@ class SamplerArgsTest(unittest.TestCase):
     def test_args_min(self):
         args = SamplerArgs()
         args.validate(chains=4)
-        cmd = args.compose(idx=1)
+        cmd = args.compose(idx=1, cmd=[])
         self.assertIn('method=sample algorithm=hmc', ' '.join(cmd))
 
     def test_args_chains(self):
@@ -68,7 +68,7 @@ class SamplerArgsTest(unittest.TestCase):
             adapt_delta=0.99,
         )
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample', ' '.join(cmd))
         self.assertIn('num_warmup=10', ' '.join(cmd))
         self.assertIn('num_samples=20', ' '.join(cmd))
@@ -79,7 +79,7 @@ class SamplerArgsTest(unittest.TestCase):
 
         args = SamplerArgs(warmup_iters=10)
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample', ' '.join(cmd))
         self.assertIn('num_warmup=10', ' '.join(cmd))
         self.assertNotIn('num_samples=', ' '.join(cmd))
@@ -154,50 +154,50 @@ class SamplerArgsTest(unittest.TestCase):
     def test_adapt(self):
         args = SamplerArgs(adapt_engaged=False)
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample algorithm=hmc adapt engaged=0', ' '.join(cmd))
 
         args = SamplerArgs(adapt_engaged=True)
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample algorithm=hmc adapt engaged=1', ' '.join(cmd))
 
         args = SamplerArgs()
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertNotIn('engine=nuts', ' '.join(cmd))
         self.assertNotIn('engaged=1', ' '.join(cmd))
 
     def test_metric(self):
         args = SamplerArgs(metric='dense_e')
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample algorithm=hmc metric=dense_e', ' '.join(cmd))
 
         args = SamplerArgs(metric='dense')
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample algorithm=hmc metric=dense_e', ' '.join(cmd))
 
         args = SamplerArgs(metric='diag_e')
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample algorithm=hmc metric=diag_e', ' '.join(cmd))
 
         args = SamplerArgs(metric='diag')
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample algorithm=hmc metric=diag_e', ' '.join(cmd))
 
         args = SamplerArgs()
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertNotIn('metric=', ' '.join(cmd))
 
         jmetric = os.path.join(datafiles_path, 'bernoulli.metric.json')
         args = SamplerArgs(metric=jmetric)
         args.validate(chains=4)
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('metric=diag_e', ' '.join(cmd))
         self.assertIn('metric_file=', ' '.join(cmd))
         self.assertIn('bernoulli.metric.json', ' '.join(cmd))
@@ -205,9 +205,9 @@ class SamplerArgsTest(unittest.TestCase):
         jmetric2 = os.path.join(datafiles_path, 'bernoulli.metric-2.json')
         args = SamplerArgs(metric=[jmetric, jmetric2])
         args.validate(chains=2)
-        cmd = args.compose(0)
+        cmd = args.compose(0, cmd=[])
         self.assertIn('bernoulli.metric.json', ' '.join(cmd))
-        cmd = args.compose(1)
+        cmd = args.compose(1, cmd=[])
         self.assertIn('bernoulli.metric-2.json', ' '.join(cmd))
 
         args = SamplerArgs(metric=[jmetric, jmetric])
@@ -225,7 +225,7 @@ class SamplerArgsTest(unittest.TestCase):
     def test_fixed_param(self):
         args = SamplerArgs(fixed_param=True)
         args.validate(chains=1)
-        cmd = args.compose(0)
+        cmd = args.compose(0, cmd=[])
         self.assertIn('method=sample algorithm=fixed_param', ' '.join(cmd))
 
 
@@ -507,7 +507,7 @@ class GenerateQuantitesTest(unittest.TestCase):
         ]
         args = GenerateQuantitiesArgs(csv_files=csv_files)
         args.validate(chains=4)
-        cmd = args.compose(idx=1)
+        cmd = args.compose(idx=1, cmd=[])
         self.assertIn('method=generate_quantities', ' '.join(cmd))
         self.assertIn('fitted_params={}'.format(csv_files[0]), ' '.join(cmd))
 
@@ -518,13 +518,13 @@ class VariationalTest(unittest.TestCase):
 
         args = VariationalArgs(output_samples=1)
         args.validate(chains=1)
-        cmd = args.compose(idx=0)
+        cmd = args.compose(idx=0, cmd=[])
         self.assertIn('method=variational', ' '.join(cmd))
         self.assertIn('output_samples=1', ' '.join(cmd))
 
         args = VariationalArgs(tol_rel_obj=1)
         args.validate(chains=1)
-        cmd = args.compose(idx=0)
+        cmd = args.compose(idx=0, cmd=[])
         self.assertIn('method=variational', ' '.join(cmd))
         self.assertIn('tol_rel_obj=1', ' '.join(cmd))
 

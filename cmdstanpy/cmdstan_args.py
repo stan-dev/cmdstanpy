@@ -194,7 +194,7 @@ class SamplerArgs(object):
                 ' or any adaptation parameters.'
             )
 
-    def compose(self, idx: int, cmd: List = []) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
@@ -284,7 +284,7 @@ class OptimizeArgs(object):
             else:
                 raise ValueError('iter must be type of int')
 
-    def compose(self, idx: int, cmd: List = []) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """compose command string for CmdStan for non-default arg values.
         """
         cmd.append('method=optimize')
@@ -316,7 +316,7 @@ class GenerateQuantitiesArgs(object):
                     'Invalid path for sample csv file: {}'.format(csv)
                 )
 
-    def compose(self, idx: int, cmd: List = []) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
@@ -422,7 +422,7 @@ class VariationalArgs(object):
                     ' found {}'.format(self.output_samples)
                 )
 
-    def compose(self, idx: int, cmd: List = []) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
