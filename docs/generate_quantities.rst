@@ -91,9 +91,8 @@ The first step is to fit model ``bernoulli`` to the data:
     bernoulli_path = os.path.join(bernoulli_dir, 'bernoulli.stan')
     bernoulli_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')
 
-    # instantiate bernoulli model, compile Stan program
+    # instantiate, compile bernoulli model
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
-    bernoulli_model.compile()
 
     # fit the model to the data
     bern_fit = bernoulli_model.sample(data=bernoulli_data)

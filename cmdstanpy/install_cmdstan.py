@@ -43,7 +43,7 @@ def install_version(cmdstan_version):
     with pushd(cmdstan_version):
         print('Building {} binaries'.format(cmdstan_version))
         make = os.getenv(
-            'MAKE', 'make' if platform.system() != "Windows" else "mingw32-make"
+            'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
         )
         cmd = [make, 'build']
         proc = subprocess.Popen(

@@ -21,7 +21,6 @@ class CmdStanVBTest(unittest.TestCase):
     def test_set_variational_attrs(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_be_big.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
         no_data = {}
         args = VariationalArgs(algorithm='meanfield')
         cmdstan_args = CmdStanArgs(
@@ -54,7 +53,6 @@ class VariationalTest(unittest.TestCase):
     def test_variational_good(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_be_big.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
         vi = model.variational(algorithm='meanfield', seed=12345)
         self.assertEqual(vi.column_names,('lp__', 'log_p__', 'log_g__', 'mu.1', 'mu.2'))
 
@@ -83,7 +81,6 @@ class VariationalTest(unittest.TestCase):
     def test_variational_eta_small(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_be_small.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
         vi = model.variational(algorithm='meanfield', seed=12345)
         self.assertEqual(vi.column_names,('lp__', 'log_p__', 'log_g__', 'mu.1', 'mu.2'))
         self.assertAlmostEqual(fabs(vi.variational_params_dict['mu.1']), 0.08, places=1)
@@ -94,7 +91,6 @@ class VariationalTest(unittest.TestCase):
     def test_variational_eta_fail(self):
         stan = os.path.join(datafiles_path, 'variational', 'eta_should_fail.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
         with self.assertRaisesRegex(RuntimeError, 'algorithm may not have converged'):
             vi = model.variational(algorithm='meanfield', seed=12345)
 

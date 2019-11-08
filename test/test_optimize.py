@@ -21,7 +21,6 @@ class CmdStanMLETest(unittest.TestCase):
     def test_set_mle_attrs(self):
         stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
         no_data = {}
         args = OptimizeArgs(algorithm='Newton')
         cmdstan_args = CmdStanArgs(
@@ -51,7 +50,6 @@ class OptimizeTest(unittest.TestCase):
     def test_optimize_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         model = CmdStanModel(stan_file=stan)
-        model.compile()
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         jinit = os.path.join(datafiles_path, 'bernoulli.init.json')
         mle = model.optimize(
@@ -107,7 +105,6 @@ class OptimizeTest(unittest.TestCase):
     def test_optimize_rosenbrock(self):
         stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
         rose_model = CmdStanModel(stan_file=stan)
-        rose_model.compile()
         no_data = {}
         mle = rose_model.optimize(
             data=no_data,
@@ -123,7 +120,6 @@ class OptimizeTest(unittest.TestCase):
     def test_optimize_bad(self):
         stan = os.path.join(datafiles_path, 'optimize', 'exponential_boundary.stan')
         exp_bound_model = CmdStanModel(stan_file=stan)
-        exp_bound_model.compile()
         no_data = {}
         with self.assertRaisesRegex(Exception, 'Error during optimizing, error code 70'):
             exp_bound_model.optimize(

@@ -19,7 +19,6 @@ class SampleTest(unittest.TestCase):
     def test_bernoulli_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
-        bern_model.compile()
 
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
@@ -93,7 +92,6 @@ class SampleTest(unittest.TestCase):
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
-        bern_model.compile()
 
         with self.assertRaisesRegex(Exception, 'Error during sampling'):
             bern_fit = bern_model.sample(
@@ -103,7 +101,6 @@ class SampleTest(unittest.TestCase):
     def test_multi_proc(self):
         logistic_stan = os.path.join(datafiles_path, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
-        logistic_model.compile()
         logistic_data = os.path.join(datafiles_path, 'logistic.data.R')
 
         with LogCapture() as log:
@@ -136,7 +133,6 @@ class SampleTest(unittest.TestCase):
     def test_fixed_param_good(self):
         stan = os.path.join(datafiles_path, 'datagen_poisson_glm.stan')
         datagen_model = CmdStanModel(stan_file=stan)
-        datagen_model.compile()
         no_data = {}
         datagen_fit = datagen_model.sample(
             data=no_data, seed=12345, sampling_iters=100, fixed_param=True
@@ -349,7 +345,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
-        bern_model.compile()
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
         )
