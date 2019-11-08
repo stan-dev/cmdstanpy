@@ -212,7 +212,9 @@ class CmdStanModel(object):
 
             if not compilation_failed:
                 if is_copied:
-                    original_target_dir = os.path.dirname(os.path.abspath(self._stan_file))
+                    original_target_dir = os.path.dirname(
+                        os.path.abspath(self._stan_file)
+                    )
                     new_exec_name = (
                         os.path.basename(os.path.splitext(self._stan_file)[0])
                         + EXTENSION
