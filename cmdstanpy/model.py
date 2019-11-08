@@ -125,7 +125,7 @@ class CmdStanModel(object):
             os.environ["PATH"] = ";".join(list(OrderedDict.fromkeys(
                 [libtbb, ] + os.getenv("PATH", "").split(";")
             )))
-            
+
         if compile and self._exe_file is None:
             self.compile()
             if self._exe_file is None:
