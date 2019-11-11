@@ -245,6 +245,80 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.stepsize, None)
 
+    def test_bernoulli_file_with_space(self):
+        stan = os.path.join(datafiles_path, 'bernoulli with space in name.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_model.compile()
+
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
+        self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
+        self.assertIn('method=sample', bern_fit.__repr__())
+
+        self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
+
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(txt_file))
+
+        self.assertEqual(bern_fit.runset.chains, 4)
+        self.assertEqual(bern_fit.draws, 100)
+        column_names = [
+            'lp__',
+            'accept_stat__',
+            'stepsize__',
+            'treedepth__',
+            'n_leapfrog__',
+            'divergent__',
+            'energy__',
+            'theta',
+        ]
+        self.assertEqual(bern_fit.column_names, tuple(column_names))
+
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        self.assertEqual(bern_fit.metric_type, 'diag_e')
+        self.assertEqual(bern_fit.stepsize.shape, (4,))
+        self.assertEqual(bern_fit.metric.shape, (4, 1))
+
+        output = os.path.join(datafiles_path, 'test1-bernoulli-output')
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=4,
+            cores=2,
+            seed=12345,
+            sampling_iters=100,
+            csv_basename=output,
+        )
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(txt_file))
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
+            os.remove(bern_fit.runset.csv_files[i])
+            os.remove(bern_fit.runset.console_files[i])
+
+        rdata = os.path.join(datafiles_path, 'bernoulli.data.R')
+        bern_fit = bern_model.sample(
+            data=rdata, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+
+        data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
+        bern_fit = bern_model.sample(
+            data=data_dict, chains=4, cores=2, seed=12345, sampling_iters=100
+        )
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+
 
 class CmdStanMCMCTest(unittest.TestCase):
     def test_validate_good_run(self):
