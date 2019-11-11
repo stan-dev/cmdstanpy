@@ -2,7 +2,6 @@ import os
 import unittest
 
 import logging
-import pytest
 from testfixtures import LogCapture
 from multiprocessing import cpu_count
 
@@ -17,11 +16,6 @@ goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
 class SampleTest(unittest.TestCase):
-    @pytest.mark.parametrize('stanfile', [
-        'bernoulli.stan', 
-        'bernoulli with space in name.stan',
-        'path with space/bernoulli_path_with_space.stan'
-    ])
     def test_bernoulli_good(self, stanfile='bernoulli.stan'):
         stan = os.path.join(datafiles_path, stanfile)
         bern_model = CmdStanModel(stan_file=stan)
@@ -250,6 +244,12 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.stepsize, None)
+
+    def test_bernoulli_file_with_space(self):
+        self.test_bernoulli_good('bernoulli with space in name.stan')
+
+    def test_bernoulli_path_with_space(self):
+        self.test_bernoulli_good('path with space/bernoulli_path_with_space.stan')
 
 class CmdStanMCMCTest(unittest.TestCase):
     def test_validate_good_run(self):
