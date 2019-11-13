@@ -213,14 +213,16 @@ class CmdStanModel(object):
                 hpp_file = Path(hpp_file).as_posix()
                 if not os.path.exists(hpp_file):
                     self._logger.info('stan to c++ (%s)', hpp_file)
-                    stanc_path = os.path.join(
-                        cmdstan_path(), 'bin', 'stanc' + EXTENSION
+                    make = os.getenv(
+                        'MAKE',
+                        'make'
+                        if platform.system() != 'Windows'
+                        else 'mingw32-make',
                     )
-                    stanc_path = Path(stanc_path).as_posix()
                     cmd = [
-                        stanc_path,
-                        '--o={}'.format(hpp_file),
-                        Path(stan_file).as_posix(),
+                        make,
+                        Path(exe_file).as_posix(),
+                        'STANCFLAGS+=--o={}'.format(hpp_file)
                     ]
                     if self._include_paths is not None:
                         bad_paths = [
@@ -234,9 +236,8 @@ class CmdStanModel(object):
                                     ', '.join(bad_paths)
                                 )
                             )
-                        cmd.append(
-                            '--include_paths='
-                            + ','.join(
+                        cmd.append('STANCFLAGS+=--include_paths=' + 
+                            ','.join(
                                 (
                                     Path(p).as_posix()
                                     for p in self._include_paths
@@ -244,7 +245,7 @@ class CmdStanModel(object):
                             )
                         )
                     try:
-                        do_command(cmd, logger=self._logger)
+                        do_command(cmd, cmdstan_path(), logger=self._logger)
                     except Exception as e:
                         self._logger.error('file {}, {}'.format(stan_file, e))
                         compilation_failed = True
@@ -918,6 +919,7 @@ class CmdStanModel(object):
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
             cmd.split(),
+            cwd=cmdstan_path(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
