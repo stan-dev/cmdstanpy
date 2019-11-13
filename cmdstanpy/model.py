@@ -236,7 +236,8 @@ class CmdStanModel(object):
                                     ', '.join(bad_paths)
                                 )
                             )
-                        cmd.append('STANCFLAGS+=--include_paths=' + 
+                        cmd.append(
+                            'STANCFLAGS+=--include_paths=' +
                             ','.join(
                                 (
                                     Path(p).as_posix()
