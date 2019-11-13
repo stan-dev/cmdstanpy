@@ -209,16 +209,16 @@ class CmdStanModel(object):
                     self._logger.info('found newer exe file, not recompiling')
 
             if do_compile:
+                make = os.getenv(
+                    'MAKE',
+                    'make'
+                    if platform.system() != 'Windows'
+                    else 'mingw32-make',
+                )
                 hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
                 hpp_file = Path(hpp_file).as_posix()
                 if not os.path.exists(hpp_file):
                     self._logger.info('stan to c++ (%s)', hpp_file)
-                    make = os.getenv(
-                        'MAKE',
-                        'make'
-                        if platform.system() != 'Windows'
-                        else 'mingw32-make',
-                    )
                     cmd = [
                         make,
                         Path(exe_file).as_posix(),
@@ -251,12 +251,6 @@ class CmdStanModel(object):
                         compilation_failed = True
 
                 if not compilation_failed:
-                    make = os.getenv(
-                        'MAKE',
-                        'make'
-                        if platform.system() != 'Windows'
-                        else 'mingw32-make',
-                    )
                     cmd = [make, 'O={}'.format(opt_lvl), exe_file]
                     self._logger.info('compiling c++')
                     try:
