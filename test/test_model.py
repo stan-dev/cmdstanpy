@@ -132,6 +132,7 @@ class CmdStanModelTest(unittest.TestCase):
 
         # test compile - implicit include path is current dir
         os.remove(os.path.join(datafiles_path, 'bernoulli_include' + '.hpp'))
+        os.remove(os.path.join(datafiles_path, 'bernoulli_include' + '.o'))
         os.remove(exe)
         model2 = CmdStanModel(stan_file=stan)
         self.assertEqual(model2.include_paths, include_paths)
