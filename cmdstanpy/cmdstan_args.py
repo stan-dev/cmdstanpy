@@ -194,47 +194,48 @@ class SamplerArgs(object):
                 ' or any adaptation parameters.'
             )
 
-    def compose(self, idx: int, cmd: str) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
-        cmd = cmd + ' method=sample'
+        cmd.append('method=sample')
         if self.sampling_iters is not None:
-            cmd = '{} num_samples={}'.format(cmd, self.sampling_iters)
+            cmd.append('num_samples={}'.format(self.sampling_iters))
         if self.warmup_iters is not None:
-            cmd = '{} num_warmup={}'.format(cmd, self.warmup_iters)
+            cmd.append('num_warmup={}'.format(self.warmup_iters))
         if self.save_warmup:
-            cmd = cmd + ' save_warmup=1'
+            cmd.append('save_warmup=1')
         if self.thin is not None:
-            cmd = '{} thin={}'.format(cmd, self.thin)
+            cmd.append('thin={}'.format(self.thin))
         if self.fixed_param:
-            cmd = cmd + ' algorithm=fixed_param'
+            cmd.append('algorithm=fixed_param')
             return cmd
         else:
-            cmd = cmd + ' algorithm=hmc'
+            cmd.append('algorithm=hmc')
         if self.max_treedepth is not None:
-            cmd = '{} engine=nuts max_depth={}'.format(cmd, self.max_treedepth)
+            cmd.append('engine=nuts')
+            cmd.append('max_depth={}'.format(self.max_treedepth))
         if self.step_size is not None:
             if not isinstance(self.step_size, list):
-                cmd = '{} stepsize={}'.format(cmd, self.step_size)
+                cmd.append('stepsize={}'.format(self.step_size))
             else:
-                cmd = '{} stepsize={}'.format(cmd, self.step_size[idx])
+                cmd.append('stepsize={}'.format(self.step_size[idx]))
         if self.metric is not None:
-            cmd = '{} metric={}'.format(cmd, self.metric)
+            cmd.append('metric={}'.format(self.metric))
         if self.metric_file is not None:
             if not isinstance(self.metric_file, list):
-                cmd = '{} metric_file="{}"'.format(cmd, self.metric_file)
+                cmd.append('metric_file="{}"'.format(self.metric_file))
             else:
-                cmd = '{} metric_file="{}"'.format(cmd, self.metric_file[idx])
+                cmd.append('metric_file="{}"'.format(self.metric_file[idx]))
         if self.adapt_engaged is not None or self.adapt_delta is not None:
-            cmd = cmd + ' adapt'
+            cmd.append('adapt')
         if self.adapt_engaged is not None:
             if self.adapt_engaged:
-                cmd = cmd + ' engaged=1'
+                cmd.append('engaged=1')
             else:
-                cmd = cmd + ' engaged=0'
+                cmd.append('engaged=0')
         if self.adapt_delta is not None:
-            cmd = '{} delta={}'.format(cmd, self.adapt_delta)
+            cmd.append('delta={}'.format(self.adapt_delta))
         return cmd
 
 
@@ -283,16 +284,16 @@ class OptimizeArgs(object):
             else:
                 raise ValueError('iter must be type of int')
 
-    def compose(self, idx: int, cmd: str) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """compose command string for CmdStan for non-default arg values.
         """
-        cmd = cmd + ' method=optimize'
+        cmd.append('method=optimize')
         if self.algorithm:
-            cmd += ' algorithm={}'.format(self.algorithm.lower())
+            cmd.append('algorithm={}'.format(self.algorithm.lower()))
         if self.init_alpha is not None:
-            cmd += ' init_alpha={}'.format(self.init_alpha)
+            cmd.append('init_alpha={}'.format(self.init_alpha))
         if self.iter is not None:
-            cmd += ' iter={}'.format(self.iter)
+            cmd.append('iter={}'.format(self.iter))
         return cmd
 
 
@@ -315,12 +316,12 @@ class GenerateQuantitiesArgs(object):
                     'Invalid path for sample csv file: {}'.format(csv)
                 )
 
-    def compose(self, idx: int, cmd: str) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
-        cmd = cmd + ' method=generate_quantities'
-        cmd = '{} fitted_params={}'.format(cmd, self.sample_csv_files[idx - 1])
+        cmd.append('method=generate_quantities')
+        cmd.append('fitted_params={}'.format(self.sample_csv_files[idx - 1]))
         return cmd
 
 
@@ -421,29 +422,30 @@ class VariationalArgs(object):
                     ' found {}'.format(self.output_samples)
                 )
 
-    def compose(self, idx: int, cmd: str) -> str:
+    def compose(self, idx: int, cmd: List) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
-        cmd = cmd + ' method=variational'
+        cmd.append('method=variational')
         if self.algorithm is not None:
-            cmd = '{} algorithm={}'.format(cmd, self.algorithm)
+            cmd.append('algorithm={}'.format(self.algorithm))
         if self.iter is not None:
-            cmd = '{} iter={}'.format(cmd, self.iter)
+            cmd.append('iter={}'.format(self.iter))
         if self.grad_samples is not None:
-            cmd = '{} grad_samples={}'.format(cmd, self.grad_samples)
+            cmd.append('grad_samples={}'.format(self.grad_samples))
         if self.elbo_samples is not None:
-            cmd = '{} elbo_samples={}'.format(cmd, self.elbo_samples)
+            cmd.append('elbo_samples={}'.format(self.elbo_samples))
         if self.eta is not None:
-            cmd = '{} eta={}'.format(cmd, self.eta)
+            cmd.append('eta={}'.format(self.eta))
         if self.adapt_iter is not None:
-            cmd = '{} adapt iter={}'.format(cmd, self.adapt_iter)
+            cmd.append('adapt')
+            cmd.append('iter={}'.format(self.adapt_iter))
         if self.tol_rel_obj is not None:
-            cmd = '{} tol_rel_obj={}'.format(cmd, self.tol_rel_obj)
+            cmd.append('tol_rel_obj={}'.format(self.tol_rel_obj))
         if self.eval_elbo is not None:
-            cmd = '{} eval_elbo={}'.format(cmd, self.eval_elbo)
+            cmd.append('eval_elbo={}'.format(self.eval_elbo))
         if self.output_samples is not None:
-            cmd = '{} output_samples={}'.format(cmd, self.output_samples)
+            cmd.append('output_samples={}'.format(self.output_samples))
         return cmd
 
 
@@ -612,6 +614,7 @@ class CmdStanArgs(object):
         """
         Compose CmdStan command for non-default arguments.
         """
+        cmd = []
         if idx is not None and self.chain_ids is not None:
             if idx < 0 or idx > len(self.chain_ids) - 1:
                 raise ValueError(
@@ -619,24 +622,29 @@ class CmdStanArgs(object):
                         idx, len(self.chain_ids)
                     )
                 )
-            cmd = '{} id={}'.format(self.model_exe, self.chain_ids[idx])
+            cmd.append(self.model_exe)
+            cmd.append('id={}'.format(self.chain_ids[idx]))
         else:
-            cmd = self.model_exe
+            cmd.append(self.model_exe)
 
         if self.seed is not None:
             if not isinstance(self.seed, list):
-                cmd = '{} random seed={}'.format(cmd, self.seed)
+                cmd.append('random')
+                cmd.append('seed={}'.format(self.seed))
             else:
-                cmd = '{} random seed={}'.format(cmd, self.seed[idx])
+                cmd.append('random')
+                cmd.append('seed={}'.format(self.seed[idx]))
         if self.data is not None:
-            cmd = '{} data file={}'.format(cmd, self.data)
+            cmd.append('data')
+            cmd.append('file={}'.format(self.data))
         if self.inits is not None:
             if not isinstance(self.inits, list):
-                cmd = '{} init={}'.format(cmd, self.inits)
+                cmd.append('init={}'.format(self.inits))
             else:
-                cmd = '{} init={}'.format(cmd, self.inits[idx])
-        cmd = '{} output file={}'.format(cmd, csv_file)
+                cmd.append('init={}'.format(self.inits[idx]))
+        cmd.append('output')
+        cmd.append('file={}'.format(csv_file))
         if self.refresh is not None:
-            cmd = '{} refresh={}'.format(cmd, self.refresh)
+            cmd.append('refresh={}'.format(self.refresh))
         cmd = self.method_args.compose(idx, cmd)
         return cmd

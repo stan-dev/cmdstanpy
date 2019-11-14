@@ -262,7 +262,9 @@ class CmdStanModel(object):
 
             if not compilation_failed:
                 if is_copied:
-                    original_target_dir = os.path.dirname(self._stan_file)
+                    original_target_dir = os.path.dirname(
+                        os.path.abspath(self._stan_file)
+                    )
                     new_exec_name = (
                         os.path.basename(os.path.splitext(self._stan_file)[0])
                         + EXTENSION
@@ -913,8 +915,7 @@ class CmdStanModel(object):
         self._logger.info('start chain %u', idx + 1)
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
-            cmd.split(),
-            cwd=cmdstan_path(),
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
