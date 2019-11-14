@@ -7,6 +7,7 @@ import shutil
 import sys
 import logging
 
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
 from numbers import Real
@@ -121,7 +122,9 @@ class CmdStanModel(object):
                 libtbb = os.path.join(
                     cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
                 )
-            os.environ['PATH'] = '{};{}'.format(libtbb, os.getenv('PATH'))
+            os.environ["PATH"] = ";".join(list(OrderedDict.fromkeys(
+                [libtbb, ] + os.getenv("PATH", "").split(";")
+            )))
 
         if compile and self._exe_file is None:
             self.compile()
@@ -206,18 +209,20 @@ class CmdStanModel(object):
                     self._logger.info('found newer exe file, not recompiling')
 
             if do_compile:
+                make = os.getenv(
+                    'MAKE',
+                    'make'
+                    if platform.system() != 'Windows'
+                    else 'mingw32-make',
+                )
                 hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
                 hpp_file = Path(hpp_file).as_posix()
                 if not os.path.exists(hpp_file):
                     self._logger.info('stan to c++ (%s)', hpp_file)
-                    stanc_path = os.path.join(
-                        cmdstan_path(), 'bin', 'stanc' + EXTENSION
-                    )
-                    stanc_path = Path(stanc_path).as_posix()
                     cmd = [
-                        stanc_path,
-                        '--o={}'.format(hpp_file),
-                        Path(stan_file).as_posix(),
+                        make,
+                        Path(exe_file).as_posix(),
+                        'STANCFLAGS+=--o={}'.format(hpp_file)
                     ]
                     if self._include_paths is not None:
                         bad_paths = [
@@ -232,8 +237,8 @@ class CmdStanModel(object):
                                 )
                             )
                         cmd.append(
-                            '--include_paths='
-                            + ','.join(
+                            'STANCFLAGS+=--include_paths=' +
+                            ','.join(
                                 (
                                     Path(p).as_posix()
                                     for p in self._include_paths
@@ -241,18 +246,12 @@ class CmdStanModel(object):
                             )
                         )
                     try:
-                        do_command(cmd, logger=self._logger)
+                        do_command(cmd, cmdstan_path(), logger=self._logger)
                     except Exception as e:
                         self._logger.error('file {}, {}'.format(stan_file, e))
                         compilation_failed = True
 
                 if not compilation_failed:
-                    make = os.getenv(
-                        'MAKE',
-                        'make'
-                        if platform.system() != 'Windows'
-                        else 'mingw32-make',
-                    )
                     cmd = [make, 'O={}'.format(opt_lvl), exe_file]
                     self._logger.info('compiling c++')
                     try:
@@ -915,6 +914,7 @@ class CmdStanModel(object):
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
             cmd.split(),
+            cwd=cmdstan_path(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,

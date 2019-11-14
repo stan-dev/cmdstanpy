@@ -2,6 +2,7 @@
 Utility functions
 """
 import os
+from collections import OrderedDict
 from collections.abc import Sequence
 from numbers import Integral, Real
 
@@ -315,8 +316,8 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
     logger.info('Adds C++ toolchain to $PATH: %s', toolchain_root)
     os.environ['PATH'] = ';'.join(
         list(
-            dict.fromkeys(
-                [compiler_path, tool_path] + os.environ['PATH'].split(';')
+            OrderedDict.fromkeys(
+                [compiler_path, tool_path, ] + os.getenv('PATH', '').split(';')
             )
         )
     )
