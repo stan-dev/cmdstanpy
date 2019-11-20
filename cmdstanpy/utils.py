@@ -81,6 +81,8 @@ class MaybeDictToFilePath(object):
                 self._paths[i] = o
             elif o is None:
                 self._paths[i] = None
+            elif i == 1 and isinstance(o, (Integral, Real)):
+                self._paths[i] = o
             else:
                 raise ValueError('data must be string or dict')
             i += 1
