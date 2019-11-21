@@ -1,4 +1,5 @@
 import os
+import pytest
 import unittest
 
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
@@ -29,6 +30,16 @@ model {
 
 
 class CmdStanModelTest(unittest.TestCase):
+
+    @pytest.fixture(scope="class", autouse=True)
+    def do_clean_up(self):
+        for root, _, files in os.walk(datafiles_path):
+            for filename in files:
+                _, ext = os.path.splitext(filename)
+                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                    filepath = os.path.join(root, filename)
+                    os.remove(filepath)
+
     def show_cmdstan_version(self):
         print('\n\nCmdStan version: {}\n\n'.format(cmdstan_path()))
         self.assertTrue(True)
