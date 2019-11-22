@@ -1,8 +1,6 @@
 import os
 import re
-import platform
 import shutil
-import tempfile
 from typing import List, Tuple
 from collections import Counter, OrderedDict
 import numpy as np
