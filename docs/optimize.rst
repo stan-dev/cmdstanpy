@@ -41,7 +41,7 @@ penalized maximum likelihood estaimate of all model parameters:
 
 In the following example, we instantiate a model and do optimization using the default CmdStan settings:
 
-.. code:: ipython3
+.. code:: python
 
     import os
     from cmdstanpy.model import CmdStanModel

@@ -111,7 +111,7 @@ For example, the Stan program
 `bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_datagen.stan>`__
 can be used to generate a dataset of simulated data, where each row in the dataset consists of `N` draws from a Bernoulli distribution given probability `theta`:
 
-.. code-block::
+.. code::
 
     transformed data { 
       int<lower=0> N = 10;
