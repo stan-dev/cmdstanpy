@@ -1,4 +1,5 @@
 import os
+import pytest
 import unittest
 
 import logging
@@ -17,6 +18,16 @@ badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
 
 class SampleTest(unittest.TestCase):
+
+    @pytest.fixture(scope="class", autouse=True)
+    def do_clean_up(self):
+        for root, _, files in os.walk(datafiles_path):
+            for filename in files:
+                _, ext = os.path.splitext(filename)
+                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                    filepath = os.path.join(root, filename)
+                    os.remove(filepath)
+
     def test_bernoulli_good(self, stanfile='bernoulli.stan'):
         stan = os.path.join(datafiles_path, stanfile)
         bern_model = CmdStanModel(stan_file=stan)

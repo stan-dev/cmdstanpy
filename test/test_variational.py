@@ -1,6 +1,8 @@
 import os
 import unittest
 from math import fabs
+import pytest
+import json
 from cmdstanpy.cmdstan_args import VariationalArgs, CmdStanArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import RunSet, CmdStanVB
@@ -10,6 +12,17 @@ datafiles_path = os.path.join(here, 'data')
 
 
 class CmdStanVBTest(unittest.TestCase):
+
+    @pytest.fixture(scope="class", autouse=True)
+    def do_clean_up(self):
+        for root, _, files in os.walk(os.path.join(datafiles_path,
+                                      'variational')):
+            for filename in files:
+                _, ext = os.path.splitext(filename)
+                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                    filepath = os.path.join(root, filename)
+                    os.remove(filepath)
+
     def test_set_variational_attrs(self):
         stan = os.path.join(datafiles_path, 'variational',
                             'eta_should_be_big.stan')
@@ -47,6 +60,17 @@ class CmdStanVBTest(unittest.TestCase):
 
 
 class VariationalTest(unittest.TestCase):
+
+    @pytest.fixture(scope="class", autouse=True)
+    def do_clean_up(self):
+        for root, _, files in os.walk(os.path.join(datafiles_path,
+                                                   'variational')):
+            for filename in files:
+                _, ext = os.path.splitext(filename)
+                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                    filepath = os.path.join(root, filename)
+                    os.remove(filepath)
+
     def test_variational_good(self):
         stan = os.path.join(datafiles_path, 'variational',
                             'eta_should_be_big.stan')

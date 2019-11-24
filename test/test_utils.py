@@ -377,8 +377,7 @@ class RloadTest(unittest.TestCase):
         os.remove(dfile_tmp)
 
     def test_parse_rdump_value(self):
-        s1 = 'structure(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,'
-        ' 16),.Dim=c(2,8))'
+        s1 = 'structure(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),.Dim=c(2,8))'
         v_s1 = parse_rdump_value(s1)
         self.assertEqual(v_s1.shape, (2, 8))
         self.assertEqual(v_s1[1, 0], 2)
@@ -388,8 +387,7 @@ class RloadTest(unittest.TestCase):
         v_s2 = parse_rdump_value(s2)
         self.assertEqual(v_s2.shape, (1, 16))
 
-        s3 = 'structure(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,'
-        ' 16),.Dim = c(8, 2))'
+        s3 = 'structure(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),.Dim=c(8,2))'
         v_s3 = parse_rdump_value(s3)
         self.assertEqual(v_s3.shape, (8, 2))
         self.assertEqual(v_s3[1, 0], 2)
