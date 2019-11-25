@@ -2,7 +2,6 @@ import os
 import unittest
 from math import fabs
 import pytest
-import json
 from cmdstanpy.cmdstan_args import VariationalArgs, CmdStanArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import RunSet, CmdStanVB
