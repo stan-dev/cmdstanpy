@@ -3,16 +3,10 @@ import pytest
 import unittest
 import json
 
-from cmdstanpy.cmdstan_args import Method, OptimizeArgs, CmdStanArgs
+from cmdstanpy.cmdstan_args import OptimizeArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import RunSet, CmdStanMLE
-from contextlib import contextmanager
-import logging
-from multiprocessing import cpu_count
-import numpy as np
-import sys
-from testfixtures import LogCapture
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
@@ -54,7 +48,6 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertEqual(mle.column_names,('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
-        
 
 
 class OptimizeTest(unittest.TestCase):
@@ -112,7 +105,6 @@ class OptimizeTest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_np[0], -5, places=2)
         self.assertAlmostEqual(mle.optimized_params_np[1], 0.2, places=3)
 
-
     def test_optimize_rosenbrock(self):
         stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
         rose_model = CmdStanModel(stan_file=stan)
@@ -127,12 +119,13 @@ class OptimizeTest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
 
-
     def test_optimize_bad(self):
-        stan = os.path.join(datafiles_path, 'optimize', 'exponential_boundary.stan')
+        stan = os.path.join(datafiles_path, 'optimize',
+                            'exponential_boundary.stan')
         exp_bound_model = CmdStanModel(stan_file=stan)
         no_data = {}
-        with self.assertRaisesRegex(Exception, 'Error during optimizing, error code 70'):
+        with self.assertRaisesRegex(Exception,
+                                    'Error during optimizing, error code 70'):
             exp_bound_model.optimize(
                 data=no_data,
                 seed=1239812093,

@@ -2,14 +2,10 @@ import os
 import pytest
 import unittest
 
-from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
-from contextlib import contextmanager
 
 from cmdstanpy.utils import cmdstan_path
-
-import sys
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
@@ -47,7 +43,7 @@ class CmdStanModelTest(unittest.TestCase):
     def test_model_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        
+
         # compile on instantiation
         model = CmdStanModel(stan_file=stan)
         self.assertEqual(stan, model.stan_file)
@@ -93,7 +89,6 @@ class CmdStanModelTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, 'bad_syntax.stan')
         with self.assertRaises(Exception):
             model = CmdStanModel(stan_file=stan)
-
 
     def test_repr(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -151,7 +146,6 @@ class CmdStanModelTest(unittest.TestCase):
         # already compiled
         model3 = CmdStanModel(stan_file=stan)
         self.assertTrue(model3.exe_file.endswith(exe.replace('\\', '/')))
-
 
 
 if __name__ == '__main__':

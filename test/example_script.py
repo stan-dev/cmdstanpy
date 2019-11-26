@@ -3,9 +3,9 @@ import os
 import sys
 
 # explicit import to test if it is installed
-import tqdm
+import tqdm # noqa
 
-from cmdstanpy import CmdStanModel, cmdstan_path, set_make_env
+from cmdstanpy import CmdStanModel, cmdstan_path
 
 
 def run_bernoulli_fit():

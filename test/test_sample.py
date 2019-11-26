@@ -16,6 +16,7 @@ datafiles_path = os.path.join(here, 'data')
 goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
+
 class SampleTest(unittest.TestCase):
 
     @pytest.fixture(scope="class", autouse=True)
@@ -129,9 +130,6 @@ class SampleTest(unittest.TestCase):
                 inits=-1
             )
 
-
-
-
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
@@ -189,7 +187,7 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(txt_file))
 
         self.assertEqual(datagen_fit.runset.chains, 1)
-                             
+
         column_names = [
             'lp__',
             'accept_stat__',
@@ -288,7 +286,9 @@ class SampleTest(unittest.TestCase):
         self.test_bernoulli_good('bernoulli with space in name.stan')
 
     def test_bernoulli_path_with_space(self):
-        self.test_bernoulli_good('path with space/bernoulli_path_with_space.stan')
+        self.test_bernoulli_good('path with space/'
+                                 'bernoulli_path_with_space.stan')
+
 
 class CmdStanMCMCTest(unittest.TestCase):
     def test_validate_good_run(self):
