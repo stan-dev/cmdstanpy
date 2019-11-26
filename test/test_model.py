@@ -1,14 +1,11 @@
 import os
+import pytest
 import unittest
 
-from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
-from contextlib import contextmanager
 
 from cmdstanpy.utils import cmdstan_path
-
-import sys
 
 here = os.path.dirname(os.path.abspath(__file__))
 datafiles_path = os.path.join(here, 'data')
@@ -29,6 +26,16 @@ model {
 
 
 class CmdStanModelTest(unittest.TestCase):
+
+    @pytest.fixture(scope="class", autouse=True)
+    def do_clean_up(self):
+        for root, _, files in os.walk(datafiles_path):
+            for filename in files:
+                _, ext = os.path.splitext(filename)
+                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                    filepath = os.path.join(root, filename)
+                    os.remove(filepath)
+
     def show_cmdstan_version(self):
         print('\n\nCmdStan version: {}\n\n'.format(cmdstan_path()))
         self.assertTrue(True)
@@ -36,7 +43,7 @@ class CmdStanModelTest(unittest.TestCase):
     def test_model_good(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        
+
         # compile on instantiation
         model = CmdStanModel(stan_file=stan)
         self.assertEqual(stan, model.stan_file)
@@ -82,7 +89,6 @@ class CmdStanModelTest(unittest.TestCase):
         stan = os.path.join(datafiles_path, 'bad_syntax.stan')
         with self.assertRaises(Exception):
             model = CmdStanModel(stan_file=stan)
-
 
     def test_repr(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
@@ -140,7 +146,6 @@ class CmdStanModelTest(unittest.TestCase):
         # already compiled
         model3 = CmdStanModel(stan_file=stan)
         self.assertTrue(model3.exe_file.endswith(exe.replace('\\', '/')))
-
 
 
 if __name__ == '__main__':
