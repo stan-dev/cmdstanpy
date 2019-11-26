@@ -379,6 +379,7 @@ class CmdStanModel(object):
         fixed_param: bool = False,
         csv_basename: str = None,
         show_progress: Union[bool, str] = False,
+        save_diagnostics: bool = False
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -602,6 +603,7 @@ class CmdStanModel(object):
                 seed=seed,
                 inits=_inits,
                 output_basename=csv_basename,
+                save_diagnostics=save_diagnostics,
                 method_args=sampler_args,
                 refresh=refresh,
             )
