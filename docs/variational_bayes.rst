@@ -72,7 +72,7 @@ and the returned set of draws from this approximate posterior (if any):
 
 In the following example, we instantiate a model and run variational inference using the default CmdStan settings:
 
-.. code:: ipython3
+.. code:: python
 
     import os
     from cmdstanpy.model import CmdStanModel
@@ -93,7 +93,7 @@ These estimates are only valid if the algorithm has converged to a good
 approximation. When the algorithm fails to do so, the ``variational``
 method will throw a ``RuntimeError``.
 
-.. code:: ipython3
+.. code:: python
 
     fail_stan = os.path.join(datafiles_path, 'variational', 'eta_should_fail.stan')
     fail_model = CmdStanModel(stan_file=fail_stan)

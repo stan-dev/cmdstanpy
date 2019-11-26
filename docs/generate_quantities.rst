@@ -82,7 +82,7 @@ which generates a new data vector ``y_rep`` using the current estimate of theta.
 
 The first step is to fit model ``bernoulli`` to the data:
 
-.. code:: ipython3
+.. code:: python
 
     import os
     from cmdstanpy import CmdStanModel, cmdstan_path
@@ -102,7 +102,7 @@ Then we compile the model ``bernoulli_ppc`` and use the fit parameter estimates
 to generate quantities of interest:
 
 
-.. code:: ipython3
+.. code:: python
 
     bernoulli_ppc_model = CmdStanModel(stan_file='bernoulli_ppc.stan')
     bernoulli_ppc_model.compile()
@@ -115,7 +115,7 @@ of the program ``bernoulli_ppc.stan``. Unlike the output from the
 probability density, sampler state, or parameters or transformed
 parameter values.
 
-.. code:: ipython3
+.. code:: python
 
     new_quantities.column_names
     new_quantities.generated_quantities.shape
@@ -126,7 +126,7 @@ parameter values.
 The method ``sample_plus_quantities`` returns a pandas DataFrame which
 combines the input drawset with the generated quantities.
 
-.. code:: ipython3
+.. code:: python
 
     sample_plus = new_quantities.sample_plus_quantities
     print(sample_plus.shape)
