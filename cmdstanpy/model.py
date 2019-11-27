@@ -384,8 +384,8 @@ class CmdStanModel(object):
         adapt_delta: float = None,
         fixed_param: bool = False,
         csv_basename: str = None,
-        show_progress: Union[bool, str] = False,
-        save_diagnostics: bool = False
+        save_diagnostics: bool = False,
+        show_progress: Union[bool, str] = False
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -496,6 +496,10 @@ class CmdStanModel(object):
             for each chain are written to file ``<basename>-<chain_id>.csv``
             and the console output and error messages are written to file
             ``<basename>-<chain_id>.txt``.
+
+        :param save_diagnostics: Whether or not to save diagnostics. If True,
+            csv output files are written to ``<basename>-diagnostic-<chain_id>.csv.``,
+            where ``<basename>`` is set with ``csv_basename``.
 
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
@@ -808,6 +812,7 @@ class CmdStanModel(object):
         seed: int = None,
         inits: float = None,
         csv_basename: str = None,
+        save_diagnostics: bool = False,
         algorithm: str = None,
         iter: int = None,
         grad_samples: int = None,
@@ -840,6 +845,10 @@ class CmdStanModel(object):
             basename for the CmdStan output files.  The csv output files
             are written to file ``<basename>-0.csv`` and the console output
             and error messages are written to file ``<basename>-0.txt``.
+
+        :param save_diagnostics: Whether or not to save diagnostics. If True,
+            csv output files are written to ``<basename>-diagnostic-<chain_id>.csv.``,
+            where ``<basename>`` is set with ``csv_basename``.
 
         :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
 
@@ -883,6 +892,7 @@ class CmdStanModel(object):
                 seed=seed,
                 inits=_inits,
                 output_basename=csv_basename,
+                save_diagnostics=save_diagnostics,
                 method_args=variational_args,
             )
 
