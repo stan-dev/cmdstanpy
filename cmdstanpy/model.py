@@ -285,6 +285,7 @@ class CmdStanModel(object):
         seed: int = None,
         inits: Union[Dict, float, str] = None,
         csv_basename: str = None,
+        save_diagnostics: bool = True,
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
@@ -345,6 +346,7 @@ class CmdStanModel(object):
                 seed=seed,
                 inits=_inits,
                 output_basename=csv_basename,
+                save_diagnostics=save_diagnostics,
                 method_args=optimize_args,
             )
 
