@@ -613,7 +613,8 @@ class CmdStanArgs(object):
                             'no such file {}'.format(self.inits[i])
                         )
 
-    def compose_command(self, idx: int, csv_file: str, diagnostic_file: str) -> str:
+    def compose_command(self, idx: int, csv_file: str, 
+                        diagnostic_file: str = None) -> str:
         """
         Compose CmdStan command for non-default arguments.
         """
