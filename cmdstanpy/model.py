@@ -1,10 +1,8 @@
-import math
 import os
 import platform
 import re
 import subprocess
 import shutil
-import sys
 import logging
 
 from collections import OrderedDict

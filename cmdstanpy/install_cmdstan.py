@@ -9,8 +9,6 @@ import argparse
 import contextlib
 import os
 import platform
-import re
-import shutil
 import subprocess
 import sys
 import tarfile
