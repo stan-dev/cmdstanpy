@@ -320,6 +320,10 @@ class CmdStanModel(object):
             are written to file ``<basename>-0.csv`` and the console output
             and error messages are written to file ``<basename>-0.txt``.
 
+        :param save_diagnostics: Whether or not to save diagnostics. If True,
+            csv output files are written to ``<basename>-diagnostic-0.csv.``,
+            where ``<basename>`` is set with ``csv_basename``.
+
         :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
 
         :param init_alpha: Line search step size for first iteration
