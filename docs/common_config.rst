@@ -7,3 +7,4 @@
             
 - ``csv_basename``:  A path or file name which will be used as the basename for the CmdStan output files.
 
+- ``save_diagnostics``:  Whether or not to save diagnostics.
