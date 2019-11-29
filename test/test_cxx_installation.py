@@ -1,11 +1,6 @@
-import argparse
-import os
 import unittest
-from unittest import mock
 import platform
-import shutil
 
-from cmdstanpy import TMPDIR
 from cmdstanpy import install_cxx_toolchain
 
 
@@ -37,7 +32,8 @@ class install_cxx_script(unittest.TestCase):
 
         with self.assertRaisesRegex(
             NotImplementedError,
-            r'Download for the C\+\+ toolchain on the current platform has not been implemented:\s*\S+',
+            r'Download for the C\+\+ toolchain on the current platform has not '
+            'been implemented:\s*\S+',
         ):
             install_cxx_toolchain.main()
 

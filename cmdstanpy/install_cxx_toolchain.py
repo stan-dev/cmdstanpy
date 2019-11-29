@@ -14,13 +14,10 @@ import argparse
 import contextlib
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
-import tarfile
 import urllib.request
-from pathlib import Path
 from time import sleep
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''

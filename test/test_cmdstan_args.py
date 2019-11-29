@@ -1,8 +1,6 @@
 import os
 import unittest
 
-from cmdstanpy import TMPDIR
-
 from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
@@ -29,7 +27,6 @@ class OptimizeArgsTest(unittest.TestCase):
         args = OptimizeArgs(init_alpha=2e-4)
         args.validate()
         cmd = args.compose(None, cmd=['output'])
-
 
         self.assertIn('init_alpha=0.0002', ' '.join(cmd))
         args = OptimizeArgs(init_alpha=-1.0)
@@ -155,12 +152,14 @@ class SamplerArgsTest(unittest.TestCase):
         args = SamplerArgs(adapt_engaged=False)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc adapt engaged=0', ' '.join(cmd))
+        self.assertIn('method=sample algorithm=hmc adapt engaged=0',
+                      ' '.join(cmd))
 
         args = SamplerArgs(adapt_engaged=True)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc adapt engaged=1', ' '.join(cmd))
+        self.assertIn('method=sample algorithm=hmc adapt engaged=1',
+                      ' '.join(cmd))
 
         args = SamplerArgs()
         args.validate(chains=4)
@@ -172,22 +171,26 @@ class SamplerArgsTest(unittest.TestCase):
         args = SamplerArgs(metric='dense_e')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=dense_e', ' '.join(cmd))
+        self.assertIn('method=sample algorithm=hmc metric=dense_e',
+                      ' '.join(cmd))
 
         args = SamplerArgs(metric='dense')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=dense_e', ' '.join(cmd))
+        self.assertIn('method=sample algorithm=hmc metric=dense_e',
+                      ' '.join(cmd))
 
         args = SamplerArgs(metric='diag_e')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=diag_e', ' '.join(cmd))
+        self.assertIn('method=sample algorithm=hmc metric=diag_e',
+                      ' '.join(cmd))
 
         args = SamplerArgs(metric='diag')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=diag_e', ' '.join(cmd))
+        self.assertIn('method=sample algorithm=hmc metric=diag_e',
+                      ' '.join(cmd))
 
         args = SamplerArgs()
         args.validate(chains=4)
@@ -510,6 +513,7 @@ class GenerateQuantitesTest(unittest.TestCase):
         cmd = args.compose(idx=1, cmd=[])
         self.assertIn('method=generate_quantities', ' '.join(cmd))
         self.assertIn('fitted_params={}'.format(csv_files[0]), ' '.join(cmd))
+
 
 class VariationalTest(unittest.TestCase):
     def test_args_variational(self):

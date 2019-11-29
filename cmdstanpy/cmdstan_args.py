@@ -466,7 +466,7 @@ class CmdStanArgs(object):
         ],
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
-        inits: Union[float, str, List[str]] = None,
+        inits: Union[int, float, str, List[str]] = None,
         output_basename: str = None,
         refresh: str = None,
     ) -> None:
@@ -577,7 +577,7 @@ class CmdStanArgs(object):
             raise ValueError('data must be string or dict')
 
         if self.inits is not None:
-            if isinstance(self.inits, Real):
+            if isinstance(self.inits, (Integral, Real)):
                 if self.inits < 0:
                     raise ValueError(
                         'inits must be > 0, found {}'.format(self.inits)

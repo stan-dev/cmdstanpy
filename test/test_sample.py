@@ -1,4 +1,5 @@
 import os
+import pytest
 import unittest
 
 import logging
@@ -15,7 +16,18 @@ datafiles_path = os.path.join(here, 'data')
 goodfiles_path = os.path.join(datafiles_path, 'runset-good')
 badfiles_path = os.path.join(datafiles_path, 'runset-bad')
 
+
 class SampleTest(unittest.TestCase):
+
+    @pytest.fixture(scope="class", autouse=True)
+    def do_clean_up(self):
+        for root, _, files in os.walk(datafiles_path):
+            for filename in files:
+                _, ext = os.path.splitext(filename)
+                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                    filepath = os.path.join(root, filename)
+                    os.remove(filepath)
+
     def test_bernoulli_good(self, stanfile='bernoulli.stan'):
         stan = os.path.join(datafiles_path, stanfile)
         bern_model = CmdStanModel(stan_file=stan)
@@ -89,6 +101,35 @@ class SampleTest(unittest.TestCase):
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
+    def test_init_types(self):
+        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+            inits=1.1
+        )
+        self.assertIn('init=1.1', bern_fit.runset.__repr__())
+
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+            inits=1
+        )
+        self.assertIn('init=1', bern_fit.runset.__repr__())
+
+        with self.assertRaises(ValueError):
+            bern_fit = bern_model.sample(
+                data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+                inits=(1,2)
+            )
+
+        with self.assertRaises(ValueError):
+            bern_fit = bern_model.sample(
+                data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+                inits=-1
+            )
+
     def test_bernoulli_bad(self):
         stan = os.path.join(datafiles_path, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
@@ -146,7 +187,7 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(txt_file))
 
         self.assertEqual(datagen_fit.runset.chains, 1)
-                             
+
         column_names = [
             'lp__',
             'accept_stat__',
@@ -245,7 +286,9 @@ class SampleTest(unittest.TestCase):
         self.test_bernoulli_good('bernoulli with space in name.stan')
 
     def test_bernoulli_path_with_space(self):
-        self.test_bernoulli_good('path with space/bernoulli_path_with_space.stan')
+        self.test_bernoulli_good('path with space/'
+                                 'bernoulli_path_with_space.stan')
+
 
 class CmdStanMCMCTest(unittest.TestCase):
     def test_validate_good_run(self):

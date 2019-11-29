@@ -1,10 +1,8 @@
-import math
 import os
 import platform
 import re
 import subprocess
 import shutil
-import sys
 import logging
 
 from collections import OrderedDict
@@ -122,8 +120,8 @@ class CmdStanModel(object):
                 libtbb = os.path.join(
                     cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
                 )
-            os.environ["PATH"] = ";".join(list(OrderedDict.fromkeys(
-                [libtbb, ] + os.getenv("PATH", "").split(";")
+            os.environ['PATH'] = ';'.join(list(OrderedDict.fromkeys(
+                [libtbb, ] + os.getenv('PATH', '').split(';')
             )))
 
         if compile and self._exe_file is None:
