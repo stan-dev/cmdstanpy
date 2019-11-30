@@ -11,8 +11,6 @@ try:
 except ImportError:
     import json
 import math
-import numpy as np
-import pandas as pd
 import platform
 import re
 import subprocess
@@ -20,14 +18,19 @@ import shutil
 import tempfile
 import logging
 import sys
-
 from typing import Dict, TextIO, List, Union, Tuple
+
+import numpy as np
+import pandas as pd
+
+
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
 def get_logger():
+    """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
     if len(logger.handlers) == 0:
         logging.basicConfig(level=logging.INFO)
@@ -53,7 +56,8 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     return latest
 
 
-class MaybeDictToFilePath(object):
+class MaybeDictToFilePath():
+    """Context manager for json files."""
     def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
         self._unlink = [False] * len(objs)
         self._paths = [''] * len(objs)
@@ -113,7 +117,8 @@ def validate_cmdstan_path(path: str) -> None:
         )
 
 
-class TemporaryCopiedFile(object):
+class TemporaryCopiedFile():
+    """Context manager for tmpfiles, handles spaces in filepath."""
     def __init__(self, file_path: str):
         self._path = None
         self._tmpdir = None
@@ -170,9 +175,9 @@ def cmdstan_path() -> str:
     """
     Validate, then return CmdStan directory path.
     """
-    cmdstan_path = ''
+    _cmdstan_path = ''
     if 'CMDSTAN' in os.environ:
-        cmdstan_path = os.environ['CMDSTAN']
+        _cmdstan_path = os.environ['CMDSTAN']
     else:
         cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
         if not os.path.exists(cmdstan_dir):
@@ -186,9 +191,9 @@ def cmdstan_path() -> str:
                 'no CmdStan installation found, '
                 'run command line script "install_cmdstan"'
             )
-        cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
-    validate_cmdstan_path(cmdstan_path)
-    return cmdstan_path
+        _cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
+    validate_cmdstan_path(_cmdstan_path)
+    return _cmdstan_path
 
 
 def cxx_toolchain_path(version: str = None) -> Tuple[str]:
@@ -217,14 +222,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools35 on %',
+                        'Found invalid installion for RTools35 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools35 on %', toolchain_root
+                    'Found invalid installion for RTools35 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
         elif os.path.exists(os.path.join(toolchain_root, 'mingw64')):
@@ -239,14 +245,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools40 on %',
+                        'Found invalid installion for RTools40 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools40 on %', toolchain_root
+                    'Found invalid installion for RTools40 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
     else:
@@ -275,14 +282,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools35 on %',
+                        'Found invalid installion for RTools35 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools35 on %', toolchain_root
+                    'Found invalid installion for RTools35 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
         if (
@@ -300,14 +308,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools40 on %',
+                        'Found invalid installion for RTools40 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools40 on %', toolchain_root
+                    'Found invalid installion for RTools40 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
     if not toolchain_root:
@@ -622,7 +631,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     if metric == 'diag_e':
         return lineno
     else:
-        for i in range(1, num_params):
+        for _ in range(1, num_params):
             line = fp.readline().lstrip(' #\t')
             lineno += 1
             if len(line.split(',')) != num_params:
