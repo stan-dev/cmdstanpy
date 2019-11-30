@@ -1,3 +1,5 @@
+"""CmdStanModel"""
+
 import os
 import platform
 import re
@@ -36,7 +38,7 @@ from cmdstanpy.utils import (
 )
 
 
-class CmdStanModel(object):
+class CmdStanModel():
     """
     Stan model.
 
@@ -149,24 +151,28 @@ class CmdStanModel(object):
                 code = fd.read()
         except IOError:
             self._logger.error(
-                'Cannot read file Stan file: {}'.format(self._stan_file)
+                'Cannot read file Stan file: %s', self._stan_file
             )
         return code
 
     @property
     def name(self) -> str:
+        """Stan program name; corresponds to bare filename, no extension."""
         return self._name
 
     @property
     def stan_file(self) -> str:
+        """Full path to Stan program file."""
         return self._stan_file
 
     @property
     def exe_file(self) -> str:
+        """Full path to Stan exe file."""
         return self._exe_file
 
     @property
     def include_paths(self) -> List[str]:
+        """List of user-specified include directory paths."""
         return self._include_paths
 
     def compile(self, opt_lvl: int = 3, force: bool = False) -> None:
@@ -245,8 +251,10 @@ class CmdStanModel(object):
                         )
                     try:
                         do_command(cmd, cmdstan_path(), logger=self._logger)
-                    except Exception as e:
-                        self._logger.error('file {}, {}'.format(stan_file, e))
+                    except RuntimeError as e:
+                        self._logger.error(
+                            'file %e, execption %s', stan_file, repr(e)
+                            )
                         compilation_failed = True
 
                 if not compilation_failed:
@@ -254,8 +262,8 @@ class CmdStanModel(object):
                     self._logger.info('compiling c++')
                     try:
                         do_command(cmd, cmdstan_path(), logger=self._logger)
-                    except Exception as e:
-                        self._logger.error('make cmd failed %s', e)
+                    except RuntimeError as e:
+                        self._logger.error('make cmd failed %s', repr(e))
                         compilation_failed = True
 
             if not compilation_failed:
@@ -510,7 +518,7 @@ class CmdStanModel(object):
         if chain_ids is None:
             chain_ids = [x + 1 for x in range(chains)]
         else:
-            if type(chain_ids) is int:
+            if isinstance(chain_ids, int):
                 if chain_ids < 1:
                     raise ValueError(
                         'chain_id must be a positive integer value,'
@@ -750,12 +758,11 @@ class CmdStanModel(object):
                 sample_fit = CmdStanMCMC(runset)
                 sample_fit._validate_csv_files()
                 sample_drawset = sample_fit.get_drawset()
-        except Exception as e:
+        except ValueError as e:
             raise ValueError(
-                'Invalid mcmc_sample, error:\n\t{}\n\t'
-                ' while processing files\n\t{}'.format(
-                    str(e), '\n\t'.join(sample_csv_files)
-                )
+                'Invalid mcmc_sample, error:\n\t%s\n\t'
+                ' while processing files\n\t%s' %
+                repr(e), '\n\t'.join(sample_csv_files)
             )
 
         generate_quantities_args = GenerateQuantitiesArgs(
@@ -1045,11 +1052,11 @@ class CmdStanModel(object):
                 pbar_sampling.update(sampling_cumulative_count)
                 pbar_sampling.refresh()
 
-        except Exception as e:
+        except Exception as e:    #pylint: disable=broad-except
             self._logger.warning(
                 'Chain %s: Failed to read the progress on the fly. Error: %s',
                 idx,
-                e,
+                repr(e),
             )
         # close both pbar
         pbar_warmup.close()

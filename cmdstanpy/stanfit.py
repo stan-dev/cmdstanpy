@@ -188,7 +188,7 @@ class CmdStanMCMC(object):
     def __init__(self, runset: RunSet, is_fixed_param: bool = False) -> None:
         """Initialize object."""
         if not (runset.method == Method.SAMPLE):
-            raise RuntimeError(
+            raise ValueError(
                 'Wrong runset method, expecting sample runset, '
                 'found method {}'.format(runset.method)
             )
@@ -466,7 +466,7 @@ class CmdStanMLE(object):
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not (runset.method == Method.OPTIMIZE):
-            raise RuntimeError(
+            raise ValueError(
                 'Wrong runset method, expecting optimize runset, '
                 'found method {}'.format(runset.method)
             )
@@ -538,7 +538,7 @@ class CmdStanGQ(object):
     def __init__(self, runset: RunSet, mcmc_sample: pd.DataFrame) -> None:
         """Initialize object."""
         if not (runset.method == Method.GENERATE_QUANTITIES):
-            raise RuntimeError(
+            raise ValueError(
                 'Wrong runset method, expecting generate_quantities runset, '
                 'found method {}'.format(runset.method)
             )
@@ -583,7 +583,7 @@ class CmdStanGQ(object):
         flattened chain, draw ordering.
         """
         if not (self.runset.method == Method.GENERATE_QUANTITIES):
-            raise RuntimeError(
+            raise ValueError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
         if self._generated_quantities is None:
@@ -597,7 +597,7 @@ class CmdStanGQ(object):
         one column per quantity of interest and one row per draw.
         """
         if not (self.runset.method == Method.GENERATE_QUANTITIES):
-            raise RuntimeError(
+            raise ValueError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
         if self._generated_quantities is None:
@@ -616,7 +616,7 @@ class CmdStanGQ(object):
         values in the generate quantities drawset.
         """
         if not (self.runset.method == Method.GENERATE_QUANTITIES):
-            raise RuntimeError(
+            raise ValueError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
         if self._generated_quantities is None:
@@ -670,7 +670,7 @@ class CmdStanVB(object):
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not (runset.method == Method.VARIATIONAL):
-            raise RuntimeError(
+            raise ValueError(
                 'Wrong runset method, expecting variational inference, '
                 'found method {}'.format(runset.method)
             )

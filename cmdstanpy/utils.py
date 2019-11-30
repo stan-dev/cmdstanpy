@@ -702,7 +702,7 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     """
     Spawn process, print stdout/stderr to console.
-    Throws exception on non-zero returncode.
+    Throws RuntimeError on non-zero returncode.
     """
     if logger:
         logger.debug('cmd: %s', cmd)
@@ -717,7 +717,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if proc.returncode:
         if stderr:
             msg = 'ERROR\n {} '.format(stderr.decode('utf-8').strip())
-        raise Exception(msg)
+        raise RuntimeError(msg)
     if stdout:
         return stdout.decode('utf-8').strip()
     return None
