@@ -135,6 +135,7 @@ def latest_version():
         return '3.5'
     return ''
 
+
 def retrieve_toolchain(filename, url):
     """Download toolchain from URL."""
     print('Downloading C++ toolchain: {}'.format(filename))
