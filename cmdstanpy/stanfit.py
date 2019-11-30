@@ -1,11 +1,13 @@
+"""Container objects for results of CmdStan run(s)."""
+
 import os
 import re
 import shutil
+import logging
 from typing import List, Tuple
 from collections import Counter, OrderedDict
 import numpy as np
 import pandas as pd
-import logging
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
@@ -22,7 +24,7 @@ from cmdstanpy.utils import (
 from cmdstanpy.cmdstan_args import Method, CmdStanArgs
 
 
-class RunSet(object):
+class RunSet():
     """
     Record of CmdStan run for a specified configuration and number of chains.
     """
@@ -37,7 +39,7 @@ class RunSet(object):
         if chains < 1:
             raise ValueError(
                 'chains must be positive integer value, '
-                'found {i]}'.format(chains)
+                'found {}'.format(chains)
             )
         self._csv_files = []
         if args.output_basename is None:
@@ -180,14 +182,14 @@ class RunSet(object):
                 ) from e
 
 
-class CmdStanMCMC(object):
+class CmdStanMCMC():
     """
     Container for outputs from CmdStan sampler run.
     """
 
     def __init__(self, runset: RunSet, is_fixed_param: bool = False) -> None:
         """Initialize object."""
-        if not (runset.method == Method.SAMPLE):
+        if not runset.method == Method.SAMPLE:
             raise ValueError(
                 'Wrong runset method, expecting sample runset, '
                 'found method {}'.format(runset.method)
@@ -351,7 +353,7 @@ class CmdStanMCMC(object):
                         while line != '# Adaptation terminated':
                             line = fp.readline().strip()
                     line = fp.readline().strip()  # stepsize
-                    label, stepsize = line.split('=')
+                    _, stepsize = line.split('=')
                     self._stepsize[chain] = float(stepsize.strip())
                     line = fp.readline().strip()  # metric header
                     # process metric
@@ -376,7 +378,6 @@ class CmdStanMCMC(object):
         Echo stansummary stdout/stderr to console.
         Assemble csv tempfile contents into pandasDataFrame.
         """
-        names = self.column_names
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
@@ -434,6 +435,7 @@ class CmdStanMCMC(object):
                 if not (p in self._column_names or p in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(p))
         self._assemble_sample()
+        # pylint: disable=redundant-keyword-arg
         data = self.sample.reshape(
             (self.draws * self.runset.chains), len(self.column_names), order='A'
         )
@@ -458,14 +460,14 @@ class CmdStanMCMC(object):
         self.runset.save_csvfiles(dir, basename)
 
 
-class CmdStanMLE(object):
+class CmdStanMLE():
     """
     Container for outputs from CmdStan optimization.
     """
 
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
-        if not (runset.method == Method.OPTIMIZE):
+        if not runset.method == Method.OPTIMIZE:
             raise ValueError(
                 'Wrong runset method, expecting optimize runset, '
                 'found method {}'.format(runset.method)
@@ -530,14 +532,14 @@ class CmdStanMLE(object):
         self.runset.save_csvfiles(dir, basename)
 
 
-class CmdStanGQ(object):
+class CmdStanGQ():
     """
     Container for outputs from CmdStan generate_quantities run.
     """
 
     def __init__(self, runset: RunSet, mcmc_sample: pd.DataFrame) -> None:
         """Initialize object."""
-        if not (runset.method == Method.GENERATE_QUANTITIES):
+        if not runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError(
                 'Wrong runset method, expecting generate_quantities runset, '
                 'found method {}'.format(runset.method)
@@ -582,7 +584,7 @@ class CmdStanGQ(object):
         last M draws are the last M draws of chain N, i.e.,
         flattened chain, draw ordering.
         """
-        if not (self.runset.method == Method.GENERATE_QUANTITIES):
+        if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
@@ -596,7 +598,7 @@ class CmdStanGQ(object):
         Returns the generated quantities as a pandas DataFrame consisting of
         one column per quantity of interest and one row per draw.
         """
-        if not (self.runset.method == Method.GENERATE_QUANTITIES):
+        if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
@@ -615,15 +617,17 @@ class CmdStanGQ(object):
         the input column is dropped in favor of the recomputed
         values in the generate quantities drawset.
         """
-        if not (self.runset.method == Method.GENERATE_QUANTITIES):
+        if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError(
                 'Bad runset method {}.'.format(self.runset.method)
             )
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
 
+        # pylint: disable=not-an-iterable
         cols_1 = [col for col in self.mcmc_sample.columns]
         cols_2 = [col for col in self.generated_quantities_pd.columns]
+
         dups = [
             item
             for item, count in Counter(cols_1 + cols_2).items()
@@ -639,7 +643,7 @@ class CmdStanGQ(object):
         Propogate information from original sample to additional sample
         returned by generate_quantities.
         """
-        sample_meta = check_sampler_csv(sample_csv_0)
+        check_sampler_csv(sample_csv_0)
         dzero = scan_generated_quantities_csv(self.runset.csv_files[0])
         self._column_names = dzero['column_names']
 
@@ -662,14 +666,14 @@ class CmdStanGQ(object):
         self.runset.save_csvfiles(dir, basename)
 
 
-class CmdStanVB(object):
+class CmdStanVB():
     """
     Container for outputs from CmdStan variational run.
     """
 
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
-        if not (runset.method == Method.VARIATIONAL):
+        if not runset.method == Method.VARIATIONAL:
             raise ValueError(
                 'Wrong runset method, expecting variational inference, '
                 'found method {}'.format(runset.method)
