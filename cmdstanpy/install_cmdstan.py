@@ -21,7 +21,7 @@ EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 @contextlib.contextmanager
 def pushd(new_dir):
-    """Like bash pushd."""
+    """Acts like pushd/popd."""
     previous_dir = os.getcwd()
     os.chdir(new_dir)
     yield
@@ -158,7 +158,7 @@ def retrieve_latest_version(version):
 
 
 def validate_dir(install_dir):
-    """Validate specified install directory."""
+    """Check that specified install directory exists, can write."""
     if not os.path.exists(install_dir):
         try:
             os.makedirs(install_dir)
