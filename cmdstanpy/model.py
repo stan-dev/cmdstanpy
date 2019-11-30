@@ -1052,7 +1052,7 @@ class CmdStanModel():
                 pbar_sampling.update(sampling_cumulative_count)
                 pbar_sampling.refresh()
 
-        except Exception as e:    #pylint: disable=broad-except
+        except Exception as e:    # pylint: disable=broad-except
             self._logger.warning(
                 'Chain %s: Failed to read the progress on the fly. Error: %s',
                 idx,
