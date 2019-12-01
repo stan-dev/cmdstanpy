@@ -172,7 +172,7 @@ class CmdStanModel():
 
     @property
     def include_paths(self) -> List[str]:
-        """List of user-specified include directory paths."""
+        """List of user-specified include paths."""
         return self._include_paths
 
     def compile(self, opt_lvl: int = 3, force: bool = False) -> None:
@@ -253,7 +253,7 @@ class CmdStanModel():
                         do_command(cmd, cmdstan_path(), logger=self._logger)
                     except RuntimeError as e:
                         self._logger.error(
-                            'file %e, execption %s', stan_file, repr(e)
+                            'file %s, execption %s', stan_file, repr(e)
                             )
                         compilation_failed = True
 
