@@ -175,9 +175,9 @@ def cmdstan_path() -> str:
     """
     Validate, then return CmdStan directory path.
     """
-    _cmdstan_path = ''
+    cmdstan = ''
     if 'CMDSTAN' in os.environ:
-        _cmdstan_path = os.environ['CMDSTAN']
+        cmdstan = os.environ['CMDSTAN']
     else:
         cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
         if not os.path.exists(cmdstan_dir):
@@ -191,9 +191,9 @@ def cmdstan_path() -> str:
                 'no CmdStan installation found, '
                 'run command line script "install_cmdstan"'
             )
-        _cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
-    validate_cmdstan_path(_cmdstan_path)
-    return _cmdstan_path
+        cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
+    validate_cmdstan_path(cmdstan)
+    return cmdstan
 
 
 def cxx_toolchain_path(version: str = None) -> Tuple[str]:
