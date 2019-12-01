@@ -121,7 +121,7 @@ class SamplerArgs():
                             'step_size must be > 0, found {}'.format(step_size)
                         )
         if self.metric is not None:
-            dims = None
+            dims = []
             if isinstance(self.metric, str):
                 if self.metric in ['diag', 'diag_e']:
                     self.metric = 'diag_e'

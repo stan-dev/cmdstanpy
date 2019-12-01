@@ -60,105 +60,20 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=print-statement,
-        apply-builtin,
-        backtick,
-        bad-continuation,
-        bad-inline-option,
-        bad-python3-import,
-        basestring-builtin,
-        buffer-builtin,
-        cmp-builtin,
-        cmp-method,
-        coerce-builtin,
-        coerce-method,
-        comprehension-escape,
-        consider-using-in,
-        delslice-method,
-        deprecated-itertools-function,
-        deprecated-operator-function,
-        deprecated-pragma,
-        deprecated-str-translate-call,
-        deprecated-string-function,
-        deprecated-sys-function,
-        deprecated-types-field,
-        deprecated-urllib-function,
-        dict-items-not-iterating,
-        dict-iter-method,
-        dict-keys-not-iterating,
-        dict-values-not-iterating,
-        dict-view-method,
-        div-method,
-        eq-without-hash,
-        exception-escape,
-        exception-message-attribute,
-        execfile-builtin,
-        file-builtin,
-        file-ignored,
-        filter-builtin-not-iterating,
-        fixme,
-        getslice-method,
-        hex-method,
-        idiv-method,
-        import-outside-toplevel,
-        import-star-module-level,
-        indexing-exception,
-        input-builtin,
-        intern-builtin,
-        invalid-name,
-        invalid-str-codec,
-        len-as-condition,
-        locally-disabled,
-        long-builtin,
-        long-suffix,
-        map-builtin-not-iterating,
-        metaclass-assignment,
-        next-method-called,
-        next-method-defined,
-        no-absolute-import,
-        no-else-break,
-        no-else-continue,
-        no-else-return,
-        no-self-use,
-        non-ascii-bytes-literal,
-        nonzero-method,
-        oct-method,
-        old-division,
-        old-ne-operator,
-        old-octal-literal,
-        old-raise-syntax,
-        parameter-unpacking,
-        protected-access,
-        raising-string,
-        range-builtin-not-iterating,
-        raw-checker-failed,
-        raw_input-builtin,
-        rdiv-method,
-        redefined-builtin,
-        reduce-builtin,
-        reload-builtin,
-        round-builtin,
-        setslice-method,
-        standarderror-builtin,
-        suppressed-message,
-        sys-max-int,
-        too-few-public-methods,
-        too-many-arguments,
-        too-many-branches,
-        too-many-locals,
-        too-many-statements,
-        unichr-builtin,
-        unicode-builtin,
-        unnecessary-comprehension,
-        unpacking-in-except,
-        unsubscriptable-object,
-        use-symbolic-message-instead,
-        useless-suppression,
-        using-cmp-argument,
-        xrange-builtin,
-        xreadlines-attribute,
-        zip-builtin-not-iterating
-        
+disable=bad-continuation,
+    consider-using-in,
+    cyclic-import,
+    fixme,
+    import-outside-toplevel,
+    no-else-break,
+    no-else-return,
+    protected-access,
+    redefined-builtin,
+    too-many-branches,
+    too-many-locals
+    
+   
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -377,13 +292,13 @@ ignore-docstrings=yes
 ignore-imports=no
 
 # Minimum lines number of a similarity.
-min-similarity-lines=4
+min-similarity-lines=25
 
 
 [BASIC]
 
 # Naming style matching correct argument names.
-argument-naming-style=snake_case
+argument-naming-style=any
 
 # Regular expression matching correct argument names. Overrides argument-
 # naming-style.
@@ -438,11 +353,13 @@ good-names=i,
            j,
            k,
            c,
+           df,
            e,
            ex,
            fd,
            fp,
            vs,
+           xs,
            Run,
            _
 

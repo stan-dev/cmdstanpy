@@ -297,18 +297,18 @@ class CmdStanMCMC():
                     self.runset.csv_files[i], self._is_fixed_param
                 )
             else:
-                d = check_sampler_csv(
+                drest = check_sampler_csv(
                     self.runset.csv_files[i], self._is_fixed_param
                 )
                 for key in dzero:
-                    if key != 'id' and dzero[key] != d[key]:
+                    if key != 'id' and dzero[key] != drest[key]:
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
                                 self.runset.csv_files[i],
                                 key,
                                 dzero[key],
-                                d[key],
+                                drest[key],
                             )
                         )
         self._draws = dzero['draws']
@@ -431,9 +431,9 @@ class CmdStanMCMC():
         """
         pnames_base = [name.split('.')[0] for name in self.column_names]
         if params is not None:
-            for p in params:
-                if not (p in self._column_names or p in pnames_base):
-                    raise ValueError('unknown parameter: {}'.format(p))
+            for param in params:
+                if not (param in self._column_names or param in pnames_base):
+                    raise ValueError('unknown parameter: {}'.format(param))
         self._assemble_sample()
         # pylint: disable=redundant-keyword-arg
         data = self.sample.reshape(
@@ -443,9 +443,9 @@ class CmdStanMCMC():
         if params is None:
             return df
         mask = []
-        for p in params:
+        for param in params:
             for name in self.column_names:
-                if p == name or p == name.split('.')[0]:
+                if param == name or param == name.split('.')[0]:
                     mask.append(name)
         return df[mask]
 
@@ -624,9 +624,8 @@ class CmdStanGQ():
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
 
-        # pylint: disable=not-an-iterable
-        cols_1 = [col for col in self.mcmc_sample.columns]
-        cols_2 = [col for col in self.generated_quantities_pd.columns]
+        cols_1 = self.mcmc_sample.columns.tolist()
+        cols_2 = self.generated_quantities_pd.columns.tolist()
 
         dups = [
             item

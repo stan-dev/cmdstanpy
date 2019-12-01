@@ -905,9 +905,10 @@ class CmdStanModel():
                     msg, runset._retcode(dummy_chain_id)
                 )
                 raise RuntimeError(msg)
-        vi = CmdStanVB(runset)
-        vi._set_variational_attrs(runset.csv_files[0])
-        return vi
+        # pylint: disable=invalid-name
+        vb = CmdStanVB(runset)
+        vb._set_variational_attrs(runset.csv_files[0])
+        return vb
 
     def _run_cmdstan(
         self, runset: RunSet, idx: int = 0, pbar: List[Any] = None

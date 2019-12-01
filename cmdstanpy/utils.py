@@ -63,30 +63,30 @@ class MaybeDictToFilePath():
         self._paths = [''] * len(objs)
         self._logger = logger or get_logger()
         i = 0
-        for o in objs:
-            if isinstance(o, dict):
+        for obj in objs:
+            if isinstance(obj, dict):
                 data_file = create_named_text_file(
                     dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
                 if any(
                     not item
-                    for item in o
+                    for item in obj
                     if isinstance(item, (Sequence, np.ndarray))
                 ):
-                    rdump(data_file, o)
+                    rdump(data_file, obj)
                 else:
-                    jsondump(data_file, o)
+                    jsondump(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
-            elif isinstance(o, str):
-                if not os.path.exists(o):
-                    raise ValueError("File doesn't exist {}".format(o))
-                self._paths[i] = o
-            elif o is None:
+            elif isinstance(obj, str):
+                if not os.path.exists(obj):
+                    raise ValueError("File doesn't exist {}".format(obj))
+                self._paths[i] = obj
+            elif obj is None:
                 self._paths[i] = None
-            elif i == 1 and isinstance(o, (Integral, Real)):
-                self._paths[i] = o
+            elif i == 1 and isinstance(obj, (Integral, Real)):
+                self._paths[i] = obj
             else:
                 raise ValueError('data must be string or dict')
             i += 1
@@ -760,6 +760,7 @@ def windows_short_path(path: str) -> str:
     import ctypes
     from ctypes import wintypes
 
+    # pylint: disable=invalid-name
     _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
     _GetShortPathNameW.argtypes = [
         wintypes.LPCWSTR,
