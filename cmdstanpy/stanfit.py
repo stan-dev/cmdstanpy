@@ -131,8 +131,8 @@ class RunSet():
         valid = True
         msg = ''
         for i in range(self._chains):
-            with open(self._console_files[i], 'r') as fp:
-                contents = fp.read()
+            with open(self._console_files[i], 'r') as fd:
+                contents = fd.read()
                 pat = re.compile(r'^Exception.*$', re.M)
                 errors = re.findall(pat, contents)
                 if len(errors) > 0:
@@ -341,34 +341,34 @@ class CmdStanMCMC():
                     dtype=float,
                 )
         for chain in range(self.runset.chains):
-            with open(self.runset.csv_files[chain], 'r') as fp:
+            with open(self.runset.csv_files[chain], 'r') as fd:
                 # skip initial comments, reads thru column header
-                line = fp.readline().strip()
+                line = fd.readline().strip()
                 while len(line) > 0 and line.startswith('#'):
-                    line = fp.readline().strip()
+                    line = fd.readline().strip()
                 if not self._is_fixed_param:
                     # skip warmup draws, if any, read to adaptation msg
-                    line = fp.readline().strip()
+                    line = fd.readline().strip()
                     if line != '# Adaptation terminated':
                         while line != '# Adaptation terminated':
-                            line = fp.readline().strip()
-                    line = fp.readline().strip()  # stepsize
+                            line = fd.readline().strip()
+                    line = fd.readline().strip()  # stepsize
                     _, stepsize = line.split('=')
                     self._stepsize[chain] = float(stepsize.strip())
-                    line = fp.readline().strip()  # metric header
+                    line = fd.readline().strip()  # metric header
                     # process metric
                     if self._metric_type == 'diag_e':
-                        line = fp.readline().lstrip(' #\t')
+                        line = fd.readline().lstrip(' #\t')
                         xs = line.split(',')
                         self._metric[chain, :] = [float(x) for x in xs]
                     else:
                         for i in range(self._num_params):
-                            line = fp.readline().lstrip(' #\t')
+                            line = fd.readline().lstrip(' #\t')
                             xs = line.split(',')
                             self._metric[chain, i, :] = [float(x) for x in xs]
                 # process draws
                 for i in range(self._draws):
-                    line = fp.readline().lstrip(' #\t')
+                    line = fd.readline().lstrip(' #\t')
                     xs = line.split(',')
                     self._sample[i, chain, :] = [float(x) for x in xs]
 
@@ -439,15 +439,15 @@ class CmdStanMCMC():
         data = self.sample.reshape(
             (self.draws * self.runset.chains), len(self.column_names), order='A'
         )
-        df = pd.DataFrame(data=data, columns=self.column_names)
+        drawset = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
-            return df
+            return drawset
         mask = []
         for param in params:
             for name in self.column_names:
                 if param == name or param == name.split('.')[0]:
                     mask.append(name)
-        return df[mask]
+        return drawset[mask]
 
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
         """
@@ -647,12 +647,12 @@ class CmdStanGQ():
         self._column_names = dzero['column_names']
 
     def _assemble_generated_quantities(self) -> None:
-        df_list = []
+        drawset_list = []
         for chain in range(self.runset.chains):
-            df_list.append(
+            drawset_list.append(
                 pd.read_csv(self.runset.csv_files[chain], comment='#')
             )
-        self._generated_quantities = pd.concat(df_list).values
+        self._generated_quantities = pd.concat(drawset_list).values
 
     def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
         """

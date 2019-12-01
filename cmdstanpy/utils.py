@@ -374,8 +374,8 @@ def rload(fname: str) -> dict:
        scalar, vector, matrix, and array data types.
     """
     data_dict = {}
-    with open(fname, 'r') as fp:
-        lines = fp.readlines()
+    with open(fname, 'r') as fd:
+        lines = fd.readlines()
     # Variable data may span multiple lines, parse accordingly
     idx = 0
     while idx < len(lines) and '<-' not in lines[idx]:
@@ -450,13 +450,13 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     """Process sampler stan_csv output file line by line."""
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
         if not is_fixed_param:
-            lineno = scan_warmup(fp, dict, lineno)
-            lineno = scan_metric(fp, dict, lineno)
-        lineno = scan_draws(fp, dict, lineno)
+            lineno = scan_warmup(fd, dict, lineno)
+            lineno = scan_metric(fd, dict, lineno)
+        lineno = scan_draws(fd, dict, lineno)
     return dict
 
 
@@ -464,10 +464,10 @@ def scan_optimize_csv(path: str) -> Dict:
     """Process optimizer stan_csv output file line by line."""
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
-        line = fp.readline().lstrip(' #\t')
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
+        line = fd.readline().lstrip(' #\t')
         xs = line.split(',')
         mle = [float(x) for x in xs]
         dict['mle'] = mle
@@ -480,9 +480,9 @@ def scan_generated_quantities_csv(path: str) -> Dict:
     """
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
     return dict
 
 
@@ -490,10 +490,10 @@ def scan_variational_csv(path: str) -> Dict:
     """Process advi stan_csv output file line by line."""
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
-        line = fp.readline().lstrip(' #\t')
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
+        line = fd.readline().lstrip(' #\t')
         lineno += 1
         if not line.startswith('Stepsize adaptation complete.'):
             raise ValueError(
@@ -501,7 +501,7 @@ def scan_variational_csv(path: str) -> Dict:
                     lineno, line
                 )
             )
-        line = fp.readline().lstrip(' #\t\n')
+        line = fd.readline().lstrip(' #\t\n')
         lineno += 1
         if not line.startswith('eta = 1'):
             raise ValueError(
@@ -509,7 +509,7 @@ def scan_variational_csv(path: str) -> Dict:
                     lineno, line
                 )
             )
-        line = fp.readline().lstrip(' #\t\n')
+        line = fd.readline().lstrip(' #\t\n')
         lineno += 1
         xs = line.split(',')
         variational_mean = [float(x) for x in xs]
@@ -520,13 +520,13 @@ def scan_variational_csv(path: str) -> Dict:
     return dict
 
 
-def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan initial stan_csv file comments lines and
     save non-default configuration information to config_dict.
     """
-    cur_pos = fp.tell()
-    line = fp.readline().strip()
+    cur_pos = fd.tell()
+    line = fd.readline().strip()
     while len(line) > 0 and line.startswith('#'):
         lineno += 1
         if not line.endswith('(Default)'):
@@ -547,33 +547,33 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                         except ValueError:
                             val = raw_val
                     config_dict[key_val[0].strip()] = val
-        cur_pos = fp.tell()
-        line = fp.readline().strip()
-    fp.seek(cur_pos)
+        cur_pos = fd.tell()
+        line = fd.readline().strip()
+    fd.seek(cur_pos)
     return lineno
 
 
-def scan_warmup(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_warmup(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Check warmup iterations, if any.
     """
     if 'save_warmup' not in config_dict:
         return lineno
-    cur_pos = fp.tell()
-    line = fp.readline().strip()
+    cur_pos = fd.tell()
+    line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
-        cur_pos = fp.tell()
-        line = fp.readline().strip()
-    fp.seek(cur_pos)
+        cur_pos = fd.tell()
+        line = fd.readline().strip()
+    fd.seek(cur_pos)
     return lineno
 
 
-def scan_column_names(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Process columns header, add to config_dict as 'column_names'
     """
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     names = line.split(',')
     config_dict['column_names'] = tuple(names)
@@ -581,7 +581,7 @@ def scan_column_names(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan stepsize, metric from  stan_csv file comment lines,
     set config_dict entries 'metric' and 'num_params'
@@ -589,13 +589,13 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     if 'metric' not in config_dict:
         config_dict['metric'] = 'diag_e'
     metric = config_dict['metric']
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     if not line == '# Adaptation terminated':
         raise ValueError(
             'line {}: expecting metric, found:\n\t "{}"'.format(lineno, line)
         )
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     label, stepsize = line.split('=')
     if not label.startswith('# Step size'):
@@ -609,7 +609,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         raise ValueError(
             'line {}: invalid stepsize: {}'.format(lineno, stepsize)
         )
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     if not (
         (
@@ -624,7 +624,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
             'line {}: invalid or missing mass matrix '
             'specification'.format(lineno)
         )
-    line = fp.readline().lstrip(' #\t')
+    line = fd.readline().lstrip(' #\t')
     lineno += 1
     num_params = len(line.split(','))
     config_dict['num_params'] = num_params
@@ -632,7 +632,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
     else:
         for _ in range(1, num_params):
-            line = fp.readline().lstrip(' #\t')
+            line = fd.readline().lstrip(' #\t')
             lineno += 1
             if len(line.split(',')) != num_params:
                 raise ValueError(
@@ -642,14 +642,14 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_draws(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Parse draws, check elements per draw, save num draws to config_dict.
     """
     draws_found = 0
     num_cols = len(config_dict['column_names'])
-    cur_pos = fp.tell()
-    line = fp.readline().strip()
+    cur_pos = fd.tell()
+    line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
@@ -660,10 +660,10 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                     lineno, num_cols, len(line.split(','))
                 )
             )
-        cur_pos = fp.tell()
-        line = fp.readline().strip()
+        cur_pos = fd.tell()
+        line = fd.readline().strip()
     config_dict['draws'] = draws_found
-    fp.seek(cur_pos)
+    fd.seek(cur_pos)
     return lineno
 
 

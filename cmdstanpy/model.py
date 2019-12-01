@@ -83,8 +83,8 @@ class CmdStanModel():
             self._name, _ = os.path.splitext(filename)
             self._exe_file = None
             # if program has #includes, search program dir
-            with open(stan_file, 'r') as fp:
-                program = fp.read()
+            with open(stan_file, 'r') as fd:
+                program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(stan_file)
                 if include_paths is None:
