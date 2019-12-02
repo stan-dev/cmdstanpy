@@ -1,10 +1,12 @@
+"""install_cxx_toolchain tests"""
+
 import unittest
 import platform
 
 from cmdstanpy import install_cxx_toolchain
 
 
-class install_cxx_script(unittest.TestCase):
+class InstallCxxScriptTest(unittest.TestCase):
     def test_config(self):
         """Test config output."""
         if platform.system() != "Windows":
