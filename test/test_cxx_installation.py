@@ -9,10 +9,10 @@ from cmdstanpy import install_cxx_toolchain
 class InstallCxxScriptTest(unittest.TestCase):
     def test_config(self):
         """Test config output."""
-        if platform.system() != "Windows":
+        if platform.system() != 'Windows':
             return
         else:
-            config = install_cxx_toolchain.get_config("C:\\RTools", True)
+            config = install_cxx_toolchain.get_config('C:\\RTools', True)
 
             config_reference = [
                 '/SP-',
@@ -29,7 +29,7 @@ class InstallCxxScriptTest(unittest.TestCase):
 
     def test_install_not_windows(self):
         """Try to install on unsupported platform."""
-        if platform.system() == "Windows":
+        if platform.system() == 'Windows':
             return
 
         with self.assertRaisesRegex(
@@ -41,7 +41,7 @@ class InstallCxxScriptTest(unittest.TestCase):
 
     def test_normalize_version(self):
         """Test supported versions."""
-        if platform.system() != "Windows":
+        if platform.system() != 'Windows':
             return
         else:
             for ver in ['4.0', '4', '40']:
@@ -56,11 +56,11 @@ class InstallCxxScriptTest(unittest.TestCase):
 
     def test_toolchain_name(self):
         """Check toolchain name."""
-        if platform.system() != "Windows":
+        if platform.system() != 'Windows':
             return
         else:
             self.assertEqual(
-                install_cxx_toolchain.get_toolchain_name(), "RTools"
+                install_cxx_toolchain.get_toolchain_name(), 'RTools'
             )
 
 
