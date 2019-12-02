@@ -9,7 +9,6 @@ from cmdstanpy import CmdStanModel, cmdstan_path
 import tqdm # noqa
 
 
-
 def run_bernoulli_fit():
     # specify Stan file, create, compile CmdStanModel object
     bernoulli_path = os.path.join(
