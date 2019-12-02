@@ -1,3 +1,5 @@
+"""CmdStan argument tests"""
+
 import os
 import unittest
 
@@ -10,14 +12,15 @@ from cmdstanpy.cmdstan_args import (
     VariationalArgs
 )
 
-here = os.path.dirname(os.path.abspath(__file__))
-datafiles_path = os.path.join(here, 'data')
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class OptimizeArgsTest(unittest.TestCase):
     def test_args_algorithm(self):
         args = OptimizeArgs(algorithm='non-valid_algorithm')
-        self.assertRaises(ValueError, lambda: args.validate())
+        with self.assertRaises(ValueError):
+            args.validate()
         args = OptimizeArgs(algorithm='Newton')
         args.validate()
         cmd = args.compose(None, cmd=['output'])
@@ -30,9 +33,11 @@ class OptimizeArgsTest(unittest.TestCase):
 
         self.assertIn('init_alpha=0.0002', ' '.join(cmd))
         args = OptimizeArgs(init_alpha=-1.0)
-        self.assertRaises(ValueError, lambda: args.validate())
+        with self.assertRaises(ValueError):
+            args.validate()
         args = OptimizeArgs(init_alpha=1.0, algorithm='Newton')
-        self.assertRaises(ValueError, lambda: args.validate())
+        with self.assertRaises(ValueError):
+            args.validate()
 
     def test_args_algorithm_iter(self):
         args = OptimizeArgs(iter=400)
@@ -40,7 +45,8 @@ class OptimizeArgsTest(unittest.TestCase):
         cmd = args.compose(None, cmd=['output'])
         self.assertIn('iter=400', ' '.join(cmd))
         args = OptimizeArgs(iter=-1)
-        self.assertRaises(ValueError, lambda: args.validate())
+        with self.assertRaises(ValueError):
+            args.validate()
 
 
 class SamplerArgsTest(unittest.TestCase):
@@ -197,7 +203,7 @@ class SamplerArgsTest(unittest.TestCase):
         cmd = args.compose(1, cmd=[])
         self.assertNotIn('metric=', ' '.join(cmd))
 
-        jmetric = os.path.join(datafiles_path, 'bernoulli.metric.json')
+        jmetric = os.path.join(DATAFILES_PATH, 'bernoulli.metric.json')
         args = SamplerArgs(metric=jmetric)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
@@ -205,7 +211,7 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('metric_file=', ' '.join(cmd))
         self.assertIn('bernoulli.metric.json', ' '.join(cmd))
 
-        jmetric2 = os.path.join(datafiles_path, 'bernoulli.metric-2.json')
+        jmetric2 = os.path.join(DATAFILES_PATH, 'bernoulli.metric-2.json')
         args = SamplerArgs(metric=[jmetric, jmetric2])
         args.validate(chains=2)
         cmd = args.compose(0, cmd=[])
@@ -234,7 +240,7 @@ class SamplerArgsTest(unittest.TestCase):
 
 class CmdStanArgsTest(unittest.TestCase):
     def test_compose(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -248,9 +254,9 @@ class CmdStanArgsTest(unittest.TestCase):
             cmdstan_args.compose_command(idx=-1, csv_file='foo')
 
     def test_no_chains(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        jinits = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
 
         sampler_args = SamplerArgs()
         with self.assertRaises(ValueError):
@@ -275,8 +281,8 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
     def test_args_good(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
 
         cmdstan_args = CmdStanArgs(
@@ -304,13 +310,13 @@ class CmdStanArgsTest(unittest.TestCase):
         self.assertIn('id=7 random seed=', ' '.join(cmd))
 
     def test_args_inits(self):
-        exe = os.path.join(datafiles_path, 'bernoulli')
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
 
-        jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
-        jinits1 = os.path.join(datafiles_path, 'bernoulli.init_1.json')
-        jinits2 = os.path.join(datafiles_path, 'bernoulli.init_2.json')
+        jinits = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
+        jinits1 = os.path.join(DATAFILES_PATH, 'bernoulli.init_1.json')
+        jinits2 = os.path.join(DATAFILES_PATH, 'bernoulli.init_2.json')
 
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -358,24 +364,17 @@ class CmdStanArgsTest(unittest.TestCase):
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('init=3.33', ' '.join(cmd))
 
+    # pylint: disable=no-value-for-parameter
     def test_args_bad(self):
         sampler_args = SamplerArgs()
 
         with self.assertRaises(Exception):
             # missing
-            cmdstan_args = CmdStanArgs(
-                model_name='bernoulli', model_exe='bernoulli.exe'
-            )
-
-        with self.assertRaises(Exception):
-            # missing
-            cmdstan_args = CmdStanArgs(
-                model_name='bernoulli', model_exe='bernoulli.exe'
-            )
+            CmdStanArgs(model_name='bernoulli', model_exe='bernoulli.exe')
 
         with self.assertRaises(ValueError):
             # bad filepath
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -385,7 +384,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad chain id
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, -4],
@@ -394,7 +393,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad seed
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -404,7 +403,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad seed
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -414,7 +413,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad seed
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -424,7 +423,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad seed
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -434,7 +433,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad inits
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -442,33 +441,13 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad inits
-            cmdstan_args = CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe',
-                chain_ids=[1, 2, 3, 4],
-                inits='no/such/path/to.file',
-                method_args=sampler_args,
-            )
-
-        with self.assertRaises(ValueError):
-            # bad inits
-            cmdstan_args = CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe',
-                chain_ids=[1, 2, 3, 4],
-                inits='no/such/path/to.file',
-                method_args=sampler_args,
-            )
-
-        jinits = os.path.join(datafiles_path, 'bernoulli.init.json')
-        jinits1 = os.path.join(datafiles_path, 'bernoulli.init_1.json')
-        jinits2 = os.path.join(datafiles_path, 'bernoulli.init_2.json')
+        jinits = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
+        jinits1 = os.path.join(DATAFILES_PATH, 'bernoulli.init_1.json')
+        jinits2 = os.path.join(DATAFILES_PATH, 'bernoulli.init_2.json')
 
         with self.assertRaises(ValueError):
             # bad inits - files must be unique
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -478,7 +457,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad inits - files must be unique
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -488,7 +467,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # bad output basename
-            cmdstan_args = CmdStanArgs(
+            CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
@@ -504,7 +483,7 @@ class GenerateQuantitesTest(unittest.TestCase):
             args.validate(chains=1)
         csv_files = [
             os.path.join(
-                datafiles_path, 'runset-good', 'bern-{}.csv'.format(i + 1)
+                DATAFILES_PATH, 'runset-good', 'bern-{}.csv'.format(i + 1)
             )
             for i in range(4)
         ]
