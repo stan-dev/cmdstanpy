@@ -498,8 +498,9 @@ class CmdStanModel(object):
             ``<basename>-<chain_id>.txt``.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to ``<basename>-diagnostic-<chain_id>.csv.``,
-            where ``<basename>`` is set with ``csv_basename``.
+            csv output files are written to
+            ``<basename>-diagnostic-<chain_id>.csv.``, where ``<basename>``
+            is set with ``csv_basename``.
 
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
@@ -847,8 +848,9 @@ class CmdStanModel(object):
             and error messages are written to file ``<basename>-0.txt``.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to ``<basename>-diagnostic-<chain_id>.csv.``,
-            where ``<basename>`` is set with ``csv_basename``.
+            csv output files are written to
+            ``<basename>-diagnostic-<chain_id>.csv.``, where ``<basename>``
+            is set with ``csv_basename``.
 
         :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
 

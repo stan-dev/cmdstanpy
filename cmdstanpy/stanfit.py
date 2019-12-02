@@ -67,7 +67,9 @@ class RunSet(object):
                 )
             if args.save_diagnostics:
                 for i in range(chains):
-                    self._diagnostic_files[i] = '{}-diagnostic-{}.csv'.format(args.output_basename, i + 1)
+                    self._diagnostic_files[i] = '{}-diagnostic-{}.csv'.format(
+                        args.output_basename, i + 1
+                    )
         self._console_files = []
         for i in range(chains):
             txt_file = ''.join(
@@ -76,7 +78,7 @@ class RunSet(object):
             self._console_files.append(txt_file)
         self._cmds = []
         for i in range(chains):
-            self._cmds.append(args.compose_command(i, self._csv_files[i], 
+            self._cmds.append(args.compose_command(i, self._csv_files[i],
                                                    self._diagnostic_files[i]))
         self._retcodes = [-1 for _ in range(chains)]
 
@@ -321,7 +323,10 @@ class CmdStanMCMC(object):
                     self.runset.csv_files[i], self._is_fixed_param
                 )
                 for key in dzero:
-                    if key not in ['id', 'diagnostic_file'] and dzero[key] != d[key]:
+                    if (
+                        key not in ['id', 'diagnostic_file']
+                        and dzero[key] != drest[key]
+                    ):
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
