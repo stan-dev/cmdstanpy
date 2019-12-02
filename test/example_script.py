@@ -5,7 +5,7 @@ import sys
 from cmdstanpy import CmdStanModel, cmdstan_path
 
 # explicit import to test if it is installed
-# pylint: disable=import-error,unused-import,wrong-import-order
+# pylint: disable=E0401,W0614,C0411 import checks
 import tqdm # noqa
 
 
