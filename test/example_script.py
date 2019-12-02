@@ -2,8 +2,8 @@
 import os
 import sys
 
-# pylint: disable=unused-import
 # explicit import to test if it is installed
+# pylint: disable=unused-import
 import tqdm # noqa
 
 from cmdstanpy import CmdStanModel, cmdstan_path
