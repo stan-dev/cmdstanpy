@@ -42,7 +42,7 @@ class RunSet():
                 'found {}'.format(chains)
             )
         self._csv_files = []
-        self._diagnostic_files = [None for i in range(chains)]
+        self._diagnostic_files = [None for _ in range(chains)]
         if args.output_basename is None:
             csv_basename = 'stan-{}-{}'.format(args.model_name, args.method)
             for i in range(chains):
