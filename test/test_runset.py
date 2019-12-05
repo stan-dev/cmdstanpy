@@ -1,3 +1,5 @@
+"""RunSet tests"""
+
 import os
 import unittest
 
@@ -5,14 +7,14 @@ from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import RunSet
 
-here = os.path.dirname(os.path.abspath(__file__))
-datafiles_path = os.path.join(here, 'data')
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class RunSetTest(unittest.TestCase):
     def test_check_retcodes(self):
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',

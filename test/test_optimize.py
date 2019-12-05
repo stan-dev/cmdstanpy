@@ -1,30 +1,33 @@
+"""CmdStan method optimize tests"""
+
 import os
-import pytest
-import unittest
 import json
+import unittest
+import pytest
 
 from cmdstanpy.cmdstan_args import OptimizeArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import RunSet, CmdStanMLE
 
-here = os.path.dirname(os.path.abspath(__file__))
-datafiles_path = os.path.join(here, 'data')
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class CmdStanMLETest(unittest.TestCase):
 
-    @pytest.fixture(scope="class", autouse=True)
+    # pylint: disable=no-self-use
+    @pytest.fixture(scope='class', autouse=True)
     def do_clean_up(self):
-        for root, _, files in os.walk(datafiles_path):
+        for root, _, files in os.walk(DATAFILES_PATH):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                if ext.lower() in ('.o', '.hpp', '.exe', ''):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 
     def test_set_mle_attrs(self):
-        stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
+        stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
         model = CmdStanModel(stan_file=stan)
         no_data = {}
         args = OptimizeArgs(algorithm='Newton')
@@ -40,22 +43,22 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
         self.assertIn('method=optimize', mle.__repr__())
 
-        self.assertEqual(mle._column_names,())
-        self.assertEqual(mle._mle,{})
+        self.assertEqual(mle._column_names, ())
+        self.assertEqual(mle._mle, {})
 
-        output = os.path.join(datafiles_path, 'optimize', 'rosenbrock_mle.csv')
+        output = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
         mle._set_mle_attrs(output)
-        self.assertEqual(mle.column_names,('lp__', 'x', 'y'))
+        self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
 
 
 class OptimizeTest(unittest.TestCase):
     def test_optimize_good(self):
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         model = CmdStanModel(stan_file=stan)
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        jinit = os.path.join(datafiles_path, 'bernoulli.init.json')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
         mle = model.optimize(
             data=jdata,
             seed=1239812093,
@@ -86,13 +89,13 @@ class OptimizeTest(unittest.TestCase):
         )
 
     def test_optimize_good_dict(self):
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         model = CmdStanModel(stan_file=stan, exe_file=exe)
-        with open(os.path.join(datafiles_path, 'bernoulli.data.json')) as d:
-            data = json.load(d)
-        with open(os.path.join(datafiles_path, 'bernoulli.init.json')) as d:
-            init = json.load(d)
+        with open(os.path.join(DATAFILES_PATH, 'bernoulli.data.json')) as fd:
+            data = json.load(fd)
+        with open(os.path.join(DATAFILES_PATH, 'bernoulli.init.json')) as fd:
+            init = json.load(fd)
         mle = model.optimize(
             data=data,
             seed=1239812093,
@@ -106,7 +109,7 @@ class OptimizeTest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_np[1], 0.2, places=3)
 
     def test_optimize_rosenbrock(self):
-        stan = os.path.join(datafiles_path, 'optimize', 'rosenbrock.stan')
+        stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
         rose_model = CmdStanModel(stan_file=stan)
         no_data = {}
         mle = rose_model.optimize(
@@ -115,12 +118,12 @@ class OptimizeTest(unittest.TestCase):
             inits=None,
             algorithm='BFGS'
         )
-        self.assertEqual(mle.column_names,('lp__', 'x', 'y'))
+        self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
 
     def test_optimize_bad(self):
-        stan = os.path.join(datafiles_path, 'optimize',
+        stan = os.path.join(DATAFILES_PATH, 'optimize',
                             'exponential_boundary.stan')
         exp_bound_model = CmdStanModel(stan_file=stan)
         no_data = {}
