@@ -466,6 +466,16 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaises(ValueError):
+            # bad inits - no such file
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                inits='no/such/path/to.file',
+                method_args=sampler_args,
+            )
+
+        with self.assertRaises(ValueError):
             # bad output basename
             CmdStanArgs(
                 model_name='bernoulli',
