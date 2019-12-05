@@ -42,6 +42,7 @@ class RunSet():
                 'found {}'.format(chains)
             )
         self._csv_files = []
+        self._diagnostic_files = [None for _ in range(chains)]
         if args.output_basename is None:
             csv_basename = 'stan-{}-{}'.format(args.model_name, args.method)
             for i in range(chains):
@@ -51,20 +52,34 @@ class RunSet():
                     suffix='.csv',
                 )
                 self._csv_files.append(fd_name)
+            if args.save_diagnostics:
+                for i in range(chains):
+                    fd_name = create_named_text_file(
+                        dir=TMPDIR,
+                        prefix='{}-diagnostic-{}-'.format(csv_basename, i + 1),
+                        suffix='.csv',
+                    )
+                    self._diagnostic_files[i] = fd_name
         else:
             for i in range(chains):
                 self._csv_files.append(
                     '{}-{}.csv'.format(args.output_basename, i + 1)
                 )
+            if args.save_diagnostics:
+                for i in range(chains):
+                    self._diagnostic_files[i] = '{}-diagnostic-{}.csv'.format(
+                        args.output_basename, i + 1
+                    )
         self._console_files = []
         for i in range(chains):
             txt_file = ''.join(
                 [os.path.splitext(self._csv_files[i])[0], '.txt']
             )
             self._console_files.append(txt_file)
-        self._cmds = [
-            args.compose_command(i, self._csv_files[i]) for i in range(chains)
-        ]
+        self._cmds = []
+        for i in range(chains):
+            self._cmds.append(args.compose_command(i, self._csv_files[i],
+                                                   self._diagnostic_files[i]))
         self._retcodes = [-1 for _ in range(chains)]
 
     def __repr__(self) -> str:
@@ -115,6 +130,13 @@ class RunSet():
             if self._retcodes[i] != 0:
                 return False
         return True
+
+    @property
+    def diagnostic_files(self) -> List[str]:
+        """
+        List of paths to CmdStan diagnostic output files.
+        """
+        return self._diagnostic_files
 
     def _retcode(self, idx: int) -> int:
         """Get retcode for chain[idx]."""
@@ -301,7 +323,10 @@ class CmdStanMCMC():
                     self.runset.csv_files[i], self._is_fixed_param
                 )
                 for key in dzero:
-                    if key != 'id' and dzero[key] != drest[key]:
+                    if (
+                        key not in ['id', 'diagnostic_file']
+                        and dzero[key] != drest[key]
+                    ):
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(
