@@ -1,37 +1,40 @@
-import os
-import pytest
-import unittest
+"""CmdStan method sample tests"""
 
+import os
 import logging
-from testfixtures import LogCapture
 from multiprocessing import cpu_count
+import unittest
+from testfixtures import LogCapture
+import pytest
 
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import RunSet, CmdStanMCMC
 from cmdstanpy.model import CmdStanModel
 
-here = os.path.dirname(os.path.abspath(__file__))
-datafiles_path = os.path.join(here, 'data')
-goodfiles_path = os.path.join(datafiles_path, 'runset-good')
-badfiles_path = os.path.join(datafiles_path, 'runset-bad')
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATAFILES_PATH = os.path.join(HERE, 'data')
+GOODFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-good')
+BADFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-bad')
+
 
 class SampleTest(unittest.TestCase):
 
-    @pytest.fixture(scope="class", autouse=True)
+    # pylint: disable=no-self-use
+    @pytest.fixture(scope='class', autouse=True)
     def do_clean_up(self):
-        for root, _, files in os.walk(datafiles_path):
+        for root, _, files in os.walk(DATAFILES_PATH):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in (".o", ".hpp", ".exe", ""):
+                if ext.lower() in ('.o', '.hpp', '.exe', ''):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 
     def test_bernoulli_good(self, stanfile='bernoulli.stan'):
-        stan = os.path.join(datafiles_path, stanfile)
+        stan = os.path.join(DATAFILES_PATH, stanfile)
         bern_model = CmdStanModel(stan_file=stan)
 
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
         )
@@ -66,7 +69,7 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.stepsize.shape, (4,))
         self.assertEqual(bern_fit.metric.shape, (4, 1))
 
-        output = os.path.join(datafiles_path, 'test1-bernoulli-output')
+        output = os.path.join(DATAFILES_PATH, 'test1-bernoulli-output')
         bern_fit = bern_model.sample(
             data=jdata,
             chains=4,
@@ -86,7 +89,7 @@ class SampleTest(unittest.TestCase):
             os.remove(bern_fit.runset.csv_files[i])
             os.remove(bern_fit.runset.console_files[i])
 
-        rdata = os.path.join(datafiles_path, 'bernoulli.data.R')
+        rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
             data=rdata, chains=4, cores=2, seed=12345, sampling_iters=100
         )
@@ -101,9 +104,9 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
     def test_init_types(self):
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
@@ -118,44 +121,41 @@ class SampleTest(unittest.TestCase):
         self.assertIn('init=1', bern_fit.runset.__repr__())
 
         with self.assertRaises(ValueError):
-            bern_fit = bern_model.sample(
+            bern_model.sample(
                 data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
-                inits=(1,2)
+                inits=(1, 2)
             )
 
         with self.assertRaises(ValueError):
-            bern_fit = bern_model.sample(
+            bern_model.sample(
                 data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
                 inits=-1
             )
 
-
-
-
     def test_bernoulli_bad(self):
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
 
         with self.assertRaisesRegex(Exception, 'Error during sampling'):
-            bern_fit = bern_model.sample(
+            bern_model.sample(
                 chains=4, cores=2, seed=12345, sampling_iters=100
             )
 
     def test_multi_proc(self):
-        logistic_stan = os.path.join(datafiles_path, 'logistic.stan')
+        logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
-        logistic_data = os.path.join(datafiles_path, 'logistic.data.R')
+        logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
 
         with LogCapture() as log:
-            logger = logging.getLogger()
-            fit = logistic_model.sample(data=logistic_data, chains=4, cores=1)
+            logging.getLogger()
+            logistic_model.sample(data=logistic_data, chains=4, cores=1)
         log.check_present(
             ('cmdstanpy', 'INFO', 'finish chain 1'),
             ('cmdstanpy', 'INFO', 'start chain 2'),
         )
         with LogCapture() as log:
-            logger = logging.getLogger()
-            fit = logistic_model.sample(data=logistic_data, chains=4, cores=2)
+            logging.getLogger()
+            logistic_model.sample(data=logistic_data, chains=4, cores=2)
         if cpu_count() >= 4:
             # finish chains 1, 2 before starting chains 3, 4
             log.check_present(
@@ -164,17 +164,15 @@ class SampleTest(unittest.TestCase):
             )
         if cpu_count() >= 4:
             with LogCapture() as log:
-                logger = logging.getLogger()
-                fit = logistic_model.sample(
-                    data=logistic_data, chains=4, cores=4
-                )
+                logging.getLogger()
+                logistic_model.sample(data=logistic_data, chains=4, cores=4)
                 log.check_present(
                     ('cmdstanpy', 'INFO', 'start chain 4'),
                     ('cmdstanpy', 'INFO', 'finish chain 1'),
                 )
 
     def test_fixed_param_good(self):
-        stan = os.path.join(datafiles_path, 'datagen_poisson_glm.stan')
+        stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
         datagen_model = CmdStanModel(stan_file=stan)
         no_data = {}
         datagen_fit = datagen_model.sample(
@@ -189,7 +187,7 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(txt_file))
 
         self.assertEqual(datagen_fit.runset.chains, 1)
-                             
+
         column_names = [
             'lp__',
             'accept_stat__',
@@ -279,7 +277,7 @@ class SampleTest(unittest.TestCase):
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
         self.assertEqual(datagen_fit.draws, 100)
-        self.assertEqual(datagen_fit.sample.shape,(100,1,len(column_names)))
+        self.assertEqual(datagen_fit.sample.shape, (100, 1, len(column_names)))
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.stepsize, None)
@@ -288,14 +286,16 @@ class SampleTest(unittest.TestCase):
         self.test_bernoulli_good('bernoulli with space in name.stan')
 
     def test_bernoulli_path_with_space(self):
-        self.test_bernoulli_good('path with space/bernoulli_path_with_space.stan')
+        self.test_bernoulli_good('path with space/'
+                                 'bernoulli_path_with_space.stan')
+
 
 class CmdStanMCMCTest(unittest.TestCase):
     def test_validate_good_run(self):
         # construct fit using existing sampler output
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
-        output = os.path.join(goodfiles_path, 'bern')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        output = os.path.join(GOODFILES_PATH, 'bern')
         sampler_args = SamplerArgs(
             sampling_iters=100, max_treedepth=11, adapt_delta=0.95
         )
@@ -321,9 +321,10 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(8, len(fit.column_names))
         self.assertEqual('lp__', fit.column_names[0])
 
-        df = fit.get_drawset()
+        drawset = fit.get_drawset()
         self.assertEqual(
-            df.shape, (fit.runset.chains * fit.draws, len(fit.column_names))
+            drawset.shape,
+            (fit.runset.chains * fit.draws, len(fit.column_names))
         )
         _ = fit.summary()
         self.assertTrue(True)
@@ -340,13 +341,13 @@ class CmdStanMCMCTest(unittest.TestCase):
                 '\nEffective sample size satisfactory.',
             ]
         )
-        self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
+        self.assertIn(expected, fit.diagnose().replace('\r\n', '\n'))
 
     def test_validate_big_run(self):
         exe = os.path.join(
-            datafiles_path, 'bernoulli' + EXTENSION
+            DATAFILES_PATH, 'bernoulli' + EXTENSION
         )
-        output = os.path.join(datafiles_path, 'runset-big', 'output_icar_nyc')
+        output = os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -390,8 +391,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             fit.get_drawset(params=['ph'])
 
     def test_save_csv(self):
-        stan = os.path.join(datafiles_path, 'bernoulli.stan')
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
@@ -405,12 +406,12 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         # save files to good dir
         basename = 'bern_save_csvfiles_test'
-        bern_fit.save_csvfiles(dir=datafiles_path, basename=basename)
+        bern_fit.save_csvfiles(dir=DATAFILES_PATH, basename=basename)
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
         with self.assertRaisesRegex(Exception, 'file exists'):
-            bern_fit.save_csvfiles(dir=datafiles_path, basename=basename)
+            bern_fit.save_csvfiles(dir=DATAFILES_PATH, basename=basename)
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
             os.remove(bern_fit.runset.console_files[i])
@@ -429,10 +430,10 @@ class CmdStanMCMCTest(unittest.TestCase):
 
     def test_diagnose_divergences(self):
         exe = os.path.join(
-            datafiles_path, 'bernoulli' + EXTENSION
+            DATAFILES_PATH, 'bernoulli' + EXTENSION
         )  # fake out validation
         output = os.path.join(
-            datafiles_path, 'diagnose-good', 'corr_gauss_depth8'
+            DATAFILES_PATH, 'diagnose-good', 'corr_gauss_depth8'
         )
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
@@ -455,17 +456,17 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'For optimal performance, increase this limit.',
             ]
         )
-        self.assertIn(expected, fit.diagnose().replace("\r\n", "\n"))
+        self.assertIn(expected, fit.diagnose().replace('\r\n', '\n'))
 
     def test_validate_bad_run(self):
-        exe = os.path.join(datafiles_path, 'bernoulli' + EXTENSION)
-        jdata = os.path.join(datafiles_path, 'bernoulli.data.json')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs(
             sampling_iters=100, max_treedepth=11, adapt_delta=0.95
         )
 
         # some chains had errors
-        output = os.path.join(badfiles_path, 'bad-transcript-bern')
+        output = os.path.join(BADFILES_PATH, 'bad-transcript-bern')
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
@@ -480,7 +481,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             runset._check_console_msgs()
 
         # csv file headers inconsistent
-        output = os.path.join(badfiles_path, 'bad-hdr-bern')
+        output = os.path.join(BADFILES_PATH, 'bad-hdr-bern')
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
@@ -500,7 +501,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             fit._validate_csv_files()
 
         # bad draws
-        output = os.path.join(badfiles_path, 'bad-draws-bern')
+        output = os.path.join(BADFILES_PATH, 'bad-draws-bern')
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
@@ -520,7 +521,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             fit._validate_csv_files()
 
         # mismatch - column headers, draws
-        output = os.path.join(badfiles_path, 'bad-cols-bern')
+        output = os.path.join(BADFILES_PATH, 'bad-cols-bern')
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,

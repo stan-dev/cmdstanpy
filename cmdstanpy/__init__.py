@@ -1,3 +1,6 @@
+# pylint: disable=wrong-import-position
+"""CmdStanPy Module"""
+
 import atexit
 import shutil
 import tempfile
@@ -18,6 +21,7 @@ TMPDIR = tempfile.mkdtemp()
 
 
 def cleanup_tmpdir():
+    """Force deletion of TMPDIR."""
     print('deleting tmpfiles dir: {}'.format(TMPDIR))
     shutil.rmtree(TMPDIR, ignore_errors=True)
     print('done')
@@ -25,7 +29,8 @@ def cleanup_tmpdir():
 
 atexit.register(cleanup_tmpdir)
 
-from .utils import set_cmdstan_path, cmdstan_path, set_make_env, install_cmdstan
-from .stanfit import CmdStanMCMC, CmdStanMLE, CmdStanGQ, CmdStanVB
-from .model import CmdStanModel
-from ._version import __version__
+
+from .utils import set_cmdstan_path, cmdstan_path, set_make_env, install_cmdstan # noqa
+from .stanfit import CmdStanMCMC, CmdStanMLE, CmdStanGQ, CmdStanVB # noqa
+from .model import CmdStanModel # noqa
+from ._version import __version__ # noqa

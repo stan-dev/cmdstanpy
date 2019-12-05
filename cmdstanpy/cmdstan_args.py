@@ -2,15 +2,16 @@
 CmdStan arguments
 """
 import os
-import numpy as np
-
 from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
+from numpy.random import RandomState
+
 from cmdstanpy.utils import read_metric
 
 
 class Method(Enum):
+    """Supported CmdStan method names."""
     SAMPLE = auto()
     OPTIMIZE = auto()
     GENERATE_QUANTITIES = auto()
@@ -20,7 +21,7 @@ class Method(Enum):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
-class SamplerArgs(object):
+class SamplerArgs():
     """Arguments for the NUTS adaptive sampler."""
 
     def __init__(
@@ -121,7 +122,7 @@ class SamplerArgs(object):
                             'step_size must be > 0, found {}'.format(step_size)
                         )
         if self.metric is not None:
-            dims = None
+            dims = []
             if isinstance(self.metric, str):
                 if self.metric in ['diag', 'diag_e']:
                     self.metric = 'diag_e'
@@ -240,7 +241,7 @@ class SamplerArgs(object):
         return cmd
 
 
-class OptimizeArgs(object):
+class OptimizeArgs():
     """Container for arguments for the optimizer."""
 
     OPTIMIZE_ALGOS = {'BFGS', 'LBFGS', 'Newton'}
@@ -285,6 +286,7 @@ class OptimizeArgs(object):
             else:
                 raise ValueError('iter must be type of int')
 
+    # pylint: disable=unused-argument
     def compose(self, idx: int, cmd: List) -> str:
         """compose command string for CmdStan for non-default arg values.
         """
@@ -298,7 +300,7 @@ class OptimizeArgs(object):
         return cmd
 
 
-class GenerateQuantitiesArgs(object):
+class GenerateQuantitiesArgs():
     """Arguments needed for generate_quantities method."""
 
     def __init__(self, csv_files: List[str]) -> None:
@@ -326,7 +328,7 @@ class GenerateQuantitiesArgs(object):
         return cmd
 
 
-class VariationalArgs(object):
+class VariationalArgs():
     """Arguments needed for variational method."""
 
     VARIATIONAL_ALGOS = {'meanfield', 'fullrank'}
@@ -423,6 +425,7 @@ class VariationalArgs(object):
                     ' found {}'.format(self.output_samples)
                 )
 
+    # pylint: disable=unused-argument
     def compose(self, idx: int, cmd: List) -> str:
         """
         Compose CmdStan command for method-specific non-default arguments.
@@ -450,7 +453,7 @@ class VariationalArgs(object):
         return cmd
 
 
-class CmdStanArgs(object):
+class CmdStanArgs():
     """
     Container for CmdStan command line arguments.
     Consists of arguments common to all methods and
@@ -535,7 +538,7 @@ class CmdStanArgs(object):
             self.output_basename, _ = os.path.splitext(self.output_basename)
 
         if self.seed is None:
-            rng = np.random.RandomState()
+            rng = RandomState()
             self.seed = rng.randint(1, 99999 + 1)
         else:
             if not isinstance(self.seed, (int, list)):
@@ -543,7 +546,7 @@ class CmdStanArgs(object):
                     'seed must be an integer between 0 and 2**32-1,'
                     ' found {}'.format(self.seed)
                 )
-            elif isinstance(self.seed, int):
+            if isinstance(self.seed, int):
                 if self.seed < 0 or self.seed > 2 ** 32 - 1:
                     raise ValueError(
                         'seed must be an integer between 0 and 2**32-1,'

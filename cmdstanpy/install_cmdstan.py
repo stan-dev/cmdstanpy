@@ -9,8 +9,6 @@ import argparse
 import contextlib
 import os
 import platform
-import re
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -23,6 +21,7 @@ EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 @contextlib.contextmanager
 def pushd(new_dir):
+    """Acts like pushd/popd."""
     previous_dir = os.getcwd()
     os.chdir(new_dir)
     yield
@@ -30,6 +29,7 @@ def pushd(new_dir):
 
 
 def usage():
+    """Print usage."""
     print(
         """Arguments:
         -v (--version) :CmdStan version
@@ -40,6 +40,7 @@ def usage():
 
 
 def install_version(cmdstan_version):
+    """Build specified CmdStan version."""
     with pushd(cmdstan_version):
         print('Building {} binaries'.format(cmdstan_version))
         make = os.getenv(
@@ -53,7 +54,7 @@ def install_version(cmdstan_version):
             stderr=subprocess.PIPE,
             env=os.environ,
         )
-        stdout, stderr = proc.communicate()
+        _, stderr = proc.communicate()
         if proc.returncode:
             print('Command "make build" failed')
             if stderr:
@@ -73,7 +74,7 @@ def install_version(cmdstan_version):
             stderr=subprocess.PIPE,
             env=os.environ,
         )
-        stdout, stderr = proc.communicate()
+        _, stderr = proc.communicate()
         if proc.returncode:
             print('Failed to compile example model bernoulli.stan')
             if stderr:
@@ -83,6 +84,7 @@ def install_version(cmdstan_version):
 
 
 def is_installed(cmdstan_version):
+    """Check if CmdStan is already installed."""
     if not os.path.exists(os.path.join(cmdstan_version, 'bin')):
         return False
     return os.path.exists(
@@ -93,6 +95,7 @@ def is_installed(cmdstan_version):
 
 
 def latest_version():
+    """Report most recent CmdStan verion installed."""
     for i in range(6):
         try:
             file_tmp, _ = urllib.request.urlretrieve(
@@ -115,6 +118,7 @@ def latest_version():
 
 
 def retrieve_latest_version(version):
+    """Download specified CmdStan version."""
     print('Downloading CmdStan version {}'.format(version))
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
@@ -144,7 +148,7 @@ def retrieve_latest_version(version):
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
         tar.extractall(target)
-    except Exception as err:
+    except Exception as err:     # pylint: disable=broad-except
         print('Failed to unpack download')
         print(err)
         sys.exit(3)
@@ -154,6 +158,7 @@ def retrieve_latest_version(version):
 
 
 def validate_dir(install_dir):
+    """Check that specified install directory exists, can write."""
     if not os.path.exists(install_dir):
         try:
             os.makedirs(install_dir)
@@ -164,7 +169,7 @@ def validate_dir(install_dir):
     else:
         if not os.path.isdir(install_dir):
             raise ValueError(
-                'File {} is not a directory: {}'.format(install_dir)
+                'File exists, should be a directory: {}'.format(install_dir)
             )
         try:
             with open('tmp_test_w', 'w') as fd:
@@ -177,6 +182,7 @@ def validate_dir(install_dir):
 
 
 def main():
+    """Main."""
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')

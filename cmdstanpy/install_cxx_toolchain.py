@@ -14,13 +14,10 @@ import argparse
 import contextlib
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
-import tarfile
 import urllib.request
-from pathlib import Path
 from time import sleep
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -29,6 +26,7 @@ IS_64BITS = sys.maxsize > 2 ** 32
 
 @contextlib.contextmanager
 def pushd(new_dir):
+    """Acts like pushd/popd."""
     previous_dir = os.getcwd()
     os.chdir(new_dir)
     yield
@@ -36,6 +34,7 @@ def pushd(new_dir):
 
 
 def usage():
+    """Print usage."""
     print(
         """Arguments:
         -v (--version) :CmdStan version
@@ -47,6 +46,7 @@ def usage():
 
 
 def get_config(dir, silent):
+    """Assemble config info."""
     config = []
     if platform.system() == 'Windows':
         _, dir = os.path.splitdrive(os.path.abspath(dir))
@@ -66,6 +66,7 @@ def get_config(dir, silent):
 
 
 def install_version(installation_dir, installation_file, version, silent):
+    """Install specified toolchain version."""
     with pushd('.'):
         print(
             'Installing the C++ toolchain: {}'.format(
@@ -86,7 +87,7 @@ def install_version(installation_dir, installation_file, version, silent):
             output = proc.stdout.readline().decode('utf-8').strip()
             if output:
                 print(output, flush=True)
-        stdout, stderr = proc.communicate()
+        _, stderr = proc.communicate()
         if proc.returncode:
             print('Installation failed: returncode={}'.format(proc.returncode))
             if stderr:
@@ -101,6 +102,7 @@ def install_version(installation_dir, installation_file, version, silent):
 
 
 def is_installed(toolchain_loc, version):
+    """Returns True is toolchain is installed."""
     if platform.system() == 'Windows':
         if version == '3.5':
             if not os.path.exists(os.path.join(toolchain_loc, 'bin')):
@@ -128,11 +130,14 @@ def is_installed(toolchain_loc, version):
 
 
 def latest_version():
+    """Windows version hardcoded to 3.5."""
     if platform.system() == 'Windows':
         return '3.5'
+    return ''
 
 
 def retrieve_toolchain(filename, url):
+    """Download toolchain from URL."""
     print('Downloading C++ toolchain: {}'.format(filename))
     for i in range(6):
         try:
@@ -150,6 +155,7 @@ def retrieve_toolchain(filename, url):
 
 
 def validate_dir(install_dir):
+    """Check that specified install directory exists, can write."""
     if not os.path.exists(install_dir):
         try:
             os.makedirs(install_dir)
@@ -160,7 +166,7 @@ def validate_dir(install_dir):
     else:
         if not os.path.isdir(install_dir):
             raise ValueError(
-                'File {} is not a directory: {}'.format(install_dir)
+                'File exists, should be a directory: {}'.format(install_dir)
             )
         try:
             with open('tmp_test_w', 'w') as fd:
@@ -173,6 +179,7 @@ def validate_dir(install_dir):
 
 
 def normalize_version(version):
+    """Return maj.min part of version string."""
     if platform.system() == 'Windows':
         if version in ['4', '40']:
             version = '4.0'
@@ -182,14 +189,17 @@ def normalize_version(version):
 
 
 def get_toolchain_name():
+    """Return toolchain name."""
     if platform.system() == 'Windows':
         return 'RTools'
+    return ''
 
 
 def get_url(version):
+    """Return URL for toolchain."""
     if platform.system() == 'Windows':
         if version == '4.0':
-
+            # pylint: disable=line-too-long
             if IS_64BITS:
                 url = 'https://cran.r-project.org/bin/windows/testing/rtools40-x86_64.exe'  # noqa: disable=E501
             else:
@@ -200,6 +210,7 @@ def get_url(version):
 
 
 def get_toolchain_version(name, version):
+    """Toolchain version."""
     root_folder = None
     toolchain_folder = None
     if platform.system() == 'Windows':
@@ -210,6 +221,7 @@ def get_toolchain_version(name, version):
 
 
 def main():
+    """Main."""
     if platform.system() not in {'Windows'}:
         msg = (
             'Download for the C++ toolchain'

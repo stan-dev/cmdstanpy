@@ -11,8 +11,6 @@ try:
 except ImportError:
     import json
 import math
-import numpy as np
-import pandas as pd
 import platform
 import re
 import subprocess
@@ -20,14 +18,19 @@ import shutil
 import tempfile
 import logging
 import sys
-
 from typing import Dict, TextIO, List, Union, Tuple
+
+import numpy as np
+import pandas as pd
+
+
 from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
 def get_logger():
+    """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
     if len(logger.handlers) == 0:
         logging.basicConfig(level=logging.INFO)
@@ -53,36 +56,37 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     return latest
 
 
-class MaybeDictToFilePath(object):
+class MaybeDictToFilePath():
+    """Context manager for json files."""
     def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
         self._unlink = [False] * len(objs)
         self._paths = [''] * len(objs)
         self._logger = logger or get_logger()
         i = 0
-        for o in objs:
-            if isinstance(o, dict):
+        for obj in objs:
+            if isinstance(obj, dict):
                 data_file = create_named_text_file(
                     dir=TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
                 if any(
                     not item
-                    for item in o
+                    for item in obj
                     if isinstance(item, (Sequence, np.ndarray))
                 ):
-                    rdump(data_file, o)
+                    rdump(data_file, obj)
                 else:
-                    jsondump(data_file, o)
+                    jsondump(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
-            elif isinstance(o, str):
-                if not os.path.exists(o):
-                    raise ValueError("File doesn't exist {}".format(o))
-                self._paths[i] = o
-            elif o is None:
+            elif isinstance(obj, str):
+                if not os.path.exists(obj):
+                    raise ValueError("File doesn't exist {}".format(obj))
+                self._paths[i] = obj
+            elif obj is None:
                 self._paths[i] = None
-            elif i == 1 and isinstance(o, (Integral, Real)):
-                self._paths[i] = o
+            elif i == 1 and isinstance(obj, (Integral, Real)):
+                self._paths[i] = obj
             else:
                 raise ValueError('data must be string or dict')
             i += 1
@@ -113,7 +117,8 @@ def validate_cmdstan_path(path: str) -> None:
         )
 
 
-class TemporaryCopiedFile(object):
+class TemporaryCopiedFile():
+    """Context manager for tmpfiles, handles spaces in filepath."""
     def __init__(self, file_path: str):
         self._path = None
         self._tmpdir = None
@@ -170,9 +175,9 @@ def cmdstan_path() -> str:
     """
     Validate, then return CmdStan directory path.
     """
-    cmdstan_path = ''
+    cmdstan = ''
     if 'CMDSTAN' in os.environ:
-        cmdstan_path = os.environ['CMDSTAN']
+        cmdstan = os.environ['CMDSTAN']
     else:
         cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
         if not os.path.exists(cmdstan_dir):
@@ -186,9 +191,9 @@ def cmdstan_path() -> str:
                 'no CmdStan installation found, '
                 'run command line script "install_cmdstan"'
             )
-        cmdstan_path = os.path.join(cmdstan_dir, latest_cmdstan)
-    validate_cmdstan_path(cmdstan_path)
-    return cmdstan_path
+        cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
+    validate_cmdstan_path(cmdstan)
+    return cmdstan
 
 
 def cxx_toolchain_path(version: str = None) -> Tuple[str]:
@@ -217,14 +222,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools35 on %',
+                        'Found invalid installion for RTools35 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools35 on %', toolchain_root
+                    'Found invalid installion for RTools35 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
         elif os.path.exists(os.path.join(toolchain_root, 'mingw64')):
@@ -239,14 +245,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools40 on %',
+                        'Found invalid installion for RTools40 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools40 on %', toolchain_root
+                    'Found invalid installion for RTools40 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
     else:
@@ -275,14 +282,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools35 on %',
+                        'Found invalid installion for RTools35 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools35 on %', toolchain_root
+                    'Found invalid installion for RTools35 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
         if (
@@ -300,14 +308,15 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools40 on %',
+                        'Found invalid installion for RTools40 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools40 on %', toolchain_root
+                    'Found invalid installion for RTools40 on %s',
+                    toolchain_root
                 )
                 toolchain_root = ''
     if not toolchain_root:
@@ -365,8 +374,8 @@ def rload(fname: str) -> dict:
        scalar, vector, matrix, and array data types.
     """
     data_dict = {}
-    with open(fname, 'r') as fp:
-        lines = fp.readlines()
+    with open(fname, 'r') as fd:
+        lines = fd.readlines()
     # Variable data may span multiple lines, parse accordingly
     idx = 0
     while idx < len(lines) and '<-' not in lines[idx]:
@@ -441,13 +450,13 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     """Process sampler stan_csv output file line by line."""
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
         if not is_fixed_param:
-            lineno = scan_warmup(fp, dict, lineno)
-            lineno = scan_metric(fp, dict, lineno)
-        lineno = scan_draws(fp, dict, lineno)
+            lineno = scan_warmup(fd, dict, lineno)
+            lineno = scan_metric(fd, dict, lineno)
+        lineno = scan_draws(fd, dict, lineno)
     return dict
 
 
@@ -455,10 +464,10 @@ def scan_optimize_csv(path: str) -> Dict:
     """Process optimizer stan_csv output file line by line."""
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
-        line = fp.readline().lstrip(' #\t')
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
+        line = fd.readline().lstrip(' #\t')
         xs = line.split(',')
         mle = [float(x) for x in xs]
         dict['mle'] = mle
@@ -471,9 +480,9 @@ def scan_generated_quantities_csv(path: str) -> Dict:
     """
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
     return dict
 
 
@@ -481,10 +490,10 @@ def scan_variational_csv(path: str) -> Dict:
     """Process advi stan_csv output file line by line."""
     dict = {}
     lineno = 0
-    with open(path, 'r') as fp:
-        lineno = scan_config(fp, dict, lineno)
-        lineno = scan_column_names(fp, dict, lineno)
-        line = fp.readline().lstrip(' #\t')
+    with open(path, 'r') as fd:
+        lineno = scan_config(fd, dict, lineno)
+        lineno = scan_column_names(fd, dict, lineno)
+        line = fd.readline().lstrip(' #\t')
         lineno += 1
         if not line.startswith('Stepsize adaptation complete.'):
             raise ValueError(
@@ -492,7 +501,7 @@ def scan_variational_csv(path: str) -> Dict:
                     lineno, line
                 )
             )
-        line = fp.readline().lstrip(' #\t\n')
+        line = fd.readline().lstrip(' #\t\n')
         lineno += 1
         if not line.startswith('eta = 1'):
             raise ValueError(
@@ -500,7 +509,7 @@ def scan_variational_csv(path: str) -> Dict:
                     lineno, line
                 )
             )
-        line = fp.readline().lstrip(' #\t\n')
+        line = fd.readline().lstrip(' #\t\n')
         lineno += 1
         xs = line.split(',')
         variational_mean = [float(x) for x in xs]
@@ -511,13 +520,13 @@ def scan_variational_csv(path: str) -> Dict:
     return dict
 
 
-def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan initial stan_csv file comments lines and
     save non-default configuration information to config_dict.
     """
-    cur_pos = fp.tell()
-    line = fp.readline().strip()
+    cur_pos = fd.tell()
+    line = fd.readline().strip()
     while len(line) > 0 and line.startswith('#'):
         lineno += 1
         if not line.endswith('(Default)'):
@@ -538,33 +547,33 @@ def scan_config(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                         except ValueError:
                             val = raw_val
                     config_dict[key_val[0].strip()] = val
-        cur_pos = fp.tell()
-        line = fp.readline().strip()
-    fp.seek(cur_pos)
+        cur_pos = fd.tell()
+        line = fd.readline().strip()
+    fd.seek(cur_pos)
     return lineno
 
 
-def scan_warmup(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_warmup(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Check warmup iterations, if any.
     """
     if 'save_warmup' not in config_dict:
         return lineno
-    cur_pos = fp.tell()
-    line = fp.readline().strip()
+    cur_pos = fd.tell()
+    line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
-        cur_pos = fp.tell()
-        line = fp.readline().strip()
-    fp.seek(cur_pos)
+        cur_pos = fd.tell()
+        line = fd.readline().strip()
+    fd.seek(cur_pos)
     return lineno
 
 
-def scan_column_names(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Process columns header, add to config_dict as 'column_names'
     """
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     names = line.split(',')
     config_dict['column_names'] = tuple(names)
@@ -572,7 +581,7 @@ def scan_column_names(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan stepsize, metric from  stan_csv file comment lines,
     set config_dict entries 'metric' and 'num_params'
@@ -580,13 +589,13 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
     if 'metric' not in config_dict:
         config_dict['metric'] = 'diag_e'
     metric = config_dict['metric']
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     if not line == '# Adaptation terminated':
         raise ValueError(
             'line {}: expecting metric, found:\n\t "{}"'.format(lineno, line)
         )
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     label, stepsize = line.split('=')
     if not label.startswith('# Step size'):
@@ -600,7 +609,7 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         raise ValueError(
             'line {}: invalid stepsize: {}'.format(lineno, stepsize)
         )
-    line = fp.readline().strip()
+    line = fd.readline().strip()
     lineno += 1
     if not (
         (
@@ -615,15 +624,15 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
             'line {}: invalid or missing mass matrix '
             'specification'.format(lineno)
         )
-    line = fp.readline().lstrip(' #\t')
+    line = fd.readline().lstrip(' #\t')
     lineno += 1
     num_params = len(line.split(','))
     config_dict['num_params'] = num_params
     if metric == 'diag_e':
         return lineno
     else:
-        for i in range(1, num_params):
-            line = fp.readline().lstrip(' #\t')
+        for _ in range(1, num_params):
+            line = fd.readline().lstrip(' #\t')
             lineno += 1
             if len(line.split(',')) != num_params:
                 raise ValueError(
@@ -633,14 +642,14 @@ def scan_metric(fp: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_draws(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Parse draws, check elements per draw, save num draws to config_dict.
     """
     draws_found = 0
     num_cols = len(config_dict['column_names'])
-    cur_pos = fp.tell()
-    line = fp.readline().strip()
+    cur_pos = fd.tell()
+    line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
         draws_found += 1
@@ -651,10 +660,10 @@ def scan_draws(fp: TextIO, config_dict: Dict, lineno: int) -> int:
                     lineno, num_cols, len(line.split(','))
                 )
             )
-        cur_pos = fp.tell()
-        line = fp.readline().strip()
+        cur_pos = fd.tell()
+        line = fd.readline().strip()
     config_dict['draws'] = draws_found
-    fp.seek(cur_pos)
+    fd.seek(cur_pos)
     return lineno
 
 
@@ -702,7 +711,7 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     """
     Spawn process, print stdout/stderr to console.
-    Throws exception on non-zero returncode.
+    Throws RuntimeError on non-zero returncode.
     """
     if logger:
         logger.debug('cmd: %s', cmd)
@@ -717,7 +726,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if proc.returncode:
         if stderr:
             msg = 'ERROR\n {} '.format(stderr.decode('utf-8').strip())
-        raise Exception(msg)
+        raise RuntimeError(msg)
     if stdout:
         return stdout.decode('utf-8').strip()
     return None
@@ -751,6 +760,7 @@ def windows_short_path(path: str) -> str:
     import ctypes
     from ctypes import wintypes
 
+    # pylint: disable=invalid-name
     _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
     _GetShortPathNameW.argtypes = [
         wintypes.LPCWSTR,
