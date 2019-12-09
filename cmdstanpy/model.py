@@ -73,7 +73,7 @@ class CmdStanModel:
                     'must specify Stan source or executable program file'
                 )
         else:
-            self._stan_file =  os.path.realpath(os.path.expanduser(stan_file))
+            self._stan_file = os.path.realpath(os.path.expanduser(stan_file))
             if not os.path.exists(self._stan_file):
                 raise ValueError('no such file {}'.format(self._stan_file))
             _, filename = os.path.split(stan_file)
@@ -641,11 +641,7 @@ class CmdStanModel:
                 method_args=sampler_args,
                 refresh=refresh,
             )
-            print(args)
-
             runset = RunSet(args=args, chains=chains)
-            print(runset)
-            
             pbar = None
             pbar_dict = {}
             with ThreadPoolExecutor(max_workers=cores) as executor:
