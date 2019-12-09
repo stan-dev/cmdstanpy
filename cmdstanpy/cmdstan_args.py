@@ -518,6 +518,8 @@ class CmdStanArgs:
                     )
 
         if self.output_dir is not None:
+            self.output_dir = os.path.realpath(os.path.expanduser(
+                self.output_dir))
             if not os.path.exists(os.path.dirname(self.output_dir)):
                 raise ValueError(
                     'invalid path for output files, no such dir: {}'.format(

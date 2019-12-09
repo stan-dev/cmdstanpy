@@ -156,7 +156,7 @@ class RunSet:
         :param dir: directory path
         """
         if dir is None:
-            dir = '.'
+            dir = os.path.realpath('.')
         test_path = os.path.join(dir, str(time()))
         try:
             os.makedirs(dir, exist_ok=True)

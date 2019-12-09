@@ -63,7 +63,7 @@ class CmdStanModel:
         """Initialize object."""
         self._stan_file = stan_file
         self._name = None
-        self._exe_file = None
+        self._exe_file = exe_file
         self._include_paths = None
         self._logger = logger or get_logger()
 
@@ -73,7 +73,8 @@ class CmdStanModel:
                     'must specify Stan source or executable program file'
                 )
         else:
-            if not os.path.exists(stan_file):
+            self._stan_file =  os.path.realpath(os.path.expanduser(stan_file))
+            if not os.path.exists(self._stan_file):
                 raise ValueError('no such file {}'.format(self._stan_file))
             _, filename = os.path.split(stan_file)
             if len(filename) < 6 or not filename.endswith('.stan'):
@@ -81,7 +82,6 @@ class CmdStanModel:
                     'invalid stan filename {}'.format(self._stan_file)
                 )
             self._name, _ = os.path.splitext(filename)
-            self._exe_file = None
             # if program has #includes, search program dir
             with open(stan_file, 'r') as fd:
                 program = fd.read()
@@ -93,9 +93,10 @@ class CmdStanModel:
                     include_paths.append(path)
 
         if exe_file is not None:
-            if not os.path.exists(exe_file):
-                raise ValueError('no such file {}'.format(exe_file))
-            _, exename = os.path.split(exe_file)
+            self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
+            if not os.path.exists(self._exe_file):
+                raise ValueError('no such file {}'.format(self._exe_file))
+            _, exename = os.path.split(self._exe_file)
             if self._name is None:
                 self._name, _ = os.path.splitext(exename)
             else:
@@ -105,7 +106,6 @@ class CmdStanModel:
                         ' executable, expecting basename: {}'
                         ' found: {}'.format(self._name, exename)
                     )
-            self._exe_file = exe_file
 
         if include_paths is not None:
             bad_paths = [d for d in include_paths if not os.path.exists(d)]
@@ -641,9 +641,11 @@ class CmdStanModel:
                 method_args=sampler_args,
                 refresh=refresh,
             )
+            print(args)
 
             runset = RunSet(args=args, chains=chains)
-
+            print(runset)
+            
             pbar = None
             pbar_dict = {}
             with ThreadPoolExecutor(max_workers=cores) as executor:
