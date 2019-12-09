@@ -41,5 +41,41 @@ class RunSetTest(unittest.TestCase):
         self.assertTrue(runset._check_retcodes())
 
 
+    def test_output_filenames(self):
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        sampler_args = SamplerArgs()
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            data=jdata,
+            method_args=sampler_args,
+        )
+        runset = RunSet(args=cmdstan_args, chains=4)
+        self.assertIn('bernoulli-', runset._csv_files[0])
+        self.assertIn('-1-', runset._csv_files[0])
+        self.assertIn('-4-', runset._csv_files[3])
+
+
+
+    def test_commands(self):
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        sampler_args = SamplerArgs()
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            data=jdata,
+            method_args=sampler_args,
+        )
+        runset = RunSet(args=cmdstan_args, chains=4)
+        self.assertIn('id=1', runset._cmds[0])
+        self.assertIn('id=4', runset._cmds[3])
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

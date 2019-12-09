@@ -3,6 +3,7 @@
 import os
 import unittest
 
+from cmdstanpy import TMPDIR
 from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
@@ -476,12 +477,24 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaises(ValueError):
-            # bad output basename
+            # bad output_dir name
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
-                output_basename='no/such/path/to.file',
+                output_dir= 'no/such/path',
+                method_args=sampler_args,
+            )
+
+        with self.assertRaises(ValueError):
+            # can't write to output_dir - valid for all platforms?
+            read_only = os.path.join(TMPDIR, 'read_only')
+            os.mkdir(read_only, mode=0o444)
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                output_dir= read_only,
                 method_args=sampler_args,
             )
 

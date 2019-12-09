@@ -2,6 +2,7 @@
 CmdStan arguments
 """
 import os
+from time import time
 from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
@@ -470,7 +471,7 @@ class CmdStanArgs():
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
         inits: Union[int, float, str, List[str]] = None,
-        output_basename: str = None,
+        output_dir: str = None,
         refresh: str = None,
     ) -> None:
         """Initialize object."""
@@ -480,7 +481,7 @@ class CmdStanArgs():
         self.data = data
         self.seed = seed
         self.inits = inits
-        self.output_basename = output_basename
+        self.output_dir = output_dir
         self.refresh = refresh
         self.method_args = method_args
         if isinstance(method_args, SamplerArgs):
@@ -515,24 +516,24 @@ class CmdStanArgs():
                         'invalid chain_id {}'.format(self.chain_ids[i])
                     )
 
-        if self.output_basename is not None:
-            if not os.path.exists(os.path.dirname(self.output_basename)):
+        if self.output_dir is not None:
+            if not os.path.exists(os.path.dirname(self.output_dir)):
                 raise ValueError(
-                    'invalid path for output files: {}'.format(
-                        self.output_basename
+                    'invalid path for output files, no such dir: {}'.format(
+                        self.output_dir
                     )
                 )
             try:
-                with open(self.output_basename, 'w+') as fd:
+                testpath = os.path.join(self.output_dir, str(time()))
+                with open(testpath, 'w+') as fd:
                     pass
-                os.remove(self.output_basename)  # cleanup
+                os.remove(testpath)  # cleanup
             except Exception:
                 raise ValueError(
-                    'invalid path for output files: {}'.format(
-                        self.output_basename
+                    'invalid path for output files, cannot write to dir: {}'.format(
+                        self.output_dir
                     )
                 )
-            self.output_basename, _ = os.path.splitext(self.output_basename)
 
         if self.seed is None:
             rng = RandomState()

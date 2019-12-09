@@ -253,7 +253,7 @@ class CmdStanModel():
                         do_command(cmd, cmdstan_path(), logger=self._logger)
                     except RuntimeError as e:
                         self._logger.error(
-                            'file %s, execption %s', stan_file, repr(e)
+                            'file %s, exception %s', stan_file, repr(e)
                             )
                         compilation_failed = True
 
@@ -290,13 +290,32 @@ class CmdStanModel():
         data: Union[Dict, str] = None,
         seed: int = None,
         inits: Union[Dict, float, str] = None,
-        csv_basename: str = None,
+        output_dir: str = None,
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
     ) -> CmdStanMLE:
         """
-        Wrapper for optimize call
+        Run the specified CmdStan optimize algorithm to produce a
+        penalized maximum likelihood estimate of the model parameters.
+
+        This function validates the specified configuration, composes a call to
+        the CmdStan ``optimize`` method and spawns one subprocess to run the
+        optimizer and waits for it to run to completion.
+        Unspecified arguments are not included in the call to CmdStan, i.e.,
+        those arguments will have CmdStan default values.
+
+        The ``CmdStanMLE`` object records the command, the return code,
+        and the paths to the optimize method output csv and console files.
+        The output files are written either to a specified output directory
+        or to a temporary directory which is deleted upon session exit.
+
+        Output filenames are composed of the model name, a timestamp
+        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
+        written to the temporary directory contain an additional 8-character
+        random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
 
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
@@ -308,9 +327,9 @@ class CmdStanModel():
             is used to generate a seed which will be used for all chains.
 
         :param inits:  Specifies how the sampler initializes parameter values.
-            Initializiation is either uniform random on a range centered on 0,
+            Initialization is either uniform random on a range centered on 0,
             exactly 0, or a dictionary or file of initial values for some or
-            all parameters in the model.  The default initialization behavoir
+            all parameters in the model.  The default initialization behavior
             will initialize all parameter values on range [-2, 2] on the
             _unconstrained_ support.  If the expected parameter values are
             too far from this range, this option may improve estimation.
@@ -321,10 +340,9 @@ class CmdStanModel():
             * dictionary - pairs parameter name : initial value.
             * string - pathname to a JSON or Rdump data file.
 
-        :param csv_basename:  A path or file name which will be used as the
-            basename for the CmdStan output files.  The csv output files
-            are written to file ``<basename>-0.csv`` and the console output
-            and error messages are written to file ``<basename>-0.txt``.
+        :param output_dir:  Name of the directory in which the CmdStan output
+            files are saved.  If unspecified, files will be written to a
+            temporary directory which is deleted upon session exit.
 
         :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
 
@@ -346,7 +364,7 @@ class CmdStanModel():
                 data=_data,
                 seed=seed,
                 inits=_inits,
-                output_basename=csv_basename,
+                output_dir=output_dir,
                 method_args=optimize_args,
             )
 
@@ -383,7 +401,7 @@ class CmdStanModel():
         adapt_engaged: bool = True,
         adapt_delta: float = None,
         fixed_param: bool = False,
-        csv_basename: str = None,
+        output_dir: str = None,
         show_progress: Union[bool, str] = False,
     ) -> CmdStanMCMC:
         """
@@ -398,7 +416,17 @@ class CmdStanModel():
 
         For each chain, the ``CmdStanMCMC`` object records the command,
         the return code, the sampler output file paths, and the corresponding
-        subprocess console outputs, if any.
+        console outputs, if any. The output files are written either to a 
+        specified output directory or to a temporary directory which is deleted
+        upon session exit.
+
+        The output filenames are composed of the model name, a timestamp
+        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
+        written to the temporary directory contain an additional 8-character
+        random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
+
 
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
@@ -423,9 +451,9 @@ class CmdStanModel():
             chain ids are numbered sequentially starting from 1.
 
         :param inits: Specifies how the sampler initializes parameter values.
-            Initializiation is either uniform random on a range centered on 0,
+            Initialization is either uniform random on a range centered on 0,
             exactly 0, or a dictionary or file of initial values for some or all
-            parameters in the model.  The default initialization behavoir will
+            parameters in the model.  The default initialization behavior will
             initialize all parameter values on range [-2, 2] on the
             _unconstrained_ support.  If the expected parameter values are
             too far from this range, this option may improve adaptation.
@@ -490,11 +518,9 @@ class CmdStanModel():
             generated quantities block.  This option must be used when the
             parameters block is empty.  Default value is False.
 
-        :param csv_basename: A path or file name which will be used as the
-            basename for the sampler output files.  The csv output files
-            for each chain are written to file ``<basename>-<chain_id>.csv``
-            and the console output and error messages are written to file
-            ``<basename>-<chain_id>.txt``.
+        :param output_dir: Name of the directory to with the  CmdStan output
+            files are written. If unspecified, output files will be written
+            to a temporary directory which is deleted upon session exit.
 
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
@@ -607,7 +633,7 @@ class CmdStanModel():
                 data=_data,
                 seed=seed,
                 inits=_inits,
-                output_basename=csv_basename,
+                output_dir=output_dir,
                 method_args=sampler_args,
                 refresh=refresh,
             )
@@ -694,13 +720,28 @@ class CmdStanModel():
         data: Union[Dict, str] = None,
         mcmc_sample: Union[CmdStanMCMC, List[str]] = None,
         seed: int = None,
-        gq_csv_basename: str = None,
+        gq_output_dir: str = None,
     ) -> CmdStanGQ:
         """
-        Wrapper for generated quantities call.  Given a CmdStanMCMC object
-        containing a sample from the fitted model, along with the
-        corresponding dataset for that fit, run just the generated quantities
-        block of the model in order to get additional quantities of interest.
+        Run CmdStan's generate_quantities method which runs the generated
+        quantities block of a model given an existing sample.
+        
+        This function takes a CmdStanMCMC object and the dataset used to
+        generate that sample and calls to the CmdStan ``generate_quantities``
+        method to generate additional quantities of interest.
+
+        The ``CmdStanGQ`` object records the command, the return code,
+        and the paths to the generate method output csv and console files.
+        The output files are written either to a specified output directory
+        or to a temporary directory which is deleted upon session exit.
+
+        Output filenames are composed of the model name, a timestamp
+        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        the console messages, e.g. `bernoulli_ppc-201912081451-1.csv`. Output
+        files  written to the temporary directory contain an additional
+        8-character random string, e.g.
+        `bernoulli_ppc-201912081451-1-5nm6as7u.csv`.
 
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
@@ -719,11 +760,9 @@ class CmdStanModel():
             this will not reproduce results from the sample method given
             the same inputs because the RNG will be in a different state.*
 
-        :param gq_csv_basename: A path or file name which will be used as the
-            basename for the sampler output files.  The csv output files
-            for each chain are written to file ``<basename>-<chain_id>.csv``
-            and the console output and error messages are written to file
-            ``<basename>-<chain_id>.txt``.
+        :param gq_output_dir:  Name of the directory in which the CmdStan output
+            files are saved.  If unspecified, files will be written to a
+            temporary directory which is deleted upon session exit.
 
         :return: CmdStanGQ object
         """
@@ -776,7 +815,7 @@ class CmdStanModel():
                 chain_ids=[x + 1 for x in range(chains)],
                 data=_data,
                 seed=seed,
-                output_basename=gq_csv_basename,
+                output_dir=gq_output_dir,
                 method_args=generate_quantities_args,
             )
             runset = RunSet(args=args, chains=chains)
@@ -804,7 +843,7 @@ class CmdStanModel():
         data: Union[Dict, str] = None,
         seed: int = None,
         inits: float = None,
-        csv_basename: str = None,
+        output_dir: str = None,
         algorithm: str = None,
         iter: int = None,
         grad_samples: int = None,
@@ -819,6 +858,24 @@ class CmdStanModel():
         Run CmdStan's variational inference algorithm to approximate
         the posterior distribution of the model conditioned on the data.
 
+        This function validates the specified configuration, composes a call to
+        the CmdStan ``variational`` method and spawns one subprocess to run the
+        optimizer and waits for it to run to completion.
+        Unspecified arguments are not included in the call to CmdStan, i.e.,
+        those arguments will have CmdStan default values.
+
+        The ``CmdStanVB`` object records the command, the return code,
+        and the paths to the variational method output csv and console files.
+        The output files are written either to a specified output directory
+        or to a temporary directory which is deleted upon session exit.
+
+        Output filenames are composed of the model name, a timestamp
+        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
+        written to the temporary directory contain an additional 8-character
+        random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
+
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
@@ -829,14 +886,13 @@ class CmdStanModel():
             is used to generate a seed which will be used for all chains.
 
         :param inits:  Specifies how the sampler initializes parameter values.
-            Initializiation is uniform random on a range centered on ``0`` with
+            Initialization is uniform random on a range centered on ``0`` with
             default range of ``2``. Specifying a single number ``n > 0`` changes
             the initialization range to ``[-n, n]``.
 
-        :param csv_basename:  A path or file name which will be used as the
-            basename for the CmdStan output files.  The csv output files
-            are written to file ``<basename>-0.csv`` and the console output
-            and error messages are written to file ``<basename>-0.txt``.
+        :param output_dir:  Name of the directory in which the CmdStan output
+            files are saved.  If unspecified, files will be written to a
+            temporary directory which is deleted upon session exit.
 
         :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
 
@@ -852,7 +908,7 @@ class CmdStanModel():
 
         :param tol_rel_obj: Relative tolerance parameter for convergence.
 
-        :param eval_elbo: Number of interations between ELBO evaluations.
+        :param eval_elbo: Number of iterations between ELBO evaluations.
 
         :param output_samples: Number of approximate posterior output draws
             to save.
@@ -879,7 +935,7 @@ class CmdStanModel():
                 data=_data,
                 seed=seed,
                 inits=_inits,
-                output_basename=csv_basename,
+                output_dir=output_dir,
                 method_args=variational_args,
             )
 
@@ -914,7 +970,7 @@ class CmdStanModel():
         self, runset: RunSet, idx: int = 0, pbar: List[Any] = None
     ) -> None:
         """
-        Encapsulates call to cmdstan.
+        Encapsulates call to CmdStan.
         Spawn process, capture console output to file, record returncode.
         """
         cmd = runset.cmds[idx]

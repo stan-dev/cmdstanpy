@@ -6,6 +6,8 @@ import shutil
 import logging
 from typing import List, Tuple
 from collections import Counter, OrderedDict
+from datetime import datetime
+from time import time
 import numpy as np
 import pandas as pd
 
@@ -41,31 +43,35 @@ class RunSet():
                 'chains must be positive integer value, '
                 'found {}'.format(chains)
             )
+
+        self._retcodes = [-1 for _ in range(chains)]
+
+        # output and console messages are written to a text file:
+        # ``<model_name>-<YYYYMMDDHHMM>-<chain_id>.txt``
+        now = datetime.now()
+        now_str = now.strftime('%Y%m%d%H%M')
+        file_basename = '-'.join([args.model_name, now_str])
+        if args.output_dir is not None:
+            output_dir = args.output_dir
+        else:
+            output_dir = TMPDIR
+            
         self._csv_files = []
-        if args.output_basename is None:
-            csv_basename = 'stan-{}-{}'.format(args.model_name, args.method)
-            for i in range(chains):
-                fd_name = create_named_text_file(
-                    dir=TMPDIR,
-                    prefix='{}-{}-'.format(csv_basename, i + 1),
+        self._console_files = []
+        self._cmds = []
+        for i in range(chains):
+            if args.output_dir is None:
+                csv_file = create_named_text_file(
+                    dir=output_dir,
+                    prefix='{}-{}-'.format(file_basename, i + 1),
                     suffix='.csv',
                 )
-                self._csv_files.append(fd_name)
-        else:
-            for i in range(chains):
-                self._csv_files.append(
-                    '{}-{}.csv'.format(args.output_basename, i + 1)
-                )
-        self._console_files = []
-        for i in range(chains):
-            txt_file = ''.join(
-                [os.path.splitext(self._csv_files[i])[0], '.txt']
-            )
+            else:
+                csv_file = os.path.join(output_dir, '{}-{}.{}'.format(file_basename, i + 1, 'csv'))
+            self._csv_files.append(csv_file)
+            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
             self._console_files.append(txt_file)
-        self._cmds = [
-            args.compose_command(i, self._csv_files[i]) for i in range(chains)
-        ]
-        self._retcodes = [-1 for _ in range(chains)]
+            self._cmds.append(args.compose_command(i, csv_file))
 
     def __repr__(self) -> str:
         repr = 'RunSet: chains={}'.format(self._chains)
@@ -141,17 +147,15 @@ class RunSet():
         if not valid:
             raise Exception(msg)
 
-    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+    def save_csvfiles(self, dir: str = None) -> None:
         """
-        Moves csvfiles to specified directory using specified basename,
-        appending suffix '-<id>.csv' to each.
+        Moves csvfiles to specified directory.
 
         :param dir: directory path
-        :param basename:  base filename
         """
         if dir is None:
             dir = '.'
-        test_path = os.path.join(dir, '.{}-test.tmp'.format(basename))
+        test_path = os.path.join(dir, str(time()))
         try:
             os.makedirs(dir, exist_ok=True)
             with open(test_path, 'w') as fd:
@@ -165,7 +169,15 @@ class RunSet():
                 raise ValueError(
                     'cannot access csv file {}'.format(self._csv_files[i])
                 )
-            to_path = os.path.join(dir, '{}-{}.csv'.format(basename, i + 1))
+            
+            path, filename = os.path.split(self._csv_files[i])
+            if path == TMPDIR:   # cleanup tmpstr in filename
+                root, ext = os.path.splitext(filename)
+                rlist = root.split('-')
+                root = '-'.join(rlist[:-1])
+                filename = ''.join([root,ext])
+
+            to_path = os.path.join(dir, filename)
             if os.path.exists(to_path):
                 raise ValueError(
                     'file exists, not overwriting: {}'.format(to_path)
@@ -449,15 +461,14 @@ class CmdStanMCMC():
                     mask.append(name)
         return drawset[mask]
 
-    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+    def save_csvfiles(self, dir: str = None) -> None:
         """
         Moves csvfiles to specified directory using specified basename,
         appending suffix '-<id>.csv' to each.
 
         :param dir: directory path
-        :param basename:  base filename
         """
-        self.runset.save_csvfiles(dir, basename)
+        self.runset.save_csvfiles(dir)
 
 
 class CmdStanMLE():
@@ -521,15 +532,14 @@ class CmdStanMLE():
             self._set_mle_attrs(self.runset.csv_files[0])
         return OrderedDict(zip(self.column_names, self._mle))
 
-    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+    def save_csvfiles(self, dir: str = None) -> None:
         """
         Moves csvfiles to specified directory using specified basename,
         appending suffix '-<id>.csv' to each.
 
         :param dir: directory path
-        :param basename:  base filename
         """
-        self.runset.save_csvfiles(dir, basename)
+        self.runset.save_csvfiles(dir)
 
 
 class CmdStanGQ():
@@ -654,15 +664,14 @@ class CmdStanGQ():
             )
         self._generated_quantities = pd.concat(drawset_list).values
 
-    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+    def save_csvfiles(self, dir: str = None) -> None:
         """
         Moves csvfiles to specified directory using specified basename,
         appending suffix '-<id>.csv' to each.
 
         :param dir: directory path
-        :param basename:  base filename
         """
-        self.runset.save_csvfiles(dir, basename)
+        self.runset.save_csvfiles(dir)
 
 
 class CmdStanVB():
@@ -745,12 +754,11 @@ class CmdStanVB():
             self._set_variational_attrs(self.runset.csv_files[0])
         return self._variational_sample
 
-    def save_csvfiles(self, dir: str = None, basename: str = None) -> None:
+    def save_csvfiles(self, dir: str = None) -> None:
         """
         Moves csvfiles to specified directory using specified basename,
         appending suffix '-<id>.csv' to each.
 
         :param dir: directory path
-        :param basename:  base filename
         """
-        self.runset.save_csvfiles(dir, basename)
+        self.runset.save_csvfiles(dir)
