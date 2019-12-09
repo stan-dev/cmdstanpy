@@ -1,6 +1,7 @@
 """CmdStan argument tests"""
 
 import os
+import platform
 import unittest
 
 from cmdstanpy import TMPDIR
@@ -493,18 +494,18 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaises(ValueError):
-            # can't write to output_dir - valid for all platforms?
-            read_only = os.path.join(
-                os.path.dirname(os.path.dirname(TMPDIR)), 'read_only'
-            )
-            os.mkdir(read_only, mode=0o444)
-            CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe',
-                chain_ids=[1, 2, 3, 4],
-                output_dir=read_only,
-                method_args=sampler_args,
-            )
+            # testing this on *nix, MacOS
+            if platform.system() != 'Windows':
+                read_only = os.path.join(TMPDIR, 'read_only')
+                os.mkdir(read_only, mode=0o444)
+                CmdStanArgs(
+                    model_name='bernoulli',
+                    model_exe='bernoulli.exe',
+                    chain_ids=[1, 2, 3, 4],
+                    output_dir=read_only,
+                    method_args=sampler_args,
+                )
+            # todo: similar test Windows - set ACLS using windows apis
 
 
 class GenerateQuantitesTest(unittest.TestCase):
