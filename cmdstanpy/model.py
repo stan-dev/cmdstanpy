@@ -61,9 +61,9 @@ class CmdStanModel:
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
-        self._stan_file = stan_file
+        self._stan_file = None
         self._name = None
-        self._exe_file = exe_file
+        self._exe_file = None
         self._include_paths = None
         self._logger = logger or get_logger()
 
@@ -83,10 +83,10 @@ class CmdStanModel:
                 )
             self._name, _ = os.path.splitext(filename)
             # if program has #includes, search program dir
-            with open(stan_file, 'r') as fd:
+            with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
-                path, _ = os.path.split(stan_file)
+                path, _ = os.path.split(self._stan_file)
                 if include_paths is None:
                     include_paths = []
                 if path not in include_paths:
