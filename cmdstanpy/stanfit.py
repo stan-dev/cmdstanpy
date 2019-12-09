@@ -85,14 +85,17 @@ class RunSet:
                     diag_file = os.path.join(
                         output_dir,
                         '{}-diagnostic-{}.{}'.format(
-                            file_basename, i + 1, 'csv')
+                            file_basename, i + 1, 'csv'
+                        ),
                     )
                 self._diagnostic_files.append(diag_file)
-                self._cmds.append(args.compose_command(i, self._csv_files[i],
-                                                    self._diagnostic_files[i]))
+                self._cmds.append(
+                    args.compose_command(
+                        i, self._csv_files[i], self._diagnostic_files[i]
+                    )
+                )
             else:
                 self._cmds.append(args.compose_command(i, self._csv_files[i]))
-
 
     def __repr__(self) -> str:
         repr = 'RunSet: chains={}'.format(self._chains)
