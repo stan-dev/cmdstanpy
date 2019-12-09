@@ -46,11 +46,10 @@ and returns a ``CmdStanMCMC`` object:
 .. code-block:: python
 
     bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
-    bern_fit = bernoulli_model.sample(data=bernoulli_data, csv_basename='./bern')
+    bern_fit = bernoulli_model.sample(data=bernoulli_data, output_dir='.')
 
 By default, the ``sample`` command runs 4 sampler chains.
-The ``csv_basename`` argument specifies the path and filename prefix
-of the sampler output files.
+The ``output_dir`` argument specifies the path to the sampler output files.
 If no output file path is specified, the sampler outputs
 are written to a temporary directory which is deleted
 when the current Python session is terminated.
@@ -138,7 +137,7 @@ and prints the output to the console.
 
 By default, CmdStanPy will save all CmdStan outputs in a temporary
 directory which is deleted when the Python session exits.
-In particular, unless the ``csv_basename`` argument to the ``sample``
+In particular, unless the ``output_dir`` argument to the ``sample``
 function is overtly specified, all the csv output files will be written into
 this temporary directory and then when the session exits.
 The ``save_csvfiles`` function moves the CmdStan csv output files

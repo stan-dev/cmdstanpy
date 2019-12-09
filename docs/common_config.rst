@@ -5,5 +5,5 @@
 
 - ``inits``:  Specifies how the sampler initializes parameter values.
             
-- ``csv_basename``:  A path or file name which will be used as the basename for the CmdStan output files.
+- ``output_dir``:  A path or file name which will be used as the basename for the CmdStan output files.
 
