@@ -54,6 +54,18 @@ If no output file path is specified, the sampler outputs
 are written to a temporary directory which is deleted
 when the current Python session is terminated.
 
+The ``CmdStanMLE`` object records the command, the return code,
+and the paths to the optimize method output csv and console files.
+The output files are written either to a specified output directory
+or to a temporary directory which is deleted upon session exit.
+
+Output filenames are composed of the model name, a timestamp
+in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+filetype suffix, either '.csv' for the CmdStan output or '.txt' for
+the console messages, e.g. ``bernoulli-201912081451-1.csv``. Output files
+written to the temporary directory contain an additional 8-character
+random string, e.g. ``bernoulli-201912081451-1-5nm6as7u.csv``.
+
 
 Access the sample
 ^^^^^^^^^^^^^^^^^
@@ -135,17 +147,14 @@ and prints the output to the console.
 
     bern_fit.diagnose()
 
-By default, CmdStanPy will save all CmdStan outputs in a temporary
-directory which is deleted when the Python session exits.
-In particular, unless the ``output_dir`` argument to the ``sample``
-function is overtly specified, all the csv output files will be written into
-this temporary directory and then when the session exits.
+The sampler output files are written to a temporary directory which
+is deleted upon session exit unless the ``output_dir`` argument is specified.
 The ``save_csvfiles`` function moves the CmdStan csv output files
-to the specified location, renaming them using a specified basename.
+to a specified directory without having to re-run the sampler.
 
 .. code-block:: python
 
-    bern_fit.save_csvfiles(dir='some/path', basename='descriptive-name')
+    bern_fit.save_csvfiles(dir='some/path')
 
 .. comment
   Progress bar
