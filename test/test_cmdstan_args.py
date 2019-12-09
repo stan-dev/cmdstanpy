@@ -494,7 +494,9 @@ class CmdStanArgsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             # can't write to output_dir - valid for all platforms?
-            read_only = os.path.join(os.path.dirname(os.path.dirname(TMPDIR)), 'read_only')
+            read_only = os.path.join(
+                os.path.dirname(os.path.dirname(TMPDIR)), 'read_only'
+            )
             os.mkdir(read_only, mode=0o444)
             CmdStanArgs(
                 model_name='bernoulli',
