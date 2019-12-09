@@ -57,6 +57,7 @@ class RunSet:
             output_dir = TMPDIR
 
         self._csv_files = []
+        self._diagnostic_files = [None for _ in range(chains)]
         self._console_files = []
         self._cmds = []
         for i in range(chains):
@@ -73,7 +74,25 @@ class RunSet:
             self._csv_files.append(csv_file)
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
             self._console_files.append(txt_file)
-            self._cmds.append(args.compose_command(i, csv_file))
+            if args.save_diagnostics:
+                if args.output_dir is None:
+                    diag_file = create_named_text_file(
+                        dir=TMPDIR,
+                        prefix='{}-diagnostic-{}-'.format(file_basename, i + 1),
+                        suffix='.csv',
+                    )
+                else:
+                    diag_file = os.path.join(
+                        output_dir,
+                        '{}-diagnostic-{}.{}'.format(
+                            file_basename, i + 1, 'csv')
+                    )
+                self._diagnostic_files.append(diag_file)
+                self._cmds.append(args.compose_command(i, self._csv_files[i],
+                                                    self._diagnostic_files[i]))
+            else:
+                self._cmds.append(args.compose_command(i, self._csv_files[i])
+
 
     def __repr__(self) -> str:
         repr = 'RunSet: chains={}'.format(self._chains)
@@ -123,6 +142,13 @@ class RunSet:
             if self._retcodes[i] != 0:
                 return False
         return True
+
+    @property
+    def diagnostic_files(self) -> List[str]:
+        """
+        List of paths to CmdStan diagnostic output files.
+        """
+        return self._diagnostic_files
 
     def _retcode(self, idx: int) -> int:
         """Get retcode for chain[idx]."""
@@ -315,7 +341,10 @@ class CmdStanMCMC:
                     self.runset.csv_files[i], self._is_fixed_param
                 )
                 for key in dzero:
-                    if key != 'id' and dzero[key] != drest[key]:
+                    if (
+                        key not in ['id', 'diagnostic_file']
+                        and dzero[key] != drest[key]
+                    ):
                         raise ValueError(
                             'csv file header mismatch, '
                             'file {}, key {} is {}, expected {}'.format(

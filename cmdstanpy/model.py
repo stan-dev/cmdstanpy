@@ -295,6 +295,7 @@ class CmdStanModel:
         seed: int = None,
         inits: Union[Dict, float, str] = None,
         output_dir: str = None,
+        save_diagnostics: bool = True,
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
@@ -348,6 +349,10 @@ class CmdStanModel:
             files are saved.  If unspecified, files will be written to a
             temporary directory which is deleted upon session exit.
 
+        :param save_diagnostics: Whether or not to save diagnostics. If True,
+            csv output files are written to ``<basename>-diagnostic-0.csv.``,
+            where ``<basename>`` is set with ``csv_basename``.
+
         :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
 
         :param init_alpha: Line search step size for first iteration
@@ -369,6 +374,7 @@ class CmdStanModel:
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
+                save_diagnostics=save_diagnostics,
                 method_args=optimize_args,
             )
 
@@ -406,7 +412,8 @@ class CmdStanModel:
         adapt_delta: float = None,
         fixed_param: bool = False,
         output_dir: str = None,
-        show_progress: Union[bool, str] = False,
+        save_diagnostics: bool = False,
+        show_progress: Union[bool, str] = False
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -526,6 +533,11 @@ class CmdStanModel:
             files are written. If unspecified, output files will be written
             to a temporary directory which is deleted upon session exit.
 
+        :param save_diagnostics: Whether or not to save diagnostics. If True,
+            csv output files are written to
+            ``<basename>-diagnostic-<chain_id>.csv.``, where ``<basename>``
+            is set with ``csv_basename``.
+
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
@@ -638,6 +650,7 @@ class CmdStanModel:
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
+                save_diagnostics=save_diagnostics,
                 method_args=sampler_args,
                 refresh=refresh,
             )
@@ -847,6 +860,7 @@ class CmdStanModel:
         seed: int = None,
         inits: float = None,
         output_dir: str = None,
+        save_diagnostics: bool = False,
         algorithm: str = None,
         iter: int = None,
         grad_samples: int = None,
@@ -897,6 +911,11 @@ class CmdStanModel:
             files are saved.  If unspecified, files will be written to a
             temporary directory which is deleted upon session exit.
 
+        :param save_diagnostics: Whether or not to save diagnostics. If True,
+            csv output files are written to
+            ``<basename>-diagnostic-<chain_id>.csv.``, where ``<basename>``
+            is set with ``csv_basename``.
+
         :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
 
         :param iter: Maximum number of ADVI iterations.
@@ -939,6 +958,7 @@ class CmdStanModel:
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
+                save_diagnostics=save_diagnostics,
                 method_args=variational_args,
             )
 

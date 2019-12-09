@@ -51,6 +51,7 @@ class SamplerArgs:
         self.adapt_engaged = adapt_engaged
         self.adapt_delta = adapt_delta
         self.fixed_param = fixed_param
+        self.diagnostic_file = None
 
     def validate(self, chains: int) -> None:
         """
@@ -473,6 +474,7 @@ class CmdStanArgs:
         seed: Union[int, List[int]] = None,
         inits: Union[int, float, str, List[str]] = None,
         output_dir: str = None,
+        save_diagnostics: bool = False,
         refresh: str = None,
     ) -> None:
         """Initialize object."""
@@ -483,6 +485,7 @@ class CmdStanArgs:
         self.seed = seed
         self.inits = inits
         self.output_dir = output_dir
+        self.save_diagnostics = save_diagnostics
         self.refresh = refresh
         self.method_args = method_args
         if isinstance(method_args, SamplerArgs):
@@ -616,7 +619,8 @@ class CmdStanArgs:
                             'no such file {}'.format(self.inits[i])
                         )
 
-    def compose_command(self, idx: int, csv_file: str) -> str:
+    def compose_command(self, idx: int, csv_file: str,
+                        diagnostic_file: str = None) -> str:
         """
         Compose CmdStan command for non-default arguments.
         """
@@ -650,6 +654,8 @@ class CmdStanArgs:
                 cmd.append('init={}'.format(self.inits[idx]))
         cmd.append('output')
         cmd.append('file={}'.format(csv_file))
+        if diagnostic_file is not None:
+            cmd.append('diagnostic_file={}'.format(diagnostic_file))
         if self.refresh is not None:
             cmd.append('refresh={}'.format(self.refresh))
         cmd = self.method_args.compose(idx, cmd)
