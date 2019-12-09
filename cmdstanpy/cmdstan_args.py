@@ -532,7 +532,7 @@ class CmdStanArgs:
             except Exception:
                 raise ValueError(
                     'invalid path for output files, '
-                    'cannot write to dir: {}'.format( self.output_dir)
+                    'cannot write to dir: {}'.format(self.output_dir)
                 )
 
         if self.seed is None:
