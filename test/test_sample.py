@@ -501,7 +501,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         with self.assertRaisesRegex(Exception, 'Exception'):
             runset._check_console_msgs()
 
-
         # csv file headers inconsistent
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-1.csv'),

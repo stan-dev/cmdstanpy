@@ -40,7 +40,6 @@ class RunSetTest(unittest.TestCase):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
 
-
     def test_output_filenames(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -57,8 +56,6 @@ class RunSetTest(unittest.TestCase):
         self.assertIn('-1-', runset._csv_files[0])
         self.assertIn('-4-', runset._csv_files[3])
 
-
-
     def test_commands(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -73,8 +70,6 @@ class RunSetTest(unittest.TestCase):
         runset = RunSet(args=cmdstan_args, chains=4)
         self.assertIn('id=1', runset._cmds[0])
         self.assertIn('id=4', runset._cmds[3])
-
-
 
 
 if __name__ == '__main__':
