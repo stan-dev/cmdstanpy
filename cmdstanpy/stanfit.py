@@ -458,8 +458,6 @@ class CmdStanMCMC:
         + Low E-BFMI values (sampler transitions HMC potential energy)
         + Low effective sample sizes
         + High R-hat values
-
-        :return str empty if no problems found
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         cmd = [cmd_path] + self.runset.csv_files
