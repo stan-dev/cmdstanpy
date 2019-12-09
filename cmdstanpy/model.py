@@ -316,7 +316,7 @@ class CmdStanModel:
 
         Output filenames are composed of the model name, a timestamp
         in the form YYYYMMDDhhmm and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
         written to the temporary directory contain an additional 8-character
         random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
@@ -420,13 +420,13 @@ class CmdStanModel:
 
         For each chain, the ``CmdStanMCMC`` object records the command,
         the return code, the sampler output file paths, and the corresponding
-        console outputs, if any. The output files are written either to a 
+        console outputs, if any. The output files are written either to a
         specified output directory or to a temporary directory which is deleted
         upon session exit.
 
         The output filenames are composed of the model name, a timestamp
         in the form YYYYMMDDhhmm and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
         written to the temporary directory contain an additional 8-character
         random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
@@ -729,7 +729,7 @@ class CmdStanModel:
         """
         Run CmdStan's generate_quantities method which runs the generated
         quantities block of a model given an existing sample.
-        
+
         This function takes a CmdStanMCMC object and the dataset used to
         generate that sample and calls to the CmdStan ``generate_quantities``
         method to generate additional quantities of interest.
@@ -741,7 +741,7 @@ class CmdStanModel:
 
         Output filenames are composed of the model name, a timestamp
         in the form YYYYMMDDhhmm and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli_ppc-201912081451-1.csv`. Output
         files  written to the temporary directory contain an additional
         8-character random string, e.g.
@@ -876,7 +876,7 @@ class CmdStanModel:
 
         Output filenames are composed of the model name, a timestamp
         in the form YYYYMMDDhhmm and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for 
+        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
         written to the temporary directory contain an additional 8-character
         random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
