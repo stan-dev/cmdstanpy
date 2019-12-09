@@ -26,7 +26,7 @@ from cmdstanpy.utils import (
 from cmdstanpy.cmdstan_args import Method, CmdStanArgs
 
 
-class RunSet():
+class RunSet:
     """
     Record of CmdStan run for a specified configuration and number of chains.
     """
@@ -55,7 +55,7 @@ class RunSet():
             output_dir = args.output_dir
         else:
             output_dir = TMPDIR
-            
+
         self._csv_files = []
         self._console_files = []
         self._cmds = []
@@ -67,7 +67,9 @@ class RunSet():
                     suffix='.csv',
                 )
             else:
-                csv_file = os.path.join(output_dir, '{}-{}.{}'.format(file_basename, i + 1, 'csv'))
+                csv_file = os.path.join(
+                    output_dir, '{}-{}.{}'.format(file_basename, i + 1, 'csv')
+                )
             self._csv_files.append(csv_file)
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
             self._console_files.append(txt_file)
@@ -169,13 +171,13 @@ class RunSet():
                 raise ValueError(
                     'cannot access csv file {}'.format(self._csv_files[i])
                 )
-            
+
             path, filename = os.path.split(self._csv_files[i])
-            if path == TMPDIR:   # cleanup tmpstr in filename
+            if path == TMPDIR:  # cleanup tmpstr in filename
                 root, ext = os.path.splitext(filename)
                 rlist = root.split('-')
                 root = '-'.join(rlist[:-1])
-                filename = ''.join([root,ext])
+                filename = ''.join([root, ext])
 
             to_path = os.path.join(dir, filename)
             if os.path.exists(to_path):
@@ -194,7 +196,7 @@ class RunSet():
                 ) from e
 
 
-class CmdStanMCMC():
+class CmdStanMCMC:
     """
     Container for outputs from CmdStan sampler run.
     """
@@ -471,7 +473,7 @@ class CmdStanMCMC():
         self.runset.save_csvfiles(dir)
 
 
-class CmdStanMLE():
+class CmdStanMLE:
     """
     Container for outputs from CmdStan optimization.
     """
@@ -542,7 +544,7 @@ class CmdStanMLE():
         self.runset.save_csvfiles(dir)
 
 
-class CmdStanGQ():
+class CmdStanGQ:
     """
     Container for outputs from CmdStan generate_quantities run.
     """
@@ -595,9 +597,7 @@ class CmdStanGQ():
         flattened chain, draw ordering.
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError(
-                'Bad runset method {}.'.format(self.runset.method)
-            )
+            raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
         return self._generated_quantities
@@ -609,9 +609,7 @@ class CmdStanGQ():
         one column per quantity of interest and one row per draw.
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError(
-                'Bad runset method {}.'.format(self.runset.method)
-            )
+            raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
         return pd.DataFrame(
@@ -628,9 +626,7 @@ class CmdStanGQ():
         values in the generate quantities drawset.
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError(
-                'Bad runset method {}.'.format(self.runset.method)
-            )
+            raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
 
@@ -674,7 +670,7 @@ class CmdStanGQ():
         self.runset.save_csvfiles(dir)
 
 
-class CmdStanVB():
+class CmdStanVB:
     """
     Container for outputs from CmdStan variational run.
     """

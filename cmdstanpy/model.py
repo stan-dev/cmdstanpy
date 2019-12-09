@@ -38,7 +38,7 @@ from cmdstanpy.utils import (
 )
 
 
-class CmdStanModel():
+class CmdStanModel:
     """
     Stan model.
 
@@ -122,9 +122,13 @@ class CmdStanModel():
                 libtbb = os.path.join(
                     cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
                 )
-            os.environ['PATH'] = ';'.join(list(OrderedDict.fromkeys(
-                [libtbb, ] + os.getenv('PATH', '').split(';')
-            )))
+            os.environ['PATH'] = ';'.join(
+                list(
+                    OrderedDict.fromkeys(
+                        [libtbb] + os.getenv('PATH', '').split(';')
+                    )
+                )
+            )
 
         if compile and self._exe_file is None:
             self.compile()
@@ -226,7 +230,7 @@ class CmdStanModel():
                     cmd = [
                         make,
                         Path(exe_file).as_posix(),
-                        'STANCFLAGS+=--o={}'.format(hpp_file)
+                        'STANCFLAGS+=--o={}'.format(hpp_file),
                     ]
                     if self._include_paths is not None:
                         bad_paths = [
@@ -241,8 +245,8 @@ class CmdStanModel():
                                 )
                             )
                         cmd.append(
-                            'STANCFLAGS+=--include_paths=' +
-                            ','.join(
+                            'STANCFLAGS+=--include_paths='
+                            + ','.join(
                                 (
                                     Path(p).as_posix()
                                     for p in self._include_paths
@@ -254,7 +258,7 @@ class CmdStanModel():
                     except RuntimeError as e:
                         self._logger.error(
                             'file %s, exception %s', stan_file, repr(e)
-                            )
+                        )
                         compilation_failed = True
 
                 if not compilation_failed:
@@ -801,7 +805,8 @@ class CmdStanModel():
             raise ValueError(
                 'Invalid mcmc_sample, error:\n\t{}\n\t'
                 ' while processing files\n\t{}'.format(
-                    repr(e), '\n\t'.join(sample_csv_files))
+                    repr(e), '\n\t'.join(sample_csv_files)
+                )
             )
 
         generate_quantities_args = GenerateQuantitiesArgs(
@@ -977,10 +982,7 @@ class CmdStanModel():
         self._logger.info('start chain %u', idx + 1)
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
         )
         if pbar:
             stdout_pbar = self._read_progress(proc, pbar, idx)
@@ -1109,7 +1111,7 @@ class CmdStanModel():
                 pbar_sampling.update(sampling_cumulative_count)
                 pbar_sampling.refresh()
 
-        except Exception as e:    # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             self._logger.warning(
                 'Chain %s: Failed to read the progress on the fly. Error: %s',
                 idx,

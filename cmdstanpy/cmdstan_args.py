@@ -13,6 +13,7 @@ from cmdstanpy.utils import read_metric
 
 class Method(Enum):
     """Supported CmdStan method names."""
+
     SAMPLE = auto()
     OPTIMIZE = auto()
     GENERATE_QUANTITIES = auto()
@@ -22,7 +23,7 @@ class Method(Enum):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
-class SamplerArgs():
+class SamplerArgs:
     """Arguments for the NUTS adaptive sampler."""
 
     def __init__(
@@ -241,7 +242,7 @@ class SamplerArgs():
         return cmd
 
 
-class OptimizeArgs():
+class OptimizeArgs:
     """Container for arguments for the optimizer."""
 
     OPTIMIZE_ALGOS = {'BFGS', 'LBFGS', 'Newton'}
@@ -300,7 +301,7 @@ class OptimizeArgs():
         return cmd
 
 
-class GenerateQuantitiesArgs():
+class GenerateQuantitiesArgs:
     """Arguments needed for generate_quantities method."""
 
     def __init__(self, csv_files: List[str]) -> None:
@@ -328,7 +329,7 @@ class GenerateQuantitiesArgs():
         return cmd
 
 
-class VariationalArgs():
+class VariationalArgs:
     """Arguments needed for variational method."""
 
     VARIATIONAL_ALGOS = {'meanfield', 'fullrank'}
@@ -453,7 +454,7 @@ class VariationalArgs():
         return cmd
 
 
-class CmdStanArgs():
+class CmdStanArgs:
     """
     Container for CmdStan command line arguments.
     Consists of arguments common to all methods and
