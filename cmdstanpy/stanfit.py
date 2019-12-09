@@ -91,7 +91,7 @@ class RunSet:
                 self._cmds.append(args.compose_command(i, self._csv_files[i],
                                                     self._diagnostic_files[i]))
             else:
-                self._cmds.append(args.compose_command(i, self._csv_files[i])
+                self._cmds.append(args.compose_command(i, self._csv_files[i]))
 
 
     def __repr__(self) -> str:
