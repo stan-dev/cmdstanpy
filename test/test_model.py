@@ -80,7 +80,6 @@ class CmdStanModelTest(unittest.TestCase):
         model = CmdStanModel(stan_file=stan)  # instantiates exe
         self.assertTrue(os.path.exists(exe))
 
-        # relative paths ".."
         dotdot_stan = os.path.realpath(os.path.join('..', 'bernoulli.stan'))
         dotdot_exe = os.path.realpath(
             os.path.join('..', 'bernoulli' + EXTENSION)
@@ -91,20 +90,17 @@ class CmdStanModelTest(unittest.TestCase):
             stan_file=os.path.join('..', 'bernoulli.stan'),
             exe_file=os.path.join('..', 'bernoulli' + EXTENSION),
         )
-        print(model1)
         self.assertEqual(model1.stan_file, dotdot_stan)
         self.assertEqual(model1.exe_file, dotdot_exe)
         os.remove(dotdot_stan)
         os.remove(dotdot_exe)
 
-        # user home ~
         tilde_stan = os.path.realpath(
             os.path.join(os.path.expanduser('~'), 'bernoulli.stan')
         )
         tilde_exe = os.path.realpath(
             os.path.join(os.path.expanduser('~'), 'bernoulli' + EXTENSION)
         )
-
         shutil.copyfile(stan, tilde_stan)
         shutil.copyfile(exe, tilde_exe)
         model2 = CmdStanModel(
