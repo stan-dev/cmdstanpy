@@ -1,6 +1,7 @@
 """CmdStanModel tests"""
 
 import os
+import shutil
 import unittest
 import pytest
 
@@ -71,6 +72,48 @@ class CmdStanModelTest(unittest.TestCase):
         model = CmdStanModel(stan_file=stan, compile=False)
         self.assertEqual(stan, model.stan_file)
         self.assertEqual(None, model.exe_file)
+
+    def test_model_paths(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        # pylint: disable=unused-variable
+        model = CmdStanModel(stan_file=stan, exe_file=exe)  # instantiates exe
+
+        # relative paths ".."
+        dotdot_stan = os.path.realpath(os.path.join('..', 'bernoulli.stan'))
+        dotdot_exe = os.path.realpath(
+            os.path.join('..', 'bernoulli' + EXTENSION)
+        )
+        shutil.copyfile(stan, dotdot_stan)
+        shutil.copyfile(exe, dotdot_exe)
+        model1 = CmdStanModel(
+            stan_file=os.path.join('..', 'bernoulli.stan'),
+            exe_file=os.path.join('..', 'bernoulli' + EXTENSION),
+        )
+        print(model1)
+        self.assertEqual(model1.stan_file, dotdot_stan)
+        self.assertEqual(model1.exe_file, dotdot_exe)
+        os.remove(dotdot_stan)
+        os.remove(dotdot_exe)
+
+        # user home ~
+        tilde_stan = os.path.realpath(
+            os.path.join(os.path.expanduser('~'), 'bernoulli.stan')
+        )
+        tilde_exe = os.path.realpath(
+            os.path.join(os.path.expanduser('~'), 'bernoulli' + EXTENSION)
+        )
+
+        shutil.copyfile(stan, tilde_stan)
+        shutil.copyfile(exe, tilde_exe)
+        model2 = CmdStanModel(
+            stan_file=os.path.join('~', 'bernoulli.stan'),
+            exe_file=os.path.join('~', 'bernoulli' + EXTENSION),
+        )
+        self.assertEqual(model2.stan_file, tilde_stan)
+        self.assertEqual(model2.exe_file, tilde_exe)
+        os.remove(tilde_stan)
+        os.remove(tilde_exe)
 
     def test_model_none(self):
         with self.assertRaises(ValueError):
