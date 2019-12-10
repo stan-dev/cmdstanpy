@@ -1,15 +1,17 @@
 """CmdStan argument tests"""
 
 import os
+import platform
 import unittest
 
+from cmdstanpy import TMPDIR
 from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
     CmdStanArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
-    VariationalArgs
+    VariationalArgs,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -158,14 +160,16 @@ class SamplerArgsTest(unittest.TestCase):
         args = SamplerArgs(adapt_engaged=False)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc adapt engaged=0',
-                      ' '.join(cmd))
+        self.assertIn(
+            'method=sample algorithm=hmc adapt engaged=0', ' '.join(cmd)
+        )
 
         args = SamplerArgs(adapt_engaged=True)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc adapt engaged=1',
-                      ' '.join(cmd))
+        self.assertIn(
+            'method=sample algorithm=hmc adapt engaged=1', ' '.join(cmd)
+        )
 
         args = SamplerArgs()
         args.validate(chains=4)
@@ -177,26 +181,30 @@ class SamplerArgsTest(unittest.TestCase):
         args = SamplerArgs(metric='dense_e')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=dense_e',
-                      ' '.join(cmd))
+        self.assertIn(
+            'method=sample algorithm=hmc metric=dense_e', ' '.join(cmd)
+        )
 
         args = SamplerArgs(metric='dense')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=dense_e',
-                      ' '.join(cmd))
+        self.assertIn(
+            'method=sample algorithm=hmc metric=dense_e', ' '.join(cmd)
+        )
 
         args = SamplerArgs(metric='diag_e')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=diag_e',
-                      ' '.join(cmd))
+        self.assertIn(
+            'method=sample algorithm=hmc metric=diag_e', ' '.join(cmd)
+        )
 
         args = SamplerArgs(metric='diag')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
-        self.assertIn('method=sample algorithm=hmc metric=diag_e',
-                      ' '.join(cmd))
+        self.assertIn(
+            'method=sample algorithm=hmc metric=diag_e', ' '.join(cmd)
+        )
 
         args = SamplerArgs()
         args.validate(chains=4)
@@ -267,7 +275,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 seed=[1, 2, 3],
                 data=jdata,
                 inits=jinits,
-                method_args=sampler_args
+                method_args=sampler_args,
             )
 
         with self.assertRaises(ValueError):
@@ -277,7 +285,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 chain_ids=None,
                 data=jdata,
                 inits=[jinits],
-                method_args=sampler_args
+                method_args=sampler_args,
             )
 
     def test_args_good(self):
@@ -476,14 +484,27 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaises(ValueError):
-            # bad output basename
+            # bad output_dir name
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
-                output_basename='no/such/path/to.file',
+                output_dir='no/such/path',
                 method_args=sampler_args,
             )
+
+        # TODO: read-only dir test for Windows - set ACLs, not mode
+        if platform.system() == 'Darwin' or platform.system() == 'Linux':
+            with self.assertRaises(ValueError):
+                read_only = os.path.join(TMPDIR, 'read_only')
+                os.mkdir(read_only, mode=0o444)
+                CmdStanArgs(
+                    model_name='bernoulli',
+                    model_exe='bernoulli.exe',
+                    chain_ids=[1, 2, 3, 4],
+                    output_dir=read_only,
+                    method_args=sampler_args,
+                )
 
 
 class GenerateQuantitesTest(unittest.TestCase):

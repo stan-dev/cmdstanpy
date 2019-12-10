@@ -53,7 +53,7 @@ Configuration
 
 - ``seed``: The seed for random number generator.
             
-- ``gq_csv_basename``:  A path or file name which will be used as the basename for the CmdStan output files.
+- ``gq_output_dir``:  A path or file name which will be used as the basename for the CmdStan output files.
 
 
 Example: add posterior predictive checks to ``bernoulli.stan``
