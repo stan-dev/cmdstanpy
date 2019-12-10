@@ -494,8 +494,9 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaises(ValueError):
-            # testing this on *nix, MacOS
-            if platform.system() != 'Windows':
+            if platform.system().lower().startswith('win'):
+                pass  # TODO - logic to set ACLs on Windows
+            else:
                 read_only = os.path.join(TMPDIR, 'read_only')
                 os.mkdir(read_only, mode=0o444)
                 CmdStanArgs(
@@ -505,7 +506,6 @@ class CmdStanArgsTest(unittest.TestCase):
                     output_dir=read_only,
                     method_args=sampler_args,
                 )
-            # todo: similar test Windows - set ACLS using windows apis
 
 
 class GenerateQuantitesTest(unittest.TestCase):
