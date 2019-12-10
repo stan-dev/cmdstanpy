@@ -77,7 +77,8 @@ class CmdStanModelTest(unittest.TestCase):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         # pylint: disable=unused-variable
-        model = CmdStanModel(stan_file=stan, exe_file=exe)  # instantiates exe
+        model = CmdStanModel(stan_file=stan)  # instantiates exe
+        self.assertTrue(os.path.exists(exe))
 
         # relative paths ".."
         dotdot_stan = os.path.realpath(os.path.join('..', 'bernoulli.stan'))
