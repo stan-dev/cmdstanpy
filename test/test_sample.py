@@ -2,6 +2,7 @@
 
 import os
 import logging
+import shutil
 from multiprocessing import cpu_count
 import unittest
 from testfixtures import LogCapture
@@ -404,7 +405,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
         )
-
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -418,9 +418,17 @@ class CmdStanMCMCTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
         with self.assertRaisesRegex(Exception, 'file exists'):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
+
+        tmp2_dir = os.path.join(HERE, 'tmp2')
+        os.mkdir(tmp2_dir)
+        bern_fit.save_csvfiles(dir=tmp2_dir)
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            self.assertTrue(os.path.exists(csv_file))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
             os.remove(bern_fit.runset.console_files[i])
+        shutil.rmtree(tmp2_dir, ignore_errors=True)
 
         # regenerate to tmpdir, save to good dir
         bern_fit = bern_model.sample(
