@@ -493,10 +493,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            if platform.system().lower().startswith('win'):
-                pass  # TODO - logic to set ACLs on Windows
-            else:
+        # TODO: read-only dir test for Windows - set ACLs, not mode
+        if platform.system() == 'Darwin' or platform.system() == 'Linux':
+            with self.assertRaises(ValueError):
                 read_only = os.path.join(TMPDIR, 'read_only')
                 os.mkdir(read_only, mode=0o444)
                 CmdStanArgs(
