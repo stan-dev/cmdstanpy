@@ -1,5 +1,9 @@
 # CmdStanPy
 
+.. image:: https://codecov.io/gh/codecov/example-python/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/codecov/example-python
+
+
 CmdStanPy is a lightweight interface to Stan for Python users which
 provides the necessary objects and functions to compile a Stan program
 and run Stan's samplers.
