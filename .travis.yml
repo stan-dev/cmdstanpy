@@ -13,6 +13,7 @@ cache:
 install:
   - pip install --quiet -r requirements.txt
   - pip install --quiet -r requirements-test.txt
+  - pip install codecov
   # install cmdstanpy
   - pip install .
   # install cmdstan
@@ -31,3 +32,6 @@ script:
   - python -m pip install -r ../requirements-optional.txt
   - python ../test/example_script.py
   - python ../scripts/clean_examples.py
+
+after_success:
+  - codecov # submit coverage
