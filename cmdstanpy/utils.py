@@ -713,6 +713,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     Spawn process, print stdout/stderr to console.
     Throws RuntimeError on non-zero returncode.
     """
+    print(cmd)
     if logger:
         logger.debug('cmd: %s', cmd)
     proc = subprocess.Popen(

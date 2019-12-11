@@ -2,6 +2,7 @@
 
 import os
 import logging
+import shutil
 from multiprocessing import cpu_count
 import unittest
 from testfixtures import LogCapture
@@ -69,14 +70,13 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.stepsize.shape, (4,))
         self.assertEqual(bern_fit.metric.shape, (4, 1))
 
-        output = os.path.join(DATAFILES_PATH, 'test1-bernoulli-output')
         bern_fit = bern_model.sample(
             data=jdata,
             chains=4,
             cores=2,
             seed=12345,
             sampling_iters=100,
-            csv_basename=output,
+            output_dir=DATAFILES_PATH,
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
@@ -295,7 +295,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        output = os.path.join(GOODFILES_PATH, 'bern')
         sampler_args = SamplerArgs(
             sampling_iters=100, max_treedepth=11, adapt_delta=0.95
         )
@@ -305,10 +304,16 @@ class CmdStanMCMCTest(unittest.TestCase):
             chain_ids=[1, 2, 3, 4],
             seed=12345,
             data=jdata,
-            output_basename=output,
+            output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=4)
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'runset-good', 'bern-1.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-good', 'bern-2.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-good', 'bern-3.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-good', 'bern-4.csv'),
+            ]
         self.assertEqual(4, runset.chains)
         retcodes = runset._retcodes
         for i in range(len(retcodes)):
@@ -347,17 +352,20 @@ class CmdStanMCMCTest(unittest.TestCase):
         exe = os.path.join(
             DATAFILES_PATH, 'bernoulli' + EXTENSION
         )
-        output = os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc')
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
             chain_ids=[1, 2],
             seed=12345,
-            output_basename=output,
+            output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=2)
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
+            ]
         fit = CmdStanMCMC(runset)
         fit._validate_csv_files()
         sampler_state = [
@@ -397,7 +405,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
         )
-
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
@@ -405,22 +412,29 @@ class CmdStanMCMCTest(unittest.TestCase):
             self.assertTrue(os.path.exists(txt_file))
 
         # save files to good dir
-        basename = 'bern_save_csvfiles_test'
-        bern_fit.save_csvfiles(dir=DATAFILES_PATH, basename=basename)
+        bern_fit.save_csvfiles(dir=DATAFILES_PATH)
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
         with self.assertRaisesRegex(Exception, 'file exists'):
-            bern_fit.save_csvfiles(dir=DATAFILES_PATH, basename=basename)
+            bern_fit.save_csvfiles(dir=DATAFILES_PATH)
+
+        tmp2_dir = os.path.join(HERE, 'tmp2')
+        os.mkdir(tmp2_dir)
+        bern_fit.save_csvfiles(dir=tmp2_dir)
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            self.assertTrue(os.path.exists(csv_file))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
             os.remove(bern_fit.runset.console_files[i])
+        shutil.rmtree(tmp2_dir, ignore_errors=True)
 
         # regenerate to tmpdir, save to good dir
         bern_fit = bern_model.sample(
             data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
         )
-        bern_fit.save_csvfiles(basename=basename)  # default dir
+        bern_fit.save_csvfiles()  # default dir
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
@@ -431,20 +445,21 @@ class CmdStanMCMCTest(unittest.TestCase):
     def test_diagnose_divergences(self):
         exe = os.path.join(
             DATAFILES_PATH, 'bernoulli' + EXTENSION
-        )  # fake out validation
-        output = os.path.join(
-            DATAFILES_PATH, 'diagnose-good', 'corr_gauss_depth8'
         )
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
             chain_ids=[1],
-            output_basename=output,
+            output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        sampler_runset = RunSet(args=cmdstan_args, chains=1)
-        fit = CmdStanMCMC(sampler_runset)
+        runset = RunSet(args=cmdstan_args, chains=1)
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'diagnose-good',
+                             'corr_gauss_depth8-1.csv'),
+            ]
+        fit = CmdStanMCMC(runset)
         # TODO - use cmdstan test files instead
         expected = '\n'.join(
             [
@@ -466,76 +481,63 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
 
         # some chains had errors
-        output = os.path.join(BADFILES_PATH, 'bad-transcript-bern')
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
             chain_ids=[1, 2, 3, 4],
             seed=12345,
             data=jdata,
-            output_basename=output,
+            output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=4)
+        for i in range(4):
+            runset._set_retcode(i, 0)
+        self.assertTrue(runset._check_retcodes())
+
+        # errors reported
+        runset._console_files = [
+            os.path.join(DATAFILES_PATH, 'runset-bad',
+                             'bad-transcript-bern-1.txt'),
+            os.path.join(DATAFILES_PATH, 'runset-bad',
+                             'bad-transcript-bern-2.txt'),
+            os.path.join(DATAFILES_PATH, 'runset-bad',
+                             'bad-transcript-bern-3.txt'),
+            os.path.join(DATAFILES_PATH, 'runset-bad',
+                             'bad-transcript-bern-4.txt'),
+            ]
         with self.assertRaisesRegex(Exception, 'Exception'):
             runset._check_console_msgs()
 
         # csv file headers inconsistent
-        output = os.path.join(BADFILES_PATH, 'bad-hdr-bern')
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe=exe,
-            chain_ids=[1, 2, 3, 4],
-            seed=12345,
-            data=jdata,
-            output_basename=output,
-            method_args=sampler_args,
-        )
-        runset = RunSet(args=cmdstan_args, chains=4)
-        retcodes = runset._retcodes
-        for i in range(len(retcodes)):
-            runset._set_retcode(i, 0)
-        self.assertTrue(runset._check_retcodes())
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-1.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-2.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-3.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-4.csv'),
+            ]
         fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'header mismatch'):
             fit._validate_csv_files()
 
         # bad draws
-        output = os.path.join(BADFILES_PATH, 'bad-draws-bern')
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe=exe,
-            chain_ids=[1, 2, 3, 4],
-            seed=12345,
-            data=jdata,
-            output_basename=output,
-            method_args=sampler_args,
-        )
-        runset = RunSet(args=cmdstan_args, chains=4)
-        retcodes = runset._retcodes
-        for i in range(len(retcodes)):
-            runset._set_retcode(i, 0)
-        self.assertTrue(runset._check_retcodes())
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-1.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-2.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-3.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-4.csv'),
+            ]
         fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'draws'):
             fit._validate_csv_files()
 
         # mismatch - column headers, draws
-        output = os.path.join(BADFILES_PATH, 'bad-cols-bern')
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe=exe,
-            chain_ids=[1, 2, 3, 4],
-            seed=12345,
-            data=jdata,
-            output_basename=output,
-            method_args=sampler_args,
-        )
-        runset = RunSet(args=cmdstan_args, chains=4)
-        retcodes = runset._retcodes
-        for i in range(len(retcodes)):
-            runset._set_retcode(i, 0)
-        self.assertTrue(runset._check_retcodes())
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-1.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-2.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-3.csv'),
+            os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-4.csv'),
+            ]
         fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'bad draw'):
             fit._validate_csv_files()

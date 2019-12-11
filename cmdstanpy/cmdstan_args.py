@@ -2,6 +2,7 @@
 CmdStan arguments
 """
 import os
+from time import time
 from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
@@ -12,6 +13,7 @@ from cmdstanpy.utils import read_metric
 
 class Method(Enum):
     """Supported CmdStan method names."""
+
     SAMPLE = auto()
     OPTIMIZE = auto()
     GENERATE_QUANTITIES = auto()
@@ -21,7 +23,7 @@ class Method(Enum):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
-class SamplerArgs():
+class SamplerArgs:
     """Arguments for the NUTS adaptive sampler."""
 
     def __init__(
@@ -49,6 +51,7 @@ class SamplerArgs():
         self.adapt_engaged = adapt_engaged
         self.adapt_delta = adapt_delta
         self.fixed_param = fixed_param
+        self.diagnostic_file = None
 
     def validate(self, chains: int) -> None:
         """
@@ -240,7 +243,7 @@ class SamplerArgs():
         return cmd
 
 
-class OptimizeArgs():
+class OptimizeArgs:
     """Container for arguments for the optimizer."""
 
     OPTIMIZE_ALGOS = {'BFGS', 'LBFGS', 'Newton'}
@@ -299,7 +302,7 @@ class OptimizeArgs():
         return cmd
 
 
-class GenerateQuantitiesArgs():
+class GenerateQuantitiesArgs:
     """Arguments needed for generate_quantities method."""
 
     def __init__(self, csv_files: List[str]) -> None:
@@ -327,7 +330,7 @@ class GenerateQuantitiesArgs():
         return cmd
 
 
-class VariationalArgs():
+class VariationalArgs:
     """Arguments needed for variational method."""
 
     VARIATIONAL_ALGOS = {'meanfield', 'fullrank'}
@@ -452,7 +455,7 @@ class VariationalArgs():
         return cmd
 
 
-class CmdStanArgs():
+class CmdStanArgs:
     """
     Container for CmdStan command line arguments.
     Consists of arguments common to all methods and
@@ -470,7 +473,8 @@ class CmdStanArgs():
         data: Union[str, dict] = None,
         seed: Union[int, List[int]] = None,
         inits: Union[int, float, str, List[str]] = None,
-        output_basename: str = None,
+        output_dir: str = None,
+        save_diagnostics: bool = False,
         refresh: str = None,
     ) -> None:
         """Initialize object."""
@@ -480,7 +484,8 @@ class CmdStanArgs():
         self.data = data
         self.seed = seed
         self.inits = inits
-        self.output_basename = output_basename
+        self.output_dir = output_dir
+        self.save_diagnostics = save_diagnostics
         self.refresh = refresh
         self.method_args = method_args
         if isinstance(method_args, SamplerArgs):
@@ -515,24 +520,25 @@ class CmdStanArgs():
                         'invalid chain_id {}'.format(self.chain_ids[i])
                     )
 
-        if self.output_basename is not None:
-            if not os.path.exists(os.path.dirname(self.output_basename)):
+        if self.output_dir is not None:
+            self.output_dir = os.path.realpath(os.path.expanduser(
+                self.output_dir))
+            if not os.path.exists(os.path.dirname(self.output_dir)):
                 raise ValueError(
-                    'invalid path for output files: {}'.format(
-                        self.output_basename
+                    'invalid path for output files, no such dir: {}'.format(
+                        self.output_dir
                     )
                 )
             try:
-                with open(self.output_basename, 'w+') as fd:
+                testpath = os.path.join(self.output_dir, str(time()))
+                with open(testpath, 'w+') as fd:
                     pass
-                os.remove(self.output_basename)  # cleanup
+                os.remove(testpath)  # cleanup
             except Exception:
                 raise ValueError(
-                    'invalid path for output files: {}'.format(
-                        self.output_basename
-                    )
+                    'invalid path for output files, '
+                    'cannot write to dir: {}'.format(self.output_dir)
                 )
-            self.output_basename, _ = os.path.splitext(self.output_basename)
 
         if self.seed is None:
             rng = RandomState()
@@ -613,7 +619,8 @@ class CmdStanArgs():
                             'no such file {}'.format(self.inits[i])
                         )
 
-    def compose_command(self, idx: int, csv_file: str) -> str:
+    def compose_command(self, idx: int, csv_file: str,
+                        diagnostic_file: str = None) -> str:
         """
         Compose CmdStan command for non-default arguments.
         """
@@ -647,6 +654,8 @@ class CmdStanArgs():
                 cmd.append('init={}'.format(self.inits[idx]))
         cmd.append('output')
         cmd.append('file={}'.format(csv_file))
+        if diagnostic_file is not None:
+            cmd.append('diagnostic_file={}'.format(diagnostic_file))
         if self.refresh is not None:
             cmd.append('refresh={}'.format(self.refresh))
         cmd = self.method_args.compose(idx, cmd)
