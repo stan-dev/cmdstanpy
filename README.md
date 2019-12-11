@@ -1,6 +1,6 @@
 # CmdStanPy
 
-![codecov](https://codecov.io/gh/cmdstanpy/branch/master/graph/badge.svg)
+![codecov](https://codecov.io/gh/stan-dev/cmdstanpy/branch/master/graph/badge.svg)
 
 
 CmdStanPy is a lightweight interface to Stan for Python users which
