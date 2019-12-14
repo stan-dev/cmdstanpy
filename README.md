@@ -1,7 +1,7 @@
 # CmdStanPy
 
-![codecov.io](https://codecov.io/github/stan-dev/cmdstanpy/coverage.svg?branch=master)
-
+[![codecov.io](https://codecov.io/github/stan-dev/cmdstanpy/coverage.svg?branch=master)]
+(https://codecov.io/github/stan-dev/cmdstanpy?branch=master)
 
 CmdStanPy is a lightweight interface to Stan for Python users which
 provides the necessary objects and functions to compile a Stan program
