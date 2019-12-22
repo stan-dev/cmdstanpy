@@ -45,14 +45,6 @@ install:
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
-  # Install RTools
-  - "python .\\cmdstanpy\\install_cxx_toolchain.py --silent --dir C:\\"
-  - "dir C:\\Rtools\\RTools35"
-  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
-  - "SET MAKE=mingw32-make.exe"
-  - "gcc --version"
-  - "mingw32-make --version"
-
   # Check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
@@ -60,13 +52,28 @@ install:
   - "python -m pip install --quiet --disable-pip-version-check --upgrade pip"
   - "python -m pip install --quiet -r requirements.txt"
   - "python -m pip install --quiet -r requirements-test.txt"
+  - "python -m pip install --quiet codecov"
 
   - "python -m pip install --quiet ."
 
+  # don't use local package
+  - "mkdir new_dir"
+  - "cd new_dir"
+
+  # Install RTools
+  - "python -m cmdstanpy.install_cxx_toolchain --silent --dir C:\\"
+  - "dir C:\\Rtools\\RTools35"
+  - "SET PATH=C:\\Rtools\\RTools35\\bin;C:\\Rtools\\RTools35\\mingw_64\\bin;%PATH%"
+  - "SET MAKE=mingw32-make.exe"
+  - "gcc --version"
+  - "mingw32-make --version"
+
   - "python -m cmdstanpy.install_cmdstan"
-  - "python ./scripts/clean_examples.py"
+  - "python ../scripts/clean_examples.py"
 
   - "pip freeze"
+  - "cd .."
+  - "rm -rf new_dir"
 
 build: false
 
@@ -75,7 +82,10 @@ test_script:
   - "SET MAKE=mingw32-make.exe"
   - "mkdir new_dir"
   - "cd new_dir"
-  - "python -m pytest -v ../test"
+  - "python -m pytest -v ../test --cov=../cmdstanpy"
   - "python -m pip install -r ../requirements-optional.txt"
   - "python ../test/example_script.py"
   - "python ../scripts/clean_examples.py"
+  - "cd .."
+  - "rm -rf new_dir"
+  - "codecov"
