@@ -257,7 +257,7 @@ class CmdStanModel:
                         do_command(cmd, cmdstan_path(), logger=self._logger)
                     except RuntimeError as e:
                         self._logger.error(
-                            'file %s, exception %s', stan_file, e
+                            'file %s, exception %s', stan_file, str(e)
                         )
                         compilation_failed = True
 
