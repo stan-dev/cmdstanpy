@@ -138,7 +138,7 @@ class CmdStanModelTest(unittest.TestCase):
 
             # Ensure the new line character in error message is not escaped
             # so the error message is readable
-            self.assertRegex(error_message, r'PARSER EXPECTED: ";"\n')
+            self.assertRegex(error_message, r'PARSER EXPECTED: ";"(\r\n|\r|\n)')
 
     def test_repr(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
