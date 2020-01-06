@@ -4,6 +4,8 @@ import os
 import shutil
 import unittest
 import pytest
+from testfixtures import LogCapture
+import numpy as np
 
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
@@ -116,7 +118,7 @@ class CmdStanModelTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = CmdStanModel(exe_file=None, stan_file=None)
 
-    def test_model_bad(self):
+    def test_model_file_does_not_exist(self):
         with self.assertRaises(Exception):
             CmdStanModel(stan_file='xdlfkjx', exe_file='sdfndjsds')
 
@@ -124,9 +126,19 @@ class CmdStanModelTest(unittest.TestCase):
         with self.assertRaises(Exception):
             CmdStanModel(stan_file=stan)
 
+    def test_model_syntax_error(self):
         stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
-        with self.assertRaises(Exception):
-            CmdStanModel(stan_file=stan)
+
+        with LogCapture() as log:
+            with self.assertRaises(Exception):
+                CmdStanModel(stan_file=stan)
+
+            # Join all the log messages into one string
+            error_message = "@( * O * )@".join(np.array(log.actual())[:, -1])
+
+            # Ensure the new line character in error message is not escaped
+            # so the error message is readable
+            self.assertRegex(error_message, r'PARSER EXPECTED: ";"(\r\n|\r|\n)')
 
     def test_repr(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
