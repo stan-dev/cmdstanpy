@@ -8,7 +8,7 @@ import shutil
 import logging
 
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from numbers import Real
 from pathlib import Path
@@ -656,7 +656,8 @@ class CmdStanModel:
             )
             runset = RunSet(args=args, chains=chains)
             pbar = None
-            pbar_dict = {}
+            all_pbars = []
+
             with ThreadPoolExecutor(max_workers=cores) as executor:
                 for i in range(chains):
                     if show_progress:
@@ -706,14 +707,13 @@ class CmdStanModel:
                             ),
                         ]
 
-                    future = executor.submit(self._run_cmdstan, runset, i, pbar)
-                    pbar_dict[future] = pbar
-                if show_progress:
-                    for future in as_completed(pbar_dict):
-                        pbar = pbar_dict[future]
-                        for pbar_item in pbar:
-                            # close here to just to be sure
-                            pbar_item.close()
+                        all_pbars += pbar
+
+                    executor.submit(self._run_cmdstan, runset, i, pbar)
+
+            # Closing all progress bars
+            for pbar in all_pbars:
+                pbar.close()
 
             if show_progress:
                 # re-enable logger for console
@@ -1074,7 +1074,6 @@ class CmdStanModel:
                             if refresh_warmup:
                                 pbar_warmup.update(num_warmup - count_warmup)
                                 pbar_warmup.refresh()
-                                pbar_warmup.close()
                                 refresh_warmup = False
                             # update values to full
                             count, count_sampling = (
@@ -1135,9 +1134,6 @@ class CmdStanModel:
                 idx,
                 repr(e),
             )
-        # close both pbar
-        pbar_warmup.close()
-        pbar_sampling.close()
 
         # return stdout
         return stdout
