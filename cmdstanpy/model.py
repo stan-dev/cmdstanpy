@@ -601,21 +601,6 @@ class CmdStanModel:
             try:
                 import tqdm
 
-                # progress bar updates - 100 per warmup, sampling
-                if fixed_param or not adapt_engaged or warmup_iters == 0:
-                    num_updates = 100
-                    w_iters = 0
-                else:
-                    num_updates = 200
-                    if warmup_iters is None:
-                        w_iters = 1000
-                    else:
-                        w_iters = warmup_iters
-                s_iters = sampling_iters
-                if s_iters is None:
-                    s_iters = 1000
-                refresh = max(int((s_iters + w_iters) // num_updates), 1)
-                # disable logger for console (temporary) - use tqdm
                 self._logger.propagate = False
             except ImportError:
                 self._logger.warning(
@@ -681,6 +666,7 @@ class CmdStanModel:
                                 tqdm_pbar = tqdm.tqdm
                         else:
                             tqdm_pbar = tqdm.tqdm
+
                         # enable dynamic_ncols for advanced users
                         # currently hidden feature
                         dynamic_ncols = os.environ.get(
@@ -690,24 +676,25 @@ class CmdStanModel:
                             dynamic_ncols = False
                         else:
                             dynamic_ncols = True
-                        pbar = [
-                            # warmup
-                            tqdm_pbar(
-                                desc='Chain {} - warmup'.format(i + 1),
-                                position=i * 2,
-                                total=sampler_args.warmup_iters,
-                                dynamic_ncols=dynamic_ncols,
-                            ),
-                            # sampling
-                            tqdm_pbar(
-                                desc='Chain {} - sample'.format(i + 1),
-                                position=i * 2 + 1,
-                                total=sampler_args.sampling_iters,
-                                dynamic_ncols=dynamic_ncols,
-                            ),
-                        ]
 
-                        all_pbars += pbar
+                        # Total number of iterations (warmup + sample)
+                        # 2000 is default in cmdstan
+                        total_iters = 2000
+
+                        if (sampler_args.warmup_iters is not None and
+                           sampler_args.sampling_iters is not None):
+
+                            total_iters = sampler_args.warmup_iters \
+                                + sampler_args.sampling_iters
+
+                        pbar = tqdm_pbar(
+                                desc='Chain {} - warmup'.format(i + 1),
+                                position=i,
+                                total=total_iters,
+                                dynamic_ncols=dynamic_ncols,
+                            )
+
+                        all_pbars.append(pbar)
 
                     executor.submit(self._run_cmdstan, runset, i, pbar)
 
@@ -990,7 +977,7 @@ class CmdStanModel:
         return vb
 
     def _run_cmdstan(
-        self, runset: RunSet, idx: int = 0, pbar: List[Any] = None
+        self, runset: RunSet, idx: int = 0, pbar: Any = None
     ) -> None:
         """
         Encapsulates call to CmdStan.
@@ -1018,7 +1005,7 @@ class CmdStanModel:
         runset._set_retcode(idx, proc.returncode)
 
     def _read_progress(
-        self, proc: subprocess.Popen, pbar: List[Any], idx: int
+        self, proc: subprocess.Popen, pbar: Any, idx: int
     ) -> bytes:
         """
         Update tqdm progress bars according to CmdStan console progress msgs.
@@ -1030,12 +1017,10 @@ class CmdStanModel:
             r'^Iteration\:\s*(\d+)\s*/\s*(\d+)\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
         )
         pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
-        pbar_warmup, pbar_sampling = pbar
-        num_warmup = pbar_warmup.total
-        num_sampling = pbar_sampling.total
-        count_warmup = 0
-        count_sampling = 0
+        previous_count = 0
         stdout = b''
+        changed_description = False  # Changed from 'warmup' to 'sample'
+        pbar.set_description(desc=f'Chain {idx + 1} - warmup', refresh=True)
 
         try:
             # iterate while process is sampling
@@ -1043,90 +1028,24 @@ class CmdStanModel:
                 output = proc.stdout.readline()
                 stdout += output
                 output = output.decode('utf-8').strip()
-                refresh_warmup = True
                 if output.startswith('Iteration'):
                     match = re.search(pattern_compiled, output)
                     if match:
-                        # check if pbars need reset
-                        if num_warmup is None or num_sampling is None:
-                            total_count = int(match.group(2))
-                            if num_warmup is None and num_sampling is None:
-                                num_warmup = total_count // 2
-                                num_sampling = total_count - num_warmup
-                                pbar_warmup.total = num_warmup
-                                pbar_sampling.total = num_sampling
-                            elif num_warmup is None:
-                                num_warmup = total_count - num_sampling
-                                pbar_warmup.total = num_warmup
-                            else:
-                                num_sampling = total_count - num_warmup
-                                pbar_sampling.total = num_sampling
-                        # raw_count = warmup + sampling
-                        raw_count = int(match.group(1))
-                        if match.group(3).lower() == 'warmup':
-                            count, count_warmup = (
-                                raw_count - count_warmup,
-                                raw_count,
-                            )
-                            pbar_warmup.update(count)
-                        elif match.group(3).lower() == 'sampling':
-                            # refresh warmup and close the progress bar
-                            if refresh_warmup:
-                                pbar_warmup.update(num_warmup - count_warmup)
-                                pbar_warmup.refresh()
-                                refresh_warmup = False
-                            # update values to full
-                            count, count_sampling = (
-                                raw_count - num_warmup - count_sampling,
-                                raw_count - num_warmup,
-                            )
-                            pbar_sampling.update(count)
+                        current_count = int(match.group(1))
 
-            # read and process rest of the stdout if needed
-            warmup_cumulative_count = 0
-            sampling_cumulative_count = 0
-            for output in proc.stdout:
-                stdout += output
-                output = output.decode('utf-8').strip()
-                if output.startswith('Iteration'):
-                    match = re.search(pattern_compiled, output)
-                    if match:
-                        # check if pbars need reset
-                        if num_warmup is None or num_sampling is None:
-                            total_count = int(match.group(2))
-                            if num_warmup is None and num_sampling is None:
-                                num_warmup = total_count // 2
-                                num_sampling = total_count - num_warmup
-                                pbar_warmup.total = num_warmup
-                                pbar_sampling.total = num_sampling
-                            elif num_warmup is None:
-                                num_warmup = total_count - num_sampling
-                                pbar_warmup.total = num_warmup
-                            else:
-                                num_sampling = total_count - num_warmup
-                                pbar_sampling.total = num_sampling
-                        # raw_count = warmup + sampling
-                        raw_count = int(match.group(1))
-                        if match.group(3).lower() == 'warmup':
-                            count, count_warmup = (
-                                raw_count - count_warmup,
-                                raw_count,
-                            )
-                            warmup_cumulative_count += count
-                        elif match.group(3).lower() == 'sampling':
-                            count, count_sampling = (
-                                raw_count - num_warmup - count_sampling,
-                                raw_count - num_warmup,
-                            )
-                            sampling_cumulative_count += count
-            # update warmup pbar if needed
-            if warmup_cumulative_count:
-                pbar_warmup.update(warmup_cumulative_count)
-                pbar_warmup.refresh()
-            # update sampling pbar if needed
-            if sampling_cumulative_count:
-                pbar_sampling.update(sampling_cumulative_count)
-                pbar_sampling.refresh()
+                        if (match.group(3).lower() == 'sampling' and
+                           not changed_description):
+                            pbar.set_description(f'Chain {idx + 1} - sample')
+                            changed_description = True
+
+                        pbar.update(current_count - previous_count)
+                        previous_count = current_count
+
+            pbar.set_description(f'Chain {idx + 1} -   done', refresh=True)
+
+            if "notebook" in type(pbar).__name__:
+                # In Jupyter make the bar green by closing it
+                pbar.close()
 
         except Exception as e:  # pylint: disable=broad-except
             self._logger.warning(
@@ -1135,5 +1054,4 @@ class CmdStanModel:
                 repr(e),
             )
 
-        # return stdout
         return stdout
