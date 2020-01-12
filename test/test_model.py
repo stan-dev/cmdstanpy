@@ -3,9 +3,11 @@
 import os
 import shutil
 import unittest
+from unittest.mock import Mock
 import pytest
 from testfixtures import LogCapture
 import numpy as np
+import tqdm
 
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
@@ -195,6 +197,36 @@ class CmdStanModelTest(unittest.TestCase):
         # already compiled
         model3 = CmdStanModel(stan_file=stan)
         self.assertTrue(model3.exe_file.endswith(exe.replace('\\', '/')))
+
+    def test_read_progress(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model = CmdStanModel(stan_file=stan, compile=False)
+
+        proc_mock = Mock()
+        proc_mock.poll.side_effect = [None, None, 'finish']
+        stan_output1 = 'Iteration: 12100 / 31000 [ 39%]  (Warmup)'
+        stan_output2 = 'Iteration: 14000 / 31000 [ 45%]  (Warmup)'
+        pbar = tqdm.tqdm(desc='Chain 1 - warmup', position=1, total=1)
+
+        proc_mock.stdout.readline.side_effect = [
+            stan_output1.encode('utf-8'), stan_output2.encode('utf-8')]
+
+        with LogCapture() as log:
+            result = model._read_progress(proc=proc_mock, pbar=pbar, idx=0)
+            self.assertEqual([], log.actual())
+            self.assertEqual(31000, pbar.total)
+
+            # Expect progress bar output to be something like this:
+            # 'Chain 1 -   done:  45%|████▌     | 14000/31000'
+            # --------
+
+            self.assertIn('Chain 1 -   done:  45%', str(pbar))
+            self.assertIn('14000/31000', str(pbar))
+
+            # Check Stan's output is returned
+            output = result.decode('utf-8')
+            self.assertIn(stan_output1, output)
+            self.assertIn(stan_output2, output)
 
 
 if __name__ == '__main__':
