@@ -16,7 +16,6 @@ from typing import Any, Dict, List, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
-    SamplerArgsDefaults,
     SamplerArgs,
     OptimizeArgs,
     GenerateQuantitiesArgs,
@@ -678,22 +677,10 @@ class CmdStanModel:
                         else:
                             dynamic_ncols = True
 
-                        total_iters = 0
-
-                        if sampler_args.warmup_iters is None:
-                            total_iters += SamplerArgsDefaults.warmup_iters
-                        else:
-                            total_iters += sampler_args.warmup_iters
-
-                        if sampler_args.sampling_iters is None:
-                            total_iters += SamplerArgsDefaults.sampling_iters
-                        else:
-                            total_iters += sampler_args.sampling_iters
-
                         pbar = tqdm_pbar(
                                 desc='Chain {} - warmup'.format(i + 1),
                                 position=i,
-                                total=total_iters,
+                                total=1,  # Will set total from Stan's output
                                 dynamic_ncols=dynamic_ncols,
                             )
 
@@ -1035,6 +1022,10 @@ class CmdStanModel:
                     match = re.search(pattern_compiled, output)
                     if match:
                         current_count = int(match.group(1))
+                        total_count = int(match.group(2))
+
+                        if pbar.total != total_count:
+                            pbar.reset(total=total_count)
 
                         if (match.group(3).lower() == 'sampling' and
                            not changed_description):

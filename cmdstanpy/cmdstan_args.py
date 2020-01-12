@@ -23,11 +23,6 @@ class Method(Enum):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
-class SamplerArgsDefaults:
-    warmup_iters = 1000
-    sampling_iters = 1000
-
-
 class SamplerArgs:
     """Arguments for the NUTS adaptive sampler."""
 
