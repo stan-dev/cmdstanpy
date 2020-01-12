@@ -1036,6 +1036,7 @@ class CmdStanModel:
         count_warmup = 0
         count_sampling = 0
         stdout = b''
+        refresh_warmup = True
 
         try:
             # iterate while process is sampling
@@ -1043,7 +1044,6 @@ class CmdStanModel:
                 output = proc.stdout.readline()
                 stdout += output
                 output = output.decode('utf-8').strip()
-                refresh_warmup = True
                 if output.startswith('Iteration'):
                     match = re.search(pattern_compiled, output)
                     if match:
@@ -1070,7 +1070,7 @@ class CmdStanModel:
                             )
                             pbar_warmup.update(count)
                         elif match.group(3).lower() == 'sampling':
-                            # refresh warmup and close the progress bar
+                            # refresh warmup to 100%
                             if refresh_warmup:
                                 pbar_warmup.update(num_warmup - count_warmup)
                                 pbar_warmup.refresh()
