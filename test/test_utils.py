@@ -9,6 +9,7 @@ import string
 import random
 
 import numpy as np
+import pytest
 
 from cmdstanpy import TMPDIR
 from cmdstanpy.utils import (
@@ -33,6 +34,9 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class CmdStanPathTest(unittest.TestCase):
+
+    @pytest.mark.skipif("TRAVIS" not in os.environ,
+                        reason="Not running on travis")
     def test_default_path(self):
         abs_rel_path = os.path.expanduser(
             os.path.join('~', '.cmdstanpy', 'cmdstan')
