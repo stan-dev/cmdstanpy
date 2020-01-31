@@ -11,7 +11,7 @@ from time import time
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import TMPDIR
+from cmdstanpy import _TMPDIR
 from cmdstanpy.utils import (
     check_sampler_csv,
     scan_optimize_csv,
@@ -54,7 +54,7 @@ class RunSet:
         if args.output_dir is not None:
             output_dir = args.output_dir
         else:
-            output_dir = TMPDIR
+            output_dir = _TMPDIR
 
         self._csv_files = []
         self._diagnostic_files = [None for _ in range(chains)]
@@ -77,7 +77,7 @@ class RunSet:
             if args.save_diagnostics:
                 if args.output_dir is None:
                     diag_file = create_named_text_file(
-                        dir=TMPDIR,
+                        dir=_TMPDIR,
                         prefix='{}-diagnostic-{}-'.format(file_basename, i + 1),
                         suffix='.csv',
                     )
@@ -202,7 +202,7 @@ class RunSet:
                 )
 
             path, filename = os.path.split(self._csv_files[i])
-            if path == TMPDIR:  # cleanup tmpstr in filename
+            if path == _TMPDIR:  # cleanup tmpstr in filename
                 root, ext = os.path.splitext(filename)
                 rlist = root.split('-')
                 root = '-'.join(rlist[:-1])
@@ -431,7 +431,7 @@ class CmdStanMCMC:
             self.runset._args.model_name, self.runset.chains
         )
         tmp_csv_path = create_named_text_file(
-            dir=TMPDIR, prefix=tmp_csv_file, suffix='.csv'
+            dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv'
         )
         cmd = [
             cmd_path,
