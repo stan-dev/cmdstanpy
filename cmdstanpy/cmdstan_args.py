@@ -170,7 +170,7 @@ class SamplerArgs:
                                         self.metric[0], metric
                                     )
                                 )
-            if dims is not None:
+            if any(dims):
                 if len(dims) > 2 or (len(dims) == 2 and dims[0] != dims[1]):
                     raise ValueError('bad metric specifiation')
                 self.metric_file = self.metric
