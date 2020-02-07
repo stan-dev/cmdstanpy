@@ -124,7 +124,7 @@ class SamplerArgs:
                             'step_size must be > 0, found {}'.format(step_size)
                         )
         if self.metric is not None:
-            dims = None
+            dims = []
             if isinstance(self.metric, str):
                 if self.metric in ['diag', 'diag_e']:
                     self.metric = 'diag_e'
@@ -170,7 +170,7 @@ class SamplerArgs:
                                         self.metric[0], metric
                                     )
                                 )
-            if dims is not None:
+            if any(dims):
                 if len(dims) > 2 or (len(dims) == 2 and dims[0] != dims[1]):
                     raise ValueError('bad metric specifiation')
                 self.metric_file = self.metric
