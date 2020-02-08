@@ -398,6 +398,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         with self.assertRaises(Exception):
             fit.get_drawset(params=['ph'])
 
+    # pylint: disable=no-self-use
     def test_custom_metric(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
