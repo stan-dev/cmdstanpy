@@ -228,9 +228,9 @@ class SamplerArgs:
             cmd.append('metric={}'.format(self.metric))
         if self.metric_file is not None:
             if not isinstance(self.metric_file, list):
-                cmd.append('metric_file="{}"'.format(self.metric_file))
+                cmd.append('metric_file={}'.format(self.metric_file))
             else:
-                cmd.append('metric_file="{}"'.format(self.metric_file[idx]))
+                cmd.append('metric_file={}'.format(self.metric_file[idx]))
         if self.adapt_engaged is not None or self.adapt_delta is not None:
             cmd.append('adapt')
         if self.adapt_engaged is not None:
