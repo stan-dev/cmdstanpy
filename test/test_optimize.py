@@ -4,6 +4,7 @@ import os
 import json
 import unittest
 import pytest
+import numpy as np
 
 from cmdstanpy.cmdstan_args import OptimizeArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
@@ -69,6 +70,7 @@ class OptimizeTest(unittest.TestCase):
         )
 
         # test numpy output
+        self.assertTrue(isinstance(mle.optimized_params_np, np.ndarray))
         self.assertAlmostEqual(mle.optimized_params_np[0], -5, places=2)
         self.assertAlmostEqual(mle.optimized_params_np[1], 0.2, places=3)
 

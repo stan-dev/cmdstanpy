@@ -548,7 +548,7 @@ class CmdStanMLE:
         """Returns optimized params as numpy array."""
         if self._mle is None:
             self._set_mle_attrs(self.runset.csv_files[0])
-        return self._mle
+        return np.asarray(self._mle)
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
