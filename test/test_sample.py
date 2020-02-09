@@ -398,6 +398,18 @@ class CmdStanMCMCTest(unittest.TestCase):
         with self.assertRaises(Exception):
             fit.get_drawset(params=['ph'])
 
+    # pylint: disable=no-self-use
+    def test_custom_metric(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        jmetric = os.path.join(DATAFILES_PATH, 'bernoulli.metric.json')
+        # just test that it runs without error
+        bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200,
+            metric=jmetric,
+        )
+
     def test_save_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
