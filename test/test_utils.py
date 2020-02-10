@@ -37,11 +37,18 @@ class CmdStanPathTest(unittest.TestCase):
     def test_default_path(self):
         if 'CMDSTAN' in os.environ:
             self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
+            path = os.environ['CMDSTAN']
+            del os.environ['CMDSTAN']
+            self.assertFalse('CMDSTAN' in os.environ)
+            set_cmdstan_path(path)
+            self.assertEqual(cmdstan_path(), path)
+            self.assertTrue('CMDSTAN' in os.environ)
         else:
             abs_rel_path = os.path.expanduser(
                 os.path.join('~', '.cmdstanpy', 'cmdstan')
                 )
             self.assertTrue(cmdstan_path().startswith(abs_rel_path))
+            self.assertTrue('CMDSTAN' in os.environ)
 
     def test_non_spaces_location(self):
         good_path = os.path.join(TMPDIR, 'good_dir')

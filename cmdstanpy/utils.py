@@ -192,6 +192,7 @@ def cmdstan_path() -> str:
                 'run command line script "install_cmdstan"'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
+        os.environ['CMDSTAN'] = cmdstan
     validate_cmdstan_path(cmdstan)
     return cmdstan
 
