@@ -81,12 +81,16 @@ class CmdStanPathTest(unittest.TestCase):
         shutil.rmtree(bad_path, ignore_errors=True)
 
     def test_set_path(self):
-        install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
-        install_version = os.path.expanduser(
-            os.path.join(install_dir, get_latest_cmdstan(install_dir))
-        )
-        set_cmdstan_path(install_version)
-        self.assertEqual(install_version, cmdstan_path())
+        if 'CMDSTAN' in os.environ:
+            self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
+        else:
+            install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+            install_version = os.path.expanduser(
+                os.path.join(install_dir, get_latest_cmdstan(install_dir))
+                )
+            set_cmdstan_path(install_version)
+            self.assertEqual(install_version, cmdstan_path())
+            self.assertEqual(install_version, os.environ['CMDSTAN'])
 
     def test_validate_path(self):
         install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
