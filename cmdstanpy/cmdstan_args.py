@@ -582,7 +582,7 @@ class CmdStanArgs:
         elif self.data is None:
             if isinstance(self.method_args, OptimizeArgs):
                 raise ValueError('data must be set when optimizing')
-        elif not isinstance(self.data, dict):
+        elif not isinstance(self.data, (str, dict)):
             raise ValueError('data must be string or dict')
 
         if self.inits is not None:
