@@ -35,6 +35,9 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     get_logger,
+    parse_include_paths,
+    parse_stanc_flags,
+    parse_stanc_flags_str,
 )
 
 
@@ -413,7 +416,7 @@ class CmdStanModel:
         fixed_param: bool = False,
         output_dir: str = None,
         save_diagnostics: bool = False,
-        show_progress: Union[bool, str] = False
+        show_progress: Union[bool, str] = False,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -678,11 +681,11 @@ class CmdStanModel:
                             dynamic_ncols = True
 
                         pbar = tqdm_pbar(
-                                desc='Chain {} - warmup'.format(i + 1),
-                                position=i,
-                                total=1,  # Will set total from Stan's output
-                                dynamic_ncols=dynamic_ncols,
-                            )
+                            desc='Chain {} - warmup'.format(i + 1),
+                            position=i,
+                            total=1,  # Will set total from Stan's output
+                            dynamic_ncols=dynamic_ncols,
+                        )
 
                         all_pbars.append(pbar)
 
@@ -1027,8 +1030,10 @@ class CmdStanModel:
                         if pbar.total != total_count:
                             pbar.reset(total=total_count)
 
-                        if (match.group(3).lower() == 'sampling' and
-                           not changed_description):
+                        if (
+                            match.group(3).lower() == 'sampling'
+                            and not changed_description
+                        ):
                             pbar.set_description(f'Chain {idx + 1} - sample')
                             changed_description = True
 

@@ -28,6 +28,44 @@ from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
+STANC_OPTS = [
+    'debug-lex',
+    'debug-parse',
+    'debug-ast',
+    'debug-decorated-ast',
+    'debug-generate-data',
+    'debug-mir',
+    'debug-mir-pretty',
+    'debug-optimized-mir',
+    'debug-optimized-mir-pretty',
+    'debug-transformed-mir',
+    'debug-transformed-mir-pretty',
+    'dump-stan-math-signatures',
+    'warn-uninitialized',
+    'auto-format',
+    'print-canonical',
+    'O',
+    'print-cpp',
+    'allow_undefined',
+    'use-opencl',
+]
+
+STANC_OPTS_ARG = ['name', 'o', 'include_paths']
+
+STANC_HELP_OPTS = ['help', 'version']
+
+
+def parse_stanc_flags_str():
+    pass
+
+
+def parse_stanc_flags():
+    pass
+
+
+def parse_include_paths():
+    pass
+
 
 def get_logger():
     """cmdstanpy logger"""
@@ -47,7 +85,8 @@ def get_latest_cmdstan(dot_dir: str) -> str:
         name.split('-')[1]
         for name in os.listdir(dot_dir)
         if os.path.isdir(os.path.join(dot_dir, name))
-        and name.startswith('cmdstan-') and name[8].isdigit()
+        and name.startswith('cmdstan-')
+        and name[8].isdigit()
     ]
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
@@ -56,8 +95,9 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     return latest
 
 
-class MaybeDictToFilePath():
+class MaybeDictToFilePath:
     """Context manager for json files."""
+
     def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
         self._unlink = [False] * len(objs)
         self._paths = [''] * len(objs)
@@ -117,8 +157,9 @@ def validate_cmdstan_path(path: str) -> None:
         )
 
 
-class TemporaryCopiedFile():
+class TemporaryCopiedFile:
     """Context manager for tmpfiles, handles spaces in filepath."""
+
     def __init__(self, file_path: str):
         self._path = None
         self._tmpdir = None
@@ -230,7 +271,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 compiler_path = ''
                 logger.warning(
                     'Found invalid installion for RTools35 on %s',
-                    toolchain_root
+                    toolchain_root,
                 )
                 toolchain_root = ''
         elif os.path.exists(os.path.join(toolchain_root, 'mingw64')):
@@ -253,7 +294,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 compiler_path = ''
                 logger.warning(
                     'Found invalid installion for RTools40 on %s',
-                    toolchain_root
+                    toolchain_root,
                 )
                 toolchain_root = ''
     else:
@@ -290,7 +331,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 compiler_path = ''
                 logger.warning(
                     'Found invalid installion for RTools35 on %s',
-                    toolchain_root
+                    toolchain_root,
                 )
                 toolchain_root = ''
         if (
@@ -316,7 +357,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 compiler_path = ''
                 logger.warning(
                     'Found invalid installion for RTools40 on %s',
-                    toolchain_root
+                    toolchain_root,
                 )
                 toolchain_root = ''
     if not toolchain_root:
@@ -328,7 +369,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
     os.environ['PATH'] = ';'.join(
         list(
             OrderedDict.fromkeys(
-                [compiler_path, tool_path, ] + os.getenv('PATH', '').split(';')
+                [compiler_path, tool_path] + os.getenv('PATH', '').split(';')
             )
         )
     )
