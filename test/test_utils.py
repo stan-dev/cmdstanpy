@@ -35,7 +35,9 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 class CmdStanPathTest(unittest.TestCase):
 
     def test_default_path(self):
-        cur_value = os.environ['CMDSTAN']
+        cur_value = None
+        if 'CMDSTAN' in os.environ:
+            cur_value = os.environ['CMDSTAN']
         try:
             if 'CMDSTAN' in os.environ:
                 self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
@@ -52,7 +54,12 @@ class CmdStanPathTest(unittest.TestCase):
                 self.assertTrue(cmdstan_path().startswith(abs_rel_path))
                 self.assertTrue('CMDSTAN' in os.environ)
         finally:
-            os.environ['CMDSTAN'] = cur_value
+            if cur_value is not None:
+                os.environ['CMDSTAN'] = cur_value
+            else:
+                if 'CMDSTAN' in os.environ:
+                    del os.environ['CMDSTAN']
+
 
     def test_non_spaces_location(self):
         good_path = os.path.join(TMPDIR, 'good_dir')
