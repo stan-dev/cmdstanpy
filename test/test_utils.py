@@ -48,10 +48,11 @@ class CmdStanPathTest(unittest.TestCase):
                 self.assertEqual(cmdstan_path(), path)
                 self.assertTrue('CMDSTAN' in os.environ)
             else:
-                abs_rel_path = os.path.expanduser(
-                    os.path.join('~', '.cmdstanpy', 'cmdstan')
+                install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+                install_version = os.path.expanduser(
+                    os.path.join(install_dir, get_latest_cmdstan(install_dir))
                     )
-                self.assertTrue(cmdstan_path().startswith(abs_rel_path))
+                self.assertTrue(os.path.samefile(cmdstan_path(), install_version))
                 self.assertTrue('CMDSTAN' in os.environ)
         finally:
             if cur_value is not None:
