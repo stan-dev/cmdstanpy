@@ -10,7 +10,7 @@ import random
 
 import numpy as np
 
-from cmdstanpy import TMPDIR
+from cmdstanpy import _TMPDIR
 from cmdstanpy.utils import (
     cmdstan_path,
     set_cmdstan_path,
@@ -40,13 +40,13 @@ class CmdStanPathTest(unittest.TestCase):
         self.assertTrue(cmdstan_path().startswith(abs_rel_path))
 
     def test_non_spaces_location(self):
-        good_path = os.path.join(TMPDIR, 'good_dir')
+        good_path = os.path.join(_TMPDIR, 'good_dir')
         with TemporaryCopiedFile(good_path) as (pth, is_changed):
             self.assertEqual(pth, good_path)
             self.assertFalse(is_changed)
 
         # prepare files for test
-        bad_path = os.path.join(TMPDIR, 'bad dir')
+        bad_path = os.path.join(_TMPDIR, 'bad dir')
         os.makedirs(bad_path, exist_ok=True)
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         stan_bad = os.path.join(bad_path, 'bad name.stan')
@@ -119,32 +119,32 @@ class CmdStanPathTest(unittest.TestCase):
 
     def test_jsondump(self):
         dict_list = {'a': [1.0, 2.0, 3.0]}
-        file_list = os.path.join(TMPDIR, 'list.json')
+        file_list = os.path.join(_TMPDIR, 'list.json')
         jsondump(file_list, dict_list)
         with open(file_list) as fd:
             self.assertEqual(json.load(fd), dict_list)
 
         dict_vec = {'a': np.repeat(3, 4)}
-        file_vec = os.path.join(TMPDIR, 'vec.json')
+        file_vec = os.path.join(_TMPDIR, 'vec.json')
         jsondump(file_vec, dict_vec)
         with open(file_vec) as fd:
             self.assertEqual(json.load(fd), dict_vec)
 
         dict_zero_vec = {'a': []}
-        file_zero_vec = os.path.join(TMPDIR, 'empty_vec.json')
+        file_zero_vec = os.path.join(_TMPDIR, 'empty_vec.json')
         jsondump(file_zero_vec, dict_zero_vec)
         with open(file_zero_vec) as fd:
             self.assertEqual(json.load(fd), dict_zero_vec)
 
         dict_zero_matrix = {'a': [[], [], []]}
-        file_zero_matrix = os.path.join(TMPDIR, 'empty_matrix.json')
+        file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
         jsondump(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
             self.assertEqual(json.load(fd), dict_zero_matrix)
 
         arr = np.zeros(shape=(5, 0))
         dict_zero_matrix = {'a': arr}
-        file_zero_matrix = os.path.join(TMPDIR, 'empty_matrix.json')
+        file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
         jsondump(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
             self.assertEqual(json.load(fd), dict_zero_matrix)
@@ -282,7 +282,7 @@ class WindowsShortPath(unittest.TestCase):
     def test_windows_short_path_directory(self):
         if platform.system() != 'Windows':
             return
-        original_path = os.path.join(TMPDIR, 'new path')
+        original_path = os.path.join(_TMPDIR, 'new path')
         os.makedirs(original_path, exist_ok=True)
         assert os.path.exists(original_path)
         assert ' ' in original_path
@@ -294,7 +294,7 @@ class WindowsShortPath(unittest.TestCase):
     def test_windows_short_path_file(self):
         if platform.system() != 'Windows':
             return
-        original_path = os.path.join(TMPDIR, 'new path', 'my_file.csv')
+        original_path = os.path.join(_TMPDIR, 'new path', 'my_file.csv')
         os.makedirs(os.path.split(original_path)[0], exist_ok=True)
         assert os.path.exists(os.path.split(original_path)[0])
         assert ' ' in original_path
@@ -309,7 +309,7 @@ class WindowsShortPath(unittest.TestCase):
         """Test that the function doesn't touch filename."""
         if platform.system() != 'Windows':
             return
-        original_path = os.path.join(TMPDIR, 'new path', 'my file.csv')
+        original_path = os.path.join(_TMPDIR, 'new path', 'my file.csv')
         os.makedirs(os.path.split(original_path)[0], exist_ok=True)
         assert os.path.exists(os.path.split(original_path)[0])
         assert ' ' in original_path

@@ -4,7 +4,7 @@ import os
 import platform
 import unittest
 
-from cmdstanpy import TMPDIR
+from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
@@ -496,7 +496,7 @@ class CmdStanArgsTest(unittest.TestCase):
         # TODO: read-only dir test for Windows - set ACLs, not mode
         if platform.system() == 'Darwin' or platform.system() == 'Linux':
             with self.assertRaises(ValueError):
-                read_only = os.path.join(TMPDIR, 'read_only')
+                read_only = os.path.join(_TMPDIR, 'read_only')
                 os.mkdir(read_only, mode=0o444)
                 CmdStanArgs(
                     model_name='bernoulli',

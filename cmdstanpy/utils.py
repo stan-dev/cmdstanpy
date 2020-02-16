@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 
-from cmdstanpy import TMPDIR
+from cmdstanpy import _TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -66,7 +66,7 @@ class MaybeDictToFilePath():
         for obj in objs:
             if isinstance(obj, dict):
                 data_file = create_named_text_file(
-                    dir=TMPDIR, prefix='', suffix='.json'
+                    dir=_TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
                 if any(
