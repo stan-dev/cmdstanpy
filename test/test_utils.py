@@ -60,7 +60,6 @@ class CmdStanPathTest(unittest.TestCase):
                 if 'CMDSTAN' in os.environ:
                     del os.environ['CMDSTAN']
 
-
     def test_non_spaces_location(self):
         good_path = os.path.join(TMPDIR, 'good_dir')
         with TemporaryCopiedFile(good_path) as (pth, is_changed):
