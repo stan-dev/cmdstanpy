@@ -188,7 +188,7 @@ class CmdStanModelTest(unittest.TestCase):
                 CmdStanModel(stan_file=stan)
 
             # Join all the log messages into one string
-            error_message = "@( * O * )@".join(np.array(log.actual())[:, -1])
+            error_message = '@( * O * )@'.join(np.array(log.actual())[:, -1])
 
             # Ensure the new line character in error message is not escaped
             # so the error message is readable
