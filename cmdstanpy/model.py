@@ -139,9 +139,12 @@ class CmdStanModel:
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
+                print('found include directive')
                 path, _ = os.path.split(self._stan_file)
                 if path not in includes:
                     includes.append(path)
+                print(includes)
+                print('')
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -244,7 +247,7 @@ class CmdStanModel:
         ignore = []
         for key, val in self._stanc_options.items():
             if key in STANC_IGNORE_OPTS:
-                self._logger.info('Ignoring compiler option: %s', key)
+                self._logger.info('ignoring compiler option: %s', key)
                 ignore.append(key)
             elif key not in STANC_OPTS:
                 raise ValueError(
@@ -259,15 +262,26 @@ class CmdStanModel:
                         'invalid include_paths, expecting list or '
                         'string, found type: {}'.format(type(val))
                     )
-                for dir in paths:
-                    if dir not in includes:
-                        includes.append(dir)
-                bad_paths = [d for d in includes if not os.path.exists(d)]
-                if any(bad_paths):
-                    raise ValueError(
-                        'invalid include paths: {}'.format(', '.join(bad_paths))
-                    )
-                self._stanc_options[key] = list(includes)
+        for opt in ignore:
+            del self._stanc_options[opt]
+
+        if len(includes) > 0:
+            if 'include_paths' not in self._stanc_options.keys():
+                self._stanc_options['include_paths'] = list(includes)
+            else:
+                self._stanc_options['include_paths'].append(list(includes))
+
+        if 'include_paths' in self._stanc_options.keys():
+            uniq = []
+            for dir in self._stanc_options['include_paths']:
+                if dir not in uniq:
+                    uniq.append(dir)
+            bad_paths = [dir for dir in uniq if not os.path.exists(dir)]
+            if any(bad_paths):
+                raise ValueError(
+                    'invalid include paths: {}'.format(', '.join(bad_paths))
+                )
+            self._stanc_options['include_paths'] = uniq
 
     def validate_cpp_opts(self) -> None:
         for key, val in self._cpp_options.items():
@@ -347,6 +361,7 @@ class CmdStanModel:
                     'compiling stan program, exe file: %s', exe_file
                 )
                 cmd = self.compose_compile_cmd(exe_file)
+                print(cmd)
                 try:
                     do_command(cmd, cmdstan_path(), logger=self._logger)
                 except RuntimeError as e:
