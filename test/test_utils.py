@@ -34,10 +34,35 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 class CmdStanPathTest(unittest.TestCase):
     def test_default_path(self):
-        abs_rel_path = os.path.expanduser(
-            os.path.join('~', '.cmdstanpy', 'cmdstan')
-        )
-        self.assertTrue(cmdstan_path().startswith(abs_rel_path))
+        cur_value = None
+        if 'CMDSTAN' in os.environ:
+            cur_value = os.environ['CMDSTAN']
+        try:
+            if 'CMDSTAN' in os.environ:
+                self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
+                path = os.environ['CMDSTAN']
+                del os.environ['CMDSTAN']
+                self.assertFalse('CMDSTAN' in os.environ)
+                set_cmdstan_path(path)
+                self.assertEqual(cmdstan_path(), path)
+                self.assertTrue('CMDSTAN' in os.environ)
+            else:
+                install_dir = os.path.expanduser(
+                    os.path.join('~', '.cmdstanpy')
+                )
+                install_version = os.path.expanduser(
+                    os.path.join(install_dir, get_latest_cmdstan(install_dir))
+                )
+                self.assertTrue(
+                    os.path.samefile(cmdstan_path(), install_version)
+                )
+                self.assertTrue('CMDSTAN' in os.environ)
+        finally:
+            if cur_value is not None:
+                os.environ['CMDSTAN'] = cur_value
+            else:
+                if 'CMDSTAN' in os.environ:
+                    del os.environ['CMDSTAN']
 
     def test_non_spaces_location(self):
         good_path = os.path.join(_TMPDIR, 'good_dir')
@@ -70,12 +95,16 @@ class CmdStanPathTest(unittest.TestCase):
         shutil.rmtree(bad_path, ignore_errors=True)
 
     def test_set_path(self):
-        install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
-        install_version = os.path.expanduser(
-            os.path.join(install_dir, get_latest_cmdstan(install_dir))
-        )
-        set_cmdstan_path(install_version)
-        self.assertEqual(install_version, cmdstan_path())
+        if 'CMDSTAN' in os.environ:
+            self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
+        else:
+            install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+            install_version = os.path.expanduser(
+                os.path.join(install_dir, get_latest_cmdstan(install_dir))
+            )
+            set_cmdstan_path(install_version)
+            self.assertEqual(install_version, cmdstan_path())
+            self.assertEqual(install_version, os.environ['CMDSTAN'])
 
     def test_validate_path(self):
         install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
