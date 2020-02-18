@@ -28,44 +28,6 @@ from cmdstanpy import TMPDIR
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
-STANC_OPTS = [
-    'debug-lex',
-    'debug-parse',
-    'debug-ast',
-    'debug-decorated-ast',
-    'debug-generate-data',
-    'debug-mir',
-    'debug-mir-pretty',
-    'debug-optimized-mir',
-    'debug-optimized-mir-pretty',
-    'debug-transformed-mir',
-    'debug-transformed-mir-pretty',
-    'dump-stan-math-signatures',
-    'warn-uninitialized',
-    'auto-format',
-    'print-canonical',
-    'O',
-    'print-cpp',
-    'allow_undefined',
-    'use-opencl',
-]
-
-STANC_OPTS_ARG = ['name', 'o', 'include_paths']
-
-STANC_HELP_OPTS = ['help', 'version']
-
-
-def parse_stanc_flags_str():
-    pass
-
-
-def parse_stanc_flags():
-    pass
-
-
-def parse_include_paths():
-    pass
-
 
 def get_logger():
     """cmdstanpy logger"""

@@ -37,6 +37,44 @@ from cmdstanpy.utils import (
     get_logger,
 )
 
+STANC_OPTS = [
+    'O',
+    'allow_undefined',
+    'use-opencl',
+    'warn-uninitialized',
+    'include_paths',
+    'name',
+]
+
+STANC_IGNORE_OPTS = [
+    'debug-lex',
+    'debug-parse',
+    'debug-ast',
+    'debug-decorated-ast',
+    'debug-generate-data',
+    'debug-mir',
+    'debug-mir-pretty',
+    'debug-optimized-mir',
+    'debug-optimized-mir-pretty',
+    'debug-transformed-mir',
+    'debug-transformed-mir-pretty',
+    'dump-stan-math-signatures',
+    'auto-format',
+    'print-canonical',
+    'print-cpp',
+    'o',
+    'help',
+    'version',
+]
+
+CPP_OPTS = [
+    'STAN_OPENCL',
+    'OPENCL_DEVICE_ID',
+    'OPENCL_PLATFORM_ID',
+    'STAN_MPI',
+    'STAN_THREADS',
+]
+
 
 class CmdStanModel:
     """
@@ -50,22 +88,36 @@ class CmdStanModel:
 
     + By default, compiles model on instantiation - override with argument
         ``compile=False``
+
+    Attributes:
+        name - model name, default is basename of program
+        stan_file - path to Stan program file
+        exe_file - path to compiled executable
+        stanc_options - dict of stanc compiler flags
+        cpp_options - dict of makefile options
     """
 
     def __init__(
         self,
+        model_name: str = None,
         stan_file: str = None,
         exe_file: str = None,
-        include_paths: List[str] = None,
+        stanc_options: Dict = None,
+        cpp_options: Dict = None,
         compile: bool = True,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
-        self._stan_file = None
         self._name = None
+        self._stan_file = None
         self._exe_file = None
-        self._include_paths = None
+        self._stanc_options = {}
+        self._cpp_options = {}
         self._logger = logger or get_logger()
+        includes = []
+
+        if model_name is not None:
+            self._name = model_name.strip()
 
         if stan_file is None:
             if exe_file is None:
@@ -81,16 +133,15 @@ class CmdStanModel:
                 raise ValueError(
                     'invalid stan filename {}'.format(self._stan_file)
                 )
-            self._name, _ = os.path.splitext(filename)
+            if self._name is None:
+                self._name, _ = os.path.splitext(filename)
             # if program has #includes, search program dir
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(self._stan_file)
-                if include_paths is None:
-                    include_paths = []
-                if path not in include_paths:
-                    include_paths.append(path)
+                if path not in includes:
+                    includes.append(path)
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -107,13 +158,13 @@ class CmdStanModel:
                         ' found: {}'.format(self._name, exename)
                     )
 
-        if include_paths is not None:
-            bad_paths = [d for d in include_paths if not os.path.exists(d)]
-            if any(bad_paths):
-                raise ValueError(
-                    'invalid include paths: {}'.format(', '.join(bad_paths))
-                )
-            self._include_paths = include_paths
+        if stanc_options is not None:
+            self._stanc_options = stanc_options
+        self.validate_stanc_opts(includes)
+
+        if cpp_options is not None:
+            self._cpp_options = cpp_options
+            self.validate_cpp_opts()
 
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
@@ -144,21 +195,6 @@ class CmdStanModel:
             self._name, self._stan_file, self._exe_file
         )
 
-    def code(self) -> str:
-        """Return Stan program as a string."""
-        if not self._stan_file:
-            raise RuntimeError('Please specify source file')
-
-        code = None
-        try:
-            with open(self._stan_file, 'r') as fd:
-                code = fd.read()
-        except IOError:
-            self._logger.error(
-                'Cannot read file Stan file: %s', self._stan_file
-            )
-        return code
-
     @property
     def name(self) -> str:
         """Stan program name; corresponds to bare filename, no extension."""
@@ -175,9 +211,100 @@ class CmdStanModel:
         return self._exe_file
 
     @property
-    def include_paths(self) -> List[str]:
-        """List of user-specified include paths."""
-        return self._include_paths
+    def stanc_options(self) -> Dict:
+        """Options to stanc compiler."""
+        return self._stanc_options
+
+    @property
+    def cpp_options(self) -> Dict:
+        """Options to CmdStan makefile."""
+        return self._cpp_options
+
+    def code(self) -> str:
+        """Return Stan program as a string."""
+        if not self._stan_file:
+            raise RuntimeError('Please specify source file')
+
+        code = None
+        try:
+            with open(self._stan_file, 'r') as fd:
+                code = fd.read()
+        except IOError:
+            self._logger.error(
+                'Cannot read file Stan file: %s', self._stan_file
+            )
+        return code
+
+    def validate_stanc_opts(self, includes: List[str]) -> None:
+        """
+        Check dictionary entries for valide stanc compiler args
+        Add list of include files, as needed
+        Raise ValueError if bad config is found.
+        """
+        ignore = []
+        for key, val in self._stanc_options.items():
+            if key in STANC_IGNORE_OPTS:
+                self._logger.info('Ignoring compiler option: %s', key)
+                ignore.append(key)
+            elif key not in STANC_OPTS:
+                raise ValueError(
+                    'unknown stanc compiler option: {}'.format(key)
+                )
+            elif key == 'include_paths':
+                paths = val
+                if isinstance(val, str):
+                    paths = val.split(',')
+                elif not isinstance(val, List):
+                    raise ValueError(
+                        'invalid include_paths, expecting list or '
+                        'string, found type: {}'.format(type(val))
+                    )
+                for dir in paths:
+                    if dir not in includes:
+                        includes.append(dir)
+                bad_paths = [d for d in includes if not os.path.exists(d)]
+                if any(bad_paths):
+                    raise ValueError(
+                        'invalid include paths: {}'.format(', '.join(bad_paths))
+                    )
+                self._stanc_options[key] = list(includes)
+
+    def validate_cpp_opts(self) -> None:
+        for key, val in self._cpp_options.items():
+            if key not in CPP_OPTS:
+                raise ValueError(
+                    'unknown CmdStan makefile option: {}'.format(key)
+                )
+            if key in ['OPENCL_DEVICE_ID', 'OPENCL_PLATFORM_ID']:
+                if not isinstance(val, int) or val < 0:
+                    raise ValueError(
+                        '{} must be a non-negative integer value,'
+                        ' found {}'.format(key, val)
+                    )
+
+    def compose_compile_cmd(self, exe_file: str) -> List[str]:
+        make = os.getenv(
+            'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
+        )
+        cmd = [make]
+        for key, val in self._stanc_options.items():
+            if key == 'include_paths':
+                cmd.append(
+                    'STANCFLAGS+=--include_paths='
+                    + ','.join(
+                        (
+                            Path(p).as_posix()
+                            for p in self._stanc_options['include_paths']
+                        )
+                    )
+                )
+            else:
+                cmd.append('STANCFLAGS+=--{}'.format(val))
+        for key, val in self._cpp_options:
+            cmd.append('{}={}'.format(key, val))
+
+        cmd.append(Path(exe_file).as_posix())
+        return cmd
 
     def compile(self, opt_lvl: int = 3, force: bool = False) -> None:
         """
@@ -206,8 +333,7 @@ class CmdStanModel:
 
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
-            exe_file = Path(exe_file).as_posix()
-            exe_file += EXTENSION
+            exe_file = Path(exe_file).as_posix() + EXTENSION
             do_compile = True
             if os.path.exists(exe_file):
                 src_time = os.path.getmtime(self._stan_file)
@@ -217,58 +343,17 @@ class CmdStanModel:
                     self._logger.info('found newer exe file, not recompiling')
 
             if do_compile:
-                make = os.getenv(
-                    'MAKE',
-                    'make'
-                    if platform.system() != 'Windows'
-                    else 'mingw32-make',
+                self._logger.info(
+                    'compiling stan program, exe file: %s', exe_file
                 )
-                hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
-                hpp_file = Path(hpp_file).as_posix()
-                if not os.path.exists(hpp_file):
-                    self._logger.info('stan to c++ (%s)', hpp_file)
-                    cmd = [
-                        make,
-                        Path(exe_file).as_posix(),
-                        'STANCFLAGS+=--o={}'.format(hpp_file),
-                    ]
-                    if self._include_paths is not None:
-                        bad_paths = [
-                            d
-                            for d in self._include_paths
-                            if not os.path.exists(d)
-                        ]
-                        if any(bad_paths):
-                            raise ValueError(
-                                'invalid include paths: {}'.format(
-                                    ', '.join(bad_paths)
-                                )
-                            )
-                        cmd.append(
-                            'STANCFLAGS+=--include_paths='
-                            + ','.join(
-                                (
-                                    Path(p).as_posix()
-                                    for p in self._include_paths
-                                )
-                            )
-                        )
-                    try:
-                        do_command(cmd, cmdstan_path(), logger=self._logger)
-                    except RuntimeError as e:
-                        self._logger.error(
-                            'file %s, exception %s', stan_file, str(e)
-                        )
-                        compilation_failed = True
-
-                if not compilation_failed:
-                    cmd = [make, 'O={}'.format(opt_lvl), exe_file]
-                    self._logger.info('compiling c++')
-                    try:
-                        do_command(cmd, cmdstan_path(), logger=self._logger)
-                    except RuntimeError as e:
-                        self._logger.error('make cmd failed %s', repr(e))
-                        compilation_failed = True
+                cmd = self.compose_compile_cmd(exe_file)
+                try:
+                    do_command(cmd, cmdstan_path(), logger=self._logger)
+                except RuntimeError as e:
+                    self._logger.error(
+                        'file %s, exception %s', stan_file, str(e)
+                    )
+                    compilation_failed = True
 
             if not compilation_failed:
                 if is_copied:
@@ -1039,7 +1124,7 @@ class CmdStanModel:
 
             pbar.set_description(f'Chain {idx + 1} -   done', refresh=True)
 
-            if "notebook" in type(pbar).__name__:
+            if 'notebook' in type(pbar).__name__:
                 # In Jupyter make the bar green by closing it
                 pbar.close()
 
