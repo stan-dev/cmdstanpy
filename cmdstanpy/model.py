@@ -235,9 +235,8 @@ class CmdStanModel:
                     else 'mingw32-make',
                 )
                 cmd = [make]
-                cmd.append(self._compiler_opts.compose())
+                cmd.append(self._compiler_options.compose())
                 cmd.append(Path(exe_file).as_posix())
-                cmd = self.compose_compile_cmd(exe_file)
                 print(cmd)
                 try:
                     do_command(cmd, cmdstan_path(), logger=self._logger)

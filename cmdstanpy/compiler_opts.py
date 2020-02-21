@@ -54,11 +54,15 @@ class CompilerOptions:
     """
 
     def __init__(
-        self, stanc_options: Dict = None, cpp_options: Dict = None
+        self,
+        stanc_options: Dict = None,
+        cpp_options: Dict = None,
+        logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self._stanc_options = stanc_options
         self._cpp_options = cpp_options
+        self._logger = logger or get_logger()
 
     def __repr__(self) -> str:
         return 'CompilerOptions(stanc_options={}, cpp_options={})'.format(
