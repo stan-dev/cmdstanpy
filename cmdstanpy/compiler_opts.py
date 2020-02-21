@@ -1,6 +1,7 @@
 """
 Makefile options for stanc and C++ compilers
 """
+
 import os
 import logging
 
