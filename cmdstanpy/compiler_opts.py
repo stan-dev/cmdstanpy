@@ -2,8 +2,14 @@
 Makefile options for stanc and C++ compilers
 """
 import os
+import logging
+
 from pathlib import Path
 from typing import Dict, List
+
+from cmdstanpy.utils import (
+    get_logger,
+)
 
 STANC_OPTS = [
     'O',
