@@ -21,6 +21,7 @@ from cmdstanpy.cmdstan_args import (
     GenerateQuantitiesArgs,
     VariationalArgs,
 )
+from cmdstanpy.compiler_opts import CompilerOptions
 from cmdstanpy.stanfit import (
     RunSet,
     CmdStanMCMC,
@@ -36,44 +37,6 @@ from cmdstanpy.utils import (
     TemporaryCopiedFile,
     get_logger,
 )
-
-STANC_OPTS = [
-    'O',
-    'allow_undefined',
-    'use-opencl',
-    'warn-uninitialized',
-    'include_paths',
-    'name',
-]
-
-STANC_IGNORE_OPTS = [
-    'debug-lex',
-    'debug-parse',
-    'debug-ast',
-    'debug-decorated-ast',
-    'debug-generate-data',
-    'debug-mir',
-    'debug-mir-pretty',
-    'debug-optimized-mir',
-    'debug-optimized-mir-pretty',
-    'debug-transformed-mir',
-    'debug-transformed-mir-pretty',
-    'dump-stan-math-signatures',
-    'auto-format',
-    'print-canonical',
-    'print-cpp',
-    'o',
-    'help',
-    'version',
-]
-
-CPP_OPTS = [
-    'STAN_OPENCL',
-    'OPENCL_DEVICE_ID',
-    'OPENCL_PLATFORM_ID',
-    'STAN_MPI',
-    'STAN_THREADS',
-]
 
 
 class CmdStanModel:
@@ -93,8 +56,7 @@ class CmdStanModel:
         name - model name, default is basename of program
         stan_file - path to Stan program file
         exe_file - path to compiled executable
-        stanc_options - dict of stanc compiler flags
-        cpp_options - dict of makefile options
+        compile_options - flags for stanc3 and c++ compiler
     """
 
     def __init__(
@@ -102,19 +64,16 @@ class CmdStanModel:
         model_name: str = None,
         stan_file: str = None,
         exe_file: str = None,
-        stanc_options: Dict = None,
-        cpp_options: Dict = None,
         compile: bool = True,
+        compiler_options: CompilerOptions = None,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self._name = None
         self._stan_file = None
         self._exe_file = None
-        self._stanc_options = {}
-        self._cpp_options = {}
+        self._compiler_options = compiler_options
         self._logger = logger or get_logger()
-        includes = []
 
         if model_name is not None:
             self._name = model_name.strip()
@@ -139,12 +98,13 @@ class CmdStanModel:
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
-                print('found include directive')
                 path, _ = os.path.split(self._stan_file)
-                if path not in includes:
-                    includes.append(path)
-                print(includes)
-                print('')
+                if self._compiler_options is None:
+                    self._compiler_options = CompilerOptions(
+                        stanc_options={'include_paths': path}
+                    )
+                else:
+                    self._compiler_options.add_includes(path)
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -160,14 +120,6 @@ class CmdStanModel:
                         ' executable, expecting basename: {}'
                         ' found: {}'.format(self._name, exename)
                     )
-
-        if stanc_options is not None:
-            self._stanc_options = stanc_options
-        self.validate_stanc_opts(includes)
-
-        if cpp_options is not None:
-            self._cpp_options = cpp_options
-            self.validate_cpp_opts()
 
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
@@ -194,7 +146,7 @@ class CmdStanModel:
                 )
 
     def __repr__(self) -> str:
-        return 'CmdStanModel(name={},  stan_file="{}", exe_file="{}")'.format(
+        return 'CmdStanModel(name="{}", stan_file="{}", exe_file="{}")'.format(
             self._name, self._stan_file, self._exe_file
         )
 
@@ -214,14 +166,9 @@ class CmdStanModel:
         return self._exe_file
 
     @property
-    def stanc_options(self) -> Dict:
-        """Options to stanc compiler."""
-        return self._stanc_options
-
-    @property
-    def cpp_options(self) -> Dict:
-        """Options to CmdStan makefile."""
-        return self._cpp_options
+    def compiler_options(self) -> CompilerOptions:
+        """Options to stanc and c++ compilers."""
+        return self._compiler_options
 
     def code(self) -> str:
         """Return Stan program as a string."""
@@ -238,89 +185,9 @@ class CmdStanModel:
             )
         return code
 
-    def validate_stanc_opts(self, includes: List[str]) -> None:
-        """
-        Check dictionary entries for valide stanc compiler args
-        Add list of include files, as needed
-        Raise ValueError if bad config is found.
-        """
-        ignore = []
-        for key, val in self._stanc_options.items():
-            if key in STANC_IGNORE_OPTS:
-                self._logger.info('ignoring compiler option: %s', key)
-                ignore.append(key)
-            elif key not in STANC_OPTS:
-                raise ValueError(
-                    'unknown stanc compiler option: {}'.format(key)
-                )
-            elif key == 'include_paths':
-                paths = val
-                if isinstance(val, str):
-                    paths = val.split(',')
-                elif not isinstance(val, List):
-                    raise ValueError(
-                        'invalid include_paths, expecting list or '
-                        'string, found type: {}'.format(type(val))
-                    )
-        for opt in ignore:
-            del self._stanc_options[opt]
-
-        if len(includes) > 0:
-            if 'include_paths' not in self._stanc_options.keys():
-                self._stanc_options['include_paths'] = list(includes)
-            else:
-                self._stanc_options['include_paths'].append(list(includes))
-
-        if 'include_paths' in self._stanc_options.keys():
-            uniq = []
-            for dir in self._stanc_options['include_paths']:
-                if dir not in uniq:
-                    uniq.append(dir)
-            bad_paths = [dir for dir in uniq if not os.path.exists(dir)]
-            if any(bad_paths):
-                raise ValueError(
-                    'invalid include paths: {}'.format(', '.join(bad_paths))
-                )
-            self._stanc_options['include_paths'] = uniq
-
-    def validate_cpp_opts(self) -> None:
-        for key, val in self._cpp_options.items():
-            if key not in CPP_OPTS:
-                raise ValueError(
-                    'unknown CmdStan makefile option: {}'.format(key)
-                )
-            if key in ['OPENCL_DEVICE_ID', 'OPENCL_PLATFORM_ID']:
-                if not isinstance(val, int) or val < 0:
-                    raise ValueError(
-                        '{} must be a non-negative integer value,'
-                        ' found {}'.format(key, val)
-                    )
-
-    def compose_compile_cmd(self, exe_file: str) -> List[str]:
-        make = os.getenv(
-            'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
-        )
-        cmd = [make]
-        for key, val in self._stanc_options.items():
-            if key == 'include_paths':
-                cmd.append(
-                    'STANCFLAGS+=--include_paths='
-                    + ','.join(
-                        (
-                            Path(p).as_posix()
-                            for p in self._stanc_options['include_paths']
-                        )
-                    )
-                )
-            else:
-                cmd.append('STANCFLAGS+=--{}'.format(val))
-        for key, val in self._cpp_options:
-            cmd.append('{}={}'.format(key, val))
-
-        cmd.append(Path(exe_file).as_posix())
-        return cmd
-
-    def compile(self, opt_lvl: int = 3, force: bool = False) -> None:
+    def compile(
+        self, force: bool = False, compiler_options: CompilerOptions = None
+    ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
         C++, then calls the C++ compiler.
@@ -329,22 +196,23 @@ class CmdStanModel:
         executable files; if the executable is newer than the source file, it
         will not recompile the file, unless argument ``force`` is True.
 
-        :param opt_lvl: Optimization level used by the C++ compiler, one of
-            {0, 1, 2, 3}.  Defaults to level 2. Level 0 optimization results
-            in the shortest compilation time with code that may run slowly.
-            Higher optimization levels increase runtime performance but will
-            take longer to compile.
-
         :param force: When ``True``, always compile, even if the executable file
             is newer than the source file.  Used for Stan models which have
             ``#include`` directives in order to force recompilation when changes
             are made to the included files.
+
+        :param compiler_options: options for stanc and C++ compilers
         """
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
 
-        compilation_failed = False
+        if compiler_options is not None:
+            compiler_options.validate()
+            self._compiler_options = compiler_options
+        else:
+            self._compiler_options.validate()
 
+        compilation_failed = False
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
             exe_file = Path(exe_file).as_posix() + EXTENSION
@@ -360,6 +228,15 @@ class CmdStanModel:
                 self._logger.info(
                     'compiling stan program, exe file: %s', exe_file
                 )
+                make = os.getenv(
+                    'MAKE',
+                    'make'
+                    if platform.system() != 'Windows'
+                    else 'mingw32-make',
+                )
+                cmd = [make]
+                cmd.append(self._compiler_opts.compose())
+                cmd.append(Path(exe_file).as_posix())
                 cmd = self.compose_compile_cmd(exe_file)
                 print(cmd)
                 try:
