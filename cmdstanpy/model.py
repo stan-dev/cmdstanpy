@@ -94,17 +94,17 @@ class CmdStanModel:
                 )
             if self._name is None:
                 self._name, _ = os.path.splitext(filename)
-            # if program has #includes, search program dir
+            # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(self._stan_file)
                 if self._compiler_options is None:
                     self._compiler_options = CompilerOptions(
-                        stanc_options={'include_paths': path}
+                        stanc_options={'include_paths': [path]}
                     )
                 else:
-                    self._compiler_options.add_includes(path)
+                    self._compiler_options.add_include_path(path)
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -120,6 +120,9 @@ class CmdStanModel:
                         ' executable, expecting basename: {}'
                         ' found: {}'.format(self._name, exename)
                     )
+
+        if self._compiler_options is not None:
+            self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
@@ -146,9 +149,11 @@ class CmdStanModel:
                 )
 
     def __repr__(self) -> str:
-        return 'CmdStanModel(name="{}", stan_file="{}", exe_file="{}")'.format(
-            self._name, self._stan_file, self._exe_file
-        )
+        repr = 'CmdStanModel: name={}'.format(self._name)
+        repr = '{}\n\t stan_file={}'.format(repr, self._stan_file)
+        repr = '{}\n\t exe_file={}'.format(repr, self._exe_file)
+        repr = '{}\n\t compiler_optons={}'.format(repr, self._compiler_options)
+        return repr
 
     @property
     def name(self) -> str:
@@ -186,7 +191,10 @@ class CmdStanModel:
         return code
 
     def compile(
-        self, force: bool = False, compiler_options: CompilerOptions = None
+        self,
+        force: bool = False,
+        compiler_options: CompilerOptions = None,
+        override_options: bool = False
     ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
@@ -201,16 +209,22 @@ class CmdStanModel:
             ``#include`` directives in order to force recompilation when changes
             are made to the included files.
 
-        :param compiler_options: options for stanc and C++ compilers
+        :param compiler_options: Options for stanc and C++ compilers.
+
+        :param override_options: When ``True``, override existing option.
+            When ``False``, add/replace existing options.  Default is ``False``.
         """
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
 
         if compiler_options is not None:
             compiler_options.validate()
-            self._compiler_options = compiler_options
-        else:
-            self._compiler_options.validate()
+            if self._compiler_options is None:
+                self._compiler_options = compiler_options
+            elif override_options:
+                self._compiler_options = compiler_options
+            else:
+                self._compiler_options.add(compiler_options)
 
         compilation_failed = False
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
@@ -225,9 +239,15 @@ class CmdStanModel:
                     self._logger.info('found newer exe file, not recompiling')
 
             if do_compile:
+                if self._compiler_options is not None:
+                    self._compiler_options.validate()
                 self._logger.info(
                     'compiling stan program, exe file: %s', exe_file
                 )
+                if self._compiler_options is not None:
+                    self._logger.info(
+                        'compiler options: %s', self._compiler_options
+                    )
                 make = os.getenv(
                     'MAKE',
                     'make'
@@ -235,9 +255,9 @@ class CmdStanModel:
                     else 'mingw32-make',
                 )
                 cmd = [make]
-                cmd.append(self._compiler_options.compose())
+                if self._compiler_options is not None:
+                    cmd.extend(self._compiler_options.compose())
                 cmd.append(Path(exe_file).as_posix())
-                print(cmd)
                 try:
                     do_command(cmd, cmdstan_path(), logger=self._logger)
                 except RuntimeError as e:

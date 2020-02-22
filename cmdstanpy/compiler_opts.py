@@ -8,9 +8,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List
 
-from cmdstanpy.utils import (
-    get_logger,
-)
+from cmdstanpy.utils import get_logger
 
 STANC_OPTS = [
     'O',
@@ -91,16 +89,16 @@ class CompilerOptions:
         Check compiler args.
         Raise ValueError if invalid options are found.
         """
-        if self._stanc_options is not None and len(self._stanc_options) > 0:
-            self.validate_stanc_opts()
-        if self._cpp_options is not None and len(self._cpp_options) > 0:
-            self.validate_cpp_opts()
+        self.validate_stanc_opts()
+        self.validate_cpp_opts()
 
     def validate_stanc_opts(self) -> None:
         """
         Check stanc compiler args.
         Raise ValueError if bad config is found.
         """
+        if self._stanc_options is None:
+            return
         ignore = []
         paths = None
         for key, val in self._stanc_options.items():
@@ -120,6 +118,13 @@ class CompilerOptions:
                         'invalid include_paths, expecting list or '
                         'string, found type: {}'.format(type(val))
                     )
+            elif key == 'use-opencl':
+                if self._cpp_options is None:
+                    self._cpp_options = {'STAN_OPENCL': 'TRUE'}
+                else:
+                    self._cpp_options['STAN_OPENCL'] = 'TRUE'
+                ignore.append(key)
+
         for opt in ignore:
             del self._stanc_options[opt]
         if paths is not None:
@@ -135,6 +140,14 @@ class CompilerOptions:
                 )
 
     def validate_cpp_opts(self) -> None:
+        if self._cpp_options is None:
+            return
+        if (
+            'OPENCL_DEVICE_ID' in self._cpp_options.keys()
+            or 'OPENCL_PLATFORM_ID' in self._cpp_options.keys()
+        ):
+            self._cpp_options['STAN_OPENCL'] = 'TRUE'
+
         for key, val in self._cpp_options.items():
             if key not in CPP_OPTS:
                 raise ValueError(
@@ -147,14 +160,26 @@ class CompilerOptions:
                         ' found {}'.format(key, val)
                     )
 
-    def add_includes(self, paths: List[str]) -> None:
-        stanc_opts = {'include_paths': paths}
-        if self._stanc_options is None:
-            self._stanc_options = stanc_opts
-        elif 'include_paths' not in self._stanc_options:
-            self._stanc_options['include_paths'] = paths
-        else:
-            self._stanc_options['include_paths'].append(paths)
+    def add(self, new_opts: "CompilerOptions") -> None:  # noqa: disable=Q000
+        """Add to existing stanc compiler options"""
+        if new_opts.stanc_options is not None:
+            if self._stanc_options is None:
+                self._stanc_options = new_opts.stanc_options
+            else:
+                for key, val in new_opts.stanc_options.items():
+                    if key == 'include_paths':
+                        self.add_include_path(str(val))
+                    else:
+                        self._stanc_options[key] = val
+        if new_opts.cpp_options is not None:
+            for key, val in new_opts.cpp_options.items():
+                self._cpp_options[key] = val
+
+    def add_include_path(self, path: str) -> None:
+        if 'include_paths' not in self._stanc_options:
+            self._stanc_options['include_paths'] = [path]
+        elif path not in self._stanc_options['include_paths']:
+            self._stanc_options['include_paths'].append(path)
 
     def compose(self) -> List[str]:
         opts = []
@@ -168,8 +193,8 @@ class CompilerOptions:
                                 Path(p).as_posix()
                                 for p in self._stanc_options['include_paths']
                             )
-                            )
                         )
+                    )
                 elif key == 'name':
                     opts.append('STANCFLAGS+=--{}={}'.format(key, val))
                 else:

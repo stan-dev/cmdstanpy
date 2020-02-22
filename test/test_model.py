@@ -11,6 +11,7 @@ import tqdm
 
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
+from cmdstanpy.compiler_opts import CompilerOptions
 
 from cmdstanpy.utils import cmdstan_path
 
@@ -29,7 +30,6 @@ model {
   y ~ bernoulli(theta);
 }
 """
-
 
 BERN_STAN = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
 BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
@@ -86,51 +86,56 @@ class CmdStanModelTest(unittest.TestCase):
             CmdStanModel(model_name='bad')
 
     def test_stanc_options(self):
-        model = CmdStanModel(
-            stan_file=BERN_STAN,
-            compile=False,
+        opts = CompilerOptions(
             stanc_options={
                 'O': True,
                 'allow_undefined': True,
                 'use-opencl': True,
                 'name': 'foo',
-            },
+            }
         )
-        opts = model.stanc_options
-        self.assertTrue(opts['O'])
-        self.assertTrue(opts['allow_undefined'])
-        self.assertTrue(opts['use-opencl'])
-        self.assertTrue(opts['name'] == 'foo')
+        model = CmdStanModel(
+            stan_file=BERN_STAN, compile=False, compiler_options=opts
+        )
+        stanc_opts = model.compiler_options.stanc_options
+        self.assertTrue(stanc_opts['O'])
+        self.assertTrue(stanc_opts['allow_undefined'])
+        self.assertTrue(stanc_opts['name'] == 'foo')
+
+        cpp_opts = model.compiler_options.cpp_options
+        self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
 
         with self.assertRaises(ValueError):
+            bad_opts = CompilerOptions(stanc_options={'X': True})
             model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, stanc_options={'X': True}
+                stan_file=BERN_STAN, compile=False, compiler_options=bad_opts
             )
         with self.assertRaises(ValueError):
+            bad_opts = CompilerOptions(stanc_options={'include_paths': True})
             model = CmdStanModel(
-                stan_file=BERN_STAN,
-                compile=False,
-                stanc_options={'include_paths': True},
+                stan_file=BERN_STAN, compile=False, compiler_options=bad_opts
             )
         with self.assertRaises(ValueError):
+            bad_opts = CompilerOptions(stanc_options={'include_paths': 'lkjdf'})
             model = CmdStanModel(
-                stan_file=BERN_STAN,
-                compile=False,
-                stanc_options={'include_paths': 'no_such_dir'},
+                stan_file=BERN_STAN, compile=False, compiler_options=bad_opts
             )
 
     def test_cpp_options(self):
-        model = CmdStanModel(
-            stan_file=BERN_STAN,
-            compile=False,
+        opts = CompilerOptions(
             cpp_options={
                 'STAN_OPENCL': 'TRUE',
                 'STAN_MPI': 'TRUE',
                 'STAN_THREADS': 'TRUE',
-            },
+            }
         )
-        opts = model.cpp_options
-        self.assertTrue(opts['STAN_OPENCL'] == 'TRUE')
+        model = CmdStanModel(
+            stan_file=BERN_STAN, compile=False, compiler_options=opts
+        )
+        cpp_opts = model.compiler_options.cpp_options
+        self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
+        self.assertEqual(cpp_opts['STAN_MPI'], 'TRUE')
+        self.assertEqual(cpp_opts['STAN_THREADS'], 'TRUE')
 
     def test_model_paths(self):
         # pylint: disable=unused-variable
@@ -196,7 +201,7 @@ class CmdStanModelTest(unittest.TestCase):
 
     def test_repr(self):
         model = CmdStanModel(stan_file=BERN_STAN)
-        model_repr = repr(model)
+        model_repr = model.__repr__()
         self.assertIn('name=bernoulli', model_repr)
 
     def test_print(self):
@@ -224,11 +229,10 @@ class CmdStanModelTest(unittest.TestCase):
         if os.path.exists(BERN_EXE):
             os.remove(BERN_EXE)
 
-        datafiles_abspath = os.path.join(HERE, 'data')
-        model = CmdStanModel(
-            stan_file=BERN_STAN,
-            stanc_options={'include_paths': [datafiles_abspath]},
-        )
+        stanc_opts = {'include_paths': os.path.join(HERE, 'data')}
+        cpp_opts = {'STAN_OPENCL': 'TRUE'}
+        opts = CompilerOptions(stanc_options=stanc_opts, cpp_options=cpp_opts)
+        model = CmdStanModel(stan_file=BERN_STAN, compiler_options=opts)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
 
