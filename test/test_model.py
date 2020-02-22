@@ -11,8 +11,6 @@ import tqdm
 
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.compiler_opts import CompilerOptions
-
 from cmdstanpy.utils import cmdstan_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -86,53 +84,50 @@ class CmdStanModelTest(unittest.TestCase):
             CmdStanModel(model_name='bad')
 
     def test_stanc_options(self):
-        opts = CompilerOptions(
-            stanc_options={
-                'O': True,
-                'allow_undefined': True,
-                'use-opencl': True,
-                'name': 'foo',
-            }
-        )
+        opts = {
+            'O': True,
+            'allow_undefined': True,
+            'use-opencl': True,
+            'name': 'foo',
+        }
         model = CmdStanModel(
-            stan_file=BERN_STAN, compile=False, compiler_options=opts
+            stan_file=BERN_STAN, compile=False, stanc_options=opts
         )
-        stanc_opts = model.compiler_options.stanc_options
+        stanc_opts = model.stanc_options
         self.assertTrue(stanc_opts['O'])
         self.assertTrue(stanc_opts['allow_undefined'])
+        self.assertTrue(stanc_opts['use-opencl'])
         self.assertTrue(stanc_opts['name'] == 'foo')
 
-        cpp_opts = model.compiler_options.cpp_options
+        cpp_opts = model.cpp_options
         self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
 
         with self.assertRaises(ValueError):
-            bad_opts = CompilerOptions(stanc_options={'X': True})
+            bad_opts = {'X': True}
             model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, compiler_options=bad_opts
+                stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
         with self.assertRaises(ValueError):
-            bad_opts = CompilerOptions(stanc_options={'include_paths': True})
+            bad_opts = {'include_paths': True}
             model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, compiler_options=bad_opts
+                stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
         with self.assertRaises(ValueError):
-            bad_opts = CompilerOptions(stanc_options={'include_paths': 'lkjdf'})
+            bad_opts = {'include_paths': 'lkjdf'}
             model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, compiler_options=bad_opts
+                stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
 
     def test_cpp_options(self):
-        opts = CompilerOptions(
-            cpp_options={
-                'STAN_OPENCL': 'TRUE',
-                'STAN_MPI': 'TRUE',
-                'STAN_THREADS': 'TRUE',
-            }
-        )
+        opts = {
+            'STAN_OPENCL': 'TRUE',
+            'STAN_MPI': 'TRUE',
+            'STAN_THREADS': 'TRUE',
+        }
         model = CmdStanModel(
-            stan_file=BERN_STAN, compile=False, compiler_options=opts
+            stan_file=BERN_STAN, compile=False, cpp_options=opts
         )
-        cpp_opts = model.compiler_options.cpp_options
+        cpp_opts = model.cpp_options
         self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
         self.assertEqual(cpp_opts['STAN_MPI'], 'TRUE')
         self.assertEqual(cpp_opts['STAN_THREADS'], 'TRUE')
@@ -228,11 +223,11 @@ class CmdStanModelTest(unittest.TestCase):
     def test_model_includes_explicit(self):
         if os.path.exists(BERN_EXE):
             os.remove(BERN_EXE)
-
-        stanc_opts = {'include_paths': os.path.join(HERE, 'data')}
-        cpp_opts = {'STAN_OPENCL': 'TRUE'}
-        opts = CompilerOptions(stanc_options=stanc_opts, cpp_options=cpp_opts)
-        model = CmdStanModel(stan_file=BERN_STAN, compiler_options=opts)
+        model = CmdStanModel(
+            stan_file=BERN_STAN,
+            stanc_options={'include_paths': os.path.join(HERE, 'data')},
+            cpp_options={'STAN_OPENCL': 'TRUE'},
+        )
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
 

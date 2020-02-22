@@ -64,7 +64,10 @@ class CompilerOptsTest(unittest.TestCase):
         stanc_opts['use-opencl'] = 'foo'
         opts = CompilerOptions(stanc_options=stanc_opts)
         opts.validate()
-        self.assertEqual(opts.compose(), ['STAN_OPENCL=TRUE'])
+        self.assertEqual(
+            opts.compose(),
+            ['STANCFLAGS+=--use-opencl', 'STAN_OPENCL=TRUE']
+        )
 
     def test_opts_stanc_ignore(self):
         stanc_opts = {}

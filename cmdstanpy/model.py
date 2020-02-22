@@ -43,8 +43,8 @@ class CmdStanModel:
     """
     Stan model.
 
-    + Stores pathnames to Stan program, compiled executable, and list of
-        paths for directories which contain included Stan programs.
+    + Stores pathnames to Stan program, compiled executable, and collection
+        of compiler options.
 
     + Provides functions to compile the model and perform inference on the
         model given data.
@@ -56,7 +56,8 @@ class CmdStanModel:
         name - model name, default is basename of program
         stan_file - path to Stan program file
         exe_file - path to compiled executable
-        compile_options - flags for stanc3 and c++ compiler
+        stanc_options - stanc3 compiler options
+        cpp_options - c++ compiler options
     """
 
     def __init__(
@@ -65,14 +66,17 @@ class CmdStanModel:
         stan_file: str = None,
         exe_file: str = None,
         compile: bool = True,
-        compiler_options: CompilerOptions = None,
+        stanc_options: Dict = None,
+        cpp_options: Dict = None,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self._name = None
         self._stan_file = None
         self._exe_file = None
-        self._compiler_options = compiler_options
+        self._compiler_options = CompilerOptions(
+            stanc_options=stanc_options, cpp_options=cpp_options
+        )
         self._logger = logger or get_logger()
 
         if model_name is not None:
@@ -81,7 +85,8 @@ class CmdStanModel:
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
-                    'must specify Stan source or executable program file'
+                    'Missing model file arguments, you must specify '
+                    'either Stan source or executable program file or both.'
                 )
         else:
             self._stan_file = os.path.realpath(os.path.expanduser(stan_file))
@@ -103,6 +108,10 @@ class CmdStanModel:
                     self._compiler_options = CompilerOptions(
                         stanc_options={'include_paths': [path]}
                     )
+                elif self._compiler_options._stanc_options is None:
+                    self._compiler_options._stanc_options = {
+                        'include_paths': [path]
+                    }
                 else:
                     self._compiler_options.add_include_path(path)
 
@@ -116,9 +125,9 @@ class CmdStanModel:
             else:
                 if self._name != os.path.splitext(exename)[0]:
                     raise ValueError(
-                        'name mismatch between Stan file and compiled'
+                        'Name mismatch between Stan file and compiled'
                         ' executable, expecting basename: {}'
-                        ' found: {}'.format(self._name, exename)
+                        ' found: {}.'.format(self._name, exename)
                     )
 
         if self._compiler_options is not None:
@@ -143,7 +152,7 @@ class CmdStanModel:
             self.compile()
             if self._exe_file is None:
                 raise ValueError(
-                    'unable to compile Stan model file: {}'.format(
+                    'Unable to compile Stan model file: {}.'.format(
                         self._stan_file
                     )
                 )
@@ -171,9 +180,14 @@ class CmdStanModel:
         return self._exe_file
 
     @property
-    def compiler_options(self) -> CompilerOptions:
-        """Options to stanc and c++ compilers."""
-        return self._compiler_options
+    def stanc_options(self) -> Dict:
+        """Options to stanc compilers."""
+        return self._compiler_options._stanc_options
+
+    @property
+    def cpp_options(self) -> Dict:
+        """Options to c++ compilers."""
+        return self._compiler_options._cpp_options
 
     def code(self) -> str:
         """Return Stan program as a string."""
@@ -193,8 +207,9 @@ class CmdStanModel:
     def compile(
         self,
         force: bool = False,
-        compiler_options: CompilerOptions = None,
-        override_options: bool = False
+        stanc_options: Dict = None,
+        cpp_options: Dict = None,
+        override_options: bool = False,
     ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
@@ -217,7 +232,11 @@ class CmdStanModel:
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
 
-        if compiler_options is not None:
+        compiler_options = None
+        if not (stanc_options is None and cpp_options is None):
+            compiler_options = CompilerOptions(
+                stanc_options=stanc_options, cpp_options=cpp_options
+            )
             compiler_options.validate()
             if self._compiler_options is None:
                 self._compiler_options = compiler_options
@@ -548,7 +567,7 @@ class CmdStanModel:
                 chains = 4
         if chains < 1:
             raise ValueError(
-                'chains must be a positive integer value, found {}'.format(
+                'Chains must be a positive integer value, found {}.'.format(
                     chains
                 )
             )
@@ -559,24 +578,24 @@ class CmdStanModel:
             if isinstance(chain_ids, int):
                 if chain_ids < 1:
                     raise ValueError(
-                        'chain_id must be a positive integer value,'
-                        ' found {}'.format(chain_ids)
+                        'Chain_id must be a positive integer value,'
+                        ' found {}.'.format(chain_ids)
                     )
                 offset = chain_ids
                 chain_ids = [x + offset + 1 for x in range(chains)]
             else:
                 if not len(chain_ids) == chains:
                     raise ValueError(
-                        'chain_ids must correspond to number of chains'
-                        ' specified {} chains, found {} chain_ids'.format(
+                        'Chain_ids must correspond to number of chains'
+                        ' specified {} chains, found {} chain_ids.'.format(
                             chains, len(chain_ids)
                         )
                     )
                 for i in len(chain_ids):
                     if chain_ids[i] < 1:
                         raise ValueError(
-                            'chain_id must be a positive integer value,'
-                            ' found {}'.format(chain_ids[i])
+                            'Chain_id must be a positive integer value,'
+                            ' found {}.'.format(chain_ids[i])
                         )
 
         cores_avail = cpu_count()
@@ -584,11 +603,12 @@ class CmdStanModel:
             cores = max(min(cores_avail - 2, chains), 1)
         if cores < 1:
             raise ValueError(
-                'cores must be a positive integer value, found {}'.format(cores)
+                'Argument cores must be a positive integer value, '
+                'found {}.'.format(cores)
             )
         if cores > cores_avail:
             self._logger.warning(
-                'requested %u cores, only %u available', cores, cpu_count()
+                'Requested %u cores, only %u available.', cores, cpu_count()
             )
             cores = cores_avail
 
@@ -601,8 +621,8 @@ class CmdStanModel:
             except ImportError:
                 self._logger.warning(
                     (
-                        'tqdm not installed, progress information is not '
-                        'shown. Please install tqdm with '
+                        'Package tqdm not installed, cannot show progress '
+                        'information. Please install tqdm with '
                         "'pip install tqdm'"
                     )
                 )
@@ -766,8 +786,8 @@ class CmdStanModel:
             sample_csv_files = mcmc_sample
         else:
             raise ValueError(
-                'mcmc_sample must be either CmdStanMCMC object'
-                ' or list of paths to sample csv_files'
+                'MCMC sample must be either CmdStanMCMC object'
+                ' or list of paths to sample csv_files.'
             )
 
         try:

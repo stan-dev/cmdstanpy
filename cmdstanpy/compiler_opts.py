@@ -94,7 +94,7 @@ class CompilerOptions:
 
     def validate_stanc_opts(self) -> None:
         """
-        Check stanc compiler args.
+        Check stanc compiler args and consistency between stanc and c++ options.
         Raise ValueError if bad config is found.
         """
         if self._stanc_options is None:
@@ -115,15 +115,14 @@ class CompilerOptions:
                     paths = val.split(',')
                 elif not isinstance(val, List):
                     raise ValueError(
-                        'invalid include_paths, expecting list or '
-                        'string, found type: {}'.format(type(val))
+                        'Invalid include_paths, expecting list or '
+                        'string, found type: {}.'.format(type(val))
                     )
             elif key == 'use-opencl':
                 if self._cpp_options is None:
                     self._cpp_options = {'STAN_OPENCL': 'TRUE'}
                 else:
                     self._cpp_options['STAN_OPENCL'] = 'TRUE'
-                ignore.append(key)
 
         for opt in ignore:
             del self._stanc_options[opt]
@@ -140,6 +139,10 @@ class CompilerOptions:
                 )
 
     def validate_cpp_opts(self) -> None:
+        """
+        Check cpp compiler args.
+        Raise ValueError if bad config is found.
+        """
         if self._cpp_options is None:
             return
         if (
@@ -157,11 +160,11 @@ class CompilerOptions:
                 if not isinstance(val, int) or val < 0:
                     raise ValueError(
                         '{} must be a non-negative integer value,'
-                        ' found {}'.format(key, val)
+                        ' found {}.'.format(key, val)
                     )
 
     def add(self, new_opts: "CompilerOptions") -> None:  # noqa: disable=Q000
-        """Add to existing stanc compiler options"""
+        """Adds options to existing set of compiler options."""
         if new_opts.stanc_options is not None:
             if self._stanc_options is None:
                 self._stanc_options = new_opts.stanc_options
@@ -176,12 +179,14 @@ class CompilerOptions:
                 self._cpp_options[key] = val
 
     def add_include_path(self, path: str) -> None:
+        """Adds include path to existing set of compiler options."""
         if 'include_paths' not in self._stanc_options:
             self._stanc_options['include_paths'] = [path]
         elif path not in self._stanc_options['include_paths']:
             self._stanc_options['include_paths'].append(path)
 
     def compose(self) -> List[str]:
+        """Format makefile options as list of strings."""
         opts = []
         if self._stanc_options is not None and len(self._stanc_options) > 0:
             for key, val in self._stanc_options.items():
