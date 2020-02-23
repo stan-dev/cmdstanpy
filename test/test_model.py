@@ -225,10 +225,7 @@ class CmdStanModelTest(unittest.TestCase):
             os.remove(BERN_EXE)
         model = CmdStanModel(
             stan_file=BERN_STAN,
-            stanc_options={
-                'include_paths': DATAFILES_PATH,
-                'use-opencl' : True
-            }
+            stanc_options={'include_paths': DATAFILES_PATH}
         )
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))

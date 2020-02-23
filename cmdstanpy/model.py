@@ -276,7 +276,6 @@ class CmdStanModel:
                 if self._compiler_options is not None:
                     cmd.extend(self._compiler_options.compose())
                 cmd.append(Path(exe_file).as_posix())
-                print(cmd)
                 try:
                     do_command(cmd, cmdstan_path(), logger=self._logger)
                 except RuntimeError as e:
