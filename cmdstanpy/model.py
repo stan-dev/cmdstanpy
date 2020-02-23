@@ -258,12 +258,11 @@ class CmdStanModel:
                     self._logger.info('found newer exe file, not recompiling')
 
             if do_compile:
-                if self._compiler_options is not None:
-                    self._compiler_options.validate()
                 self._logger.info(
                     'compiling stan program, exe file: %s', exe_file
                 )
                 if self._compiler_options is not None:
+                    self._compiler_options.validate()
                     self._logger.info(
                         'compiler options: %s', self._compiler_options
                     )
@@ -277,6 +276,7 @@ class CmdStanModel:
                 if self._compiler_options is not None:
                     cmd.extend(self._compiler_options.compose())
                 cmd.append(Path(exe_file).as_posix())
+                print(cmd)
                 try:
                     do_command(cmd, cmdstan_path(), logger=self._logger)
                 except RuntimeError as e:
