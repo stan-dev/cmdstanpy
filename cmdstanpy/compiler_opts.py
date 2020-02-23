@@ -97,7 +97,7 @@ class CompilerOptions:
         Check stanc compiler args and consistency between stanc and c++ options.
         Raise ValueError if bad config is found.
         """
-        #pylint: disable=no-member
+        # pylint: disable=no-member
         if self._stanc_options is None:
             return
         ignore = []
