@@ -184,10 +184,10 @@ class CompilerOptsTest(unittest.TestCase):
         opts_list = opts.compose()
         self.assertTrue(expect in opts_list)
 
-        path2 = os.path.join(HERE, 'data', 'optimize').replace('\\', '/')
+        path2 = os.path.join(HERE, 'data', 'optimize')
         expect = 'STANCFLAGS+=--include_paths=' + ','.join(
             [DATAFILES_PATH, path2]
-        )
+        ).replace('\\', '/')
         stanc_opts3 = {'include_paths': path2}
         new_opts3 = CompilerOptions(stanc_options=stanc_opts3)
         opts.add(new_opts3)
