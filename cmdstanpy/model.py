@@ -43,21 +43,12 @@ class CmdStanModel:
     """
     Stan model.
 
-    + Stores pathnames to Stan program, compiled executable, and collection
-        of compiler options.
-
-    + Provides functions to compile the model and perform inference on the
-        model given data.
-
-    + By default, compiles model on instantiation - override with argument
-        ``compile=False``
-
-    Attributes:
-        name - model name, default is basename of program
-        stan_file - path to Stan program file
-        exe_file - path to compiled executable
-        stanc_options - stanc3 compiler options
-        cpp_options - c++ compiler options
+    - Stores pathnames to Stan program, compiled executable, and collection of
+      compiler options.
+    - Provides functions to compile the model and perform inference on the
+      model given data.
+    - By default, compiles model on instantiation - override with argument
+      ``compile=False``
     """
 
     def __init__(
