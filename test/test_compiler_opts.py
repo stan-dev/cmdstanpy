@@ -65,8 +65,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions(stanc_options=stanc_opts)
         opts.validate()
         self.assertEqual(
-            opts.compose(),
-            ['STANCFLAGS+=--use-opencl', 'STAN_OPENCL=TRUE']
+            opts.compose(), ['STANCFLAGS+=--use-opencl', 'STAN_OPENCL=TRUE']
         )
 
     def test_opts_stanc_ignore(self):
@@ -94,7 +93,9 @@ class CompilerOptsTest(unittest.TestCase):
         self.assertTrue(expect in opts_list)
 
     def test_opts_add_include_paths(self):
-        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace('\\', '/')
+        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace(
+            '\\', '/'
+        )
         stanc_opts = {'warn-uninitialized': True}
         opts = CompilerOptions(stanc_options=stanc_opts)
         opts.validate()
@@ -174,7 +175,9 @@ class CompilerOptsTest(unittest.TestCase):
         self.assertTrue('STAN_OPENCL=FALSE' in opts_list)
         self.assertTrue('OPENCL_DEVICE_ID=2' in opts_list)
 
-        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace('\\', '/')
+        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace(
+            '\\', '/'
+        )
         stanc_opts2 = {'include_paths': DATAFILES_PATH}
         new_opts2 = CompilerOptions(stanc_options=stanc_opts2)
         opts.add(new_opts2)
