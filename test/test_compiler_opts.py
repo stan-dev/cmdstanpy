@@ -78,7 +78,7 @@ class CompilerOptsTest(unittest.TestCase):
 
     def test_opts_stanc_includes(self):
         path2 = os.path.join(HERE, 'data', 'optimize')
-        paths_str = ','.join([DATAFILES_PATH, path2])
+        paths_str = ','.join([DATAFILES_PATH, path2]).replace('\\', '/')
         expect = 'STANCFLAGS+=--include_paths=' + paths_str
 
         stanc_opts = {'include_paths': paths_str}
@@ -94,7 +94,7 @@ class CompilerOptsTest(unittest.TestCase):
         self.assertTrue(expect in opts_list)
 
     def test_opts_add_include_paths(self):
-        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH
+        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace('\\', '/')
         stanc_opts = {'warn-uninitialized': True}
         opts = CompilerOptions(stanc_options=stanc_opts)
         opts.validate()
@@ -107,7 +107,7 @@ class CompilerOptsTest(unittest.TestCase):
         self.assertTrue(expect in opts_list)
 
         path2 = os.path.join(HERE, 'data', 'optimize')
-        paths_str = ','.join([DATAFILES_PATH, path2])
+        paths_str = ','.join([DATAFILES_PATH, path2]).replace('\\', '/')
         expect = 'STANCFLAGS+=--include_paths=' + paths_str
         opts.add_include_path(path2)
         opts.validate()
@@ -174,14 +174,14 @@ class CompilerOptsTest(unittest.TestCase):
         self.assertTrue('STAN_OPENCL=FALSE' in opts_list)
         self.assertTrue('OPENCL_DEVICE_ID=2' in opts_list)
 
-        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH
+        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace('\\', '/')
         stanc_opts2 = {'include_paths': DATAFILES_PATH}
         new_opts2 = CompilerOptions(stanc_options=stanc_opts2)
         opts.add(new_opts2)
         opts_list = opts.compose()
         self.assertTrue(expect in opts_list)
 
-        path2 = os.path.join(HERE, 'data', 'optimize')
+        path2 = os.path.join(HERE, 'data', 'optimize').replace('\\', '/')
         expect = 'STANCFLAGS+=--include_paths=' + ','.join(
             [DATAFILES_PATH, path2]
         )
