@@ -1,12 +1,10 @@
-Wrapping CmdStan
-________________
+Under the Hood
+______________
 
 Under the hood, CmdStanPy uses the CmdStan command line interface
-to compile and run a Stan program.
-The CmdStan interface is file-based.
-
-* Stan programs are compiled to c++ executables
-* The c++ executable operates on input files and produces output files.
+to compile and fit a model to data.
+The function `cmdstan_path` returns the path to the local CmdStan installation.
+See the installation section for more details on installing CmdStan.
   
 
 Model Compilation
@@ -34,10 +32,12 @@ allow optional arguments ``stanc_options`` and ``cpp_options`` which
 specify options for each compilation step.
 
 
-
 File Handling
 -------------
 
+CmdStan is file-based interface, therefore CmdStanPy
+maintains the necessary files for all models, data, and
+inference method results.
 CmdStanPy uses the Python library ``tempfile`` module to create
 a temporary directory where all input and output files are written and
 which is deleted when the Python session is terminated.
