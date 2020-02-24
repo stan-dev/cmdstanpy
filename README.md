@@ -4,8 +4,10 @@
 
 
 CmdStanPy is a lightweight interface to Stan for Python users which
-provides the necessary objects and functions to compile a Stan program
-and run Stan's samplers.
+provides the necessary objects and functions to do Bayesian inference
+given a probability model written as a Stan program and data.
+Under the hood, CmdStanPy uses the CmdStan command line interface
+to compile and run a Stan program.
 
 ### Goals
 
