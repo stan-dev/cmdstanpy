@@ -22,6 +22,7 @@
    generate_quantities
    optimize
    variational_bayes
+   under_the_hood
    api
 
 

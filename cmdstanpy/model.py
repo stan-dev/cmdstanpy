@@ -21,6 +21,7 @@ from cmdstanpy.cmdstan_args import (
     GenerateQuantitiesArgs,
     VariationalArgs,
 )
+from cmdstanpy.compiler_opts import CompilerOptions
 from cmdstanpy.stanfit import (
     RunSet,
     CmdStanMCMC,
@@ -42,35 +43,50 @@ class CmdStanModel:
     """
     Stan model.
 
-    + Stores pathnames to Stan program, compiled executable, and list of
-        paths for directories which contain included Stan programs.
+    + Stores pathnames to Stan program, compiled executable, and collection
+        of compiler options.
 
     + Provides functions to compile the model and perform inference on the
         model given data.
 
     + By default, compiles model on instantiation - override with argument
         ``compile=False``
+
+    Attributes:
+        name - model name, default is basename of program
+        stan_file - path to Stan program file
+        exe_file - path to compiled executable
+        stanc_options - stanc3 compiler options
+        cpp_options - c++ compiler options
     """
 
     def __init__(
         self,
+        model_name: str = None,
         stan_file: str = None,
         exe_file: str = None,
-        include_paths: List[str] = None,
         compile: bool = True,
+        stanc_options: Dict = None,
+        cpp_options: Dict = None,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
-        self._stan_file = None
         self._name = None
+        self._stan_file = None
         self._exe_file = None
-        self._include_paths = None
+        self._compiler_options = CompilerOptions(
+            stanc_options=stanc_options, cpp_options=cpp_options
+        )
         self._logger = logger or get_logger()
+
+        if model_name is not None:
+            self._name = model_name.strip()
 
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
-                    'must specify Stan source or executable program file'
+                    'Missing model file arguments, you must specify '
+                    'either Stan source or executable program file or both.'
                 )
         else:
             self._stan_file = os.path.realpath(os.path.expanduser(stan_file))
@@ -81,16 +97,23 @@ class CmdStanModel:
                 raise ValueError(
                     'invalid stan filename {}'.format(self._stan_file)
                 )
-            self._name, _ = os.path.splitext(filename)
-            # if program has #includes, search program dir
+            if self._name is None:
+                self._name, _ = os.path.splitext(filename)
+            # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(self._stan_file)
-                if include_paths is None:
-                    include_paths = []
-                if path not in include_paths:
-                    include_paths.append(path)
+                if self._compiler_options is None:
+                    self._compiler_options = CompilerOptions(
+                        stanc_options={'include_paths': [path]}
+                    )
+                elif self._compiler_options._stanc_options is None:
+                    self._compiler_options._stanc_options = {
+                        'include_paths': [path]
+                    }
+                else:
+                    self._compiler_options.add_include_path(path)
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -102,18 +125,13 @@ class CmdStanModel:
             else:
                 if self._name != os.path.splitext(exename)[0]:
                     raise ValueError(
-                        'name mismatch between Stan file and compiled'
+                        'Name mismatch between Stan file and compiled'
                         ' executable, expecting basename: {}'
-                        ' found: {}'.format(self._name, exename)
+                        ' found: {}.'.format(self._name, exename)
                     )
 
-        if include_paths is not None:
-            bad_paths = [d for d in include_paths if not os.path.exists(d)]
-            if any(bad_paths):
-                raise ValueError(
-                    'invalid include paths: {}'.format(', '.join(bad_paths))
-                )
-            self._include_paths = include_paths
+        if self._compiler_options is not None:
+            self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
@@ -134,30 +152,17 @@ class CmdStanModel:
             self.compile()
             if self._exe_file is None:
                 raise ValueError(
-                    'unable to compile Stan model file: {}'.format(
+                    'Unable to compile Stan model file: {}.'.format(
                         self._stan_file
                     )
                 )
 
     def __repr__(self) -> str:
-        return 'CmdStanModel(name={},  stan_file="{}", exe_file="{}")'.format(
-            self._name, self._stan_file, self._exe_file
-        )
-
-    def code(self) -> str:
-        """Return Stan program as a string."""
-        if not self._stan_file:
-            raise RuntimeError('Please specify source file')
-
-        code = None
-        try:
-            with open(self._stan_file, 'r') as fd:
-                code = fd.read()
-        except IOError:
-            self._logger.error(
-                'Cannot read file Stan file: %s', self._stan_file
-            )
-        return code
+        repr = 'CmdStanModel: name={}'.format(self._name)
+        repr = '{}\n\t stan_file={}'.format(repr, self._stan_file)
+        repr = '{}\n\t exe_file={}'.format(repr, self._exe_file)
+        repr = '{}\n\t compiler_optons={}'.format(repr, self._compiler_options)
+        return repr
 
     @property
     def name(self) -> str:
@@ -175,11 +180,37 @@ class CmdStanModel:
         return self._exe_file
 
     @property
-    def include_paths(self) -> List[str]:
-        """List of user-specified include paths."""
-        return self._include_paths
+    def stanc_options(self) -> Dict:
+        """Options to stanc compilers."""
+        return self._compiler_options._stanc_options
 
-    def compile(self, opt_lvl: int = 3, force: bool = False) -> None:
+    @property
+    def cpp_options(self) -> Dict:
+        """Options to c++ compilers."""
+        return self._compiler_options._cpp_options
+
+    def code(self) -> str:
+        """Return Stan program as a string."""
+        if not self._stan_file:
+            raise RuntimeError('Please specify source file')
+
+        code = None
+        try:
+            with open(self._stan_file, 'r') as fd:
+                code = fd.read()
+        except IOError:
+            self._logger.error(
+                'Cannot read file Stan file: %s', self._stan_file
+            )
+        return code
+
+    def compile(
+        self,
+        force: bool = False,
+        stanc_options: Dict = None,
+        cpp_options: Dict = None,
+        override_options: bool = False,
+    ) -> None:
         """
         Compile the given Stan program file.  Translates the Stan code to
         C++, then calls the C++ compiler.
@@ -188,26 +219,36 @@ class CmdStanModel:
         executable files; if the executable is newer than the source file, it
         will not recompile the file, unless argument ``force`` is True.
 
-        :param opt_lvl: Optimization level used by the C++ compiler, one of
-            {0, 1, 2, 3}.  Defaults to level 2. Level 0 optimization results
-            in the shortest compilation time with code that may run slowly.
-            Higher optimization levels increase runtime performance but will
-            take longer to compile.
-
         :param force: When ``True``, always compile, even if the executable file
             is newer than the source file.  Used for Stan models which have
             ``#include`` directives in order to force recompilation when changes
             are made to the included files.
+
+        :param compiler_options: Options for stanc and C++ compilers.
+
+        :param override_options: When ``True``, override existing option.
+            When ``False``, add/replace existing options.  Default is ``False``.
         """
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
 
-        compilation_failed = False
+        compiler_options = None
+        if not (stanc_options is None and cpp_options is None):
+            compiler_options = CompilerOptions(
+                stanc_options=stanc_options, cpp_options=cpp_options
+            )
+            compiler_options.validate()
+            if self._compiler_options is None:
+                self._compiler_options = compiler_options
+            elif override_options:
+                self._compiler_options = compiler_options
+            else:
+                self._compiler_options.add(compiler_options)
 
+        compilation_failed = False
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
-            exe_file = Path(exe_file).as_posix()
-            exe_file += EXTENSION
+            exe_file = Path(exe_file).as_posix() + EXTENSION
             do_compile = True
             if os.path.exists(exe_file):
                 src_time = os.path.getmtime(self._stan_file)
@@ -217,58 +258,31 @@ class CmdStanModel:
                     self._logger.info('found newer exe file, not recompiling')
 
             if do_compile:
+                self._logger.info(
+                    'compiling stan program, exe file: %s', exe_file
+                )
+                if self._compiler_options is not None:
+                    self._compiler_options.validate()
+                    self._logger.info(
+                        'compiler options: %s', self._compiler_options
+                    )
                 make = os.getenv(
                     'MAKE',
                     'make'
                     if platform.system() != 'Windows'
                     else 'mingw32-make',
                 )
-                hpp_file = os.path.splitext(stan_file)[0] + '.hpp'
-                hpp_file = Path(hpp_file).as_posix()
-                if not os.path.exists(hpp_file):
-                    self._logger.info('stan to c++ (%s)', hpp_file)
-                    cmd = [
-                        make,
-                        Path(exe_file).as_posix(),
-                        'STANCFLAGS+=--o={}'.format(hpp_file),
-                    ]
-                    if self._include_paths is not None:
-                        bad_paths = [
-                            d
-                            for d in self._include_paths
-                            if not os.path.exists(d)
-                        ]
-                        if any(bad_paths):
-                            raise ValueError(
-                                'invalid include paths: {}'.format(
-                                    ', '.join(bad_paths)
-                                )
-                            )
-                        cmd.append(
-                            'STANCFLAGS+=--include_paths='
-                            + ','.join(
-                                (
-                                    Path(p).as_posix()
-                                    for p in self._include_paths
-                                )
-                            )
-                        )
-                    try:
-                        do_command(cmd, cmdstan_path(), logger=self._logger)
-                    except RuntimeError as e:
-                        self._logger.error(
-                            'file %s, exception %s', stan_file, str(e)
-                        )
-                        compilation_failed = True
-
-                if not compilation_failed:
-                    cmd = [make, 'O={}'.format(opt_lvl), exe_file]
-                    self._logger.info('compiling c++')
-                    try:
-                        do_command(cmd, cmdstan_path(), logger=self._logger)
-                    except RuntimeError as e:
-                        self._logger.error('make cmd failed %s', repr(e))
-                        compilation_failed = True
+                cmd = [make]
+                if self._compiler_options is not None:
+                    cmd.extend(self._compiler_options.compose())
+                cmd.append(Path(exe_file).as_posix())
+                try:
+                    do_command(cmd, cmdstan_path(), logger=self._logger)
+                except RuntimeError as e:
+                    self._logger.error(
+                        'file %s, exception %s', stan_file, str(e)
+                    )
+                    compilation_failed = True
 
             if not compilation_failed:
                 if is_copied:
@@ -413,7 +427,7 @@ class CmdStanModel:
         fixed_param: bool = False,
         output_dir: str = None,
         save_diagnostics: bool = False,
-        show_progress: Union[bool, str] = False
+        show_progress: Union[bool, str] = False,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -552,7 +566,7 @@ class CmdStanModel:
                 chains = 4
         if chains < 1:
             raise ValueError(
-                'chains must be a positive integer value, found {}'.format(
+                'Chains must be a positive integer value, found {}.'.format(
                     chains
                 )
             )
@@ -563,24 +577,24 @@ class CmdStanModel:
             if isinstance(chain_ids, int):
                 if chain_ids < 1:
                     raise ValueError(
-                        'chain_id must be a positive integer value,'
-                        ' found {}'.format(chain_ids)
+                        'Chain_id must be a positive integer value,'
+                        ' found {}.'.format(chain_ids)
                     )
                 offset = chain_ids
                 chain_ids = [x + offset + 1 for x in range(chains)]
             else:
                 if not len(chain_ids) == chains:
                     raise ValueError(
-                        'chain_ids must correspond to number of chains'
-                        ' specified {} chains, found {} chain_ids'.format(
+                        'Chain_ids must correspond to number of chains'
+                        ' specified {} chains, found {} chain_ids.'.format(
                             chains, len(chain_ids)
                         )
                     )
                 for i in len(chain_ids):
                     if chain_ids[i] < 1:
                         raise ValueError(
-                            'chain_id must be a positive integer value,'
-                            ' found {}'.format(chain_ids[i])
+                            'Chain_id must be a positive integer value,'
+                            ' found {}.'.format(chain_ids[i])
                         )
 
         cores_avail = cpu_count()
@@ -588,11 +602,12 @@ class CmdStanModel:
             cores = max(min(cores_avail - 2, chains), 1)
         if cores < 1:
             raise ValueError(
-                'cores must be a positive integer value, found {}'.format(cores)
+                'Argument cores must be a positive integer value, '
+                'found {}.'.format(cores)
             )
         if cores > cores_avail:
             self._logger.warning(
-                'requested %u cores, only %u available', cores, cpu_count()
+                'Requested %u cores, only %u available.', cores, cpu_count()
             )
             cores = cores_avail
 
@@ -605,8 +620,8 @@ class CmdStanModel:
             except ImportError:
                 self._logger.warning(
                     (
-                        'tqdm not installed, progress information is not '
-                        'shown. Please install tqdm with '
+                        'Package tqdm not installed, cannot show progress '
+                        'information. Please install tqdm with '
                         "'pip install tqdm'"
                     )
                 )
@@ -678,11 +693,11 @@ class CmdStanModel:
                             dynamic_ncols = True
 
                         pbar = tqdm_pbar(
-                                desc='Chain {} - warmup'.format(i + 1),
-                                position=i,
-                                total=1,  # Will set total from Stan's output
-                                dynamic_ncols=dynamic_ncols,
-                            )
+                            desc='Chain {} - warmup'.format(i + 1),
+                            position=i,
+                            total=1,  # Will set total from Stan's output
+                            dynamic_ncols=dynamic_ncols,
+                        )
 
                         all_pbars.append(pbar)
 
@@ -770,8 +785,8 @@ class CmdStanModel:
             sample_csv_files = mcmc_sample
         else:
             raise ValueError(
-                'mcmc_sample must be either CmdStanMCMC object'
-                ' or list of paths to sample csv_files'
+                'MCMC sample must be either CmdStanMCMC object'
+                ' or list of paths to sample csv_files.'
             )
 
         try:
@@ -1027,8 +1042,10 @@ class CmdStanModel:
                         if pbar.total != total_count:
                             pbar.reset(total=total_count)
 
-                        if (match.group(3).lower() == 'sampling' and
-                           not changed_description):
+                        if (
+                            match.group(3).lower() == 'sampling'
+                            and not changed_description
+                        ):
                             pbar.set_description(f'Chain {idx + 1} - sample')
                             changed_description = True
 
@@ -1037,7 +1054,7 @@ class CmdStanModel:
 
             pbar.set_description(f'Chain {idx + 1} -   done', refresh=True)
 
-            if "notebook" in type(pbar).__name__:
+            if 'notebook' in type(pbar).__name__:
                 # In Jupyter make the bar green by closing it
                 pbar.close()
 
