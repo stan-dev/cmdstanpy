@@ -144,6 +144,11 @@ class SampleTest(unittest.TestCase):
                 chains=4, cores=2, seed=12345, sampling_iters=100
             )
 
+        with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
+            bern_model.sample(
+                data={'foo': 1}, chains=4, cores=2, seed=12345, sampling_iters=100
+            )
+
     def test_multi_proc(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
