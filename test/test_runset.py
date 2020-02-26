@@ -56,7 +56,7 @@ class RunSetTest(unittest.TestCase):
             runset._set_retcode(i, 70)
             stdout_file = 'chain-' + str(i+1) + '-missing-data-stdout.txt'
             path = os.path.join(DATAFILES_PATH, stdout_file)
-            runset._console_msg_files[i] = path
+            runset._stdout_files[i] = path
         errs = '\n\t'.join(runset._get_err_msgs())
         self.assertIn('Exception', errs)
 

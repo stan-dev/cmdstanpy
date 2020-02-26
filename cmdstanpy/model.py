@@ -952,7 +952,7 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id)
 
         # treat failure to converge as failure
-        transcript_file = runset.console_msg_files[dummy_chain_id]
+        transcript_file = runset.stdout_files[dummy_chain_id]
         valid = True
         pat = re.compile(r'The algorithm may not have converged.', re.M)
         with open(transcript_file, 'r') as transcript:
@@ -994,10 +994,10 @@ class CmdStanModel:
             stdout = stdout_pbar + stdout
         self._logger.info('finish chain %u', idx + 1)
         if stdout:
-            with open(runset.console_msg_files[idx], 'w+') as fd:
+            with open(runset.stdout_files[idx], 'w+') as fd:
                 fd.write(stdout.decode('utf-8'))
         if stderr:
-            with open(runset.console_err_files[idx], 'w+') as fd:
+            with open(runset.stderr_files[idx], 'w+') as fd:
                 fd.write(stderr.decode('utf-8'))
         runset._set_retcode(idx, proc.returncode)
 

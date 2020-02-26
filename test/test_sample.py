@@ -46,7 +46,7 @@ class SampleTest(unittest.TestCase):
 
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            stdout_file = bern_fit.runset.console_msg_files[i]
+            stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
 
@@ -80,17 +80,17 @@ class SampleTest(unittest.TestCase):
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            stdout_file = bern_fit.runset.console_msg_files[i]
+            stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
-            if os.path.exists(bern_fit.runset.console_msg_files[i]):
-                os.remove(bern_fit.runset.console_msg_files[i])
-            if os.path.exists(bern_fit.runset.console_err_files[i]):
-                os.remove(bern_fit.runset.console_err_files[i])
+            if os.path.exists(bern_fit.runset.stdout_files[i]):
+                os.remove(bern_fit.runset.stdout_files[i])
+            if os.path.exists(bern_fit.runset.stderr_files[i]):
+                os.remove(bern_fit.runset.stderr_files[i])
         rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
             data=rdata, chains=4, cores=2, seed=12345, sampling_iters=100
@@ -190,7 +190,7 @@ class SampleTest(unittest.TestCase):
 
         for i in range(datagen_fit.runset.chains):
             csv_file = datagen_fit.runset.csv_files[i]
-            stdout_file = datagen_fit.runset.console_msg_files[i]
+            stdout_file = datagen_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
 
@@ -427,7 +427,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            stdout_file = bern_fit.runset.console_msg_files[i]
+            stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
 
@@ -447,10 +447,10 @@ class CmdStanMCMCTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
-            if os.path.exists(bern_fit.runset.console_msg_files[i]):
-                os.remove(bern_fit.runset.console_msg_files[i])
-            if os.path.exists(bern_fit.runset.console_err_files[i]):
-                os.remove(bern_fit.runset.console_err_files[i])
+            if os.path.exists(bern_fit.runset.stdout_files[i]):
+                os.remove(bern_fit.runset.stdout_files[i])
+            if os.path.exists(bern_fit.runset.stderr_files[i]):
+                os.remove(bern_fit.runset.stderr_files[i])
         shutil.rmtree(tmp2_dir, ignore_errors=True)
 
         # regenerate to tmpdir, save to good dir
@@ -463,10 +463,10 @@ class CmdStanMCMCTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
         for i in range(bern_fit.runset.chains):  # cleanup default dir
             os.remove(bern_fit.runset.csv_files[i])
-            if os.path.exists(bern_fit.runset.console_msg_files[i]):
-                os.remove(bern_fit.runset.console_msg_files[i])
-            if os.path.exists(bern_fit.runset.console_err_files[i]):
-                os.remove(bern_fit.runset.console_err_files[i])
+            if os.path.exists(bern_fit.runset.stdout_files[i]):
+                os.remove(bern_fit.runset.stdout_files[i])
+            if os.path.exists(bern_fit.runset.stderr_files[i]):
+                os.remove(bern_fit.runset.stderr_files[i])
 
     def test_diagnose_divergences(self):
         exe = os.path.join(
@@ -522,7 +522,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(runset._check_retcodes())
 
         # errors reported
-        runset._console_err_files = [
+        runset._stderr_files = [
             os.path.join(DATAFILES_PATH, 'runset-bad',
                              'bad-transcript-bern-1.txt'),
             os.path.join(DATAFILES_PATH, 'runset-bad',
