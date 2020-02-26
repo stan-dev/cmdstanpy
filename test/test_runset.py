@@ -40,6 +40,26 @@ class RunSetTest(unittest.TestCase):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
 
+    def test_get_err_msgs(self):
+        exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
+        rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+        sampler_args = SamplerArgs()
+        cmdstan_args = CmdStanArgs(
+            model_name='logistic',
+            model_exe=exe,
+            chain_ids=[1, 2, 3],
+            data=rdata,
+            method_args=sampler_args,
+        )
+        runset = RunSet(args=cmdstan_args, chains=3)
+        for i in range(3):
+            runset._set_retcode(i, 70)
+            stdout_file = 'chain-' + str(i+1) + '-missing-data-stdout.txt'
+            path = os.path.join(DATAFILES_PATH, stdout_file)
+            runset._console_msg_files[i] = path
+        errs = '\n\t'.join(runset._get_err_msgs())
+        self.assertIn('Exception', errs)
+
     def test_output_filenames(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
