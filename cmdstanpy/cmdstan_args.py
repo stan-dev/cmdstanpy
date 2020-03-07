@@ -78,7 +78,7 @@ class SamplerArgs:
             and self.adapt_step_size is None
         ):
             if self.adapt_engaged is False:
-                msg = 'adaptation not engaged but adaptation controls specified\n\t'
+                msg = 'adaptation engaged=0, but found args\n\t'
                 if self.adapt_delta is not None:
                     msg = '{}adapt_delta: {}\t'.format(msg, self.adapt_delta)
                 if self.adapt_init_phase is not None:
