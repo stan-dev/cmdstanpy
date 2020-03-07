@@ -484,7 +484,7 @@ class CmdStanMCMC:
         cmd = [cmd_path] + self.runset.csv_files
         result = do_command(cmd=cmd, logger=self.runset._logger)
         if result:
-            self.runset._logger.warning(result)
+            self.runset._logger.info(result)
         return result
 
     def get_drawset(self, params: List[str] = None) -> pd.DataFrame:
