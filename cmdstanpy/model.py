@@ -406,8 +406,8 @@ class CmdStanModel:
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
         inits: Union[Dict, float, str, List[str]] = None,
-        warmup_iters: int = None,
-        sampling_iters: int = None,
+        iter_warmup: int = None,
+        iter_sampling: int = None,
         save_warmup: bool = False,
         thin: int = None,
         max_treedepth: float = None,
@@ -481,9 +481,9 @@ class CmdStanModel:
             * string - pathname to a JSON or Rdump data file.
             * list of strings - per-chain pathname to data file.
 
-        :param warmup_iters: Number of warmup iterations for each chain.
+        :param iter_warmup: Number of warmup iterations for each chain.
 
-        :param sampling_iters: Number of draws from the posterior for each
+        :param iter_sampling: Number of draws from the posterior for each
             chain.
 
         :param save_warmup: When True, sampler saves warmup draws as part of
@@ -516,7 +516,7 @@ class CmdStanModel:
             chains.
 
         :param adapt_engaged: When True, adapt stepsize and metric.
-            *Note: If True, ``warmup_iters`` must be > 0.*
+            *Note: If True, ``iter_warmup`` must be > 0.*
 
         :param adapt_delta: Adaptation target Metropolis acceptance rate.
             The default value is 0.8.  Increasing this value, which must be
@@ -621,8 +621,8 @@ class CmdStanModel:
         # TODO:  issue 49: inits can be initialization function
 
         sampler_args = SamplerArgs(
-            warmup_iters=warmup_iters,
-            sampling_iters=sampling_iters,
+            iter_warmup=iter_warmup,
+            iter_sampling=iter_sampling,
             save_warmup=save_warmup,
             thin=thin,
             max_treedepth=max_treedepth,
