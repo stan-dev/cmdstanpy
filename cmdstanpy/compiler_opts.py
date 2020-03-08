@@ -70,7 +70,7 @@ class CompilerOptions:
         self._logger = logger or get_logger()
 
     def __repr__(self) -> str:
-        return 'CompilerOptions(stanc_options={}, cpp_options={})'.format(
+        return 'stanc_options={}, cpp_options={}'.format(
             self._stanc_options, self._cpp_options
         )
 

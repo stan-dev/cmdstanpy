@@ -28,8 +28,8 @@ class SamplerArgs:
 
     def __init__(
         self,
-        warmup_iters: int = None,
-        sampling_iters: int = None,
+        iter_warmup: int = None,
+        iter_sampling: int = None,
         save_warmup: bool = False,
         thin: int = None,
         max_treedepth: int = None,
@@ -40,8 +40,8 @@ class SamplerArgs:
         fixed_param: bool = False,
     ) -> None:
         """Initialize object."""
-        self.warmup_iters = warmup_iters
-        self.sampling_iters = sampling_iters
+        self.iter_warmup = iter_warmup
+        self.iter_sampling = iter_sampling
         self.save_warmup = save_warmup
         self.thin = thin
         self.max_treedepth = max_treedepth
@@ -65,26 +65,26 @@ class SamplerArgs:
             raise ValueError(
                 'sampler expects number of chains to be greater than 0'
             )
-        if self.warmup_iters is not None:
-            if self.warmup_iters < 0 or not isinstance(
-                self.warmup_iters, Integral
+        if self.iter_warmup is not None:
+            if self.iter_warmup < 0 or not isinstance(
+                self.iter_warmup, Integral
             ):
                 raise ValueError(
-                    'warmup_iters must be a non-negative integer,'
-                    ' found {}'.format(self.warmup_iters)
+                    'iter_warmup must be a non-negative integer,'
+                    ' found {}'.format(self.iter_warmup)
                 )
-            if self.adapt_engaged and self.warmup_iters == 0:
+            if self.adapt_engaged and self.iter_warmup == 0:
                 raise ValueError(
                     'adaptation requested but 0 warmup iterations specified, '
                     'must run warmup iterations'
                 )
-        if self.sampling_iters is not None:
-            if self.sampling_iters < 0 or not isinstance(
-                self.sampling_iters, Integral
+        if self.iter_sampling is not None:
+            if self.iter_sampling < 0 or not isinstance(
+                self.iter_sampling, Integral
             ):
                 raise ValueError(
-                    'sampling_iters must be a non-negative integer,'
-                    ' found {}'.format(self.sampling_iters)
+                    'iter_sampling must be a non-negative integer,'
+                    ' found {}'.format(self.iter_sampling)
                 )
         if self.thin is not None:
             if self.thin < 1 or not isinstance(self.thin, Integral):
@@ -186,7 +186,7 @@ class SamplerArgs:
                 )
 
         if self.fixed_param and (
-            (self.warmup_iters is not None and self.warmup_iters > 0)
+            (self.iter_warmup is not None and self.iter_warmup > 0)
             or self.save_warmup
             or self.max_treedepth is not None
             or self.metric is not None
@@ -203,10 +203,10 @@ class SamplerArgs:
         Compose CmdStan command for method-specific non-default arguments.
         """
         cmd.append('method=sample')
-        if self.sampling_iters is not None:
-            cmd.append('num_samples={}'.format(self.sampling_iters))
-        if self.warmup_iters is not None:
-            cmd.append('num_warmup={}'.format(self.warmup_iters))
+        if self.iter_sampling is not None:
+            cmd.append('num_samples={}'.format(self.iter_sampling))
+        if self.iter_warmup is not None:
+            cmd.append('num_warmup={}'.format(self.iter_warmup))
         if self.save_warmup:
             cmd.append('save_warmup=1')
         if self.thin is not None:

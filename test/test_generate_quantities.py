@@ -80,7 +80,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100
         )
 
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
@@ -127,7 +127,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_fit = model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100
         )
         bern_gqs = model.generate_quantities(
             data=jdata,
