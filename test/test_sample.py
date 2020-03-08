@@ -46,7 +46,7 @@ class SampleTest(unittest.TestCase):
 
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            txt_file = bern_fit.runset.console_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
 
@@ -80,7 +80,7 @@ class SampleTest(unittest.TestCase):
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            txt_file = bern_fit.runset.console_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
         bern_sample = bern_fit.sample
@@ -182,7 +182,7 @@ class SampleTest(unittest.TestCase):
 
         for i in range(datagen_fit.runset.chains):
             csv_file = datagen_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            txt_file = datagen_fit.runset.console_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
 
@@ -410,6 +410,23 @@ class CmdStanMCMCTest(unittest.TestCase):
             metric=jmetric,
         )
 
+    def test_adapt_schedule(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345,
+            iter_sampling=200, iter_warmup=200,
+            adapt_init_phase=11, adapt_metric_window=12, adapt_step_size=13,
+        )
+        txt_file = bern_fit.runset.console_files[0]
+        with open(txt_file, 'r') as fd:
+            lines = fd.readlines()
+            stripped = [line.strip() for line in lines]
+            self.assertIn('init_buffer = 11', stripped)
+            self.assertIn('window = 12', stripped)
+            self.assertIn('term_buffer = 13', stripped)
+
     def test_save_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -419,7 +436,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            txt_file = bern_fit.runset.console_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(txt_file))
 
