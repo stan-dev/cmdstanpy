@@ -28,9 +28,9 @@ NUTS-HMC sampler configuration
 
 - ``inits``: Specifies how the sampler initializes parameter values.
 
-- ``warmup_iters``: Number of warmup iterations for each chain.
+- ``iter_warmup``: Number of warmup iterations for each chain.
 
-- ``sampling_iters``: Number of draws from the posterior for each chain.
+- ``iter_sampling``: Number of draws from the posterior for each chain.
 
 - ``save_warmup``: When True, sampler saves warmup draws as part of output csv file.
 

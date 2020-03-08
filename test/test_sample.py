@@ -37,7 +37,7 @@ class SampleTest(unittest.TestCase):
 
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100
         )
         self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
         self.assertIn('method=sample', bern_fit.__repr__())
@@ -75,7 +75,7 @@ class SampleTest(unittest.TestCase):
             chains=4,
             cores=2,
             seed=12345,
-            sampling_iters=100,
+            iter_sampling=100,
             output_dir=DATAFILES_PATH,
         )
         for i in range(bern_fit.runset.chains):
@@ -93,14 +93,14 @@ class SampleTest(unittest.TestCase):
                 os.remove(bern_fit.runset.stderr_files[i])
         rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
-            data=rdata, chains=4, cores=2, seed=12345, sampling_iters=100
+            data=rdata, chains=4, cores=2, seed=12345, iter_sampling=100
         )
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
         bern_fit = bern_model.sample(
-            data=data_dict, chains=4, cores=2, seed=12345, sampling_iters=100
+            data=data_dict, chains=4, cores=2, seed=12345, iter_sampling=100
         )
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
@@ -111,26 +111,26 @@ class SampleTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
             inits=1.1
         )
         self.assertIn('init=1.1', bern_fit.runset.__repr__())
 
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
             inits=1
         )
         self.assertIn('init=1', bern_fit.runset.__repr__())
 
         with self.assertRaises(ValueError):
             bern_model.sample(
-                data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+                data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
                 inits=(1, 2)
             )
 
         with self.assertRaises(ValueError):
             bern_model.sample(
-                data=jdata, chains=4, cores=2, seed=12345, sampling_iters=100,
+                data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
                 inits=-1
             )
 
@@ -146,7 +146,7 @@ class SampleTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
             bern_model.sample(
                 data={'foo': 1},
-                chains=4, cores=2, seed=12345, sampling_iters=100
+                chains=4, cores=2, seed=12345, iter_sampling=100
             )
 
     def test_multi_proc(self):
@@ -184,7 +184,7 @@ class SampleTest(unittest.TestCase):
         datagen_model = CmdStanModel(stan_file=stan)
         no_data = {}
         datagen_fit = datagen_model.sample(
-            data=no_data, seed=12345, sampling_iters=100, fixed_param=True
+            data=no_data, seed=12345, iter_sampling=100, fixed_param=True
         )
         self.assertEqual(datagen_fit.runset._args.method, Method.SAMPLE)
 
@@ -304,7 +304,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs(
-            sampling_iters=100, max_treedepth=11, adapt_delta=0.95
+            iter_sampling=100, max_treedepth=11, adapt_delta=0.95
         )
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -414,7 +414,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         jmetric = os.path.join(DATAFILES_PATH, 'bernoulli.metric.json')
         # just test that it runs without error
         bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200,
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=200,
             metric=jmetric,
         )
 
@@ -423,7 +423,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=200
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
@@ -455,7 +455,7 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         # regenerate to tmpdir, save to good dir
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, sampling_iters=200
+            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=200
         )
         bern_fit.save_csvfiles()  # default dir
         for i in range(bern_fit.runset.chains):
@@ -503,7 +503,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs(
-            sampling_iters=100, max_treedepth=11, adapt_delta=0.95
+            iter_sampling=100, max_treedepth=11, adapt_delta=0.95
         )
 
         # some chains had errors
