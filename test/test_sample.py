@@ -46,9 +46,9 @@ class SampleTest(unittest.TestCase):
 
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
-            self.assertTrue(os.path.exists(txt_file))
+            self.assertTrue(os.path.exists(stdout_file))
 
         self.assertEqual(bern_fit.runset.chains, 4)
         self.assertEqual(bern_fit.draws, 100)
@@ -80,15 +80,17 @@ class SampleTest(unittest.TestCase):
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
-            self.assertTrue(os.path.exists(txt_file))
+            self.assertTrue(os.path.exists(stdout_file))
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
-            os.remove(bern_fit.runset.console_files[i])
-
+            if os.path.exists(bern_fit.runset.stdout_files[i]):
+                os.remove(bern_fit.runset.stdout_files[i])
+            if os.path.exists(bern_fit.runset.stderr_files[i]):
+                os.remove(bern_fit.runset.stderr_files[i])
         rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
             data=rdata, chains=4, cores=2, seed=12345, iter_sampling=100
@@ -136,8 +138,14 @@ class SampleTest(unittest.TestCase):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
 
-        with self.assertRaisesRegex(Exception, 'Error during sampling'):
+        with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
             bern_model.sample(
+                chains=4, cores=2, seed=12345, iter_sampling=100
+            )
+
+        with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
+            bern_model.sample(
+                data={'foo': 1},
                 chains=4, cores=2, seed=12345, iter_sampling=100
             )
 
@@ -182,9 +190,9 @@ class SampleTest(unittest.TestCase):
 
         for i in range(datagen_fit.runset.chains):
             csv_file = datagen_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            stdout_file = datagen_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
-            self.assertTrue(os.path.exists(txt_file))
+            self.assertTrue(os.path.exists(stdout_file))
 
         self.assertEqual(datagen_fit.runset.chains, 1)
 
@@ -419,9 +427,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
+            stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
-            self.assertTrue(os.path.exists(txt_file))
+            self.assertTrue(os.path.exists(stdout_file))
 
         # save files to good dir
         bern_fit.save_csvfiles(dir=DATAFILES_PATH)
@@ -439,7 +447,10 @@ class CmdStanMCMCTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
-            os.remove(bern_fit.runset.console_files[i])
+            if os.path.exists(bern_fit.runset.stdout_files[i]):
+                os.remove(bern_fit.runset.stdout_files[i])
+            if os.path.exists(bern_fit.runset.stderr_files[i]):
+                os.remove(bern_fit.runset.stderr_files[i])
         shutil.rmtree(tmp2_dir, ignore_errors=True)
 
         # regenerate to tmpdir, save to good dir
@@ -452,7 +463,10 @@ class CmdStanMCMCTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
         for i in range(bern_fit.runset.chains):  # cleanup default dir
             os.remove(bern_fit.runset.csv_files[i])
-            os.remove(bern_fit.runset.console_files[i])
+            if os.path.exists(bern_fit.runset.stdout_files[i]):
+                os.remove(bern_fit.runset.stdout_files[i])
+            if os.path.exists(bern_fit.runset.stderr_files[i]):
+                os.remove(bern_fit.runset.stderr_files[i])
 
     def test_diagnose_divergences(self):
         exe = os.path.join(
@@ -508,7 +522,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(runset._check_retcodes())
 
         # errors reported
-        runset._console_files = [
+        runset._stderr_files = [
             os.path.join(DATAFILES_PATH, 'runset-bad',
                              'bad-transcript-bern-1.txt'),
             os.path.join(DATAFILES_PATH, 'runset-bad',
@@ -518,8 +532,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad',
                              'bad-transcript-bern-4.txt'),
             ]
-        with self.assertRaisesRegex(Exception, 'Exception'):
-            runset._check_console_msgs()
+        self.assertEqual(len(runset._get_err_msgs()), 4)
 
         # csv file headers inconsistent
         runset._csv_files = [

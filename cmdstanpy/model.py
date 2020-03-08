@@ -672,7 +672,6 @@ class CmdStanModel:
                                 tqdm_pbar = tqdm.tqdm
                         else:
                             tqdm_pbar = tqdm.tqdm
-
                         # enable dynamic_ncols for advanced users
                         # currently hidden feature
                         dynamic_ncols = os.environ.get(
@@ -689,7 +688,6 @@ class CmdStanModel:
                             total=1,  # Will set total from Stan's output
                             dynamic_ncols=dynamic_ncols,
                         )
-
                         all_pbars.append(pbar)
 
                     executor.submit(self._run_cmdstan, runset, i, pbar)
@@ -697,18 +695,22 @@ class CmdStanModel:
             # Closing all progress bars
             for pbar in all_pbars:
                 pbar.close()
-
             if show_progress:
                 # re-enable logger for console
                 self._logger.propagate = True
+
+            err_msg = 'Error during sampling.\n'
             if not runset._check_retcodes():
-                msg = 'Error during sampling'
                 for i in range(chains):
                     if runset._retcode(i) != 0:
-                        msg = '{}, chain {} returned error code {}'.format(
-                            msg, i, runset._retcode(i)
+                        err_msg = '{}chain {} returned error code {}\n'.format(
+                            err_msg, i+1, runset._retcode(i)
                         )
-                raise RuntimeError(msg)
+                console_errs = runset._get_err_msgs()
+                if len(console_errs) > 0:
+                    err_msg = '{}{}'.format(err_msg, ''.join(console_errs))
+                raise RuntimeError(err_msg)
+
             mcmc = CmdStanMCMC(runset, fixed_param)
             mcmc._validate_csv_files()
         return mcmc
@@ -950,7 +952,7 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id)
 
         # treat failure to converge as failure
-        transcript_file = runset.console_files[dummy_chain_id]
+        transcript_file = runset.stdout_files[dummy_chain_id]
         valid = True
         pat = re.compile(r'The algorithm may not have converged.', re.M)
         with open(transcript_file, 'r') as transcript:
@@ -990,14 +992,13 @@ class CmdStanModel:
         stdout, stderr = proc.communicate()
         if pbar:
             stdout = stdout_pbar + stdout
-        transcript_file = runset.console_files[idx]
         self._logger.info('finish chain %u', idx + 1)
-        with open(transcript_file, 'w+') as transcript:
-            if stdout:
-                transcript.write(stdout.decode('utf-8'))
-            if stderr:
-                transcript.write('ERROR')
-                transcript.write(stderr.decode('utf-8'))
+        if stdout:
+            with open(runset.stdout_files[idx], 'w+') as fd:
+                fd.write(stdout.decode('utf-8'))
+        if stderr:
+            with open(runset.stderr_files[idx], 'w+') as fd:
+                fd.write(stderr.decode('utf-8'))
         runset._set_retcode(idx, proc.returncode)
 
     def _read_progress(
