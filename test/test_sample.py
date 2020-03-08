@@ -427,7 +427,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             iter_sampling=200, iter_warmup=200,
             adapt_init_phase=11, adapt_metric_window=12, adapt_step_size=13,
         )
-        txt_file = bern_fit.runset.console_files[0]
+        txt_file = bern_fit.runset.stdout_files[0]
         with open(txt_file, 'r') as fd:
             lines = fd.readlines()
             stripped = [line.strip() for line in lines]
