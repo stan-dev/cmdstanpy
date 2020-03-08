@@ -65,8 +65,8 @@ class SamplerArgsTest(unittest.TestCase):
 
     def test_good(self):
         args = SamplerArgs(
-            warmup_iters=10,
-            sampling_iters=20,
+            iter_warmup=10,
+            iter_sampling=20,
             save_warmup=True,
             thin=7,
             max_treedepth=15,
@@ -82,7 +82,7 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('algorithm=hmc engine=nuts', ' '.join(cmd))
         self.assertIn('max_depth=15 adapt delta=0.99', ' '.join(cmd))
 
-        args = SamplerArgs(warmup_iters=10)
+        args = SamplerArgs(iter_warmup=10)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample', ' '.join(cmd))
@@ -92,15 +92,15 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertNotIn('algorithm=hmc engine=nuts', ' '.join(cmd))
 
     def test_bad(self):
-        args = SamplerArgs(warmup_iters=-10)
+        args = SamplerArgs(iter_warmup=-10)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(warmup_iters=0, adapt_engaged=True)
+        args = SamplerArgs(iter_warmup=0, adapt_engaged=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(sampling_iters=-10)
+        args = SamplerArgs(iter_sampling=-10)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
@@ -132,7 +132,7 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(warmup_iters=100, fixed_param=True)
+        args = SamplerArgs(iter_warmup=100, fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
