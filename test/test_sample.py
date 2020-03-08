@@ -140,7 +140,7 @@ class SampleTest(unittest.TestCase):
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
             bern_model.sample(
-                chains=4, cores=2, seed=12345, sampling_iters=100
+                chains=4, cores=2, seed=12345, iter_sampling=100
             )
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
