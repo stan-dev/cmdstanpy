@@ -78,19 +78,19 @@ class SamplerArgs:
             and self.adapt_step_size is None
         ):
             if self.adapt_engaged is False:
-                msg = 'adaptation engaged=0, but found args\n\t'
+                msg = 'conflicting arguments: adapt_engaged: False'
                 if self.adapt_delta is not None:
-                    msg = '{}adapt_delta: {}\t'.format(msg, self.adapt_delta)
+                    msg = '{}, adapt_delta: {}'.format(msg, self.adapt_delta)
                 if self.adapt_init_phase is not None:
-                    msg = '{}adapt_init_phase: {}\t'.format(
+                    msg = '{}, adapt_init_phase: {}'.format(
                         msg, self.adapt_init_phase
                     )
                 if self.adapt_metric_window is not None:
-                    msg = '{}adapt_metric_window: {}\t'.format(
+                    msg = '{}, adapt_metric_window: {}'.format(
                         msg, self.adapt_metric_window
                     )
                 if self.adapt_step_size is not None:
-                    msg = '{}adapt_step_size: {}'.format(
+                    msg = '{}, adapt_step_size: {}'.format(
                         msg, self.adapt_step_size
                     )
                 raise ValueError(msg)
