@@ -46,8 +46,9 @@ class RunSet:
 
         self._retcodes = [-1 for _ in range(chains)]
 
-        # output and console messages are written to a text file:
-        # ``<model_name>-<YYYYMMDDHHMM>-<chain_id>.txt``
+        # stdout, stderr are written to text files
+        # prefix: ``<model_name>-<YYYYMMDDHHMM>-<chain_id>``
+        # suffixes: ``-stdout.txt``, ``-stderr.txt``
         now = datetime.now()
         now_str = now.strftime('%Y%m%d%H%M')
         file_basename = '-'.join([args.model_name, now_str])
@@ -55,10 +56,10 @@ class RunSet:
             output_dir = args.output_dir
         else:
             output_dir = _TMPDIR
-
-        self._csv_files = []
+        self._csv_files = [None for _ in range(chains)]
         self._diagnostic_files = [None for _ in range(chains)]
-        self._console_files = []
+        self._stdout_files = [None for _ in range(chains)]
+        self._stderr_files = [None for _ in range(chains)]
         self._cmds = []
         for i in range(chains):
             if args.output_dir is None:
@@ -71,9 +72,15 @@ class RunSet:
                 csv_file = os.path.join(
                     output_dir, '{}-{}.{}'.format(file_basename, i + 1, 'csv')
                 )
-            self._csv_files.append(csv_file)
-            txt_file = ''.join([os.path.splitext(csv_file)[0], '.txt'])
-            self._console_files.append(txt_file)
+            self._csv_files[i] = csv_file
+            stdout_file = ''.join(
+                [os.path.splitext(csv_file)[0], '-stdout.txt']
+            )
+            self._stdout_files[i] = stdout_file
+            stderr_file = ''.join(
+                [os.path.splitext(csv_file)[0], '-stderr.txt']
+            )
+            self._stderr_files[i] = stderr_file
             if args.save_diagnostics:
                 if args.output_dir is None:
                     diag_file = create_named_text_file(
@@ -88,7 +95,7 @@ class RunSet:
                             file_basename, i + 1, 'csv'
                         ),
                     )
-                self._diagnostic_files.append(diag_file)
+                self._diagnostic_files[i] = diag_file
                 self._cmds.append(
                     args.compose_command(
                         i, self._csv_files[i], self._diagnostic_files[i]
@@ -100,8 +107,10 @@ class RunSet:
     def __repr__(self) -> str:
         repr = 'RunSet: chains={}'.format(self._chains)
         repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
-        repr = '{}\n csv_files:\n\t{}\n console_files:\n\t{}'.format(
-            repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._console_files)
+        repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
+            repr,
+            '\n\t'.join(self._csv_files),
+            '\n\t'.join(self._stdout_files),
         )
         return repr
 
@@ -133,11 +142,18 @@ class RunSet:
         return self._csv_files
 
     @property
-    def console_files(self) -> List[str]:
+    def stdout_files(self) -> List[str]:
         """
-        List of paths to CmdStan console transcript files.
+        List of paths to CmdStan stdout transcripts.
         """
-        return self._console_files
+        return self._stdout_files
+
+    @property
+    def stderr_files(self) -> List[str]:
+        """
+        List of paths to CmdStan stderr transcripts.
+        """
+        return self._stderr_files
 
     def _check_retcodes(self) -> bool:
         """True when all chains have retcode 0."""
@@ -161,22 +177,27 @@ class RunSet:
         """Set retcode for chain[idx] to val."""
         self._retcodes[idx] = val
 
-    # redo - better error handling
-    # only used by unit tests...
-    def _check_console_msgs(self) -> bool:
+    def _get_err_msgs(self) -> List[str]:
         """Checks console messages for each chain."""
-        valid = True
-        msg = ''
+        msgs = []
         for i in range(self._chains):
-            with open(self._console_files[i], 'r') as fd:
-                contents = fd.read()
-                pat = re.compile(r'^Exception.*$', re.M)
+            if (
+                os.path.exists(self._stderr_files[i])
+                and os.stat(self._stderr_files[i]).st_size > 0
+            ):
+                with open(self._stderr_files[i], 'r') as fd:
+                    msgs.append('chain {}:\n{}\n'.format(i + 1, fd.read()))
+            if (
+                os.path.exists(self._stdout_files[i])
+                and os.stat(self._stdout_files[i]).st_size > 0
+            ):
+                with open(self._stdout_files[i], 'r') as fd:
+                    contents = fd.read()
+                    pat = re.compile(r'^Exception.*$', re.M)
                 errors = re.findall(pat, contents)
                 if len(errors) > 0:
-                    valid = False
-                    msg = '{}chain {}: {}\n'.format(msg, i + 1, errors)
-        if not valid:
-            raise Exception(msg)
+                    msgs.append('chain {}: {}\n'.format(i + 1, errors))
+        return msgs
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
@@ -253,10 +274,10 @@ class CmdStanMCMC:
             self.runset.chains,
             self.runset._args.method_args.compose(0, cmd=[]),
         )
-        repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
+        repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
             repr,
             '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.console_files),
+            '\n\t'.join(self.runset.stdout_files),
         )
         return repr
 
@@ -463,7 +484,7 @@ class CmdStanMCMC:
         cmd = [cmd_path] + self.runset.csv_files
         result = do_command(cmd=cmd, logger=self.runset._logger)
         if result:
-            self.runset._logger.warning(result)
+            self.runset._logger.info(result)
         return result
 
     def get_drawset(self, params: List[str] = None) -> pd.DataFrame:
@@ -523,10 +544,10 @@ class CmdStanMLE:
         repr = 'CmdStanMLE: model={}{}'.format(
             self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
         )
-        repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
+        repr = '{}\n csv_file:\n\t{}\n output_file:\n\t{}'.format(
             repr,
             '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.console_files),
+            '\n\t'.join(self.runset.stdout_files),
         )
         return repr
 
@@ -597,10 +618,10 @@ class CmdStanGQ:
             self.runset.chains,
             self.runset._args.method_args.compose(0, cmd=[]),
         )
-        repr = '{}\n csv_files:\n\t{}\n console_files\n\t{}'.format(
+        repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
             repr,
             '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.console_files),
+            '\n\t'.join(self.runset.stdout_files),
         )
         return repr
 
@@ -721,10 +742,10 @@ class CmdStanVB:
         repr = 'CmdStanVB: model={}{}'.format(
             self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
         )
-        repr = '{}\n csv_file:\n\t{}\n console_file\n\t{}'.format(
+        repr = '{}\n csv_file:\n\t{}\n output_file:\n\t{}'.format(
             repr,
             '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.console_files),
+            '\n\t'.join(self.runset.stdout_files),
         )
         return repr
 
