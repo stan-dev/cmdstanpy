@@ -251,7 +251,7 @@ class CmdStanMCMC:
     Container for outputs from CmdStan sampler run.
     """
 
-    def __init__(self, runset: RunSet, is_fixed_param: bool = False) -> None:
+    def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
         if not runset.method == Method.SAMPLE:
             raise ValueError(
@@ -259,14 +259,17 @@ class CmdStanMCMC:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._draws = None
+        self._iter_warmup = runset._args.method_args.iter_warmup
+        self._iter_sampling = runset._args.method_args.iter_sampling
+        self._save_warmup = runset._args.method_args.save_warmup
+        self._is_fixed_param = runset._args.method_args.fixed_param
         self._column_names = ()
         self._num_params = None  # metric dim(s)
         self._metric_type = None
         self._metric = None
         self._stepsize = None
         self._sample = None
-        self._is_fixed_param = is_fixed_param
+        self._warmup = None
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -289,7 +292,7 @@ class CmdStanMCMC:
     @property
     def draws(self) -> int:
         """Number of draws per chain."""
-        return self._draws
+        return self._iter_sampling
 
     @property
     def columns(self) -> int:
@@ -358,11 +361,19 @@ class CmdStanMCMC:
         for i in range(self.runset.chains):
             if i == 0:
                 dzero = check_sampler_csv(
-                    self.runset.csv_files[i], self._is_fixed_param
+                    self.runset.csv_files[i],
+                    self._is_fixed_param,
+                    self._iter_warmup,
+                    self._iter_sampling,
+                    self._save_warmup
                 )
             else:
                 drest = check_sampler_csv(
-                    self.runset.csv_files[i], self._is_fixed_param
+                    self.runset.csv_files[i],
+                    self._is_fixed_param,
+                    self._iter_warmup,
+                    self._iter_sampling,
+                    self._save_warmup
                 )
                 for key in dzero:
                     if (
@@ -378,7 +389,6 @@ class CmdStanMCMC:
                                 drest[key],
                             )
                         )
-        self._draws = dzero['draws']
         self._column_names = dzero['column_names']
         if not self._is_fixed_param:
             self._num_params = dzero['num_params']
@@ -392,7 +402,7 @@ class CmdStanMCMC:
         if self._sample is not None:
             return
         self._sample = np.empty(
-            (self._draws, self.runset.chains, len(self._column_names)),
+            (self._iter_sampling, self.runset.chains, len(self._column_names)),
             dtype=float,
             order='F',
         )
@@ -434,7 +444,7 @@ class CmdStanMCMC:
                             xs = line.split(',')
                             self._metric[chain, i, :] = [float(x) for x in xs]
                 # process draws
-                for i in range(self._draws):
+                for i in range(self._iter_sampling):
                     line = fd.readline().lstrip(' #\t')
                     xs = line.split(',')
                     self._sample[i, chain, :] = [float(x) for x in xs]

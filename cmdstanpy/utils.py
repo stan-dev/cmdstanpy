@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 
-from cmdstanpy import _TMPDIR
+from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -435,18 +435,41 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     return val
 
 
-def check_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
+def check_sampler_csv(
+        path: str,
+        is_fixed_param: bool = False,
+        iter_warmup: int = _CMDSTAN_WARMUP,
+        iter_sampling: int = _CMDSTAN_SAMPLING,
+        save_warmup: bool = False,
+        ) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_sampler_csv(path, is_fixed_param)
-    draws_spec = int(meta.get('num_samples', 1000))
+    expect_warmup = iter_warmup
+    expect_sampling = iter_sampling
     if 'thin' in meta:
-        draws_spec = int(math.ceil(draws_spec / meta['thin']))
-    if meta['draws'] != draws_spec:
+        expect_warmup = int(math.ceil(expect_warmup / meta['thin']))
+        expect_sampling = int(math.ceil(expect_sampling / meta['thin']))
+    if meta['iter_sampling'] != expect_sampling:
         raise ValueError(
-            'bad csv file {}, expected {} draws, found {}'.format(
-                path, draws_spec, meta['draws']
+            'bad csv file {}, expected {} sampling iterations, found {}'.format(
+                path, expect_sampling, meta['iter_sampling']
             )
         )
+    if save_warmup:
+        if not ('save_warmup' in meta and meta['save_warmup'] == '1'):
+            raise ValueError(
+                'bad csv file {}, '
+                'config error, expected save_warmup = 1'.format(
+                    path
+                )
+            )
+        if meta['iter_warmup'] != expect_warmup:
+            raise ValueError(
+                'bad csv file {}, '
+                'expected {} warmup iterations, found {}'.format(
+                    path, expect_warmup, meta['iter_warmup']
+                )
+            )
     return meta
 
 
@@ -458,9 +481,9 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
         lineno = scan_config(fd, dict, lineno)
         lineno = scan_column_names(fd, dict, lineno)
         if not is_fixed_param:
-            lineno = scan_warmup(fd, dict, lineno)
+            lineno = scan_warmup_iters(fd, dict, lineno)
             lineno = scan_metric(fd, dict, lineno)
-        lineno = scan_draws(fd, dict, lineno)
+        lineno = scan_sampling_iters(fd, dict, lineno)
     return dict
 
 
@@ -557,7 +580,7 @@ def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_warmup(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_warmup_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Check warmup iterations, if any.
     """
@@ -565,11 +588,14 @@ def scan_warmup(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
     cur_pos = fd.tell()
     line = fd.readline().strip()
+    iters_found = 0
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
+        iters_found += 1
         cur_pos = fd.tell()
         line = fd.readline().strip()
     fd.seek(cur_pos)
+    config_dict['iter_warmup'] = iters_found
     return lineno
 
 
@@ -646,27 +672,27 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_sampling_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
-    Parse draws, check elements per draw, save num draws to config_dict.
+    Parse sampling iteration, save number of iterations to config_dict.
     """
-    draws_found = 0
+    iters_found = 0
     num_cols = len(config_dict['column_names'])
     cur_pos = fd.tell()
     line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
-        draws_found += 1
+        iters_found += 1
         data = line.split(',')
         if len(data) != num_cols:
             raise ValueError(
-                'line {}: bad draw, expecting {} items, found {}'.format(
+                'line {}: bad iteration, expecting {} items, found {}'.format(
                     lineno, num_cols, len(line.split(','))
                 )
             )
         cur_pos = fd.tell()
         line = fd.readline().strip()
-    config_dict['draws'] = draws_found
+    config_dict['iter_sampling'] = iters_found
     fd.seek(cur_pos)
     return lineno
 

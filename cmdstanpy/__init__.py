@@ -18,6 +18,8 @@ _STANSUMMARY_STATS = [
 ]
 
 _TMPDIR = tempfile.mkdtemp()
+_CMDSTAN_WARMUP = 1000
+_CMDSTAN_SAMPLING = 1000
 
 
 def _cleanup_tmpdir():

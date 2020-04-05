@@ -711,7 +711,7 @@ class CmdStanModel:
                     err_msg = '{}{}'.format(err_msg, ''.join(console_errs))
                 raise RuntimeError(err_msg)
 
-            mcmc = CmdStanMCMC(runset, fixed_param)
+            mcmc = CmdStanMCMC(runset)
             mcmc._validate_csv_files()
         return mcmc
 
