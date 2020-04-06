@@ -27,7 +27,7 @@ class CmdStanMLETest(unittest.TestCase):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 
-    def test_set_mle_attrs(self):
+    def test_instantiate(self):
         stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
         model = CmdStanModel(stan_file=stan)
         no_data = {}
@@ -40,15 +40,12 @@ class CmdStanMLETest(unittest.TestCase):
             method_args=args,
         )
         runset = RunSet(args=cmdstan_args, chains=1)
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
+            ]
         mle = CmdStanMLE(runset)
         self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
         self.assertIn('method=optimize', mle.__repr__())
-
-        self.assertEqual(mle._column_names, ())
-        self.assertEqual(mle._mle, {})
-
-        output = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
-        mle._set_mle_attrs(output)
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)

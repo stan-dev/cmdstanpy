@@ -182,11 +182,16 @@ class CmdStanPathTest(unittest.TestCase):
 class ReadStanCsvTest(unittest.TestCase):
     def test_check_sampler_csv_1(self):
         csv_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
-        dict = check_sampler_csv(csv_good)
+        dict = check_sampler_csv(
+            path=csv_good,
+            is_fixed_param=False,
+            iter_warmup=100,
+            iter_sampling=10
+        )
         self.assertEqual('bernoulli_model', dict['model'])
         self.assertEqual(10, dict['num_samples'])
         self.assertFalse('save_warmup' in dict)
-        self.assertEqual(10, dict['draws'])
+        self.assertEqual(10, dict['iter_sampling'])
         self.assertEqual(8, len(dict['column_names']))
 
     def test_check_sampler_csv_2(self):
@@ -245,10 +250,15 @@ class ReadStanCsvTest(unittest.TestCase):
             adapt_delta=0.98,
         )
         csv_file = bern_fit.runset.csv_files[0]
-        dict = check_sampler_csv(csv_file)
+        dict = check_sampler_csv(
+            path=csv_file,
+            is_fixed_param=False,
+            iter_sampling=490,
+            iter_warmup=490,
+        )
         self.assertEqual(dict['num_samples'], 490)
         self.assertEqual(dict['thin'], 7)
-        self.assertEqual(dict['draws'], 70)
+        self.assertEqual(dict['iter_sampling'], 70)
         self.assertEqual(dict['seed'], 12345)
         self.assertEqual(dict['max_depth'], 11)
         self.assertEqual(dict['delta'], 0.98)

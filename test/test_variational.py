@@ -26,7 +26,7 @@ class CmdStanVBTest(unittest.TestCase):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 
-    def test_set_variational_attrs(self):
+    def test_instantiate(self):
         stan = os.path.join(
             DATAFILES_PATH, 'variational', 'eta_should_be_big.stan'
         )
@@ -41,22 +41,14 @@ class CmdStanVBTest(unittest.TestCase):
             method_args=args,
         )
         runset = RunSet(args=cmdstan_args, chains=1)
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'variational', 'eta_big_output.csv')
+            ]
         variational = CmdStanVB(runset)
         self.assertIn(
             'CmdStanVB: model=eta_should_be_big', variational.__repr__()
         )
         self.assertIn('method=variational', variational.__repr__())
-
-        # check CmdStanVB.__init__ state
-        self.assertEqual(variational._column_names, ())
-        self.assertEqual(variational._variational_mean, {})
-        self.assertEqual(variational._variational_sample, None)
-
-        # process csv file, check attrs
-        output = os.path.join(
-            DATAFILES_PATH, 'variational', 'eta_big_output.csv'
-        )
-        variational._set_variational_attrs(output)
         self.assertEqual(
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu.1', 'mu.2'),

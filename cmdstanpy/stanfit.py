@@ -108,9 +108,7 @@ class RunSet:
         repr = 'RunSet: chains={}'.format(self._chains)
         repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
         repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
-            repr,
-            '\n\t'.join(self._csv_files),
-            '\n\t'.join(self._stdout_files),
+            repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._stdout_files)
         )
         return repr
 
@@ -270,6 +268,7 @@ class CmdStanMCMC:
         self._stepsize = None
         self._sample = None
         self._warmup = None
+        self._validate_csv_files()
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -361,19 +360,19 @@ class CmdStanMCMC:
         for i in range(self.runset.chains):
             if i == 0:
                 dzero = check_sampler_csv(
-                    self.runset.csv_files[i],
-                    self._is_fixed_param,
-                    self._iter_warmup,
-                    self._iter_sampling,
-                    self._save_warmup
+                    path=self.runset.csv_files[i],
+                    is_fixed_param=self._is_fixed_param,
+                    iter_sampling=self._iter_sampling,
+                    iter_warmup=self._iter_warmup,
+                    save_warmup=self._save_warmup,
                 )
             else:
                 drest = check_sampler_csv(
-                    self.runset.csv_files[i],
-                    self._is_fixed_param,
-                    self._iter_warmup,
-                    self._iter_sampling,
-                    self._save_warmup
+                    path=self.runset.csv_files[i],
+                    is_fixed_param=self._is_fixed_param,
+                    iter_sampling=self._iter_sampling,
+                    iter_warmup=self._iter_warmup,
+                    save_warmup=self._save_warmup,
                 )
                 for key in dzero:
                     if (
@@ -549,6 +548,7 @@ class CmdStanMLE:
         self.runset = runset
         self._column_names = ()
         self._mle = {}
+        self._set_mle_attrs(runset.csv_files[0])
 
     def __repr__(self) -> str:
         repr = 'CmdStanMLE: model={}{}'.format(
@@ -577,22 +577,16 @@ class CmdStanMLE:
     @property
     def optimized_params_np(self) -> np.array:
         """Returns optimized params as numpy array."""
-        if self._mle is None:
-            self._set_mle_attrs(self.runset.csv_files[0])
         return np.asarray(self._mle)
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
         """Returns optimized params as pandas DataFrame."""
-        if self._mle is None:
-            self._set_mle_attrs(self.runset.csv_files[0])
         return pd.DataFrame([self._mle], columns=self.column_names)
 
     @property
     def optimized_params_dict(self) -> OrderedDict:
         """Returns optimized params as Dict."""
-        if self._mle is None:
-            self._set_mle_attrs(self.runset.csv_files[0])
         return OrderedDict(zip(self.column_names, self._mle))
 
     def save_csvfiles(self, dir: str = None) -> None:
@@ -619,8 +613,10 @@ class CmdStanGQ:
             )
         self.runset = runset
         self.mcmc_sample = mcmc_sample
-        self._column_names = None
         self._generated_quantities = None
+        self._column_names = scan_generated_quantities_csv(
+            self.runset.csv_files[0]
+        )['column_names']
 
     def __repr__(self) -> str:
         repr = 'CmdStanGQ: model={} chains={}{}'.format(
@@ -709,9 +705,6 @@ class CmdStanGQ:
         Propogate information from original sample to additional sample
         returned by generate_quantities.
         """
-        check_sampler_csv(sample_csv_0)
-        dzero = scan_generated_quantities_csv(self.runset.csv_files[0])
-        self._column_names = dzero['column_names']
 
     def _assemble_generated_quantities(self) -> None:
         drawset_list = []
@@ -747,6 +740,7 @@ class CmdStanVB:
         self._column_names = ()
         self._variational_mean = {}
         self._variational_sample = None
+        self._set_variational_attrs(runset.csv_files[0])
 
     def __repr__(self) -> str:
         repr = 'CmdStanVB: model={}{}'.format(
@@ -786,29 +780,21 @@ class CmdStanVB:
     @property
     def variational_params_np(self) -> np.array:
         """Returns inferred parameter means as numpy array."""
-        if self._variational_mean is None:
-            self._set_variational_attrs(self.runset.csv_files[0])
         return self._variational_mean
 
     @property
     def variational_params_pd(self) -> pd.DataFrame:
         """Returns inferred parameter means as pandas DataFrame."""
-        if self._variational_mean is None:
-            self._set_variational_attrs(self.runset.csv_files[0])
         return pd.DataFrame([self._variational_mean], columns=self.column_names)
 
     @property
     def variational_params_dict(self) -> OrderedDict:
         """Returns inferred parameter means as Dict."""
-        if self._variational_mean is None:
-            self._set_variational_attrs(self.runset.csv_files[0])
         return OrderedDict(zip(self.column_names, self._variational_mean))
 
     @property
     def variational_sample(self) -> np.array:
         """Returns the set of approximate posterior output draws."""
-        if self._variational_sample is None:
-            self._set_variational_attrs(self.runset.csv_files[0])
         return self._variational_sample
 
     def save_csvfiles(self, dir: str = None) -> None:

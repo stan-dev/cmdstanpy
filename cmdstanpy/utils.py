@@ -436,38 +436,38 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
 
 
 def check_sampler_csv(
-        path: str,
-        is_fixed_param: bool = False,
-        iter_warmup: int = _CMDSTAN_WARMUP,
-        iter_sampling: int = _CMDSTAN_SAMPLING,
-        save_warmup: bool = False,
-        ) -> Dict:
+    path: str,
+    is_fixed_param: bool = False,
+    iter_sampling: int = None,
+    iter_warmup: int = None,
+    save_warmup: bool = False,
+) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_sampler_csv(path, is_fixed_param)
-    expect_warmup = iter_warmup
-    expect_sampling = iter_sampling
+    if iter_sampling is None:
+        iter_sampling = _CMDSTAN_SAMPLING
+    if iter_warmup is None:
+        iter_warmup = _CMDSTAN_WARMUP
     if 'thin' in meta:
-        expect_warmup = int(math.ceil(expect_warmup / meta['thin']))
-        expect_sampling = int(math.ceil(expect_sampling / meta['thin']))
-    if meta['iter_sampling'] != expect_sampling:
+        iter_warmup = int(math.ceil(iter_warmup / meta['thin']))
+        iter_sampling = int(math.ceil(iter_sampling / meta['thin']))
+    if meta['iter_sampling'] != iter_sampling:
         raise ValueError(
             'bad csv file {}, expected {} sampling iterations, found {}'.format(
-                path, expect_sampling, meta['iter_sampling']
+                path, iter_sampling, meta['iter_sampling']
             )
         )
     if save_warmup:
         if not ('save_warmup' in meta and meta['save_warmup'] == '1'):
             raise ValueError(
                 'bad csv file {}, '
-                'config error, expected save_warmup = 1'.format(
-                    path
-                )
+                'config error, expected save_warmup = 1'.format(path)
             )
-        if meta['iter_warmup'] != expect_warmup:
+        if meta['iter_warmup'] != iter_warmup:
             raise ValueError(
                 'bad csv file {}, '
                 'expected {} warmup iterations, found {}'.format(
-                    path, expect_warmup, meta['iter_warmup']
+                    path, iter_warmup, meta['iter_warmup']
                 )
             )
     return meta
@@ -494,10 +494,9 @@ def scan_optimize_csv(path: str) -> Dict:
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
         lineno = scan_column_names(fd, dict, lineno)
-        line = fd.readline().lstrip(' #\t')
+        line = fd.readline().lstrip(' #\t').rstrip()
         xs = line.split(',')
-        mle = [float(x) for x in xs]
-        dict['mle'] = mle
+        dict['mle'] = [float(x) for x in xs]
     return dict
 
 
@@ -520,7 +519,7 @@ def scan_variational_csv(path: str) -> Dict:
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
         lineno = scan_column_names(fd, dict, lineno)
-        line = fd.readline().lstrip(' #\t')
+        line = fd.readline().lstrip(' #\t').rstrip()
         lineno += 1
         if not line.startswith('Stepsize adaptation complete.'):
             raise ValueError(
