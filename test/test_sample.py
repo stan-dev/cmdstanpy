@@ -148,6 +148,10 @@ class SampleTest(unittest.TestCase):
                 data={'foo': 1},
                 chains=4, cores=2, seed=12345, iter_sampling=100
             )
+        # tests current behavoir
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        with self.assertRaisesRegex(ValueError, 'invalid path for output files'):
+            bern_model.sample(data=jdata, chains=1, output_dir='foo')
 
     def test_multi_proc(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
