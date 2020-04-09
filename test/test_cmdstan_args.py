@@ -374,14 +374,16 @@ class CmdStanArgsTest(unittest.TestCase):
 
     # pylint: disable=no-value-for-parameter
     def test_args_bad(self):
-        sampler_args = SamplerArgs()
+        sampler_args = SamplerArgs(iter_warmup=10, iter_sampling=20)
 
-        with self.assertRaises(Exception):
-            # missing
+        with self.assertRaisesRegex(
+            Exception, 'missing 2 required positional arguments'
+        ):
             CmdStanArgs(model_name='bernoulli', model_exe='bernoulli.exe')
 
-        with self.assertRaises(ValueError):
-            # bad filepath
+        with self.assertRaisesRegex(
+            ValueError, 'no such file no/such/path/to.file'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -390,8 +392,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad chain id
+        with self.assertRaisesRegex(ValueError, 'invalid chain_id'):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -399,8 +400,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'seed must be an integer between'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -409,8 +411,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'number of seeds must match number of chains'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -419,8 +422,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'seed must be an integer between'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -429,8 +433,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'seed must be an integer between'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -439,8 +444,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad inits
+        with self.assertRaisesRegex(ValueError, 'inits must be > 0'):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -453,8 +457,9 @@ class CmdStanArgsTest(unittest.TestCase):
         jinits1 = os.path.join(DATAFILES_PATH, 'bernoulli.init_1.json')
         jinits2 = os.path.join(DATAFILES_PATH, 'bernoulli.init_2.json')
 
-        with self.assertRaises(ValueError):
-            # bad inits - files must be unique
+        with self.assertRaisesRegex(
+            ValueError, 'number of inits files must match number of chains'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -463,18 +468,18 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad inits - files must be unique
+        with self.assertRaisesRegex(
+            ValueError, 'each chain must have its own init file'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
-                inits=[jinits, jinits1, jinits2],
+                inits=[jinits, jinits1, jinits2, jinits2],
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad inits - no such file
+        with self.assertRaisesRegex(ValueError, 'no such file'):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -483,15 +488,33 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad output_dir name
+        with self.assertRaisesRegex(
+            ValueError, 'invalid path for output files, no such dir'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
-                output_dir='no/such/path',
+                output_dir='bad/path',
                 method_args=sampler_args,
             )
+
+        fname = 'foo.txt'
+        if os.path.exists(fname):
+            os.remove(fname)
+        with self.assertRaisesRegex(
+            ValueError, 'specified output_dir not a directory'
+        ):
+            open(fname, 'x').close()
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                output_dir=fname,
+                method_args=sampler_args,
+            )
+        if os.path.exists(fname):
+            os.remove(fname)
 
         # TODO: read-only dir test for Windows - set ACLs, not mode
         if platform.system() == 'Darwin' or platform.system() == 'Linux':
