@@ -532,7 +532,7 @@ class CmdStanArgs:
                 try:
                     os.makedirs(self.output_dir)
                     self._logger.info(
-                        'created output directory: {}'.format(self.output_dir)
+                        'created output directory: %s', self.output_dir
                         )
                 except (RuntimeError, PermissionError):
                     raise ValueError(
