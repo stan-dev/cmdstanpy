@@ -2,13 +2,17 @@
 CmdStan arguments
 """
 import os
+import logging
 from time import time
 from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
 from numpy.random import RandomState
 
-from cmdstanpy.utils import read_metric
+from cmdstanpy.utils import (
+    read_metric,
+    get_logger,
+)
 
 
 class Method(Enum):
@@ -476,6 +480,7 @@ class CmdStanArgs:
         output_dir: str = None,
         save_diagnostics: bool = False,
         refresh: str = None,
+        logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
@@ -497,6 +502,7 @@ class CmdStanArgs:
         elif isinstance(method_args, VariationalArgs):
             self.method = Method.VARIATIONAL
         self.method_args.validate(len(chain_ids) if chain_ids else None)
+        self._logger = logger or get_logger()
         self.validate()
 
     def validate(self) -> None:
@@ -523,11 +529,17 @@ class CmdStanArgs:
             self.output_dir = os.path.realpath(os.path.expanduser(
                 self.output_dir))
             if not os.path.exists(self.output_dir):
-                raise ValueError(
-                    'invalid path for output files, no such dir: {}'.format(
-                        self.output_dir
+                try:
+                    os.makedirs(self.output_dir)
+                    self._logger.info(
+                        'created output directory: {}'.format(self.output_dir)
+                        )
+                except (RuntimeError, PermissionError):
+                    raise ValueError(
+                        'invalid path for output files, no such dir: {}'.format(
+                            self.output_dir
+                        )
                     )
-                )
             if not os.path.isdir(self.output_dir):
                 raise ValueError(
                     'specified output_dir not a directory: {}'.format(

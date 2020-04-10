@@ -111,27 +111,43 @@ class SampleTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
-            inits=1.1
+            data=jdata,
+            chains=4,
+            cores=2,
+            seed=12345,
+            iter_sampling=100,
+            inits=1.1,
         )
         self.assertIn('init=1.1', bern_fit.runset.__repr__())
 
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
-            inits=1
+            data=jdata,
+            chains=4,
+            cores=2,
+            seed=12345,
+            iter_sampling=100,
+            inits=1,
         )
         self.assertIn('init=1', bern_fit.runset.__repr__())
 
         with self.assertRaises(ValueError):
             bern_model.sample(
-                data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
-                inits=(1, 2)
+                data=jdata,
+                chains=4,
+                cores=2,
+                seed=12345,
+                iter_sampling=100,
+                inits=(1, 2),
             )
 
         with self.assertRaises(ValueError):
             bern_model.sample(
-                data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100,
-                inits=-1
+                data=jdata,
+                chains=4,
+                cores=2,
+                seed=12345,
+                iter_sampling=100,
+                inits=-1,
             )
 
     def test_bernoulli_bad(self):
@@ -139,19 +155,21 @@ class SampleTest(unittest.TestCase):
         bern_model = CmdStanModel(stan_file=stan)
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
-            bern_model.sample(
-                chains=4, cores=2, seed=12345, iter_sampling=100
-            )
+            bern_model.sample(chains=4, cores=2, seed=12345, iter_sampling=100)
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
             bern_model.sample(
                 data={'foo': 1},
-                chains=4, cores=2, seed=12345, iter_sampling=100
+                chains=4,
+                cores=2,
+                seed=12345,
+                iter_sampling=100,
             )
-        # tests current behavoir
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        with self.assertRaisesRegex(ValueError, 'invalid path for output files'):
-            bern_model.sample(data=jdata, chains=1, output_dir='foo')
+        with self.assertRaisesRegex(
+            ValueError, 'invalid path for output files'
+        ):
+            bern_model.sample(data=jdata, chains=1, output_dir='/bad')
 
     def test_multi_proc(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
@@ -285,7 +303,7 @@ class SampleTest(unittest.TestCase):
             'eta.17',
             'eta.18',
             'eta.19',
-            'eta.20'
+            'eta.20',
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
         self.assertEqual(datagen_fit.draws, 100)
@@ -298,8 +316,9 @@ class SampleTest(unittest.TestCase):
         self.test_bernoulli_good('bernoulli with space in name.stan')
 
     def test_bernoulli_path_with_space(self):
-        self.test_bernoulli_good('path with space/'
-                                 'bernoulli_path_with_space.stan')
+        self.test_bernoulli_good(
+            'path with space/' 'bernoulli_path_with_space.stan'
+        )
 
 
 class CmdStanMCMCTest(unittest.TestCase):
@@ -325,7 +344,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-2.csv'),
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-4.csv'),
-            ]
+        ]
         self.assertEqual(4, runset.chains)
         retcodes = runset._retcodes
         for i in range(len(retcodes)):
@@ -341,7 +360,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         drawset = fit.get_drawset()
         self.assertEqual(
             drawset.shape,
-            (fit.runset.chains * fit.draws, len(fit.column_names))
+            (fit.runset.chains * fit.draws, len(fit.column_names)),
         )
         _ = fit.summary()
         self.assertTrue(True)
@@ -361,9 +380,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertIn(expected, fit.diagnose().replace('\r\n', '\n'))
 
     def test_validate_big_run(self):
-        exe = os.path.join(
-            DATAFILES_PATH, 'bernoulli' + EXTENSION
-        )
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -377,7 +394,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
             os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
-            ]
+        ]
         fit = CmdStanMCMC(runset)
         fit._validate_csv_files()
         sampler_state = [
@@ -418,7 +435,11 @@ class CmdStanMCMCTest(unittest.TestCase):
         jmetric = os.path.join(DATAFILES_PATH, 'bernoulli.metric.json')
         # just test that it runs without error
         bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=200,
+            data=jdata,
+            chains=4,
+            cores=2,
+            seed=12345,
+            iter_sampling=200,
             metric=jmetric,
         )
 
@@ -473,9 +494,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 os.remove(bern_fit.runset.stderr_files[i])
 
     def test_diagnose_divergences(self):
-        exe = os.path.join(
-            DATAFILES_PATH, 'bernoulli' + EXTENSION
-        )
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         sampler_args = SamplerArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -486,9 +505,10 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         runset = RunSet(args=cmdstan_args, chains=1)
         runset._csv_files = [
-            os.path.join(DATAFILES_PATH, 'diagnose-good',
-                             'corr_gauss_depth8-1.csv'),
-            ]
+            os.path.join(
+                DATAFILES_PATH, 'diagnose-good', 'corr_gauss_depth8-1.csv'
+            )
+        ]
         fit = CmdStanMCMC(runset)
         # TODO - use cmdstan test files instead
         expected = '\n'.join(
@@ -527,15 +547,19 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         # errors reported
         runset._stderr_files = [
-            os.path.join(DATAFILES_PATH, 'runset-bad',
-                             'bad-transcript-bern-1.txt'),
-            os.path.join(DATAFILES_PATH, 'runset-bad',
-                             'bad-transcript-bern-2.txt'),
-            os.path.join(DATAFILES_PATH, 'runset-bad',
-                             'bad-transcript-bern-3.txt'),
-            os.path.join(DATAFILES_PATH, 'runset-bad',
-                             'bad-transcript-bern-4.txt'),
-            ]
+            os.path.join(
+                DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-1.txt'
+            ),
+            os.path.join(
+                DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-2.txt'
+            ),
+            os.path.join(
+                DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-3.txt'
+            ),
+            os.path.join(
+                DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-4.txt'
+            ),
+        ]
         self.assertEqual(len(runset._get_err_msgs()), 4)
 
         # csv file headers inconsistent
@@ -544,7 +568,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-2.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-4.csv'),
-            ]
+        ]
         fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'header mismatch'):
             fit._validate_csv_files()
@@ -555,7 +579,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-2.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-4.csv'),
-            ]
+        ]
         fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'draws'):
             fit._validate_csv_files()
@@ -566,7 +590,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-2.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-4.csv'),
-            ]
+        ]
         fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'bad draw'):
             fit._validate_csv_files()

@@ -3,6 +3,7 @@
 import os
 import platform
 import unittest
+from time import time
 
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import (
@@ -317,6 +318,19 @@ class CmdStanArgsTest(unittest.TestCase):
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=7 random seed=', ' '.join(cmd))
 
+        dirname = 'tmp' + str(time())
+        if os.path.exists(dirname):
+            os.rmdir(dirname)
+        CmdStanArgs(
+            model_name='bernoulli',
+            model_exe='bernoulli.exe',
+            chain_ids=[1, 2, 3, 4],
+            output_dir=dirname,
+            method_args=sampler_args,
+        )
+        self.assertTrue(os.path.exists(dirname))
+        os.rmdir(dirname)
+
     def test_args_inits(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -485,17 +499,6 @@ class CmdStanArgsTest(unittest.TestCase):
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 inits='no/such/path/to.file',
-                method_args=sampler_args,
-            )
-
-        with self.assertRaisesRegex(
-            ValueError, 'invalid path for output files, no such dir'
-        ):
-            CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe',
-                chain_ids=[1, 2, 3, 4],
-                output_dir='bad/path',
                 method_args=sampler_args,
             )
 
