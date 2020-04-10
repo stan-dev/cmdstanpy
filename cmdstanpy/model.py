@@ -644,6 +644,7 @@ class CmdStanModel:
                 save_diagnostics=save_diagnostics,
                 method_args=sampler_args,
                 refresh=refresh,
+                logger=self._logger,
             )
             runset = RunSet(args=args, chains=chains)
             pbar = None
@@ -704,7 +705,7 @@ class CmdStanModel:
                 for i in range(chains):
                     if runset._retcode(i) != 0:
                         err_msg = '{}chain {} returned error code {}\n'.format(
-                            err_msg, i+1, runset._retcode(i)
+                            err_msg, i + 1, runset._retcode(i)
                         )
                 console_errs = runset._get_err_msgs()
                 if len(console_errs) > 0:

@@ -2,13 +2,17 @@
 CmdStan arguments
 """
 import os
+import logging
 from time import time
 from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
 from numpy.random import RandomState
 
-from cmdstanpy.utils import read_metric
+from cmdstanpy.utils import (
+    read_metric,
+    get_logger,
+)
 
 
 class Method(Enum):
@@ -113,8 +117,8 @@ class SamplerArgs:
             else:
                 if len(self.step_size) != chains:
                     raise ValueError(
-                        'number of step_sizes must match number of chains '
-                        ' found {} step_sizes for {} chains '.format(
+                        'number of step_sizes must match number of chains,'
+                        ' found {} step_sizes for {} chains'.format(
                             len(self.step_size), chains
                         )
                     )
@@ -137,8 +141,8 @@ class SamplerArgs:
             elif isinstance(self.metric, (list, tuple)):
                 if len(self.metric) != chains:
                     raise ValueError(
-                        'number of metric files must match number of chains '
-                        ' found {} metric files for {} chains '.format(
+                        'number of metric files must match number of chains,'
+                        ' found {} metric files for {} chains'.format(
                             len(self.metric), chains
                         )
                     )
@@ -476,6 +480,7 @@ class CmdStanArgs:
         output_dir: str = None,
         save_diagnostics: bool = False,
         refresh: str = None,
+        logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
@@ -497,6 +502,7 @@ class CmdStanArgs:
         elif isinstance(method_args, VariationalArgs):
             self.method = Method.VARIATIONAL
         self.method_args.validate(len(chain_ids) if chain_ids else None)
+        self._logger = logger or get_logger()
         self.validate()
 
     def validate(self) -> None:
@@ -519,13 +525,24 @@ class CmdStanArgs:
                     raise ValueError(
                         'invalid chain_id {}'.format(self.chain_ids[i])
                     )
-
         if self.output_dir is not None:
             self.output_dir = os.path.realpath(os.path.expanduser(
                 self.output_dir))
-            if not os.path.exists(os.path.dirname(self.output_dir)):
+            if not os.path.exists(self.output_dir):
+                try:
+                    os.makedirs(self.output_dir)
+                    self._logger.info(
+                        'created output directory: %s', self.output_dir
+                        )
+                except (RuntimeError, PermissionError):
+                    raise ValueError(
+                        'invalid path for output files, no such dir: {}'.format(
+                            self.output_dir
+                        )
+                    )
+            if not os.path.isdir(self.output_dir):
                 raise ValueError(
-                    'invalid path for output files, no such dir: {}'.format(
+                    'specified output_dir not a directory: {}'.format(
                         self.output_dir
                     )
                 )
@@ -536,8 +553,8 @@ class CmdStanArgs:
                 os.remove(testpath)  # cleanup
             except Exception:
                 raise ValueError(
-                    'invalid path for output files, '
-                    'cannot write to dir: {}'.format(self.output_dir)
+                    'invalid path for output files,'
+                    ' cannot write to dir: {}'.format(self.output_dir)
                 )
 
         if self.seed is None:
@@ -563,7 +580,7 @@ class CmdStanArgs:
 
                 if len(self.seed) != len(self.chain_ids):
                     raise ValueError(
-                        'number of seeds must match number of chains '
+                        'number of seeds must match number of chains,'
                         ' found {} seed for {} chains '.format(
                             len(self.seed), len(self.chain_ids)
                         )
@@ -602,7 +619,7 @@ class CmdStanArgs:
 
                 if len(self.inits) != len(self.chain_ids):
                     raise ValueError(
-                        'number of inits files must match number of chains '
+                        'number of inits files must match number of chains,'
                         ' found {} inits files for {} chains '.format(
                             len(self.inits), len(self.chain_ids)
                         )
