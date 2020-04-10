@@ -1,10 +1,12 @@
 """CmdStan method sample tests"""
 
 import os
+import platform
 import logging
 import shutil
 from multiprocessing import cpu_count
 import unittest
+from time import time
 from testfixtures import LogCapture
 import pytest
 
@@ -165,11 +167,17 @@ class SampleTest(unittest.TestCase):
                 seed=12345,
                 iter_sampling=100,
             )
-        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        with self.assertRaisesRegex(
-            ValueError, 'invalid path for output files'
-        ):
-            bern_model.sample(data=jdata, chains=1, output_dir='/bad')
+        if platform.system() != 'Windows':
+            jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+            dirname1 = 'tmp1' + str(time())
+            os.mkdir(dirname1, mode=644)
+            dirname2 = 'tmp2' + str(time())
+            path = os.path.join(dirname1, dirname2)
+            with self.assertRaisesRegex(
+                    ValueError, 'invalid path for output files'
+                    ):
+                bern_model.sample(data=jdata, chains=1, output_dir=path)
+            os.rmdir(dirname1)
 
     def test_multi_proc(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
