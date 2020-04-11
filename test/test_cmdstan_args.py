@@ -81,7 +81,8 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('save_warmup=1', ' '.join(cmd))
         self.assertIn('thin=7', ' '.join(cmd))
         self.assertIn('algorithm=hmc engine=nuts', ' '.join(cmd))
-        self.assertIn('max_depth=15 adapt delta=0.99', ' '.join(cmd))
+        self.assertIn('max_depth=15', ' '.join(cmd))
+        self.assertIn('adapt engaged=1 delta=0.99', ' '.join(cmd))
 
         args = SamplerArgs(iter_warmup=10)
         args.validate(chains=4)
@@ -97,7 +98,7 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(iter_warmup=0, adapt_engaged=True)
+        args = SamplerArgs(iter_warmup=10, adapt_engaged=False)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
@@ -153,6 +154,34 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
+        args = SamplerArgs(adapt_delta=0.88, adapt_engaged=False)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_init_phase=0.88)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_metric_window=0.88)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_step_size=0.88)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_init_phase=-1)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_metric_window=-2)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_step_size=-3)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
         args = SamplerArgs(adapt_delta=0.88, fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
@@ -172,11 +201,23 @@ class SamplerArgsTest(unittest.TestCase):
             'method=sample algorithm=hmc adapt engaged=1', ' '.join(cmd)
         )
 
+        args = SamplerArgs(
+            adapt_init_phase=26,
+            adapt_metric_window=60,
+            adapt_step_size=34,
+            )
+        args.validate(chains=4)
+        cmd = args.compose(1, cmd=[])
+        self.assertIn('method=sample algorithm=hmc adapt', ' '.join(cmd))
+        self.assertIn('init_buffer=26', ' '.join(cmd))
+        self.assertIn('window=60', ' '.join(cmd))
+        self.assertIn('term_buffer=34', ' '.join(cmd))
+
         args = SamplerArgs()
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertNotIn('engine=nuts', ' '.join(cmd))
-        self.assertNotIn('engaged=1', ' '.join(cmd))
+        self.assertNotIn('adapt engaged=0', ' '.join(cmd))
 
     def test_metric(self):
         args = SamplerArgs(metric='dense_e')

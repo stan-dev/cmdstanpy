@@ -451,6 +451,23 @@ class CmdStanMCMCTest(unittest.TestCase):
             metric=jmetric,
         )
 
+    def test_adapt_schedule(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345,
+            iter_sampling=200, iter_warmup=200,
+            adapt_init_phase=11, adapt_metric_window=12, adapt_step_size=13,
+        )
+        txt_file = bern_fit.runset.stdout_files[0]
+        with open(txt_file, 'r') as fd:
+            lines = fd.readlines()
+            stripped = [line.strip() for line in lines]
+            self.assertIn('init_buffer = 11', stripped)
+            self.assertIn('window = 12', stripped)
+            self.assertIn('term_buffer = 13', stripped)
+
     def test_save_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')

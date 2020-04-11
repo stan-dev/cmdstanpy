@@ -3,7 +3,7 @@ ______________
 
 Under the hood, CmdStanPy uses the CmdStan command line interface
 to compile and fit a model to data.
-The function `cmdstan_path` returns the path to the local CmdStan installation.
+The function ``cmdstan_path`` returns the path to the local CmdStan installation.
 See the installation section for more details on installing CmdStan.
   
 
@@ -54,11 +54,11 @@ Output Files
 ^^^^^^^^^^^^
 
 Output filenames are composed of the model name, a timestamp
-in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
 filetype suffix, either '.csv' for the CmdStan output or '.txt' for
-the console messages, e.g. ``bernoulli-201912081451-1.csv``. Output files
+the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
 written to the temporary directory contain an additional 8-character
-random string, e.g. ``bernoulli-201912081451-1-5nm6as7u.csv``.
+random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
 
 
 When the ``output_dir`` argument to the ``CmdStanModel`` inference methods
