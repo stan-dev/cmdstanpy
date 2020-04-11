@@ -3,6 +3,7 @@
 import os
 import platform
 import unittest
+from time import time
 
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import (
@@ -80,7 +81,8 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('save_warmup=1', ' '.join(cmd))
         self.assertIn('thin=7', ' '.join(cmd))
         self.assertIn('algorithm=hmc engine=nuts', ' '.join(cmd))
-        self.assertIn('max_depth=15 adapt delta=0.99', ' '.join(cmd))
+        self.assertIn('max_depth=15', ' '.join(cmd))
+        self.assertIn('adapt engaged=1 delta=0.99', ' '.join(cmd))
 
         args = SamplerArgs(iter_warmup=10)
         args.validate(chains=4)
@@ -96,7 +98,7 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(iter_warmup=0, adapt_engaged=True)
+        args = SamplerArgs(iter_warmup=10, adapt_engaged=False)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
@@ -152,6 +154,34 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
+        args = SamplerArgs(adapt_delta=0.88, adapt_engaged=False)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_init_phase=0.88)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_metric_window=0.88)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_step_size=0.88)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_init_phase=-1)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_metric_window=-2)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
+        args = SamplerArgs(adapt_step_size=-3)
+        with self.assertRaises(ValueError):
+            args.validate(chains=2)
+
         args = SamplerArgs(adapt_delta=0.88, fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
@@ -171,11 +201,23 @@ class SamplerArgsTest(unittest.TestCase):
             'method=sample algorithm=hmc adapt engaged=1', ' '.join(cmd)
         )
 
+        args = SamplerArgs(
+            adapt_init_phase=26,
+            adapt_metric_window=60,
+            adapt_step_size=34,
+            )
+        args.validate(chains=4)
+        cmd = args.compose(1, cmd=[])
+        self.assertIn('method=sample algorithm=hmc adapt', ' '.join(cmd))
+        self.assertIn('init_buffer=26', ' '.join(cmd))
+        self.assertIn('window=60', ' '.join(cmd))
+        self.assertIn('term_buffer=34', ' '.join(cmd))
+
         args = SamplerArgs()
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertNotIn('engine=nuts', ' '.join(cmd))
-        self.assertNotIn('engaged=1', ' '.join(cmd))
+        self.assertNotIn('adapt engaged=0', ' '.join(cmd))
 
     def test_metric(self):
         args = SamplerArgs(metric='dense_e')
@@ -317,6 +359,19 @@ class CmdStanArgsTest(unittest.TestCase):
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('id=7 random seed=', ' '.join(cmd))
 
+        dirname = 'tmp' + str(time())
+        if os.path.exists(dirname):
+            os.rmdir(dirname)
+        CmdStanArgs(
+            model_name='bernoulli',
+            model_exe='bernoulli.exe',
+            chain_ids=[1, 2, 3, 4],
+            output_dir=dirname,
+            method_args=sampler_args,
+        )
+        self.assertTrue(os.path.exists(dirname))
+        os.rmdir(dirname)
+
     def test_args_inits(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -374,14 +429,16 @@ class CmdStanArgsTest(unittest.TestCase):
 
     # pylint: disable=no-value-for-parameter
     def test_args_bad(self):
-        sampler_args = SamplerArgs()
+        sampler_args = SamplerArgs(iter_warmup=10, iter_sampling=20)
 
-        with self.assertRaises(Exception):
-            # missing
+        with self.assertRaisesRegex(
+            Exception, 'missing 2 required positional arguments'
+        ):
             CmdStanArgs(model_name='bernoulli', model_exe='bernoulli.exe')
 
-        with self.assertRaises(ValueError):
-            # bad filepath
+        with self.assertRaisesRegex(
+            ValueError, 'no such file no/such/path/to.file'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -390,8 +447,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad chain id
+        with self.assertRaisesRegex(ValueError, 'invalid chain_id'):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -399,8 +455,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'seed must be an integer between'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -409,8 +466,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'number of seeds must match number of chains'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -419,8 +477,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'seed must be an integer between'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -429,8 +488,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad seed
+        with self.assertRaisesRegex(
+            ValueError, 'seed must be an integer between'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -439,8 +499,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad inits
+        with self.assertRaisesRegex(ValueError, 'inits must be > 0'):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -453,8 +512,9 @@ class CmdStanArgsTest(unittest.TestCase):
         jinits1 = os.path.join(DATAFILES_PATH, 'bernoulli.init_1.json')
         jinits2 = os.path.join(DATAFILES_PATH, 'bernoulli.init_2.json')
 
-        with self.assertRaises(ValueError):
-            # bad inits - files must be unique
+        with self.assertRaisesRegex(
+            ValueError, 'number of inits files must match number of chains'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -463,18 +523,18 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad inits - files must be unique
+        with self.assertRaisesRegex(
+            ValueError, 'each chain must have its own init file'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
-                inits=[jinits, jinits1, jinits2],
+                inits=[jinits, jinits1, jinits2, jinits2],
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad inits - no such file
+        with self.assertRaisesRegex(ValueError, 'no such file'):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -483,15 +543,22 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaises(ValueError):
-            # bad output_dir name
+        fname = 'foo.txt'
+        if os.path.exists(fname):
+            os.remove(fname)
+        with self.assertRaisesRegex(
+            ValueError, 'specified output_dir not a directory'
+        ):
+            open(fname, 'x').close()
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
-                output_dir='no/such/path',
+                output_dir=fname,
                 method_args=sampler_args,
             )
+        if os.path.exists(fname):
+            os.remove(fname)
 
         # TODO: read-only dir test for Windows - set ACLs, not mode
         if platform.system() == 'Darwin' or platform.system() == 'Linux':

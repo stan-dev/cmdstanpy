@@ -2,13 +2,17 @@
 CmdStan arguments
 """
 import os
+import logging
 from time import time
 from enum import Enum, auto
 from numbers import Integral, Real
 from typing import List, Union
 from numpy.random import RandomState
 
-from cmdstanpy.utils import read_metric
+from cmdstanpy.utils import (
+    read_metric,
+    get_logger,
+)
 
 
 class Method(Enum):
@@ -35,8 +39,11 @@ class SamplerArgs:
         max_treedepth: int = None,
         metric: Union[str, List[str]] = None,
         step_size: Union[float, List[float]] = None,
-        adapt_engaged: bool = None,
+        adapt_engaged: bool = True,
         adapt_delta: float = None,
+        adapt_init_phase: int = None,
+        adapt_metric_window: int = None,
+        adapt_step_size: int = None,
         fixed_param: bool = False,
     ) -> None:
         """Initialize object."""
@@ -50,6 +57,9 @@ class SamplerArgs:
         self.step_size = step_size
         self.adapt_engaged = adapt_engaged
         self.adapt_delta = adapt_delta
+        self.adapt_init_phase = adapt_init_phase
+        self.adapt_metric_window = adapt_metric_window
+        self.adapt_step_size = adapt_step_size
         self.fixed_param = fixed_param
         self.diagnostic_file = None
 
@@ -65,6 +75,30 @@ class SamplerArgs:
             raise ValueError(
                 'sampler expects number of chains to be greater than 0'
             )
+        if not (
+            self.adapt_delta is None
+            and self.adapt_init_phase is None
+            and self.adapt_metric_window is None
+            and self.adapt_step_size is None
+        ):
+            if self.adapt_engaged is False:
+                msg = 'conflicting arguments: adapt_engaged: False'
+                if self.adapt_delta is not None:
+                    msg = '{}, adapt_delta: {}'.format(msg, self.adapt_delta)
+                if self.adapt_init_phase is not None:
+                    msg = '{}, adapt_init_phase: {}'.format(
+                        msg, self.adapt_init_phase
+                    )
+                if self.adapt_metric_window is not None:
+                    msg = '{}, adapt_metric_window: {}'.format(
+                        msg, self.adapt_metric_window
+                    )
+                if self.adapt_step_size is not None:
+                    msg = '{}, adapt_step_size: {}'.format(
+                        msg, self.adapt_step_size
+                    )
+                raise ValueError(msg)
+
         if self.iter_warmup is not None:
             if self.iter_warmup < 0 or not isinstance(
                 self.iter_warmup, Integral
@@ -73,10 +107,9 @@ class SamplerArgs:
                     'iter_warmup must be a non-negative integer,'
                     ' found {}'.format(self.iter_warmup)
                 )
-            if self.adapt_engaged and self.iter_warmup == 0:
+            if self.iter_warmup > 0 and not self.adapt_engaged:
                 raise ValueError(
-                    'adaptation requested but 0 warmup iterations specified, '
-                    'must run warmup iterations'
+                    'adapt_engaged is False, cannot specify warmup iterations'
                 )
         if self.iter_sampling is not None:
             if self.iter_sampling < 0 or not isinstance(
@@ -89,7 +122,7 @@ class SamplerArgs:
         if self.thin is not None:
             if self.thin < 1 or not isinstance(self.thin, Integral):
                 raise ValueError(
-                    'thin must be a positive integer greater than 0,'
+                    'thin must be a positive integer,'
                     'found {}'.format(self.thin)
                 )
         if self.max_treedepth is not None:
@@ -97,14 +130,10 @@ class SamplerArgs:
                 self.max_treedepth, Integral
             ):
                 raise ValueError(
-                    'max_treedepth must be a positive integer greater than 0,'
+                    'max_treedepth must be a positive integer,'
                     ' found {}'.format(self.max_treedepth)
                 )
         if self.step_size is not None:
-            if self.fixed_param:
-                raise ValueError(
-                    'when fixed_param=True, cannot specify max_treedepth.'
-                )
             if isinstance(self.step_size, Real):
                 if self.step_size < 0:
                     raise ValueError(
@@ -113,8 +142,8 @@ class SamplerArgs:
             else:
                 if len(self.step_size) != chains:
                     raise ValueError(
-                        'number of step_sizes must match number of chains '
-                        ' found {} step_sizes for {} chains '.format(
+                        'number of step_sizes must match number of chains,'
+                        ' found {} step_sizes for {} chains'.format(
                             len(self.step_size), chains
                         )
                     )
@@ -137,8 +166,8 @@ class SamplerArgs:
             elif isinstance(self.metric, (list, tuple)):
                 if len(self.metric) != chains:
                     raise ValueError(
-                        'number of metric files must match number of chains '
-                        ' found {} metric files for {} chains '.format(
+                        'number of metric files must match number of chains,'
+                        ' found {} metric files for {} chains'.format(
                             len(self.metric), chains
                         )
                     )
@@ -184,6 +213,30 @@ class SamplerArgs:
                     'adapt_delta must be between 0 and 1,'
                     ' found {}'.format(self.adapt_delta)
                 )
+        if self.adapt_init_phase is not None:
+            if self.adapt_init_phase < 0 or not isinstance(
+                self.adapt_init_phase, Integral
+            ):
+                raise ValueError(
+                    'adapt_init_phase must be a non-negative integer,'
+                    'found {}'.format(self.adapt_init_phase)
+                )
+        if self.adapt_metric_window is not None:
+            if self.adapt_metric_window < 0 or not isinstance(
+                self.adapt_metric_window, Integral
+            ):
+                raise ValueError(
+                    'adapt_metric_window must be a non-negative integer,'
+                    'found {}'.format(self.adapt_metric_window)
+                )
+        if self.adapt_step_size is not None:
+            if self.adapt_step_size < 0 or not isinstance(
+                self.adapt_step_size, Integral
+            ):
+                raise ValueError(
+                    'adapt_step_size must be a non-negative integer,'
+                    'found {}'.format(self.adapt_step_size)
+                )
 
         if self.fixed_param and (
             (self.iter_warmup is not None and self.iter_warmup > 0)
@@ -191,11 +244,16 @@ class SamplerArgs:
             or self.max_treedepth is not None
             or self.metric is not None
             or self.step_size is not None
-            or self.adapt_delta is not None
+            or not (
+                self.adapt_delta is None
+                and self.adapt_init_phase is None
+                and self.adapt_metric_window is None
+                and self.adapt_step_size is None
+            )
         ):
             raise ValueError(
-                'when fixed_param=True, cannot specify warmup or'
-                ' or any adaptation parameters.'
+                'when fixed_param=True, cannot specify warmup'
+                ' or adaptation parameters.'
             )
 
     def compose(self, idx: int, cmd: List) -> str:
@@ -231,15 +289,20 @@ class SamplerArgs:
                 cmd.append('metric_file={}'.format(self.metric_file))
             else:
                 cmd.append('metric_file={}'.format(self.metric_file[idx]))
-        if self.adapt_engaged is not None or self.adapt_delta is not None:
-            cmd.append('adapt')
-        if self.adapt_engaged is not None:
-            if self.adapt_engaged:
-                cmd.append('engaged=1')
-            else:
-                cmd.append('engaged=0')
+        cmd.append('adapt')
+        if self.adapt_engaged:
+            cmd.append('engaged=1')
+        else:
+            cmd.append('engaged=0')
         if self.adapt_delta is not None:
             cmd.append('delta={}'.format(self.adapt_delta))
+        if self.adapt_init_phase is not None:
+            cmd.append('init_buffer={}'.format(self.adapt_init_phase))
+        if self.adapt_metric_window is not None:
+            cmd.append('window={}'.format(self.adapt_metric_window))
+        if self.adapt_step_size is not None:
+            cmd.append('term_buffer={}'.format(self.adapt_step_size))
+
         return cmd
 
 
@@ -476,6 +539,7 @@ class CmdStanArgs:
         output_dir: str = None,
         save_diagnostics: bool = False,
         refresh: str = None,
+        logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
@@ -497,6 +561,7 @@ class CmdStanArgs:
         elif isinstance(method_args, VariationalArgs):
             self.method = Method.VARIATIONAL
         self.method_args.validate(len(chain_ids) if chain_ids else None)
+        self._logger = logger or get_logger()
         self.validate()
 
     def validate(self) -> None:
@@ -519,13 +584,24 @@ class CmdStanArgs:
                     raise ValueError(
                         'invalid chain_id {}'.format(self.chain_ids[i])
                     )
-
         if self.output_dir is not None:
             self.output_dir = os.path.realpath(os.path.expanduser(
                 self.output_dir))
-            if not os.path.exists(os.path.dirname(self.output_dir)):
+            if not os.path.exists(self.output_dir):
+                try:
+                    os.makedirs(self.output_dir)
+                    self._logger.info(
+                        'created output directory: %s', self.output_dir
+                        )
+                except (RuntimeError, PermissionError):
+                    raise ValueError(
+                        'invalid path for output files, no such dir: {}'.format(
+                            self.output_dir
+                        )
+                    )
+            if not os.path.isdir(self.output_dir):
                 raise ValueError(
-                    'invalid path for output files, no such dir: {}'.format(
+                    'specified output_dir not a directory: {}'.format(
                         self.output_dir
                     )
                 )
@@ -536,8 +612,8 @@ class CmdStanArgs:
                 os.remove(testpath)  # cleanup
             except Exception:
                 raise ValueError(
-                    'invalid path for output files, '
-                    'cannot write to dir: {}'.format(self.output_dir)
+                    'invalid path for output files,'
+                    ' cannot write to dir: {}'.format(self.output_dir)
                 )
 
         if self.seed is None:
@@ -563,7 +639,7 @@ class CmdStanArgs:
 
                 if len(self.seed) != len(self.chain_ids):
                     raise ValueError(
-                        'number of seeds must match number of chains '
+                        'number of seeds must match number of chains,'
                         ' found {} seed for {} chains '.format(
                             len(self.seed), len(self.chain_ids)
                         )
@@ -602,7 +678,7 @@ class CmdStanArgs:
 
                 if len(self.inits) != len(self.chain_ids):
                     raise ValueError(
-                        'number of inits files must match number of chains '
+                        'number of inits files must match number of chains,'
                         ' found {} inits files for {} chains '.format(
                             len(self.inits), len(self.chain_ids)
                         )
@@ -619,8 +695,9 @@ class CmdStanArgs:
                             'no such file {}'.format(self.inits[i])
                         )
 
-    def compose_command(self, idx: int, csv_file: str,
-                        diagnostic_file: str = None) -> str:
+    def compose_command(
+        self, idx: int, csv_file: str, diagnostic_file: str = None
+    ) -> str:
         """
         Compose CmdStan command for non-default arguments.
         """

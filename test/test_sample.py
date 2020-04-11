@@ -1,10 +1,12 @@
 """CmdStan method sample tests"""
 
 import os
+import platform
 import logging
 import shutil
 from multiprocessing import cpu_count
 import unittest
+from time import time
 from testfixtures import LogCapture
 import pytest
 
@@ -165,6 +167,17 @@ class SampleTest(unittest.TestCase):
                 seed=12345,
                 iter_sampling=100,
             )
+        if platform.system() != 'Windows':
+            jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+            dirname1 = 'tmp1' + str(time())
+            os.mkdir(dirname1, mode=644)
+            dirname2 = 'tmp2' + str(time())
+            path = os.path.join(dirname1, dirname2)
+            with self.assertRaisesRegex(
+                    ValueError, 'invalid path for output files'
+                    ):
+                bern_model.sample(data=jdata, chains=1, output_dir=path)
+            os.rmdir(dirname1)
 
     def test_multi_proc(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
@@ -436,6 +449,23 @@ class CmdStanMCMCTest(unittest.TestCase):
             metric=jmetric,
         )
 
+    def test_adapt_schedule(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=4, cores=2, seed=12345,
+            iter_sampling=200, iter_warmup=200,
+            adapt_init_phase=11, adapt_metric_window=12, adapt_step_size=13,
+        )
+        txt_file = bern_fit.runset.stdout_files[0]
+        with open(txt_file, 'r') as fd:
+            lines = fd.readlines()
+            stripped = [line.strip() for line in lines]
+            self.assertIn('init_buffer = 11', stripped)
+            self.assertIn('window = 12', stripped)
+            self.assertIn('term_buffer = 13', stripped)
+
     def test_save_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -560,7 +590,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(ValueError, 'csv file header mismatch'):
+        with self.assertRaisesRegex(ValueError, 'header mismatch'):
             CmdStanMCMC(runset)
 
         # bad draws
@@ -570,9 +600,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(
-            ValueError, 'expected 1000 sampling iterations, found 988'
-        ):
+        with self.assertRaisesRegex(ValueError, 'draws'):
             CmdStanMCMC(runset)
 
         # mismatch - column headers, draws
@@ -582,9 +610,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(
-            ValueError, 'bad iteration, expecting 9 items, found 8'
-        ):
+        with self.assertRaisesRegex(ValueError, 'bad draw'):
             CmdStanMCMC(runset)
 
 

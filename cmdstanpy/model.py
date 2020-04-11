@@ -322,7 +322,7 @@ class CmdStanModel:
         or to a temporary directory which is deleted upon session exit.
 
         Output filenames are composed of the model name, a timestamp
-        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
         filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
         written to the temporary directory contain an additional 8-character
@@ -333,7 +333,7 @@ class CmdStanModel:
             or as the path of a data file in JSON or Rdump format.
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified,
+            between 0 and 2^32 - 1. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
 
@@ -342,12 +342,12 @@ class CmdStanModel:
             exactly 0, or a dictionary or file of initial values for some or
             all parameters in the model.  The default initialization behavior
             will initialize all parameter values on range [-2, 2] on the
-            _unconstrained_ support.  If the expected parameter values are
+            *unconstrained* support.  If the expected parameter values are
             too far from this range, this option may improve estimation.
             The following value types are allowed:
 
-            * Single number ``n > 0`` - initialization range is [-n, n].
-            * ``0`` - all parameters are initialized to 0.
+            * Single number, n > 0 - initialization range is [-n, n].
+            * 0 - all parameters are initialized to 0.
             * dictionary - pairs parameter name : initial value.
             * string - pathname to a JSON or Rdump data file.
 
@@ -356,8 +356,8 @@ class CmdStanModel:
             temporary directory which is deleted upon session exit.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to ``<basename>-diagnostic-0.csv.``,
-            where ``<basename>`` is set with ``csv_basename``.
+            csv output files are written to `<basename>-diagnostic-0.csv.`,
+            where `<basename>` is set with `csv_basename`.
 
         :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
 
@@ -415,6 +415,9 @@ class CmdStanModel:
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = True,
         adapt_delta: float = None,
+        adapt_init_phase: int = None,
+        adapt_metric_window: int = None,
+        adapt_step_size: int = None,
         fixed_param: bool = False,
         output_dir: str = None,
         save_diagnostics: bool = False,
@@ -437,7 +440,7 @@ class CmdStanModel:
         upon session exit.
 
         The output filenames are composed of the model name, a timestamp
-        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
         filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
         written to the temporary directory contain an additional 8-character
@@ -452,11 +455,11 @@ class CmdStanModel:
 
         :param cores: Number of processes to run in parallel. Must be an
             integer between 1 and the number of CPUs in the system.
-            If none then set automatically to `chains` but no more
-            than `total_cpu_count - 2`
+            If none then set automatically to chains but no more
+            than total_cpu_count - 2
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified,
+            between 0 and 2^32 - 1. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
             When the same seed is used across all chains,
@@ -471,12 +474,12 @@ class CmdStanModel:
             exactly 0, or a dictionary or file of initial values for some or all
             parameters in the model.  The default initialization behavior will
             initialize all parameter values on range [-2, 2] on the
-            _unconstrained_ support.  If the expected parameter values are
+            *unconstrained* support.  If the expected parameter values are
             too far from this range, this option may improve adaptation.
             The following value types are allowed:
 
-            * Single number ``n > 0`` - initialization range is [-n, n].
-            * ``0`` - all parameters are initialized to 0.
+            * Single number n > 0 - initialization range is [-n, n].
+            * 0 - all parameters are initialized to 0.
             * dictionary - pairs parameter name : initial value.
             * string - pathname to a JSON or Rdump data file.
             * list of strings - per-chain pathname to data file.
@@ -516,7 +519,6 @@ class CmdStanModel:
             chains.
 
         :param adapt_engaged: When True, adapt stepsize and metric.
-            *Note: If True, ``iter_warmup`` must be > 0.*
 
         :param adapt_delta: Adaptation target Metropolis acceptance rate.
             The default value is 0.8.  Increasing this value, which must be
@@ -524,8 +526,21 @@ class CmdStanModel:
             It improves the effective sample size, but may increase the time
             per iteration.
 
+        :param adapt_init_phase: Iterations for initial phase of adaptation
+            during which step size is adjusted so that the chain converges
+            towards the typical set.
+
+        :param adapt_metric_window: The second phase of adaptation tunes
+            the metric and stepsize in a series of intervals.  This parameter
+            specifies the number of iterations used for the first tuning
+            interval; window size increases for each subsequent interval.
+
+        :param adapt_step_size: Number of iterations given over to adjusting
+            the step size given the tuned metric during the final phase of
+            adaptation.
+
         :param fixed_param: When True, call CmdStan with argument
-            "algorithm=fixed_param" which runs the sampler without
+            ``algorithm=fixed_param`` which runs the sampler without
             updating the Markov Chain, thus the values of all parameters and
             transformed parameters are constant across all draws and
             only those values in the generated quantities block that are
@@ -540,8 +555,8 @@ class CmdStanModel:
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
             csv output files are written to
-            ``<basename>-diagnostic-<chain_id>.csv.``, where ``<basename>``
-            is set with ``csv_basename``.
+            `<basename>-diagnostic-<chain_id>.csv.`, where `<basename>`
+            is set with `csv_basename`.
 
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
@@ -630,6 +645,9 @@ class CmdStanModel:
             step_size=step_size,
             adapt_engaged=adapt_engaged,
             adapt_delta=adapt_delta,
+            adapt_init_phase=adapt_init_phase,
+            adapt_metric_window=adapt_metric_window,
+            adapt_step_size=adapt_step_size,
             fixed_param=fixed_param,
         )
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
@@ -644,6 +662,7 @@ class CmdStanModel:
                 save_diagnostics=save_diagnostics,
                 method_args=sampler_args,
                 refresh=refresh,
+                logger=self._logger,
             )
             runset = RunSet(args=args, chains=chains)
             pbar = None
@@ -735,7 +754,7 @@ class CmdStanModel:
         or to a temporary directory which is deleted upon session exit.
 
         Output filenames are composed of the model name, a timestamp
-        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
         filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli_ppc-201912081451-1.csv`. Output
         files  written to the temporary directory contain an additional
@@ -746,12 +765,12 @@ class CmdStanModel:
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
-        :param mcmc_sample: Can be either a CmdStanMCMC object returned by
-            CmdStanPy's `sample` method or a list of stan-csv files generated
+        :param mcmc_sample: Can be either a ``CmdStanMCMC`` object returned by
+            the ``sample`` method or a list of stan-csv files generated
             by fitting the model to the data using any Stan interface.
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified,
+            between 0 and 2^32 - 1. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
             *NOTE: Specifying the seed will guarantee the same result for
@@ -886,7 +905,7 @@ class CmdStanModel:
         or to a temporary directory which is deleted upon session exit.
 
         Output filenames are composed of the model name, a timestamp
-        in the form YYYYMMDDhhmm and the chain id, plus the corresponding
+        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
         filetype suffix, either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
         written to the temporary directory contain an additional 8-character
@@ -897,14 +916,14 @@ class CmdStanModel:
             or as the path of a data file in JSON or Rdump format.
 
         :param seed: The seed for random number generator. Must be an integer
-            between ``0`` and ``2^32 - 1``. If unspecified,
+            between 0 and 2^32 - 1. If unspecified,
             ``numpy.random.RandomState()``
             is used to generate a seed which will be used for all chains.
 
         :param inits:  Specifies how the sampler initializes parameter values.
-            Initialization is uniform random on a range centered on ``0`` with
-            default range of ``2``. Specifying a single number ``n > 0`` changes
-            the initialization range to ``[-n, n]``.
+            Initialization is uniform random on a range centered on 0 with
+            default range of 2. Specifying a single number n > 0 changes
+            the initialization range to [-n, n].
 
         :param output_dir:  Name of the directory in which the CmdStan output
             files are saved.  If unspecified, files will be written to a
@@ -912,10 +931,10 @@ class CmdStanModel:
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
             csv output files are written to
-            ``<basename>-diagnostic-<chain_id>.csv.``, where ``<basename>``
+            `<basename>-diagnostic-<chain_id>.csv.`, where `<basename>`
             is set with ``csv_basename``.
 
-        :param algorithm: Algorithm to use. One of: "meanfield", "fullrank".
+        :param algorithm: Algorithm to use. One of: 'meanfield', 'fullrank'.
 
         :param iter: Maximum number of ADVI iterations.
 
