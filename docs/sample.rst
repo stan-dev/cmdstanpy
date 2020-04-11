@@ -32,7 +32,7 @@ NUTS-HMC sampler configuration
 
 - ``iter_sampling``: Number of draws from the posterior for each chain.
 
-- ``save_warmup``: When True, sampler saves warmup draws as part of output csv file.
+- ``save_warmup``: When ``True``, sampler saves warmup draws as part of output csv file.
 
 - ``thin``: Period between saved samples.
 
@@ -42,7 +42,15 @@ NUTS-HMC sampler configuration
 
 - ``step_size``: Initial stepsize for HMC sampler.
 
-- ``adapt_engaged``: When ``True``, adapt stepsize and metric.
+- ``adapt_engaged``: When ``True``, tune stepsize and metric during warmup. The default is ``True``.
+
+- ``adapt_delta``: Adaptation target Metropolis acceptance rate. The default value is 0.8.  Increasing this value, which must be strictly less than 1, causes adaptation to use smaller step sizes. It improves the effective sample size, but may increase the time per iteration.
+
+- ``adapt_init_phase``: Iterations for initial phase of adaptation during which step size is adjusted so that the chain converges towards the typical set.
+
+- ``adapt_metric_window``: The second phase of adaptation tunes the metric and stepsize in a series of intervals.  This parameter specifies the number of iterations used for the first tuning interval; window size increases for each subsequent interval.
+
+- ``adapt_step_size``: Number of iterations given over to adjusting the step size given the tuned metric during the final phase of adaptation.
 
 - ``fixed_param``: When ``True``, call CmdStan with argument "algorithm=fixed_param".  
 

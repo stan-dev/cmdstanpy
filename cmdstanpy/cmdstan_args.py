@@ -39,8 +39,11 @@ class SamplerArgs:
         max_treedepth: int = None,
         metric: Union[str, List[str]] = None,
         step_size: Union[float, List[float]] = None,
-        adapt_engaged: bool = None,
+        adapt_engaged: bool = True,
         adapt_delta: float = None,
+        adapt_init_phase: int = None,
+        adapt_metric_window: int = None,
+        adapt_step_size: int = None,
         fixed_param: bool = False,
     ) -> None:
         """Initialize object."""
@@ -54,6 +57,9 @@ class SamplerArgs:
         self.step_size = step_size
         self.adapt_engaged = adapt_engaged
         self.adapt_delta = adapt_delta
+        self.adapt_init_phase = adapt_init_phase
+        self.adapt_metric_window = adapt_metric_window
+        self.adapt_step_size = adapt_step_size
         self.fixed_param = fixed_param
         self.diagnostic_file = None
 
@@ -69,6 +75,30 @@ class SamplerArgs:
             raise ValueError(
                 'sampler expects number of chains to be greater than 0'
             )
+        if not (
+            self.adapt_delta is None
+            and self.adapt_init_phase is None
+            and self.adapt_metric_window is None
+            and self.adapt_step_size is None
+        ):
+            if self.adapt_engaged is False:
+                msg = 'conflicting arguments: adapt_engaged: False'
+                if self.adapt_delta is not None:
+                    msg = '{}, adapt_delta: {}'.format(msg, self.adapt_delta)
+                if self.adapt_init_phase is not None:
+                    msg = '{}, adapt_init_phase: {}'.format(
+                        msg, self.adapt_init_phase
+                    )
+                if self.adapt_metric_window is not None:
+                    msg = '{}, adapt_metric_window: {}'.format(
+                        msg, self.adapt_metric_window
+                    )
+                if self.adapt_step_size is not None:
+                    msg = '{}, adapt_step_size: {}'.format(
+                        msg, self.adapt_step_size
+                    )
+                raise ValueError(msg)
+
         if self.iter_warmup is not None:
             if self.iter_warmup < 0 or not isinstance(
                 self.iter_warmup, Integral
@@ -77,10 +107,9 @@ class SamplerArgs:
                     'iter_warmup must be a non-negative integer,'
                     ' found {}'.format(self.iter_warmup)
                 )
-            if self.adapt_engaged and self.iter_warmup == 0:
+            if self.iter_warmup > 0 and not self.adapt_engaged:
                 raise ValueError(
-                    'adaptation requested but 0 warmup iterations specified, '
-                    'must run warmup iterations'
+                    'adapt_engaged is False, cannot specify warmup iterations'
                 )
         if self.iter_sampling is not None:
             if self.iter_sampling < 0 or not isinstance(
@@ -93,7 +122,7 @@ class SamplerArgs:
         if self.thin is not None:
             if self.thin < 1 or not isinstance(self.thin, Integral):
                 raise ValueError(
-                    'thin must be a positive integer greater than 0,'
+                    'thin must be a positive integer,'
                     'found {}'.format(self.thin)
                 )
         if self.max_treedepth is not None:
@@ -101,14 +130,10 @@ class SamplerArgs:
                 self.max_treedepth, Integral
             ):
                 raise ValueError(
-                    'max_treedepth must be a positive integer greater than 0,'
+                    'max_treedepth must be a positive integer,'
                     ' found {}'.format(self.max_treedepth)
                 )
         if self.step_size is not None:
-            if self.fixed_param:
-                raise ValueError(
-                    'when fixed_param=True, cannot specify max_treedepth.'
-                )
             if isinstance(self.step_size, Real):
                 if self.step_size < 0:
                     raise ValueError(
@@ -188,6 +213,30 @@ class SamplerArgs:
                     'adapt_delta must be between 0 and 1,'
                     ' found {}'.format(self.adapt_delta)
                 )
+        if self.adapt_init_phase is not None:
+            if self.adapt_init_phase < 0 or not isinstance(
+                self.adapt_init_phase, Integral
+            ):
+                raise ValueError(
+                    'adapt_init_phase must be a non-negative integer,'
+                    'found {}'.format(self.adapt_init_phase)
+                )
+        if self.adapt_metric_window is not None:
+            if self.adapt_metric_window < 0 or not isinstance(
+                self.adapt_metric_window, Integral
+            ):
+                raise ValueError(
+                    'adapt_metric_window must be a non-negative integer,'
+                    'found {}'.format(self.adapt_metric_window)
+                )
+        if self.adapt_step_size is not None:
+            if self.adapt_step_size < 0 or not isinstance(
+                self.adapt_step_size, Integral
+            ):
+                raise ValueError(
+                    'adapt_step_size must be a non-negative integer,'
+                    'found {}'.format(self.adapt_step_size)
+                )
 
         if self.fixed_param and (
             (self.iter_warmup is not None and self.iter_warmup > 0)
@@ -195,11 +244,16 @@ class SamplerArgs:
             or self.max_treedepth is not None
             or self.metric is not None
             or self.step_size is not None
-            or self.adapt_delta is not None
+            or not (
+                self.adapt_delta is None
+                and self.adapt_init_phase is None
+                and self.adapt_metric_window is None
+                and self.adapt_step_size is None
+            )
         ):
             raise ValueError(
-                'when fixed_param=True, cannot specify warmup or'
-                ' or any adaptation parameters.'
+                'when fixed_param=True, cannot specify warmup'
+                ' or adaptation parameters.'
             )
 
     def compose(self, idx: int, cmd: List) -> str:
@@ -235,15 +289,20 @@ class SamplerArgs:
                 cmd.append('metric_file={}'.format(self.metric_file))
             else:
                 cmd.append('metric_file={}'.format(self.metric_file[idx]))
-        if self.adapt_engaged is not None or self.adapt_delta is not None:
-            cmd.append('adapt')
-        if self.adapt_engaged is not None:
-            if self.adapt_engaged:
-                cmd.append('engaged=1')
-            else:
-                cmd.append('engaged=0')
+        cmd.append('adapt')
+        if self.adapt_engaged:
+            cmd.append('engaged=1')
+        else:
+            cmd.append('engaged=0')
         if self.adapt_delta is not None:
             cmd.append('delta={}'.format(self.adapt_delta))
+        if self.adapt_init_phase is not None:
+            cmd.append('init_buffer={}'.format(self.adapt_init_phase))
+        if self.adapt_metric_window is not None:
+            cmd.append('window={}'.format(self.adapt_metric_window))
+        if self.adapt_step_size is not None:
+            cmd.append('term_buffer={}'.format(self.adapt_step_size))
+
         return cmd
 
 
@@ -636,8 +695,9 @@ class CmdStanArgs:
                             'no such file {}'.format(self.inits[i])
                         )
 
-    def compose_command(self, idx: int, csv_file: str,
-                        diagnostic_file: str = None) -> str:
+    def compose_command(
+        self, idx: int, csv_file: str, diagnostic_file: str = None
+    ) -> str:
         """
         Compose CmdStan command for non-default arguments.
         """
