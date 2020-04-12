@@ -257,12 +257,15 @@ class CmdStanMCMC:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._iter_sampling = runset._args.method_args.iter_sampling
-        self._save_warmup = runset._args.method_args.save_warmup
-        self._iter_warmup = runset._args.method_args.iter_warmup
+        # copy info from runset
         self._is_fixed_param = runset._args.method_args.fixed_param
-        self._draws_sampling = None  # iter_sampling / thin
-        self._draws_warmup = None  # iter_wamup / thin
+        self._iter_sampling = runset._args.method_args.iter_sampling
+        self._iter_warmup = runset._args.method_args.iter_warmup
+        self._save_warmup = runset._args.method_args.save_warmup
+        self._thin = runset._args.method_args.thin
+        # parse the remainder from csv files
+        self._draws_sampling = None
+        self._draws_warmup = None
         self._column_names = ()
         self._num_params = None  # metric dim(s)
         self._metric_type = None
@@ -378,6 +381,7 @@ class CmdStanMCMC:
                     iter_sampling=self._iter_sampling,
                     iter_warmup=self._iter_warmup,
                     save_warmup=self._save_warmup,
+                    thin=self._thin,
                 )
             else:
                 drest = check_sampler_csv(
@@ -386,6 +390,7 @@ class CmdStanMCMC:
                     iter_sampling=self._iter_sampling,
                     iter_warmup=self._iter_warmup,
                     save_warmup=self._save_warmup,
+                    thin=self._thin,
                 )
                 for key in dzero:
                     if (

@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 
-from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING
+from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING, _CMDSTAN_THIN
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -441,20 +441,39 @@ def check_sampler_csv(
     iter_sampling: int = None,
     iter_warmup: int = None,
     save_warmup: bool = False,
+    thin: int = None,
 ) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_sampler_csv(path, is_fixed_param)
-    if iter_sampling is None:
-        iter_sampling = _CMDSTAN_SAMPLING
-    if iter_warmup is None:
-        iter_warmup = _CMDSTAN_WARMUP
-    if 'thin' in meta:
-        iter_warmup = int(math.ceil(iter_warmup / meta['thin']))
-        iter_sampling = int(math.ceil(iter_sampling / meta['thin']))
-    if meta['draws_sampling'] != iter_sampling:
+    if thin is None:
+        thin = _CMDSTAN_THIN
+    elif thin > _CMDSTAN_THIN:
+        if 'thin' not in meta:
+            raise ValueError(
+                'bad csv file {}, '
+                'config error, expected thin = {}'.format(
+                path, thin
+            )
+        )
+        if meta['thin'] != thin:
+            raise ValueError(
+                'bad csv file {}, '
+                'config error, expected thin = {}, found {}'.format(
+                path, thin, meta['thin']
+            )
+        )
+    draws_sampling = iter_sampling
+    if draws_sampling is None:
+        draws_sampling = _CMDSTAN_SAMPLING
+    draws_warmup = iter_warmup
+    if draws_warmup is None:
+        draws_warmup = _CMDSTAN_WARMUP
+    draws_warmup = int(math.ceil(draws_warmup / thin))
+    draws_sampling = int(math.ceil(draws_sampling / thin))
+    if meta['draws_sampling'] != draws_sampling:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
-                path, iter_sampling, meta['draws_sampling']
+                path, draws_sampling, meta['draws_sampling']
             )
         )
     if save_warmup:
@@ -464,11 +483,11 @@ def check_sampler_csv(
                 'bad csv file {}, '
                 'config error, expected save_warmup = 1'.format(path)
             )
-        if meta['draws_warmup'] != iter_warmup:
+        if meta['draws_warmup'] != draws_warmup:
             raise ValueError(
                 'bad csv file {}, '
                 'expected {} warmup draws, found {}'.format(
-                    path, iter_warmup, meta['draws_warmup']
+                    path, draws_warmup, meta['draws_warmup']
                 )
             )
     return meta
