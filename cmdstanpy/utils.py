@@ -451,17 +451,15 @@ def check_sampler_csv(
         if 'thin' not in meta:
             raise ValueError(
                 'bad csv file {}, '
-                'config error, expected thin = {}'.format(
-                path, thin
+                'config error, expected thin = {}'.format(path, thin)
             )
-        )
         if meta['thin'] != thin:
             raise ValueError(
                 'bad csv file {}, '
                 'config error, expected thin = {}, found {}'.format(
-                path, thin, meta['thin']
+                    path, thin, meta['thin']
+                )
             )
-        )
     draws_sampling = iter_sampling
     if draws_sampling is None:
         draws_sampling = _CMDSTAN_SAMPLING

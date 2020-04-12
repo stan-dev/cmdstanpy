@@ -196,28 +196,22 @@ class ReadStanCsvTest(unittest.TestCase):
         self.assertEqual(8, len(dict['column_names']))
 
         with self.assertRaisesRegex(
-                ValueError, 'config error, expected thin = 2'
-            ):
+            ValueError, 'config error, expected thin = 2'
+        ):
             check_sampler_csv(
-                path=csv_good,
-                iter_warmup=100,
-                iter_sampling=20,
-                thin=2
+                path=csv_good, iter_warmup=100, iter_sampling=20, thin=2
             )
         with self.assertRaisesRegex(
-                ValueError, 'config error, expected save_warmup'
-            ):
+            ValueError, 'config error, expected save_warmup'
+        ):
             check_sampler_csv(
                 path=csv_good,
                 iter_warmup=100,
                 iter_sampling=10,
-                save_warmup=True
+                save_warmup=True,
             )
         with self.assertRaisesRegex(ValueError, 'expected 1000 draws'):
-            check_sampler_csv(
-                path=csv_good,
-                iter_warmup=100,
-            )
+            check_sampler_csv(path=csv_good, iter_warmup=100)
 
     def test_check_sampler_csv_2(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'no_such_file.csv')
