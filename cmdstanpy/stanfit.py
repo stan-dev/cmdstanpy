@@ -735,12 +735,6 @@ class CmdStanGQ:
             axis=1,
         )
 
-    def _set_attrs_gq_csv_files(self, sample_csv_0: str) -> None:
-        """
-        Propogate information from original sample to additional sample
-        returned by generate_quantities.
-        """
-
     def _assemble_generated_quantities(self) -> None:
         drawset_list = []
         for chain in range(self.runset.chains):
