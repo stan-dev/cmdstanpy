@@ -451,23 +451,24 @@ def check_sampler_csv(
     if 'thin' in meta:
         iter_warmup = int(math.ceil(iter_warmup / meta['thin']))
         iter_sampling = int(math.ceil(iter_sampling / meta['thin']))
-    if meta['iter_sampling'] != iter_sampling:
+    if meta['draws_sampling'] != iter_sampling:
         raise ValueError(
-            'bad csv file {}, expected {} sampling iterations, found {}'.format(
-                path, iter_sampling, meta['iter_sampling']
+            'bad csv file {}, expected {} draws, found {}'.format(
+                path, iter_sampling, meta['draws_sampling']
             )
         )
     if save_warmup:
-        if not ('save_warmup' in meta and meta['save_warmup'] == '1'):
+        if not ('save_warmup' in meta and meta['save_warmup'] == 1):
+            print(meta)
             raise ValueError(
                 'bad csv file {}, '
                 'config error, expected save_warmup = 1'.format(path)
             )
-        if meta['iter_warmup'] != iter_warmup:
+        if meta['draws_warmup'] != iter_warmup:
             raise ValueError(
                 'bad csv file {}, '
-                'expected {} warmup iterations, found {}'.format(
-                    path, iter_warmup, meta['iter_warmup']
+                'expected {} warmup draws, found {}'.format(
+                    path, iter_warmup, meta['draws_warmup']
                 )
             )
     return meta
@@ -587,14 +588,14 @@ def scan_warmup_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
     cur_pos = fd.tell()
     line = fd.readline().strip()
-    iters_found = 0
+    draws_found = 0
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
-        iters_found += 1
+        draws_found += 1
         cur_pos = fd.tell()
         line = fd.readline().strip()
     fd.seek(cur_pos)
-    config_dict['iter_warmup'] = iters_found
+    config_dict['draws_warmup'] = draws_found
     return lineno
 
 
@@ -675,13 +676,13 @@ def scan_sampling_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Parse sampling iteration, save number of iterations to config_dict.
     """
-    iters_found = 0
+    draws_found = 0
     num_cols = len(config_dict['column_names'])
     cur_pos = fd.tell()
     line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
-        iters_found += 1
+        draws_found += 1
         data = line.split(',')
         if len(data) != num_cols:
             raise ValueError(
@@ -691,7 +692,7 @@ def scan_sampling_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
             )
         cur_pos = fd.tell()
         line = fd.readline().strip()
-    config_dict['iter_sampling'] = iters_found
+    config_dict['draws_sampling'] = draws_found
     fd.seek(cur_pos)
     return lineno
 

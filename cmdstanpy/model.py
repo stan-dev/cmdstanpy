@@ -809,10 +809,12 @@ class CmdStanModel:
                     config = scan_sampler_csv(sample_csv_files[0])
                 except ValueError:
                     config = scan_sampler_csv(sample_csv_files[0], True)
-                conf_iter_sampling = int(config['iter_sampling'])
+                conf_iter_sampling = None
+                if 'num_samples' in config:
+                    conf_iter_sampling = int(config['num_samples'])
                 conf_iter_warmup = None
-                if 'iter_warmup' in config:
-                    conf_iter_warmup = int(config['iter_warmup'])
+                if 'num_warmup' in config:
+                    conf_iter_warmup = int(config['num_warmup'])
                 conf_thin = None
                 if 'thin' in config:
                     conf_thin = int(config['thin'])

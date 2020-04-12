@@ -191,7 +191,7 @@ class ReadStanCsvTest(unittest.TestCase):
         self.assertEqual('bernoulli_model', dict['model'])
         self.assertEqual(10, dict['num_samples'])
         self.assertFalse('save_warmup' in dict)
-        self.assertEqual(10, dict['iter_sampling'])
+        self.assertEqual(10, dict['draws_sampling'])
         self.assertEqual(8, len(dict['column_names']))
 
     def test_check_sampler_csv_2(self):
@@ -258,7 +258,7 @@ class ReadStanCsvTest(unittest.TestCase):
         )
         self.assertEqual(dict['num_samples'], 490)
         self.assertEqual(dict['thin'], 7)
-        self.assertEqual(dict['iter_sampling'], 70)
+        self.assertEqual(dict['draws_sampling'], 70)
         self.assertEqual(dict['seed'], 12345)
         self.assertEqual(dict['max_depth'], 11)
         self.assertEqual(dict['delta'], 0.98)

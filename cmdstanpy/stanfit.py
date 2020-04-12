@@ -257,10 +257,12 @@ class CmdStanMCMC:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._iter_warmup = runset._args.method_args.iter_warmup
         self._iter_sampling = runset._args.method_args.iter_sampling
         self._save_warmup = runset._args.method_args.save_warmup
+        self._iter_warmup = runset._args.method_args.iter_warmup
         self._is_fixed_param = runset._args.method_args.fixed_param
+        self._draws_sampling = None  # iter_sampling / thin
+        self._draws_warmup = None  # iter_wamup / thin
         self._column_names = ()
         self._num_params = None  # metric dim(s)
         self._metric_type = None
@@ -289,17 +291,14 @@ class CmdStanMCMC:
         return self.runset.chains
 
     @property
-    def draws(self) -> int:
+    def num_draws(self) -> int:
         """Number of draws per chain."""
-        return self._iter_sampling
+        return self._draws_sampling
 
     @property
-    def columns(self) -> int:
-        """
-        Total number of information items returned by sampler for each draw.
-        Consists of sampler state, model parameters and computed quantities.
-        """
-        return len(self._column_names)
+    def num_draws_warmup(self) -> int:
+        """Number of warmup draws per chain."""
+        return self._draws_warmup
 
     @property
     def column_names(self) -> Tuple[str, ...]:
@@ -350,6 +349,20 @@ class CmdStanMCMC:
             self._assemble_sample()
         return self._sample
 
+    @property
+    def warmup(self) -> np.ndarray:
+        """
+        A 3-D numpy ndarray which contains all warmup draws across all chains
+        arranged as (draws, chains, columns) stored column major
+        so that the values for each parameter are stored contiguously
+        in memory, likewise all draws from a chain are contiguous.
+        """
+        if not self._save_warmup:
+            return None
+        if self._sample is None:
+            self._assemble_sample()
+        return self._warmup
+
     def _validate_csv_files(self) -> None:
         """
         Checks that csv output files for all chains are consistent.
@@ -388,6 +401,11 @@ class CmdStanMCMC:
                                 drest[key],
                             )
                         )
+        self._draws_sampling = dzero['draws_sampling']
+        if self._save_warmup:
+            self._draws_warmup = dzero['draws_warmup']
+        else:
+            self._draws_warmup = 0
         self._column_names = dzero['column_names']
         if not self._is_fixed_param:
             self._num_params = dzero['num_params']
@@ -401,10 +419,20 @@ class CmdStanMCMC:
         if self._sample is not None:
             return
         self._sample = np.empty(
-            (self._iter_sampling, self.runset.chains, len(self._column_names)),
+            (self._draws_sampling, self.runset.chains, len(self._column_names)),
             dtype=float,
             order='F',
         )
+        if self._save_warmup:
+            self._warmup = np.empty(
+                (
+                    self._draws_warmup,
+                    self.runset.chains,
+                    len(self._column_names),
+                ),
+                dtype=float,
+                order='F',
+            )
         if not self._is_fixed_param:
             self._stepsize = np.empty(self.runset.chains, dtype=float)
             if self._metric_type == 'diag_e':
@@ -418,13 +446,18 @@ class CmdStanMCMC:
                 )
         for chain in range(self.runset.chains):
             with open(self.runset.csv_files[chain], 'r') as fd:
-                # skip initial comments, reads thru column header
+                # skip initial comments, up to columns header
                 line = fd.readline().strip()
                 while len(line) > 0 and line.startswith('#'):
                     line = fd.readline().strip()
+                # at columns header
                 if not self._is_fixed_param:
-                    # skip warmup draws, if any, read to adaptation msg
-                    line = fd.readline().strip()
+                    if self._save_warmup:
+                        for i in range(self._draws_warmup):
+                            line = fd.readline().strip()
+                            xs = line.split(',')
+                            self._warmup[i, chain, :] = [float(x) for x in xs]
+                    # read to adaptation msg
                     if line != '# Adaptation terminated':
                         while line != '# Adaptation terminated':
                             line = fd.readline().strip()
@@ -434,17 +467,17 @@ class CmdStanMCMC:
                     line = fd.readline().strip()  # metric header
                     # process metric
                     if self._metric_type == 'diag_e':
-                        line = fd.readline().lstrip(' #\t')
+                        line = fd.readline().lstrip(' #\t').strip()
                         xs = line.split(',')
                         self._metric[chain, :] = [float(x) for x in xs]
                     else:
                         for i in range(self._num_params):
-                            line = fd.readline().lstrip(' #\t')
+                            line = fd.readline().lstrip(' #\t').strip()
                             xs = line.split(',')
                             self._metric[chain, i, :] = [float(x) for x in xs]
                 # process draws
-                for i in range(self._iter_sampling):
-                    line = fd.readline().lstrip(' #\t')
+                for i in range(self._draws_sampling):
+                    line = fd.readline().strip()
                     xs = line.split(',')
                     self._sample[i, chain, :] = [float(x) for x in xs]
 
@@ -511,7 +544,9 @@ class CmdStanMCMC:
         self._assemble_sample()
         # pylint: disable=redundant-keyword-arg
         data = self.sample.reshape(
-            (self.draws * self.runset.chains), len(self.column_names), order='A'
+            (self.num_draws * self.runset.chains),
+            len(self.column_names),
+            order='A',
         )
         drawset = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
