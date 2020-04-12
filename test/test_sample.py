@@ -607,7 +607,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-4.csv'),
         ]
         with self.assertRaisesRegex(
-            ValueError, 'bad iteration, expecting 9 items, found 8'
+            ValueError, 'bad draw, expecting 9 items, found 8'
         ):
             CmdStanMCMC(runset)
 

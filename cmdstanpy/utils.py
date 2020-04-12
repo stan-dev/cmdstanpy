@@ -686,7 +686,7 @@ def scan_sampling_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         data = line.split(',')
         if len(data) != num_cols:
             raise ValueError(
-                'line {}: bad iteration, expecting {} items, found {}'.format(
+                'line {}: bad draw, expecting {} items, found {}'.format(
                     lineno, num_cols, len(line.split(','))
                 )
             )
