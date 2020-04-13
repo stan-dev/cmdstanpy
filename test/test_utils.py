@@ -154,7 +154,7 @@ class CmdStanPathTest(unittest.TestCase):
                 data_2 = d2[k]
                 if isinstance(data_2, np.ndarray):
                     data_2 = data_2.tolist()
-                    self.assertEqual(data_1, data_2)
+                self.assertEqual(data_1, data_2)
 
         dict_list = {'a': [1.0, 2.0, 3.0]}
         file_list = os.path.join(_TMPDIR, 'list.json')
