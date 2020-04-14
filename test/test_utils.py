@@ -147,36 +147,45 @@ class CmdStanPathTest(unittest.TestCase):
                 pass
 
     def test_jsondump(self):
+        def cmp(d1, d2):
+            self.assertEqual(d1.keys(), d2.keys())
+            for k in d1:
+                data_1 = d1[k]
+                data_2 = d2[k]
+                if isinstance(data_2, np.ndarray):
+                    data_2 = data_2.tolist()
+                self.assertEqual(data_1, data_2)
+
         dict_list = {'a': [1.0, 2.0, 3.0]}
         file_list = os.path.join(_TMPDIR, 'list.json')
         jsondump(file_list, dict_list)
         with open(file_list) as fd:
-            self.assertEqual(json.load(fd), dict_list)
+            cmp(json.load(fd), dict_list)
 
         dict_vec = {'a': np.repeat(3, 4)}
         file_vec = os.path.join(_TMPDIR, 'vec.json')
         jsondump(file_vec, dict_vec)
         with open(file_vec) as fd:
-            self.assertEqual(json.load(fd), dict_vec)
+            cmp(json.load(fd), dict_vec)
 
         dict_zero_vec = {'a': []}
         file_zero_vec = os.path.join(_TMPDIR, 'empty_vec.json')
         jsondump(file_zero_vec, dict_zero_vec)
         with open(file_zero_vec) as fd:
-            self.assertEqual(json.load(fd), dict_zero_vec)
+            cmp(json.load(fd), dict_zero_vec)
 
         dict_zero_matrix = {'a': [[], [], []]}
         file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
         jsondump(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
-            self.assertEqual(json.load(fd), dict_zero_matrix)
+            cmp(json.load(fd), dict_zero_matrix)
 
         arr = np.zeros(shape=(5, 0))
         dict_zero_matrix = {'a': arr}
         file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
         jsondump(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
-            self.assertEqual(json.load(fd), dict_zero_matrix)
+            cmp(json.load(fd), dict_zero_matrix)
 
 
 class ReadStanCsvTest(unittest.TestCase):
