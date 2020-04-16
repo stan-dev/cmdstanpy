@@ -581,13 +581,12 @@ class CmdStanModel:
             chain_ids = [x + 1 for x in range(chains)]
         else:
             if isinstance(chain_ids, int):
-                if chain_ids < 1:
+                if chain_ids < 0:
                     raise ValueError(
-                        'Chain_id must be a positive integer value,'
+                        'Chain_id must be a non-negative integer value,'
                         ' found {}.'.format(chain_ids)
                     )
-                offset = chain_ids
-                chain_ids = [x + offset + 1 for x in range(chains)]
+                chain_ids = [chain_ids + i + 1 for i in range(chains)]
             else:
                 if not len(chain_ids) == chains:
                     raise ValueError(
@@ -596,11 +595,11 @@ class CmdStanModel:
                             chains, len(chain_ids)
                         )
                     )
-                for i in len(chain_ids):
-                    if chain_ids[i] < 1:
+                for chain_id in chain_ids:
+                    if chain_id < 0:
                         raise ValueError(
-                            'Chain_id must be a positive integer value,'
-                            ' found {}.'.format(chain_ids[i])
+                            'Chain_id must be a non-negative integer value,'
+                            ' found {}.'.format(chain_id)
                         )
 
         cores_avail = cpu_count()
