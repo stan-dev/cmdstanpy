@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 
-from cmdstanpy import _TMPDIR
+from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING, _CMDSTAN_THIN
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -436,18 +436,59 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     return val
 
 
-def check_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
+def check_sampler_csv(
+    path: str,
+    is_fixed_param: bool = False,
+    iter_sampling: int = None,
+    iter_warmup: int = None,
+    save_warmup: bool = False,
+    thin: int = None,
+) -> Dict:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_sampler_csv(path, is_fixed_param)
-    draws_spec = int(meta.get('num_samples', 1000))
-    if 'thin' in meta:
-        draws_spec = int(math.ceil(draws_spec / meta['thin']))
-    if meta['draws'] != draws_spec:
+    if thin is None:
+        thin = _CMDSTAN_THIN
+    elif thin > _CMDSTAN_THIN:
+        if 'thin' not in meta:
+            raise ValueError(
+                'bad csv file {}, '
+                'config error, expected thin = {}'.format(path, thin)
+            )
+        if meta['thin'] != thin:
+            raise ValueError(
+                'bad csv file {}, '
+                'config error, expected thin = {}, found {}'.format(
+                    path, thin, meta['thin']
+                )
+            )
+    draws_sampling = iter_sampling
+    if draws_sampling is None:
+        draws_sampling = _CMDSTAN_SAMPLING
+    draws_warmup = iter_warmup
+    if draws_warmup is None:
+        draws_warmup = _CMDSTAN_WARMUP
+    draws_warmup = int(math.ceil(draws_warmup / thin))
+    draws_sampling = int(math.ceil(draws_sampling / thin))
+    if meta['draws_sampling'] != draws_sampling:
         raise ValueError(
             'bad csv file {}, expected {} draws, found {}'.format(
-                path, draws_spec, meta['draws']
+                path, draws_sampling, meta['draws_sampling']
             )
         )
+    if save_warmup:
+        if not ('save_warmup' in meta and meta['save_warmup'] == 1):
+            print(meta)
+            raise ValueError(
+                'bad csv file {}, '
+                'config error, expected save_warmup = 1'.format(path)
+            )
+        if meta['draws_warmup'] != draws_warmup:
+            raise ValueError(
+                'bad csv file {}, '
+                'expected {} warmup draws, found {}'.format(
+                    path, draws_warmup, meta['draws_warmup']
+                )
+            )
     return meta
 
 
@@ -459,9 +500,9 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
         lineno = scan_config(fd, dict, lineno)
         lineno = scan_column_names(fd, dict, lineno)
         if not is_fixed_param:
-            lineno = scan_warmup(fd, dict, lineno)
+            lineno = scan_warmup_iters(fd, dict, lineno)
             lineno = scan_metric(fd, dict, lineno)
-        lineno = scan_draws(fd, dict, lineno)
+        lineno = scan_sampling_iters(fd, dict, lineno)
     return dict
 
 
@@ -472,10 +513,9 @@ def scan_optimize_csv(path: str) -> Dict:
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
         lineno = scan_column_names(fd, dict, lineno)
-        line = fd.readline().lstrip(' #\t')
+        line = fd.readline().lstrip(' #\t').rstrip()
         xs = line.split(',')
-        mle = [float(x) for x in xs]
-        dict['mle'] = mle
+        dict['mle'] = [float(x) for x in xs]
     return dict
 
 
@@ -498,7 +538,7 @@ def scan_variational_csv(path: str) -> Dict:
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
         lineno = scan_column_names(fd, dict, lineno)
-        line = fd.readline().lstrip(' #\t')
+        line = fd.readline().lstrip(' #\t').rstrip()
         lineno += 1
         if not line.startswith('Stepsize adaptation complete.'):
             raise ValueError(
@@ -558,7 +598,7 @@ def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_warmup(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_warmup_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Check warmup iterations, if any.
     """
@@ -566,11 +606,14 @@ def scan_warmup(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
     cur_pos = fd.tell()
     line = fd.readline().strip()
+    draws_found = 0
     while len(line) > 0 and not line.startswith('#'):
         lineno += 1
+        draws_found += 1
         cur_pos = fd.tell()
         line = fd.readline().strip()
     fd.seek(cur_pos)
+    config_dict['draws_warmup'] = draws_found
     return lineno
 
 
@@ -647,9 +690,9 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_draws(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_sampling_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
-    Parse draws, check elements per draw, save num draws to config_dict.
+    Parse sampling iteration, save number of iterations to config_dict.
     """
     draws_found = 0
     num_cols = len(config_dict['column_names'])
@@ -667,7 +710,7 @@ def scan_draws(fd: TextIO, config_dict: Dict, lineno: int) -> int:
             )
         cur_pos = fd.tell()
         line = fd.readline().strip()
-    config_dict['draws'] = draws_found
+    config_dict['draws_sampling'] = draws_found
     fd.seek(cur_pos)
     return lineno
 

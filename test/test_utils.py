@@ -191,12 +191,36 @@ class CmdStanPathTest(unittest.TestCase):
 class ReadStanCsvTest(unittest.TestCase):
     def test_check_sampler_csv_1(self):
         csv_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
-        dict = check_sampler_csv(csv_good)
+        dict = check_sampler_csv(
+            path=csv_good,
+            is_fixed_param=False,
+            iter_warmup=100,
+            iter_sampling=10,
+            thin=1,
+        )
         self.assertEqual('bernoulli_model', dict['model'])
         self.assertEqual(10, dict['num_samples'])
         self.assertFalse('save_warmup' in dict)
-        self.assertEqual(10, dict['draws'])
+        self.assertEqual(10, dict['draws_sampling'])
         self.assertEqual(8, len(dict['column_names']))
+
+        with self.assertRaisesRegex(
+            ValueError, 'config error, expected thin = 2'
+        ):
+            check_sampler_csv(
+                path=csv_good, iter_warmup=100, iter_sampling=20, thin=2
+            )
+        with self.assertRaisesRegex(
+            ValueError, 'config error, expected save_warmup'
+        ):
+            check_sampler_csv(
+                path=csv_good,
+                iter_warmup=100,
+                iter_sampling=10,
+                save_warmup=True,
+            )
+        with self.assertRaisesRegex(ValueError, 'expected 1000 draws'):
+            check_sampler_csv(path=csv_good, iter_warmup=100)
 
     def test_check_sampler_csv_2(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'no_such_file.csv')
@@ -254,13 +278,35 @@ class ReadStanCsvTest(unittest.TestCase):
             adapt_delta=0.98,
         )
         csv_file = bern_fit.runset.csv_files[0]
-        dict = check_sampler_csv(csv_file)
+        dict = check_sampler_csv(
+            path=csv_file,
+            is_fixed_param=False,
+            iter_sampling=490,
+            iter_warmup=490,
+            thin=7,
+        )
         self.assertEqual(dict['num_samples'], 490)
         self.assertEqual(dict['thin'], 7)
-        self.assertEqual(dict['draws'], 70)
+        self.assertEqual(dict['draws_sampling'], 70)
         self.assertEqual(dict['seed'], 12345)
         self.assertEqual(dict['max_depth'], 11)
         self.assertEqual(dict['delta'], 0.98)
+
+        with self.assertRaisesRegex(ValueError, 'config error'):
+            check_sampler_csv(
+                path=csv_file,
+                is_fixed_param=False,
+                iter_sampling=490,
+                iter_warmup=490,
+                thin=9,
+            )
+        with self.assertRaisesRegex(ValueError, 'expected 490 draws, found 70'):
+            check_sampler_csv(
+                path=csv_file,
+                is_fixed_param=False,
+                iter_sampling=490,
+                iter_warmup=490,
+            )
 
 
 class ReadMetricTest(unittest.TestCase):

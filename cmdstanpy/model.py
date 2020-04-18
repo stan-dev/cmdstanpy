@@ -36,6 +36,7 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     get_logger,
+    scan_sampler_csv,
 )
 
 
@@ -395,7 +396,6 @@ class CmdStanModel:
                 )
                 raise RuntimeError(msg)
         mle = CmdStanMLE(runset)
-        mle._set_mle_attrs(runset.csv_files[0])
         return mle
 
     def sample(
@@ -729,8 +729,7 @@ class CmdStanModel:
                     err_msg = '{}{}'.format(err_msg, ''.join(console_errs))
                 raise RuntimeError(err_msg)
 
-            mcmc = CmdStanMCMC(runset, fixed_param)
-            mcmc._validate_csv_files()
+            mcmc = CmdStanMCMC(runset)
         return mcmc
 
     def generate_quantities(
@@ -803,7 +802,26 @@ class CmdStanModel:
         try:
             chains = len(sample_csv_files)
             if sample_drawset is None:  # assemble sample from csv files
-                sampler_args = SamplerArgs()
+                config = {}
+                # scan 1st csv file to get config
+                try:
+                    config = scan_sampler_csv(sample_csv_files[0])
+                except ValueError:
+                    config = scan_sampler_csv(sample_csv_files[0], True)
+                conf_iter_sampling = None
+                if 'num_samples' in config:
+                    conf_iter_sampling = int(config['num_samples'])
+                conf_iter_warmup = None
+                if 'num_warmup' in config:
+                    conf_iter_warmup = int(config['num_warmup'])
+                conf_thin = None
+                if 'thin' in config:
+                    conf_thin = int(config['thin'])
+                sampler_args = SamplerArgs(
+                    iter_sampling=conf_iter_sampling,
+                    iter_warmup=conf_iter_warmup,
+                    thin=conf_thin,
+                )
                 args = CmdStanArgs(
                     self._name,
                     self._exe_file,
@@ -813,7 +831,6 @@ class CmdStanModel:
                 runset = RunSet(args=args, chains=chains)
                 runset._csv_files = sample_csv_files
                 sample_fit = CmdStanMCMC(runset)
-                sample_fit._validate_csv_files()
                 sample_drawset = sample_fit.get_drawset()
         except ValueError as e:
             raise ValueError(
@@ -854,7 +871,6 @@ class CmdStanModel:
                         )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
-            quantities._set_attrs_gq_csv_files(sample_csv_files[0])
         return quantities
 
     def variational(
@@ -989,7 +1005,6 @@ class CmdStanModel:
                 raise RuntimeError(msg)
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
-        vb._set_variational_attrs(runset.csv_files[0])
         return vb
 
     def _run_cmdstan(
