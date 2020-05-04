@@ -201,9 +201,9 @@ def get_url(version):
         if version == '4.0':
             # pylint: disable=line-too-long
             if IS_64BITS:
-                url = 'https://cran.r-project.org/bin/windows/testing/rtools40-x86_64.exe'  # noqa: disable=E501
+                url = 'https://cran.r-project.org/bin/windows/Rtools/rtools40-x86_64.exe'  # noqa: disable=E501
             else:
-                url = 'https://cran.r-project.org/bin/windows/testing/rtools40-i686.exe'  # noqa: disable=E501
+                url = 'https://cran.r-project.org/bin/windows/Rtools/rtools40-i686.exe'  # noqa: disable=E501
         elif version == '3.5':
             url = 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
     return url
