@@ -319,7 +319,7 @@ class OptimizeArgs:
         self.init_alpha = init_alpha
         self.iter = iter
 
-    def validate(self, chains=None) -> None:  # pylint: disable=unused-variable
+    def validate(self, chains=None) -> None:  # pylint: disable=unused-argument
         """
         Check arguments correctness and consistency.
         """
@@ -372,7 +372,7 @@ class GenerateQuantitiesArgs:
         """Initialize object."""
         self.sample_csv_files = csv_files
 
-    def validate(self, chains: int) -> None:  # pylint: disable=unused-variable
+    def validate(self, chains: int) -> None:  # pylint: disable=unused-argument
         """
         Check arguments correctness and consistency.
 
@@ -420,7 +420,7 @@ class VariationalArgs:
         self.eval_elbo = eval_elbo
         self.output_samples = output_samples
 
-    def validate(self, chains=None) -> None:  # pylint: disable=unused-variable
+    def validate(self, chains=None) -> None:  # pylint: disable=unused-argument
         """
         Check arguments correctness and consistency.
         """
