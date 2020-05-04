@@ -148,7 +148,7 @@ def retrieve_latest_version(version):
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
         tar.extractall(target)
-    except Exception as err:     # pylint: disable=broad-except
+    except Exception as err:  # pylint: disable=broad-except
         print('Failed to unpack download')
         print(err)
         sys.exit(3)

@@ -585,14 +585,15 @@ class CmdStanArgs:
                         'invalid chain_id {}'.format(self.chain_ids[i])
                     )
         if self.output_dir is not None:
-            self.output_dir = os.path.realpath(os.path.expanduser(
-                self.output_dir))
+            self.output_dir = os.path.realpath(
+                os.path.expanduser(self.output_dir)
+            )
             if not os.path.exists(self.output_dir):
                 try:
                     os.makedirs(self.output_dir)
                     self._logger.info(
                         'created output directory: %s', self.output_dir
-                        )
+                    )
                 except (RuntimeError, PermissionError):
                     raise ValueError(
                         'invalid path for output files, no such dir: {}'.format(

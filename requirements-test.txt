@@ -1,6 +1,5 @@
-astroid==2.3.3
 flake8
-pylint==2.4.4
+pylint
 pytest
 pytest-cov
 testfixtures
