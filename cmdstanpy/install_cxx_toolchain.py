@@ -169,7 +169,7 @@ def validate_dir(install_dir):
                 'File exists, should be a directory: {}'.format(install_dir)
             )
         try:
-            with open('tmp_test_w', 'w') as fd:
+            with open('tmp_test_w', 'w'):
                 pass
             os.remove('tmp_test_w')  # cleanup
         except OSError as e:

@@ -208,7 +208,7 @@ class RunSet:
         test_path = os.path.join(dir, str(time()))
         try:
             os.makedirs(dir, exist_ok=True)
-            with open(test_path, 'w') as fd:
+            with open(test_path, 'w'):
                 pass
             os.remove(test_path)  # cleanup
         except OSError:
