@@ -114,7 +114,7 @@ class CompilerOptions:
                 paths = val
                 if isinstance(val, str):
                     paths = val.split(',')
-                elif not isinstance(val, List):
+                elif not isinstance(val, list):
                     raise ValueError(
                         'Invalid include_paths, expecting list or '
                         'string, found type: {}.'.format(type(val))
