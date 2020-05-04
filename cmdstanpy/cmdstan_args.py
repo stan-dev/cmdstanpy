@@ -191,8 +191,8 @@ class SamplerArgs:
                                     self.metric[0], metric
                                 )
                             )
-                        for j, dim in enumerate(dims):
-                            if dims[j] != dims2[j]:
+                        for dim, dim2 in zip(dims, dims2):
+                            if dim != dim2:
                                 raise ValueError(
                                     'metrics files {}, {},'
                                     ' inconsistent metrics'.format(
@@ -319,7 +319,7 @@ class OptimizeArgs:
         self.init_alpha = init_alpha
         self.iter = iter
 
-    def validate(self, chains=None) -> None:
+    def validate(self, chains=None) -> None:  # pylint: disable=unused-argument
         """
         Check arguments correctness and consistency.
         """
@@ -372,13 +372,13 @@ class GenerateQuantitiesArgs:
         """Initialize object."""
         self.sample_csv_files = csv_files
 
-    def validate(self, chains: int) -> None:
+    def validate(self, chains: int) -> None:  # pylint: disable=unused-argument
         """
         Check arguments correctness and consistency.
 
         * check that sample csv files exist
         """
-        for i, csv in enumerate(self.sample_csv_files):
+        for csv in self.sample_csv_files:
             if not os.path.exists(csv):
                 raise ValueError(
                     'Invalid path for sample csv file: {}'.format(csv)
@@ -420,7 +420,7 @@ class VariationalArgs:
         self.eval_elbo = eval_elbo
         self.output_samples = output_samples
 
-    def validate(self, chains=None) -> None:
+    def validate(self, chains=None) -> None:  # pylint: disable=unused-argument
         """
         Check arguments correctness and consistency.
         """
@@ -585,14 +585,15 @@ class CmdStanArgs:
                         'invalid chain_id {}'.format(self.chain_ids[i])
                     )
         if self.output_dir is not None:
-            self.output_dir = os.path.realpath(os.path.expanduser(
-                self.output_dir))
+            self.output_dir = os.path.realpath(
+                os.path.expanduser(self.output_dir)
+            )
             if not os.path.exists(self.output_dir):
                 try:
                     os.makedirs(self.output_dir)
                     self._logger.info(
                         'created output directory: %s', self.output_dir
-                        )
+                    )
                 except (RuntimeError, PermissionError):
                     raise ValueError(
                         'invalid path for output files, no such dir: {}'.format(
@@ -607,7 +608,7 @@ class CmdStanArgs:
                 )
             try:
                 testpath = os.path.join(self.output_dir, str(time()))
-                with open(testpath, 'w+') as fd:
+                with open(testpath, 'w+'):
                     pass
                 os.remove(testpath)  # cleanup
             except Exception:
