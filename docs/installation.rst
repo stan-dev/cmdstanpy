@@ -57,8 +57,8 @@ Prerequisites
 
 CmdStanPy requires an installed C++ toolchain.
 
-Fuction ``install_cmdstan``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Function ``install_cmdstan``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CmdStanPy provides the function ``install_cmdstan`` which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
