@@ -20,14 +20,14 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 GOODFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-good')
 BADFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-bad')
 SAMPLER_STATE = [
-            'lp__',
-            'accept_stat__',
-            'stepsize__',
-            'treedepth__',
-            'n_leapfrog__',
-            'divergent__',
-            'energy__',
-        ]
+    'lp__',
+    'accept_stat__',
+    'stepsize__',
+    'treedepth__',
+    'n_leapfrog__',
+    'divergent__',
+    'energy__',
+]
 BERNOULLI_COLS = SAMPLER_STATE + ['theta']
 
 

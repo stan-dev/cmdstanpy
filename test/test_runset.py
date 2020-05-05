@@ -54,7 +54,7 @@ class RunSetTest(unittest.TestCase):
         runset = RunSet(args=cmdstan_args, chains=3)
         for i in range(3):
             runset._set_retcode(i, 70)
-            stdout_file = 'chain-' + str(i+1) + '-missing-data-stdout.txt'
+            stdout_file = 'chain-' + str(i + 1) + '-missing-data-stdout.txt'
             path = os.path.join(DATAFILES_PATH, stdout_file)
             runset._stdout_files[i] = path
         errs = '\n\t'.join(runset._get_err_msgs())

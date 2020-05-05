@@ -202,10 +202,8 @@ class SamplerArgsTest(unittest.TestCase):
         )
 
         args = SamplerArgs(
-            adapt_init_phase=26,
-            adapt_metric_window=60,
-            adapt_step_size=34,
-            )
+            adapt_init_phase=26, adapt_metric_window=60, adapt_step_size=34,
+        )
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample algorithm=hmc adapt', ' '.join(cmd))
