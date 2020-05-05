@@ -9,6 +9,7 @@ Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
+   -m --make : install mingw32-make (Windows RTools 4.0 only)
 """
 import argparse
 import contextlib
@@ -18,6 +19,7 @@ import shutil
 import subprocess
 import sys
 import urllib.request
+from collections import OrderedDict
 from time import sleep
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -40,6 +42,7 @@ def usage():
         -v (--version) :CmdStan version
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
+        -m (--make) : install mingw32-make (Windows RTools 4.0 only)
         -h (--help) : this message
         """
     )
@@ -101,6 +104,51 @@ def install_version(installation_dir, installation_file, version, silent):
     print('Installed {}'.format(os.path.splitext(installation_file)[0]))
 
 
+def install_mingw32(toolchain_loc):
+    """Install mingw32 for Windows RTools 4.0."""
+    os.environ['PATH'] = ';'.join(
+        list(
+            OrderedDict.fromkeys(
+                [
+                    os.path.join(toolchain_loc, 'usr', 'bin'),
+                    os.path.join(toolchain_loc, 'mingw64', 'bin'),
+                ]
+                + os.environ.get('PATH', '').split(';')
+            )
+        )
+    )
+    cmd = [
+        'pacman',
+        '-Sy',
+        'mingw-w64-x86_64-make' if IS_64BITS else 'mingw-w64-i686-make',
+        '--noconfirm',
+    ]
+    with pushd('.'):
+        print(' '.join(cmd))
+        proc = subprocess.Popen(
+            cmd,
+            cwd=None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
+        )
+        while proc.poll() is None:
+            output = proc.stdout.readline().decode('utf-8').strip()
+            if output:
+                print(output, flush=True)
+        _, stderr = proc.communicate()
+        if proc.returncode:
+            print(
+                'mingw32 installation failed: returncode={}'.format(
+                    proc.returncode
+                )
+            )
+            if stderr:
+                print(stderr.decode('utf-8').strip())
+            sys.exit(3)
+    print('Installed mingw32.exe')
+
+
 def is_installed(toolchain_loc, version):
     """Returns True is toolchain is installed."""
     if platform.system() == 'Windows':
@@ -130,9 +178,9 @@ def is_installed(toolchain_loc, version):
 
 
 def latest_version():
-    """Windows version hardcoded to 3.5."""
+    """Windows version hardcoded to 4.0."""
     if platform.system() == 'Windows':
-        return '3.5'
+        return '4.0'
     return ''
 
 
@@ -233,6 +281,7 @@ def main():
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')
     parser.add_argument('--silent', '-s', action='store_true')
+    parser.add_argument('--make', '-m', action='store_true')
     args = parser.parse_args(sys.argv[1:])
 
     toolchain = get_toolchain_name()
@@ -272,6 +321,17 @@ def main():
             install_version(
                 toolchain_loc, toolchain_version + EXTENSION, version, silent
             )
+        if (
+            vars(args)['make']
+            and (platform.system() == 'Windows')
+            and (version in ('4.0', '4', '40'))
+        ):
+            if os.path.exists(
+                os.path.join(toolchain_loc, 'mingw64', 'bin', 'mingw32.exe')
+            ):
+                print('mingw32.exe already installed')
+            else:
+                install_mingw32(toolchain_loc)
 
 
 if __name__ == '__main__':
