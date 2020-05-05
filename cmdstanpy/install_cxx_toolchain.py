@@ -9,7 +9,7 @@ Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
-   -m --make : install mingw32-make (Windows RTools 4.0 only)
+   -m --nomake : don't install mingw32-make (Windows RTools 4.0 only)
 """
 import argparse
 import contextlib
@@ -42,7 +42,7 @@ def usage():
         -v (--version) :CmdStan version
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
-        -m (--make) : install mingw32-make (Windows RTools 4.0 only)
+        -m (--nomake) : don't install mingw32-make (Windows RTools 4.0 only)
         -h (--help) : this message
         """
     )
@@ -281,7 +281,7 @@ def main():
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')
     parser.add_argument('--silent', '-s', action='store_true')
-    parser.add_argument('--make', '-m', action='store_true')
+    parser.add_argument('--nomake', '-m', action='store_false')
     args = parser.parse_args(sys.argv[1:])
 
     toolchain = get_toolchain_name()
@@ -322,7 +322,7 @@ def main():
                 toolchain_loc, toolchain_version + EXTENSION, version, silent
             )
         if (
-            vars(args)['make']
+            vars(args)['nomake'] is None
             and (platform.system() == 'Windows')
             and (version in ('4.0', '4', '40'))
         ):
