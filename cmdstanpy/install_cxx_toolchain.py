@@ -9,7 +9,7 @@ Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
-   -m --nomake : don't install mingw32-make (Windows RTools 4.0 only)
+   -m --no-make : don't install mingw32-make (Windows RTools 4.0 only)
 """
 import argparse
 import contextlib
@@ -42,7 +42,7 @@ def usage():
         -v (--version) :CmdStan version
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
-        -m (--nomake) : don't install mingw32-make (Windows RTools 4.0 only)
+        -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
         -h (--help) : this message
         """
     )
@@ -104,8 +104,8 @@ def install_version(installation_dir, installation_file, version, silent):
     print('Installed {}'.format(os.path.splitext(installation_file)[0]))
 
 
-def install_mingw32(toolchain_loc):
-    """Install mingw32 for Windows RTools 4.0."""
+def install_mingw32_make(toolchain_loc):
+    """Install mingw32-make for Windows RTools 4.0."""
     os.environ['PATH'] = ';'.join(
         list(
             OrderedDict.fromkeys(
@@ -139,14 +139,14 @@ def install_mingw32(toolchain_loc):
         _, stderr = proc.communicate()
         if proc.returncode:
             print(
-                'mingw32 installation failed: returncode={}'.format(
+                'mingw32-make installation failed: returncode={}'.format(
                     proc.returncode
                 )
             )
             if stderr:
                 print(stderr.decode('utf-8').strip())
             sys.exit(3)
-    print('Installed mingw32.exe')
+    print('Installed mingw32-make.exe')
 
 
 def is_installed(toolchain_loc, version):
@@ -281,7 +281,7 @@ def main():
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')
     parser.add_argument('--silent', '-s', action='store_true')
-    parser.add_argument('--nomake', '-m', action='store_false')
+    parser.add_argument('--no-make', '-m', action='store_false')
     args = parser.parse_args(sys.argv[1:])
 
     toolchain = get_toolchain_name()
@@ -322,16 +322,16 @@ def main():
                 toolchain_loc, toolchain_version + EXTENSION, version, silent
             )
         if (
-            vars(args)['nomake'] is None
+            'no-make' not in vars(args)
             and (platform.system() == 'Windows')
             and (version in ('4.0', '4', '40'))
         ):
             if os.path.exists(
-                os.path.join(toolchain_loc, 'mingw64', 'bin', 'mingw32.exe')
+                os.path.join(toolchain_loc, 'mingw64', 'bin', 'mingw32-make.exe')
             ):
-                print('mingw32.exe already installed')
+                print('mingw32-make.exe already installed')
             else:
-                install_mingw32(toolchain_loc)
+                install_mingw32_make(toolchain_loc)
 
 
 if __name__ == '__main__':
