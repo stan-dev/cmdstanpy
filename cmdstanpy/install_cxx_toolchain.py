@@ -328,7 +328,7 @@ def main():
             ):
                 print('mingw32-make.exe already installed')
             else:
-                install_mingw32_make(toolchain_loc)
+                install_mingw32_make(toolchain_folder)
 
 
 if __name__ == '__main__':
