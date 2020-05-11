@@ -2,7 +2,7 @@
 """
 Download and install a C++ toolchain.
 Currently implemented platforms (platform.system)
-    Windows: RTools 3.5 (default), 4.0
+    Windows: RTools 3.5, 4.0 (default)
     Darwin (macOS): Not implemented
     Linux: Not implemented
 Optional command line arguments:
@@ -259,13 +259,11 @@ def get_url(version):
 
 def get_toolchain_version(name, version):
     """Toolchain version."""
-    root_folder = None
     toolchain_folder = None
     if platform.system() == 'Windows':
-        root_folder = 'RTools'
         toolchain_folder = '{}{}'.format(name, version.replace('.', ''))
 
-    return root_folder, toolchain_folder
+    return toolchain_folder
 
 
 def main():
@@ -307,19 +305,18 @@ def main():
     else:
         silent = False
 
-    root_folder, toolchain_version = get_toolchain_version(toolchain, version)
-    toolchain_loc = os.path.join(root_folder, toolchain_version)
+    toolchain_folder = get_toolchain_version(toolchain, version)
     with pushd(install_dir):
-        if is_installed(toolchain_loc, version):
+        if is_installed(toolchain_folder, version):
             print(
-                'C++ toolchain {} already installed'.format(toolchain_version)
+                'C++ toolchain {} already installed'.format(toolchain_folder)
             )
         else:
-            if os.path.exists(toolchain_loc):
-                shutil.rmtree(toolchain_loc, ignore_errors=False)
-            retrieve_toolchain(toolchain_version + EXTENSION, url)
+            if os.path.exists(toolchain_folder):
+                shutil.rmtree(toolchain_folder, ignore_errors=False)
+            retrieve_toolchain(toolchain_folder + EXTENSION, url)
             install_version(
-                toolchain_loc, toolchain_version + EXTENSION, version, silent
+                toolchain_folder, toolchain_folder + EXTENSION, version, silent
             )
         if (
             'no-make' not in vars(args)
@@ -327,7 +324,7 @@ def main():
             and (version in ('4.0', '4', '40'))
         ):
             if os.path.exists(
-                os.path.join(toolchain_loc, 'mingw64', 'bin', 'mingw32-make.exe')
+                os.path.join(toolchain_folder, 'mingw64', 'bin', 'mingw32-make.exe')
             ):
                 print('mingw32-make.exe already installed')
             else:
