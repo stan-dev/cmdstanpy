@@ -308,9 +308,7 @@ def main():
     toolchain_folder = get_toolchain_version(toolchain, version)
     with pushd(install_dir):
         if is_installed(toolchain_folder, version):
-            print(
-                'C++ toolchain {} already installed'.format(toolchain_folder)
-            )
+            print('C++ toolchain {} already installed'.format(toolchain_folder))
         else:
             if os.path.exists(toolchain_folder):
                 shutil.rmtree(toolchain_folder, ignore_errors=False)
@@ -324,7 +322,9 @@ def main():
             and (version in ('4.0', '4', '40'))
         ):
             if os.path.exists(
-                os.path.join(toolchain_folder, 'mingw64', 'bin', 'mingw32-make.exe')
+                os.path.join(
+                    toolchain_folder, 'mingw64', 'bin', 'mingw32-make.exe'
+                )
             ):
                 print('mingw32-make.exe already installed')
             else:
