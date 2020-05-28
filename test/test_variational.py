@@ -43,7 +43,7 @@ class CmdStanVBTest(unittest.TestCase):
         runset = RunSet(args=cmdstan_args, chains=1)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'variational', 'eta_big_output.csv')
-            ]
+        ]
         variational = CmdStanVB(runset)
         self.assertIn(
             'CmdStanVB: model=eta_should_be_big', variational.__repr__()

@@ -127,7 +127,7 @@ class CmdStanModel:
 
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
-            libtbb = os.getenv('STAN_TBB')
+            libtbb = os.environ.get('STAN_TBB')
             if libtbb is None:
                 libtbb = os.path.join(
                     cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
@@ -135,7 +135,7 @@ class CmdStanModel:
             os.environ['PATH'] = ';'.join(
                 list(
                     OrderedDict.fromkeys(
-                        [libtbb] + os.getenv('PATH', '').split(';')
+                        [libtbb] + os.environ.get('PATH', '').split(';')
                     )
                 )
             )
