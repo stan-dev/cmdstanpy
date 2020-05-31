@@ -148,7 +148,7 @@ def retrieve_latest_version(version):
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
         tar.extractall(target)
-    except Exception as err:     # pylint: disable=broad-except
+    except Exception as err:  # pylint: disable=broad-except
         print('Failed to unpack download')
         print(err)
         sys.exit(3)
@@ -172,7 +172,7 @@ def validate_dir(install_dir):
                 'File exists, should be a directory: {}'.format(install_dir)
             )
         try:
-            with open('tmp_test_w', 'w') as fd:
+            with open('tmp_test_w', 'w'):
                 pass
             os.remove('tmp_test_w')  # cleanup
         except OSError as e:

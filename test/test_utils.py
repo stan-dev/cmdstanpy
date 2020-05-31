@@ -147,47 +147,80 @@ class CmdStanPathTest(unittest.TestCase):
                 pass
 
     def test_jsondump(self):
+        def cmp(d1, d2):
+            self.assertEqual(d1.keys(), d2.keys())
+            for k in d1:
+                data_1 = d1[k]
+                data_2 = d2[k]
+                if isinstance(data_2, np.ndarray):
+                    data_2 = data_2.tolist()
+                self.assertEqual(data_1, data_2)
+
         dict_list = {'a': [1.0, 2.0, 3.0]}
         file_list = os.path.join(_TMPDIR, 'list.json')
         jsondump(file_list, dict_list)
         with open(file_list) as fd:
-            self.assertEqual(json.load(fd), dict_list)
+            cmp(json.load(fd), dict_list)
 
         dict_vec = {'a': np.repeat(3, 4)}
         file_vec = os.path.join(_TMPDIR, 'vec.json')
         jsondump(file_vec, dict_vec)
         with open(file_vec) as fd:
-            self.assertEqual(json.load(fd), dict_vec)
+            cmp(json.load(fd), dict_vec)
 
         dict_zero_vec = {'a': []}
         file_zero_vec = os.path.join(_TMPDIR, 'empty_vec.json')
         jsondump(file_zero_vec, dict_zero_vec)
         with open(file_zero_vec) as fd:
-            self.assertEqual(json.load(fd), dict_zero_vec)
+            cmp(json.load(fd), dict_zero_vec)
 
         dict_zero_matrix = {'a': [[], [], []]}
         file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
         jsondump(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
-            self.assertEqual(json.load(fd), dict_zero_matrix)
+            cmp(json.load(fd), dict_zero_matrix)
 
         arr = np.zeros(shape=(5, 0))
         dict_zero_matrix = {'a': arr}
         file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
         jsondump(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
-            self.assertEqual(json.load(fd), dict_zero_matrix)
+            cmp(json.load(fd), dict_zero_matrix)
 
 
 class ReadStanCsvTest(unittest.TestCase):
     def test_check_sampler_csv_1(self):
         csv_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
-        dict = check_sampler_csv(csv_good)
+        dict = check_sampler_csv(
+            path=csv_good,
+            is_fixed_param=False,
+            iter_warmup=100,
+            iter_sampling=10,
+            thin=1,
+        )
         self.assertEqual('bernoulli_model', dict['model'])
         self.assertEqual(10, dict['num_samples'])
         self.assertFalse('save_warmup' in dict)
-        self.assertEqual(10, dict['draws'])
+        self.assertEqual(10, dict['draws_sampling'])
         self.assertEqual(8, len(dict['column_names']))
+
+        with self.assertRaisesRegex(
+            ValueError, 'config error, expected thin = 2'
+        ):
+            check_sampler_csv(
+                path=csv_good, iter_warmup=100, iter_sampling=20, thin=2
+            )
+        with self.assertRaisesRegex(
+            ValueError, 'config error, expected save_warmup'
+        ):
+            check_sampler_csv(
+                path=csv_good,
+                iter_warmup=100,
+                iter_sampling=10,
+                save_warmup=True,
+            )
+        with self.assertRaisesRegex(ValueError, 'expected 1000 draws'):
+            check_sampler_csv(path=csv_good, iter_warmup=100)
 
     def test_check_sampler_csv_2(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'no_such_file.csv')
@@ -245,13 +278,35 @@ class ReadStanCsvTest(unittest.TestCase):
             adapt_delta=0.98,
         )
         csv_file = bern_fit.runset.csv_files[0]
-        dict = check_sampler_csv(csv_file)
+        dict = check_sampler_csv(
+            path=csv_file,
+            is_fixed_param=False,
+            iter_sampling=490,
+            iter_warmup=490,
+            thin=7,
+        )
         self.assertEqual(dict['num_samples'], 490)
         self.assertEqual(dict['thin'], 7)
-        self.assertEqual(dict['draws'], 70)
+        self.assertEqual(dict['draws_sampling'], 70)
         self.assertEqual(dict['seed'], 12345)
         self.assertEqual(dict['max_depth'], 11)
         self.assertEqual(dict['delta'], 0.98)
+
+        with self.assertRaisesRegex(ValueError, 'config error'):
+            check_sampler_csv(
+                path=csv_file,
+                is_fixed_param=False,
+                iter_sampling=490,
+                iter_warmup=490,
+                thin=9,
+            )
+        with self.assertRaisesRegex(ValueError, 'expected 490 draws, found 70'):
+            check_sampler_csv(
+                path=csv_file,
+                is_fixed_param=False,
+                iter_sampling=490,
+                iter_warmup=490,
+            )
 
 
 class ReadMetricTest(unittest.TestCase):

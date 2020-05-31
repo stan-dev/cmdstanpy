@@ -6,7 +6,7 @@ from cmdstanpy import CmdStanModel, cmdstan_path
 
 # explicit import to test if it is installed
 # pylint: disable=E0401,W0611,C0411
-import tqdm # noqa
+import tqdm  # noqa
 
 
 def run_bernoulli_fit():

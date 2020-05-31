@@ -19,6 +19,16 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 GOODFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-good')
 BADFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-bad')
+SAMPLER_STATE = [
+    'lp__',
+    'accept_stat__',
+    'stepsize__',
+    'treedepth__',
+    'n_leapfrog__',
+    'divergent__',
+    'energy__',
+]
+BERNOULLI_COLS = SAMPLER_STATE + ['theta']
 
 
 class SampleTest(unittest.TestCase):
@@ -39,7 +49,7 @@ class SampleTest(unittest.TestCase):
 
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=100
+            data=jdata, chains=2, cores=2, seed=12345, iter_sampling=100
         )
         self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
         self.assertIn('method=sample', bern_fit.__repr__())
@@ -52,29 +62,19 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
 
-        self.assertEqual(bern_fit.runset.chains, 4)
-        self.assertEqual(bern_fit.draws, 100)
-        column_names = [
-            'lp__',
-            'accept_stat__',
-            'stepsize__',
-            'treedepth__',
-            'n_leapfrog__',
-            'divergent__',
-            'energy__',
-            'theta',
-        ]
-        self.assertEqual(bern_fit.column_names, tuple(column_names))
+        self.assertEqual(bern_fit.runset.chains, 2)
+        self.assertEqual(bern_fit.num_draws, 100)
+        self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
 
         bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(bern_fit.metric_type, 'diag_e')
-        self.assertEqual(bern_fit.stepsize.shape, (4,))
-        self.assertEqual(bern_fit.metric.shape, (4, 1))
+        self.assertEqual(bern_fit.stepsize.shape, (2,))
+        self.assertEqual(bern_fit.metric.shape, (2, 1))
 
         bern_fit = bern_model.sample(
             data=jdata,
-            chains=4,
+            chains=2,
             cores=2,
             seed=12345,
             iter_sampling=100,
@@ -86,7 +86,7 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
         bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
@@ -95,17 +95,17 @@ class SampleTest(unittest.TestCase):
                 os.remove(bern_fit.runset.stderr_files[i])
         rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
-            data=rdata, chains=4, cores=2, seed=12345, iter_sampling=100
+            data=rdata, chains=2, cores=2, seed=12345, iter_sampling=100
         )
         bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
         bern_fit = bern_model.sample(
-            data=data_dict, chains=4, cores=2, seed=12345, iter_sampling=100
+            data=data_dict, chains=2, cores=2, seed=12345, iter_sampling=100
         )
         bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 4, len(column_names)))
+        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
 
     def test_init_types(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -114,7 +114,7 @@ class SampleTest(unittest.TestCase):
 
         bern_fit = bern_model.sample(
             data=jdata,
-            chains=4,
+            chains=2,
             cores=2,
             seed=12345,
             iter_sampling=100,
@@ -124,7 +124,7 @@ class SampleTest(unittest.TestCase):
 
         bern_fit = bern_model.sample(
             data=jdata,
-            chains=4,
+            chains=2,
             cores=2,
             seed=12345,
             iter_sampling=100,
@@ -135,7 +135,7 @@ class SampleTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             bern_model.sample(
                 data=jdata,
-                chains=4,
+                chains=2,
                 cores=2,
                 seed=12345,
                 iter_sampling=100,
@@ -145,7 +145,7 @@ class SampleTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             bern_model.sample(
                 data=jdata,
-                chains=4,
+                chains=2,
                 cores=2,
                 seed=12345,
                 iter_sampling=100,
@@ -157,12 +157,12 @@ class SampleTest(unittest.TestCase):
         bern_model = CmdStanModel(stan_file=stan)
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
-            bern_model.sample(chains=4, cores=2, seed=12345, iter_sampling=100)
+            bern_model.sample(chains=2, cores=2, seed=12345, iter_sampling=100)
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
             bern_model.sample(
                 data={'foo': 1},
-                chains=4,
+                chains=2,
                 cores=2,
                 seed=12345,
                 iter_sampling=100,
@@ -174,8 +174,8 @@ class SampleTest(unittest.TestCase):
             dirname2 = 'tmp2' + str(time())
             path = os.path.join(dirname1, dirname2)
             with self.assertRaisesRegex(
-                    ValueError, 'invalid path for output files'
-                    ):
+                ValueError, 'invalid path for output files'
+            ):
                 bern_model.sample(data=jdata, chains=1, output_dir=path)
             os.rmdir(dirname1)
 
@@ -314,7 +314,7 @@ class SampleTest(unittest.TestCase):
             'eta.20',
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
-        self.assertEqual(datagen_fit.draws, 100)
+        self.assertEqual(datagen_fit.num_draws, 100)
         self.assertEqual(datagen_fit.sample.shape, (100, 1, len(column_names)))
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.metric_type, None)
@@ -360,15 +360,14 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(runset._check_retcodes())
 
         fit = CmdStanMCMC(runset)
-        fit._validate_csv_files()
-        self.assertEqual(100, fit.draws)
-        self.assertEqual(8, len(fit.column_names))
+        self.assertEqual(100, fit.num_draws)
+        self.assertEqual(len(BERNOULLI_COLS), len(fit.column_names))
         self.assertEqual('lp__', fit.column_names[0])
 
         drawset = fit.get_drawset()
         self.assertEqual(
             drawset.shape,
-            (fit.runset.chains * fit.draws, len(fit.column_names)),
+            (fit.runset.chains * fit.num_draws, len(fit.column_names)),
         )
         _ = fit.summary()
         self.assertTrue(True)
@@ -389,7 +388,7 @@ class CmdStanMCMCTest(unittest.TestCase):
 
     def test_validate_big_run(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
-        sampler_args = SamplerArgs()
+        sampler_args = SamplerArgs(iter_warmup=1500, iter_sampling=1000)
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
@@ -404,19 +403,9 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
         ]
         fit = CmdStanMCMC(runset)
-        fit._validate_csv_files()
-        sampler_state = [
-            'lp__',
-            'accept_stat__',
-            'stepsize__',
-            'treedepth__',
-            'n_leapfrog__',
-            'divergent__',
-            'energy__',
-        ]
         phis = ['phi.{}'.format(str(x + 1)) for x in range(2095)]
-        column_names = sampler_state + phis
-        self.assertEqual(fit.columns, len(column_names))
+        column_names = SAMPLER_STATE + phis
+        self.assertEqual(fit.num_draws, 1000)
         self.assertEqual(fit.column_names, tuple(column_names))
         self.assertEqual(fit.metric_type, 'diag_e')
         self.assertEqual(fit.stepsize.shape, (2,))
@@ -444,7 +433,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         # just test that it runs without error
         bern_model.sample(
             data=jdata,
-            chains=4,
+            chains=2,
             cores=2,
             seed=12345,
             iter_sampling=200,
@@ -456,9 +445,14 @@ class CmdStanMCMCTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345,
-            iter_sampling=200, iter_warmup=200,
-            adapt_init_phase=11, adapt_metric_window=12, adapt_step_size=13,
+            data=jdata,
+            chains=1,
+            seed=12345,
+            iter_sampling=200,
+            iter_warmup=200,
+            adapt_init_phase=11,
+            adapt_metric_window=12,
+            adapt_step_size=13,
         )
         txt_file = bern_fit.runset.stdout_files[0]
         with open(txt_file, 'r') as fd:
@@ -473,7 +467,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=200
+            data=jdata, chains=2, cores=2, seed=12345, iter_sampling=200
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
@@ -505,7 +499,7 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         # regenerate to tmpdir, save to good dir
         bern_fit = bern_model.sample(
-            data=jdata, chains=4, cores=2, seed=12345, iter_sampling=200
+            data=jdata, chains=2, cores=2, seed=12345, iter_sampling=200
         )
         bern_fit.save_csvfiles()  # default dir
         for i in range(bern_fit.runset.chains):
@@ -551,9 +545,7 @@ class CmdStanMCMCTest(unittest.TestCase):
     def test_validate_bad_run(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs(
-            iter_sampling=100, max_treedepth=11, adapt_delta=0.95
-        )
+        sampler_args = SamplerArgs(max_treedepth=11, adapt_delta=0.95)
 
         # some chains had errors
         cmdstan_args = CmdStanArgs(
@@ -594,9 +586,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-4.csv'),
         ]
-        fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'header mismatch'):
-            fit._validate_csv_files()
+            CmdStanMCMC(runset)
 
         # bad draws
         runset._csv_files = [
@@ -605,9 +596,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-4.csv'),
         ]
-        fit = CmdStanMCMC(runset)
         with self.assertRaisesRegex(ValueError, 'draws'):
-            fit._validate_csv_files()
+            CmdStanMCMC(runset)
 
         # mismatch - column headers, draws
         runset._csv_files = [
@@ -616,9 +606,68 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-4.csv'),
         ]
-        fit = CmdStanMCMC(runset)
-        with self.assertRaisesRegex(ValueError, 'bad draw'):
-            fit._validate_csv_files()
+        with self.assertRaisesRegex(
+            ValueError, 'bad draw, expecting 9 items, found 8'
+        ):
+            CmdStanMCMC(runset)
+
+    def test_save_warmup(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=200,
+            iter_sampling=100,
+            save_warmup=True,
+        )
+        self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
+        self.assertEqual(bern_fit.num_draws_warmup, 200)
+        self.assertEqual(bern_fit.warmup.shape, (200, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.num_draws, 100)
+        self.assertEqual(bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS)))
+
+    def test_save_warmup_thin(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=200,
+            iter_sampling=100,
+            thin=5,
+            save_warmup=True,
+        )
+        self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
+        self.assertEqual(bern_fit.num_draws_warmup, 40)
+        self.assertEqual(bern_fit.warmup.shape, (40, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.num_draws, 20)
+        self.assertEqual(bern_fit.sample.shape, (20, 2, len(BERNOULLI_COLS)))
+
+    def test_dont_save_warmup(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=200,
+            iter_sampling=100,
+            save_warmup=False,
+        )
+        self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
+        self.assertEqual(bern_fit.num_draws_warmup, 0)
+        self.assertEqual(bern_fit.warmup, None)
+        self.assertEqual(bern_fit.num_draws, 100)
+        self.assertEqual(bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS)))
 
 
 if __name__ == '__main__':
