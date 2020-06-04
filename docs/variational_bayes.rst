@@ -84,7 +84,7 @@ In the following example, we instantiate a model and run variational inference u
 
     # run CmdStan's variational inference method, returns object `CmdStanVB`
     bern_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
-    bern_vb = bernoulli_model.variational(data=bernoulli_data)
+    bern_vb = bernoulli_model.variational(data=bern_data)
     print(bern_vb.column_names)
     print(bern_vb.variational_params_dict)
     bern_vb.variational_sample.shape
