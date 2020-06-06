@@ -629,6 +629,31 @@ def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
+def parse_var_dims(names: Tuple[str, ...]) -> Dict:
+    """
+    Use Stan CSV file column names to get variable names, dimensions.
+    Assumes that CSV file has been validated and column names are correct.
+    """
+    if names is None:
+        raise ValueError('missing argument "names"')
+    vars_dict = {}
+    idx = 0
+    while idx < len(names):
+        if names[idx].endswith('__'):
+            pass
+        elif '.' not in names[idx]:
+            vars_dict[names[idx]] = 1
+        else:
+            vs = names[idx].split('.')
+            if idx < len(names) - 1 and names[idx + 1].split('.')[0] == vs[0]:
+                idx += 1
+                continue
+            dims = [int(vs[x]) for x in range(1, len(vs))]
+            vars_dict[vs[0]] = dims
+        idx += 1
+    return vars_dict
+
+
 def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan stepsize, metric from  stan_csv file comment lines,

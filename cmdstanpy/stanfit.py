@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from collections import Counter, OrderedDict
 from datetime import datetime
 from time import time
@@ -22,6 +22,7 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
+    parse_var_dims,
 )
 from cmdstanpy.cmdstan_args import Method, CmdStanArgs
 
@@ -273,6 +274,8 @@ class CmdStanMCMC:
         self._stepsize = None
         self._sample = None
         self._warmup = None
+        self._drawset = None
+        self._stan_var_dims = {}
         self._validate_csv_files()
 
     def __repr__(self) -> str:
@@ -311,6 +314,13 @@ class CmdStanMCMC:
         names of model parameters and computed quantities.
         """
         return self._column_names
+
+    @property
+    def stan_var_dims(self) -> Dict:
+        """
+        Dict of Stan program variable names, dimensions.
+        """
+        return self._stan_var_dims
 
     @property
     def metric_type(self) -> str:
@@ -415,6 +425,7 @@ class CmdStanMCMC:
         if not self._is_fixed_param:
             self._num_params = dzero['num_params']
             self._metric_type = dzero.get('metric')
+        self._stan_var_dims = parse_var_dims(dzero['column_names'])
 
     def _assemble_sample(self) -> None:
         """
@@ -547,21 +558,71 @@ class CmdStanMCMC:
                 if not (param in self._column_names or param in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(param))
         self._assemble_sample()
-        # pylint: disable=redundant-keyword-arg
-        data = self.sample.reshape(
-            (self.num_draws * self.runset.chains),
-            len(self.column_names),
-            order='A',
-        )
-        drawset = pd.DataFrame(data=data, columns=self.column_names)
+        if self._drawset is None:
+            # pylint: disable=redundant-keyword-arg
+            data = self.sample.reshape(
+                (self.num_draws * self.runset.chains),
+                len(self.column_names),
+                order='A',
+            )
+            self._drawset = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
-            return drawset
+            return self._drawset
         mask = []
         for param in params:
             for name in self.column_names:
                 if param == name or param == name.split('.')[0]:
                     mask.append(name)
-        return drawset[mask]
+        return self._drawset[mask]
+
+    def stan_var(self, name: str) -> np.ndarray:
+        """
+        Return all draws for named Stan program variable.
+
+        :param name: variable name
+        """
+        if name not in self._stan_var_dims:
+            raise ValueError('unknown name: {}'.format(name))
+        if self._drawset is None:
+            self.get_drawset()
+        dims = self._stan_var_dims[name]
+        if dims == 1:
+            return self._drawset[name]
+        else:
+            var_dims = [self._drawset.shape[0]]
+            var_dims.extend(dims)
+            var_cols = [
+                col for col in self._drawset if col.startswith(name + '.')
+            ]
+            return (
+                self._drawset[var_cols]
+                .to_numpy()
+                .reshape(tuple(var_dims), order='A')
+            )
+
+    def stan_vars(self) -> Dict:
+        """
+        Return a dictionary of all Stan program variables
+        """
+        result = {}
+        if self._drawset is None:
+            self.get_drawset()
+        for key in self.stan_var_dims:
+            dims = self._stan_var_dims[key]
+            if dims == 1:
+                result[key] = self._drawset[key]
+            else:
+                var_dims = [self._drawset.shape[0]]
+                var_dims.extend(dims)
+                var_cols = [
+                    col for col in self._drawset if col.startswith(key + '.')
+                ]
+                result[key] = (
+                    self._drawset[var_cols]
+                    .to_numpy()
+                    .reshape(tuple(var_dims), order='A')
+                )
+        return result
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
