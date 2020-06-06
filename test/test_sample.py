@@ -683,6 +683,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(theta.shape, (200,))
 
     def test_get_var_lv(self):
+        # pylint: disable=C0103
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'lotka-volterra' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'lotka-volterra.data.json')
@@ -704,8 +705,8 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(8, len(fit._stan_var_dims))
         self.assertTrue('z' in fit._stan_var_dims)
         self.assertEqual(fit._stan_var_dims['z'], [20, 2])
-        zs = fit.stan_var(name='z')
-        self.assertEqual(zs.shape, (20, 20, 2))
+        z = fit.stan_var(name='z')
+        self.assertEqual(z.shape, (20, 20, 2))
         theta = fit.stan_var(name='theta')
         self.assertEqual(theta.shape, (20, 4))
 
