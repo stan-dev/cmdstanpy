@@ -624,7 +624,7 @@ class CmdStanMCMC:
                 )
         return result
 
-    def sampler_diags(self) -> Dict:
+    def sampler_diagnostics(self) -> Dict:
         """
         Returns the sampler diagnostics as a map from
         column name to draws X chains X 1 ndarray.

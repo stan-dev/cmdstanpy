@@ -676,7 +676,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
         )
-        diags = bern_fit.sampler_diags()
+        diags = bern_fit.sampler_diagnostics()
         self.assertEqual(SAMPLER_STATE, list(diags))
         for key in diags:
             self.assertEqual(diags[key].shape, (100, 2))
