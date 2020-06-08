@@ -577,7 +577,16 @@ class CmdStanMCMC:
 
     def stan_variable(self, name: str) -> np.ndarray:
         """
-        Return all draws for named Stan program variable.
+        Return a new ndarray which contains the set of draws
+        for the named Stan program variable.
+        * If the variable is a scalar variable, this returns a 1-d array,
+          length(draws X chains).
+        * If the variable is a vector, this is a 2-d array,
+          shape ( draws X chains, len(vector))
+        * If the variable is a matrix, this is a 3-d array,
+          shape ( draws X chains, matrix nrows, matrix ncols ).
+        * If the variable is an array with N dimensions, this is an N+1-d array,
+          shape ( draws X chains, size(dim 1), ... size(dim N)).
 
         :param name: variable name
         """
@@ -602,7 +611,8 @@ class CmdStanMCMC:
 
     def stan_variables(self) -> Dict:
         """
-        Return a dictionary of all Stan program variables
+        Return a dictionary of all Stan program variables.
+        Creates copies of the data in the draws matrix.
         """
         result = {}
         if self._drawset is None:
