@@ -575,7 +575,7 @@ class CmdStanMCMC:
                     mask.append(name)
         return self._drawset[mask]
 
-    def stan_var(self, name: str) -> np.ndarray:
+    def stan_variable(self, name: str) -> np.ndarray:
         """
         Return all draws for named Stan program variable.
 
@@ -600,7 +600,7 @@ class CmdStanMCMC:
                 .reshape(tuple(var_dims), order='A')
             )
 
-    def stan_vars(self) -> Dict:
+    def stan_variables(self) -> Dict:
         """
         Return a dictionary of all Stan program variables
         """
@@ -622,6 +622,17 @@ class CmdStanMCMC:
                     .to_numpy()
                     .reshape(tuple(var_dims), order='A')
                 )
+        return result
+
+    def sampler_diags(self) -> Dict:
+        """
+        Returns the sampler diagnostics as a map from
+        column name to draws X chains X 1 ndarray.
+        """
+        result = {}
+        diag_names = [x for x in self._column_names if x.endswith('__')]
+        for idx, value in enumerate(diag_names):
+            result[value] = self.sample[:, :, idx]
         return result
 
     def save_csvfiles(self, dir: str = None) -> None:

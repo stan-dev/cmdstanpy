@@ -669,7 +669,19 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(bern_fit.num_draws, 100)
         self.assertEqual(bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS)))
 
-    def test_get_var_bern(self):
+    def test_sampler_diags(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
+        )
+        diags = bern_fit.sampler_diags()
+        self.assertEqual(SAMPLER_STATE, list(diags))
+        for key in diags:
+            self.assertEqual(diags[key].shape, (100, 2))
+
+    def test_variable_bern(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
@@ -679,10 +691,14 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(1, len(bern_fit._stan_var_dims))
         self.assertTrue('theta' in bern_fit._stan_var_dims)
         self.assertEqual(bern_fit._stan_var_dims['theta'], 1)
-        theta = bern_fit.stan_var(name='theta')
+        theta = bern_fit.stan_variable(name='theta')
         self.assertEqual(theta.shape, (200,))
+        with self.assertRaises(ValueError):
+            bern_fit.stan_variable(name='eta')
+        with self.assertRaises(ValueError):
+            bern_fit.stan_variable(name='lp__')
 
-    def test_get_var_lv(self):
+    def test_variable_lv(self):
         # pylint: disable=C0103
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'lotka-volterra' + EXTENSION)
@@ -705,12 +721,12 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(8, len(fit._stan_var_dims))
         self.assertTrue('z' in fit._stan_var_dims)
         self.assertEqual(fit._stan_var_dims['z'], [20, 2])
-        z = fit.stan_var(name='z')
+        z = fit.stan_variable(name='z')
         self.assertEqual(z.shape, (20, 20, 2))
-        theta = fit.stan_var(name='theta')
+        theta = fit.stan_variable(name='theta')
         self.assertEqual(theta.shape, (20, 4))
 
-    def test_get_vars(self):
+    def test_variables(self):
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'lotka-volterra' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'lotka-volterra.data.json')
@@ -732,7 +748,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(8, len(fit._stan_var_dims))
         self.assertTrue('z' in fit._stan_var_dims)
         self.assertEqual(fit._stan_var_dims['z'], [20, 2])
-        vars = fit.stan_vars()
+        vars = fit.stan_variables()
         self.assertEqual(len(vars), len(fit._stan_var_dims))
         self.assertTrue('z' in vars)
         self.assertEqual(vars['z'].shape, (20, 20, 2))
