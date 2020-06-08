@@ -318,7 +318,9 @@ class CmdStanMCMC:
     @property
     def stan_var_dims(self) -> Dict:
         """
-        Dict of Stan program variable names, dimensions.
+        Dict mapping Stan program variable names to variable dimensions.
+        Scalar types have int value '1'.  Structured types have list of dims,
+        e.g.,  program variable ``vector[10] foo`` has entry ``('foo', [10])``.
         """
         return self._stan_var_dims
 
@@ -579,6 +581,7 @@ class CmdStanMCMC:
         """
         Return a new ndarray which contains the set of draws
         for the named Stan program variable.
+
         * If the variable is a scalar variable, this returns a 1-d array,
           length(draws X chains).
         * If the variable is a vector, this is a 2-d array,
