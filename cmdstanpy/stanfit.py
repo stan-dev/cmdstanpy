@@ -600,17 +600,17 @@ class CmdStanMCMC:
         dim0 = self.num_draws * self.runset.chains
         dims = self._stan_var_dims[name]
         if dims == 1:
-            idx = self._column_names.index(name)
-            return self._sample[:, :, idx].reshape((dim0,), order='A')
+            idx = self.column_names.index(name)
+            return self.sample[:, :, idx].reshape((dim0,), order='A')
         else:
             idxs = [
                 x[0]
-                for x in enumerate(self._column_names)
+                for x in enumerate(self.column_names)
                 if x[1].startswith(name + '.')
             ]
             var_dims = [dim0]
             var_dims.extend(dims)
-            return self._sample[
+            return self.sample[
                 :, :, idxs[0] : idxs[len(idxs) - 1] + 1
             ].reshape(tuple(var_dims), order='A')
 
@@ -630,7 +630,8 @@ class CmdStanMCMC:
         column name to draws X chains X 1 ndarray.
         """
         result = {}
-        diag_names = [x for x in self._column_names if x.endswith('__')]
+        self._assemble_sample()
+        diag_names = [x for x in self.column_names if x.endswith('__')]
         for idx, value in enumerate(diag_names):
             result[value] = self.sample[:, :, idx]
         return result
