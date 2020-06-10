@@ -3,6 +3,7 @@
 import os
 import re
 import shutil
+import copy
 import logging
 from typing import List, Tuple, Dict
 from collections import Counter, OrderedDict
@@ -322,7 +323,7 @@ class CmdStanMCMC:
         Scalar types have int value '1'.  Structured types have list of dims,
         e.g.,  program variable ``vector[10] foo`` has entry ``('foo', [10])``.
         """
-        return self._stan_var_dims
+        return copy.deepcopy(self._stan_var_dims)
 
     @property
     def metric_type(self) -> str:
@@ -571,10 +572,10 @@ class CmdStanMCMC:
         if params is None:
             return self._drawset
         mask = []
-        for param in params:
-            for name in self.column_names:
-                if param == name or param == name.split('.')[0]:
-                    mask.append(name)
+        params = set(params)
+        for name in self.column_names:
+            if any(item in params for item in (name, name.split('.')[0])):
+                mask.append(name)
         return self._drawset[mask]
 
     def stan_variable(self, name: str) -> np.ndarray:
@@ -595,22 +596,23 @@ class CmdStanMCMC:
         """
         if name not in self._stan_var_dims:
             raise ValueError('unknown name: {}'.format(name))
-        if self._drawset is None:
-            self.get_drawset()
+        self._assemble_sample()
+        dim0 = self.num_draws * self.runset.chains
         dims = self._stan_var_dims[name]
         if dims == 1:
-            return self._drawset[name]
+            idx = self._column_names.index(name)
+            return self._sample[:, :, idx].reshape((dim0,), order='A')
         else:
-            var_dims = [self._drawset.shape[0]]
-            var_dims.extend(dims)
-            var_cols = [
-                col for col in self._drawset if col.startswith(name + '.')
+            idxs = [
+                x[0]
+                for x in enumerate(self._column_names)
+                if x[1].startswith(name + '.')
             ]
-            return (
-                self._drawset[var_cols]
-                .to_numpy()
-                .reshape(tuple(var_dims), order='A')
-            )
+            var_dims = [dim0]
+            var_dims.extend(dims)
+            return self._sample[
+                :, :, idxs[0] : idxs[len(idxs) - 1] + 1
+            ].reshape(tuple(var_dims), order='A')
 
     def stan_variables(self) -> Dict:
         """
@@ -618,23 +620,8 @@ class CmdStanMCMC:
         Creates copies of the data in the draws matrix.
         """
         result = {}
-        if self._drawset is None:
-            self.get_drawset()
-        for key in self.stan_var_dims:
-            dims = self._stan_var_dims[key]
-            if dims == 1:
-                result[key] = self._drawset[key]
-            else:
-                var_dims = [self._drawset.shape[0]]
-                var_dims.extend(dims)
-                var_cols = [
-                    col for col in self._drawset if col.startswith(key + '.')
-                ]
-                result[key] = (
-                    self._drawset[var_cols]
-                    .to_numpy()
-                    .reshape(tuple(var_dims), order='A')
-                )
+        for name in self.stan_var_dims:
+            result[name] = self.stan_variable(name)
         return result
 
     def sampler_diagnostics(self) -> Dict:

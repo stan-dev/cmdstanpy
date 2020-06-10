@@ -649,7 +649,7 @@ def parse_var_dims(names: Tuple[str, ...]) -> Dict:
                 idx += 1
                 continue
             dims = [int(vs[x]) for x in range(1, len(vs))]
-            vars_dict[vs[0]] = dims
+            vars_dict[vs[0]] = tuple(dims)
         idx += 1
     return vars_dict
 
