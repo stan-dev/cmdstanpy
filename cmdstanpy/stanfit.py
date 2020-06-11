@@ -3,8 +3,9 @@
 import os
 import re
 import shutil
+import copy
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from collections import Counter, OrderedDict
 from datetime import datetime
 from time import time
@@ -22,6 +23,7 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
+    parse_var_dims,
 )
 from cmdstanpy.cmdstan_args import Method, CmdStanArgs
 
@@ -273,6 +275,8 @@ class CmdStanMCMC:
         self._stepsize = None
         self._sample = None
         self._warmup = None
+        self._drawset = None
+        self._stan_var_dims = {}
         self._validate_csv_files()
 
     def __repr__(self) -> str:
@@ -311,6 +315,15 @@ class CmdStanMCMC:
         names of model parameters and computed quantities.
         """
         return self._column_names
+
+    @property
+    def stan_var_dims(self) -> Dict:
+        """
+        Dict mapping Stan program variable names to variable dimensions.
+        Scalar types have int value '1'.  Structured types have list of dims,
+        e.g.,  program variable ``vector[10] foo`` has entry ``('foo', [10])``.
+        """
+        return copy.deepcopy(self._stan_var_dims)
 
     @property
     def metric_type(self) -> str:
@@ -415,6 +428,7 @@ class CmdStanMCMC:
         if not self._is_fixed_param:
             self._num_params = dzero['num_params']
             self._metric_type = dzero.get('metric')
+        self._stan_var_dims = parse_var_dims(dzero['column_names'])
 
     def _assemble_sample(self) -> None:
         """
@@ -547,21 +561,80 @@ class CmdStanMCMC:
                 if not (param in self._column_names or param in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(param))
         self._assemble_sample()
-        # pylint: disable=redundant-keyword-arg
-        data = self.sample.reshape(
-            (self.num_draws * self.runset.chains),
-            len(self.column_names),
-            order='A',
-        )
-        drawset = pd.DataFrame(data=data, columns=self.column_names)
+        if self._drawset is None:
+            # pylint: disable=redundant-keyword-arg
+            data = self.sample.reshape(
+                (self.num_draws * self.runset.chains),
+                len(self.column_names),
+                order='A',
+            )
+            self._drawset = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
-            return drawset
+            return self._drawset
         mask = []
-        for param in params:
-            for name in self.column_names:
-                if param == name or param == name.split('.')[0]:
-                    mask.append(name)
-        return drawset[mask]
+        params = set(params)
+        for name in self.column_names:
+            if any(item in params for item in (name, name.split('.')[0])):
+                mask.append(name)
+        return self._drawset[mask]
+
+    def stan_variable(self, name: str) -> np.ndarray:
+        """
+        Return a new ndarray which contains the set of draws
+        for the named Stan program variable.
+
+        * If the variable is a scalar variable, this returns a 1-d array,
+          length(draws X chains).
+        * If the variable is a vector, this is a 2-d array,
+          shape ( draws X chains, len(vector))
+        * If the variable is a matrix, this is a 3-d array,
+          shape ( draws X chains, matrix nrows, matrix ncols ).
+        * If the variable is an array with N dimensions, this is an N+1-d array,
+          shape ( draws X chains, size(dim 1), ... size(dim N)).
+
+        :param name: variable name
+        """
+        if name not in self._stan_var_dims:
+            raise ValueError('unknown name: {}'.format(name))
+        self._assemble_sample()
+        dim0 = self.num_draws * self.runset.chains
+        dims = self._stan_var_dims[name]
+        if dims == 1:
+            idx = self.column_names.index(name)
+            return self.sample[:, :, idx].reshape((dim0,), order='A')
+        else:
+            idxs = [
+                x[0]
+                for x in enumerate(self.column_names)
+                if x[1].startswith(name + '.')
+            ]
+            var_dims = [dim0]
+            var_dims.extend(dims)
+            return self.sample[
+                :, :, idxs[0] : idxs[len(idxs) - 1] + 1
+            ].reshape(tuple(var_dims), order='A')
+
+    def stan_variables(self) -> Dict:
+        """
+        Return a dictionary of all Stan program variables.
+        Creates copies of the data in the draws matrix.
+        """
+        result = {}
+        for name in self.stan_var_dims:
+            result[name] = self.stan_variable(name)
+        return result
+
+    def sampler_diagnostics(self) -> Dict:
+        """
+        Returns the sampler diagnostics as a map from
+        column name to draws X chains X 1 ndarray.
+        """
+        result = {}
+        self._assemble_sample()
+        diag_names = [x for x in self.column_names if x.endswith('__')]
+        for idx, value in enumerate(diag_names):
+            result[value] = self.sample[:, :, idx]
+        return result
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
