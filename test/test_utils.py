@@ -25,6 +25,7 @@ from cmdstanpy.utils import (
     rload,
     parse_rdump_value,
     jsondump,
+    parse_var_dims,
 )
 from cmdstanpy.model import CmdStanModel
 
@@ -487,6 +488,73 @@ class RloadTest(unittest.TestCase):
         self.assertEqual(v_struct3[7, 0], 8)
         self.assertEqual(v_struct3[0, 1], 9)
         self.assertEqual(v_struct3[6, 1], 15)
+
+
+class ParseVarDimsTest(unittest.TestCase):
+    def test_parse_empty(self):
+        x = []
+        vars_dict = parse_var_dims(x)
+        self.assertEqual(len(vars_dict), 0)
+
+    def test_parse_missing(self):
+        with self.assertRaises(ValueError):
+            parse_var_dims(None)
+
+    def test_parse_scalar(self):
+        x = ['foo']
+        vars_dict = parse_var_dims(x)
+        self.assertEqual(len(vars_dict), 1)
+        self.assertEqual(vars_dict['foo'], 1)
+
+    def test_parse_scalars(self):
+        x = ['foo', 'foo1']
+        vars_dict = parse_var_dims(x)
+        self.assertEqual(len(vars_dict), 2)
+        self.assertEqual(vars_dict['foo'], 1)
+        self.assertEqual(vars_dict['foo1'], 1)
+
+    def test_parse_scalar_vec_scalar(self):
+        x = [
+            'foo',
+            'phi.1',
+            'phi.2',
+            'phi.3',
+            'phi.4',
+            'phi.5',
+            'phi.6',
+            'phi.7',
+            'phi.8',
+            'phi.9',
+            'phi.10',
+            'bar',
+        ]
+        vars_dict = parse_var_dims(x)
+        self.assertEqual(len(vars_dict), 3)
+        self.assertEqual(vars_dict['foo'], 1)
+        self.assertEqual(vars_dict['phi'], (10,))
+        self.assertEqual(vars_dict['bar'], 1)
+
+    def test_parse_scalar_matrix_vec(self):
+        x = [
+            'foo',
+            'phi.1.1',
+            'phi.1.2',
+            'phi.1.3',
+            'phi.1.4',
+            'phi.1.5',
+            'phi.2.1',
+            'phi.2.2',
+            'phi.2.3',
+            'phi.2.4',
+            'phi.2.5',
+            'bar.1',
+            'bar.2',
+        ]
+        vars_dict = parse_var_dims(x)
+        self.assertEqual(len(vars_dict), 3)
+        self.assertEqual(vars_dict['foo'], 1)
+        self.assertEqual(vars_dict['phi'], (2, 5))
+        self.assertEqual(vars_dict['bar'], (2,))
 
 
 if __name__ == '__main__':
