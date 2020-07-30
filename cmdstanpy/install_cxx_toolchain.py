@@ -110,8 +110,12 @@ def install_mingw32_make(toolchain_loc):
         list(
             OrderedDict.fromkeys(
                 [
+                    os.path.join(
+                        toolchain_loc,
+                        'mingw_64' if IS_64BITS else 'mingw_32',
+                        'bin',
+                    ),
                     os.path.join(toolchain_loc, 'usr', 'bin'),
-                    os.path.join(toolchain_loc, 'mingw64', 'bin'),
                 ]
                 + os.environ.get('PATH', '').split(';')
             )
@@ -152,7 +156,7 @@ def install_mingw32_make(toolchain_loc):
 def is_installed(toolchain_loc, version):
     """Returns True is toolchain is installed."""
     if platform.system() == 'Windows':
-        if version == '3.5':
+        if version in ['35', '3.5']:
             if not os.path.exists(os.path.join(toolchain_loc, 'bin')):
                 return False
             return os.path.exists(
@@ -163,7 +167,7 @@ def is_installed(toolchain_loc, version):
                     'g++' + EXTENSION,
                 )
             )
-        elif version == '4.0':
+        elif version in ['40', '4.0', '4']:
             return os.path.exists(
                 os.path.join(
                     toolchain_loc,
