@@ -334,8 +334,8 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            ``numpy.random.RandomState()``
-            is used to generate a seed which will be used for all chains.
+            ``numpy.random.RandomState()`` is used to generate a seed.
+            
 
         :param inits:  Specifies how the sampler initializes parameter values.
             Initialization is either uniform random on a range centered on 0,
@@ -402,7 +402,8 @@ class CmdStanModel:
         self,
         data: Union[Dict, str] = None,
         chains: Union[int, None] = None,
-        cores: Union[int, None] = None,
+        parallel_chains: Union[int, None] = None,
+        threads_per_chain: Union[int, None] = None,
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
         inits: Union[Dict, float, str, List[str]] = None,
@@ -451,12 +452,18 @@ class CmdStanModel:
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
-        :param chains: Number of sampler chains, should be > 1.
+        :param chains: Number of sampler chains, must be a positive integer.
 
-        :param cores: Number of processes to run in parallel. Must be an
+        :param parallel_chains: Number of processes to run in parallel. Must be an
             integer between 1 and the number of CPUs in the system.
             If none then set automatically to chains but no more
             than total_cpu_count - 2
+
+        :threads_per_chain: If the model was compiled with threading support,
+            the number of threads to use in parallelized sections within an
+            MCMC chain (e.g., when using the Stan functions ``reduce_sum()``
+            or ``map_rect()``).  The total number of threads used will be
+            ``parallel_chains``*``threads_per_chain``.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
@@ -564,7 +571,6 @@ class CmdStanModel:
 
         :return: CmdStanMCMC object
         """
-
         if chains is None:
             if fixed_param:
                 chains = 1
@@ -601,20 +607,45 @@ class CmdStanModel:
                             'Chain_id must be a non-negative integer value,'
                             ' found {}.'.format(chain_id)
                         )
-
-        cores_avail = cpu_count()
-        if cores is None:
-            cores = max(min(cores_avail - 2, chains), 1)
-        if cores < 1:
+        if parallel_chains is None or parallel_chains > chains:
+            parallel_chains = max(min(cpu_count(), chains), 1)
+        if parallel_chains < 1:
             raise ValueError(
-                'Argument cores must be a positive integer value, '
-                'found {}.'.format(cores)
+                'Argument parallel_chains must be a positive integer value, '
+                'found {}.'.format(parallel_chains)
             )
-        if cores > cores_avail:
-            self._logger.warning(
-                'Requested %u cores, only %u available.', cores, cpu_count()
+        if threads_per_chain is None:
+            threads_per_chain = 1
+        if threads_per_chain < 1:
+            raise ValueError(
+                'Argument threads_per_chain must be a positive integer value, '
+                'found {}.'.format(threads_per_chain)
             )
-            cores = cores_avail
+        os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
+        if threads_per_chain > cpu_count():
+            self._logger.warn(
+                'Requested threads_per_chain: %u > available CPUs: %u,'
+                ' will oversubcribe CPUs',
+                threads_per_chain,
+                cpu_count(),
+            )
+            if parallel_chains > 1:
+                parallel_chains = 1
+                self._logger.warn(', won\'t run chains in parallel')
+        if parallel_chains > 1:
+            cores_requested = parallel_chains * threads_per_chain
+            max_parallel = cpu_count()
+            while cores_requested > max_parallel and max_parallel > 1:
+                max_parallel -= 1
+                cores_requested -= threads_per_chain
+            if parallel_chains > max_parallel:
+                self._logger.warn(
+                    'Not enough cores to run %u parallel_chains,'
+                    ' will only run %u in parallel.',
+                    parallel_chains,
+                    max_parallel,
+                )
+                parallel_chains = max_parallel
 
         refresh = None
         if show_progress:
@@ -667,7 +698,7 @@ class CmdStanModel:
             pbar = None
             all_pbars = []
 
-            with ThreadPoolExecutor(max_workers=cores) as executor:
+            with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
                     if show_progress:
                         if (
@@ -707,7 +738,6 @@ class CmdStanModel:
                             dynamic_ncols=dynamic_ncols,
                         )
                         all_pbars.append(pbar)
-
                     executor.submit(self._run_cmdstan, runset, i, pbar)
 
             # Closing all progress bars
@@ -856,9 +886,9 @@ class CmdStanModel:
             )
             runset = RunSet(args=args, chains=chains)
 
-            cores_avail = cpu_count()
-            cores = max(min(cores_avail - 2, chains), 1)
-            with ThreadPoolExecutor(max_workers=cores) as executor:
+            parallel_chains_avail = cpu_count()
+            parallel_chains = max(min(parallel_chains_avail - 2, chains), 1)
+            with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
                     executor.submit(self._run_cmdstan, runset, i)
 
@@ -1016,6 +1046,7 @@ class CmdStanModel:
         """
         cmd = runset.cmds[idx]
         self._logger.info('start chain %u', idx + 1)
+        self._logger.info('threads: %s', os.environ['STAN_NUM_THREADS'])
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ

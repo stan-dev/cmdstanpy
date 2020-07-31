@@ -610,9 +610,9 @@ class CmdStanMCMC:
             ]
             var_dims = [dim0]
             var_dims.extend(dims)
-            return self.sample[
-                :, :, idxs[0] : idxs[len(idxs) - 1] + 1
-            ].reshape(tuple(var_dims), order='A')
+            return self.sample[:, :, idxs[0] : idxs[len(idxs) - 1] + 1].reshape(
+                tuple(var_dims), order='A'
+            )
 
     def stan_variables(self) -> Dict:
         """

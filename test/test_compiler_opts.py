@@ -15,7 +15,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts.validate()
         self.assertEqual(opts.compose(), [])
         self.assertEqual(
-            opts.__repr__(), 'stanc_options=None, cpp_options=None',
+            opts.__repr__(), 'stanc_options=None, cpp_options=None'
         )
 
         stanc_opts = {}
