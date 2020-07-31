@@ -335,7 +335,6 @@ class CmdStanModel:
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
             ``numpy.random.RandomState()`` is used to generate a seed.
-            
 
         :param inits:  Specifies how the sampler initializes parameter values.
             Initialization is either uniform random on a range centered on 0,
@@ -454,10 +453,10 @@ class CmdStanModel:
 
         :param chains: Number of sampler chains, must be a positive integer.
 
-        :param parallel_chains: Number of processes to run in parallel. Must be an
-            integer between 1 and the number of CPUs in the system.
-            If none then set automatically to chains but no more
-            than total_cpu_count - 2
+        :param parallel_chains: Number of processes to run in parallel. Must be
+            an integer between 1 and the number of CPUs in the system.
+            If none then set automatically to chains but no more than
+            total_cpu_count - 2.
 
         :threads_per_chain: If the model was compiled with threading support,
             the number of threads to use in parallelized sections within an
@@ -609,6 +608,13 @@ class CmdStanModel:
                         )
         if parallel_chains is None or parallel_chains > chains:
             parallel_chains = max(min(cpu_count(), chains), 1)
+        if parallel_chains > cpu_count():
+            self._logger.warning(
+                'Requested %u parallel chains, but only %u CPUs,'
+                ' can only run %u chains in parallel.',
+                threads_per_chain, cpu_count(), cpu_count()
+            )
+            parallel_chains = max(min(cpu_count(), chains), 1)
         if parallel_chains < 1:
             raise ValueError(
                 'Argument parallel_chains must be a positive integer value, '
@@ -623,7 +629,7 @@ class CmdStanModel:
             )
         os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
         if threads_per_chain > cpu_count():
-            self._logger.warn(
+            self._logger.warning(
                 'Requested threads_per_chain: %u > available CPUs: %u,'
                 ' will oversubcribe CPUs',
                 threads_per_chain,
@@ -631,19 +637,23 @@ class CmdStanModel:
             )
             if parallel_chains > 1:
                 parallel_chains = 1
-                self._logger.warn(', won\'t run chains in parallel')
+                self._logger.warning(", won't run chains in parallel")
         if parallel_chains > 1:
-            cores_requested = parallel_chains * threads_per_chain
+            total_threads = parallel_chains * threads_per_chain
             max_parallel = cpu_count()
-            while cores_requested > max_parallel and max_parallel > 1:
+            while total_threads > max_parallel:
+                if max_parallel == 1:
+                    break
+                total_threads -= threads_per_chain
                 max_parallel -= 1
-                cores_requested -= threads_per_chain
             if parallel_chains > max_parallel:
-                self._logger.warn(
-                    'Not enough cores to run %u parallel_chains,'
-                    ' will only run %u in parallel.',
-                    parallel_chains,
+                self._logger.warning(
+                    'Not enough cores to run %u threads total,'
+                    ' will run %u chains in parallel,'
+                    ' with %u threads per chain',
+                    parallel_chains * threads_per_chain,
                     max_parallel,
+                    threads_per_chain
                 )
                 parallel_chains = max_parallel
 
