@@ -612,7 +612,7 @@ class CmdStanModel:
             self._logger.warning(
                 'Requested %u parallel chains, but only %u CPUs,'
                 ' can only run %u chains in parallel.',
-                threads_per_chain, cpu_count(), cpu_count()
+                parallel_chains, cpu_count(), cpu_count()
             )
             parallel_chains = max(min(cpu_count(), chains), 1)
         if parallel_chains < 1:
