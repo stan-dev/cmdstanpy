@@ -607,17 +607,16 @@ class CmdStanModel:
                         )
         if parallel_chains is None:
             parallel_chains = max(min(cpu_count(), chains), 1)
-        if parallel_chains > chains:
-            self._logger.warning('Requested more parallel chains than chains,'
+        elif parallel_chains > chains:
+            self._logger.warning('Parallel specified chains greater than chains,'
                                  ' chains: %u, parallel_chains %u.',
                                  chains, parallel_chains)
-            
             parallel_chains = chains
-        if parallel_chains < 1:
+        elif parallel_chains < 1:
             raise ValueError(
                 'Argument parallel_chains must be a positive integer value, '
                 'found {}.'.format(parallel_chains)
-            )
+                )
         if threads_per_chain is None:
             threads_per_chain = 1
         if threads_per_chain < 1:
