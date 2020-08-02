@@ -608,9 +608,9 @@ class CmdStanModel:
         if parallel_chains is None:
             parallel_chains = max(min(cpu_count(), chains), 1)
         elif parallel_chains > chains:
-            self._logger.warning('Parallel specified chains greater than chains,'
-                                 ' chains: %u, parallel_chains %u.',
-                                 chains, parallel_chains)
+            self._logger.warning('Requesting %u parallel_chains for %u chains,'
+                                 ' running all chains in parallel.',
+                                 parallel_chains, chains)
             parallel_chains = chains
         elif parallel_chains < 1:
             raise ValueError(
