@@ -5,6 +5,8 @@
 
 - ``inits``:  Specifies how the sampler initializes parameter values.
             
-- ``output_dir``:  A path or file name which will be used as the basename for the CmdStan output files.
+- ``output_dir``:  Name of the directory to which CmdStan output files are written.
 
-- ``save_diagnostics``:  Whether or not to save diagnostics.
+- ``save_diagnostics``:  Whether or not to the CmdStan auxiliary output file.
+  For the ``sample`` method, the diagnostics file contains sampler information for each draw
+  together with the gradients on the unconstrained scale and log probabilities for all parameters in the model.

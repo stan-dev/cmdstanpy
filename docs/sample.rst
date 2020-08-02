@@ -20,7 +20,7 @@ NUTS-HMC sampler configuration
 
 - ``chains``: Number of sampler chains.
 
-- ``cores``: Number of processes to run in parallel.
+- ``parallel_chains``: Number of processes to run in parallel.
 
 - ``seed``: The seed or list of per-chain seeds for the sampler's random number generator.
 
@@ -69,25 +69,32 @@ and data file
 
 The :ref:`class_cmdstanmodel` class method  ``sample`` returns a ``CmdStanMCMC`` object
 which provides properties to retrieve information about the sample, as well as methods
-to run CmdStan's summary and diagnostics tools:
-
-- ``chains``
-- ``draws``
-- ``columns``   
-- ``column_names``
-- ``metric_type``
-- ``metric``
-- ``sample``
-- ``stepsize``
-
-- ``get_drawset``
-- ``summary()``
-- ``diagnose()``
-- ``save_csvfiles()``
-
+to run CmdStan's summary and diagnostics tools.
+Useful methods for information about the sample and the fit are:
   
-By default the sampler runs 4 chains.
-It will use 2 less than that number of cores available, as determined by Python's ``multiprocessing.cpu_count()`` function.  For example, on a dual-processor machine with 4 virtual cores, the defaults will result a run of 4 chains, but only 2 chains will be run parallel.
+- ``summary()`` - Run CmdStan's `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__ utility on the sample.
+- ``diagnose()`` - Run CmdStan's `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__ utility on the sample.
+- ``sampler_diagnostics()`` - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.
+- ``save_csvfiles(dir_name)`` - Move output csvfiles to specified directory.
+- ``chains`` - Number of chains
+- ``num_draws`` - Number of post-warmup draws (i.e., sampling iterations)
+- ``num_warmup_draws`` - Number of warmup draws.
+- ``metric`` - Per chain metric by the HMC sampler.
+- ``stepsize`` - Per chain stepszie used by the HMC sampler.
+- ``sample`` - A 3-D numpy.ndarray which contains all post-warmup draws across all chains arranged as (draws, chains, columns).
+- ``warmup`` - A 3-D numpy.ndarray which contains all warmup draws across all chains arranged as (draws, chains, columns).
+  
+Useful methods for downstream analysis are:
+  
+- ``stan_variable(var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
+- ``stan_variables()`` - Return dictionary of all Stan program variables.
+  
+By default the sampler runs 4 chains, running as many chains in parallel as there
+are available processors as determined by Python's ``multiprocessing.cpu_count()`` function.
+For example, on a dual-processor machine with 4 virtual cores, all 4 chains will be run in parallel.
+Continuing this example, specifying ``chains=6`` will result in 4 chains being run in parallel,
+and as soon as 2 of them are finished, the remaining 2 chains will run.
+Specifying ``chains=6, parallel_chains=6`` will run all 6 chains in parallel.
 
 .. code-block:: python
 
@@ -103,6 +110,10 @@ It will use 2 less than that number of cores available, as determined by Python'
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
     bern_fit.sample.shape
     bern_fit.summary()
+
+
+Example: high-level parallelization with `reduce_sum`
+-----------------------------------------------------
 
     
 
