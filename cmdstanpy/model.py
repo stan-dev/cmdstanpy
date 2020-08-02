@@ -324,7 +324,7 @@ class CmdStanModel:
         Output files are either written to a temporary directory or to the
         specified output directory.  Ouput filenames correspond to the template
         '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
-        either '.csv' for the CmdStan output or '.txt' for 
+        either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. 'bernoulli-201912081451-1.csv'.
         Output files written to the temporary directory contain an additional
         8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
@@ -444,7 +444,7 @@ class CmdStanModel:
         Output files are either written to a temporary directory or to the
         specified output directory.  Ouput filenames correspond to the template
         '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
-        either '.csv' for the CmdStan output or '.txt' for 
+        either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. 'bernoulli-201912081451-1.csv'.
         Output files written to the temporary directory contain an additional
         8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
@@ -610,15 +610,18 @@ class CmdStanModel:
         if parallel_chains is None:
             parallel_chains = max(min(cpu_count(), chains), 1)
         elif parallel_chains > chains:
-            self._logger.warning('Requesting %u parallel_chains for %u chains,'
-                                 ' running all chains in parallel.',
-                                 parallel_chains, chains)
+            self._logger.warning(
+                'Requesting %u parallel_chains for %u chains,'
+                ' running all chains in parallel.',
+                parallel_chains,
+                chains,
+            )
             parallel_chains = chains
         elif parallel_chains < 1:
             raise ValueError(
                 'Argument parallel_chains must be a positive integer value, '
                 'found {}.'.format(parallel_chains)
-                )
+            )
         if threads_per_chain is None:
             threads_per_chain = 1
         if threads_per_chain < 1:
@@ -766,7 +769,7 @@ class CmdStanModel:
         Output files are either written to a temporary directory or to the
         specified output directory.  Ouput filenames correspond to the template
         '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
-        either '.csv' for the CmdStan output or '.txt' for 
+        either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. 'bernoulli-201912081451-1.csv'.
         Output files written to the temporary directory contain an additional
         8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
@@ -919,7 +922,7 @@ class CmdStanModel:
         Output files are either written to a temporary directory or to the
         specified output directory.  Ouput filenames correspond to the template
         '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
-        either '.csv' for the CmdStan output or '.txt' for 
+        either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. 'bernoulli-201912081451-1.csv'.
         Output files written to the temporary directory contain an additional
         8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
@@ -1028,7 +1031,9 @@ class CmdStanModel:
         """
         cmd = runset.cmds[idx]
         self._logger.info('start chain %u', idx + 1)
-        self._logger.debug('threads: %s', str(os.environ.get('STAN_NUM_THREADS')))
+        self._logger.debug(
+            'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
+        )
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
