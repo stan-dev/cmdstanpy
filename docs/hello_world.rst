@@ -50,21 +50,22 @@ and returns a ``CmdStanMCMC`` object:
 
 By default, the ``sample`` command runs 4 sampler chains.
 The ``output_dir`` argument specifies the path to the sampler output files.
-If no output file path is specified, the sampler outputs
-are written to a temporary directory which is deleted
+
+The object returned by the ``sample`` command is a ``CmdStanMLE`` object.
+It records the CmdStan arguments and command, the console outputs,
+the return code, and the paths to all output files.
+
+Because this example specifies the output dir, the output
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__
+are saved in the current working directory, one CSV file per chain.
+The filenames follow the template '<model_name>-<YYYYMMDDHHMM>-<chain_id>'
+plus the file suffix '.csv'.
+There is also a correspondingly named file with suffix '.txt'
+which contains all messages written to the console.
+
+By default, output files are written to a temporary directory which is deleted
 when the current Python session is terminated.
-
-The ``CmdStanMLE`` object records the command, the return code,
-and the paths to the optimize method output csv and console files.
-The output files are written either to a specified output directory
-or to a temporary directory which is deleted upon session exit.
-
-Output filenames are composed of the model name, a timestamp
-in the form YYYYMMDDhhmm and the chain id, plus the corresponding
-filetype suffix, either '.csv' for the CmdStan output or '.txt' for
-the console messages, e.g. ``bernoulli-201912081451-1.csv``. Output files
-written to the temporary directory contain an additional 8-character
-random string, e.g. ``bernoulli-201912081451-1-5nm6as7u.csv``.
+This is useful during model testing and development.
 
 
 Access the sample
@@ -95,16 +96,16 @@ arranged as dimensions: (draws, chains, columns).
     bern_fit.sample.shape
 
 
-The ``get_drawset`` method returns the draws from
-all chains as a ``pandas.DataFrame``, one draw per row, one column per
-model parameter, transformed parameter, generated quantity variable.
-The ``params`` argument is used to restrict the DataFrame
-columns to just the specified parameter names.
+The ``stan_variable(var_name)`` method returns
+a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
 
 .. code-block:: python
 
-    bern_fit.get_drawset(params=['theta'])
+    bern_fit.get_variable('theta')
 
+
+
+    
 Python's index slicing operations can be used to access the information by chain.
 For example, to select all draws and all output columns from the first chain,
 we specify the chain index (2nd index dimension).  As arrays indexing starts at 0,
@@ -121,10 +122,13 @@ the index '0' corresponds to the first chain in the ``CmdStanMCMC``:
 Summarize or save the results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CmdStan is distributed with a posterior analysis utility ``stansummary``
+CmdStan is distributed with a posterior analysis utility
+` ``stansummary`` <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>
 that reads the outputs of all chains and computes summary statistics
-on the model fit for all parameters. The ``CmdStanMCMC`` method ``summary``
-runs the CmdStan ``stansummary`` utility and returns the output as a pandas.DataFrame:
+on the model fit for all sampler and model parameters and quantities of interest.
+The ``CmdStanMCMC`` method ``summary`` runs this utility and returns
+the total joint log-probability density `lp__` plus
+the model parameters and quantities of interest in a pandas.DataFrame:
 
 .. code-block:: python
 
