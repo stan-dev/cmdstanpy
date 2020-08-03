@@ -229,6 +229,61 @@ class SampleTest(unittest.TestCase):
                     ('cmdstanpy', 'INFO', 'finish chain 1'),
                 )
 
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data,
+                chains=1,
+                parallel_chains=1,
+                threads_per_chain=7,
+            )
+        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 7'))
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data,
+                chains=7,
+                parallel_chains=1,
+                threads_per_chain=5,
+            )
+        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 5'))
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data,
+                chains=1,
+                parallel_chains=7,
+                threads_per_chain=5,
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Requesting 7 parallel_chains for 1 chains, '
+                'running all chains in parallel.',
+            )
+        )
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data, chains=7, threads_per_chain=5
+            )
+            cores = cpu_count()
+            expect = 'total threads: {}'.format(cores * 5)
+        log.check_present(('cmdstanpy', 'DEBUG', expect))
+        with self.assertRaisesRegex(
+            ValueError, 'parallel_chains must be a positive integer'
+        ):
+            logistic_model.sample(
+                data=logistic_data, chains=4, parallel_chains=-4
+            )
+        with self.assertRaisesRegex(
+            ValueError, 'threads_per_chain must be a positive integer'
+        ):
+            logistic_model.sample(
+                data=logistic_data, chains=4, threads_per_chain=-4
+            )
+
     def test_fixed_param_good(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
         datagen_model = CmdStanModel(stan_file=stan)
