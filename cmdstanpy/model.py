@@ -769,7 +769,7 @@ class CmdStanModel:
         or to a temporary directory which is deleted upon session exit.
 
         Output files are either written to a temporary directory or to the
-        specified output directory.  Ouput filenames correspond to the template
+        specified output directory.  Output filenames correspond to the template
         '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
         either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. 'bernoulli-201912081451-1.csv'.
