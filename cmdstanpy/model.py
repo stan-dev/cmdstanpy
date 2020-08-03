@@ -582,7 +582,6 @@ class CmdStanModel:
                     chains
                 )
             )
-
         if chain_ids is None:
             chain_ids = [x + 1 for x in range(chains)]
         else:
@@ -629,6 +628,9 @@ class CmdStanModel:
                 'Argument threads_per_chain must be a positive integer value, '
                 'found {}.'.format(threads_per_chain)
             )
+        self._logger.debug(
+            'total threads: %u', parallel_chains * threads_per_chain
+        )
         os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
 
         refresh = None

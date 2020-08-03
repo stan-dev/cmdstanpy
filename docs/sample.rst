@@ -112,8 +112,8 @@ Specifying ``chains=6, parallel_chains=6`` will run all 6 chains in parallel.
     bern_fit.summary()
 
 
-Example: high-level parallelization with `reduce_sum`
------------------------------------------------------
+.. Example: high-level parallelization with `reduce_sum`
+.. -----------------------------------------------------
 
     
 
