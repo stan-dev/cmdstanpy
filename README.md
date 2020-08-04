@@ -13,14 +13,13 @@ to compile and run a Stan program.
 
 - Clean interface to Stan services so that CmdStanPy can keep up with Stan releases.
 
-- Provides complete control - all sampler arguments have corresponding named argument
-for CmdStanPy sampler function.
+- Provide access to all CmdStan inference methods.
 
 - Easy to install,
   + minimal Python library dependencies: numpy, pandas
   + Python code doesn't interface directly with c++, only calls compiled executables
 
-- Modular - CmdStanPy produces a sample from the posterior, downstream modules do the analysis.
+- Modular - CmdStanPy produces a MCMC sample (or point estimate) from the posterior; other packages do analysis and visualization.
 
 ### Docs
 
@@ -39,16 +38,17 @@ The CmdStanPy, CmdStan, and the core Stan C++ code are licensed under new BSD.
 ::
 
     import os
-    from cmdstanpy import CmdStanModel, cmdstan_path
+    from cmdstanpy import cmdstan_path, CmdStanModel
 
-    # specify Stan file, create, compile CmdStanModel object
-    bernoulli_path = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
-    bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
+    # specify locations of Stan program file and data
+    bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
+    bernoulli_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
 
+    # instantiate a model; compiles the Stan program by default
+    bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
 
-    # specify data, fit the model
-    bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
-    bernoulli_fit = bernoulli_model.sample(chains=5, cores=3, data=bernoulli_data)
+    # obtain a posterior sample from the model conditioned on the data
+    bernoulli_fit = bernoulli_model.sample(chains=4, data=bernoulli_data)
 
     # summarize the results (wraps CmdStan `bin/stansummary`):
     bernoulli_fit.summary()
