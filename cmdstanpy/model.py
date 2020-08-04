@@ -76,7 +76,7 @@ class CmdStanModel:
         if model_name is not None:
             if not model_name.strip():
                 raise ValueError(
-                    'Bad value for argument model name, found "{}"'.format(
+                    'Invalid value for argument model name, found "{}"'.format(
                         model_name
                     )
                 )
