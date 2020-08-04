@@ -276,7 +276,7 @@ class CmdStanMCMC:
         self._sample = None
         self._warmup = None
         self._drawset = None
-        self._stan_var_dims = {}
+        self._stan_variable_dims = {}
         self._validate_csv_files()
 
     def __repr__(self) -> str:
@@ -299,7 +299,7 @@ class CmdStanMCMC:
 
     @property
     def num_draws(self) -> int:
-        """Number of draws per chain."""
+        """Number of post-warmup draws per chain."""
         return self._draws_sampling
 
     @property
@@ -310,20 +310,19 @@ class CmdStanMCMC:
     @property
     def column_names(self) -> Tuple[str, ...]:
         """
-        Names of information items returned by sampler for each draw.
-        Includes for sampler state labels and
-        names of model parameters and computed quantities.
+        Names of all per-draw outputs: all
+        sampler and model parameters and quantities of interest
         """
         return self._column_names
 
     @property
-    def stan_var_dims(self) -> Dict:
+    def stan_variable_dims(self) -> Dict:
         """
         Dict mapping Stan program variable names to variable dimensions.
         Scalar types have int value '1'.  Structured types have list of dims,
         e.g.,  program variable ``vector[10] foo`` has entry ``('foo', [10])``.
         """
-        return copy.deepcopy(self._stan_var_dims)
+        return copy.deepcopy(self._stan_variable_dims)
 
     @property
     def metric_type(self) -> str:
@@ -428,7 +427,7 @@ class CmdStanMCMC:
         if not self._is_fixed_param:
             self._num_params = dzero['num_params']
             self._metric_type = dzero.get('metric')
-        self._stan_var_dims = parse_var_dims(dzero['column_names'])
+        self._stan_variable_dims = parse_var_dims(dzero['column_names'])
 
     def _assemble_sample(self) -> None:
         """
@@ -581,7 +580,11 @@ class CmdStanMCMC:
     def stan_variable(self, name: str) -> np.ndarray:
         """
         Return a new ndarray which contains the set of draws
-        for the named Stan program variable.
+        for the named Stan program variable.  Flattens the chains.
+        Underlyingly draws are in chain order, i.e., for a sample
+        consisting of N chains of M draws each, the first M array
+        elements are from chain 1, the next M are from chain 2,
+        and the last M elements are from chain N.
 
         * If the variable is a scalar variable, this returns a 1-d array,
           length(draws X chains).
@@ -594,11 +597,11 @@ class CmdStanMCMC:
 
         :param name: variable name
         """
-        if name not in self._stan_var_dims:
+        if name not in self._stan_variable_dims:
             raise ValueError('unknown name: {}'.format(name))
         self._assemble_sample()
         dim0 = self.num_draws * self.runset.chains
-        dims = self._stan_var_dims[name]
+        dims = self._stan_variable_dims[name]
         if dims == 1:
             idx = self.column_names.index(name)
             return self.sample[:, :, idx].reshape((dim0,), order='A')
@@ -610,9 +613,9 @@ class CmdStanMCMC:
             ]
             var_dims = [dim0]
             var_dims.extend(dims)
-            return self.sample[
-                :, :, idxs[0] : idxs[len(idxs) - 1] + 1
-            ].reshape(tuple(var_dims), order='A')
+            return self.sample[:, :, idxs[0] : idxs[-1] + 1].reshape(
+                tuple(var_dims), order='A'
+            )
 
     def stan_variables(self) -> Dict:
         """
@@ -620,7 +623,7 @@ class CmdStanMCMC:
         Creates copies of the data in the draws matrix.
         """
         result = {}
-        for name in self.stan_var_dims:
+        for name in self.stan_variable_dims:
             result[name] = self.stan_variable(name)
         return result
 
@@ -638,8 +641,10 @@ class CmdStanMCMC:
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
-        Moves csvfiles to specified directory using specified basename,
-        appending suffix '-<id>.csv' to each.
+        Move output csvfiles to specified directory.  If files were
+        written to the temporary session directory, clean filename.
+        E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
+        'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
         """
@@ -704,8 +709,10 @@ class CmdStanMLE:
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
-        Moves csvfiles to specified directory using specified basename,
-        appending suffix '-<id>.csv' to each.
+        Move output csvfiles to specified directory.  If files were
+        written to the temporary session directory, clean filename.
+        E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
+        'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
         """
@@ -823,8 +830,10 @@ class CmdStanGQ:
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
-        Moves csvfiles to specified directory using specified basename,
-        appending suffix '-<id>.csv' to each.
+        Move output csvfiles to specified directory.  If files were
+        written to the temporary session directory, clean filename.
+        E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
+        'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
         """
@@ -906,8 +915,10 @@ class CmdStanVB:
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
-        Moves csvfiles to specified directory using specified basename,
-        appending suffix '-<id>.csv' to each.
+        Move output csvfiles to specified directory.  If files were
+        written to the temporary session directory, clean filename.
+        E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
+        'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
         """

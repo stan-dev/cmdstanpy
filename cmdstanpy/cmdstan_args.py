@@ -9,10 +9,7 @@ from numbers import Integral, Real
 from typing import List, Union
 from numpy.random import RandomState
 
-from cmdstanpy.utils import (
-    read_metric,
-    get_logger,
-)
+from cmdstanpy.utils import read_metric, get_logger
 
 
 class Method(Enum):

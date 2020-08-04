@@ -270,7 +270,7 @@ class ReadStanCsvTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata,
             chains=1,
-            cores=1,
+            parallel_chains=1,
             seed=12345,
             iter_sampling=490,
             iter_warmup=490,
