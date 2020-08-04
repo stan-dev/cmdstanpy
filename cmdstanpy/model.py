@@ -167,9 +167,9 @@ class CmdStanModel:
     @property
     def name(self) -> str:
         """
-        Stan program name.
-        Set by the constructor to value of argument `model_name`; if not specified
-        will be basename of Stan program file, if specified, else exe file.
+        Model name used in output filename templates. Default is basename
+        of Stan program or exe file, unless specified in call to constructor
+        via argument `model_name`.
         """
         return self._name
 
