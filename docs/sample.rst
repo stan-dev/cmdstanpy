@@ -70,11 +70,15 @@ and data file
 The :ref:`class_cmdstanmodel` class method  ``sample`` returns a ``CmdStanMCMC`` object
 which provides properties to retrieve information about the sample, as well as methods
 to run CmdStan's summary and diagnostics tools.
-Useful methods for information about the sample and the fit are:
-  
+
+Methods for information about the fit of the model to the data:
+
 - ``summary()`` - Run CmdStan's `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__ utility on the sample.
 - ``diagnose()`` - Run CmdStan's `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__ utility on the sample.
 - ``sampler_diagnostics()`` - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.
+
+Methods for managing the sample:
+
 - ``save_csvfiles(dir_name)`` - Move output csvfiles to specified directory.
 - ``chains`` - Number of chains
 - ``num_draws`` - Number of post-warmup draws (i.e., sampling iterations)
@@ -84,7 +88,7 @@ Useful methods for information about the sample and the fit are:
 - ``sample`` - A 3-D numpy.ndarray which contains all post-warmup draws across all chains arranged as (draws, chains, columns).
 - ``warmup`` - A 3-D numpy.ndarray which contains all warmup draws across all chains arranged as (draws, chains, columns).
   
-Useful methods for downstream analysis are:
+Methods for downstream analysis are:
   
 - ``stan_variable(var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
 - ``stan_variables()`` - Return dictionary of all Stan program variables.
@@ -101,21 +105,54 @@ Specifying ``chains=6, parallel_chains=6`` will run all 6 chains in parallel.
     import os
     from cmdstanpy import cmdstan_path, CmdStanModel
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
+    bernoulli_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
 
     # instantiate, compile bernoulli model
     bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
 
-    # run CmdStan's sample method, returns object `CmdStanMCMC`
-    bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
+    # run the NUTS-HMC sampler
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
     bern_fit.sample.shape
     bern_fit.summary()
 
 
-.. Example: high-level parallelization with `reduce_sum`
-.. -----------------------------------------------------
+Example: high-level parallelization with **reduce_sum**
+--------------------------------------------------------
 
-    
+Stan provides `high-level parallelization <https://mc-stan.org/docs/stan-users-guide/parallelization-chapter.html>`_
+via multi-threading by use of the **reduce_sum** and **map_rect** functions in a Stan program.
+To use this feature, a Stan program must be compiled with the C++ compiler flag **STAN_THREADS**
+as described in the :ref:`model-compilation` section.
+
+.. code-block:: python
+
+    proc_parallel_model = CmdStanModel(
+        stan_file='proc_parallel.stan',
+        cpp_options={"STAN_THREADS": True}),
+    )
+
+When running the sampler with this model, you must explicitly specify the number
+of threads to use via ``sample`` method argument **threads_per_chain**.
+For example, to run 4 chains multi-threaded using 4 threads per chain:
+
+.. code-block:: python
+
+    proc_parallel_fit = proc_parallel_model.sample(data=proc_data,
+        chains=4, threads_per_chain=4)
+
+By default, the number of parallel chains will be equal to the number of
+available cores on your machine, which may adversely affect overall
+performance.  For example, on a machine with Intel's dual processor hardware,
+i.e, 4 virtual cores, the above configuration will use 16 threads.
+To limit this, specify the **parallel_chains** option so that
+the maximum number of threads used will be **parallel_chains** X **threads_per_chain**
+
+.. code-block:: python
+
+    proc_parallel_fit = proc_parallel_model.sample(data=proc_data,
+        chains=4, parallel_chains=1, threads_per_chain=4)
+
+
 
 Example: generate data - `fixed_param=True`
 -------------------------------------------

@@ -14,7 +14,7 @@ CmdStanModel
 .. autoclass:: cmdstanpy.CmdStanModel
    :members:
 
-.. _class_cmdstanstanmcmc:
+.. _class_cmdstanmcmc:
 
 CmdStanMCMC
 ===========
@@ -22,7 +22,7 @@ CmdStanMCMC
 .. autoclass:: cmdstanpy.CmdStanMCMC
    :members:
 
-.. _class_cmdstanstanmle:
+.. _class_cmdstanmle:
 
 CmdStanMLE
 ==========
@@ -30,7 +30,7 @@ CmdStanMLE
 .. autoclass:: cmdstanpy.CmdStanMLE
    :members:
 
-.. _class_cmdstanstanqq:
+.. _class_cmdstanqq:
 
 CmdStanGQ
 =========
@@ -38,7 +38,7 @@ CmdStanGQ
 .. autoclass:: cmdstanpy.CmdStanGQ
    :members:
 
-.. _class_cmdstanstanvb:
+.. _class_cmdstanvb:
 
 CmdStanVB
 =========

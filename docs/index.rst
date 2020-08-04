@@ -18,6 +18,7 @@
    :caption: Contents:
 
    getting_started
+   stan_models
    sample
    generate_quantities
    optimize
