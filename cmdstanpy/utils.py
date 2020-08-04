@@ -214,30 +214,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
     toolchain_root = ''
     if 'CMDSTAN_TOOLCHAIN' in os.environ:
         toolchain_root = os.environ['CMDSTAN_TOOLCHAIN']
-        if os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
-            compiler_path = os.path.join(
-                toolchain_root,
-                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
-                'bin',
-            )
-            if os.path.exists(compiler_path):
-                tool_path = os.path.join(toolchain_root, 'bin')
-                if not os.path.exists(tool_path):
-                    tool_path = ''
-                    compiler_path = ''
-                    logger.warning(
-                        'Found invalid installion for RTools35 on %s',
-                        toolchain_root,
-                    )
-                    toolchain_root = ''
-            else:
-                compiler_path = ''
-                logger.warning(
-                    'Found invalid installion for RTools35 on %s',
-                    toolchain_root,
-                )
-                toolchain_root = ''
-        elif os.path.exists(os.path.join(toolchain_root, 'mingw64')):
+        if os.path.exists(os.path.join(toolchain_root, 'mingw64')):
             compiler_path = os.path.join(
                 toolchain_root,
                 'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
@@ -260,21 +237,8 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     toolchain_root,
                 )
                 toolchain_root = ''
-    else:
-        rtools_dir = os.path.expanduser(
-            os.path.join('~', '.cmdstanpy', 'RTools')
-        )
-        if not os.path.exists(rtools_dir):
-            raise ValueError(
-                'no RTools installation found, '
-                'run command line script "install_cxx_toolchain"'
-            )
-        compiler_path = ''
-        tool_path = ''
-        if version not in ('4', '40', '4.0') and os.path.exists(
-            os.path.join(rtools_dir, 'RTools35')
-        ):
-            toolchain_root = os.path.join(rtools_dir, 'RTools35')
+
+        elif os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
             compiler_path = os.path.join(
                 toolchain_root,
                 'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
@@ -297,9 +261,32 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     toolchain_root,
                 )
                 toolchain_root = ''
-        if (
-            not toolchain_root or version in ('4', '40', '4.0')
-        ) and os.path.exists(os.path.join(rtools_dir, 'RTools40')):
+    else:
+        rtools_dir = os.path.expanduser(
+            os.path.join('~', '.cmdstanpy', 'RTools40')
+        )
+        if not os.path.exists(rtools_dir):
+            rtools_dir = os.path.expanduser(
+                os.path.join('~', '.cmdstanpy', 'RTools35')
+            )
+            if not os.path.exists(rtools_dir):
+                rtools_dir = os.path.expanduser(
+                    os.path.join('~', '.cmdstanpy', 'RTools')
+                )
+                if not os.path.exists(rtools_dir):
+                    raise ValueError(
+                        'no RTools installation found, '
+                        'run command line script "install_cxx_toolchain"'
+                    )
+            else:
+                rtools_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        else:
+            rtools_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        compiler_path = ''
+        tool_path = ''
+        if version not in ('35', '3.5', '3') and os.path.exists(
+            os.path.join(rtools_dir, 'RTools40')
+        ):
             toolchain_root = os.path.join(rtools_dir, 'RTools40')
             compiler_path = os.path.join(
                 toolchain_root,
@@ -312,14 +299,40 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                     tool_path = ''
                     compiler_path = ''
                     logger.warning(
-                        'Found invalid installion for RTools40 on %s',
+                        'Found invalid installation for RTools40 on %s',
                         toolchain_root,
                     )
                     toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
-                    'Found invalid installion for RTools40 on %s',
+                    'Found invalid installation for RTools40 on %s',
+                    toolchain_root,
+                )
+                toolchain_root = ''
+        if (
+            not toolchain_root or version in ('4', '40', '4.0')
+        ) and os.path.exists(os.path.join(rtools_dir, 'RTools35')):
+            toolchain_root = os.path.join(rtools_dir, 'RTools35')
+            compiler_path = os.path.join(
+                toolchain_root,
+                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'bin',
+            )
+            if os.path.exists(compiler_path):
+                tool_path = os.path.join(toolchain_root, 'bin')
+                if not os.path.exists(tool_path):
+                    tool_path = ''
+                    compiler_path = ''
+                    logger.warning(
+                        'Found invalid installation for RTools35 on %s',
+                        toolchain_root,
+                    )
+                    toolchain_root = ''
+            else:
+                compiler_path = ''
+                logger.warning(
+                    'Found invalid installation for RTools35 on %s',
                     toolchain_root,
                 )
                 toolchain_root = ''
@@ -328,7 +341,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
             'no C++ toolchain installation found, '
             'run command line script "install_cxx_toolchain"'
         )
-    logger.info('Adds C++ toolchain to $PATH: %s', toolchain_root)
+    logger.info('Add C++ toolchain to $PATH: %s', toolchain_root)
     os.environ['PATH'] = ';'.join(
         list(
             OrderedDict.fromkeys(

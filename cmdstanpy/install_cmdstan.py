@@ -4,6 +4,7 @@ Download and install a CmdStan release from GitHub.
 Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstanpy
+   -c --compiler : add C++ compiler to path (Windows only)
 """
 import argparse
 import contextlib
@@ -186,6 +187,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')
+    if platform.system() == 'Windows':
+        # use compiler installed with install_cxx_toolchain
+        # Install a new compiler if compiler not found
+        # Search order is RTools40, RTools35
+        parser.add_argument(
+            '--compiler', '-c', dest='compiler', action='store_true'
+        )
     args = parser.parse_args(sys.argv[1:])
 
     version = vars(args)['version']
@@ -198,6 +206,30 @@ def main():
         install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
+
+    if platform.system() == 'Windows' and vars(args)['compiler']:
+        from .install_cxx_toolchain import (
+            main as _main_cxx,
+            is_installed as _is_installed_cxx,
+        )
+        from .utils import cxx_toolchain_path
+
+        cxx_loc = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        compiler_found = False
+        for cxx_version in ['40', '35']:
+            if _is_installed_cxx(cxx_loc, cxx_version):
+                compiler_found = True
+                break
+        if not compiler_found:
+            print('Installing RTools40')
+            # copy argv and clear sys.argv
+            original_argv = sys.argv[:]
+            sys.argv = sys.argv[:1]
+            _main_cxx()
+            sys.argv = original_argv
+            cxx_version = '40'
+        # Add toolchain to $PATH
+        cxx_toolchain_path(cxx_version)
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
