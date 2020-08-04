@@ -74,7 +74,7 @@ class CmdStanModel:
         self._logger = logger or get_logger()
 
         if model_name is not None:
-            if len(model_name.strip()) == 0:
+            if not model_name.strip():
                 raise ValueError(
                     'Bad value for argument model name, found "{}"'.format(
                         model_name
