@@ -458,12 +458,11 @@ class CmdStanModel:
         :param parallel_chains: Number of processes to run in parallel. Must be
             a positive integer.  Defaults to ``multiprocessing.cpu_count()``.
 
-        :param threads_per_chain: If the model was compiled with threading support,
-            the number of threads to use in parallelized sections within an
-            MCMC chain (e.g., when using the Stan functions ``reduce_sum()``
-            or ``map_rect()``).  The total number of threads used will be
-            ``parallel_chains * threads_per_chain``.  If a model wasn't
-            compiled with threading support, has no effect.
+        :param threads_per_chain: the number of threads to use in parallelized
+            sections within an MCMC chain (e.g., when using the Stan functions
+            ``reduce_sum()``  or ``map_rect()``).  This will only have an effect
+            if the model was compiled with threading support. The total number
+            of threads used will be ``parallel_chains * threads_per_chain``.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
