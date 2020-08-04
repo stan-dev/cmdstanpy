@@ -444,22 +444,35 @@ class CmdStanMCMCTest(unittest.TestCase):
             drawset.shape,
             (fit.runset.chains * fit.num_draws, len(fit.column_names)),
         )
-        _ = fit.summary()
-        self.assertTrue(True)
 
-        # TODO - use cmdstan test files instead
-        expected = '\n'.join(
-            [
-                'Checking sampler transitions treedepth.',
-                'Treedepth satisfactory for all transitions.',
-                '\nChecking sampler transitions for divergences.',
-                'No divergent transitions found.',
-                '\nChecking E-BFMI - sampler transitions HMC potential energy.',
-                'E-BFMI satisfactory for all transitions.',
-                '\nEffective sample size satisfactory.',
-            ]
+        summary = fit.summary()
+        self.assertIn('5%', list(summary.columns))
+        self.assertIn('50%', list(summary.columns))
+        self.assertIn('95%', list(summary.columns))
+        self.assertNotIn('1%', list(summary.columns))
+        self.assertNotIn('99%', list(summary.columns))
+
+        summary = fit.summary(percentiles=[1, 45, 99])
+        self.assertIn('1%', list(summary.columns))
+        self.assertIn('45%', list(summary.columns))
+        self.assertIn('99%', list(summary.columns))
+        self.assertNotIn('5%', list(summary.columns))
+        self.assertNotIn('50%', list(summary.columns))
+        self.assertNotIn('95%', list(summary.columns))
+
+        with self.assertRaises(ValueError):
+            fit.summary(percentiles=[])
+
+        with self.assertRaises(ValueError):
+            fit.summary(percentiles=[-1])
+
+        diagnostics = fit.diagnose()
+        self.assertIn(
+            'Treedepth satisfactory for all transitions.', diagnostics
         )
-        self.assertIn(expected, fit.diagnose().replace('\r\n', '\n'))
+        self.assertIn('No divergent transitions found.', diagnostics)
+        self.assertIn('E-BFMI satisfactory for all transitions.', diagnostics)
+        self.assertIn('Effective sample size satisfactory.', diagnostics)
 
     def test_validate_big_run(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
