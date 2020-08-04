@@ -55,7 +55,9 @@ CmdStanPy requires a local install of CmdStan.
 Prerequisites
 ^^^^^^^^^^^^^
 
-CmdStanPy requires an installed C++ toolchain.
+CmdStanPy requires an installed C++ toolchain
+consisting of a modern C++ compiler and the GNU-Make utility.
+
 
 Function ``install_cmdstan``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -123,8 +125,8 @@ get and set this environment variable:
     newpath = cmdstan_path()
 
 
-Specifying a custom ``make`` tool
-"""""""""""""""""""""""""""""""""
+Specifying a custom Make tool
+"""""""""""""""""""""""""""""
 
 To use custom ``make``-tool use ``set_make_env`` function.
 
@@ -133,6 +135,12 @@ To use custom ``make``-tool use ``set_make_env`` function.
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
 
+
+Installion via the command line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you with to install CmdStan yourself, follow the instructions
+in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`__.
 
 
     

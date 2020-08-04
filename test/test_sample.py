@@ -49,7 +49,11 @@ class SampleTest(unittest.TestCase):
 
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_fit = bern_model.sample(
-            data=jdata, chains=2, cores=2, seed=12345, iter_sampling=100
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
         )
         self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
         self.assertIn('method=sample', bern_fit.__repr__())
@@ -75,7 +79,7 @@ class SampleTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata,
             chains=2,
-            cores=2,
+            parallel_chains=2,
             seed=12345,
             iter_sampling=100,
             output_dir=DATAFILES_PATH,
@@ -95,14 +99,22 @@ class SampleTest(unittest.TestCase):
                 os.remove(bern_fit.runset.stderr_files[i])
         rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
-            data=rdata, chains=2, cores=2, seed=12345, iter_sampling=100
+            data=rdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
         )
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
         bern_fit = bern_model.sample(
-            data=data_dict, chains=2, cores=2, seed=12345, iter_sampling=100
+            data=data_dict,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
         )
         bern_sample = bern_fit.sample
         self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
@@ -115,7 +127,7 @@ class SampleTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata,
             chains=2,
-            cores=2,
+            parallel_chains=2,
             seed=12345,
             iter_sampling=100,
             inits=1.1,
@@ -125,7 +137,7 @@ class SampleTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata,
             chains=2,
-            cores=2,
+            parallel_chains=2,
             seed=12345,
             iter_sampling=100,
             inits=1,
@@ -136,7 +148,7 @@ class SampleTest(unittest.TestCase):
             bern_model.sample(
                 data=jdata,
                 chains=2,
-                cores=2,
+                parallel_chains=2,
                 seed=12345,
                 iter_sampling=100,
                 inits=(1, 2),
@@ -146,7 +158,7 @@ class SampleTest(unittest.TestCase):
             bern_model.sample(
                 data=jdata,
                 chains=2,
-                cores=2,
+                parallel_chains=2,
                 seed=12345,
                 iter_sampling=100,
                 inits=-1,
@@ -157,13 +169,15 @@ class SampleTest(unittest.TestCase):
         bern_model = CmdStanModel(stan_file=stan)
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
-            bern_model.sample(chains=2, cores=2, seed=12345, iter_sampling=100)
+            bern_model.sample(
+                chains=2, parallel_chains=2, seed=12345, iter_sampling=100
+            )
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
             bern_model.sample(
                 data={'foo': 1},
                 chains=2,
-                cores=2,
+                parallel_chains=2,
                 seed=12345,
                 iter_sampling=100,
             )
@@ -186,14 +200,18 @@ class SampleTest(unittest.TestCase):
 
         with LogCapture() as log:
             logging.getLogger()
-            logistic_model.sample(data=logistic_data, chains=4, cores=1)
+            logistic_model.sample(
+                data=logistic_data, chains=4, parallel_chains=1
+            )
         log.check_present(
             ('cmdstanpy', 'INFO', 'finish chain 1'),
             ('cmdstanpy', 'INFO', 'start chain 2'),
         )
         with LogCapture() as log:
             logging.getLogger()
-            logistic_model.sample(data=logistic_data, chains=4, cores=2)
+            logistic_model.sample(
+                data=logistic_data, chains=4, parallel_chains=2
+            )
         if cpu_count() >= 4:
             # finish chains 1, 2 before starting chains 3, 4
             log.check_present(
@@ -203,11 +221,68 @@ class SampleTest(unittest.TestCase):
         if cpu_count() >= 4:
             with LogCapture() as log:
                 logging.getLogger()
-                logistic_model.sample(data=logistic_data, chains=4, cores=4)
+                logistic_model.sample(
+                    data=logistic_data, chains=4, parallel_chains=4
+                )
                 log.check_present(
                     ('cmdstanpy', 'INFO', 'start chain 4'),
                     ('cmdstanpy', 'INFO', 'finish chain 1'),
                 )
+
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data,
+                chains=1,
+                parallel_chains=1,
+                threads_per_chain=7,
+            )
+        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 7'))
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data,
+                chains=7,
+                parallel_chains=1,
+                threads_per_chain=5,
+            )
+        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 5'))
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data,
+                chains=1,
+                parallel_chains=7,
+                threads_per_chain=5,
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Requesting 7 parallel_chains for 1 chains, '
+                'running all chains in parallel.',
+            )
+        )
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data, chains=7, threads_per_chain=5
+            )
+            cores = cpu_count()
+            expect = 'total threads: {}'.format(cores * 5)
+        log.check_present(('cmdstanpy', 'DEBUG', expect))
+        with self.assertRaisesRegex(
+            ValueError, 'parallel_chains must be a positive integer'
+        ):
+            logistic_model.sample(
+                data=logistic_data, chains=4, parallel_chains=-4
+            )
+        with self.assertRaisesRegex(
+            ValueError, 'threads_per_chain must be a positive integer'
+        ):
+            logistic_model.sample(
+                data=logistic_data, chains=4, threads_per_chain=-4
+            )
 
     def test_fixed_param_good(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
@@ -434,7 +509,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_model.sample(
             data=jdata,
             chains=2,
-            cores=2,
+            parallel_chains=2,
             seed=12345,
             iter_sampling=200,
             metric=jmetric,
@@ -467,7 +542,11 @@ class CmdStanMCMCTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
         bern_fit = bern_model.sample(
-            data=jdata, chains=2, cores=2, seed=12345, iter_sampling=200
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
@@ -499,7 +578,11 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         # regenerate to tmpdir, save to good dir
         bern_fit = bern_model.sample(
-            data=jdata, chains=2, cores=2, seed=12345, iter_sampling=200
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
         )
         bern_fit.save_csvfiles()  # default dir
         for i in range(bern_fit.runset.chains):
@@ -688,9 +771,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
         )
-        self.assertEqual(1, len(bern_fit._stan_var_dims))
-        self.assertTrue('theta' in bern_fit._stan_var_dims)
-        self.assertEqual(bern_fit._stan_var_dims['theta'], 1)
+        self.assertEqual(1, len(bern_fit._stan_variable_dims))
+        self.assertTrue('theta' in bern_fit._stan_variable_dims)
+        self.assertEqual(bern_fit._stan_variable_dims['theta'], 1)
         theta = bern_fit.stan_variable(name='theta')
         self.assertEqual(theta.shape, (200,))
         with self.assertRaises(ValueError):
@@ -718,9 +801,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         runset._set_retcode(0, 0)
         fit = CmdStanMCMC(runset)
         self.assertEqual(20, fit.num_draws)
-        self.assertEqual(8, len(fit._stan_var_dims))
-        self.assertTrue('z' in fit._stan_var_dims)
-        self.assertEqual(fit._stan_var_dims['z'], (20, 2))
+        self.assertEqual(8, len(fit._stan_variable_dims))
+        self.assertTrue('z' in fit._stan_variable_dims)
+        self.assertEqual(fit._stan_variable_dims['z'], (20, 2))
         z = fit.stan_variable(name='z')
         self.assertEqual(z.shape, (20, 20, 2))
         theta = fit.stan_variable(name='theta')
@@ -745,11 +828,11 @@ class CmdStanMCMCTest(unittest.TestCase):
         runset._set_retcode(0, 0)
         fit = CmdStanMCMC(runset)
         self.assertEqual(20, fit.num_draws)
-        self.assertEqual(8, len(fit._stan_var_dims))
-        self.assertTrue('z' in fit._stan_var_dims)
-        self.assertEqual(fit._stan_var_dims['z'], (20, 2))
+        self.assertEqual(8, len(fit._stan_variable_dims))
+        self.assertTrue('z' in fit._stan_variable_dims)
+        self.assertEqual(fit._stan_variable_dims['z'], (20, 2))
         vars = fit.stan_variables()
-        self.assertEqual(len(vars), len(fit._stan_var_dims))
+        self.assertEqual(len(vars), len(fit._stan_variable_dims))
         self.assertTrue('z' in vars)
         self.assertEqual(vars['z'].shape, (20, 20, 2))
         self.assertTrue('theta' in vars)

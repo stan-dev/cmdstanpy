@@ -209,7 +209,7 @@ class CmdStanModel:
 
         By default, this function compares the timestamps on the source and
         executable files; if the executable is newer than the source file, it
-        will not recompile the file, unless argument ``force`` is True.
+        will not recompile the file, unless argument ``force`` is ``True``.
 
         :param force: When ``True``, always compile, even if the executable file
             is newer than the source file.  Used for Stan models which have
@@ -321,12 +321,13 @@ class CmdStanModel:
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
 
-        Output filenames are composed of the model name, a timestamp
-        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
-        the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
-        written to the temporary directory contain an additional 8-character
-        random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
+        Output files are either written to a temporary directory or to the
+        specified output directory.  Ouput filenames correspond to the template
+        '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
+        either '.csv' for the CmdStan output or '.txt' for
+        the console messages, e.g. 'bernoulli-201912081451-1.csv'.
+        Output files written to the temporary directory contain an additional
+        8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
 
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
@@ -334,8 +335,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            ``numpy.random.RandomState()``
-            is used to generate a seed which will be used for all chains.
+            ``numpy.random.RandomState()`` is used to generate a seed.
 
         :param inits:  Specifies how the sampler initializes parameter values.
             Initialization is either uniform random on a range centered on 0,
@@ -351,15 +351,16 @@ class CmdStanModel:
             * dictionary - pairs parameter name : initial value.
             * string - pathname to a JSON or Rdump data file.
 
-        :param output_dir:  Name of the directory in which the CmdStan output
-            files are saved.  If unspecified, files will be written to a
-            temporary directory which is deleted upon session exit.
+        :param output_dir: Name of the directory to which CmdStan output
+            files are written. If unspecified, output files will be written
+            to a temporary directory which is deleted upon session exit.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to `<basename>-diagnostic-0.csv.`,
-            where `<basename>` is set with `csv_basename`.
+            csv output files are written to an output file with filename
+            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
+            e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
-        :param algorithm: Algorithm to use. One of: "BFGS", "LBFGS", "Newton"
+        :param algorithm: Algorithm to use. One of: 'BFGS', 'LBFGS', 'Newton'
 
         :param init_alpha: Line search step size for first iteration
 
@@ -402,7 +403,8 @@ class CmdStanModel:
         self,
         data: Union[Dict, str] = None,
         chains: Union[int, None] = None,
-        cores: Union[int, None] = None,
+        parallel_chains: Union[int, None] = None,
+        threads_per_chain: Union[int, None] = None,
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
         inits: Union[Dict, float, str, List[str]] = None,
@@ -439,24 +441,29 @@ class CmdStanModel:
         specified output directory or to a temporary directory which is deleted
         upon session exit.
 
-        The output filenames are composed of the model name, a timestamp
-        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
-        the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
-        written to the temporary directory contain an additional 8-character
-        random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
-
+        Output files are either written to a temporary directory or to the
+        specified output directory.  Ouput filenames correspond to the template
+        '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
+        either '.csv' for the CmdStan output or '.txt' for
+        the console messages, e.g. 'bernoulli-201912081451-1.csv'.
+        Output files written to the temporary directory contain an additional
+        8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
 
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
-        :param chains: Number of sampler chains, should be > 1.
+        :param chains: Number of sampler chains, must be a positive integer.
 
-        :param cores: Number of processes to run in parallel. Must be an
-            integer between 1 and the number of CPUs in the system.
-            If none then set automatically to chains but no more
-            than total_cpu_count - 2
+        :param parallel_chains: Number of processes to run in parallel. Must be
+            a positive integer.  Defaults to ``multiprocessing.cpu_count()``.
+
+        :threads_per_chain: If the model was compiled with threading support,
+            the number of threads to use in parallelized sections within an
+            MCMC chain (e.g., when using the Stan functions ``reduce_sum()``
+            or ``map_rect()``).  The total number of threads used will be
+            ``parallel_chains * threads_per_chain``.  If a model wasn't
+            compiled with threading support, has no effect.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
@@ -489,7 +496,7 @@ class CmdStanModel:
         :param iter_sampling: Number of draws from the posterior for each
             chain.
 
-        :param save_warmup: When True, sampler saves warmup draws as part of
+        :param save_warmup: When ``True``, sampler saves warmup draws as part of
             the Stan csv output file.
 
         :param thin: Period between saved samples.
@@ -499,13 +506,13 @@ class CmdStanModel:
 
         :param metric: Specification of the mass matrix, either as a
             vector consisting of the diagonal elements of the covariance
-            matrix (``diag`` or ``diag_e``) or the full covariance matrix
-            (``dense`` or ``dense_e``).
+            matrix ('diag' or 'diag_e') or the full covariance matrix
+            ('dense' or 'dense_e').
 
             If the value of the metric argument is a string other than
-            ``diag``, ``diag_e``, ``dense``, or ``dense_e``, it must be
+            'diag', 'diag_e', 'dense', or 'dense_e', it must be
             a valid filepath to a JSON or Rdump file which contains an entry
-            ``inv_metric`` whose value is either the diagonal vector or
+            'inv_metric' whose value is either the diagonal vector or
             the full covariance matrix.
 
             If the value of the metric argument is a list of paths, its
@@ -514,7 +521,7 @@ class CmdStanModel:
 
         :param step_size: Initial stepsize for HMC sampler.  The value is either
             a single number or a list of numbers which will be used as the
-            global or per-chain initial step_size, respectively.
+            global or per-chain initial step size, respectively.
             The length of the list of step sizes must match the number of
             chains.
 
@@ -522,8 +529,8 @@ class CmdStanModel:
 
         :param adapt_delta: Adaptation target Metropolis acceptance rate.
             The default value is 0.8.  Increasing this value, which must be
-            strictly less than 1, causes adaptation to use smaller step sizes.
-            It improves the effective sample size, but may increase the time
+            strictly less than 1, causes adaptation to use smaller step sizes
+            which improves the effective sample size, but may increase the time
             per iteration.
 
         :param adapt_init_phase: Iterations for initial phase of adaptation
@@ -539,7 +546,7 @@ class CmdStanModel:
             the step size given the tuned metric during the final phase of
             adaptation.
 
-        :param fixed_param: When True, call CmdStan with argument
+        :param fixed_param: When ``True``, call CmdStan with argument
             ``algorithm=fixed_param`` which runs the sampler without
             updating the Markov Chain, thus the values of all parameters and
             transformed parameters are constant across all draws and
@@ -547,16 +554,16 @@ class CmdStanModel:
             produced by RNG functions may change.  This provides
             a way to use Stan programs to generate simulated data via the
             generated quantities block.  This option must be used when the
-            parameters block is empty.  Default value is False.
+            parameters block is empty.  Default value is ``False``.
 
-        :param output_dir: Name of the directory to with the  CmdStan output
+        :param output_dir: Name of the directory to which CmdStan output
             files are written. If unspecified, output files will be written
             to a temporary directory which is deleted upon session exit.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to
-            `<basename>-diagnostic-<chain_id>.csv.`, where `<basename>`
-            is set with `csv_basename`.
+            csv output files are written to an output file with filename
+            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
+            e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
@@ -564,7 +571,6 @@ class CmdStanModel:
 
         :return: CmdStanMCMC object
         """
-
         if chains is None:
             if fixed_param:
                 chains = 1
@@ -576,7 +582,6 @@ class CmdStanModel:
                     chains
                 )
             )
-
         if chain_ids is None:
             chain_ids = [x + 1 for x in range(chains)]
         else:
@@ -601,20 +606,32 @@ class CmdStanModel:
                             'Chain_id must be a non-negative integer value,'
                             ' found {}.'.format(chain_id)
                         )
-
-        cores_avail = cpu_count()
-        if cores is None:
-            cores = max(min(cores_avail - 2, chains), 1)
-        if cores < 1:
-            raise ValueError(
-                'Argument cores must be a positive integer value, '
-                'found {}.'.format(cores)
-            )
-        if cores > cores_avail:
+        if parallel_chains is None:
+            parallel_chains = max(min(cpu_count(), chains), 1)
+        elif parallel_chains > chains:
             self._logger.warning(
-                'Requested %u cores, only %u available.', cores, cpu_count()
+                'Requesting %u parallel_chains for %u chains,'
+                ' running all chains in parallel.',
+                parallel_chains,
+                chains,
             )
-            cores = cores_avail
+            parallel_chains = chains
+        elif parallel_chains < 1:
+            raise ValueError(
+                'Argument parallel_chains must be a positive integer value, '
+                'found {}.'.format(parallel_chains)
+            )
+        if threads_per_chain is None:
+            threads_per_chain = 1
+        if threads_per_chain < 1:
+            raise ValueError(
+                'Argument threads_per_chain must be a positive integer value, '
+                'found {}.'.format(threads_per_chain)
+            )
+        self._logger.debug(
+            'total threads: %u', parallel_chains * threads_per_chain
+        )
+        os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
 
         refresh = None
         if show_progress:
@@ -667,7 +684,7 @@ class CmdStanModel:
             pbar = None
             all_pbars = []
 
-            with ThreadPoolExecutor(max_workers=cores) as executor:
+            with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
                     if show_progress:
                         if (
@@ -707,7 +724,6 @@ class CmdStanModel:
                             dynamic_ncols=dynamic_ncols,
                         )
                         all_pbars.append(pbar)
-
                     executor.submit(self._run_cmdstan, runset, i, pbar)
 
             # Closing all progress bars
@@ -752,13 +768,13 @@ class CmdStanModel:
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
 
-        Output filenames are composed of the model name, a timestamp
-        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
-        the console messages, e.g. `bernoulli_ppc-201912081451-1.csv`. Output
-        files  written to the temporary directory contain an additional
-        8-character random string, e.g.
-        `bernoulli_ppc-201912081451-1-5nm6as7u.csv`.
+        Output files are either written to a temporary directory or to the
+        specified output directory.  Output filenames correspond to the template
+        '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
+        either '.csv' for the CmdStan output or '.txt' for
+        the console messages, e.g. 'bernoulli-201912081451-1.csv'.
+        Output files written to the temporary directory contain an additional
+        8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
 
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
@@ -856,9 +872,9 @@ class CmdStanModel:
             )
             runset = RunSet(args=args, chains=chains)
 
-            cores_avail = cpu_count()
-            cores = max(min(cores_avail - 2, chains), 1)
-            with ThreadPoolExecutor(max_workers=cores) as executor:
+            parallel_chains_avail = cpu_count()
+            parallel_chains = max(min(parallel_chains_avail - 2, chains), 1)
+            with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
                     executor.submit(self._run_cmdstan, runset, i)
 
@@ -905,12 +921,13 @@ class CmdStanModel:
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
 
-        Output filenames are composed of the model name, a timestamp
-        in the form 'YYYYMMDDhhmm' and the chain id, plus the corresponding
-        filetype suffix, either '.csv' for the CmdStan output or '.txt' for
-        the console messages, e.g. `bernoulli-201912081451-1.csv`. Output files
-        written to the temporary directory contain an additional 8-character
-        random string, e.g. `bernoulli-201912081451-1-5nm6as7u.csv`.
+        Output files are either written to a temporary directory or to the
+        specified output directory.  Output filenames correspond to the template
+        '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
+        either '.csv' for the CmdStan output or '.txt' for
+        the console messages, e.g. 'bernoulli-201912081451-1.csv'.
+        Output files written to the temporary directory contain an additional
+        8-character random string, e.g. 'bernoulli-201912081451-1-5nm6as7u.csv'.
 
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
@@ -926,14 +943,14 @@ class CmdStanModel:
             default range of 2. Specifying a single number n > 0 changes
             the initialization range to [-n, n].
 
-        :param output_dir:  Name of the directory in which the CmdStan output
-            files are saved.  If unspecified, files will be written to a
-            temporary directory which is deleted upon session exit.
+        :param output_dir: Name of the directory to which CmdStan output
+            files are written. If unspecified, output files will be written
+            to a temporary directory which is deleted upon session exit.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to
-            `<basename>-diagnostic-<chain_id>.csv.`, where `<basename>`
-            is set with ``csv_basename``.
+            csv output files are written to an output file with filename
+            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
+            e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
         :param algorithm: Algorithm to use. One of: 'meanfield', 'fullrank'.
 
@@ -1016,6 +1033,9 @@ class CmdStanModel:
         """
         cmd = runset.cmds[idx]
         self._logger.info('start chain %u', idx + 1)
+        self._logger.debug(
+            'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
+        )
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ

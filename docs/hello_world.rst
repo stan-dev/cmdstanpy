@@ -4,18 +4,45 @@ ______________
 Bayesian estimation via Stan's HMC-NUTS sampler 
 ------------------------------------------------
 
-To exercise the essential functions of CmdStanPy, we will
-compile the example Stan model ``bernoulli.stan``, which is
-distributed with CmdStan and then fit the model to example data
-``bernoulli.data.json``, also distributed with CmdStan using
-Stan's HMC-NUTS sampler in order to estimate the posterior probability
+To exercise the essential functions of CmdStanPy we show how to run
+Stan's HMC-NUTS sampler to estimate the posterior probability
 of the model parameters conditioned on the data.
+Do do this we use the example Stan model ``bernoulli.stan``
+and corresponding dataset ``bernoulli.data.json`` which are
+distributed with CmdStan.
+
+This is a simple model for binary data:  given a set of N observations of i.i.d. binary data
+`y[1] ... y[N]`, it calculates the Bernoulli chance-of-success `theta`.
+
+.. code::
+
+   data { 
+      int<lower=0> N; 
+      int<lower=0,upper=1> y[N];
+    } 
+    parameters {
+      real<lower=0,upper=1> theta;
+    } 
+    model {
+      theta ~ beta(1,1);  // uniform prior on interval 0,1
+      y ~ bernoulli(theta);
+    }
+
+The data file specifies the number of observations and their values.
+
+.. code::
+
+   {
+    "N" : 10,
+    "y" : [0,1,0,0,0,0,0,0,0,1]
+   }
 
 
 Specify a Stan model
 ^^^^^^^^^^^^^^^^^^^^
 
-The ``CmdStanModel`` class specifies the Stan program and its corresponding compiled executable.
+The: :ref:`class_cmdstanmodel` class manages the Stan program and its corresponding compiled executable.
+It provides properties and functions to inspect the model code and filepaths.
 By default, the Stan program is compiled on instantiation.
 
 .. code-block:: python
@@ -25,11 +52,6 @@ By default, the Stan program is compiled on instantiation.
 
     bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
     bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
-
-The ``CmdStanModel`` class provides properties and functions to inspect the model code and filepaths.
-
-.. code-block:: python
-
     bernoulli_model.name
     bernoulli_model.stan_file
     bernoulli_model.exe_file
@@ -40,75 +62,56 @@ The ``CmdStanModel`` class provides properties and functions to inspect the mode
 Run the HMC-NUTS sampler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``CmdStanModel`` method ``sample`` runs the Stan HMC-NUTS sampler on the model and data
-and returns a ``CmdStanMCMC`` object:
+The :ref:`class_cmdstanmodel` method ``sample`` is used to do Bayesian inference
+over the model conditioned on data using  using Hamiltonian Monte Carlo
+(HMC) sampling. It runs Stan's HMC-NUTS sampler on the model and data and
+returns a :ref:`class_cmdstanmcmc` object.
 
 .. code-block:: python
 
-    bernoulli_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
+    bernoulli_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
     bern_fit = bernoulli_model.sample(data=bernoulli_data, output_dir='.')
 
 By default, the ``sample`` command runs 4 sampler chains.
-The ``output_dir`` argument specifies the path to the sampler output files.
-If no output file path is specified, the sampler outputs
-are written to a temporary directory which is deleted
-when the current Python session is terminated.
-
-The ``CmdStanMLE`` object records the command, the return code,
-and the paths to the optimize method output csv and console files.
-The output files are written either to a specified output directory
-or to a temporary directory which is deleted upon session exit.
-
-Output filenames are composed of the model name, a timestamp
-in the form YYYYMMDDhhmm and the chain id, plus the corresponding
-filetype suffix, either '.csv' for the CmdStan output or '.txt' for
-the console messages, e.g. ``bernoulli-201912081451-1.csv``. Output files
-written to the temporary directory contain an additional 8-character
-random string, e.g. ``bernoulli-201912081451-1-5nm6as7u.csv``.
+This is a set of per-chain 
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__
+The filenames follow the template '<model_name>-<YYYYMMDDHHMM>-<chain_id>'
+plus the file suffix '.csv'.
+There is also a correspondingly named file with suffix '.txt'
+which contains all messages written to the console.
+If the ``output_dir`` argument is omitted, the output files are written
+to a temporary directory which is deleted when the current Python session is terminated.
 
 
 Access the sample
 ^^^^^^^^^^^^^^^^^
 
-The ``sample`` command returns a ``CmdStanMCMC`` object
-which provides methods to retrieve the sampler outputs,
-the arguments used to run Cmdstan, and names of the
-the per-chain stan-csv output files, and per-chain console messages files.
+The :ref:`class_cmdstanmcmc` object stores the CmdStan config information and
+the names of the the per-chain output files.
+It manages and retrieves the sampler outputs as Python objects.
 
 .. code-block:: python
 
    print(bern_fit)
 
-The resulting sample from the posterior is lazily instantiated
-the first time that any of the properties
+The resulting set of draws produced by the sampler is lazily instantiated
+as a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
+over all draws from all chains  arranged as draws X chains X columns.
+Instantiation happens the first time that any of the information
+in the posterior is accesed via properties:
 ``sample``, ``metric``, or ``stepsize`` are accessed.
 At this point the stan-csv output files are read into memory.
 For large files this may take several seconds; for the example
 dataset, this should take less than a second.
-The ``sample`` property of the ``CmdStanMCMC`` object
-is a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
-which contains the set of all draws from all chains 
-arranged as dimensions: (draws, chains, columns).
 
 .. code-block:: python
 
     bern_fit.sample.shape
-
-
-The ``get_drawset`` method returns the draws from
-all chains as a ``pandas.DataFrame``, one draw per row, one column per
-model parameter, transformed parameter, generated quantity variable.
-The ``params`` argument is used to restrict the DataFrame
-columns to just the specified parameter names.
-
-.. code-block:: python
-
-    bern_fit.get_drawset(params=['theta'])
-
+    
 Python's index slicing operations can be used to access the information by chain.
 For example, to select all draws and all output columns from the first chain,
 we specify the chain index (2nd index dimension).  As arrays indexing starts at 0,
-the index '0' corresponds to the first chain in the ``CmdStanMCMC``:
+the index '0' corresponds to the first chain in the :ref:`class_cmdstanmcmc`:
 
 .. code-block:: python
 
@@ -118,39 +121,44 @@ the index '0' corresponds to the first chain in the ``CmdStanMCMC``:
                         # array([-7.99462  ,  0.578072 ,  0.955103 ,  2.       ,  7.       ,
                         # 0.       ,  9.44788  ,  0.0934208])
 
+To work with the draws from all chains for a parameter or quantity of interest
+in the model, use the ``stan_variable`` method to obtains
+a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable
+by flattening the draws by chains into a single column:
+
+.. code-block:: python
+
+    bern_fit.stan_variable('theta')
+
+                        
 Summarize or save the results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CmdStan is distributed with a posterior analysis utility ``stansummary``
+CmdStan is distributed with a posterior analysis utility
+`stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__
 that reads the outputs of all chains and computes summary statistics
-on the model fit for all parameters. The ``CmdStanMCMC`` method ``summary``
-runs the CmdStan ``stansummary`` utility and returns the output as a pandas.DataFrame:
+for all sampler and model parameters and quantities of interest.
+The :ref:`class_cmdstanmcmc` method ``summary`` runs this utility and returns
+summaries of the total joint log-probability density **lp__** plus
+all model parameters and quantities of interest in a pandas.DataFrame:
 
 .. code-block:: python
 
     bern_fit.summary()
 
-CmdStan is distributed with a second posterior analysis utility ``diagnose``
-that reads the outputs of all chains and checks for the following
-potential problems:
-
-+ Transitions that hit the maximum treedepth
-+ Divergent transitions
-+ Low E-BFMI values (sampler transitions HMC potential energy)
-+ Low effective sample sizes
-+ High R-hat values
-
-The ``CmdStanMCMC`` method ``diagnose`` runs the CmdStan ``diagnose`` utility
-and prints the output to the console.
+CmdStan is distributed with a second posterior analysis utility
+`diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__
+which analyzes the per-draw sampler parameters across all chains
+looking for potential problems which indicate that the sample
+isn't a representative sample from the posterior.
+The ``diagnose`` method runs this utility and prints the output to the console.
 
 .. code-block:: python
 
     bern_fit.diagnose()
 
-The sampler output files are written to a temporary directory which
-is deleted upon session exit unless the ``output_dir`` argument is specified.
 The ``save_csvfiles`` function moves the CmdStan csv output files
-to a specified directory without having to re-run the sampler.
+to a specified directory.
 
 .. code-block:: python
 
