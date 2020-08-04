@@ -33,6 +33,7 @@ BERN_STAN = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
 BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
+
 class CmdStanModelTest(unittest.TestCase):
 
     # pylint: disable=no-self-use
@@ -78,7 +79,6 @@ class CmdStanModelTest(unittest.TestCase):
         model = CmdStanModel(stan_file=BERN_STAN, compile=False)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
-
 
     def test_model_bad(self):
         with self.assertRaises(ValueError):

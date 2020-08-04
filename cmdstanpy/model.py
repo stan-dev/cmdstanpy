@@ -172,7 +172,7 @@ class CmdStanModel:
         will be basename of Stan program file, if specified, else exe file.
         """
         return self._name
-        
+
     @property
     def stan_file(self) -> str:
         """Full path to Stan program file."""
