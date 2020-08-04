@@ -50,6 +50,8 @@ class CmdStanModel:
       model given data.
     - By default, compiles model on instantiation - override with argument
       ``compile=False``
+    - By default, property ``name`` corresponds to basename of the Stan program
+      or exe file - override with argument ``model_name=<name>``.
     """
 
     def __init__(
@@ -72,6 +74,12 @@ class CmdStanModel:
         self._logger = logger or get_logger()
 
         if model_name is not None:
+            if len(model_name.strip()) == 0:
+                raise ValueError(
+                    'Bad value for argument model name, found "{}"'.format(
+                        model_name
+                    )
+                )
             self._name = model_name.strip()
 
         if stan_file is None:
@@ -158,9 +166,13 @@ class CmdStanModel:
 
     @property
     def name(self) -> str:
-        """Stan program name; corresponds to bare filename, no extension."""
+        """
+        Stan program name.
+        Set by the constructor to value of argument `model_name`; if not specified
+        will be basename of Stan program file, if specified, else exe file.
+        """
         return self._name
-
+        
     @property
     def stan_file(self) -> str:
         """Full path to Stan program file."""
