@@ -126,9 +126,9 @@ class RunSetTest(unittest.TestCase):
             method_args=sampler_args,
         )
         with self.assertRaises(ValueError):
-            runset = RunSet(args=cmdstan_args, chains=0)
+            RunSet(args=cmdstan_args, chains=0)
         with self.assertRaises(ValueError):
-            runset = RunSet(args=cmdstan_args, chains=4, chain_ids=[1, 2, 3])
+            RunSet(args=cmdstan_args, chains=4, chain_ids=[1, 2, 3])
 
 
 if __name__ == '__main__':
