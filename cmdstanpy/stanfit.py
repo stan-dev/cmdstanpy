@@ -525,8 +525,7 @@ class CmdStanMCMC:
                     )
                 cur_pct = pct
             percentiles_str = '='.join(
-                '--percentiles', 
-                ','.join(str(x) for x in percentiles)
+                ['--percentiles', ','.join([str(x) for x in percentiles])]
             )
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
