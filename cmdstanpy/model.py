@@ -398,7 +398,7 @@ class CmdStanModel:
             )
 
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1, chain_ids=[1])
+            runset = RunSet(args=args, chains=1)
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
@@ -1013,7 +1013,7 @@ class CmdStanModel:
             )
 
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1, chain_ids=[1])
+            runset = RunSet(args=args, chains=1)
             self._run_cmdstan(runset, dummy_chain_id)
 
         # treat failure to converge as failure

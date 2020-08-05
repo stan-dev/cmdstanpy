@@ -37,26 +37,28 @@ class RunSet:
         self,
         args: CmdStanArgs,
         chains: int = 4,
-        chain_ids: List[int] = [1, 2, 3, 4],
+        chain_ids: List[int] = None,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self._args = args
         self._chains = chains
-        self._chain_ids = chain_ids
         self._logger = logger or get_logger()
         if chains < 1:
             raise ValueError(
                 'chains must be positive integer value, '
                 'found {}'.format(chains)
             )
-        if chains != len(chain_ids):
+        if chain_ids is None:
+            chain_ids = [x + 1 for x in range(chains)]
+        elif len(chain_ids) != chains:
             raise ValueError(
                 'mismatch between number of chains and chain_ids, '
                 'found {} chains, but {} chain_ids'.format(
                     chains, len(chain_ids)
                 )
             )
+        self._chain_ids = chain_ids
         self._retcodes = [-1 for _ in range(chains)]
 
         # stdout, stderr are written to text files
