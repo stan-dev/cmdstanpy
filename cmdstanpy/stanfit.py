@@ -499,12 +499,34 @@ class CmdStanMCMC:
                     xs = line.split(',')
                     self._sample[i, chain, :] = [float(x) for x in xs]
 
-    def summary(self) -> pd.DataFrame:
+    def summary(self, percentiles: List[int] = None) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output csv files.
         Echo stansummary stdout/stderr to console.
         Assemble csv tempfile contents into pandasDataFrame.
+
+        :param percentiles: Ordered non-empty list of percentiles to report.
+            Must be integers from (1, 99), inclusive.
         """
+        percentiles_str = '--percentiles=5,50,95'
+        if percentiles is not None:
+            if len(percentiles) == 0:
+                raise ValueError(
+                    'invalid percentiles argument, must be ordered'
+                    ' non-empty list from (1, 99), inclusive.'
+                )
+
+            cur_pct = 0
+            for pct in percentiles:
+                if pct > 99 or not pct > cur_pct:
+                    raise ValueError(
+                        'invalid percentiles spec, must be ordered'
+                        ' non-empty list from (1, 99), inclusive.'
+                    )
+                cur_pct = pct
+            percentiles_str = '='.join(
+                ['--percentiles', ','.join([str(x) for x in percentiles])]
+            )
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
@@ -516,6 +538,7 @@ class CmdStanMCMC:
         )
         cmd = [
             cmd_path,
+            percentiles_str,
             '--csv_file={}'.format(tmp_csv_path),
         ] + self.runset.csv_files
         do_command(cmd, logger=self.runset._logger)

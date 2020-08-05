@@ -470,7 +470,7 @@ class CmdStanModel:
         :param parallel_chains: Number of processes to run in parallel. Must be
             a positive integer.  Defaults to ``multiprocessing.cpu_count()``.
 
-        :param threads_per_chain: the number of threads to use in parallelized
+        :param threads_per_chain: The number of threads to use in parallelized
             sections within an MCMC chain (e.g., when using the Stan functions
             ``reduce_sum()``  or ``map_rect()``).  This will only have an effect
             if the model was compiled with threading support. The total number
