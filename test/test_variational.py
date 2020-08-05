@@ -40,7 +40,7 @@ class CmdStanVBTest(unittest.TestCase):
             data=no_data,
             method_args=args,
         )
-        runset = RunSet(args=cmdstan_args, chains=1)
+        runset = RunSet(args=cmdstan_args, chains=1, chain_ids=[1])
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'variational', 'eta_big_output.csv')
         ]

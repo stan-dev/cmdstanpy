@@ -421,7 +421,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-1.csv'),
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-2.csv'),
@@ -472,7 +472,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=2)
+        runset = RunSet(args=cmdstan_args, chains=2, chain_ids=[1, 2])
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
             os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
@@ -605,7 +605,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=1)
+        runset = RunSet(args=cmdstan_args, chains=1, chain_ids=[1])
         runset._csv_files = [
             os.path.join(
                 DATAFILES_PATH, 'diagnose-good', 'corr_gauss_depth8-1.csv'
@@ -640,7 +640,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args)
         for i in range(4):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
@@ -796,7 +796,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=1)
+        runset = RunSet(args=cmdstan_args, chains=1, chain_ids=[1])
         runset._csv_files = [os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')]
         runset._set_retcode(0, 0)
         fit = CmdStanMCMC(runset)
@@ -823,7 +823,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=1)
+        runset = RunSet(args=cmdstan_args, chains=1, chain_ids=[1])
         runset._csv_files = [os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')]
         runset._set_retcode(0, 0)
         fit = CmdStanMCMC(runset)

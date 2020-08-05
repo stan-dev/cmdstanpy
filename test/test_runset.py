@@ -16,14 +16,15 @@ class RunSetTest(unittest.TestCase):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3, 4]  # default
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
-            chain_ids=[1, 2, 3, 4],
+            chain_ids=chain_ids,
             data=jdata,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args)
         self.assertIn('RunSet: chains=4', runset.__repr__())
         self.assertIn('method=sample', runset.__repr__())
 
@@ -44,14 +45,15 @@ class RunSetTest(unittest.TestCase):
         exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
         rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
         sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3]
         cmdstan_args = CmdStanArgs(
             model_name='logistic',
             model_exe=exe,
-            chain_ids=[1, 2, 3],
+            chain_ids=chain_ids,
             data=rdata,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=3)
+        runset = RunSet(args=cmdstan_args, chains=3, chain_ids=chain_ids)
         for i in range(3):
             runset._set_retcode(i, 70)
             stdout_file = 'chain-' + str(i + 1) + '-missing-data-stdout.txt'
@@ -64,14 +66,15 @@ class RunSetTest(unittest.TestCase):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3, 4]
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
-            chain_ids=[1, 2, 3, 4],
+            chain_ids=chain_ids,
             data=jdata,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args)
         self.assertIn('bernoulli-', runset._csv_files[0])
         self.assertIn('-1-', runset._csv_files[0])
         self.assertIn('-4-', runset._csv_files[3])
@@ -80,16 +83,52 @@ class RunSetTest(unittest.TestCase):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3, 4]
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
-            chain_ids=[1, 2, 3, 4],
+            chain_ids=chain_ids,
             data=jdata,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args)
         self.assertIn('id=1', runset._cmds[0])
         self.assertIn('id=4', runset._cmds[3])
+
+    def test_chain_ids(self):
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        sampler_args = SamplerArgs()
+        chain_ids = [11, 12, 13, 14]
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=chain_ids,
+            data=jdata,
+            method_args=sampler_args,
+        )
+        runset = RunSet(args=cmdstan_args, chains=4, chain_ids=chain_ids)
+        self.assertIn('id=11', runset._cmds[0])
+        self.assertIn('-11-', runset._csv_files[0])
+        self.assertIn('id=14', runset._cmds[3])
+        self.assertIn('-14-', runset._csv_files[3])
+
+    def test_ctor_checks(self):
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        sampler_args = SamplerArgs()
+        chain_ids = [11, 12, 13, 14]
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=chain_ids,
+            data=jdata,
+            method_args=sampler_args,
+        )
+        with self.assertRaises(ValueError):
+            runset = RunSet(args=cmdstan_args, chains=0)
+        with self.assertRaises(ValueError):
+            runset = RunSet(args=cmdstan_args, chains=4, chain_ids=[1, 2, 3])
 
 
 if __name__ == '__main__':
