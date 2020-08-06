@@ -421,7 +421,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-1.csv'),
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-2.csv'),
@@ -653,7 +653,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=4)
+        runset = RunSet(args=cmdstan_args)
         for i in range(4):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())

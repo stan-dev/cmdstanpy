@@ -34,7 +34,11 @@ class RunSet:
     """
 
     def __init__(
-        self, args: CmdStanArgs, chains: int = 4, logger: logging.Logger = None
+        self,
+        args: CmdStanArgs,
+        chains: int = 4,
+        chain_ids: List[int] = None,
+        logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
         self._args = args
@@ -45,7 +49,16 @@ class RunSet:
                 'chains must be positive integer value, '
                 'found {}'.format(chains)
             )
-
+        if chain_ids is None:
+            chain_ids = [x + 1 for x in range(chains)]
+        elif len(chain_ids) != chains:
+            raise ValueError(
+                'mismatch between number of chains and chain_ids, '
+                'found {} chains, but {} chain_ids'.format(
+                    chains, len(chain_ids)
+                )
+            )
+        self._chain_ids = chain_ids
         self._retcodes = [-1 for _ in range(chains)]
 
         # stdout, stderr are written to text files
@@ -67,12 +80,13 @@ class RunSet:
             if args.output_dir is None:
                 csv_file = create_named_text_file(
                     dir=output_dir,
-                    prefix='{}-{}-'.format(file_basename, i + 1),
+                    prefix='{}-{}-'.format(file_basename, str(chain_ids[i])),
                     suffix='.csv',
                 )
             else:
                 csv_file = os.path.join(
-                    output_dir, '{}-{}.{}'.format(file_basename, i + 1, 'csv')
+                    output_dir,
+                    '{}-{}.{}'.format(file_basename, str(chain_ids[i]), 'csv'),
                 )
             self._csv_files[i] = csv_file
             stdout_file = ''.join(
@@ -87,14 +101,16 @@ class RunSet:
                 if args.output_dir is None:
                     diag_file = create_named_text_file(
                         dir=_TMPDIR,
-                        prefix='{}-diagnostic-{}-'.format(file_basename, i + 1),
+                        prefix='{}-diagnostic-{}-'.format(
+                            file_basename, str(chain_ids[i])
+                        ),
                         suffix='.csv',
                     )
                 else:
                     diag_file = os.path.join(
                         output_dir,
                         '{}-diagnostic-{}.{}'.format(
-                            file_basename, i + 1, 'csv'
+                            file_basename, str(chain_ids[i]), 'csv'
                         ),
                     )
                 self._diagnostic_files[i] = diag_file
@@ -126,8 +142,13 @@ class RunSet:
 
     @property
     def chains(self) -> int:
-        """Number of sampler chains."""
+        """Number of chains."""
         return self._chains
+
+    @property
+    def chain_ids(self) -> List[int]:
+        """Chain ids."""
+        return self._chain_ids
 
     @property
     def cmds(self) -> List[str]:
@@ -296,6 +317,11 @@ class CmdStanMCMC:
     def chains(self) -> int:
         """Number of chains."""
         return self.runset.chains
+
+    @property
+    def chain_ids(self) -> List[int]:
+        """Chain ids."""
+        return self.runset.chain_ids
 
     @property
     def num_draws(self) -> int:

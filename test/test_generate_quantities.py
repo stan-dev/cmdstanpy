@@ -60,6 +60,9 @@ class GenerateQuantitiesTest(unittest.TestCase):
         model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
+        with self.assertRaises(ValueError):
+            model.generate_quantities(data=jdata, mcmc_sample=[])
+
         # synthesize list of filenames
         goodfiles_path = os.path.join(
             DATAFILES_PATH, 'runset-bad', 'bad-draws-bern'
