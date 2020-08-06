@@ -470,7 +470,7 @@ class CmdStanModel:
         :param parallel_chains: Number of processes to run in parallel. Must be
             a positive integer.  Defaults to ``multiprocessing.cpu_count()``.
 
-        :param threads_per_chain: the number of threads to use in parallelized
+        :param threads_per_chain: The number of threads to use in parallelized
             sections within an MCMC chain (e.g., when using the Stan functions
             ``reduce_sum()``  or ``map_rect()``).  This will only have an effect
             if the model was compiled with threading support. The total number
@@ -597,12 +597,12 @@ class CmdStanModel:
             chain_ids = [x + 1 for x in range(chains)]
         else:
             if isinstance(chain_ids, int):
-                if chain_ids < 0:
+                if chain_ids < 1:
                     raise ValueError(
-                        'Chain_id must be a non-negative integer value,'
+                        'Chain_id must be a positive integer value,'
                         ' found {}.'.format(chain_ids)
                     )
-                chain_ids = [chain_ids + i + 1 for i in range(chains)]
+                chain_ids = [chain_ids + i for i in range(chains)]
             else:
                 if not len(chain_ids) == chains:
                     raise ValueError(
@@ -691,7 +691,7 @@ class CmdStanModel:
                 refresh=refresh,
                 logger=self._logger,
             )
-            runset = RunSet(args=args, chains=chains)
+            runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
             pbar = None
             all_pbars = []
 
@@ -818,16 +818,19 @@ class CmdStanModel:
             sample_csv_files = mcmc_sample.runset.csv_files
             sample_drawset = mcmc_sample.get_drawset()
             chains = mcmc_sample.chains
+            chain_ids = mcmc_sample.chain_ids
         elif isinstance(mcmc_sample, list):
+            if len(mcmc_sample) < 1:
+                raise ValueError('MCMC sample cannot be empty list')
             sample_csv_files = mcmc_sample
+            chains = len(sample_csv_files)
+            chain_ids = [x + 1 for x in range(chains)]
         else:
             raise ValueError(
                 'MCMC sample must be either CmdStanMCMC object'
                 ' or list of paths to sample csv_files.'
             )
-
         try:
-            chains = len(sample_csv_files)
             if sample_drawset is None:  # assemble sample from csv files
                 config = {}
                 # scan 1st csv file to get config
@@ -852,10 +855,10 @@ class CmdStanModel:
                 args = CmdStanArgs(
                     self._name,
                     self._exe_file,
-                    chain_ids=[x + 1 for x in range(chains)],
+                    chain_ids=chain_ids,
                     method_args=sampler_args,
                 )
-                runset = RunSet(args=args, chains=chains)
+                runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
                 runset._csv_files = sample_csv_files
                 sample_fit = CmdStanMCMC(runset)
                 sample_drawset = sample_fit.get_drawset()
@@ -875,13 +878,13 @@ class CmdStanModel:
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,
-                chain_ids=[x + 1 for x in range(chains)],
+                chain_ids=chain_ids,
                 data=_data,
                 seed=seed,
                 output_dir=gq_output_dir,
                 method_args=generate_quantities_args,
             )
-            runset = RunSet(args=args, chains=chains)
+            runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
 
             parallel_chains_avail = cpu_count()
             parallel_chains = max(min(parallel_chains_avail - 2, chains), 1)
