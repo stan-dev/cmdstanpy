@@ -28,15 +28,15 @@ stan_file = "./stan_weird_example.stan"
 
 with open(stan_file, "w") as f:
     print(program_code, file=f)
-    
+
 model = cmdstanpy.CmdStanModel(stan_file=stan_file)
 fit = model.sample(chains=1, iter_warmup=100, iter_sampling=100)
-    
-    
+
+
 print(fit.diagnose())
 
 
-print("WEIRD MODEL --> COUNTING PRINTS")
+print("WEIRD MODEL 1 CHAIN --> COUNTING PRINTS")
 
 # data
 for i, fpath in enumerate(fit.runset.stdout_files):
@@ -49,4 +49,25 @@ for i, fpath in enumerate(fit.runset.stdout_files):
                 line_count += 1
                 #lines.append([float(item.strip()) for item in line.strip("local_vars:").split(",")])
         # data.append(lines)
-        print("print count:", line_count, "total linecount", j)
+        print("\n    print count:", line_count, "\n    total linecount", j, "\n\n")
+
+
+fit2 = model.sample(chains=1, iter_warmup=100, iter_sampling=100)
+
+
+print(fit.diagnose())
+
+print("WEIRD MODEL 10 CHAIN --> COUNTING PRINTS")
+
+# data
+for i, fpath in enumerate(fit.runset.stdout_files, 1):
+    print("FILE {}: ".format(i), end=" ")
+    with open(fpath, "r") as f:
+        line_count = 0
+        #lines = []
+        for j, line in enumerate(f, 1):
+            if line.startswith("local_vars:"):
+                line_count += 1
+                #lines.append([float(item.strip()) for item in line.strip("local_vars:").split(",")])
+        # data.append(lines)
+        print("\n    print count:", line_count, "\n    total linecount", j, "\n\n")
