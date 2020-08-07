@@ -1,8 +1,8 @@
 import cmdstanpy
 import platform
 
-if platform.system() == "Windows":
-    cmdstanpy.utils.cxx_toolchain_path()
+#if platform.system() == "Windows":
+#    cmdstanpy.utils.cxx_toolchain_path()
 
 program_code = """
 parameters{
