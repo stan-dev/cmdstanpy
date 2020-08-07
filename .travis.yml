@@ -20,6 +20,11 @@ install:
   # install cmdstan
   - python -m cmdstanpy.install_cmdstan
   - python ./scripts/clean_examples.py
+  - cd weird_model
+  - echo "compiling weird model first"
+  - python weird_run.py
+  - echo "compiling normal model then"
+  - python normal_run.py
 
 after install:
 
