@@ -56,7 +56,7 @@ for i, fpath in enumerate(fit.runset.stdout_files, 1):
 fit2 = model.sample(chains=10, iter_warmup=100, iter_sampling=100)
 
 
-print(fit.diagnose())
+print(fit2.diagnose())
 
 
 print("NORMAL MODEL 10 CHAINS --> COUNTING PRINTS")

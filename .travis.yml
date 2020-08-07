@@ -25,6 +25,7 @@ install:
   - python weird_run.py
   - echo "compiling normal model then"
   - python normal_run.py
+  - cd ..
 
 after install:
 

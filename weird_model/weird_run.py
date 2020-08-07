@@ -55,12 +55,12 @@ for i, fpath in enumerate(fit.runset.stdout_files):
 fit2 = model.sample(chains=1, iter_warmup=100, iter_sampling=100)
 
 
-print(fit.diagnose())
+print(fit2.diagnose())
 
 print("WEIRD MODEL 10 CHAIN --> COUNTING PRINTS")
 
 # data
-for i, fpath in enumerate(fit.runset.stdout_files, 1):
+for i, fpath in enumerate(fit2.runset.stdout_files, 1):
     print("FILE {}: ".format(i), end=" ")
     with open(fpath, "r") as f:
         line_count = 0
