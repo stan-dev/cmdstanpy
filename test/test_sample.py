@@ -258,7 +258,7 @@ class SampleTest(unittest.TestCase):
         log.check_present(
             (
                 'cmdstanpy',
-                'WARNING',
+                'INFO',
                 'Requesting 7 parallel_chains for 1 chains, '
                 'running all chains in parallel.',
             )
