@@ -292,6 +292,9 @@ class SampleTest(unittest.TestCase):
             data=no_data, seed=12345, iter_sampling=100, fixed_param=True
         )
         self.assertEqual(datagen_fit.runset._args.method, Method.SAMPLE)
+        self.assertEqual(datagen_fit.metric_type, None)
+        self.assertEqual(datagen_fit.metric, None)
+        self.assertEqual(datagen_fit.stepsize, None)
 
         for i in range(datagen_fit.runset.chains):
             csv_file = datagen_fit.runset.csv_files[i]
@@ -850,6 +853,66 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(vars['z'].shape, (20, 20, 2))
         self.assertTrue('theta' in vars)
         self.assertEqual(vars['theta'].shape, (20, 4))
+
+    def test_validate(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=200,
+            iter_sampling=100,
+            thin=2,
+            save_warmup=True,
+            validate_csv=False,
+        )
+        # check error messages
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.column_names)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.stan_variable_dims)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.metric_type)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.metric)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.stepsize)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        # check computations match
+        self.assertEqual(bern_fit.num_draws, 50)
+        self.assertEqual(bern_fit.num_draws_warmup, 100)
+        bern_fit.validate_csv_files()
+        self.assertEqual(bern_fit.num_draws, 50)
+        self.assertEqual(bern_fit.num_draws_warmup, 100)
+        self.assertEqual(len(bern_fit.column_names), 8)
+        self.assertEqual(len(bern_fit.stan_variable_dims), 1)
+        self.assertEqual(bern_fit.metric_type, 'diag_e')
 
 
 if __name__ == '__main__':
