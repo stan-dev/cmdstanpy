@@ -436,6 +436,7 @@ class CmdStanModel:
         output_dir: str = None,
         save_diagnostics: bool = False,
         show_progress: Union[bool, str] = False,
+        validate_csv: bool = True,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -579,6 +580,11 @@ class CmdStanModel:
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
+
+        :param validate_csv: If ``False``, skip scan of sample csv output file.
+            When sample is large or disk i/o is slow, will speed up processing.
+            Default is ``True`` - sample csv files are scanned for completeness
+            and consistency.
 
         :return: CmdStanMCMC object
         """
@@ -756,7 +762,7 @@ class CmdStanModel:
                     err_msg = '{}{}'.format(err_msg, ''.join(console_errs))
                 raise RuntimeError(err_msg)
 
-            mcmc = CmdStanMCMC(runset)
+            mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
         return mcmc
 
     def generate_quantities(

@@ -5,6 +5,7 @@ import re
 import shutil
 import copy
 import logging
+import math
 from typing import List, Tuple, Dict
 from collections import Counter, OrderedDict
 from datetime import datetime
@@ -272,7 +273,13 @@ class CmdStanMCMC:
     Container for outputs from CmdStan sampler run.
     """
 
-    def __init__(self, runset: RunSet, validate_csv: bool = True) -> None:
+    # pylint: disable=too-many-instance-attributes
+    def __init__(
+        self,
+        runset: RunSet,
+        validate_csv: bool = True,
+        logger: logging.Logger = None,
+    ) -> None:
         """Initialize object."""
         if not runset.method == Method.SAMPLE:
             raise ValueError(
@@ -280,6 +287,7 @@ class CmdStanMCMC:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
+        self._logger = logger or get_logger()
         # copy info from runset
         self._is_fixed_param = runset._args.method_args.fixed_param
         self._iter_sampling = runset._args.method_args.iter_sampling
@@ -301,7 +309,6 @@ class CmdStanMCMC:
         self._validate_csv = validate_csv
         if validate_csv:
             self.validate_csv_files()
-
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -340,7 +347,6 @@ class CmdStanMCMC:
             return int(math.ceil(self._iter_warmup / self._thin))
         return self._draws_warmup
 
-
     @property
     def column_names(self) -> Tuple[str, ...]:
         """
@@ -351,10 +357,9 @@ class CmdStanMCMC:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metatdata.'
-                )
+            )
             return None
         return self._column_names
-            
 
     @property
     def stan_variable_dims(self) -> Dict:
@@ -367,7 +372,7 @@ class CmdStanMCMC:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metatdata.'
-                )
+            )
             return None
         return copy.deepcopy(self._stan_variable_dims)
 
@@ -383,7 +388,7 @@ class CmdStanMCMC:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metatdata.'
-                )
+            )
             return None
         return self._metric_type
 
@@ -399,7 +404,7 @@ class CmdStanMCMC:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metatdata.'
-                )
+            )
             return None
         if self._sample is None:
             self._assemble_sample()
@@ -417,7 +422,7 @@ class CmdStanMCMC:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metatdata.'
-                )
+            )
             return None
         if self._sample is None:
             self._assemble_sample()
