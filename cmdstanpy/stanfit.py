@@ -5,6 +5,7 @@ import re
 import shutil
 import copy
 import logging
+import math
 from typing import List, Tuple, Dict
 from collections import Counter, OrderedDict
 from datetime import datetime
@@ -272,7 +273,13 @@ class CmdStanMCMC:
     Container for outputs from CmdStan sampler run.
     """
 
-    def __init__(self, runset: RunSet) -> None:
+    # pylint: disable=too-many-instance-attributes
+    def __init__(
+        self,
+        runset: RunSet,
+        validate_csv: bool = True,
+        logger: logging.Logger = None,
+    ) -> None:
         """Initialize object."""
         if not runset.method == Method.SAMPLE:
             raise ValueError(
@@ -280,6 +287,7 @@ class CmdStanMCMC:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
+        self._logger = logger or get_logger()
         # copy info from runset
         self._is_fixed_param = runset._args.method_args.fixed_param
         self._iter_sampling = runset._args.method_args.iter_sampling
@@ -298,7 +306,9 @@ class CmdStanMCMC:
         self._warmup = None
         self._drawset = None
         self._stan_variable_dims = {}
-        self._validate_csv_files()
+        self._validate_csv = validate_csv
+        if validate_csv:
+            self.validate_csv_files()
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -326,11 +336,15 @@ class CmdStanMCMC:
     @property
     def num_draws(self) -> int:
         """Number of post-warmup draws per chain."""
+        if not self._validate_csv and self._draws_sampling is None:
+            return int(math.ceil(self._iter_sampling / self._thin))
         return self._draws_sampling
 
     @property
     def num_draws_warmup(self) -> int:
         """Number of warmup draws per chain."""
+        if not self._validate_csv and self._draws_warmup is None:
+            return int(math.ceil(self._iter_warmup / self._thin))
         return self._draws_warmup
 
     @property
@@ -339,6 +353,12 @@ class CmdStanMCMC:
         Names of all per-draw outputs: all
         sampler and model parameters and quantities of interest
         """
+        if not self._validate_csv and len(self._column_names) == 0:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
         return self._column_names
 
     @property
@@ -348,6 +368,12 @@ class CmdStanMCMC:
         Scalar types have int value '1'.  Structured types have list of dims,
         e.g.,  program variable ``vector[10] foo`` has entry ``('foo', [10])``.
         """
+        if not self._validate_csv and len(self._stan_variable_dims) == 0:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
         return copy.deepcopy(self._stan_variable_dims)
 
     @property
@@ -356,6 +382,14 @@ class CmdStanMCMC:
         Metric type used for adaptation, either 'diag_e' or 'dense_e'.
         When sampler algorithm 'fixed_param' is specified, metric_type is None.
         """
+        if self._is_fixed_param:
+            return None
+        if not self._validate_csv and self._metric_type is None:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
         return self._metric_type
 
     @property
@@ -364,7 +398,15 @@ class CmdStanMCMC:
         Metric used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, metric is None.
         """
-        if not self._is_fixed_param and self._metric is None:
+        if self._is_fixed_param:
+            return None
+        if not self._validate_csv and self._metric is None:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
+        if self._sample is None:
             self._assemble_sample()
         return self._metric
 
@@ -374,7 +416,15 @@ class CmdStanMCMC:
         Stepsize used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, stepsize is None.
         """
-        if not self._is_fixed_param and self._stepsize is None:
+        if self._is_fixed_param:
+            return None
+        if not self._validate_csv and self._stepsize is None:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
+        if self._sample is None:
             self._assemble_sample()
         return self._stepsize
 
@@ -386,6 +436,8 @@ class CmdStanMCMC:
         so that the values for each parameter are stored contiguously
         in memory, likewise all draws from a chain are contiguous.
         """
+        if not self._validate_csv and self._sample is None:
+            self.validate_csv_files()
         if self._sample is None:
             self._assemble_sample()
         return self._sample
@@ -400,11 +452,13 @@ class CmdStanMCMC:
         """
         if not self._save_warmup:
             return None
+        if not self._validate_csv and self._sample is None:
+            self.validate_csv_files()
         if self._sample is None:
             self._assemble_sample()
         return self._warmup
 
-    def _validate_csv_files(self) -> None:
+    def validate_csv_files(self) -> None:
         """
         Checks that csv output files for all chains are consistent.
         Populates attributes for draws, column_names, num_params, metric_type.
