@@ -356,7 +356,7 @@ class CmdStanMCMC:
         if not self._validate_csv and len(self._column_names) == 0:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metatdata.'
+                ' in order to retrieve sample metadata.'
             )
             return None
         return self._column_names
@@ -371,7 +371,7 @@ class CmdStanMCMC:
         if not self._validate_csv and len(self._stan_variable_dims) == 0:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metatdata.'
+                ' in order to retrieve sample metadata.'
             )
             return None
         return copy.deepcopy(self._stan_variable_dims)
@@ -387,7 +387,7 @@ class CmdStanMCMC:
         if not self._validate_csv and self._metric_type is None:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metatdata.'
+                ' in order to retrieve sample metadata.'
             )
             return None
         return self._metric_type
@@ -403,7 +403,7 @@ class CmdStanMCMC:
         if not self._validate_csv and self._metric is None:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metatdata.'
+                ' in order to retrieve sample metadata.'
             )
             return None
         if self._sample is None:
@@ -421,7 +421,7 @@ class CmdStanMCMC:
         if not self._validate_csv and self._stepsize is None:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metatdata.'
+                ' in order to retrieve sample metadata.'
             )
             return None
         if self._sample is None:
