@@ -647,7 +647,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
         with self.assertRaisesRegex(
-            (IOError, OSError, PermissionError), 'cannot save to path: '
+            Exception, 'cannot save to path: '
         ):
             dir = tempfile.mkdtemp(dir=_TMPDIR)
             os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
