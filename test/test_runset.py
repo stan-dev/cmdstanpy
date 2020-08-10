@@ -116,10 +116,10 @@ class RunSetTest(unittest.TestCase):
             data=jdata,
             method_args=sampler_args,
             save_diagnostics=True,
-            output_dir=os.path.abspath("."),
+            output_dir=os.path.abspath('.'),
         )
         runset = RunSet(args=cmdstan_args)
-        self.assertIn(os.path.abspath("."), runset.diagnostic_files[0])
+        self.assertIn(os.path.abspath('.'), runset.diagnostic_files[0])
 
     def test_chain_ids(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)

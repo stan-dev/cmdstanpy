@@ -6,7 +6,7 @@ import logging
 import shutil
 from multiprocessing import cpu_count
 import tempfile
-import stats
+import stat
 import unittest
 from time import time
 from testfixtures import LogCapture
@@ -540,9 +540,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 3), mo_phis.shape)
         phi2095 = fit.get_drawset(params=['phi.2095'])
         self.assertEqual((2000, 1), phi2095.shape)
-        with self.assertRaisesRegex(ValueError, "unknown parameter: phi.2096"):
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: phi.2096'):
             fit.get_drawset(params=['phi.2096'])
-        with self.assertRaisesRegex(ValueError, "unknown parameter: ph"):
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
             fit.get_drawset(params=['ph'])
 
     # pylint: disable=no-self-use
