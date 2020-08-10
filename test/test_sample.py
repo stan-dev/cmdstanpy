@@ -70,8 +70,8 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.num_draws, 100)
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
 
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(bern_fit.metric_type, 'diag_e')
         self.assertEqual(bern_fit.stepsize.shape, (2,))
         self.assertEqual(bern_fit.metric.shape, (2, 1))
@@ -89,8 +89,8 @@ class SampleTest(unittest.TestCase):
             stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
@@ -105,8 +105,8 @@ class SampleTest(unittest.TestCase):
             seed=12345,
             iter_sampling=100,
         )
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
         bern_fit = bern_model.sample(
@@ -116,8 +116,8 @@ class SampleTest(unittest.TestCase):
             seed=12345,
             iter_sampling=100,
         )
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
 
     def test_init_types(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -393,7 +393,7 @@ class SampleTest(unittest.TestCase):
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
         self.assertEqual(datagen_fit.num_draws, 100)
-        self.assertEqual(datagen_fit.sample.shape, (100, 1, len(column_names)))
+        self.assertEqual(datagen_fit.draws.shape, (100, 1, len(column_names)))
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.stepsize, None)
@@ -442,9 +442,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(len(BERNOULLI_COLS), len(fit.column_names))
         self.assertEqual('lp__', fit.column_names[0])
 
-        drawset = fit.get_drawset()
+        draws_df = fit.draws_as_dataframe()
         self.assertEqual(
-            drawset.shape,
+            draws_df.shape,
             (fit.runset.chains * fit.num_draws, len(fit.column_names)),
         )
 
@@ -501,19 +501,19 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.metric_type, 'diag_e')
         self.assertEqual(fit.stepsize.shape, (2,))
         self.assertEqual(fit.metric.shape, (2, 2095))
-        self.assertEqual((1000, 2, 2102), fit.sample.shape)
-        phis = fit.get_drawset(params=['phi'])
+        self.assertEqual((1000, 2, 2102), fit.draws.shape)
+        phis = fit.draws_as_dataframe(params=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
-        phi1 = fit.get_drawset(params=['phi.1'])
+        phi1 = fit.draws_as_dataframe(params=['phi.1'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.get_drawset(params=['phi.1', 'phi.10', 'phi.100'])
+        mo_phis = fit.draws_as_dataframe(params=['phi.1', 'phi.10', 'phi.100'])
         self.assertEqual((2000, 3), mo_phis.shape)
-        phi2095 = fit.get_drawset(params=['phi.2095'])
+        phi2095 = fit.draws_as_dataframe(params=['phi.2095'])
         self.assertEqual((2000, 1), phi2095.shape)
         with self.assertRaises(Exception):
-            fit.get_drawset(params=['phi.2096'])
+            fit.draws_as_dataframe(params=['phi.2096'])
         with self.assertRaises(Exception):
-            fit.get_drawset(params=['ph'])
+            fit.draws_as_dataframe(params=['ph'])
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -724,10 +724,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws_warmup, 200)
-        self.assertEqual(bern_fit.warmup.shape, (200, 2, len(BERNOULLI_COLS)))
-        self.assertEqual(bern_fit.num_draws, 100)
-        self.assertEqual(bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.num_draws, 300)
+        self.assertEqual(bern_fit.draws.shape, (300, 2, len(BERNOULLI_COLS)))
 
     def test_save_warmup_thin(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -744,10 +742,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws_warmup, 40)
-        self.assertEqual(bern_fit.warmup.shape, (40, 2, len(BERNOULLI_COLS)))
-        self.assertEqual(bern_fit.num_draws, 20)
-        self.assertEqual(bern_fit.sample.shape, (20, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.num_draws, 60)
+        self.assertEqual(bern_fit.draws.shape, (60, 2, len(BERNOULLI_COLS)))
 
     def test_dont_save_warmup(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -763,10 +759,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=False,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws_warmup, 0)
-        self.assertEqual(bern_fit.warmup, None)
         self.assertEqual(bern_fit.num_draws, 100)
-        self.assertEqual(bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.draws.shape, (100, 2, len(BERNOULLI_COLS)))
 
     def test_sampler_diags(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -905,11 +899,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(msg.startswith(expect))
 
         # check computations match
-        self.assertEqual(bern_fit.num_draws, 50)
-        self.assertEqual(bern_fit.num_draws_warmup, 100)
+        self.assertEqual(bern_fit.num_draws, 150)
         bern_fit.validate_csv_files()
-        self.assertEqual(bern_fit.num_draws, 50)
-        self.assertEqual(bern_fit.num_draws_warmup, 100)
+        self.assertEqual(bern_fit.num_draws, 150)
         self.assertEqual(len(bern_fit.column_names), 8)
         self.assertEqual(len(bern_fit.stan_variable_dims), 1)
         self.assertEqual(bern_fit.metric_type, 'diag_e')
