@@ -107,7 +107,7 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(bern_fit.metric_type, 'dense_e')
         self.assertEqual(bern_fit.stepsize.shape, (2,))
-        self.assertEqual(bern_fit.metric.shape, (2, 2))
+        self.assertEqual(bern_fit.metric.shape, (2, 1, 1))
 
         bern_fit = bern_model.sample(
             data=jdata,
