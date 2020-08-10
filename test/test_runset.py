@@ -100,9 +100,11 @@ class RunSetTest(unittest.TestCase):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3, 4]
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
+            chain_ids=chain_ids,
             data=jdata,
             method_args=sampler_args,
             save_diagnostics=True,
@@ -113,6 +115,7 @@ class RunSetTest(unittest.TestCase):
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
+            chain_ids=chain_ids,
             data=jdata,
             method_args=sampler_args,
             save_diagnostics=True,
