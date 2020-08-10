@@ -235,7 +235,7 @@ class RunSet:
             with open(test_path, 'w'):
                 pass
             os.remove(test_path)  # cleanup
-        except OSError:
+        except (IOError, OSError, PermissionError):
             raise Exception('cannot save to path: {}'.format(dir))
 
         for i in range(self.chains):

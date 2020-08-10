@@ -5,11 +5,14 @@ import platform
 import logging
 import shutil
 from multiprocessing import cpu_count
+import tempfile
+import stat
 import unittest
 from time import time
 from testfixtures import LogCapture
 import pytest
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import RunSet, CmdStanMCMC
@@ -75,6 +78,36 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.metric_type, 'diag_e')
         self.assertEqual(bern_fit.stepsize.shape, (2,))
         self.assertEqual(bern_fit.metric.shape, (2, 1))
+
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_warmup=1000,
+            iter_sampling=100,
+            metric='dense_e',
+        )
+        self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
+        self.assertIn('method=sample', bern_fit.__repr__())
+
+        self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
+
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            stdout_file = bern_fit.runset.stdout_files[i]
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(stdout_file))
+
+        self.assertEqual(bern_fit.runset.chains, 2)
+        self.assertEqual(bern_fit.num_draws, 100)
+        self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
+
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.metric_type, 'dense_e')
+        self.assertEqual(bern_fit.stepsize.shape, (2,))
+        self.assertEqual(bern_fit.metric.shape, (2, 1, 1))
 
         bern_fit = bern_model.sample(
             data=jdata,
@@ -510,9 +543,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 3), mo_phis.shape)
         phi2095 = fit.get_drawset(params=['phi.2095'])
         self.assertEqual((2000, 1), phi2095.shape)
-        with self.assertRaises(Exception):
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: phi.2096'):
             fit.get_drawset(params=['phi.2096'])
-        with self.assertRaises(Exception):
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
             fit.get_drawset(params=['ph'])
 
     # pylint: disable=no-self-use
@@ -575,7 +608,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
-        with self.assertRaisesRegex(Exception, 'file exists'):
+        with self.assertRaisesRegex(
+            ValueError, 'file exists, not overwriting: '
+        ):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
         tmp2_dir = os.path.join(HERE, 'tmp2')
@@ -610,6 +645,15 @@ class CmdStanMCMCTest(unittest.TestCase):
                 os.remove(bern_fit.runset.stdout_files[i])
             if os.path.exists(bern_fit.runset.stderr_files[i]):
                 os.remove(bern_fit.runset.stderr_files[i])
+
+        with self.assertRaisesRegex(ValueError, 'cannot access csv file'):
+            bern_fit.save_csvfiles(dir=DATAFILES_PATH)
+
+        if platform.system() != "Windows":
+            with self.assertRaisesRegex(Exception, 'cannot save to path: '):
+                dir = tempfile.mkdtemp(dir=_TMPDIR)
+                os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                bern_fit.save_csvfiles(dir=dir)
 
     def test_diagnose_divergences(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)

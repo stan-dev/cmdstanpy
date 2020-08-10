@@ -3,6 +3,7 @@
 import os
 import unittest
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import RunSet
@@ -94,6 +95,34 @@ class RunSetTest(unittest.TestCase):
         runset = RunSet(args=cmdstan_args)
         self.assertIn('id=1', runset._cmds[0])
         self.assertIn('id=4', runset._cmds[3])
+
+    def test_save_diagnostics(self):
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3, 4]
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=chain_ids,
+            data=jdata,
+            method_args=sampler_args,
+            save_diagnostics=True,
+        )
+        runset = RunSet(args=cmdstan_args)
+        self.assertIn(_TMPDIR, runset.diagnostic_files[0])
+
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=chain_ids,
+            data=jdata,
+            method_args=sampler_args,
+            save_diagnostics=True,
+            output_dir=os.path.abspath('.'),
+        )
+        runset = RunSet(args=cmdstan_args)
+        self.assertIn(os.path.abspath('.'), runset.diagnostic_files[0])
 
     def test_chain_ids(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
