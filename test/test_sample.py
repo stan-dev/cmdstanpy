@@ -646,12 +646,11 @@ class CmdStanMCMCTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'cannot access csv file'):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
-        with self.assertRaisesRegex(
-            Exception, 'cannot save to path: '
-        ):
-            dir = tempfile.mkdtemp(dir=_TMPDIR)
-            os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
-            bern_fit.save_csvfiles(dir=dir)
+        if platform.system() != "Windows":
+            with self.assertRaisesRegex(Exception, 'cannot save to path: '):
+                dir = tempfile.mkdtemp(dir=_TMPDIR)
+                os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                bern_fit.save_csvfiles(dir=dir)
 
     def test_diagnose_divergences(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
