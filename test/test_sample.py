@@ -545,7 +545,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 1), phi2095.shape)
         with self.assertRaisesRegex(ValueError, 'unknown parameter: phi.2096'):
             fit.draws_as_dataframe(params=['phi.2096'])
-        with self.assertRaises(ValueError, 'unknown parameter: ph'):
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
             fit.draws_as_dataframe(params=['ph'])
 
     # pylint: disable=no-self-use
