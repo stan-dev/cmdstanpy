@@ -471,7 +471,7 @@ class CmdStanMCMC:
             ' "draws(inc_warmup=True)", returning draws from both'
             ' warmup and sampling iterations.'
         )
-        return self.draws()
+        return self.draws(inc_warmup=True)
 
     def validate_csv_files(self) -> None:
         """

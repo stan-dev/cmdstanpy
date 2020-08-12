@@ -825,6 +825,48 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
 
+    def test_deprecated(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=200,
+            iter_sampling=100,
+            save_warmup=True,
+        )
+        with LogCapture() as log:
+            self.assertEqual(
+                bern_fit.sample.shape,
+                (100, 2, len(BERNOULLI_COLS)),
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "sample" will be deprecated,'
+                ' use method "draws" instead.'
+            )
+        )
+        with LogCapture() as log:
+            self.assertEqual(
+                bern_fit.warmup.shape,
+                (300, 2, len(BERNOULLI_COLS)),
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "warmup" has been deprecated, instead use method'
+                ' "draws(inc_warmup=True)", returning draws from both'
+                ' warmup and sampling iterations.'
+            )
+        )
+
+
     def test_sampler_diags(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
