@@ -866,7 +866,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
 
-
     def test_sampler_diags(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
