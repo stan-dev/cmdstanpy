@@ -649,7 +649,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'cannot access csv file'):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
-        if platform.system() != "Windows":
+        if platform.system() != 'Windows':
             with self.assertRaisesRegex(Exception, 'cannot save to path: '):
                 dir = tempfile.mkdtemp(dir=_TMPDIR)
                 os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
