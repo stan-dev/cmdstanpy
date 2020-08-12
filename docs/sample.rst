@@ -199,7 +199,7 @@ produced by RNG functions may change.
     sim_data.summary()
 
 Each draw contains variable `y_sim`, a vector of `N` binary outcomes.
-This is $\widetilde{y}$, the probability of new data given an estimate of
+From this, we can compute the probability of new data given an estimate of
 parameter `theta` - the chance of success of a single Bernoulli trial.
 By plotting the histogram of the distribution of total number of successes
 in `N` trials shows the **posterior predictive distribution** of `theta`.
