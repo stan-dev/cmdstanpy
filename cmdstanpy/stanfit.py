@@ -132,7 +132,7 @@ class RunSet:
                 repr, '\n\t'.join(self._csv_files)
             )
         if self._args.save_diagnostics and os.path.exists(
-            self._diagnostics_files[0]
+            self._diagnostic_files[0]
         ):
             repr = '{}\n diagnostics_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._diagnostic_files)
