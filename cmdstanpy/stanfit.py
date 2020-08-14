@@ -201,13 +201,6 @@ class RunSet:
         return True
 
     @property
-    def retcodes(self) -> List[int]:
-        """
-        List of return codes for all chains.
-        """
-        return self._retcodes
-
-    @property
     def diagnostic_files(self) -> List[str]:
         """
         List of paths to CmdStan diagnostic output files.
