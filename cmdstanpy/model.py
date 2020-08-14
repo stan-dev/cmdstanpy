@@ -750,17 +750,27 @@ class CmdStanModel:
                 # re-enable logger for console
                 self._logger.propagate = True
 
-            err_msg = 'Error during sampling.\n'
             if not runset._check_retcodes():
-                for i in range(chains):
-                    if runset._retcode(i) != 0:
-                        err_msg = '{}chain {} returned error code {}\n'.format(
-                            err_msg, i + 1, runset._retcode(i)
+                bad_runs = [
+                    i for (i, j) in enumerate(runset.retcodes) if j != 0
+                ]
+                msg = 'Failure during chains: {}\n'.format(
+                    ','.join([str(runset.chain_ids[i]) for i in bad_runs])
+                )
+                for i in bad_runs:
+                    if os.path.exists(runset.stdout_files[i]):
+                        msg = '{}Chain {}, console message:\n'.format(
+                            msg, runset.chain_ids[i]
                         )
-                console_errs = runset._get_err_msgs()
-                if len(console_errs) > 0:
-                    err_msg = '{}{}'.format(err_msg, ''.join(console_errs))
-                raise RuntimeError(err_msg)
+                        with open(runset.stdout_files[i], 'r') as fd:
+                            msg = '{}{}\n'.format(msg, fd.read())
+                    if os.path.exists(runset.stderr_files[i]):
+                        msg = '{}chain {} error message:\n'.format(
+                            msg, runset.chain_ids[i]
+                        )
+                        with open(runset.stderr_files[i], 'r') as fd:
+                            msg = '{}{}\n'.format(msg, fd.read())
+                raise RuntimeError(msg)
 
             mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
         return mcmc

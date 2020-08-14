@@ -126,8 +126,19 @@ class RunSet:
     def __repr__(self) -> str:
         repr = 'RunSet: chains={}'.format(self._chains)
         repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
-        repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
-            repr, '\n\t'.join(self._csv_files), '\n\t'.join(self._stdout_files)
+        repr = '{}\n retcodes={}'.format(repr, self._retcodes)
+        repr = '{}\n csv_files:\n\t{}\n'.format(
+            repr, '\n\t'.join(self._csv_files)
+        )
+        if self._args.save_diagnostics:
+            repr = '{}\n diagnostics_files:\n\t{}\n'.format(
+                repr, '\n\t'.join(self._diagnostic_files)
+            )
+        repr = '{}\n console_msgs:\n\t{}\n'.format(
+            repr, '\n\t'.join(self._stdout_files)
+        )
+        repr = '{}\n error_msgs:\n\t{}\n'.format(
+            repr, '\n\t'.join(self._stderr_files)
         )
         return repr
 
@@ -183,6 +194,13 @@ class RunSet:
             if self._retcodes[i] != 0:
                 return False
         return True
+
+    @property
+    def retcodes(self) -> List[int]:
+        """
+        List of return codes for all chains.
+        """
+        return self._retcodes
 
     @property
     def diagnostic_files(self) -> List[str]:
