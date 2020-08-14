@@ -127,19 +127,24 @@ class RunSet:
         repr = 'RunSet: chains={}'.format(self._chains)
         repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
         repr = '{}\n retcodes={}'.format(repr, self._retcodes)
-        repr = '{}\n csv_files:\n\t{}\n'.format(
-            repr, '\n\t'.join(self._csv_files)
-        )
-        if self._args.save_diagnostics:
-            repr = '{}\n diagnostics_files:\n\t{}\n'.format(
+        if os.path.exists(self._csv_files[0]):
+            repr = '{}\n csv_files:\n\t{}'.format(
+                repr, '\n\t'.join(self._csv_files)
+            )
+        if self._args.save_diagnostics and os.path.exists(
+            self._diagnostics_files[0]
+        ):
+            repr = '{}\n diagnostics_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._diagnostic_files)
             )
-        repr = '{}\n console_msgs:\n\t{}\n'.format(
-            repr, '\n\t'.join(self._stdout_files)
-        )
-        repr = '{}\n error_msgs:\n\t{}\n'.format(
-            repr, '\n\t'.join(self._stderr_files)
-        )
+        if os.path.exists(self._stdout_files[0]):
+            repr = '{}\n console_msgs:\n\t{}'.format(
+                repr, '\n\t'.join(self._stdout_files)
+            )
+        if os.path.exists(self._stderr_files[0]):
+            repr = '{}\n error_msgs:\n\t{}'.format(
+                repr, '\n\t'.join(self._stderr_files)
+            )
         return repr
 
     @property
@@ -217,27 +222,37 @@ class RunSet:
         """Set retcode for chain[idx] to val."""
         self._retcodes[idx] = val
 
-    def _get_err_msgs(self) -> List[str]:
+    def get_err_msgs(self) -> List[str]:
         """Checks console messages for each chain."""
         msgs = []
+        msgs.append(self.__repr__())
         for i in range(self._chains):
             if (
                 os.path.exists(self._stderr_files[i])
                 and os.stat(self._stderr_files[i]).st_size > 0
             ):
                 with open(self._stderr_files[i], 'r') as fd:
-                    msgs.append('chain {}:\n{}\n'.format(i + 1, fd.read()))
+                    msgs.append(
+                        'chain_id {}:\n{}\n'.format(
+                            self._chain_ids[i], fd.read()
+                        )
+                    )
             if (
                 os.path.exists(self._stdout_files[i])
                 and os.stat(self._stdout_files[i]).st_size > 0
             ):
                 with open(self._stdout_files[i], 'r') as fd:
                     contents = fd.read()
-                    pat = re.compile(r'^Exception.*$', re.M)
+                    # pattern matches initial "Exception" or "Error" msg
+                    pat = re.compile(r'^E[rx].*$', re.M)
                 errors = re.findall(pat, contents)
                 if len(errors) > 0:
-                    msgs.append('chain {}: {}\n'.format(i + 1, errors))
-        return msgs
+                    msgs.append(
+                        'chain_id {}:\n\t{}\n'.format(
+                            self._chain_ids[i], '\n\t'.join(errors)
+                        )
+                    )
+        return '\n'.join(msgs)
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
