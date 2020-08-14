@@ -720,7 +720,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-4.txt'
             ),
         ]
-        self.assertEqual(len(runset._get_err_msgs()), 4)
+        self.assertIn('Exception', runset.get_err_msgs())
 
         # csv file headers inconsistent
         runset._csv_files = [
