@@ -99,14 +99,14 @@ as a 3-D ``numpy.ndarray`` (i.e., a multi-dimensional array)
 over all draws from all chains  arranged as draws X chains X columns.
 Instantiation happens the first time that any of the information
 in the posterior is accesed via properties:
-``sample``, ``metric``, or ``stepsize`` are accessed.
+``draws``, ``metric``, or ``stepsize`` are accessed.
 At this point the stan-csv output files are read into memory.
 For large files this may take several seconds; for the example
 dataset, this should take less than a second.
 
 .. code-block:: python
 
-    bern_fit.sample.shape
+    bern_fit.draws().shape
     
 Python's index slicing operations can be used to access the information by chain.
 For example, to select all draws and all output columns from the first chain,
@@ -115,9 +115,9 @@ the index '0' corresponds to the first chain in the :ref:`class_cmdstanmcmc`:
 
 .. code-block:: python
 
-    chain_1 = bern_fit.sample[:,0,:]
+    chain_1 = bern_fit.draws()[:,0,:]
     chain_1.shape       # (1000, 8)
-    chain_1[0]          # sample first draw:
+    chain_1[0]          # first draw:
                         # array([-7.99462  ,  0.578072 ,  0.955103 ,  2.       ,  7.       ,
                         # 0.       ,  9.44788  ,  0.0934208])
 

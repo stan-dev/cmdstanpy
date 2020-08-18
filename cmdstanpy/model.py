@@ -804,7 +804,7 @@ class CmdStanModel:
 
         if isinstance(mcmc_sample, CmdStanMCMC):
             sample_csv_files = mcmc_sample.runset.csv_files
-            sample_drawset = mcmc_sample.get_drawset()
+            sample_drawset = mcmc_sample.draws_as_dataframe()
             chains = mcmc_sample.chains
             chain_ids = mcmc_sample.chain_ids
         elif isinstance(mcmc_sample, list):
@@ -849,7 +849,7 @@ class CmdStanModel:
                 runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
                 runset._csv_files = sample_csv_files
                 sample_fit = CmdStanMCMC(runset)
-                sample_drawset = sample_fit.get_drawset()
+                sample_drawset = sample_fit.draws_as_dataframe()
         except ValueError as e:
             raise ValueError(
                 'Invalid mcmc_sample, error:\n\t{}\n\t'
