@@ -974,6 +974,9 @@ class CmdStanModel:
         :param output_samples: Number of approximate posterior output draws
             to save.
 
+        :param require_converged: Whether or not to raise an error if stan
+            reports that "The algorithm may not have converged".
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
