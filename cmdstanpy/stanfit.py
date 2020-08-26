@@ -261,8 +261,8 @@ class RunSet:
             with open(test_path, 'w'):
                 pass
             os.remove(test_path)  # cleanup
-        except (IOError, OSError, PermissionError):
-            raise Exception('cannot save to path: {}'.format(dir))
+        except (IOError, OSError, PermissionError) as exc:
+            raise Exception('cannot save to path: {}'.format(dir)) from exc
 
         for i in range(self.chains):
             if not os.path.exists(self._csv_files[i]):
