@@ -461,7 +461,7 @@ class VariationalArgs:
                     ' found {}'.format(self.eta)
                 )
         if self.adapt_iter is not None:
-            if self.adapt_iter < 1 or not isinstance(self.eta, Integral):
+            if self.adapt_iter < 1 or not isinstance(self.adapt_iter, Integral):
                 raise ValueError(
                     'adapt_iter must be a positive integer,'
                     ' found {}'.format(self.adapt_iter)
