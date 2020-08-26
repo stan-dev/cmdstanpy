@@ -561,9 +561,9 @@ def scan_variational_csv(path: str) -> Dict:
             )
         line = fd.readline().lstrip(' #\t\n')
         lineno += 1
-        if not line.startswith('eta = 1'):
+        if not line.startswith('eta'):
             raise ValueError(
-                'line {}: expecting eta = 1, found:\n\t "{}"'.format(
+                'line {}: expecting eta, found:\n\t "{}"'.format(
                     lineno, line
                 )
             )
