@@ -601,11 +601,26 @@ class VariationalTest(unittest.TestCase):
         self.assertIn('method=variational', ' '.join(cmd))
         self.assertIn('output_samples=1', ' '.join(cmd))
 
-        args = VariationalArgs(tol_rel_obj=1)
+        args = VariationalArgs(tol_rel_obj=0.01)
         args.validate(chains=1)
         cmd = args.compose(idx=0, cmd=[])
         self.assertIn('method=variational', ' '.join(cmd))
-        self.assertIn('tol_rel_obj=1', ' '.join(cmd))
+        self.assertIn('tol_rel_obj=0.01', ' '.join(cmd))
+
+        args = VariationalArgs(adapt_engaged=True, adapt_iter=100)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd=[])
+        self.assertIn('adapt engaged=1 iter=100', ' '.join(cmd))
+
+        args = VariationalArgs(adapt_engaged=False)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd=[])
+        self.assertIn('adapt engaged=0', ' '.join(cmd))
+
+        args = VariationalArgs(eta=0.1)
+        args.validate(chains=1)
+        cmd = args.compose(idx=0, cmd=[])
+        self.assertIn('eta=0.1', ' '.join(cmd))
 
     def test_args_bad(self):
         args = VariationalArgs(algorithm='no_such_algo')
