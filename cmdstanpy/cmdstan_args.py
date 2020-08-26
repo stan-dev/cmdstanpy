@@ -403,6 +403,7 @@ class VariationalArgs:
         elbo_samples: int = None,
         eta: Real = None,
         adapt_iter: int = None,
+        adapt_engaged: bool = True,
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
         output_samples: int = None,
@@ -413,6 +414,7 @@ class VariationalArgs:
         self.elbo_samples = elbo_samples
         self.eta = eta
         self.adapt_iter = adapt_iter
+        self.adapt_engaged = adapt_engaged
         self.tol_rel_obj = tol_rel_obj
         self.eval_elbo = eval_elbo
         self.output_samples = output_samples
@@ -503,9 +505,13 @@ class VariationalArgs:
             cmd.append('elbo_samples={}'.format(self.elbo_samples))
         if self.eta is not None:
             cmd.append('eta={}'.format(self.eta))
-        if self.adapt_iter is not None:
-            cmd.append('adapt')
-            cmd.append('iter={}'.format(self.adapt_iter))
+        cmd.append('adapt')
+        if self.adapt_engaged:
+            cmd.append('engaged=1')
+            if self.adapt_iter is not None:
+                cmd.append('iter={}'.format(self.adapt_iter))
+        else:
+            cmd.append('engaged=0')
         if self.tol_rel_obj is not None:
             cmd.append('tol_rel_obj={}'.format(self.tol_rel_obj))
         if self.eval_elbo is not None:
