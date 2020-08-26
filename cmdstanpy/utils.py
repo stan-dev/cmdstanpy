@@ -562,8 +562,8 @@ def scan_variational_csv(path: str) -> Dict:
                         lineno, line
                     )
                 )
-        line = fd.readline().lstrip(' #\t\n')
-        lineno += 1
+            line = fd.readline().lstrip(' #\t\n')
+            lineno += 1
         xs = line.split(',')
         variational_mean = [float(x) for x in xs]
         dict['variational_mean'] = variational_mean
