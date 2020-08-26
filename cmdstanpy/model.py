@@ -904,6 +904,7 @@ class CmdStanModel:
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
         output_samples: int = None,
+        require_converged: bool = True,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1010,7 +1011,7 @@ class CmdStanModel:
             errors = re.findall(pat, contents)
             if len(errors) > 0:
                 valid = False
-        if not valid:
+        if require_converged and not valid:
             raise RuntimeError('The algorithm may not have converged.')
         if not runset._check_retcodes():
             msg = 'Error during variational inference.\n{}'.format(
