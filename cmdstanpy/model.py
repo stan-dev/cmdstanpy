@@ -900,6 +900,7 @@ class CmdStanModel:
         grad_samples: int = None,
         elbo_samples: int = None,
         eta: Real = None,
+        adapt_engaged: bool = True,
         adapt_iter: int = None,
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
@@ -962,6 +963,8 @@ class CmdStanModel:
 
         :param eta: Stepsize scaling parameter.
 
+        :param adapt_engaged: Whether eta adaptation is engaged.
+
         :param adapt_iter: Number of iterations for eta adaptation.
 
         :param tol_rel_obj: Relative tolerance parameter for convergence.
@@ -979,6 +982,7 @@ class CmdStanModel:
             grad_samples=grad_samples,
             elbo_samples=elbo_samples,
             eta=eta,
+            adapt_engaged=adapt_engaged,
             adapt_iter=adapt_iter,
             tol_rel_obj=tol_rel_obj,
             eval_elbo=eval_elbo,
