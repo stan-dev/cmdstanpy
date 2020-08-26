@@ -132,7 +132,7 @@ class SamplerArgs:
                 )
         if self.step_size is not None:
             if isinstance(self.step_size, Real):
-                if self.step_size < 0:
+                if self.step_size <= 0:
                     raise ValueError(
                         'step_size must be > 0, found {}'.format(self.step_size)
                     )
@@ -336,7 +336,7 @@ class OptimizeArgs:
                     'init_alpha must not be set when algorithm is Newton'
                 )
             if isinstance(self.init_alpha, Real):
-                if self.init_alpha < 0:
+                if self.init_alpha <= 0:
                     raise ValueError('init_alpha must be greater than 0')
             else:
                 raise ValueError('init_alpha must be type of float')
@@ -453,7 +453,7 @@ class VariationalArgs:
                     ' found {}'.format(self.elbo_samples)
                 )
         if self.eta is not None:
-            if self.eta < 1 or not isinstance(self.eta, (Integral, Real)):
+            if self.eta < 0 or not isinstance(self.eta, (Integral, Real)):
                 raise ValueError(
                     'eta must be a non-negative number,'
                     ' found {}'.format(self.eta)
@@ -465,7 +465,7 @@ class VariationalArgs:
                     ' found {}'.format(self.adapt_iter)
                 )
         if self.tol_rel_obj is not None:
-            if self.tol_rel_obj < 1 or not isinstance(
+            if self.tol_rel_obj <= 0 or not isinstance(
                 self.tol_rel_obj, (Integral, Real)
             ):
                 raise ValueError(
