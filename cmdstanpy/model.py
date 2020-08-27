@@ -850,13 +850,13 @@ class CmdStanModel:
                 runset._csv_files = sample_csv_files
                 sample_fit = CmdStanMCMC(runset)
                 sample_drawset = sample_fit.draws_as_dataframe()
-        except ValueError as e:
+        except ValueError as exc:
             raise ValueError(
                 'Invalid mcmc_sample, error:\n\t{}\n\t'
                 ' while processing files\n\t{}'.format(
-                    repr(e), '\n\t'.join(sample_csv_files)
+                    repr(exc), '\n\t'.join(sample_csv_files)
                 )
-            )
+            ) from exc
 
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files

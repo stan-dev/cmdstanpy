@@ -597,12 +597,12 @@ class CmdStanArgs:
                     self._logger.info(
                         'created output directory: %s', self.output_dir
                     )
-                except (RuntimeError, PermissionError):
+                except (RuntimeError, PermissionError) as exc:
                     raise ValueError(
                         'invalid path for output files, no such dir: {}'.format(
                             self.output_dir
                         )
-                    )
+                    ) from exc
             if not os.path.isdir(self.output_dir):
                 raise ValueError(
                     'specified output_dir not a directory: {}'.format(
@@ -614,11 +614,11 @@ class CmdStanArgs:
                 with open(testpath, 'w+'):
                     pass
                 os.remove(testpath)  # cleanup
-            except Exception:
+            except Exception as exc:
                 raise ValueError(
                     'invalid path for output files,'
                     ' cannot write to dir: {}'.format(self.output_dir)
-                )
+                ) from exc
 
         if self.seed is None:
             rng = RandomState()

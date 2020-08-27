@@ -444,8 +444,8 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
             val = float(rhs)
         else:
             val = int(rhs)
-    except TypeError:
-        raise ValueError('bad value in Rdump file: {}'.format(rhs))
+    except TypeError as exc:
+        raise ValueError('bad value in Rdump file: {}'.format(rhs)) from exc
     return val
 
 
@@ -686,10 +686,10 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         )
     try:
         float(stepsize.strip())
-    except ValueError:
+    except ValueError as exc:
         raise ValueError(
             'line {}: invalid stepsize: {}'.format(lineno, stepsize)
-        )
+        ) from exc
     line = fd.readline().strip()
     lineno += 1
     if not (
