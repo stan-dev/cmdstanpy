@@ -848,7 +848,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'cmdstanpy',
                 'WARNING',
                 'method "sample" will be deprecated,'
-                ' use method "draws" instead.'
+                ' use method "draws" instead.',
             )
         )
         with LogCapture() as log:
@@ -862,7 +862,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'WARNING',
                 'method "warmup" has been deprecated, instead use method'
                 ' "draws(inc_warmup=True)", returning draws from both'
-                ' warmup and sampling iterations.'
+                ' warmup and sampling iterations.',
             )
         )
 
