@@ -387,9 +387,9 @@ def rdump(path: str, data: Dict) -> None:
 
 def rload(fname: str) -> dict:
     """Parse data and parameter variable values from an R dump format file.
-       This parser only supports the subset of R dump data as described
-       in the "Dump Data Format" section of the CmdStan manual, i.e.,
-       scalar, vector, matrix, and array data types.
+    This parser only supports the subset of R dump data as described
+    in the "Dump Data Format" section of the CmdStan manual, i.e.,
+    scalar, vector, matrix, and array data types.
     """
     data_dict = {}
     with open(fname, 'r') as fd:
@@ -420,8 +420,8 @@ def rload(fname: str) -> dict:
 
 def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
     """Process right hand side of Rdump variable assignment statement.
-       Value is either scalar, vector, or multi-dim structure.
-       Use regex to capture structure values, dimensions.
+    Value is either scalar, vector, or multi-dim structure.
+    Use regex to capture structure values, dimensions.
     """
     pat = re.compile(
         r'structure\(\s*c\((?P<vals>[^)]*)\)'
@@ -568,7 +568,11 @@ def scan_variational_csv(path: str) -> Dict:
         variational_mean = [float(x) for x in xs]
         dict['variational_mean'] = variational_mean
         dict['variational_sample'] = pd.read_csv(
-            path, comment='#', skiprows=lineno, header=None
+            path,
+            comment='#',
+            skiprows=lineno,
+            header=None,
+            float_precision='high',
         )
     return dict
 

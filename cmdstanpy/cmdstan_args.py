@@ -350,8 +350,7 @@ class OptimizeArgs:
 
     # pylint: disable=unused-argument
     def compose(self, idx: int, cmd: List) -> str:
-        """compose command string for CmdStan for non-default arg values.
-        """
+        """compose command string for CmdStan for non-default arg values."""
         cmd.append('method=optimize')
         if self.algorithm:
             cmd.append('algorithm={}'.format(self.algorithm.lower()))
