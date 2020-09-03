@@ -163,7 +163,7 @@ def validate_dir(install_dir):
     if not os.path.exists(install_dir):
         try:
             os.makedirs(install_dir)
-        except OSError as e:
+        except (IOError, OSError, PermissionError) as e:
             raise ValueError(
                 'Cannot create directory: {}'.format(install_dir)
             ) from e
@@ -176,7 +176,7 @@ def validate_dir(install_dir):
             with open('tmp_test_w', 'w'):
                 pass
             os.remove('tmp_test_w')  # cleanup
-        except OSError as e:
+        except (IOError, OSError, PermissionError) as e:
             raise ValueError(
                 'Cannot write files to directory {}'.format(install_dir)
             ) from e

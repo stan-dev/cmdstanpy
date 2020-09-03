@@ -124,9 +124,7 @@ class OptimizeTest(unittest.TestCase):
         )
         exp_bound_model = CmdStanModel(stan_file=stan)
         no_data = {}
-        with self.assertRaisesRegex(
-            Exception, 'Error during optimizing, error code 70'
-        ):
+        with self.assertRaisesRegex(RuntimeError, 'Error during optimization'):
             exp_bound_model.optimize(
                 data=no_data, seed=1239812093, inits=None, algorithm='BFGS'
             )

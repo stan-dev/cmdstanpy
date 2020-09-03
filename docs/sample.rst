@@ -112,7 +112,7 @@ Specifying ``chains=6, parallel_chains=6`` will run all 6 chains in parallel.
 
     # run the NUTS-HMC sampler
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
-    bern_fit.sample.shape
+    bern_fit.draws().shape
     bern_fit.summary()
 
 
@@ -191,22 +191,28 @@ produced by RNG functions may change.
 
 .. code-block:: python
 
+    import os
+    from cmdstanpy import CmdStanModel
     datagen_stan = os.path.join('..', '..', 'test', 'data', 'bernoulli_datagen.stan')
     datagen_model = CmdStanModel(stan_file=datagen_stan)
-
     sim_data = datagen_model.sample(fixed_param=True)
     sim_data.summary()
 
-Compute, plot histogram of total successes for `N` Bernoulli trials with chance of success `theta`:
+Each draw contains variable `y_sim`, a vector of `N` binary outcomes.
+From this, we can compute the probability of new data given an estimate of
+parameter `theta` - the chance of success of a single Bernoulli trial.
+By plotting the histogram of the distribution of total number of successes
+in `N` trials shows the **posterior predictive distribution** of `theta`.
 
 .. code-block:: python
 
-    drawset_pd = sim_data.get_drawset()
-    drawset_pd.columns
+    # extract int array `y_sim` from the sampler output
+    y_sims = sim_data.stan_variable(name='y_sim')
+    y_sims.shape
 
-    # extract new series of outcomes of N Bernoulli trials
-    y_sims = drawset_pd.drop(columns=['lp__', 'accept_stat__'])
-
-    # plot total number of successes per draw
+    # each draw has 10 replicates of estimated parameter 'theta'
     y_sums = y_sims.sum(axis=1)
-    y_sums.astype('int32').plot.hist(range(0,datagen_data['N']+1))
+    # plot total number of successes per draw
+    import pandas as pd
+    y_sums_pd = pd.DataFrame(data=y_sums)
+    y_sums_pd.plot.hist(range(0,datagen_data['N']+1))

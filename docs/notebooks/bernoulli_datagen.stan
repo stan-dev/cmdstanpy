@@ -1,9 +1,9 @@
-transformed data { 
-  int<lower=0> N = 10;
-  real<lower=0,upper=1> theta = 0.35;
+data { 
+  int<lower=0> N;
+  real<lower=0,upper=1> theta;
 } 
 generated quantities {
-  int y_sim[N];
+  int theta_rep = 0;
   for (n in 1:N)
-    y_sim[n] = bernoulli_rng(theta);
+    theta_rep += bernoulli_rng(theta);
 }

@@ -5,11 +5,14 @@ import platform
 import logging
 import shutil
 from multiprocessing import cpu_count
+import tempfile
+import stat
 import unittest
 from time import time
 from testfixtures import LogCapture
 import pytest
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import RunSet, CmdStanMCMC
@@ -70,11 +73,41 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.num_draws, 100)
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
 
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws()
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(bern_fit.metric_type, 'diag_e')
         self.assertEqual(bern_fit.stepsize.shape, (2,))
         self.assertEqual(bern_fit.metric.shape, (2, 1))
+
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_warmup=1000,
+            iter_sampling=100,
+            metric='dense_e',
+        )
+        self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
+        self.assertIn('method=sample', bern_fit.__repr__())
+
+        self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
+
+        for i in range(bern_fit.runset.chains):
+            csv_file = bern_fit.runset.csv_files[i]
+            stdout_file = bern_fit.runset.stdout_files[i]
+            self.assertTrue(os.path.exists(csv_file))
+            self.assertTrue(os.path.exists(stdout_file))
+
+        self.assertEqual(bern_fit.runset.chains, 2)
+        self.assertEqual(bern_fit.num_draws, 100)
+        self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
+
+        bern_sample = bern_fit.sample
+        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.metric_type, 'dense_e')
+        self.assertEqual(bern_fit.stepsize.shape, (2,))
+        self.assertEqual(bern_fit.metric.shape, (2, 1, 1))
 
         bern_fit = bern_model.sample(
             data=jdata,
@@ -89,8 +122,8 @@ class SampleTest(unittest.TestCase):
             stdout_file = bern_fit.runset.stdout_files[i]
             self.assertTrue(os.path.exists(csv_file))
             self.assertTrue(os.path.exists(stdout_file))
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws()
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
         for i in range(bern_fit.runset.chains):  # cleanup datafile_path dir
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
@@ -105,8 +138,8 @@ class SampleTest(unittest.TestCase):
             seed=12345,
             iter_sampling=100,
         )
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws()
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
         bern_fit = bern_model.sample(
@@ -116,8 +149,8 @@ class SampleTest(unittest.TestCase):
             seed=12345,
             iter_sampling=100,
         )
-        bern_sample = bern_fit.sample
-        self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        bern_draws = bern_fit.draws()
+        self.assertEqual(bern_draws.shape, (100, 2, len(BERNOULLI_COLS)))
 
     def test_init_types(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -258,7 +291,7 @@ class SampleTest(unittest.TestCase):
         log.check_present(
             (
                 'cmdstanpy',
-                'WARNING',
+                'INFO',
                 'Requesting 7 parallel_chains for 1 chains, '
                 'running all chains in parallel.',
             )
@@ -292,6 +325,9 @@ class SampleTest(unittest.TestCase):
             data=no_data, seed=12345, iter_sampling=100, fixed_param=True
         )
         self.assertEqual(datagen_fit.runset._args.method, Method.SAMPLE)
+        self.assertEqual(datagen_fit.metric_type, None)
+        self.assertEqual(datagen_fit.metric, None)
+        self.assertEqual(datagen_fit.stepsize, None)
 
         for i in range(datagen_fit.runset.chains):
             csv_file = datagen_fit.runset.csv_files[i]
@@ -390,7 +426,7 @@ class SampleTest(unittest.TestCase):
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
         self.assertEqual(datagen_fit.num_draws, 100)
-        self.assertEqual(datagen_fit.sample.shape, (100, 1, len(column_names)))
+        self.assertEqual(datagen_fit.draws().shape, (100, 1, len(column_names)))
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.stepsize, None)
@@ -439,9 +475,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(len(BERNOULLI_COLS), len(fit.column_names))
         self.assertEqual('lp__', fit.column_names[0])
 
-        drawset = fit.get_drawset()
+        draws_df = fit.draws_as_dataframe()
         self.assertEqual(
-            drawset.shape,
+            draws_df.shape,
             (fit.runset.chains * fit.num_draws, len(fit.column_names)),
         )
 
@@ -498,19 +534,19 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.metric_type, 'diag_e')
         self.assertEqual(fit.stepsize.shape, (2,))
         self.assertEqual(fit.metric.shape, (2, 2095))
-        self.assertEqual((1000, 2, 2102), fit.sample.shape)
-        phis = fit.get_drawset(params=['phi'])
+        self.assertEqual((1000, 2, 2102), fit.draws().shape)
+        phis = fit.draws_as_dataframe(params=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
-        phi1 = fit.get_drawset(params=['phi.1'])
+        phi1 = fit.draws_as_dataframe(params=['phi.1'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.get_drawset(params=['phi.1', 'phi.10', 'phi.100'])
+        mo_phis = fit.draws_as_dataframe(params=['phi.1', 'phi.10', 'phi.100'])
         self.assertEqual((2000, 3), mo_phis.shape)
-        phi2095 = fit.get_drawset(params=['phi.2095'])
+        phi2095 = fit.draws_as_dataframe(params=['phi.2095'])
         self.assertEqual((2000, 1), phi2095.shape)
-        with self.assertRaises(Exception):
-            fit.get_drawset(params=['phi.2096'])
-        with self.assertRaises(Exception):
-            fit.get_drawset(params=['ph'])
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: phi.2096'):
+            fit.draws_as_dataframe(params=['phi.2096'])
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
+            fit.draws_as_dataframe(params=['ph'])
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -572,7 +608,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
-        with self.assertRaisesRegex(Exception, 'file exists'):
+        with self.assertRaisesRegex(
+            ValueError, 'file exists, not overwriting: '
+        ):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
         tmp2_dir = os.path.join(HERE, 'tmp2')
@@ -607,6 +645,15 @@ class CmdStanMCMCTest(unittest.TestCase):
                 os.remove(bern_fit.runset.stdout_files[i])
             if os.path.exists(bern_fit.runset.stderr_files[i]):
                 os.remove(bern_fit.runset.stderr_files[i])
+
+        with self.assertRaisesRegex(ValueError, 'cannot access csv file'):
+            bern_fit.save_csvfiles(dir=DATAFILES_PATH)
+
+        if platform.system() != 'Windows':
+            with self.assertRaisesRegex(Exception, 'cannot save to path: '):
+                dir = tempfile.mkdtemp(dir=_TMPDIR)
+                os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                bern_fit.save_csvfiles(dir=dir)
 
     def test_diagnose_divergences(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
@@ -673,7 +720,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-4.txt'
             ),
         ]
-        self.assertEqual(len(runset._get_err_msgs()), 4)
+        self.assertIn('Exception', runset.get_err_msgs())
 
         # csv file headers inconsistent
         runset._csv_files = [
@@ -721,10 +768,11 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws_warmup, 200)
-        self.assertEqual(bern_fit.warmup.shape, (200, 2, len(BERNOULLI_COLS)))
-        self.assertEqual(bern_fit.num_draws, 100)
-        self.assertEqual(bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.num_draws, 300)
+        self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(
+            bern_fit.draws(inc_warmup=True).shape, (300, 2, len(BERNOULLI_COLS))
+        )
 
     def test_save_warmup_thin(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -741,10 +789,11 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws_warmup, 40)
-        self.assertEqual(bern_fit.warmup.shape, (40, 2, len(BERNOULLI_COLS)))
-        self.assertEqual(bern_fit.num_draws, 20)
-        self.assertEqual(bern_fit.sample.shape, (20, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.num_draws, 60)
+        self.assertEqual(bern_fit.draws().shape, (20, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(
+            bern_fit.draws(inc_warmup=True).shape, (60, 2, len(BERNOULLI_COLS))
+        )
 
     def test_dont_save_warmup(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -760,10 +809,62 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=False,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws_warmup, 0)
-        self.assertEqual(bern_fit.warmup, None)
         self.assertEqual(bern_fit.num_draws, 100)
-        self.assertEqual(bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS)))
+        self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
+        with LogCapture() as log:
+            self.assertEqual(
+                bern_fit.draws(inc_warmup=True).shape,
+                (100, 2, len(BERNOULLI_COLS)),
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'draws from warmup iterations not available,'
+                ' must run sampler with "save_warmup=True".',
+            )
+        )
+
+    def test_deprecated(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=200,
+            iter_sampling=100,
+            save_warmup=True,
+        )
+        with LogCapture() as log:
+            self.assertEqual(
+                bern_fit.sample.shape,
+                (100, 2, len(BERNOULLI_COLS)),
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "sample" will be deprecated,'
+                ' use method "draws" instead.',
+            )
+        )
+        with LogCapture() as log:
+            self.assertEqual(
+                bern_fit.warmup.shape,
+                (300, 2, len(BERNOULLI_COLS)),
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "warmup" has been deprecated, instead use method'
+                ' "draws(inc_warmup=True)", returning draws from both'
+                ' warmup and sampling iterations.',
+            )
+        )
 
     def test_sampler_diags(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -850,6 +951,64 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(vars['z'].shape, (20, 20, 2))
         self.assertTrue('theta' in vars)
         self.assertEqual(vars['theta'].shape, (20, 4))
+
+    def test_validate(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=200,
+            iter_sampling=100,
+            thin=2,
+            save_warmup=True,
+            validate_csv=False,
+        )
+        # check error messages
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.column_names)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.stan_variable_dims)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.metric_type)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.metric)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertIsNone(bern_fit.stepsize)
+        expect = 'csv files not yet validated'
+        msg = log.actual()[-1][-1]
+        self.assertTrue(msg.startswith(expect))
+
+        # check computations match
+        self.assertEqual(bern_fit.num_draws, 150)
+        bern_fit.validate_csv_files()
+        self.assertEqual(bern_fit.num_draws, 150)
+        self.assertEqual(len(bern_fit.column_names), 8)
+        self.assertEqual(len(bern_fit.stan_variable_dims), 1)
+        self.assertEqual(bern_fit.metric_type, 'diag_e')
 
 
 if __name__ == '__main__':

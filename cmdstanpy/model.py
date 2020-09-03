@@ -313,7 +313,6 @@ class CmdStanModel:
         seed: int = None,
         inits: Union[Dict, float, str] = None,
         output_dir: str = None,
-        save_diagnostics: bool = True,
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
@@ -367,11 +366,6 @@ class CmdStanModel:
             files are written. If unspecified, output files will be written
             to a temporary directory which is deleted upon session exit.
 
-        :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to an output file with filename
-            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
-            e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
-
         :param algorithm: Algorithm to use. One of: 'BFGS', 'LBFGS', 'Newton'
 
         :param init_alpha: Line search step size for first iteration
@@ -393,7 +387,7 @@ class CmdStanModel:
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
-                save_diagnostics=save_diagnostics,
+                save_diagnostics=False,
                 method_args=optimize_args,
             )
 
@@ -402,12 +396,8 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
-            msg = 'Error during optimizing'
-            if runset._retcode(dummy_chain_id) != 0:
-                msg = '{}, error code {}'.format(
-                    msg, runset._retcode(dummy_chain_id)
-                )
-                raise RuntimeError(msg)
+            msg = 'Error during optimization.\n{}'.format(runset.get_err_msgs())
+            raise RuntimeError(msg)
         mle = CmdStanMLE(runset)
         return mle
 
@@ -436,6 +426,7 @@ class CmdStanModel:
         output_dir: str = None,
         save_diagnostics: bool = False,
         show_progress: Union[bool, str] = False,
+        validate_csv: bool = True,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -580,6 +571,11 @@ class CmdStanModel:
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
+        :param validate_csv: If ``False``, skip scan of sample csv output file.
+            When sample is large or disk i/o is slow, will speed up processing.
+            Default is ``True`` - sample csv files are scanned for completeness
+            and consistency.
+
         :return: CmdStanMCMC object
         """
         if chains is None:
@@ -620,7 +616,7 @@ class CmdStanModel:
         if parallel_chains is None:
             parallel_chains = max(min(cpu_count(), chains), 1)
         elif parallel_chains > chains:
-            self._logger.warning(
+            self._logger.info(
                 'Requesting %u parallel_chains for %u chains,'
                 ' running all chains in parallel.',
                 parallel_chains,
@@ -744,19 +740,11 @@ class CmdStanModel:
                 # re-enable logger for console
                 self._logger.propagate = True
 
-            err_msg = 'Error during sampling.\n'
             if not runset._check_retcodes():
-                for i in range(chains):
-                    if runset._retcode(i) != 0:
-                        err_msg = '{}chain {} returned error code {}\n'.format(
-                            err_msg, i + 1, runset._retcode(i)
-                        )
-                console_errs = runset._get_err_msgs()
-                if len(console_errs) > 0:
-                    err_msg = '{}{}'.format(err_msg, ''.join(console_errs))
-                raise RuntimeError(err_msg)
+                msg = 'Error during sampling.\n{}'.format(runset.get_err_msgs())
+                raise RuntimeError(msg)
 
-            mcmc = CmdStanMCMC(runset)
+            mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
         return mcmc
 
     def generate_quantities(
@@ -816,7 +804,7 @@ class CmdStanModel:
 
         if isinstance(mcmc_sample, CmdStanMCMC):
             sample_csv_files = mcmc_sample.runset.csv_files
-            sample_drawset = mcmc_sample.get_drawset()
+            sample_drawset = mcmc_sample.draws_as_dataframe()
             chains = mcmc_sample.chains
             chain_ids = mcmc_sample.chain_ids
         elif isinstance(mcmc_sample, list):
@@ -861,14 +849,14 @@ class CmdStanModel:
                 runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
                 runset._csv_files = sample_csv_files
                 sample_fit = CmdStanMCMC(runset)
-                sample_drawset = sample_fit.get_drawset()
-        except ValueError as e:
+                sample_drawset = sample_fit.draws_as_dataframe()
+        except ValueError as exc:
             raise ValueError(
                 'Invalid mcmc_sample, error:\n\t{}\n\t'
                 ' while processing files\n\t{}'.format(
-                    repr(e), '\n\t'.join(sample_csv_files)
+                    repr(exc), '\n\t'.join(sample_csv_files)
                 )
-            )
+            ) from exc
 
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files
@@ -893,12 +881,9 @@ class CmdStanModel:
                     executor.submit(self._run_cmdstan, runset, i)
 
             if not runset._check_retcodes():
-                msg = 'Error during generate_quantities'
-                for i in range(chains):
-                    if runset._retcode(i) != 0:
-                        msg = '{}, chain {} returned error code {}'.format(
-                            msg, i, runset._retcode(i)
-                        )
+                msg = 'Error during generate_quantities.\n{}'.format(
+                    runset.get_err_msgs()
+                )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
         return quantities
@@ -915,10 +900,12 @@ class CmdStanModel:
         grad_samples: int = None,
         elbo_samples: int = None,
         eta: Real = None,
+        adapt_engaged: bool = True,
         adapt_iter: int = None,
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
         output_samples: int = None,
+        require_converged: bool = True,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -976,6 +963,8 @@ class CmdStanModel:
 
         :param eta: Stepsize scaling parameter.
 
+        :param adapt_engaged: Whether eta adaptation is engaged.
+
         :param adapt_iter: Number of iterations for eta adaptation.
 
         :param tol_rel_obj: Relative tolerance parameter for convergence.
@@ -985,6 +974,9 @@ class CmdStanModel:
         :param output_samples: Number of approximate posterior output draws
             to save.
 
+        :param require_converged: Whether or not to raise an error if stan
+            reports that "The algorithm may not have converged".
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
@@ -993,6 +985,7 @@ class CmdStanModel:
             grad_samples=grad_samples,
             elbo_samples=elbo_samples,
             eta=eta,
+            adapt_engaged=adapt_engaged,
             adapt_iter=adapt_iter,
             tol_rel_obj=tol_rel_obj,
             eval_elbo=eval_elbo,
@@ -1025,15 +1018,13 @@ class CmdStanModel:
             errors = re.findall(pat, contents)
             if len(errors) > 0:
                 valid = False
-        if not valid:
+        if require_converged and not valid:
             raise RuntimeError('The algorithm may not have converged.')
         if not runset._check_retcodes():
-            msg = 'Error during variational inference'
-            if runset._retcode(dummy_chain_id) != 0:
-                msg = '{}, error code {}'.format(
-                    msg, runset._retcode(dummy_chain_id)
-                )
-                raise RuntimeError(msg)
+            msg = 'Error during variational inference.\n{}'.format(
+                runset.get_err_msgs()
+            )
+            raise RuntimeError(msg)
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
         return vb

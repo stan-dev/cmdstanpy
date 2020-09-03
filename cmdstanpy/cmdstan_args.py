@@ -132,7 +132,7 @@ class SamplerArgs:
                 )
         if self.step_size is not None:
             if isinstance(self.step_size, Real):
-                if self.step_size < 0:
+                if self.step_size <= 0:
                     raise ValueError(
                         'step_size must be > 0, found {}'.format(self.step_size)
                     )
@@ -336,7 +336,7 @@ class OptimizeArgs:
                     'init_alpha must not be set when algorithm is Newton'
                 )
             if isinstance(self.init_alpha, Real):
-                if self.init_alpha < 0:
+                if self.init_alpha <= 0:
                     raise ValueError('init_alpha must be greater than 0')
             else:
                 raise ValueError('init_alpha must be type of float')
@@ -350,8 +350,7 @@ class OptimizeArgs:
 
     # pylint: disable=unused-argument
     def compose(self, idx: int, cmd: List) -> str:
-        """compose command string for CmdStan for non-default arg values.
-        """
+        """compose command string for CmdStan for non-default arg values."""
         cmd.append('method=optimize')
         if self.algorithm:
             cmd.append('algorithm={}'.format(self.algorithm.lower()))
@@ -403,6 +402,7 @@ class VariationalArgs:
         elbo_samples: int = None,
         eta: Real = None,
         adapt_iter: int = None,
+        adapt_engaged: bool = True,
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
         output_samples: int = None,
@@ -413,6 +413,7 @@ class VariationalArgs:
         self.elbo_samples = elbo_samples
         self.eta = eta
         self.adapt_iter = adapt_iter
+        self.adapt_engaged = adapt_engaged
         self.tol_rel_obj = tol_rel_obj
         self.eval_elbo = eval_elbo
         self.output_samples = output_samples
@@ -453,19 +454,19 @@ class VariationalArgs:
                     ' found {}'.format(self.elbo_samples)
                 )
         if self.eta is not None:
-            if self.eta < 1 or not isinstance(self.eta, (Integral, Real)):
+            if self.eta < 0 or not isinstance(self.eta, (Integral, Real)):
                 raise ValueError(
                     'eta must be a non-negative number,'
                     ' found {}'.format(self.eta)
                 )
         if self.adapt_iter is not None:
-            if self.adapt_iter < 1 or not isinstance(self.eta, Integral):
+            if self.adapt_iter < 1 or not isinstance(self.adapt_iter, Integral):
                 raise ValueError(
                     'adapt_iter must be a positive integer,'
                     ' found {}'.format(self.adapt_iter)
                 )
         if self.tol_rel_obj is not None:
-            if self.tol_rel_obj < 1 or not isinstance(
+            if self.tol_rel_obj <= 0 or not isinstance(
                 self.tol_rel_obj, (Integral, Real)
             ):
                 raise ValueError(
@@ -503,9 +504,13 @@ class VariationalArgs:
             cmd.append('elbo_samples={}'.format(self.elbo_samples))
         if self.eta is not None:
             cmd.append('eta={}'.format(self.eta))
-        if self.adapt_iter is not None:
-            cmd.append('adapt')
-            cmd.append('iter={}'.format(self.adapt_iter))
+        cmd.append('adapt')
+        if self.adapt_engaged:
+            cmd.append('engaged=1')
+            if self.adapt_iter is not None:
+                cmd.append('iter={}'.format(self.adapt_iter))
+        else:
+            cmd.append('engaged=0')
         if self.tol_rel_obj is not None:
             cmd.append('tol_rel_obj={}'.format(self.tol_rel_obj))
         if self.eval_elbo is not None:
@@ -591,12 +596,12 @@ class CmdStanArgs:
                     self._logger.info(
                         'created output directory: %s', self.output_dir
                     )
-                except (RuntimeError, PermissionError):
+                except (RuntimeError, PermissionError) as exc:
                     raise ValueError(
                         'invalid path for output files, no such dir: {}'.format(
                             self.output_dir
                         )
-                    )
+                    ) from exc
             if not os.path.isdir(self.output_dir):
                 raise ValueError(
                     'specified output_dir not a directory: {}'.format(
@@ -608,11 +613,11 @@ class CmdStanArgs:
                 with open(testpath, 'w+'):
                     pass
                 os.remove(testpath)  # cleanup
-            except Exception:
+            except Exception as exc:
                 raise ValueError(
                     'invalid path for output files,'
                     ' cannot write to dir: {}'.format(self.output_dir)
-                )
+                ) from exc
 
         if self.seed is None:
             rng = RandomState()

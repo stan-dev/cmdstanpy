@@ -3,6 +3,7 @@
 import os
 import unittest
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
 from cmdstanpy.stanfit import RunSet
@@ -12,6 +13,26 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class RunSetTest(unittest.TestCase):
+    def test_check_repr(self):
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3, 4]  # default
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=chain_ids,
+            data=jdata,
+            method_args=sampler_args,
+        )
+        runset = RunSet(args=cmdstan_args)
+
+        self.assertIn('RunSet: chains=4', runset.__repr__())
+        self.assertIn('method=sample', runset.__repr__())
+        self.assertIn('retcodes=[-1, -1, -1, -1]', runset.__repr__())
+        self.assertIn('csv_files:', runset.__repr__())
+        self.assertNotIn('diagnostics_files:', runset.__repr__())
+
     def test_check_retcodes(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -25,8 +46,6 @@ class RunSetTest(unittest.TestCase):
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args)
-        self.assertIn('RunSet: chains=4', runset.__repr__())
-        self.assertIn('method=sample', runset.__repr__())
 
         retcodes = runset._retcodes
         self.assertEqual(4, len(retcodes))
@@ -59,7 +78,7 @@ class RunSetTest(unittest.TestCase):
             stdout_file = 'chain-' + str(i + 1) + '-missing-data-stdout.txt'
             path = os.path.join(DATAFILES_PATH, stdout_file)
             runset._stdout_files[i] = path
-        errs = '\n\t'.join(runset._get_err_msgs())
+        errs = runset.get_err_msgs()
         self.assertIn('Exception', errs)
 
     def test_output_filenames(self):
@@ -94,6 +113,34 @@ class RunSetTest(unittest.TestCase):
         runset = RunSet(args=cmdstan_args)
         self.assertIn('id=1', runset._cmds[0])
         self.assertIn('id=4', runset._cmds[3])
+
+    def test_save_diagnostics(self):
+        exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        sampler_args = SamplerArgs()
+        chain_ids = [1, 2, 3, 4]
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=chain_ids,
+            data=jdata,
+            method_args=sampler_args,
+            save_diagnostics=True,
+        )
+        runset = RunSet(args=cmdstan_args)
+        self.assertIn(_TMPDIR, runset.diagnostic_files[0])
+
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe=exe,
+            chain_ids=chain_ids,
+            data=jdata,
+            method_args=sampler_args,
+            save_diagnostics=True,
+            output_dir=os.path.abspath('.'),
+        )
+        runset = RunSet(args=cmdstan_args)
+        self.assertIn(os.path.abspath('.'), runset.diagnostic_files[0])
 
     def test_chain_ids(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
