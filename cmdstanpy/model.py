@@ -850,13 +850,13 @@ class CmdStanModel:
                 runset._csv_files = sample_csv_files
                 sample_fit = CmdStanMCMC(runset)
                 sample_drawset = sample_fit.draws_as_dataframe()
-        except ValueError as e:
+        except ValueError as exc:
             raise ValueError(
                 'Invalid mcmc_sample, error:\n\t{}\n\t'
                 ' while processing files\n\t{}'.format(
-                    repr(e), '\n\t'.join(sample_csv_files)
+                    repr(exc), '\n\t'.join(sample_csv_files)
                 )
-            )
+            ) from exc
 
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files
@@ -900,10 +900,12 @@ class CmdStanModel:
         grad_samples: int = None,
         elbo_samples: int = None,
         eta: Real = None,
+        adapt_engaged: bool = True,
         adapt_iter: int = None,
         tol_rel_obj: Real = None,
         eval_elbo: int = None,
         output_samples: int = None,
+        require_converged: bool = True,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -961,6 +963,8 @@ class CmdStanModel:
 
         :param eta: Stepsize scaling parameter.
 
+        :param adapt_engaged: Whether eta adaptation is engaged.
+
         :param adapt_iter: Number of iterations for eta adaptation.
 
         :param tol_rel_obj: Relative tolerance parameter for convergence.
@@ -970,6 +974,9 @@ class CmdStanModel:
         :param output_samples: Number of approximate posterior output draws
             to save.
 
+        :param require_converged: Whether or not to raise an error if stan
+            reports that "The algorithm may not have converged".
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
@@ -978,6 +985,7 @@ class CmdStanModel:
             grad_samples=grad_samples,
             elbo_samples=elbo_samples,
             eta=eta,
+            adapt_engaged=adapt_engaged,
             adapt_iter=adapt_iter,
             tol_rel_obj=tol_rel_obj,
             eval_elbo=eval_elbo,
@@ -1010,7 +1018,7 @@ class CmdStanModel:
             errors = re.findall(pat, contents)
             if len(errors) > 0:
                 valid = False
-        if not valid:
+        if require_converged and not valid:
             raise RuntimeError('The algorithm may not have converged.')
         if not runset._check_retcodes():
             msg = 'Error during variational inference.\n{}'.format(

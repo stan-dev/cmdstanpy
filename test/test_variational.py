@@ -147,6 +147,10 @@ class VariationalTest(unittest.TestCase):
         ):
             model.variational(algorithm='meanfield', seed=12345)
 
+        model.variational(
+            algorithm='meanfield', seed=12345, require_converged=False
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

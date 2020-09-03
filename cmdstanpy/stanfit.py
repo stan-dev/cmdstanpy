@@ -261,8 +261,8 @@ class RunSet:
             with open(test_path, 'w'):
                 pass
             os.remove(test_path)  # cleanup
-        except (IOError, OSError, PermissionError):
-            raise Exception('cannot save to path: {}'.format(dir))
+        except (IOError, OSError, PermissionError) as exc:
+            raise Exception('cannot save to path: {}'.format(dir)) from exc
 
         for i in range(self.chains):
             if not os.path.exists(self._csv_files[i]):
@@ -658,7 +658,12 @@ class CmdStanMCMC:
         do_command(cmd, logger=self.runset._logger)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
-                fd, delimiter=',', header=0, index_col=0, comment='#'
+                fd,
+                delimiter=',',
+                header=0,
+                index_col=0,
+                comment='#',
+                float_precision='high',
             )
         mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
@@ -971,7 +976,11 @@ class CmdStanGQ:
         drawset_list = []
         for chain in range(self.runset.chains):
             drawset_list.append(
-                pd.read_csv(self.runset.csv_files[chain], comment='#')
+                pd.read_csv(
+                    self.runset.csv_files[chain],
+                    comment='#',
+                    float_precision='high',
+                )
             )
         self._generated_quantities = pd.concat(drawset_list).values
 
