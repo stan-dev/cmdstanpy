@@ -727,22 +727,23 @@ class CmdStanMCMC:
                 mask.append(name)
         return self._draws_as_df[mask]
 
-    def stan_variable(self, name: str) -> np.ndarray:
+    def stan_variable(self, name: str) -> pd.DataFrame:
         """
-        Return a new ndarray which contains the set of post-warmup draws
+        Return a new DataFrame which contains the set of post-warmup draws
         for the named Stan program variable.  Flattens the chains.
         Underlyingly draws are in chain order, i.e., for a sample
         consisting of N chains of M draws each, the first M array
         elements are from chain 1, the next M are from chain 2,
         and the last M elements are from chain N.
 
-        * If the variable is a scalar variable, this returns a 1-d array,
-          length(draws X chains).
+        * If the variable is a scalar variable, this returns a 2-d DataFrame
+          with a singleton dimension,
+          shape( draws X chains, 1).
         * If the variable is a vector, this is a 2-d array,
           shape ( draws X chains, len(vector))
         * If the variable is a matrix, this is a 3-d array,
           shape ( draws X chains, matrix nrows, matrix ncols ).
-        * If the variable is an array with N dimensions, this is an N+1-d array,
+        * If the variable is an array with N dimensions, this is an N+1-d array
           shape ( draws X chains, size(dim 1), ... size(dim N)).
 
         :param name: variable name
@@ -754,20 +755,23 @@ class CmdStanMCMC:
         dims = self._stan_variable_dims[name]
         if dims == 1:
             idx = self.column_names.index(name)
-            return self._draws[self._draws_warmup :, :, idx].reshape(
-                (dim0,), order='A'
-            )
+            return pd.DataFrame({
+                name: self._draws[self._draws_warmup:, :, idx].reshape(
+                    (dim0,), order='A'
+                )
+            })
         else:
             idxs = [
-                x[0]
+                x
                 for x in enumerate(self.column_names)
                 if x[1].startswith(name + '.')
             ]
-            var_dims = [dim0]
-            var_dims.extend(dims)
-            return self._draws[
-                self._draws_warmup :, :, idxs[0] : idxs[-1] + 1
-            ].reshape(tuple(var_dims), order='A')
+            return pd.DataFrame({
+                n: self._draws[
+                    self._draws_warmup:, :, x
+                ].reshape(dim0, order='A')
+                for x, n in idxs
+            })
 
     def stan_variables(self) -> Dict:
         """
