@@ -889,7 +889,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue('theta' in bern_fit._stan_variable_dims)
         self.assertEqual(bern_fit._stan_variable_dims['theta'], 1)
         theta = bern_fit.stan_variable(name='theta')
-        self.assertEqual(theta.shape, (200,))
+        self.assertEqual(theta.shape, (200, 1))
         with self.assertRaises(ValueError):
             bern_fit.stan_variable(name='eta')
         with self.assertRaises(ValueError):
@@ -919,7 +919,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue('z' in fit._stan_variable_dims)
         self.assertEqual(fit._stan_variable_dims['z'], (20, 2))
         z = fit.stan_variable(name='z')
-        self.assertEqual(z.shape, (20, 20, 2))
+        self.assertEqual(z.shape, (20, 40))
         theta = fit.stan_variable(name='theta')
         self.assertEqual(theta.shape, (20, 4))
 
@@ -948,7 +948,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         vars = fit.stan_variables()
         self.assertEqual(len(vars), len(fit._stan_variable_dims))
         self.assertTrue('z' in vars)
-        self.assertEqual(vars['z'].shape, (20, 20, 2))
+        self.assertEqual(vars['z'].shape, (20, 40))
         self.assertTrue('theta' in vars)
         self.assertEqual(vars['theta'].shape, (20, 4))
 

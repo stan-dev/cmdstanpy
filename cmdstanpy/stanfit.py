@@ -736,15 +736,14 @@ class CmdStanMCMC:
         elements are from chain 1, the next M are from chain 2,
         and the last M elements are from chain N.
 
-        * If the variable is a scalar variable, this returns a 2-d DataFrame
-          with a singleton dimension,
-          shape( draws X chains, 1).
-        * If the variable is a vector, this is a 2-d array,
+        * If the variable is a scalar variable, the shape of the DataFrame is
+          ( draws X chains, 1).
+        * If the variable is a vector, the shape of the DataFrame is
           shape ( draws X chains, len(vector))
-        * If the variable is a matrix, this is a 3-d array,
-          shape ( draws X chains, matrix nrows, matrix ncols ).
-        * If the variable is an array with N dimensions, this is an N+1-d array
-          shape ( draws X chains, size(dim 1), ... size(dim N)).
+        * If the variable is a matrix, the shape of the DataFrame is
+          shape ( draws X chains, size(dim 1) X size(dim 2) )
+        * If the variable is an array with N dimensions, the shape of the DataFrame is
+          shape ( draws X chains, size(dim 1) X ... X size(dim N)).
 
         :param name: variable name
         """
