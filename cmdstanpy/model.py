@@ -161,7 +161,7 @@ class CmdStanModel:
         repr = 'CmdStanModel: name={}'.format(self._name)
         repr = '{}\n\t stan_file={}'.format(repr, self._stan_file)
         repr = '{}\n\t exe_file={}'.format(repr, self._exe_file)
-        repr = '{}\n\t compiler_optons={}'.format(repr, self._compiler_options)
+        repr = '{}\n\t compiler_options={}'.format(repr, self._compiler_options)
         return repr
 
     @property
