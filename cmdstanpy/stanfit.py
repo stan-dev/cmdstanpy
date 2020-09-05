@@ -751,26 +751,19 @@ class CmdStanMCMC:
             raise ValueError('unknown name: {}'.format(name))
         self._assemble_draws()
         dim0 = self.num_draws * self.runset.chains
-        dims = self._stan_variable_dims[name]
-        if dims == 1:
-            idx = self.column_names.index(name)
-            return pd.DataFrame({
-                name: self._draws[self._draws_warmup:, :, idx].reshape(
-                    (dim0,), order='A'
-                )
-            })
-        else:
-            idxs = [
-                x
-                for x in enumerate(self.column_names)
-                if x[1].startswith(name + '.')
-            ]
-            return pd.DataFrame({
-                n: self._draws[
-                    self._draws_warmup:, :, x
-                ].reshape(dim0, order='A')
-                for x, n in idxs
-            })
+        dims = np.prod(self._stan_variable_dims[name])
+        pattern = r'^{}(\.\d+)*$'.format(name)
+        names, idxs = [], []
+        for i, column_name in enumerate(self.column_names):
+            if re.search(pattern, column_name):
+                names.append(column_name)
+                idxs.append(i)
+        return pd.DataFrame(
+            self._draws[
+                self._draws_warmup:, :, idxs
+            ].reshape((dim0, dims), order='A'),
+            columns=names
+        )
 
     def stan_variables(self) -> Dict:
         """
