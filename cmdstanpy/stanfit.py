@@ -702,7 +702,7 @@ class CmdStanMCMC:
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
         """
-        pnames_base = [name.split('.')[0] for name in self.column_names]
+        pnames_base = [name.split('[')[0] for name in self.column_names]
         if params is not None:
             for param in params:
                 if not (param in self._column_names or param in pnames_base):
@@ -723,7 +723,7 @@ class CmdStanMCMC:
         mask = []
         params = set(params)
         for name in self.column_names:
-            if any(item in params for item in (name, name.split('.')[0])):
+            if any(item in params for item in (name, name.split('[')[0])):
                 mask.append(name)
         return self._draws_as_df[mask]
 

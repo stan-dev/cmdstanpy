@@ -37,16 +37,16 @@ class GenerateQuantitiesTest(unittest.TestCase):
             csv_file = bern_gqs.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
         column_names = [
-            'y_rep.1',
-            'y_rep.2',
-            'y_rep.3',
-            'y_rep.4',
-            'y_rep.5',
-            'y_rep.6',
-            'y_rep.7',
-            'y_rep.8',
-            'y_rep.9',
-            'y_rep.10',
+            'y_rep[1]',
+            'y_rep[2]',
+            'y_rep[3]',
+            'y_rep[4]',
+            'y_rep[5]',
+            'y_rep[6]',
+            'y_rep[7]',
+            'y_rep[8]',
+            'y_rep[9]',
+            'y_rep[10]',
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
         self.assertEqual(
@@ -104,16 +104,16 @@ class GenerateQuantitiesTest(unittest.TestCase):
             csv_file = bern_gqs.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
         column_names = [
-            'y_rep.1',
-            'y_rep.2',
-            'y_rep.3',
-            'y_rep.4',
-            'y_rep.5',
-            'y_rep.6',
-            'y_rep.7',
-            'y_rep.8',
-            'y_rep.9',
-            'y_rep.10',
+            'y_rep[1]',
+            'y_rep[2]',
+            'y_rep[3]',
+            'y_rep[4]',
+            'y_rep[5]',
+            'y_rep[6]',
+            'y_rep[7]',
+            'y_rep[8]',
+            'y_rep[9]',
+            'y_rep[10]',
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
         self.assertEqual(

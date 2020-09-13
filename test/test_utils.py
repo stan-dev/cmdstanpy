@@ -516,16 +516,16 @@ class ParseVarDimsTest(unittest.TestCase):
     def test_parse_scalar_vec_scalar(self):
         x = [
             'foo',
-            'phi.1',
-            'phi.2',
-            'phi.3',
-            'phi.4',
-            'phi.5',
-            'phi.6',
-            'phi.7',
-            'phi.8',
-            'phi.9',
-            'phi.10',
+            'phi[1]',
+            'phi[2]',
+            'phi[3]',
+            'phi[4]',
+            'phi[5]',
+            'phi[6]',
+            'phi[7]',
+            'phi[8]',
+            'phi[9]',
+            'phi[10]',
             'bar',
         ]
         vars_dict = parse_var_dims(x)
@@ -537,18 +537,18 @@ class ParseVarDimsTest(unittest.TestCase):
     def test_parse_scalar_matrix_vec(self):
         x = [
             'foo',
-            'phi.1.1',
-            'phi.1.2',
-            'phi.1.3',
-            'phi.1.4',
-            'phi.1.5',
-            'phi.2.1',
-            'phi.2.2',
-            'phi.2.3',
-            'phi.2.4',
-            'phi.2.5',
-            'bar.1',
-            'bar.2',
+            'phi[1,1]',
+            'phi[1,2]',
+            'phi[1,3]',
+            'phi[1,4]',
+            'phi[1,5]',
+            'phi[2,1]',
+            'phi[2,2]',
+            'phi[2,3]',
+            'phi[2,4]',
+            'phi[2,5]',
+            'bar[1]',
+            'bar[2]',
         ]
         vars_dict = parse_var_dims(x)
         self.assertEqual(len(vars_dict), 3)

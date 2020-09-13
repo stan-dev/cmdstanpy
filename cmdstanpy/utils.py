@@ -636,9 +636,17 @@ def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     line = fd.readline().strip()
     lineno += 1
     names = line.split(',')
-    config_dict['column_names'] = tuple(names)
+    config_dict['column_names'] = tuple(_rename_columns(names))
     config_dict['num_params'] = len(names) - 1
     return lineno
+
+
+def _rename_columns(names: List) -> List:
+    names = [
+        re.sub(r',([\d,]+)$', r'[\1]', column.replace('.', ','))
+        for column in names
+    ]
+    return names
 
 
 def parse_var_dims(names: Tuple[str, ...]) -> Dict:
@@ -653,14 +661,14 @@ def parse_var_dims(names: Tuple[str, ...]) -> Dict:
     while idx < len(names):
         if names[idx].endswith('__'):
             pass
-        elif '.' not in names[idx]:
+        elif '[' not in names[idx]:
             vars_dict[names[idx]] = 1
         else:
-            vs = names[idx].split('.')
-            if idx < len(names) - 1 and names[idx + 1].split('.')[0] == vs[0]:
+            vs = names[idx].split('[')
+            if idx < len(names) - 1 and names[idx + 1].split('[')[0] == vs[0]:
                 idx += 1
                 continue
-            dims = [int(vs[x]) for x in range(1, len(vs))]
+            dims = [int(x) for x in vs[1][:-1].split(',')]
             vars_dict[vs[0]] = tuple(dims)
         idx += 1
     return vars_dict
