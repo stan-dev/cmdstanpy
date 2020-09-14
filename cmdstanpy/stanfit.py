@@ -742,8 +742,8 @@ class CmdStanMCMC:
           shape ( draws X chains, len(vector))
         * If the variable is a matrix, the shape of the DataFrame is
           shape ( draws X chains, size(dim 1) X size(dim 2) )
-        * If the variable is an array with N dimensions, the shape of the DataFrame is
-          shape ( draws X chains, size(dim 1) X ... X size(dim N)).
+        * If the variable is an array with N dimensions, the shape of the
+          DataFrame is shape ( draws X chains, size(dim 1) X ... X size(dim N))
 
         :param name: variable name
         """

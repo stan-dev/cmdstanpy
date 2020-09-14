@@ -537,13 +537,17 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((1000, 2, 2102), fit.draws().shape)
         phis = fit.draws_as_dataframe(params=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
-        phi1 = fit.draws_as_dataframe(params=['phi[1]']) 
+        phi1 = fit.draws_as_dataframe(params=['phi[1]'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_as_dataframe(params=['phi[1]', 'phi[10]', 'phi[100]'])
+        mo_phis = fit.draws_as_dataframe(
+            params=['phi[1]', 'phi[10]', 'phi[100]']
+        )
         self.assertEqual((2000, 3), mo_phis.shape)
         phi2095 = fit.draws_as_dataframe(params=['phi[2095]'])
         self.assertEqual((2000, 1), phi2095.shape)
-        with self.assertRaisesRegex(ValueError, 'unknown parameter: phi\[2096\]'):
+        with self.assertRaisesRegex(
+            ValueError, r'unknown parameter: phi\[2096\]'
+        ):
             fit.draws_as_dataframe(params=['phi[2096]'])
         with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
             fit.draws_as_dataframe(params=['ph'])
