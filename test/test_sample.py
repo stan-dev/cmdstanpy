@@ -341,88 +341,88 @@ class SampleTest(unittest.TestCase):
             'lp__',
             'accept_stat__',
             'N',
-            'y_sim.1',
-            'y_sim.2',
-            'y_sim.3',
-            'y_sim.4',
-            'y_sim.5',
-            'y_sim.6',
-            'y_sim.7',
-            'y_sim.8',
-            'y_sim.9',
-            'y_sim.10',
-            'y_sim.11',
-            'y_sim.12',
-            'y_sim.13',
-            'y_sim.14',
-            'y_sim.15',
-            'y_sim.16',
-            'y_sim.17',
-            'y_sim.18',
-            'y_sim.19',
-            'y_sim.20',
-            'x_sim.1',
-            'x_sim.2',
-            'x_sim.3',
-            'x_sim.4',
-            'x_sim.5',
-            'x_sim.6',
-            'x_sim.7',
-            'x_sim.8',
-            'x_sim.9',
-            'x_sim.10',
-            'x_sim.11',
-            'x_sim.12',
-            'x_sim.13',
-            'x_sim.14',
-            'x_sim.15',
-            'x_sim.16',
-            'x_sim.17',
-            'x_sim.18',
-            'x_sim.19',
-            'x_sim.20',
-            'pop_sim.1',
-            'pop_sim.2',
-            'pop_sim.3',
-            'pop_sim.4',
-            'pop_sim.5',
-            'pop_sim.6',
-            'pop_sim.7',
-            'pop_sim.8',
-            'pop_sim.9',
-            'pop_sim.10',
-            'pop_sim.11',
-            'pop_sim.12',
-            'pop_sim.13',
-            'pop_sim.14',
-            'pop_sim.15',
-            'pop_sim.16',
-            'pop_sim.17',
-            'pop_sim.18',
-            'pop_sim.19',
-            'pop_sim.20',
+            'y_sim[1]',
+            'y_sim[2]',
+            'y_sim[3]',
+            'y_sim[4]',
+            'y_sim[5]',
+            'y_sim[6]',
+            'y_sim[7]',
+            'y_sim[8]',
+            'y_sim[9]',
+            'y_sim[10]',
+            'y_sim[11]',
+            'y_sim[12]',
+            'y_sim[13]',
+            'y_sim[14]',
+            'y_sim[15]',
+            'y_sim[16]',
+            'y_sim[17]',
+            'y_sim[18]',
+            'y_sim[19]',
+            'y_sim[20]',
+            'x_sim[1]',
+            'x_sim[2]',
+            'x_sim[3]',
+            'x_sim[4]',
+            'x_sim[5]',
+            'x_sim[6]',
+            'x_sim[7]',
+            'x_sim[8]',
+            'x_sim[9]',
+            'x_sim[10]',
+            'x_sim[11]',
+            'x_sim[12]',
+            'x_sim[13]',
+            'x_sim[14]',
+            'x_sim[15]',
+            'x_sim[16]',
+            'x_sim[17]',
+            'x_sim[18]',
+            'x_sim[19]',
+            'x_sim[20]',
+            'pop_sim[1]',
+            'pop_sim[2]',
+            'pop_sim[3]',
+            'pop_sim[4]',
+            'pop_sim[5]',
+            'pop_sim[6]',
+            'pop_sim[7]',
+            'pop_sim[8]',
+            'pop_sim[9]',
+            'pop_sim[10]',
+            'pop_sim[11]',
+            'pop_sim[12]',
+            'pop_sim[13]',
+            'pop_sim[14]',
+            'pop_sim[15]',
+            'pop_sim[16]',
+            'pop_sim[17]',
+            'pop_sim[18]',
+            'pop_sim[19]',
+            'pop_sim[20]',
             'alpha_sim',
             'beta_sim',
-            'eta.1',
-            'eta.2',
-            'eta.3',
-            'eta.4',
-            'eta.5',
-            'eta.6',
-            'eta.7',
-            'eta.8',
-            'eta.9',
-            'eta.10',
-            'eta.11',
-            'eta.12',
-            'eta.13',
-            'eta.14',
-            'eta.15',
-            'eta.16',
-            'eta.17',
-            'eta.18',
-            'eta.19',
-            'eta.20',
+            'eta[1]',
+            'eta[2]',
+            'eta[3]',
+            'eta[4]',
+            'eta[5]',
+            'eta[6]',
+            'eta[7]',
+            'eta[8]',
+            'eta[9]',
+            'eta[10]',
+            'eta[11]',
+            'eta[12]',
+            'eta[13]',
+            'eta[14]',
+            'eta[15]',
+            'eta[16]',
+            'eta[17]',
+            'eta[18]',
+            'eta[19]',
+            'eta[20]',
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
         self.assertEqual(datagen_fit.num_draws, 100)
@@ -527,7 +527,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
         ]
         fit = CmdStanMCMC(runset)
-        phis = ['phi.{}'.format(str(x + 1)) for x in range(2095)]
+        phis = ['phi[{}]'.format(str(x + 1)) for x in range(2095)]
         column_names = SAMPLER_STATE + phis
         self.assertEqual(fit.num_draws, 1000)
         self.assertEqual(fit.column_names, tuple(column_names))
@@ -537,14 +537,18 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((1000, 2, 2102), fit.draws().shape)
         phis = fit.draws_as_dataframe(params=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
-        phi1 = fit.draws_as_dataframe(params=['phi.1'])
+        phi1 = fit.draws_as_dataframe(params=['phi[1]'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_as_dataframe(params=['phi.1', 'phi.10', 'phi.100'])
+        mo_phis = fit.draws_as_dataframe(
+            params=['phi[1]', 'phi[10]', 'phi[100]']
+        )
         self.assertEqual((2000, 3), mo_phis.shape)
-        phi2095 = fit.draws_as_dataframe(params=['phi.2095'])
+        phi2095 = fit.draws_as_dataframe(params=['phi[2095]'])
         self.assertEqual((2000, 1), phi2095.shape)
-        with self.assertRaisesRegex(ValueError, 'unknown parameter: phi.2096'):
-            fit.draws_as_dataframe(params=['phi.2096'])
+        with self.assertRaisesRegex(
+            ValueError, r'unknown parameter: phi\[2096\]'
+        ):
+            fit.draws_as_dataframe(params=['phi[2096]'])
         with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
             fit.draws_as_dataframe(params=['ph'])
 
@@ -889,7 +893,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue('theta' in bern_fit._stan_variable_dims)
         self.assertEqual(bern_fit._stan_variable_dims['theta'], 1)
         theta = bern_fit.stan_variable(name='theta')
-        self.assertEqual(theta.shape, (200,))
+        self.assertEqual(theta.shape, (200, 1))
         with self.assertRaises(ValueError):
             bern_fit.stan_variable(name='eta')
         with self.assertRaises(ValueError):
@@ -919,7 +923,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue('z' in fit._stan_variable_dims)
         self.assertEqual(fit._stan_variable_dims['z'], (20, 2))
         z = fit.stan_variable(name='z')
-        self.assertEqual(z.shape, (20, 20, 2))
+        self.assertEqual(z.shape, (20, 40))
         theta = fit.stan_variable(name='theta')
         self.assertEqual(theta.shape, (20, 4))
 
@@ -948,7 +952,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         vars = fit.stan_variables()
         self.assertEqual(len(vars), len(fit._stan_variable_dims))
         self.assertTrue('z' in vars)
-        self.assertEqual(vars['z'].shape, (20, 20, 2))
+        self.assertEqual(vars['z'].shape, (20, 40))
         self.assertTrue('theta' in vars)
         self.assertEqual(vars['theta'].shape, (20, 4))
 
