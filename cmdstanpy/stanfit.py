@@ -752,7 +752,7 @@ class CmdStanMCMC:
         self._assemble_draws()
         dim0 = self.num_draws * self.runset.chains
         dims = np.prod(self._stan_variable_dims[name])
-        pattern = r'^{}(\.\d+)*$'.format(name)
+        pattern = r'^{}(\[[\d,]+\])?$'.format(name)
         names, idxs = [], []
         for i, column_name in enumerate(self.column_names):
             if re.search(pattern, column_name):

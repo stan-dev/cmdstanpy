@@ -527,7 +527,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-big', 'output_icar_nyc-1.csv'),
         ]
         fit = CmdStanMCMC(runset)
-        phis = ['phi.{}'.format(str(x + 1)) for x in range(2095)]
+        phis = ['phi[{}]'.format(str(x + 1)) for x in range(2095)]
         column_names = SAMPLER_STATE + phis
         self.assertEqual(fit.num_draws, 1000)
         self.assertEqual(fit.column_names, tuple(column_names))
@@ -537,14 +537,14 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((1000, 2, 2102), fit.draws().shape)
         phis = fit.draws_as_dataframe(params=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
-        phi1 = fit.draws_as_dataframe(params=['phi.1'])
+        phi1 = fit.draws_as_dataframe(params=['phi[1]']) 
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_as_dataframe(params=['phi.1', 'phi.10', 'phi.100'])
+        mo_phis = fit.draws_as_dataframe(params=['phi[1]', 'phi[10]', 'phi[100]'])
         self.assertEqual((2000, 3), mo_phis.shape)
-        phi2095 = fit.draws_as_dataframe(params=['phi.2095'])
+        phi2095 = fit.draws_as_dataframe(params=['phi[2095]'])
         self.assertEqual((2000, 1), phi2095.shape)
-        with self.assertRaisesRegex(ValueError, 'unknown parameter: phi.2096'):
-            fit.draws_as_dataframe(params=['phi.2096'])
+        with self.assertRaisesRegex(ValueError, 'unknown parameter: phi\[2096\]'):
+            fit.draws_as_dataframe(params=['phi[2096]'])
         with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
             fit.draws_as_dataframe(params=['ph'])
 
