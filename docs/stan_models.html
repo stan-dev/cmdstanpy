@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Stan Models in CmdStanPy &mdash; CmdStanPy 0.9.66 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MCMC Sampling" href="sample.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> CmdStanPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.9.66
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Stan Models in CmdStanPy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#model-compilation">Model compilation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#specifying-a-custom-make-tool">Specifying a custom Make tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sample.html">MCMC Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generate_quantities.html">Run Generated Quantities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational_bayes.html">Variational Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="under_the_hood.html">Under the Hood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CmdStanPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Stan Models in CmdStanPy</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/stan_models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="stan-models-in-cmdstanpy">
+<h1>Stan Models in CmdStanPy<a class="headerlink" href="#stan-models-in-cmdstanpy" title="Permalink to this headline">¶</a></h1>
+<p>The: <a class="reference internal" href="api.html#class-cmdstanmodel"><span class="std std-ref">CmdStanModel</span></a> class manages the Stan program and its corresponding compiled executable.
+It provides properties and functions to inspect the model code and filepaths.
+By default, the Stan program is compiled on instantiation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">cmdstan_path</span><span class="p">,</span> <span class="n">CmdStanModel</span>
+
+<span class="n">bernoulli_stan</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
+<span class="n">bernoulli_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">bernoulli_stan</span><span class="p">)</span>
+<span class="n">bernoulli_model</span><span class="o">.</span><span class="n">name</span>
+<span class="n">bernoulli_model</span><span class="o">.</span><span class="n">stan_file</span>
+<span class="n">bernoulli_model</span><span class="o">.</span><span class="n">exe_file</span>
+<span class="n">bernoulli_model</span><span class="o">.</span><span class="n">code</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>A model object can be instantiated by specifying either the Stan program file path
+or the compiled executable file path or both.
+If both are specified, the constructor will check the timestamps on each and
+will only re-compile the program if the Stan file has a later timestamp which
+indicates that the program may have been edited.</p>
+<div class="section" id="model-compilation">
+<span id="id1"></span><h2>Model compilation<a class="headerlink" href="#model-compilation" title="Permalink to this headline">¶</a></h2>
+<p>Model compilation is carried out via the GNU Make build tool.
+The CmdStan <code class="docutils literal notranslate"><span class="pre">makefile</span></code> contains a set of general rules which
+specify the dependencies between the Stan program and the
+Stan platform components and low-level libraries.
+Optional behaviors can be specified by use of variables
+which are passed in to the <code class="docutils literal notranslate"><span class="pre">make</span></code> command as name, value pairs.</p>
+<p>Model compilation is done in two steps:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">stanc</span></code> compiler translates the Stan program to C++.</p></li>
+<li><p>The C++ compiler compiles the generated code and links in
+the necessary supporting libraries.</p></li>
+</ul>
+<p>Therefore, both the constructor and the <code class="docutils literal notranslate"><span class="pre">compile</span></code> method
+allow optional arguments <code class="docutils literal notranslate"><span class="pre">stanc_options</span></code> and <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code> which
+specify options for each compilation step.
+Options are specified as a Python dictionary mapping
+compiler option names to appropriate values.</p>
+<p>To use Stan’s
+<a class="reference external" href="https://mc-stan.org/docs/2_24/cmdstan-guide/parallelization.html">parallelization</a>
+features, Stan programs must be compiled with the appropriate C++ compiler flags.
+If you are running GPU hardware and wish to use the OpenCL framework to speed up matrix operations,
+you must set the C++ compiler flag <strong>STAN_OPENCL</strong>.
+For high-level within-chain parallelization using the Stan language <cite>reduce_sum</cite> function,
+it’s necessary to set the C++ compiler flag <strong>STAN_THREADS</strong>.  While any value can be used,
+we recommend the value <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>For example, given Stan program named ‘proc_parallel.stan’, you can take
+advantage of both kinds of parallelization by specifying the compiler options when instantiating
+the model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">proc_parallel_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span>
+    <span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;proc_parallel.stan&#39;</span><span class="p">,</span>
+    <span class="n">cpp_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;STAN_THREADS&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s2">&quot;STAN_OPENCL&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="specifying-a-custom-make-tool">
+<h3>Specifying a custom Make tool<a class="headerlink" href="#specifying-a-custom-make-tool" title="Permalink to this headline">¶</a></h3>
+<p>To use custom Make-tool use <code class="docutils literal notranslate"><span class="pre">set_make_env</span></code> function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">set_make_env</span>
+<span class="n">set_make_env</span><span class="p">(</span><span class="s2">&quot;mingw32-make.exe&quot;</span><span class="p">)</span> <span class="c1"># On Windows with mingw32-make</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sample.html" class="btn btn-neutral float-right" title="MCMC Sampling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Stan Development Team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
