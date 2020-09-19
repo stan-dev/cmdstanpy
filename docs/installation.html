@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; CmdStanPy 0.9.66 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> CmdStanPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.9.66
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stan_models.html">Stan Models in CmdStanPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample.html">MCMC Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generate_quantities.html">Run Generated Quantities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimize.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational_bayes.html">Variational Inference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="under_the_hood.html">Under the Hood</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CmdStanPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="install-package-cmdstanpy">
+<h2>Install package CmdStanPy<a class="headerlink" href="#install-package-cmdstanpy" title="Permalink to this headline">¶</a></h2>
+<p>CmdStanPy is a pure-Python package which can be installed from PyPI</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade cmdstanpy
+</pre></div>
+</div>
+<p>or from GitHub</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -e git+https://github.com/stan-dev/cmdstanpy#egg<span class="o">=</span>cmdstanpy
+</pre></div>
+</div>
+<p>To install CmdStanPy with all the optional packages
+(ujson; json processing, tqdm; progress bar)</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade cmdstanpy<span class="o">[</span>all<span class="o">]</span>
+</pre></div>
+</div>
+<p><em>Note for PyStan users:</em>  PyStan and CmdStanPy should be installed in separate environments.
+If you already have PyStan installed, you should take care to install CmdStanPy in its own
+virtual environment.</p>
+<p>User can install optional packages with pip with the CmdStanPy installation</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade cmdstanpy<span class="o">[</span>all<span class="o">]</span>
+</pre></div>
+</div>
+<p>The optional packages are</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ujson</span></code> which provides faster IO</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which displays a progress during sampling</p></li>
+</ul>
+</div></blockquote>
+<p>To install these manually</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install ujson
+pip install tqdm
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-cmdstan">
+<h2>Install CmdStan<a class="headerlink" href="#install-cmdstan" title="Permalink to this headline">¶</a></h2>
+<p>CmdStanPy requires a local install of CmdStan.</p>
+<div class="section" id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<p>CmdStanPy requires an installed C++ toolchain
+consisting of a modern C++ compiler and the GNU-Make utility.</p>
+</div>
+<div class="section" id="function-install-cmdstan">
+<h3>Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code><a class="headerlink" href="#function-install-cmdstan" title="Permalink to this headline">¶</a></h3>
+<p>CmdStanPy provides the function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code> which
+downloads CmdStan from GitHub and builds the CmdStan utilities.
+It can be can be called from within Python or from the command line.
+By default it installs the latest version of CmdStan into a directory named
+<code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code> in your <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory:</p>
+<ul class="simple">
+<li><p>From Python</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cmdstanpy</span>
+<span class="n">cmdstanpy</span><span class="o">.</span><span class="n">install_cmdstan</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>From the command line on Linux or MacOSX</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan
+ls -F ~/.cmdstanpy
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>On Windows</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m cmdstanpy.install_cmdstan
+dir <span class="s2">&quot;%HOME%/.cmdstanpy&quot;</span>
+</pre></div>
+</div>
+<p>The named arguments: <cite>-d &lt;directory&gt;</cite> and  <cite>-v &lt;version&gt;</cite>
+can be used to override these defaults:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan -d my_local_cmdstan -v <span class="m">2</span>.20.0
+ls -F my_local_cmdstan
+</pre></div>
+</div>
+<div class="section" id="specifying-cmdstan-installation-location">
+<h4>Specifying CmdStan installation location<a class="headerlink" href="#specifying-cmdstan-installation-location" title="Permalink to this headline">¶</a></h4>
+<p>The default for the CmdStan installation location
+is a directory named <code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code> in your <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory.</p>
+<p>If you have installed CmdStan in a different directory,
+then you can set the environment variable <code class="docutils literal notranslate"><span class="pre">CMDSTAN</span></code> to this
+location and it will be picked up by CmdStanPy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">CMDSTAN</span><span class="o">=</span><span class="s1">&#39;/path/to/cmdstan-2.20.0&#39;</span>
+</pre></div>
+</div>
+<p>The CmdStanPy commands <code class="docutils literal notranslate"><span class="pre">cmdstan_path</span></code> and <code class="docutils literal notranslate"><span class="pre">set_cmdstan_path</span></code>
+get and set this environment variable:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">cmdstan_path</span><span class="p">,</span> <span class="n">set_cmdstan_path</span>
+
+<span class="n">oldpath</span> <span class="o">=</span> <span class="n">cmdstan_path</span><span class="p">()</span>
+<span class="n">set_cmdstan_path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span><span class="s1">&#39;to&#39;</span><span class="p">,</span><span class="s1">&#39;cmdstan&#39;</span><span class="p">))</span>
+<span class="n">newpath</span> <span class="o">=</span> <span class="n">cmdstan_path</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="specifying-a-custom-make-tool">
+<h4>Specifying a custom Make tool<a class="headerlink" href="#specifying-a-custom-make-tool" title="Permalink to this headline">¶</a></h4>
+<p>To use custom <code class="docutils literal notranslate"><span class="pre">make</span></code>-tool use <code class="docutils literal notranslate"><span class="pre">set_make_env</span></code> function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">set_make_env</span>
+<span class="n">set_make_env</span><span class="p">(</span><span class="s2">&quot;mingw32-make.exe&quot;</span><span class="p">)</span> <span class="c1"># On Windows with mingw32-make</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="installion-via-the-command-line">
+<h3>Installion via the command line<a class="headerlink" href="#installion-via-the-command-line" title="Permalink to this headline">¶</a></h3>
+<p>If you with to install CmdStan yourself, follow the instructions
+in the <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan User’s Guide</a>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Stan Development Team
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
