@@ -23,7 +23,7 @@ to compile and run a Stan program.
 
 ### Docs
 
-See https://cmdstanpy.readthedocs.io/
+See https://mc-stan.org/cmdstanpy, also available on readthedocs:  https://cmdstanpy.readthedocs.io
 
 ### Source Repository
 
