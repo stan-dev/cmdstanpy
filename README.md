@@ -21,13 +21,15 @@ to compile and run a Stan program.
 
 - Modular - CmdStanPy produces a MCMC sample (or point estimate) from the posterior; other packages do analysis and visualization.
 
-### Docs
-
-See https://mc-stan.org/cmdstanpy, also available on readthedocs:  https://cmdstanpy.readthedocs.io
 
 ### Source Repository
 
-CmdStan's source-code repository is hosted here on GitHub.
+CmdStanPy and CmdStan are available from GitHub: https://github.com/stan-dev/cmdstanpy and https://github.com/stan-dev/cmdstan
+
+
+### Docs
+
+The latest release documentation is hosted on  https://mc-stan.org/cmdstanpy, older release versions are available from readthedocs:  https://cmdstanpy.readthedocs.io
 
 ### Licensing
 
