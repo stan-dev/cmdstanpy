@@ -53,4 +53,5 @@ def set_version_active_on_rtd(project_slug, rtd_user, rtd_password, default_vers
         # Post our version data
         r = s.post(url, data = version_data, headers=dict(Referer=url))
 
-set_version_active_on_rtd(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+if __name__ == '__main__':
+    set_version_active_on_rtd(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
