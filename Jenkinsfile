@@ -1,14 +1,14 @@
 #!/usr/bin/env groovy
 
 pipeline {
-    agent { label 'linux' }
+    agent { label 'linux-ec2' }
     options {
         skipDefaultCheckout()
         preserveStashes(buildCount: 5)
     }
     parameters {
-        string(defaultValue: '0.9.66', name: 'new_version', description: "Version to release.")
-        string(defaultValue: '0.9.65', name: 'old_version', description: "Old version to be replaced in cmdstanpy/_version")
+        string(defaultValue: '0.9.67', name: 'new_version', description: "Version to release.")
+        string(defaultValue: '0.9.66', name: 'old_version', description: "Old version to be replaced in cmdstanpy/_version")
     }
     environment {
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -32,17 +32,11 @@ pipeline {
                     /* Create release branch, change cmdstanpy/_version and generate docs. */
                     sh """#!/bin/bash
 
-                        git config --global user.email "mc.stanislaw@gmail.com"
-                        git config --global user.name "Stan Jenkins"
-                        git config --global auth.token ${GITHUB_TOKEN}
-
                         # Create new release branch
                         git checkout -b release/v${params.new_version}
 
                         # Change version in _version
                         sed -i 's/${params.old_version}/${params.new_version}/g' cmdstanpy/_version.py
-
-                        pip install sphinx-build
 
                         # Generate docs
                         cd docsrc
@@ -52,9 +46,14 @@ pipeline {
                         # Copy docs
                         cp -R docsrc/_build/html/ docs/
 
+                        git config --global user.email "mc.stanislaw@gmail.com"
+                        git config --global user.name "Stan Jenkins"
+                        git config --global auth.token ${GITHUB_TOKEN}
+
                         # Push new release branch
+                        git add .
                         git commit -m "release/v${params.new_version}: updating version numbers" -a
-                        git push origin release/v${params.new_version}
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstanpy.git release/v${params.new_version}
                     """
 
                     /* Merge into develop */
