@@ -100,7 +100,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'readthedocs-snick-username-password', usernameVariable: 'RTD_USERNAME', passwordVariable: 'RTD_PASSWORD')]) {
                     /* Set default version in readthedocs */
                     sh """#!/bin/bash
-                        python change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} ${params.new_version}
+                        python change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${params.new_version}
                     """
                 }
 
