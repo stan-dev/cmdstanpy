@@ -15,7 +15,6 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Contents:
 
    getting_started
    stan_models

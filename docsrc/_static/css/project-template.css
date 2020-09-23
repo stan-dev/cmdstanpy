@@ -8,13 +8,14 @@
     text-decoration: underline;
 }
 
-.deprecated p {
-    padding: 10px 7px 10px 10px;
-    color: #b94a48;
-    background-color: #F3E5E5;
-    border: 1px solid #eed3d7;
+div.version * {
+    color: #000000;
 }
 
-.deprecated p span.versionmodified {
-    font-weight: bold;
+.wy-side-nav-search>a, .wy-side-nav-search .wy-dropdown>a {
+    color: black;
+}
+
+.wy-side-nav-search>div.version {
+    color: #8c8c8c;
 }
