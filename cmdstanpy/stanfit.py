@@ -329,7 +329,7 @@ class CmdStanMCMC:
         self._metric = None
         self._stepsize = None
         self._draws = None
-        self._draws_as_df = None
+        self._draws_pd = None
         self._stan_variable_dims = {}
         self._validate_csv = validate_csv
         if validate_csv:
@@ -689,7 +689,7 @@ class CmdStanMCMC:
             self.runset._logger.info(result)
         return result
 
-    def draws_as_dataframe(
+    def draws_pd(
         self, params: List[str] = None, inc_warmup: bool = False
     ) -> pd.DataFrame:
         """
@@ -708,24 +708,24 @@ class CmdStanMCMC:
                 if not (param in self._column_names or param in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(param))
         self._assemble_draws()
-        if self._draws_as_df is None:
+        if self._draws_pd is None:
             # pylint: disable=redundant-keyword-arg
             data = self.draws(inc_warmup=inc_warmup).reshape(
                 (self.num_draws * self.runset.chains),
                 len(self.column_names),
                 order='A',
             )
-            self._draws_as_df = pd.DataFrame(
+            self._draws_pd = pd.DataFrame(
                 data=data, columns=self.column_names
             )
         if params is None:
-            return self._draws_as_df
+            return self._draws_pd
         mask = []
         params = set(params)
         for name in self.column_names:
             if any(item in params for item in (name, name.split('[')[0])):
                 mask.append(name)
-        return self._draws_as_df[mask]
+        return self._draws_pd[mask]
 
     def stan_variable(self, name: str) -> pd.DataFrame:
         """
