@@ -1,5 +1,15 @@
 #!/usr/bin/env groovy
 
+def checkoutBranch(branch){
+    checkout([$class: 'GitSCM',
+              branches: [[name: '*/' + branch]],
+              doGenerateSubmoduleConfigurations: false,
+              extensions: [],
+              submoduleCfg: [],
+              userRemoteConfigs: [[url: "https://github.com/stan-dev/cmdstanpy.git", credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b']]]
+    )
+}
+
 pipeline {
     agent { label 'linux-ec2' }
     options {
@@ -14,21 +24,12 @@ pipeline {
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
     }
     stages {
-        stage("Activate version") {
+        stage("Create release branch") {
             steps{
                 deleteDir()
+                checkoutBranch("master")
 
-                checkout([$class: 'GitSCM',
-                          branches: [[name: '*/develop']],
-                          doGenerateSubmoduleConfigurations: false,
-                          extensions: [],
-                          submoduleCfg: [],
-                          userRemoteConfigs: [[url: "https://github.com/stan-dev/cmdstanpy.git", credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b']]]
-                )
-
-                /* Create a new branch */
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-
                     /* Create release branch, change cmdstanpy/_version and generate docs. */
                     sh """#!/bin/bash
 
@@ -43,6 +44,7 @@ pipeline {
                         make github
                         cd ..
 
+                        # Git identity
                         git config --global user.email "mc.stanislaw@gmail.com"
                         git config --global user.name "Stan Jenkins"
                         git config --global auth.token ${GITHUB_TOKEN}
@@ -52,31 +54,76 @@ pipeline {
                         git commit -m "release/v${params.new_version}: updating version numbers" -a
                         git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstanpy.git release/v${params.new_version}
                     """
+                }
+            }
+        }
 
-                    /* Merge into develop */
+        stage("Merge into develop") {
+            steps{
+                deleteDir()
+                checkoutBranch("develop")
+
+                withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     //sh """#!/bin/bash
                     //    git checkout develop
                     //    git pull origin develop
                     //    git merge release/v${params.new_version}
+                    //
+                    //    # Git identity
+                    //    git config --global user.email "mc.stanislaw@gmail.com"
+                    //    git config --global user.name "Stan Jenkins"
+                    //    git config --global auth.token ${GITHUB_TOKEN}
+
                     //    git push origin develop
                     //    git branch -d release/v${params.new_version}
                     //"""
+                }
+            }
+        }
 
-                    /* Tag version */
+        stage("Tag version") {
+            steps{
+                deleteDir()
+                checkoutBranch("develop")
+
+                withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     sh """#!/bin/bash
                         git checkout develop
                         git pull origin develop --ff
                         git tag -a "v${params.new_version}" -m "Tagging v${params.new_version}"
+
+                        git config --global user.email "mc.stanislaw@gmail.com"
+                        git config --global user.name "Stan Jenkins"
+                        git config --global auth.token ${GITHUB_TOKEN}
+
                         git push origin "v${params.new_version}"
                     """
+                }
+            }
+        }
 
+        stage("Update master branch to new version") {
+            steps{
+                deleteDir()
+                checkoutBranch("develop")
+                withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     /* Update master branch to the new version */
                     //sh """#!/bin/bash
                     //    git checkout master
                     //    git reset --hard v${params.new_version}
+                    //    git config --global user.email "mc.stanislaw@gmail.com"
+                    //    git config --global user.name "Stan Jenkins"
+                    //    git config --global auth.token ${GITHUB_TOKEN}
                     //    git push origin master
                     //"""
                 }
+            }
+        }
+
+        stage("Upload package to pypi") {
+            steps{
+                deleteDir()
+                checkoutBranch("master")
 
                 withCredentials([usernamePassword(credentialsId: 'pypi-snick-token', usernameVariable: 'PYPI_USERNAME', passwordVariable: 'PYPI_TOKEN')]) {
                     /* Upload to PyPi */
@@ -93,18 +140,21 @@ pipeline {
 
                         # Upload wheels
                         twine upload -u __token__ -p ${PYPI_TOKEN} --skip-existing dist/*
-
                     """
                 }
+            }
+        }
 
+        stage("Change ReadTheDocs default version") {
+            steps{
                 withCredentials([usernamePassword(credentialsId: 'readthedocs-snick-username-password', usernameVariable: 'RTD_USERNAME', passwordVariable: 'RTD_PASSWORD')]) {
                     /* Set default version in readthedocs */
                     sh """#!/bin/bash
                         python change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${params.new_version}
                     """
                 }
-
             }
         }
+
     }
 }
