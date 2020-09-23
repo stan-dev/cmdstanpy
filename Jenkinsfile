@@ -31,7 +31,7 @@ pipeline {
 
                     /* Create release branch, change cmdstanpy/_version and generate docs. */
                     sh """#!/bin/bash
-                    
+
                         git config --global user.email "mc.stanislaw@gmail.com"
                         git config --global user.name "Stan Jenkins"
                         git config --global auth.token ${GITHUB_TOKEN}
@@ -41,6 +41,8 @@ pipeline {
 
                         # Change version in _version
                         sed -i 's/${params.old_version}/${params.new_version}/g' cmdstanpy/_version.py
+
+                        pip install sphinx-build
 
                         # Generate docs
                         cd docsrc
