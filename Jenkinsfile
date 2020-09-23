@@ -106,14 +106,17 @@ pipeline {
             steps{
                 deleteDir()
                 checkoutBranch("develop")
+                
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     /* Update master branch to the new version */
                     //sh """#!/bin/bash
                     //    git checkout master
                     //    git reset --hard v${params.new_version}
+
                     //    git config --global user.email "mc.stanislaw@gmail.com"
                     //    git config --global user.name "Stan Jenkins"
                     //    git config --global auth.token ${GITHUB_TOKEN}
+
                     //    git push origin master
                     //"""
                 }
@@ -126,7 +129,6 @@ pipeline {
                 checkoutBranch("master")
 
                 withCredentials([usernamePassword(credentialsId: 'pypi-snick-token', usernameVariable: 'PYPI_USERNAME', passwordVariable: 'PYPI_TOKEN')]) {
-                    /* Upload to PyPi */
                     sh """#!/bin/bash
 
                         # Install python dependencies
@@ -148,7 +150,6 @@ pipeline {
         stage("Change ReadTheDocs default version") {
             steps{
                 withCredentials([usernamePassword(credentialsId: 'readthedocs-snick-username-password', usernameVariable: 'RTD_USERNAME', passwordVariable: 'RTD_PASSWORD')]) {
-                    /* Set default version in readthedocs */
                     sh """#!/bin/bash
                         python change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${params.new_version}
                     """
