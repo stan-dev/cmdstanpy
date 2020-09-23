@@ -43,9 +43,6 @@ pipeline {
                         make github
                         cd ..
 
-                        # Copy docs
-                        cp -R docsrc/_build/html/ docs/
-
                         git config --global user.email "mc.stanislaw@gmail.com"
                         git config --global user.name "Stan Jenkins"
                         git config --global auth.token ${GITHUB_TOKEN}
