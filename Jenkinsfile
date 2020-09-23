@@ -23,7 +23,7 @@ pipeline {
                           doGenerateSubmoduleConfigurations: false,
                           extensions: [],
                           submoduleCfg: [],
-                          userRemoteConfigs: [[url: "https://github.com/stan-dev/cmdstanpy", credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b']]]
+                          userRemoteConfigs: [[url: "https://github.com/stan-dev/cmdstanpy.git", credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b']]]
                 )
 
                 /* Create a new branch */
@@ -31,6 +31,11 @@ pipeline {
 
                     /* Create release branch, change cmdstanpy/_version and generate docs. */
                     sh """#!/bin/bash
+                    
+                        git config --global user.email "mc.stanislaw@gmail.com"
+                        git config --global user.name "Stan Jenkins"
+                        git config --global auth.token ${GITHUB_TOKEN}
+
                         # Create new release branch
                         git checkout -b release/v${params.new_version}
 
