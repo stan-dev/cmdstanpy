@@ -53,7 +53,7 @@ if LooseVersion(sphinx.__version__) < LooseVersion('1.4'):
 else:
     extensions.append('sphinx.ext.imgmath')
 
-autodoc_default_options = { 'members': True, 'special-members': '__init__' }
+autodoc_default_options = {'members': True, 'special-members': '__init__'}
 autodoc_default_flags = ['members', 'inherited-members', 'special-members']
 autodoc_member_order = 'groupwise'
 autodoc_typehints = 'description'
@@ -155,7 +155,7 @@ html_theme_options = {
     'sticky_navigation': True,
     'navigation_depth': 4,
     'includehidden': True,
-    'titles_only': False
+    'titles_only': False,
 }
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
@@ -253,7 +253,7 @@ latex_documents = [
         u'project-template Documentation',
         u'Stan Development Team',
         'manual',
-    ),
+    )
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -309,7 +309,7 @@ texinfo_documents = [
         'project-template',
         '',
         '',
-    ),
+    )
 ]
 
 # Documents to append as an appendix to all manuals.
