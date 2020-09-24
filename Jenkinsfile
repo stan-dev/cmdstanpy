@@ -145,6 +145,8 @@ pipeline {
 
         stage("Change ReadTheDocs default version") {
             steps{
+                deleteDir()
+                checkoutBranch("master")
                 withCredentials([usernamePassword(credentialsId: 'readthedocs-snick-username-password', usernameVariable: 'RTD_USERNAME', passwordVariable: 'RTD_PASSWORD')]) {
                     sh """#!/bin/bash
                         python change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${params.new_version}
