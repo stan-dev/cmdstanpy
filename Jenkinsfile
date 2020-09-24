@@ -62,16 +62,15 @@ pipeline {
                 checkoutBranch("develop")
 
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                    //sh """#!/bin/bash
-                    //    git checkout develop
-                    //    git pull origin develop
-                    //    git merge release/v${params.new_version}
+                    sh """#!/bin/bash
+                        git pull origin develop
+                        git merge release/v${params.new_version}
 
-                    //    git config --global auth.token ${GITHUB_TOKEN}
-
-                    //    git push origin develop
-                    //    git branch -d release/v${params.new_version}
-                    //"""
+                        git config --global auth.token ${GITHUB_TOKEN}
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstanpy.git develop
+                        
+                        git branch -d release/v${params.new_version}
+                    """
                 }
             }
         }
@@ -98,18 +97,15 @@ pipeline {
         stage("Update master branch to new version") {
             steps{
                 deleteDir()
-                checkoutBranch("develop")
+                checkoutBranch("master")
                 
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     /* Update master branch to the new version */
-                    //sh """#!/bin/bash
-                    //    git checkout master
-                    //    git reset --hard v${params.new_version}
-
-                    //    git config --global auth.token ${GITHUB_TOKEN}
-
-                    //    git push origin master
-                    //"""
+                    sh """#!/bin/bash
+                        git reset --hard v${params.new_version}
+                        git config --global auth.token ${GITHUB_TOKEN}
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstanpy.git master
+                    """
                 }
             }
         }
