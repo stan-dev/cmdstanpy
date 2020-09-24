@@ -27,7 +27,7 @@ pipeline {
         stage("Create release branch") {
             steps{
                 deleteDir()
-                checkoutBranch("master")
+                checkoutBranch("develop")
 
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     /* Create release branch, change cmdstanpy/_version and generate docs. */
@@ -45,8 +45,6 @@ pipeline {
                         cd ..
 
                         # Git identity
-                        git config --global user.email "mc.stanislaw@gmail.com"
-                        git config --global user.name "Stan Jenkins"
                         git config --global auth.token ${GITHUB_TOKEN}
 
                         # Push new release branch
@@ -92,11 +90,9 @@ pipeline {
                         git pull origin develop --ff
                         git tag -a "v${params.new_version}" -m "Tagging v${params.new_version}"
 
-                        git config --global user.email "mc.stanislaw@gmail.com"
-                        git config --global user.name "Stan Jenkins"
                         git config --global auth.token ${GITHUB_TOKEN}
 
-                        git push origin "v${params.new_version}"
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstanpy.git tag v${params.new_version}
                     """
                 }
             }
@@ -132,16 +128,16 @@ pipeline {
                     sh """#!/bin/bash
 
                         # Install python dependencies
-                        pip install --no-cache-dir --upgrade pip
-                        pip install --no-cache-dir twine wheel
-                        pip install --no-cache-dir -r requirements.txt
+                        pip3 install --no-cache-dir --upgrade pip
+                        pip3 install --no-cache-dir twine wheel
+                        pip3 install --no-cache-dir -r requirements.txt
 
                         # Build wheel
-                        python setup.py bdist_wheel
-                        pip install --no-cache-dir dist/*.whl
+                        python3 setup.py bdist_wheel
+                        pip3 install --no-cache-dir dist/*.whl
 
                         # Upload wheels
-                        twine upload -u __token__ -p ${PYPI_TOKEN} --skip-existing dist/*
+                        python3 -m twine upload -u __token__ -p ${PYPI_TOKEN} --skip-existing dist/*
                     """
                 }
             }
