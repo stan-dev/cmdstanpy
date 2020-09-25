@@ -3,11 +3,9 @@
 [![codecov](https://codecov.io/gh/stan-dev/cmdstanpy/branch/master/graph/badge.svg)](https://codecov.io/gh/stan-dev/cmdstanpy)
 
 
-CmdStanPy is a lightweight interface to Stan for Python users which
-provides the necessary objects and functions to do Bayesian inference
-given a probability model written as a Stan program and data.
-Under the hood, CmdStanPy uses the CmdStan command line interface
-to compile and run a Stan program.
+CmdStanPy is a lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms.  It supports both development and production workflows. Because model development and testing may require many iterations, the defaults favor development mode and therefore output files are stored on a temporary filesystem. Non-default options allow all aspects of a run to be specified so that scripts can be used to distributed analysis jobs across nodes and machines.
+
+CmdStanPy is distributed via PyPi: https://pypi.org/project/cmdstanpy/
 
 ### Goals
 
@@ -20,6 +18,8 @@ to compile and run a Stan program.
   + Python code doesn't interface directly with c++, only calls compiled executables
 
 - Modular - CmdStanPy produces a MCMC sample (or point estimate) from the posterior; other packages do analysis and visualization.
+
+- Low memory overhead - by default, minimal memory used above that required by CmdStanPy; objects run CmdStan programs and track CmdStan input and output files.
 
 
 ### Source Repository
