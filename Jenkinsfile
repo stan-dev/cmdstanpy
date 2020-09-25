@@ -68,7 +68,7 @@ pipeline {
 
                         git config --global auth.token ${GITHUB_TOKEN}
                         git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstanpy.git develop
-                        
+
                         git branch -d release/v${params.new_version}
                     """
                 }
@@ -137,7 +137,7 @@ pipeline {
         stage("Change ReadTheDocs default version") {
             steps{
                 deleteDir()
-                checkoutBranch("master")
+                checkoutBranch("develop")
                 withCredentials([usernamePassword(credentialsId: 'readthedocs-snick-username-password', usernameVariable: 'RTD_USERNAME', passwordVariable: 'RTD_PASSWORD')]) {
                     sh """#!/bin/bash
                         python change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${params.new_version}
