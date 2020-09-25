@@ -8,7 +8,7 @@
 ===============================================
 
 .. module:: cmdstanpy
-   :synopsis: A lightweight interface to CmdStan which provides the necessary objects and functions to use Stan for Bayesian inference.
+   :synopsis: A lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms.
 
 .. moduleauthor:: Stan Developement Team
 
@@ -26,6 +26,5 @@
    variational_bayes
    under_the_hood
    api
-
 
 :ref:`genindex`
