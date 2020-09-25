@@ -1,56 +1,46 @@
 Installation
-____________
+============
+
+Both CmdStanPy and CmdStan must be installed;
+since the CmdStanPy package contains utility ``install_cmdstan``,
+we recommend installing the CmdStanPy package first.
+
 
 Install package CmdStanPy
 -------------------------
 
-CmdStanPy is a pure-Python package which can be installed from PyPI
+CmdStanPy is a pure-Python3 package.
+
+It can be installed from PyPI via URL: https://pypi.org/project/cmdstanpy/ or from the
+command line using ``pip``:
 
 .. code-block:: bash
 
     pip install --upgrade cmdstanpy
 
-or from GitHub
+The optional packages are
 
-.. code-block:: bash
+  * ``tqdm`` which allows for progress bar display during sampling
 
-    pip install -e git+https://github.com/stan-dev/cmdstanpy#egg=cmdstanpy
-
-To install CmdStanPy with all the optional packages
-(ujson; json processing, tqdm; progress bar)
+To install CmdStanPy with all the optional packages:
 
 .. code-block:: bash
 
     pip install --upgrade cmdstanpy[all]
+
+To install the current develop branch from GitHub:
+
+.. code-block:: bash
+
+    pip install -e git+https://github.com/stan-dev/cmdstanpy@/develop
+
 
 *Note for PyStan users:*  PyStan and CmdStanPy should be installed in separate environments.
 If you already have PyStan installed, you should take care to install CmdStanPy in its own
 virtual environment.
 
-User can install optional packages with pip with the CmdStanPy installation
-
-.. code-block:: bash
-
-    pip install --upgrade cmdstanpy[all]
-
-
-The optional packages are
-
-  * ``ujson`` which provides faster IO
-  * ``tqdm`` which displays a progress during sampling
-
-To install these manually
-
-.. code-block:: bash
-
-    pip install ujson
-    pip install tqdm
-
-
 Install CmdStan
 ---------------
-
-CmdStanPy requires a local install of CmdStan.
 
 Prerequisites
 ^^^^^^^^^^^^^
@@ -58,6 +48,11 @@ Prerequisites
 CmdStanPy requires an installed C++ toolchain
 consisting of a modern C++ compiler and the GNU-Make utility.
 
++ Windows: CmdStanPy provides the function ``install_cxx_toolchain``
+
++ Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default ``make`` utility)
+
++ maxOS:  install XCode and Xcode command line tools via command: `xcode-select --install`.
 
 Function ``install_cmdstan``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -97,9 +92,14 @@ can be used to override these defaults:
     install_cmdstan -d my_local_cmdstan -v 2.20.0
     ls -F my_local_cmdstan
 
+DIY Installion 
+^^^^^^^^^^^^^^
 
-Specifying CmdStan installation location
-""""""""""""""""""""""""""""""""""""""""
+If you with to install CmdStan yourself, follow the instructions
+in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`__.
+
+Post Installion: Setting Environment Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The default for the CmdStan installation location
 is a directory named ``.cmdstanpy`` in your ``$HOME`` directory.
@@ -110,7 +110,7 @@ location and it will be picked up by CmdStanPy:
 
 .. code-block:: bash
 
-    export CMDSTAN='/path/to/cmdstan-2.20.0'
+    export CMDSTAN='/path/to/cmdstan-2.24.0'
 
 
 The CmdStanPy commands ``cmdstan_path`` and ``set_cmdstan_path``
@@ -124,10 +124,6 @@ get and set this environment variable:
     set_cmdstan_path(os.path.join('path','to','cmdstan'))
     newpath = cmdstan_path()
 
-
-Specifying a custom Make tool
-"""""""""""""""""""""""""""""
-
 To use custom ``make``-tool use ``set_make_env`` function.
 
 .. code-block:: python
@@ -135,13 +131,4 @@ To use custom ``make``-tool use ``set_make_env`` function.
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
 
-
-Installion via the command line
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you with to install CmdStan yourself, follow the instructions
-in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`__.
-
-
-    
 
