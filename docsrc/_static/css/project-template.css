@@ -9,11 +9,15 @@
 }
 
 div.version * {
-    color: #000000;
+    color: #404040;
+}
+
+pre, code, .rst-content tt, .rst-content code, .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
+    color: #000000 !important;
 }
 
 .wy-side-nav-search>a, .wy-side-nav-search .wy-dropdown>a {
-    color: black;
+    color: #404040;
 }
 
 .wy-side-nav-search>div.version {
