@@ -14,6 +14,10 @@ CmdStanModel
 .. autoclass:: cmdstanpy.CmdStanModel
    :members:
 
+
+
+
+
 .. _class_cmdstanmcmc:
 
 CmdStanMCMC

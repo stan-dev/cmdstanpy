@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -35,7 +35,9 @@
   <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="“Hello, World”" href="hello_world.html" />
+    <link rel="prev" title="Overview" href="overview.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -45,13 +47,16 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #edf0f2" >
           
 
           
             <a href="index.html" class="icon icon-home"> CmdStanPy
           
 
+          
+            
+            <img src="_static/logo_icon.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -83,9 +88,20 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-package-cmdstanpy">Install package CmdStanPy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-cmdstan">Install CmdStan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#function-install-cmdstan">Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diy-installion">DIY Installion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#post-installion-setting-environment-variables">Post Installion: Setting Environment Variables</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">“Hello, World”</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stan_models.html">Stan Models in CmdStanPy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sample.html">MCMC Sampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generate_quantities.html">Run Generated Quantities</a></li>
@@ -159,48 +175,46 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>Both CmdStanPy and CmdStan must be installed;
+since the CmdStanPy package contains utility <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code>,
+we recommend installing the CmdStanPy package first.</p>
 <div class="section" id="install-package-cmdstanpy">
 <h2>Install package CmdStanPy<a class="headerlink" href="#install-package-cmdstanpy" title="Permalink to this headline">¶</a></h2>
-<p>CmdStanPy is a pure-Python package which can be installed from PyPI</p>
+<p>CmdStanPy is a pure-Python3 package.</p>
+<p>It can be installed from PyPI via URL: <a class="reference external" href="https://pypi.org/project/cmdstanpy/">https://pypi.org/project/cmdstanpy/</a> or from the
+command line using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade cmdstanpy
-</pre></div>
-</div>
-<p>or from GitHub</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -e git+https://github.com/stan-dev/cmdstanpy#egg<span class="o">=</span>cmdstanpy
-</pre></div>
-</div>
-<p>To install CmdStanPy with all the optional packages
-(ujson; json processing, tqdm; progress bar)</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade cmdstanpy<span class="o">[</span>all<span class="o">]</span>
-</pre></div>
-</div>
-<p><em>Note for PyStan users:</em>  PyStan and CmdStanPy should be installed in separate environments.
-If you already have PyStan installed, you should take care to install CmdStanPy in its own
-virtual environment.</p>
-<p>User can install optional packages with pip with the CmdStanPy installation</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade cmdstanpy<span class="o">[</span>all<span class="o">]</span>
 </pre></div>
 </div>
 <p>The optional packages are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ujson</span></code> which provides faster IO</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which displays a progress during sampling</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which allows for progress bar display during sampling</p></li>
 </ul>
 </div></blockquote>
-<p>To install these manually</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install ujson
-pip install tqdm
+<p>To install CmdStanPy with all the optional packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade cmdstanpy<span class="o">[</span>all<span class="o">]</span>
 </pre></div>
 </div>
+<p>To install the current develop branch from GitHub:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -e git+https://github.com/stan-dev/cmdstanpy@/develop
+</pre></div>
+</div>
+<p><em>Note for PyStan users:</em>  PyStan and CmdStanPy should be installed in separate environments.
+If you already have PyStan installed, you should take care to install CmdStanPy in its own
+virtual environment.</p>
 </div>
 <div class="section" id="install-cmdstan">
 <h2>Install CmdStan<a class="headerlink" href="#install-cmdstan" title="Permalink to this headline">¶</a></h2>
-<p>CmdStanPy requires a local install of CmdStan.</p>
 <div class="section" id="prerequisites">
 <h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
 <p>CmdStanPy requires an installed C++ toolchain
 consisting of a modern C++ compiler and the GNU-Make utility.</p>
+<ul class="simple">
+<li><p>Windows: CmdStanPy provides the function <code class="docutils literal notranslate"><span class="pre">install_cxx_toolchain</span></code></p></li>
+<li><p>Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default <code class="docutils literal notranslate"><span class="pre">make</span></code> utility)</p></li>
+<li><p>maxOS:  install XCode and Xcode command line tools via command: <cite>xcode-select –install</cite>.</p></li>
+</ul>
 </div>
 <div class="section" id="function-install-cmdstan">
 <h3>Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code><a class="headerlink" href="#function-install-cmdstan" title="Permalink to this headline">¶</a></h3>
@@ -236,14 +250,20 @@ can be used to override these defaults:</p>
 ls -F my_local_cmdstan
 </pre></div>
 </div>
-<div class="section" id="specifying-cmdstan-installation-location">
-<h4>Specifying CmdStan installation location<a class="headerlink" href="#specifying-cmdstan-installation-location" title="Permalink to this headline">¶</a></h4>
+</div>
+<div class="section" id="diy-installion">
+<h3>DIY Installion<a class="headerlink" href="#diy-installion" title="Permalink to this headline">¶</a></h3>
+<p>If you with to install CmdStan yourself, follow the instructions
+in the <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan User’s Guide</a>.</p>
+</div>
+<div class="section" id="post-installion-setting-environment-variables">
+<h3>Post Installion: Setting Environment Variables<a class="headerlink" href="#post-installion-setting-environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>The default for the CmdStan installation location
 is a directory named <code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code> in your <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory.</p>
 <p>If you have installed CmdStan in a different directory,
 then you can set the environment variable <code class="docutils literal notranslate"><span class="pre">CMDSTAN</span></code> to this
 location and it will be picked up by CmdStanPy:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">CMDSTAN</span><span class="o">=</span><span class="s1">&#39;/path/to/cmdstan-2.20.0&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">CMDSTAN</span><span class="o">=</span><span class="s1">&#39;/path/to/cmdstan-2.24.0&#39;</span>
 </pre></div>
 </div>
 <p>The CmdStanPy commands <code class="docutils literal notranslate"><span class="pre">cmdstan_path</span></code> and <code class="docutils literal notranslate"><span class="pre">set_cmdstan_path</span></code>
@@ -255,20 +275,11 @@ get and set this environment variable:</p>
 <span class="n">newpath</span> <span class="o">=</span> <span class="n">cmdstan_path</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="specifying-a-custom-make-tool">
-<h4>Specifying a custom Make tool<a class="headerlink" href="#specifying-a-custom-make-tool" title="Permalink to this headline">¶</a></h4>
 <p>To use custom <code class="docutils literal notranslate"><span class="pre">make</span></code>-tool use <code class="docutils literal notranslate"><span class="pre">set_make_env</span></code> function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">set_make_env</span>
 <span class="n">set_make_env</span><span class="p">(</span><span class="s2">&quot;mingw32-make.exe&quot;</span><span class="p">)</span> <span class="c1"># On Windows with mingw32-make</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="installion-via-the-command-line">
-<h3>Installion via the command line<a class="headerlink" href="#installion-via-the-command-line" title="Permalink to this headline">¶</a></h3>
-<p>If you with to install CmdStan yourself, follow the instructions
-in the <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan User’s Guide</a>.</p>
 </div>
 </div>
 </div>
@@ -278,6 +289,15 @@ in the <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guid
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="hello_world.html" class="btn btn-neutral float-right" title="“Hello, World”" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
