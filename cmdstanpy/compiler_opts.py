@@ -51,7 +51,7 @@ CPP_OPTS = [
 
 class CompilerOptions:
     """
-    User-specified flags for stanc and c++ compiler.
+    User-specified flags for stanc and C++ compiler.
 
     Attributes:
         stanc_options - stanc compiler flags, options
@@ -94,7 +94,7 @@ class CompilerOptions:
 
     def validate_stanc_opts(self) -> None:
         """
-        Check stanc compiler args and consistency between stanc and c++ options.
+        Check stanc compiler args and consistency between stanc and C++ options.
         Raise ValueError if bad config is found.
         """
         # pylint: disable=no-member

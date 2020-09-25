@@ -42,16 +42,16 @@ from cmdstanpy.utils import (
 
 class CmdStanModel:
     """
-    Stan model.
+    A CmdStanModel object encapsulates the Stan program and provides
+    methods for compilation and doing inference on the model given data
+    using Stan's algorithms.  It manages program compilation and corresponding
+    Stan and C++ compiler options.
 
-    - Stores pathnames to Stan program, compiled executable, and collection of
-      compiler options.
-    - Provides functions to compile the model and perform inference on the
-      model given data.
-    - By default, compiles model on instantiation - override with argument
-      ``compile=False``
-    - By default, property ``name`` corresponds to basename of the Stan program
-      or exe file - override with argument ``model_name=<name>``.
+    The constructor method allows model instantiation given either or
+    both the Stan program source file and the compiled executable, and
+    provides accessor functions for the file locations.   By default, the
+    constructor will compile the Stan program on instantiation unless the
+    argument ``compile=False`` is specified.
     """
 
     def __init__(
@@ -64,7 +64,17 @@ class CmdStanModel:
         cpp_options: Dict = None,
         logger: logging.Logger = None,
     ) -> None:
-        """Initialize object."""
+        """
+        Initialize object given constructor args.
+
+        :param model_name: Model name, used for output file names.
+        :param stan_file: Path to Stan program file.
+        :param exe_file: Path to compiled executable file.
+        :param compile: Whether or not to compile the model.
+        :param stanc_options: Options for stanc compiler.
+        :param cpp_options: Options for C++ compiler.
+        :param logger: Python logger object.
+        """
         self._name = None
         self._stan_file = None
         self._exe_file = None
@@ -169,7 +179,7 @@ class CmdStanModel:
         """
         Model name used in output filename templates. Default is basename
         of Stan program or exe file, unless specified in call to constructor
-        via argument `model_name`.
+        via argument ``model_name``.
         """
         return self._name
 
@@ -190,7 +200,7 @@ class CmdStanModel:
 
     @property
     def cpp_options(self) -> Dict:
-        """Options to c++ compilers."""
+        """Options to C++ compilers."""
         return self._compiler_options._cpp_options
 
     def code(self) -> str:
@@ -228,7 +238,8 @@ class CmdStanModel:
             ``#include`` directives in order to force recompilation when changes
             are made to the included files.
 
-        :param compiler_options: Options for stanc and C++ compilers.
+        :param stanc_options: Options for stanc compiler.
+        :param cpp_options: Options for C++ compiler.
 
         :param override_options: When ``True``, override existing option.
             When ``False``, add/replace existing options.  Default is ``False``.

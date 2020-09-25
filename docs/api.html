@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -46,13 +46,16 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #edf0f2" >
           
 
           
             <a href="index.html" class="icon icon-home"> CmdStanPy
           
 
+          
+            
+            <img src="_static/logo_icon.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -84,9 +87,10 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">“Hello, World”</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stan_models.html">Stan Models in CmdStanPy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sample.html">MCMC Sampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generate_quantities.html">Run Generated Quantities</a></li>
@@ -175,29 +179,54 @@
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="cmdstanmodel">
 <span id="class-cmdstanmodel"></span><h3>CmdStanModel<a class="headerlink" href="#cmdstanmodel" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<dl class="py class">
 <dt id="cmdstanpy.CmdStanModel">
-<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanModel</code><span class="sig-paren">(</span><em class="sig-param">model_name: str = None</em>, <em class="sig-param">stan_file: str = None</em>, <em class="sig-param">exe_file: str = None</em>, <em class="sig-param">compile: bool = True</em>, <em class="sig-param">stanc_options: Dict = None</em>, <em class="sig-param">cpp_options: Dict = None</em>, <em class="sig-param">logger: logging.Logger = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stan model.</p>
-<ul class="simple">
-<li><p>Stores pathnames to Stan program, compiled executable, and collection of
-compiler options.</p></li>
-<li><p>Provides functions to compile the model and perform inference on the
-model given data.</p></li>
-<li><p>By default, compiles model on instantiation - override with argument
-<code class="docutils literal notranslate"><span class="pre">compile=False</span></code></p></li>
-<li><p>By default, property <code class="docutils literal notranslate"><span class="pre">name</span></code> corresponds to basename of the Stan program
-or exe file - override with argument <code class="docutils literal notranslate"><span class="pre">model_name=&lt;name&gt;</span></code>.</p></li>
+<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">stan_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">exe_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compile</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">stanc_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cpp_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>A CmdStanModel object encapsulates the Stan program and provides
+methods for compilation and doing inference on the model given data
+using Stan’s algorithms.  It manages program compilation and corresponding
+Stan and C++ compiler options.</p>
+<p>The constructor method allows model instantiation given either or
+both the Stan program source file and the compiled executable, and
+provides accessor functions for the file locations.   By default, the
+constructor will compile the Stan program on instantiation unless the
+argument <code class="docutils literal notranslate"><span class="pre">compile=False</span></code> is specified.</p>
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanModel.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">stan_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">exe_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compile</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">stanc_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cpp_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize object given constructor args.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em>) – Model name, used for output file names.</p></li>
+<li><p><strong>stan_file</strong> (<em>str</em>) – Path to Stan program file.</p></li>
+<li><p><strong>exe_file</strong> (<em>str</em>) – Path to compiled executable file.</p></li>
+<li><p><strong>compile</strong> (<em>bool</em>) – Whether or not to compile the model.</p></li>
+<li><p><strong>stanc_options</strong> (<em>Dict</em>) – Options for stanc compiler.</p></li>
+<li><p><strong>cpp_options</strong> (<em>Dict</em>) – Options for C++ compiler.</p></li>
+<li><p><strong>logger</strong> (<em>logging.Logger</em>) – Python logger object.</p></li>
 </ul>
-<dl class="method">
-<dt id="cmdstanpy.CmdStanModel.code">
-<code class="sig-name descname">code</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.code" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return Stan program as a string.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanModel.code">
+<code class="sig-name descname">code</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Stan program as a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanModel.compile">
-<code class="sig-name descname">compile</code><span class="sig-paren">(</span><em class="sig-param">force: bool = False</em>, <em class="sig-param">stanc_options: Dict = None</em>, <em class="sig-param">cpp_options: Dict = None</em>, <em class="sig-param">override_options: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.compile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">compile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">stanc_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cpp_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">override_options</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.compile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compile the given Stan program file.  Translates the Stan code to
 C++, then calls the C++ compiler.</p>
 <p>By default, this function compares the timestamps on the source and
@@ -206,33 +235,25 @@ will not recompile the file, unless argument <code class="docutils literal notra
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>force</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, always compile, even if the executable file
+<li><p><strong>force</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, always compile, even if the executable file
 is newer than the source file.  Used for Stan models which have
 <code class="docutils literal notranslate"><span class="pre">#include</span></code> directives in order to force recompilation when changes
 are made to the included files.</p></li>
-<li><p><strong>compiler_options</strong> – Options for stanc and C++ compilers.</p></li>
-<li><p><strong>override_options</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, override existing option.
+<li><p><strong>stanc_options</strong> (<em>Dict</em>) – Options for stanc compiler.</p></li>
+<li><p><strong>cpp_options</strong> (<em>Dict</em>) – Options for C++ compiler.</p></li>
+<li><p><strong>override_options</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, override existing option.
 When <code class="docutils literal notranslate"><span class="pre">False</span></code>, add/replace existing options.  Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanModel.cpp_options">
-<em class="property">property </em><code class="sig-name descname">cpp_options</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.cpp_options" title="Permalink to this definition">¶</a></dt>
-<dd><p>Options to c++ compilers.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanModel.exe_file">
-<em class="property">property </em><code class="sig-name descname">exe_file</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.exe_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Full path to Stan exe file.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanModel.generate_quantities">
-<code class="sig-name descname">generate_quantities</code><span class="sig-paren">(</span><em class="sig-param">data: Union[Dict</em>, <em class="sig-param">str] = None</em>, <em class="sig-param">mcmc_sample: Union[cmdstanpy.stanfit.CmdStanMCMC</em>, <em class="sig-param">List[str]] = None</em>, <em class="sig-param">seed: int = None</em>, <em class="sig-param">gq_output_dir: str = None</em><span class="sig-paren">)</span> &#x2192; cmdstanpy.stanfit.CmdStanGQ<a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.generate_quantities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.generate_quantities" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">generate_quantities</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mcmc_sample</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gq_output_dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.generate_quantities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.generate_quantities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run CmdStan’s generate_quantities method which runs the generated
 quantities block of a model given an existing sample.</p>
 <p>This function takes a CmdStanMCMC object and the dataset used to
@@ -252,13 +273,13 @@ Output files written to the temporary directory contain an additional
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Values for all data variables in the model, specified
+<li><p><strong>data</strong> (<em>Union</em><em>[</em><em>Dict</em><em>, </em><em>str</em><em>]</em>) – Values for all data variables in the model, specified
 either as a dictionary with entries matching the data variables,
 or as the path of a data file in JSON or Rdump format.</p></li>
-<li><p><strong>mcmc_sample</strong> – Can be either a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object returned by
+<li><p><strong>mcmc_sample</strong> (<em>Union</em><em>[</em><em>cmdstanpy.stanfit.CmdStanMCMC</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Can be either a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object returned by
 the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method or a list of stan-csv files generated
 by fitting the model to the data using any Stan interface.</p></li>
-<li><p><strong>seed</strong> – The seed for random number generator. Must be an integer
+<li><p><strong>seed</strong> (<em>int</em>) – The seed for random number generator. Must be an integer
 between 0 and 2^32 - 1. If unspecified,
 <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState()</span></code>
 is used to generate a seed which will be used for all chains.
@@ -266,7 +287,7 @@ is used to generate a seed which will be used for all chains.
 multiple invocations of this method with the same inputs.  However
 this will not reproduce results from the sample method given
 the same inputs because the RNG will be in a different state.</em></p></li>
-<li><p><strong>gq_output_dir</strong> – Name of the directory in which the CmdStan output
+<li><p><strong>gq_output_dir</strong> (<em>str</em>) – Name of the directory in which the CmdStan output
 files are saved.  If unspecified, files will be written to a
 temporary directory which is deleted upon session exit.</p></li>
 </ul>
@@ -274,20 +295,15 @@ temporary directory which is deleted upon session exit.</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>CmdStanGQ object</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>cmdstanpy.stanfit.CmdStanGQ</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanModel.name">
-<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Model name used in output filename templates. Default is basename
-of Stan program or exe file, unless specified in call to constructor
-via argument <cite>model_name</cite>.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanModel.optimize">
-<code class="sig-name descname">optimize</code><span class="sig-paren">(</span><em class="sig-param">data: Union[Dict</em>, <em class="sig-param">str] = None</em>, <em class="sig-param">seed: int = None</em>, <em class="sig-param">inits: Union[Dict</em>, <em class="sig-param">float</em>, <em class="sig-param">str] = None</em>, <em class="sig-param">output_dir: str = None</em>, <em class="sig-param">algorithm: str = None</em>, <em class="sig-param">init_alpha: float = None</em>, <em class="sig-param">iter: int = None</em><span class="sig-paren">)</span> &#x2192; cmdstanpy.stanfit.CmdStanMLE<a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.optimize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">optimize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inits</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">init_alpha</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">iter</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.optimize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run the specified CmdStan optimize algorithm to produce a
 penalized maximum likelihood estimate of the model parameters.</p>
 <p>This function validates the specified configuration, composes a call to
@@ -309,13 +325,13 @@ Output files written to the temporary directory contain an additional
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Values for all data variables in the model, specified
+<li><p><strong>data</strong> (<em>Union</em><em>[</em><em>Dict</em><em>, </em><em>str</em><em>]</em>) – Values for all data variables in the model, specified
 either as a dictionary with entries matching the data variables,
 or as the path of a data file in JSON or Rdump format.</p></li>
-<li><p><strong>seed</strong> – The seed for random number generator. Must be an integer
+<li><p><strong>seed</strong> (<em>int</em>) – The seed for random number generator. Must be an integer
 between 0 and 2^32 - 1. If unspecified,
 <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState()</span></code> is used to generate a seed.</p></li>
-<li><p><strong>inits</strong> – <p>Specifies how the sampler initializes parameter values.
+<li><p><strong>inits</strong> (<em>Union</em><em>[</em><em>Dict</em><em>, </em><em>float</em><em>, </em><em>str</em><em>]</em>) – <p>Specifies how the sampler initializes parameter values.
 Initialization is either uniform random on a range centered on 0,
 exactly 0, or a dictionary or file of initial values for some or
 all parameters in the model.  The default initialization behavior
@@ -330,23 +346,26 @@ The following value types are allowed:</p>
 <li><p>string - pathname to a JSON or Rdump data file.</p></li>
 </ul>
 </p></li>
-<li><p><strong>output_dir</strong> – Name of the directory to which CmdStan output
+<li><p><strong>output_dir</strong> (<em>str</em>) – Name of the directory to which CmdStan output
 files are written. If unspecified, output files will be written
 to a temporary directory which is deleted upon session exit.</p></li>
-<li><p><strong>algorithm</strong> – Algorithm to use. One of: ‘BFGS’, ‘LBFGS’, ‘Newton’</p></li>
-<li><p><strong>init_alpha</strong> – Line search step size for first iteration</p></li>
-<li><p><strong>iter</strong> – Total number of iterations</p></li>
+<li><p><strong>algorithm</strong> (<em>str</em>) – Algorithm to use. One of: ‘BFGS’, ‘LBFGS’, ‘Newton’</p></li>
+<li><p><strong>init_alpha</strong> (<em>float</em>) – Line search step size for first iteration</p></li>
+<li><p><strong>iter</strong> (<em>int</em>) – Total number of iterations</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>CmdStanMLE object</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>cmdstanpy.stanfit.CmdStanMLE</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanModel.sample">
-<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param">data: Union[Dict</em>, <em class="sig-param">str] = None</em>, <em class="sig-param">chains: Optional[int] = None</em>, <em class="sig-param">parallel_chains: Optional[int] = None</em>, <em class="sig-param">threads_per_chain: Optional[int] = None</em>, <em class="sig-param">seed: Union[int</em>, <em class="sig-param">List[int]] = None</em>, <em class="sig-param">chain_ids: Union[int</em>, <em class="sig-param">List[int]] = None</em>, <em class="sig-param">inits: Union[Dict</em>, <em class="sig-param">float</em>, <em class="sig-param">str</em>, <em class="sig-param">List[str]] = None</em>, <em class="sig-param">iter_warmup: int = None</em>, <em class="sig-param">iter_sampling: int = None</em>, <em class="sig-param">save_warmup: bool = False</em>, <em class="sig-param">thin: int = None</em>, <em class="sig-param">max_treedepth: float = None</em>, <em class="sig-param">metric: Union[str</em>, <em class="sig-param">List[str]] = None</em>, <em class="sig-param">step_size: Union[float</em>, <em class="sig-param">List[float]] = None</em>, <em class="sig-param">adapt_engaged: bool = True</em>, <em class="sig-param">adapt_delta: float = None</em>, <em class="sig-param">adapt_init_phase: int = None</em>, <em class="sig-param">adapt_metric_window: int = None</em>, <em class="sig-param">adapt_step_size: int = None</em>, <em class="sig-param">fixed_param: bool = False</em>, <em class="sig-param">output_dir: str = None</em>, <em class="sig-param">save_diagnostics: bool = False</em>, <em class="sig-param">show_progress: Union[bool</em>, <em class="sig-param">str] = False</em>, <em class="sig-param">validate_csv: bool = True</em><span class="sig-paren">)</span> &#x2192; cmdstanpy.stanfit.CmdStanMCMC<a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.sample" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">chains</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">parallel_chains</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">threads_per_chain</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">chain_ids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inits</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">iter_warmup</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">iter_sampling</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_warmup</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">thin</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_treedepth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">step_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adapt_engaged</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">adapt_delta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adapt_init_phase</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adapt_metric_window</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adapt_step_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fixed_param</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">output_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_diagnostics</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">show_progress</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">validate_csv</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run or more chains of the NUTS sampler to produce a set of draws
 from the posterior distribution of a model conditioned on some data.</p>
 <p>This function validates the specified configuration, composes a call to
@@ -369,27 +388,27 @@ Output files written to the temporary directory contain an additional
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Values for all data variables in the model, specified
+<li><p><strong>data</strong> (<em>Union</em><em>[</em><em>Dict</em><em>, </em><em>str</em><em>]</em>) – Values for all data variables in the model, specified
 either as a dictionary with entries matching the data variables,
 or as the path of a data file in JSON or Rdump format.</p></li>
-<li><p><strong>chains</strong> – Number of sampler chains, must be a positive integer.</p></li>
-<li><p><strong>parallel_chains</strong> – Number of processes to run in parallel. Must be
+<li><p><strong>chains</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Number of sampler chains, must be a positive integer.</p></li>
+<li><p><strong>parallel_chains</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Number of processes to run in parallel. Must be
 a positive integer.  Defaults to <code class="docutils literal notranslate"><span class="pre">multiprocessing.cpu_count()</span></code>.</p></li>
-<li><p><strong>threads_per_chain</strong> – The number of threads to use in parallelized
+<li><p><strong>threads_per_chain</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of threads to use in parallelized
 sections within an MCMC chain (e.g., when using the Stan functions
 <code class="docutils literal notranslate"><span class="pre">reduce_sum()</span></code>  or <code class="docutils literal notranslate"><span class="pre">map_rect()</span></code>).  This will only have an effect
 if the model was compiled with threading support. The total number
 of threads used will be <code class="docutils literal notranslate"><span class="pre">parallel_chains</span> <span class="pre">*</span> <span class="pre">threads_per_chain</span></code>.</p></li>
-<li><p><strong>seed</strong> – The seed for random number generator. Must be an integer
+<li><p><strong>seed</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – The seed for random number generator. Must be an integer
 between 0 and 2^32 - 1. If unspecified,
 <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState()</span></code>
 is used to generate a seed which will be used for all chains.
 When the same seed is used across all chains,
 the chain-id is used to advance the RNG to avoid dependent samples.</p></li>
-<li><p><strong>chain_ids</strong> – The offset for the random number generator, either
+<li><p><strong>chain_ids</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – The offset for the random number generator, either
 an integer or a list of unique per-chain offsets.  If unspecified,
 chain ids are numbered sequentially starting from 1.</p></li>
-<li><p><strong>inits</strong> – <p>Specifies how the sampler initializes parameter values.
+<li><p><strong>inits</strong> (<em>Union</em><em>[</em><em>Dict</em><em>, </em><em>float</em><em>, </em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – <p>Specifies how the sampler initializes parameter values.
 Initialization is either uniform random on a range centered on 0,
 exactly 0, or a dictionary or file of initial values for some or all
 parameters in the model.  The default initialization behavior will
@@ -405,15 +424,15 @@ The following value types are allowed:</p>
 <li><p>list of strings - per-chain pathname to data file.</p></li>
 </ul>
 </p></li>
-<li><p><strong>iter_warmup</strong> – Number of warmup iterations for each chain.</p></li>
-<li><p><strong>iter_sampling</strong> – Number of draws from the posterior for each
+<li><p><strong>iter_warmup</strong> (<em>int</em>) – Number of warmup iterations for each chain.</p></li>
+<li><p><strong>iter_sampling</strong> (<em>int</em>) – Number of draws from the posterior for each
 chain.</p></li>
-<li><p><strong>save_warmup</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, sampler saves warmup draws as part of
+<li><p><strong>save_warmup</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, sampler saves warmup draws as part of
 the Stan csv output file.</p></li>
-<li><p><strong>thin</strong> – Period between saved samples.</p></li>
-<li><p><strong>max_treedepth</strong> – Maximum depth of trees evaluated by NUTS sampler
+<li><p><strong>thin</strong> (<em>int</em>) – Period between saved samples.</p></li>
+<li><p><strong>max_treedepth</strong> (<em>float</em>) – Maximum depth of trees evaluated by NUTS sampler
 per iteration.</p></li>
-<li><p><strong>metric</strong> – <p>Specification of the mass matrix, either as a
+<li><p><strong>metric</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – <p>Specification of the mass matrix, either as a
 vector consisting of the diagonal elements of the covariance
 matrix (‘diag’ or ‘diag_e’) or the full covariance matrix
 (‘dense’ or ‘dense_e’).</p>
@@ -426,28 +445,28 @@ the full covariance matrix.</p>
 length must match the number of chains and all paths must be
 unique.</p>
 </p></li>
-<li><p><strong>step_size</strong> – Initial stepsize for HMC sampler.  The value is either
+<li><p><strong>step_size</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>List</em><em>[</em><em>float</em><em>]</em><em>]</em>) – Initial stepsize for HMC sampler.  The value is either
 a single number or a list of numbers which will be used as the
 global or per-chain initial step size, respectively.
 The length of the list of step sizes must match the number of
 chains.</p></li>
-<li><p><strong>adapt_engaged</strong> – When True, adapt stepsize and metric.</p></li>
-<li><p><strong>adapt_delta</strong> – Adaptation target Metropolis acceptance rate.
+<li><p><strong>adapt_engaged</strong> (<em>bool</em>) – When True, adapt stepsize and metric.</p></li>
+<li><p><strong>adapt_delta</strong> (<em>float</em>) – Adaptation target Metropolis acceptance rate.
 The default value is 0.8.  Increasing this value, which must be
 strictly less than 1, causes adaptation to use smaller step sizes
 which improves the effective sample size, but may increase the time
 per iteration.</p></li>
-<li><p><strong>adapt_init_phase</strong> – Iterations for initial phase of adaptation
+<li><p><strong>adapt_init_phase</strong> (<em>int</em>) – Iterations for initial phase of adaptation
 during which step size is adjusted so that the chain converges
 towards the typical set.</p></li>
-<li><p><strong>adapt_metric_window</strong> – The second phase of adaptation tunes
+<li><p><strong>adapt_metric_window</strong> (<em>int</em>) – The second phase of adaptation tunes
 the metric and stepsize in a series of intervals.  This parameter
 specifies the number of iterations used for the first tuning
 interval; window size increases for each subsequent interval.</p></li>
-<li><p><strong>adapt_step_size</strong> – Number of iterations given over to adjusting
+<li><p><strong>adapt_step_size</strong> (<em>int</em>) – Number of iterations given over to adjusting
 the step size given the tuned metric during the final phase of
 adaptation.</p></li>
-<li><p><strong>fixed_param</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, call CmdStan with argument
+<li><p><strong>fixed_param</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, call CmdStan with argument
 <code class="docutils literal notranslate"><span class="pre">algorithm=fixed_param</span></code> which runs the sampler without
 updating the Markov Chain, thus the values of all parameters and
 transformed parameters are constant across all draws and
@@ -456,17 +475,17 @@ produced by RNG functions may change.  This provides
 a way to use Stan programs to generate simulated data via the
 generated quantities block.  This option must be used when the
 parameters block is empty.  Default value is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p><strong>output_dir</strong> – Name of the directory to which CmdStan output
+<li><p><strong>output_dir</strong> (<em>str</em>) – Name of the directory to which CmdStan output
 files are written. If unspecified, output files will be written
 to a temporary directory which is deleted upon session exit.</p></li>
-<li><p><strong>save_diagnostics</strong> – Whether or not to save diagnostics. If True,
+<li><p><strong>save_diagnostics</strong> (<em>bool</em>) – Whether or not to save diagnostics. If True,
 csv output files are written to an output file with filename
 template ‘&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-diagnostic-&lt;chain_id&gt;’,
 e.g. ‘bernoulli-201912081451-diagnostic-1.csv’.</p></li>
-<li><p><strong>show_progress</strong> – Use tqdm progress bar to show sampling progress.
+<li><p><strong>show_progress</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>str</em><em>]</em>) – Use tqdm progress bar to show sampling progress.
 If show_progress==’notebook’ use tqdm_notebook
 (needs nodejs for jupyter).</p></li>
-<li><p><strong>validate_csv</strong> – If <code class="docutils literal notranslate"><span class="pre">False</span></code>, skip scan of sample csv output file.
+<li><p><strong>validate_csv</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">False</span></code>, skip scan of sample csv output file.
 When sample is large or disk i/o is slow, will speed up processing.
 Default is <code class="docutils literal notranslate"><span class="pre">True</span></code> - sample csv files are scanned for completeness
 and consistency.</p></li>
@@ -475,24 +494,15 @@ and consistency.</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>CmdStanMCMC object</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>cmdstanpy.stanfit.CmdStanMCMC</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanModel.stan_file">
-<em class="property">property </em><code class="sig-name descname">stan_file</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.stan_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Full path to Stan program file.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanModel.stanc_options">
-<em class="property">property </em><code class="sig-name descname">stanc_options</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.stanc_options" title="Permalink to this definition">¶</a></dt>
-<dd><p>Options to stanc compilers.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanModel.variational">
-<code class="sig-name descname">variational</code><span class="sig-paren">(</span><em class="sig-param">data: Union[Dict</em>, <em class="sig-param">str] = None</em>, <em class="sig-param">seed: int = None</em>, <em class="sig-param">inits: float = None</em>, <em class="sig-param">output_dir: str = None</em>, <em class="sig-param">save_diagnostics: bool = False</em>, <em class="sig-param">algorithm: str = None</em>, <em class="sig-param">iter: int = None</em>, <em class="sig-param">grad_samples: int = None</em>, <em class="sig-param">elbo_samples: int = None</em>, <em class="sig-param">eta: numbers.Real = None</em>, <em class="sig-param">adapt_engaged: bool = True</em>, <em class="sig-param">adapt_iter: int = None</em>, <em class="sig-param">tol_rel_obj: numbers.Real = None</em>, <em class="sig-param">eval_elbo: int = None</em>, <em class="sig-param">output_samples: int = None</em>, <em class="sig-param">require_converged: bool = True</em><span class="sig-paren">)</span> &#x2192; cmdstanpy.stanfit.CmdStanVB<a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.variational"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.variational" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">variational</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inits</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_diagnostics</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">algorithm</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">iter</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">grad_samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">elbo_samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">eta</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">adapt_engaged</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">adapt_iter</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tol_rel_obj</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">eval_elbo</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_samples</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">require_converged</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.variational"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.variational" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run CmdStan’s variational inference algorithm to approximate
 the posterior distribution of the model conditioned on the data.</p>
 <p>This function validates the specified configuration, composes a call to
@@ -514,43 +524,78 @@ Output files written to the temporary directory contain an additional
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> – Values for all data variables in the model, specified
+<li><p><strong>data</strong> (<em>Union</em><em>[</em><em>Dict</em><em>, </em><em>str</em><em>]</em>) – Values for all data variables in the model, specified
 either as a dictionary with entries matching the data variables,
 or as the path of a data file in JSON or Rdump format.</p></li>
-<li><p><strong>seed</strong> – The seed for random number generator. Must be an integer
+<li><p><strong>seed</strong> (<em>int</em>) – The seed for random number generator. Must be an integer
 between 0 and 2^32 - 1. If unspecified,
 <code class="docutils literal notranslate"><span class="pre">numpy.random.RandomState()</span></code>
 is used to generate a seed which will be used for all chains.</p></li>
-<li><p><strong>inits</strong> – Specifies how the sampler initializes parameter values.
+<li><p><strong>inits</strong> (<em>float</em>) – Specifies how the sampler initializes parameter values.
 Initialization is uniform random on a range centered on 0 with
 default range of 2. Specifying a single number n &gt; 0 changes
 the initialization range to [-n, n].</p></li>
-<li><p><strong>output_dir</strong> – Name of the directory to which CmdStan output
+<li><p><strong>output_dir</strong> (<em>str</em>) – Name of the directory to which CmdStan output
 files are written. If unspecified, output files will be written
 to a temporary directory which is deleted upon session exit.</p></li>
-<li><p><strong>save_diagnostics</strong> – Whether or not to save diagnostics. If True,
+<li><p><strong>save_diagnostics</strong> (<em>bool</em>) – Whether or not to save diagnostics. If True,
 csv output files are written to an output file with filename
 template ‘&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-diagnostic-&lt;chain_id&gt;’,
 e.g. ‘bernoulli-201912081451-diagnostic-1.csv’.</p></li>
-<li><p><strong>algorithm</strong> – Algorithm to use. One of: ‘meanfield’, ‘fullrank’.</p></li>
-<li><p><strong>iter</strong> – Maximum number of ADVI iterations.</p></li>
-<li><p><strong>grad_samples</strong> – Number of MC draws for computing the gradient.</p></li>
-<li><p><strong>elbo_samples</strong> – Number of MC draws for estimate of ELBO.</p></li>
-<li><p><strong>eta</strong> – Stepsize scaling parameter.</p></li>
-<li><p><strong>adapt_engaged</strong> – Whether eta adaptation is engaged.</p></li>
-<li><p><strong>adapt_iter</strong> – Number of iterations for eta adaptation.</p></li>
-<li><p><strong>tol_rel_obj</strong> – Relative tolerance parameter for convergence.</p></li>
-<li><p><strong>eval_elbo</strong> – Number of iterations between ELBO evaluations.</p></li>
-<li><p><strong>output_samples</strong> – Number of approximate posterior output draws
+<li><p><strong>algorithm</strong> (<em>str</em>) – Algorithm to use. One of: ‘meanfield’, ‘fullrank’.</p></li>
+<li><p><strong>iter</strong> (<em>int</em>) – Maximum number of ADVI iterations.</p></li>
+<li><p><strong>grad_samples</strong> (<em>int</em>) – Number of MC draws for computing the gradient.</p></li>
+<li><p><strong>elbo_samples</strong> (<em>int</em>) – Number of MC draws for estimate of ELBO.</p></li>
+<li><p><strong>eta</strong> (<em>numbers.Real</em>) – Stepsize scaling parameter.</p></li>
+<li><p><strong>adapt_engaged</strong> (<em>bool</em>) – Whether eta adaptation is engaged.</p></li>
+<li><p><strong>adapt_iter</strong> (<em>int</em>) – Number of iterations for eta adaptation.</p></li>
+<li><p><strong>tol_rel_obj</strong> (<em>numbers.Real</em>) – Relative tolerance parameter for convergence.</p></li>
+<li><p><strong>eval_elbo</strong> (<em>int</em>) – Number of iterations between ELBO evaluations.</p></li>
+<li><p><strong>output_samples</strong> (<em>int</em>) – Number of approximate posterior output draws
 to save.</p></li>
-<li><p><strong>require_converged</strong> – Whether or not to raise an error if stan
+<li><p><strong>require_converged</strong> (<em>bool</em>) – Whether or not to raise an error if stan
 reports that “The algorithm may not have converged”.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>CmdStanVB object</p>
 </dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>cmdstanpy.stanfit.CmdStanVB</p>
+</dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanModel.cpp_options">
+<em class="property">property </em><code class="sig-name descname">cpp_options</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.cpp_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Options to C++ compilers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanModel.exe_file">
+<em class="property">property </em><code class="sig-name descname">exe_file</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.exe_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full path to Stan exe file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanModel.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model name used in output filename templates. Default is basename
+of Stan program or exe file, unless specified in call to constructor
+via argument <code class="docutils literal notranslate"><span class="pre">model_name</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanModel.stan_file">
+<em class="property">property </em><code class="sig-name descname">stan_file</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.stan_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full path to Stan program file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanModel.stanc_options">
+<em class="property">property </em><code class="sig-name descname">stanc_options</code><a class="headerlink" href="#cmdstanpy.CmdStanModel.stanc_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Options to stanc compilers.</p>
 </dd></dl>
 
 </dd></dl>
@@ -558,32 +603,31 @@ reports that “The algorithm may not have converged”.</p></li>
 </div>
 <div class="section" id="cmdstanmcmc">
 <span id="class-cmdstanmcmc"></span><h3>CmdStanMCMC<a class="headerlink" href="#cmdstanmcmc" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<dl class="py class">
 <dt id="cmdstanpy.CmdStanMCMC">
-<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanMCMC</code><span class="sig-paren">(</span><em class="sig-param">runset: cmdstanpy.stanfit.RunSet</em>, <em class="sig-param">validate_csv: bool = True</em>, <em class="sig-param">logger: logging.Logger = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanMCMC</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em>, <em class="sig-param"><span class="n">validate_csv</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for outputs from CmdStan sampler run.</p>
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.chain_ids">
-<em class="property">property </em><code class="sig-name descname">chain_ids</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.chain_ids" title="Permalink to this definition">¶</a></dt>
-<dd><p>Chain ids.</p>
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em>, <em class="sig-param"><span class="n">validate_csv</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>runset</strong> (<a class="reference internal" href="#cmdstanpy.stanfit.RunSet" title="cmdstanpy.stanfit.RunSet"><em>cmdstanpy.stanfit.RunSet</em></a>) – </p></li>
+<li><p><strong>validate_csv</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>logger</strong> (<em>logging.Logger</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.chains">
-<em class="property">property </em><code class="sig-name descname">chains</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.chains" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of chains.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.column_names">
-<em class="property">property </em><code class="sig-name descname">column_names</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.column_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Names of all per-draw outputs: all
-sampler and model parameters and quantities of interest</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.diagnose">
-<code class="sig-name descname">diagnose</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.diagnose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.diagnose" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">diagnose</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.diagnose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.diagnose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run cmdstan/bin/diagnose over all output csv files.
 Returns output of diagnose (stdout/stderr).</p>
 <p>The diagnose utility reads the outputs of all chains
@@ -595,91 +639,84 @@ and checks for the following potential problems:</p>
 <li><p>Low effective sample sizes</p></li>
 <li><p>High R-hat values</p></li>
 </ul>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.draws">
-<code class="sig-name descname">draws</code><span class="sig-paren">(</span><em class="sig-param">inc_warmup: bool = False</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.draws"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.draws" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">draws</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inc_warmup</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.draws"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.draws" title="Permalink to this definition">¶</a></dt>
 <dd><p>A 3-D numpy ndarray which contains all draws, from both warmup and
 sampling iterations, arranged as (draws, chains, columns) and stored
 column major, so that the values for each parameter are contiguous
 in memory, likewise all draws from a chain are contiguous.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inc_warmup</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code> and the warmup draws are present in
+<dd class="field-odd"><p><strong>inc_warmup</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code> and the warmup draws are present in
 the output, i.e., the sampler was run with <code class="docutils literal notranslate"><span class="pre">save_warmup=True</span></code>,
 then the warmup draws are included.  Default value is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.draws_as_dataframe">
-<code class="sig-name descname">draws_as_dataframe</code><span class="sig-paren">(</span><em class="sig-param">params: List[str] = None</em>, <em class="sig-param">inc_warmup: bool = False</em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.draws_as_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.draws_as_dataframe" title="Permalink to this definition">¶</a></dt>
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.draws_pd">
+<code class="sig-name descname">draws_pd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">inc_warmup</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.draws_pd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.draws_pd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the assembled draws as a pandas DataFrame consisting of
 one column per parameter and one row per draw.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>params</strong> – list of model parameter names.</p></li>
-<li><p><strong>inc_warmup</strong> – When <code class="docutils literal notranslate"><span class="pre">True</span></code> and the warmup draws are present in
+<li><p><strong>params</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – list of model parameter names.</p></li>
+<li><p><strong>inc_warmup</strong> (<em>bool</em>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code> and the warmup draws are present in
 the output, i.e., the sampler was run with <code class="docutils literal notranslate"><span class="pre">save_warmup=True</span></code>,
 then the warmup draws are included.  Default value is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.core.frame.DataFrame</p>
+</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.metric">
-<em class="property">property </em><code class="sig-name descname">metric</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.metric" title="Permalink to this definition">¶</a></dt>
-<dd><p>Metric used by sampler for each chain.
-When sampler algorithm ‘fixed_param’ is specified, metric is None.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.metric_type">
-<em class="property">property </em><code class="sig-name descname">metric_type</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.metric_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Metric type used for adaptation, either ‘diag_e’ or ‘dense_e’.
-When sampler algorithm ‘fixed_param’ is specified, metric_type is None.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.num_draws">
-<em class="property">property </em><code class="sig-name descname">num_draws</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.num_draws" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of draws per chain.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.sample">
-<em class="property">property </em><code class="sig-name descname">sample</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.sample" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deprecated - use method “draws()” instead.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.sampler_diagnostics">
-<code class="sig-name descname">sampler_diagnostics</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.sampler_diagnostics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.sampler_diagnostics" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sampler_diagnostics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.sampler_diagnostics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.sampler_diagnostics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the sampler diagnostics as a map from
 column name to draws X chains X 1 ndarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.save_csvfiles">
-<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param">dir: str = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.save_csvfiles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.save_csvfiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Move output csvfiles to specified directory.  If files were
 written to the temporary session directory, clean filename.
 E.g., save ‘bernoulli-201912081451-1-5nm6as7u.csv’ as
 ‘bernoulli-201912081451-1.csv’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dir</strong> – directory path</p>
+<dd class="field-odd"><p><strong>dir</strong> (<em>str</em>) – directory path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.stan_variable">
-<code class="sig-name descname">stan_variable</code><span class="sig-paren">(</span><em class="sig-param">name: str</em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.stan_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.stan_variable" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stan_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.stan_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.stan_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new DataFrame which contains the set of post-warmup draws
 for the named Stan program variable.  Flattens the chains.
 Underlyingly draws are in chain order, i.e., for a sample
@@ -698,12 +735,107 @@ DataFrame is ( draws X chains, size(dim 1) X … X size(dim N))</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> – variable name</p>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – variable name</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.core.frame.DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.stan_variables">
+<code class="sig-name descname">stan_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.stan_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.stan_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary of all Stan program variables.
+Creates copies of the data in the draws matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.summary">
+<code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">percentiles</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run cmdstan/bin/stansummary over all output csv files.
+Echo stansummary stdout/stderr to console.
+Assemble csv tempfile contents into pandasDataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>percentiles</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – Ordered non-empty list of percentiles to report.
+Must be integers from (1, 99), inclusive.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>pandas.core.frame.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.validate_csv_files">
+<code class="sig-name descname">validate_csv_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.validate_csv_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.validate_csv_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that csv output files for all chains are consistent.
+Populates attributes for draws, column_names, num_params, metric_type.
+Raises exception when inconsistencies detected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.chain_ids">
+<em class="property">property </em><code class="sig-name descname">chain_ids</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.chain_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Chain ids.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.chains">
+<em class="property">property </em><code class="sig-name descname">chains</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.chains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of chains.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.column_names">
+<em class="property">property </em><code class="sig-name descname">column_names</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.column_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>all
+sampler and model parameters and quantities of interest</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Names of all per-draw outputs</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.metric">
+<em class="property">property </em><code class="sig-name descname">metric</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.metric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metric used by sampler for each chain.
+When sampler algorithm ‘fixed_param’ is specified, metric is None.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.metric_type">
+<em class="property">property </em><code class="sig-name descname">metric_type</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.metric_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metric type used for adaptation, either ‘diag_e’ or ‘dense_e’.
+When sampler algorithm ‘fixed_param’ is specified, metric_type is None.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.num_draws">
+<em class="property">property </em><code class="sig-name descname">num_draws</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.num_draws" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of draws per chain.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMCMC.sample">
+<em class="property">property </em><code class="sig-name descname">sample</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deprecated - use method “draws()” instead.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.stan_variable_dims">
 <em class="property">property </em><code class="sig-name descname">stan_variable_dims</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.stan_variable_dims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dict mapping Stan program variable names to variable dimensions.
@@ -711,43 +843,14 @@ Scalar types have int value ‘1’.  Structured types have list of dims,
 e.g.,  program variable <code class="docutils literal notranslate"><span class="pre">vector[10]</span> <span class="pre">foo</span></code> has entry <code class="docutils literal notranslate"><span class="pre">('foo',</span> <span class="pre">[10])</span></code>.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.stan_variables">
-<code class="sig-name descname">stan_variables</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.stan_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.stan_variables" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a dictionary of all Stan program variables.
-Creates copies of the data in the draws matrix.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.stepsize">
 <em class="property">property </em><code class="sig-name descname">stepsize</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.stepsize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stepsize used by sampler for each chain.
 When sampler algorithm ‘fixed_param’ is specified, stepsize is None.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.summary">
-<code class="sig-name descname">summary</code><span class="sig-paren">(</span><em class="sig-param">percentiles: List[int] = None</em><span class="sig-paren">)</span> &#x2192; pandas.core.frame.DataFrame<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run cmdstan/bin/stansummary over all output csv files.
-Echo stansummary stdout/stderr to console.
-Assemble csv tempfile contents into pandasDataFrame.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>percentiles</strong> – Ordered non-empty list of percentiles to report.
-Must be integers from (1, 99), inclusive.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMCMC.validate_csv_files">
-<code class="sig-name descname">validate_csv_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMCMC.validate_csv_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.validate_csv_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks that csv output files for all chains are consistent.
-Populates attributes for draws, column_names, num_params, metric_type.
-Raises exception when inconsistencies detected.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMCMC.warmup">
 <em class="property">property </em><code class="sig-name descname">warmup</code><a class="headerlink" href="#cmdstanpy.CmdStanMCMC.warmup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deprecated - use “draws(inc_warmup=True)”</p>
@@ -758,47 +861,64 @@ Raises exception when inconsistencies detected.</p>
 </div>
 <div class="section" id="cmdstanmle">
 <span id="class-cmdstanmle"></span><h3>CmdStanMLE<a class="headerlink" href="#cmdstanmle" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<dl class="py class">
 <dt id="cmdstanpy.CmdStanMLE">
-<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanMLE</code><span class="sig-paren">(</span><em class="sig-param">runset: cmdstanpy.stanfit.RunSet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMLE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMLE" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanMLE</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMLE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for outputs from CmdStan optimization.</p>
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMLE.column_names">
-<em class="property">property </em><code class="sig-name descname">column_names</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.column_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Names of estimated quantities, includes joint log probability,
-and all parameters, transformed parameters, and generated quantitites.</p>
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMLE.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMLE.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMLE.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>runset</strong> (<a class="reference internal" href="#cmdstanpy.stanfit.RunSet" title="cmdstanpy.stanfit.RunSet"><em>cmdstanpy.stanfit.RunSet</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMLE.optimized_params_dict">
-<em class="property">property </em><code class="sig-name descname">optimized_params_dict</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.optimized_params_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns optimized params as Dict.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMLE.optimized_params_np">
-<em class="property">property </em><code class="sig-name descname">optimized_params_np</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.optimized_params_np" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns optimized params as numpy array.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cmdstanpy.CmdStanMLE.optimized_params_pd">
-<em class="property">property </em><code class="sig-name descname">optimized_params_pd</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.optimized_params_pd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns optimized params as pandas DataFrame.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanMLE.save_csvfiles">
-<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param">dir: str = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMLE.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMLE.save_csvfiles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanMLE.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanMLE.save_csvfiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Move output csvfiles to specified directory.  If files were
 written to the temporary session directory, clean filename.
 E.g., save ‘bernoulli-201912081451-1-5nm6as7u.csv’ as
 ‘bernoulli-201912081451-1.csv’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dir</strong> – directory path</p>
+<dd class="field-odd"><p><strong>dir</strong> (<em>str</em>) – directory path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMLE.column_names">
+<em class="property">property </em><code class="sig-name descname">column_names</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.column_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Names of estimated quantities, includes joint log probability,
+and all parameters, transformed parameters, and generated quantitites.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMLE.optimized_params_dict">
+<em class="property">property </em><code class="sig-name descname">optimized_params_dict</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.optimized_params_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns optimized params as Dict.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMLE.optimized_params_np">
+<em class="property">property </em><code class="sig-name descname">optimized_params_np</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.optimized_params_np" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns optimized params as numpy array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanMLE.optimized_params_pd">
+<em class="property">property </em><code class="sig-name descname">optimized_params_pd</code><a class="headerlink" href="#cmdstanpy.CmdStanMLE.optimized_params_pd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns optimized params as pandas DataFrame.</p>
 </dd></dl>
 
 </dd></dl>
@@ -806,23 +926,57 @@ E.g., save ‘bernoulli-201912081451-1-5nm6as7u.csv’ as
 </div>
 <div class="section" id="cmdstangq">
 <span id="class-cmdstanqq"></span><h3>CmdStanGQ<a class="headerlink" href="#cmdstangq" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<dl class="py class">
 <dt id="cmdstanpy.CmdStanGQ">
-<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanGQ</code><span class="sig-paren">(</span><em class="sig-param">runset: cmdstanpy.stanfit.RunSet</em>, <em class="sig-param">mcmc_sample: pandas.core.frame.DataFrame</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanGQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanGQ" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanGQ</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em>, <em class="sig-param"><span class="n">mcmc_sample</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanGQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanGQ" title="Permalink to this definition">¶</a></dt>
 <dd><p>Container for outputs from CmdStan generate_quantities run.</p>
-<dl class="method">
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanGQ.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em>, <em class="sig-param"><span class="n">mcmc_sample</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanGQ.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanGQ.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>runset</strong> (<a class="reference internal" href="#cmdstanpy.stanfit.RunSet" title="cmdstanpy.stanfit.RunSet"><em>cmdstanpy.stanfit.RunSet</em></a>) – </p></li>
+<li><p><strong>mcmc_sample</strong> (<em>pandas.core.frame.DataFrame</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanGQ.save_csvfiles">
+<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanGQ.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanGQ.save_csvfiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move output csvfiles to specified directory.  If files were
+written to the temporary session directory, clean filename.
+E.g., save ‘bernoulli-201912081451-1-5nm6as7u.csv’ as
+‘bernoulli-201912081451-1.csv’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir</strong> (<em>str</em>) – directory path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanGQ.chains">
 <em class="property">property </em><code class="sig-name descname">chains</code><a class="headerlink" href="#cmdstanpy.CmdStanGQ.chains" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of chains.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanGQ.column_names">
 <em class="property">property </em><code class="sig-name descname">column_names</code><a class="headerlink" href="#cmdstanpy.CmdStanGQ.column_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Names of generated quantities of interest.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanGQ.generated_quantities">
 <em class="property">property </em><code class="sig-name descname">generated_quantities</code><a class="headerlink" href="#cmdstanpy.CmdStanGQ.generated_quantities" title="Permalink to this definition">¶</a></dt>
 <dd><p>A 2-D numpy ndarray which contains generated quantities draws
@@ -833,14 +987,14 @@ last M draws are the last M draws of chain N, i.e.,
 flattened chain, draw ordering.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanGQ.generated_quantities_pd">
 <em class="property">property </em><code class="sig-name descname">generated_quantities_pd</code><a class="headerlink" href="#cmdstanpy.CmdStanGQ.generated_quantities_pd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the generated quantities as a pandas DataFrame consisting of
 one column per quantity of interest and one row per draw.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanGQ.sample_plus_quantities">
 <em class="property">property </em><code class="sig-name descname">sample_plus_quantities</code><a class="headerlink" href="#cmdstanpy.CmdStanGQ.sample_plus_quantities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the column-wise concatenation of the input drawset
@@ -850,30 +1004,47 @@ the input column is dropped in favor of the recomputed
 values in the generate quantities drawset.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanGQ.save_csvfiles">
-<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param">dir: str = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanGQ.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanGQ.save_csvfiles" title="Permalink to this definition">¶</a></dt>
+</dd></dl>
+
+</div>
+<div class="section" id="cmdstanvb">
+<span id="class-cmdstanvb"></span><h3>CmdStanVB<a class="headerlink" href="#cmdstanvb" title="Permalink to this headline">¶</a></h3>
+<dl class="py class">
+<dt id="cmdstanpy.CmdStanVB">
+<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanVB</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanVB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanVB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for outputs from CmdStan variational run.</p>
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanVB.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runset</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanVB.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanVB.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>runset</strong> (<a class="reference internal" href="#cmdstanpy.stanfit.RunSet" title="cmdstanpy.stanfit.RunSet"><em>cmdstanpy.stanfit.RunSet</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.CmdStanVB.save_csvfiles">
+<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanVB.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanVB.save_csvfiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Move output csvfiles to specified directory.  If files were
 written to the temporary session directory, clean filename.
 E.g., save ‘bernoulli-201912081451-1-5nm6as7u.csv’ as
 ‘bernoulli-201912081451-1.csv’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dir</strong> – directory path</p>
+<dd class="field-odd"><p><strong>dir</strong> (<em>str</em>) – directory path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
-</dd></dl>
-
-</div>
-<div class="section" id="cmdstanvb">
-<span id="class-cmdstanvb"></span><h3>CmdStanVB<a class="headerlink" href="#cmdstanvb" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="cmdstanpy.CmdStanVB">
-<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.</code><code class="sig-name descname">CmdStanVB</code><span class="sig-paren">(</span><em class="sig-param">runset: cmdstanpy.stanfit.RunSet</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanVB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanVB" title="Permalink to this definition">¶</a></dt>
-<dd><p>Container for outputs from CmdStan variational run.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanVB.column_names">
 <em class="property">property </em><code class="sig-name descname">column_names</code><a class="headerlink" href="#cmdstanpy.CmdStanVB.column_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Names of information items returned by sampler for each draw.
@@ -881,7 +1052,7 @@ Includes approximation information and names of model parameters
 and computed quantities.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanVB.columns">
 <em class="property">property </em><code class="sig-name descname">columns</code><a class="headerlink" href="#cmdstanpy.CmdStanVB.columns" title="Permalink to this definition">¶</a></dt>
 <dd><p>Total number of information items returned by sampler.
@@ -889,39 +1060,25 @@ Includes approximation information and names of model parameters
 and computed quantities.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.CmdStanVB.save_csvfiles">
-<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param">dir: str = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#CmdStanVB.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.CmdStanVB.save_csvfiles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Move output csvfiles to specified directory.  If files were
-written to the temporary session directory, clean filename.
-E.g., save ‘bernoulli-201912081451-1-5nm6as7u.csv’ as
-‘bernoulli-201912081451-1.csv’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dir</strong> – directory path</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanVB.variational_params_dict">
 <em class="property">property </em><code class="sig-name descname">variational_params_dict</code><a class="headerlink" href="#cmdstanpy.CmdStanVB.variational_params_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns inferred parameter means as Dict.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanVB.variational_params_np">
 <em class="property">property </em><code class="sig-name descname">variational_params_np</code><a class="headerlink" href="#cmdstanpy.CmdStanVB.variational_params_np" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns inferred parameter means as numpy array.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanVB.variational_params_pd">
 <em class="property">property </em><code class="sig-name descname">variational_params_pd</code><a class="headerlink" href="#cmdstanpy.CmdStanVB.variational_params_pd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns inferred parameter means as pandas DataFrame.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.CmdStanVB.variational_sample">
 <em class="property">property </em><code class="sig-name descname">variational_sample</code><a class="headerlink" href="#cmdstanpy.CmdStanVB.variational_sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the set of approximate posterior output draws.</p>
@@ -932,76 +1089,103 @@ E.g., save ‘bernoulli-201912081451-1-5nm6as7u.csv’ as
 </div>
 <div class="section" id="runset">
 <span id="class-runset"></span><h3>RunSet<a class="headerlink" href="#runset" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
+<dl class="py class">
 <dt id="cmdstanpy.stanfit.RunSet">
-<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.stanfit.</code><code class="sig-name descname">RunSet</code><span class="sig-paren">(</span><em class="sig-param">args: cmdstanpy.cmdstan_args.CmdStanArgs</em>, <em class="sig-param">chains: int = 4</em>, <em class="sig-param">chain_ids: List[int] = None</em>, <em class="sig-param">logger: logging.Logger = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#RunSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">cmdstanpy.stanfit.</code><code class="sig-name descname">RunSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">args</span></em>, <em class="sig-param"><span class="n">chains</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">chain_ids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#RunSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record of CmdStan run for a specified configuration and number of chains.</p>
-<dl class="method">
+<dl class="py method">
+<dt id="cmdstanpy.stanfit.RunSet.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">args</span></em>, <em class="sig-param"><span class="n">chains</span><span class="o">=</span><span class="default_value">4</span></em>, <em class="sig-param"><span class="n">chain_ids</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#RunSet.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<em>cmdstanpy.cmdstan_args.CmdStanArgs</em>) – </p></li>
+<li><p><strong>chains</strong> (<em>int</em>) – </p></li>
+<li><p><strong>chain_ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – </p></li>
+<li><p><strong>logger</strong> (<em>logging.Logger</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.stanfit.RunSet.get_err_msgs">
+<code class="sig-name descname">get_err_msgs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#RunSet.get_err_msgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.get_err_msgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks console messages for each chain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cmdstanpy.stanfit.RunSet.save_csvfiles">
+<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit.html#RunSet.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.save_csvfiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves csvfiles to specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dir</strong> (<em>str</em>) – directory path</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.chain_ids">
 <em class="property">property </em><code class="sig-name descname">chain_ids</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.chain_ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Chain ids.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.chains">
 <em class="property">property </em><code class="sig-name descname">chains</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.chains" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of chains.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.cmds">
 <em class="property">property </em><code class="sig-name descname">cmds</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.cmds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Per-chain call to CmdStan.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.csv_files">
 <em class="property">property </em><code class="sig-name descname">csv_files</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.csv_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of paths to CmdStan output files.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.diagnostic_files">
 <em class="property">property </em><code class="sig-name descname">diagnostic_files</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.diagnostic_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of paths to CmdStan diagnostic output files.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.stanfit.RunSet.get_err_msgs">
-<code class="sig-name descname">get_err_msgs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[str]<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#RunSet.get_err_msgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.get_err_msgs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks console messages for each chain.</p>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.method">
 <em class="property">property </em><code class="sig-name descname">method</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.method" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the CmdStan method used to generate this fit.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.model">
 <em class="property">property </em><code class="sig-name descname">model</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stan model name.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="cmdstanpy.stanfit.RunSet.save_csvfiles">
-<code class="sig-name descname">save_csvfiles</code><span class="sig-paren">(</span><em class="sig-param">dir: str = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/cmdstanpy/stanfit.html#RunSet.save_csvfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.save_csvfiles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Moves csvfiles to specified directory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dir</strong> – directory path</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.stderr_files">
 <em class="property">property </em><code class="sig-name descname">stderr_files</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.stderr_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of paths to CmdStan stderr transcripts.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="cmdstanpy.stanfit.RunSet.stdout_files">
 <em class="property">property </em><code class="sig-name descname">stdout_files</code><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.stdout_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>List of paths to CmdStan stdout transcripts.</p>

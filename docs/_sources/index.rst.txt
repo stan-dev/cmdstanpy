@@ -8,16 +8,17 @@
 ===============================================
 
 .. module:: cmdstanpy
-   :synopsis: A lightweight interface to CmdStan which provides the necessary objects and functions to do use Stan for Bayesian inference.
+   :synopsis: A lightweight interface to CmdStan which provides the necessary objects and functions to use Stan for Bayesian inference.
 
 .. moduleauthor:: Stan Developement Team
 
 
 .. toctree::
    :maxdepth: 4
-   :caption: Contents:
 
-   getting_started
+   overview
+   installation
+   hello_world
    stan_models
    sample
    generate_quantities

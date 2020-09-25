@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script type="text/javascript" src="../../_static/js/copybutton.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script src="../../_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -45,13 +45,16 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #edf0f2" >
           
 
           
             <a href="../../index.html" class="icon icon-home"> CmdStanPy
           
 
+          
+            
+            <img src="../../_static/logo_icon.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -83,9 +86,10 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hello_world.html">“Hello, World”</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../stan_models.html">Stan Models in CmdStanPy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../sample.html">MCMC Sampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generate_quantities.html">Run Generated Quantities</a></li>
@@ -192,7 +196,7 @@
 <span class="sd">    Record of CmdStan run for a specified configuration and number of chains.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="RunSet.__init__"><a class="viewcode-back" href="../../api.html#cmdstanpy.RunSet.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">args</span><span class="p">:</span> <span class="n">CmdStanArgs</span><span class="p">,</span>
         <span class="n">chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
@@ -279,7 +283,7 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;RunSet: chains=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">)</span>
@@ -458,7 +462,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># pylint: disable=too-many-instance-attributes</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="CmdStanMCMC.__init__"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">,</span>
         <span class="n">validate_csv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -487,11 +491,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stepsize</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_draws_as_df</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stan_variable_dims</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_csv</span> <span class="o">=</span> <span class="n">validate_csv</span>
         <span class="k">if</span> <span class="n">validate_csv</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">validate_csv_files</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate_csv_files</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanMCMC: model=</span><span class="si">{}</span><span class="s1"> chains=</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -847,7 +851,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="CmdStanMCMC.draws_as_dataframe"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.draws_as_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">draws_as_dataframe</span><span class="p">(</span>
+<div class="viewcode-block" id="CmdStanMCMC.draws_pd"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.draws_pd">[docs]</a>    <span class="k">def</span> <span class="nf">draws_pd</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -866,24 +870,24 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span> <span class="ow">or</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">pnames_base</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown parameter: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_as_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># pylint: disable=redundant-keyword-arg</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_draws</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span><span class="p">),</span>
                 <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">),</span>
                 <span class="n">order</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_draws_as_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
                 <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_as_df</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">params</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="n">params</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])):</span>
                 <span class="n">mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_as_df</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="CmdStanMCMC.stan_variable"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -962,7 +966,7 @@
 <span class="sd">    Container for outputs from CmdStan optimization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CmdStanMLE.__init__"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMLE.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">OPTIMIZE</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -972,7 +976,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">runset</span> <span class="o">=</span> <span class="n">runset</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span> <span class="o">=</span> <span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_mle_attrs</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_mle_attrs</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanMLE: model=</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -1030,7 +1034,7 @@
 <span class="sd">    Container for outputs from CmdStan generate_quantities run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">,</span> <span class="n">mcmc_sample</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CmdStanGQ.__init__"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanGQ.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">,</span> <span class="n">mcmc_sample</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">GENERATE_QUANTITIES</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1042,7 +1046,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_generated_quantities</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span> <span class="o">=</span> <span class="n">scan_generated_quantities_csv</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="p">)[</span><span class="s1">&#39;column_names&#39;</span><span class="p">]</span>
+        <span class="p">)[</span><span class="s1">&#39;column_names&#39;</span><span class="p">]</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanGQ: model=</span><span class="si">{}</span><span class="s1"> chains=</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -1155,7 +1159,7 @@
 <span class="sd">    Container for outputs from CmdStan variational run.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CmdStanVB.__init__"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanVB.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">VARIATIONAL</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1166,7 +1170,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span> <span class="o">=</span> <span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_variational_sample</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_variational_attrs</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_variational_attrs</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanVB: model=</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>

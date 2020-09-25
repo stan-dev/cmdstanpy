@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
@@ -22,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -46,13 +45,16 @@
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+        <div class="wy-side-nav-search"  style="background: #edf0f2" >
           
 
           
             <a href="index.html" class="icon icon-home"> CmdStanPy
           
 
+          
+            
+            <img src="_static/logo_icon.png" class="logo" alt="Logo"/>
           
           </a>
 
@@ -84,9 +86,10 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">“Hello, World”</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stan_models.html">Stan Models in CmdStanPy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sample.html">MCMC Sampling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generate_quantities.html">Run Generated Quantities</a></li>
@@ -160,7 +163,8 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#C"><strong>C</strong></a>
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
@@ -173,6 +177,26 @@
  | <a href="#W"><strong>W</strong></a>
  
 </div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cmdstanpy.CmdStanGQ.__init__">__init__() (cmdstanpy.CmdStanGQ method)</a>
+
+      <ul>
+        <li><a href="api.html#cmdstanpy.CmdStanMCMC.__init__">(cmdstanpy.CmdStanMCMC method)</a>
+</li>
+        <li><a href="api.html#cmdstanpy.CmdStanMLE.__init__">(cmdstanpy.CmdStanMLE method)</a>
+</li>
+        <li><a href="api.html#cmdstanpy.CmdStanModel.__init__">(cmdstanpy.CmdStanModel method)</a>
+</li>
+        <li><a href="api.html#cmdstanpy.CmdStanVB.__init__">(cmdstanpy.CmdStanVB method)</a>
+</li>
+        <li><a href="api.html#cmdstanpy.stanfit.RunSet.__init__">(cmdstanpy.stanfit.RunSet method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -200,10 +224,15 @@
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanModel">CmdStanModel (class in cmdstanpy)</a>
 </li>
+      <li>
+    cmdstanpy
+
+      <ul>
+        <li><a href="index.html#module-cmdstanpy">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#module-cmdstanpy">cmdstanpy (module)</a>
-</li>
       <li><a href="api.html#cmdstanpy.CmdStanVB">CmdStanVB (class in cmdstanpy)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanModel.code">code() (cmdstanpy.CmdStanModel method)</a>
@@ -240,7 +269,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.draws">draws() (cmdstanpy.CmdStanMCMC method)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.CmdStanMCMC.draws_as_dataframe">draws_as_dataframe() (cmdstanpy.CmdStanMCMC method)</a>
+      <li><a href="api.html#cmdstanpy.CmdStanMCMC.draws_pd">draws_pd() (cmdstanpy.CmdStanMCMC method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -276,12 +305,19 @@
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.metric">metric() (cmdstanpy.CmdStanMCMC property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.metric_type">metric_type() (cmdstanpy.CmdStanMCMC property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.stanfit.RunSet.model">model() (cmdstanpy.stanfit.RunSet property)</a>
 </li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="index.html#module-cmdstanpy">cmdstanpy</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
