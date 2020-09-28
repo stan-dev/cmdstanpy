@@ -44,7 +44,7 @@ def get_logger():
     return logger
 
 
-def get_latest_cmdstan(dot_dir: str) -> str:
+def get_latest_cmdstan(cmdstan_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
@@ -52,8 +52,8 @@ def get_latest_cmdstan(dot_dir: str) -> str:
     """
     versions = [
         name.split('-')[1]
-        for name in os.listdir(dot_dir)
-        if os.path.isdir(os.path.join(dot_dir, name))
+        for name in os.listdir(cmdstan_dir)
+        if os.path.isdir(os.path.join(cmdstan_dir, name))
         and name.startswith('cmdstan-')
         and name[8].isdigit()
     ]
@@ -271,19 +271,19 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 )
                 toolchain_root = ''
     else:
-        dot_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        if not os.path.exists(dot_dir):
-            dot_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        if not os.path.exists(cmdstan_dir):
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         rtools_dir = os.path.expanduser(
-            os.path.join('~', dot_dir, 'RTools40')
+            os.path.join('~', cmdstan_dir, 'RTools40')
         )
         if not os.path.exists(rtools_dir):
             rtools_dir = os.path.expanduser(
-                os.path.join('~', dot_dir, 'RTools35')
+                os.path.join('~', cmdstan_dir, 'RTools35')
             )
             if not os.path.exists(rtools_dir):
                 rtools_dir = os.path.expanduser(
-                    os.path.join('~', dot_dir, 'RTools')
+                    os.path.join('~', cmdstan_dir, 'RTools')
                 )
                 if not os.path.exists(rtools_dir):
                     raise ValueError(
@@ -291,9 +291,9 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                         'run command line script "install_cxx_toolchain"'
                     )
             else:
-                rtools_dir = os.path.expanduser(os.path.join('~', dot_dir))
+                rtools_dir = os.path.expanduser(os.path.join('~', cmdstan_dir))
         else:
-            rtools_dir = os.path.expanduser(os.path.join('~', dot_dir))
+            rtools_dir = os.path.expanduser(os.path.join('~', cmdstan_dir))
         compiler_path = ''
         tool_path = ''
         if version not in ('35', '3.5', '3') and os.path.exists(
