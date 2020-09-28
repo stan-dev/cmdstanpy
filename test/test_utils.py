@@ -48,10 +48,16 @@ class CmdStanPathTest(unittest.TestCase):
                 self.assertEqual(cmdstan_path(), path)
                 self.assertTrue('CMDSTAN' in os.environ)
             else:
-                cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+                cmdstan_dir = os.path.expanduser(
+                    os.path.join('~', _DOT_CMDSTAN)
+                )
                 if not os.path.exists(cmdstan_dir):
-                    cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-                install_version = os.path.join(cmdstan_dir, get_latest_cmdstan(cmdstan_dir))
+                    cmdstan_dir = os.path.expanduser(
+                        os.path.join('~', _DOT_CMDSTANPY)
+                    )
+                install_version = os.path.join(
+                    cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+                )
                 self.assertTrue(
                     os.path.samefile(cmdstan_path(), install_version)
                 )
@@ -99,8 +105,12 @@ class CmdStanPathTest(unittest.TestCase):
         else:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
             if not os.path.exists(cmdstan_dir):
-                cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-            install_version = os.path.join(cmdstan_dir, get_latest_cmdstan(cmdstan_dir))
+                cmdstan_dir = os.path.expanduser(
+                    os.path.join('~', _DOT_CMDSTANPY)
+                )
+            install_version = os.path.join(
+                cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+            )
             set_cmdstan_path(install_version)
             self.assertEqual(install_version, cmdstan_path())
             self.assertEqual(install_version, os.environ['CMDSTAN'])
@@ -109,7 +119,9 @@ class CmdStanPathTest(unittest.TestCase):
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        install_version = os.path.join(cmdstan_dir, get_latest_cmdstan(cmdstan_dir))
+        install_version = os.path.join(
+            cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+        )
         set_cmdstan_path(install_version)
         validate_cmdstan_path(install_version)
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
