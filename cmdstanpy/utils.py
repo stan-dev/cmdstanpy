@@ -24,7 +24,14 @@ import numpy as np
 import pandas as pd
 
 
-from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING, _CMDSTAN_THIN
+from cmdstanpy import (
+    _TMPDIR,
+    _CMDSTAN_WARMUP,
+    _CMDSTAN_SAMPLING,
+    _CMDSTAN_THIN,
+    _DOT_CMDSTAN,
+    _DOT_CMDSTANPY,
+)
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -182,12 +189,14 @@ def cmdstan_path() -> str:
     if 'CMDSTAN' in os.environ:
         cmdstan = os.environ['CMDSTAN']
     else:
-        cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
-            raise ValueError(
-                'no CmdStan installation found, '
-                'run command line script "install_cmdstan"'
-            )
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+            if not os.path.exists(cmdstan_dir):
+                raise ValueError(
+                    'no CmdStan installation found, '
+                    'run command line script "install_cmdstan"'
+                )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
@@ -262,16 +271,19 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 )
                 toolchain_root = ''
     else:
+        dot_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+        if not os.path.exists(dot_dir):
+            dot_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         rtools_dir = os.path.expanduser(
-            os.path.join('~', '.cmdstanpy', 'RTools40')
+            os.path.join('~', dot_dir, 'RTools40')
         )
         if not os.path.exists(rtools_dir):
             rtools_dir = os.path.expanduser(
-                os.path.join('~', '.cmdstanpy', 'RTools35')
+                os.path.join('~', dot_dir, 'RTools35')
             )
             if not os.path.exists(rtools_dir):
                 rtools_dir = os.path.expanduser(
-                    os.path.join('~', '.cmdstanpy', 'RTools')
+                    os.path.join('~', dot_dir, 'RTools')
                 )
                 if not os.path.exists(rtools_dir):
                     raise ValueError(
@@ -279,9 +291,9 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                         'run command line script "install_cxx_toolchain"'
                     )
             else:
-                rtools_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+                rtools_dir = os.path.expanduser(os.path.join('~', dot_dir))
         else:
-            rtools_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+            rtools_dir = os.path.expanduser(os.path.join('~', dot_dir))
         compiler_path = ''
         tool_path = ''
         if version not in ('35', '3.5', '3') and os.path.exists(
@@ -908,10 +920,10 @@ def install_cmdstan(version: str = None, dir: str = None) -> bool:
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
     )
-    while proc.poll() is None:
-        output = proc.stdout.readline().decode('utf-8').strip()
-        if output:
-            logger.info(output)
+    # while proc.poll() is None:
+    #     output = proc.stdout.readline().decode('utf-8').strip()
+    #     if output:
+    #        logger.info(output)
     proc.communicate()
     if proc.returncode:
         logger.warning('CmdStan installation failed')
