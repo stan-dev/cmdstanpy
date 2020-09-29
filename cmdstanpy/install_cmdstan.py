@@ -3,7 +3,7 @@
 Download and install a CmdStan release from GitHub.
 Optional command line arguments:
    -v, --version : version, defaults to latest
-   -d, --dir : install directory, defaults to '~/.cmdstanpy
+   -d, --dir : install directory, defaults to '~/.cmdstan(py)
    -c --compiler : add C++ compiler to path (Windows only)
 """
 import argparse
@@ -16,6 +16,8 @@ import tarfile
 import urllib.request
 from pathlib import Path
 from time import sleep
+
+from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -201,9 +203,13 @@ def main():
         version = latest_version()
     print('CmdStan version: {}'.format(version))
 
+    cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+    if not os.path.exists(cmdstan_dir):
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+
     install_dir = vars(args)['dir']
     if install_dir is None:
-        install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        install_dir = cmdstan_dir
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
@@ -214,7 +220,7 @@ def main():
         )
         from .utils import cxx_toolchain_path
 
-        cxx_loc = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        cxx_loc = cmdstan_dir
         compiler_found = False
         for cxx_version in ['40', '35']:
             if _is_installed_cxx(cxx_loc, cxx_version):
@@ -242,4 +248,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print(sys.argv[:1])
     main()

@@ -7,7 +7,7 @@ Currently implemented platforms (platform.system)
     Linux: Not implemented
 Optional command line arguments:
    -v, --version : version, defaults to latest
-   -d, --dir : install directory, defaults to '~/.cmdstanpy
+   -d, --dir : install directory, defaults to '~/.cmdstan(py)
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
    -m --no-make : don't install mingw32-make (Windows RTools 4.0 only)
 """
@@ -21,6 +21,9 @@ import sys
 import urllib.request
 from collections import OrderedDict
 from time import sleep
+
+from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
@@ -297,7 +300,10 @@ def main():
 
     install_dir = vars(args)['dir']
     if install_dir is None:
-        install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        if not os.path.exists(cmdstan_dir):
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+        install_dir = cmdstan_dir
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
