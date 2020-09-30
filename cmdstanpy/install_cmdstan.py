@@ -14,7 +14,8 @@ import platform
 import subprocess
 import sys
 import tarfile
-import urllib.request, urllib.error
+import urllib.request
+import urllib.error
 from pathlib import Path
 from time import sleep
 
@@ -53,9 +54,8 @@ def install_version(cmdstan_version, overwrite):
         print('Building version {}'.format(cmdstan_version))
         if overwrite:
             print(
-                'Overwrite requested, remove existing build of version {}'.format(
-                    cmdstan_version
-                )
+                'Overwrite requested, remove existing build of version '
+                '{}'.format(cmdstan_version)
             )
             cmd = [make, 'clean-all']
             proc = subprocess.Popen(
@@ -110,17 +110,17 @@ def install_version(cmdstan_version, overwrite):
 
 
 def is_version_available(version):
-    is_OK = True
+    is_available = True
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
         'v{0}/cmdstan-{0}.tar.gz'.format(version)
     )
     for i in range(6):
         try:
-            conn = urllib.request.urlopen(url)
+            urllib.request.urlopen(url)
         except urllib.error.HTTPError as err:
             print('HTTPError: {}'.format(err.code))
-            is_OK = False
+            is_available = False
             break
         except urllib.error.URLError as err:
             print('URLError: {}'.format(err.reason))
@@ -132,8 +132,8 @@ def is_version_available(version):
                 )
                 sleep(1)
                 continue
-            is_OK = False
-    return is_OK
+            is_available = False
+    return is_available
 
 
 def latest_version():
