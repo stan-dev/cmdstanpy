@@ -904,7 +904,9 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     return path
 
 
-def install_cmdstan(version: str = None, dir: str = None) -> bool:
+def install_cmdstan(version: str = None,
+                    dir: str = None,
+                    overwrite: bool = False) -> bool:
     """
     Run 'install_cmdstan' -script
     """
@@ -912,20 +914,23 @@ def install_cmdstan(version: str = None, dir: str = None) -> bool:
     python = sys.executable
     here = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(here, 'install_cmdstan.py')
-    cmd = [python, path]
+    cmd = [python, "-u", path]
     if version is not None:
         cmd.extend(['--version', version])
     if dir is not None:
         cmd.extend(['--dir', dir])
+    if overwrite:
+        cmd.extend(['--overwrite', "TRUE"])
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
     )
-    # while proc.poll() is None:
-    #     output = proc.stdout.readline().decode('utf-8').strip()
-    #     if output:
-    #        logger.info(output)
-    proc.communicate()
+    while proc.poll() is None:
+        print(proc.stdout.readline().decode('utf-8').strip())
+
+    _, stderr = proc.communicate()
     if proc.returncode:
-        logger.warning('CmdStan installation failed')
+        logger.warning('CmdStan installation failed.')
+        if stderr:
+            logger.warning(stderr.decode('utf-8').strip())
         return False
     return True

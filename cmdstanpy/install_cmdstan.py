@@ -4,7 +4,8 @@ Download and install a CmdStan release from GitHub.
 Optional command line arguments:
    -v, --version : version, defaults to latest
    -d, --dir : install directory, defaults to '~/.cmdstan(py)
-   -c --compiler : add C++ compiler to path (Windows only)
+   --overwrite: when true, re-install version, default false
+   -c, --compiler : add C++ compiler to path (Windows only)
 """
 import argparse
 import contextlib
@@ -13,7 +14,7 @@ import platform
 import subprocess
 import sys
 import tarfile
-import urllib.request
+import urllib.request, urllib.error
 from pathlib import Path
 from time import sleep
 
@@ -37,18 +38,40 @@ def usage():
         """Arguments:
         -v (--version) :CmdStan version
         -d (--dir) : install directory
+        --overwrite : replace installed version
         -h (--help) : this message
         """
     )
 
 
-def install_version(cmdstan_version):
+def install_version(cmdstan_version, overwrite):
     """Build specified CmdStan version."""
     with pushd(cmdstan_version):
-        print('Building {} binaries'.format(cmdstan_version))
         make = os.getenv(
             'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
         )
+        print('Building version {}'.format(cmdstan_version))
+        if overwrite:
+            print(
+                'Overwrite requested, remove existing build of version {}'.format(
+                    cmdstan_version
+                )
+            )
+            cmd = [make, 'clean-all']
+            proc = subprocess.Popen(
+                cmd,
+                cwd=None,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=os.environ,
+            )
+            _, stderr = proc.communicate()
+            if proc.returncode:
+                print('Command "make clean-all" failed')
+                if stderr:
+                    print(stderr.decode('utf-8').strip())
+                    sys.exit(3)
+            print('Rebuilding version {}'.format(cmdstan_version))
         cmd = [make, 'build']
         proc = subprocess.Popen(
             cmd,
@@ -86,15 +109,31 @@ def install_version(cmdstan_version):
     print('Installed {}'.format(cmdstan_version))
 
 
-def is_installed(cmdstan_version):
-    """Check if CmdStan is already installed."""
-    if not os.path.exists(os.path.join(cmdstan_version, 'bin')):
-        return False
-    return os.path.exists(
-        os.path.join(
-            cmdstan_version, 'examples', 'bernoulli', 'bernoulli' + EXTENSION
-        )
+def is_version_available(version):
+    is_OK = True
+    url = (
+        'https://github.com/stan-dev/cmdstan/releases/download/'
+        'v{0}/cmdstan-{0}.tar.gz'.format(version)
     )
+    for i in range(6):
+        try:
+            conn = urllib.request.urlopen(url)
+        except urllib.error.HTTPError as err:
+            print('HTTPError: {}'.format(err.code))
+            is_OK = False
+            break
+        except urllib.error.URLError as err:
+            print('URLError: {}'.format(err.reason))
+            if i < 5:
+                print(
+                    'checking version {} availability, retry ({}/5)'.format(
+                        version, i + 1
+                    )
+                )
+                sleep(1)
+                continue
+            is_OK = False
+    return is_OK
 
 
 def latest_version():
@@ -120,17 +159,21 @@ def latest_version():
     return response[start_idx:end_idx]
 
 
-def retrieve_latest_version(version):
+def retrieve_version(version):
     """Download specified CmdStan version."""
     print('Downloading CmdStan version {}'.format(version))
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
         'v{0}/cmdstan-{0}.tar.gz'.format(version)
     )
-    for i in range(6):
+    for i in range(6):  # always retry to allow for transient URLErrors
         try:
             file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
             break
+        except urllib.error.HTTPError as err:
+            print('HTTPError: {}'.format(err.code))
+            print('Version {} not available from github.com.'.format(version))
+            sys.exit(3)
         except urllib.error.URLError as err:
             print(
                 'Failed to download CmdStan version {} from github.com'.format(
@@ -142,6 +185,7 @@ def retrieve_latest_version(version):
                 print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
+            print('Version {} not available from github.com.'.format(version))
             sys.exit(3)
     print('Download successful, file: {}'.format(file_tmp))
     try:
@@ -189,6 +233,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')
+    parser.add_argument('--overwrite')
     if platform.system() == 'Windows':
         # use compiler installed with install_cxx_toolchain
         # Install a new compiler if compiler not found
@@ -201,7 +246,13 @@ def main():
     version = vars(args)['version']
     if version is None:
         version = latest_version()
-    print('CmdStan version: {}'.format(version))
+
+    if is_version_available(version):
+        print('Installing CmdStan version: {}'.format(version))
+    else:
+        raise ValueError(
+            'Invalid version requested: {}, cannot install.'.format(version)
+        )
 
     cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
     if not os.path.exists(cmdstan_dir):
@@ -212,6 +263,10 @@ def main():
         install_dir = cmdstan_dir
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
+
+    overwrite = False
+    if vars(args)['overwrite'] is not None:
+        overwrite = True
 
     if platform.system() == 'Windows' and vars(args)['compiler']:
         from .install_cxx_toolchain import (
@@ -239,12 +294,11 @@ def main():
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
-        if not os.path.exists(cmdstan_version):
-            retrieve_latest_version(version)
-        if is_installed(cmdstan_version):
-            print('CmdStan version {} already installed'.format(version))
+        if overwrite or not os.path.exists(cmdstan_version):
+            retrieve_version(version)
+            install_version(cmdstan_version, overwrite)
         else:
-            install_version(cmdstan_version)
+            print('CmdStan version {} already installed'.format(version))
 
 
 if __name__ == '__main__':
