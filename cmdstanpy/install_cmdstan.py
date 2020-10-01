@@ -41,7 +41,7 @@ class CmdStanInstallError(RuntimeError):
 
 
 @contextlib.contextmanager
-def pushd(new_dir):
+def pushd(new_dir: str):
     """Acts like pushd/popd."""
     previous_dir = os.getcwd()
     os.chdir(new_dir)
@@ -56,13 +56,22 @@ def usage():
         -v (--version) :CmdStan version
         -d (--dir) : install directory
         --overwrite : replace installed version
+        --verbose : show CmdStan build messages
         -h (--help) : this message
         """
     )
 
 
-def install_version(cmdstan_version, overwrite, verbose):
-    """Build specified CmdStan version."""
+def install_version(cmdstan_version: str, overwrite: bool = False, verbose: bool = False):
+    """
+    Build specified CmdStan version by spawning subprocesses to
+    run the Make utility on the downloaded CmdStan release src files.
+    Assumes that current working directory is parent of release dir.
+
+    :param cmdstan_version: CmdStan release, corresponds to release dirname.
+    :param overwrite: when ``True``, run ``make clean-all`` before building.
+    :param verbose: when ``True``, print build msgs to stdout.
+    """
     with pushd(cmdstan_version):
         make = os.getenv(
             'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
@@ -131,7 +140,7 @@ def install_version(cmdstan_version, overwrite, verbose):
     print('Installed {}'.format(cmdstan_version))
 
 
-def is_version_available(version):
+def is_version_available(version: str):
     is_available = True
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
@@ -185,7 +194,7 @@ def latest_version():
     return response[start_idx:end_idx]
 
 
-def retrieve_version(version):
+def retrieve_version(version: str):
     """Download specified CmdStan version."""
     print('Downloading CmdStan version {}'.format(version))
     url = (

@@ -44,7 +44,7 @@ def get_logger():
     return logger
 
 
-def validate_dir(install_dir):
+def validate_dir(install_dir: str):
     """Check that specified install directory exists, can write."""
     if not os.path.exists(install_dir):
         try:
