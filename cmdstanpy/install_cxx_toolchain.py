@@ -23,7 +23,7 @@ from collections import OrderedDict
 from time import sleep
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import cmdstan_path, validate_dir
+from cmdstanpy.utils import validate_dir
 
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
