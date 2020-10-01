@@ -62,7 +62,9 @@ def usage():
     )
 
 
-def install_version(cmdstan_version: str, overwrite: bool = False, verbose: bool = False):
+def install_version(
+    cmdstan_version: str, overwrite: bool = False, verbose: bool = False
+):
     """
     Build specified CmdStan version by spawning subprocesses to
     run the Make utility on the downloaded CmdStan release src files.
@@ -273,9 +275,7 @@ def main():
 
     cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
     if not os.path.exists(cmdstan_dir):
-        cmdstanpy_dir = os.path.expanduser(
-            os.path.join('~', _DOT_CMDSTANPY)
-        )
+        cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         if os.path.exists(cmdstanpy_dir):
             cmdstan_dir = cmdstanpy_dir
 
