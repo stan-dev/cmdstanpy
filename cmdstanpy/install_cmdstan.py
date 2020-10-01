@@ -27,6 +27,7 @@ from pathlib import Path
 from time import sleep
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+from cmdstanpy.utils import cmdstan_path, validate_dir
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -144,7 +145,7 @@ def is_version_available(version):
             print('HTTPError: {}'.format(err.code))
             is_available = False
             break
-        except urllib.error.URLError as err:
+        except urllib.error.URLError as e:
             if i < 5:
                 print(
                     'checking version {} availability, retry ({}/5)'.format(
@@ -154,7 +155,7 @@ def is_version_available(version):
                 sleep(1)
                 continue
             print('Release {} is unavailable from URL {}'.format(version, url))
-            print('URLError: {}'.format(err.reason))
+            print('URLError: {}'.format(e.reason))
             is_available = False
     return is_available
 
@@ -167,16 +168,16 @@ def latest_version():
                 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
             )
             break
-        except urllib.error.URLError as err:
+        except urllib.error.URLError as e:
             print('Cannot connect to github.')
-            print(err)
+            print(e)
             if i < 5:
                 print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
             raise CmdStanRetrieveError(
                 'Cannot connect to CmdStan github repo.'
-            ) from err
+            ) from e
     with open(file_tmp, 'r') as fd:
         response = fd.read()
         start_idx = response.find('\"tag_name\":\"v') + len('"tag_name":"v')
@@ -195,20 +196,20 @@ def retrieve_version(version):
         try:
             file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
             break
-        except urllib.error.HTTPError as err:
+        except urllib.error.HTTPError as e:
             raise CmdStanRetrieveError(
                 'HTTPError: {}\n'
                 'Version {} not available from github.com.'.format(
-                    err.code, version
+                    e.code, version
                 )
-            ) from err
-        except urllib.error.URLError as err:
+            ) from e
+        except urllib.error.URLError as e:
             print(
                 'Failed to download CmdStan version {} from github.com'.format(
                     version
                 )
             )
-            print(err)
+            print(e)
             if i < 5:
                 print('retry ({}/5)'.format(i + 1))
                 sleep(1)
@@ -216,7 +217,7 @@ def retrieve_version(version):
             print('Version {} not available from github.com.'.format(version))
             raise CmdStanRetrieveError(
                 'Version {} not available from github.com.'.format(version)
-            ) from err
+            ) from e
     print('Download successful, file: {}'.format(file_tmp))
     try:
         tar = tarfile.open(file_tmp)
@@ -225,37 +226,13 @@ def retrieve_version(version):
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
         tar.extractall(target)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         raise CmdStanInstallError(
             'Failed to unpack file {}'.format(file_tmp)
-        ) from err
+        ) from e
     finally:
         tar.close()
     print('Unpacked download as cmdstan-{}'.format(version))
-
-
-def validate_dir(install_dir):
-    """Check that specified install directory exists, can write."""
-    if not os.path.exists(install_dir):
-        try:
-            os.makedirs(install_dir)
-        except (IOError, OSError, PermissionError) as err:
-            raise ValueError(
-                'Cannot create directory: {}'.format(install_dir)
-            ) from err
-    else:
-        if not os.path.isdir(install_dir):
-            raise ValueError(
-                'File exists, should be a directory: {}'.format(install_dir)
-            )
-        try:
-            with open('tmp_test_w', 'w'):
-                pass
-            os.remove('tmp_test_w')  # cleanup
-        except (IOError, OSError, PermissionError) as err:
-            raise ValueError(
-                'Cannot write files to directory {}'.format(install_dir)
-            ) from err
 
 
 def main():
@@ -287,7 +264,11 @@ def main():
 
     cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
     if not os.path.exists(cmdstan_dir):
-        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+        cmdstanpy_dir = os.path.expanduser(
+            os.path.join('~', _DOT_CMDSTANPY)
+        )
+        if os.path.exists(cmdstanpy_dir):
+            cmdstan_dir = cmdstanpy_dir
 
     install_dir = cmdstan_dir
     if vars(args)['dir']:
@@ -340,8 +321,8 @@ def main():
                     overwrite=vars(args)['overwrite'],
                     verbose=vars(args)['verbose'],
                 )
-            except RuntimeError as err:
-                print(err)
+            except RuntimeError as e:
+                print(e)
                 sys.exit(3)
         else:
             print('CmdStan version {} already installed'.format(version))

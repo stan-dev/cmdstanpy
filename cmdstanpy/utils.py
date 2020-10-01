@@ -44,6 +44,30 @@ def get_logger():
     return logger
 
 
+def validate_dir(install_dir):
+    """Check that specified install directory exists, can write."""
+    if not os.path.exists(install_dir):
+        try:
+            os.makedirs(install_dir)
+        except (IOError, OSError, PermissionError) as e:
+            raise ValueError(
+                'Cannot create directory: {}'.format(install_dir)
+            ) from e
+    else:
+        if not os.path.isdir(install_dir):
+            raise ValueError(
+                'File exists, should be a directory: {}'.format(install_dir)
+            )
+        try:
+            with open('tmp_test_w', 'w'):
+                pass
+            os.remove('tmp_test_w')  # cleanup
+        except OSError as e:
+            raise ValueError(
+                'Cannot write files to directory {}'.format(install_dir)
+            ) from e
+
+
 def get_latest_cmdstan(cmdstan_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
@@ -72,54 +96,6 @@ def get_latest_cmdstan(cmdstan_dir: str) -> str:
     return latest
 
 
-class MaybeDictToFilePath:
-    """Context manager for json files."""
-
-    def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
-        self._unlink = [False] * len(objs)
-        self._paths = [''] * len(objs)
-        self._logger = logger or get_logger()
-        i = 0
-        for obj in objs:
-            if isinstance(obj, dict):
-                data_file = create_named_text_file(
-                    dir=_TMPDIR, prefix='', suffix='.json'
-                )
-                self._logger.debug('input tempfile: %s', data_file)
-                if any(
-                    not item
-                    for item in obj
-                    if isinstance(item, (Sequence, np.ndarray))
-                ):
-                    rdump(data_file, obj)
-                else:
-                    jsondump(data_file, obj)
-                self._paths[i] = data_file
-                self._unlink[i] = True
-            elif isinstance(obj, str):
-                if not os.path.exists(obj):
-                    raise ValueError("File doesn't exist {}".format(obj))
-                self._paths[i] = obj
-            elif obj is None:
-                self._paths[i] = None
-            elif i == 1 and isinstance(obj, (Integral, Real)):
-                self._paths[i] = obj
-            else:
-                raise ValueError('data must be string or dict')
-            i += 1
-
-    def __enter__(self):
-        return self._paths
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        for can_unlink, path in zip(self._unlink, self._paths):
-            if can_unlink and path:
-                try:
-                    os.remove(path)
-                except PermissionError:
-                    pass
-
-
 def validate_cmdstan_path(path: str) -> None:
     """
     Validate that CmdStan directory exists and binaries have been built.
@@ -132,46 +108,6 @@ def validate_cmdstan_path(path: str) -> None:
             'no CmdStan binaries found, '
             'run command line script "install_cmdstan"'
         )
-
-
-class TemporaryCopiedFile:
-    """Context manager for tmpfiles, handles spaces in filepath."""
-
-    def __init__(self, file_path: str):
-        self._path = None
-        self._tmpdir = None
-        if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
-            base_path, file_name = os.path.split(os.path.abspath(file_path))
-            os.makedirs(base_path, exist_ok=True)
-            try:
-                short_base_path = windows_short_path(base_path)
-                if os.path.exists(short_base_path):
-                    file_path = os.path.join(short_base_path, file_name)
-            except RuntimeError:
-                pass
-
-        if ' ' in os.path.abspath(file_path):
-            tmpdir = tempfile.mkdtemp()
-            if ' ' in tmpdir:
-                raise RuntimeError(
-                    'Unable to generate temporary path without spaces! \n'
-                    + 'Please move your stan file to location without spaces.'
-                )
-
-            _, path = tempfile.mkstemp(suffix='.stan', dir=tmpdir)
-
-            shutil.copy(file_path, path)
-            self._path = path
-            self._tmpdir = tmpdir
-        else:
-            self._path = file_path
-
-    def __enter__(self):
-        return self._path, self._tmpdir is not None
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._tmpdir:
-            shutil.rmtree(self._tmpdir, ignore_errors=True)
 
 
 def set_cmdstan_path(path: str) -> None:
@@ -464,8 +400,8 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
             val = float(rhs)
         else:
             val = int(rhs)
-    except TypeError as exc:
-        raise ValueError('bad value in Rdump file: {}'.format(rhs)) from exc
+    except TypeError as e:
+        raise ValueError('bad value in Rdump file: {}'.format(rhs)) from e
     return val
 
 
@@ -718,10 +654,10 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         )
     try:
         float(stepsize.strip())
-    except ValueError as exc:
+    except ValueError as e:
         raise ValueError(
             'line {}: invalid stepsize: {}'.format(lineno, stepsize)
-        ) from exc
+        ) from e
     line = fd.readline().strip()
     lineno += 1
     if not (
@@ -967,3 +903,91 @@ def install_cmdstan(
             logger.warning(stderr.decode('utf-8').strip())
         return False
     return True
+
+
+class MaybeDictToFilePath:
+    """Context manager for json files."""
+
+    def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
+        self._unlink = [False] * len(objs)
+        self._paths = [''] * len(objs)
+        self._logger = logger or get_logger()
+        i = 0
+        for obj in objs:
+            if isinstance(obj, dict):
+                data_file = create_named_text_file(
+                    dir=_TMPDIR, prefix='', suffix='.json'
+                )
+                self._logger.debug('input tempfile: %s', data_file)
+                if any(
+                    not item
+                    for item in obj
+                    if isinstance(item, (Sequence, np.ndarray))
+                ):
+                    rdump(data_file, obj)
+                else:
+                    jsondump(data_file, obj)
+                self._paths[i] = data_file
+                self._unlink[i] = True
+            elif isinstance(obj, str):
+                if not os.path.exists(obj):
+                    raise ValueError("File doesn't exist {}".format(obj))
+                self._paths[i] = obj
+            elif obj is None:
+                self._paths[i] = None
+            elif i == 1 and isinstance(obj, (Integral, Real)):
+                self._paths[i] = obj
+            else:
+                raise ValueError('data must be string or dict')
+            i += 1
+
+    def __enter__(self):
+        return self._paths
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for can_unlink, path in zip(self._unlink, self._paths):
+            if can_unlink and path:
+                try:
+                    os.remove(path)
+                except PermissionError:
+                    pass
+
+
+class TemporaryCopiedFile:
+    """Context manager for tmpfiles, handles spaces in filepath."""
+
+    def __init__(self, file_path: str):
+        self._path = None
+        self._tmpdir = None
+        if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
+            base_path, file_name = os.path.split(os.path.abspath(file_path))
+            os.makedirs(base_path, exist_ok=True)
+            try:
+                short_base_path = windows_short_path(base_path)
+                if os.path.exists(short_base_path):
+                    file_path = os.path.join(short_base_path, file_name)
+            except RuntimeError:
+                pass
+
+        if ' ' in os.path.abspath(file_path):
+            tmpdir = tempfile.mkdtemp()
+            if ' ' in tmpdir:
+                raise RuntimeError(
+                    'Unable to generate temporary path without spaces! \n'
+                    + 'Please move your stan file to location without spaces.'
+                )
+
+            _, path = tempfile.mkstemp(suffix='.stan', dir=tmpdir)
+
+            shutil.copy(file_path, path)
+            self._path = path
+            self._tmpdir = tmpdir
+        else:
+            self._path = file_path
+
+    def __enter__(self):
+        return self._path, self._tmpdir is not None
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._tmpdir:
+            shutil.rmtree(self._tmpdir, ignore_errors=True)
