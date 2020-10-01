@@ -5,7 +5,6 @@ import unittest
 from cmdstanpy.install_cmdstan import (
     is_version_available,
     latest_version,
-#    retrieve_version,
     validate_dir,
 )
 from cmdstanpy.utils import cmdstan_path
