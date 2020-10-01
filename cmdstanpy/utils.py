@@ -51,12 +51,20 @@ def get_latest_cmdstan(cmdstan_dir: str) -> str:
     Assumes directory populated via script `install_cmdstan`.
     """
     versions = [
-        name.split('-')[1]
+        ''.join(name.split('-')[1:])  # name may contain '-rc'
         for name in os.listdir(cmdstan_dir)
         if os.path.isdir(os.path.join(cmdstan_dir, name))
         and name.startswith('cmdstan-')
         and name[8].isdigit()
     ]
+    # munge rc for sort, e.g. 2.23-rc1 -> 2.23.-99
+    for i in range(len(versions)):  # # pylint: disable=C0200
+        tmp = versions[i].split('rc')
+        if len(tmp) == 1:
+            continue
+        rc_sortable = str(int(tmp[1]) - 100)
+        versions[i] = '.'.join([tmp[0], rc_sortable])
+
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
@@ -904,23 +912,48 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     return path
 
 
-def install_cmdstan(version: str = None,
-                    dir: str = None,
-                    overwrite: bool = False) -> bool:
+def install_cmdstan(
+    version: str = None,
+    dir: str = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> bool:
     """
-    Run 'install_cmdstan' -script
+    Download and install a CmdStan release from GitHub by running
+    script ``install_cmdstan`` as a subprocess.  Downloads the release
+    tar.gz file to temporary storage.  Retries GitHub requests in order
+    to allow for transient network outages. Builds CmdStan executables
+    and tests the compiler by building example model ``bernoulli.stan``.
+
+    :param version: CmdStan version string, e.g. "2.24.1".
+        Defaults to latest CmdStan release.
+
+    :param dir: Path to install directory.  Defaults to hidden directory
+        ``$HOME/.cmdstan`` or ``$HOME/.cmdstanpy``, if the latter exists.
+        If no directory is specified and neither of the above directories
+        exist, directory ``$HOME/.cmdstan`` will be created and populated.
+
+    :param overwrite:  Boolean value; when ``True``, will overwrite and
+        rebuild an existing CmdStan installation.  Default is ``False``.
+
+    :param verbose:  Boolean value; when ``True``, output from CmdStan build
+        processes will be streamed to the console.  Default is ``False``.
+
+    :return: Boolean value; ``True`` for success.
     """
     logger = get_logger()
     python = sys.executable
     here = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(here, 'install_cmdstan.py')
-    cmd = [python, "-u", path]
+    cmd = [python, '-u', path]
     if version is not None:
         cmd.extend(['--version', version])
     if dir is not None:
         cmd.extend(['--dir', dir])
     if overwrite:
-        cmd.extend(['--overwrite', "TRUE"])
+        cmd.extend(['--overwrite', 'TRUE'])
+    if verbose:
+        cmd.extend(['--verbose', 'TRUE'])
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
     )

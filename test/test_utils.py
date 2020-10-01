@@ -140,6 +140,15 @@ class CmdStanPathTest(unittest.TestCase):
             validate_cmdstan_path(path_test)
         shutil.rmtree(folder_name)
 
+    def test_munge_cmdstan_versions(self):
+        tdir = os.path.join(HERE, 'tmpdir_xxx')
+        os.mkdir(tdir)
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc1'))
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc2'))
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0'))
+        self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
+        shutil.rmtree(tdir, ignore_errors=True)
+
     def test_dict_to_file(self):
         file_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
         dict_good = {'a': 0.5}
