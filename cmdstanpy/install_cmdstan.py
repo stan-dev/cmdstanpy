@@ -174,7 +174,9 @@ def latest_version():
                 print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
-            raise CmdStanRetrieveError('Cannot connect to CmdStan github repo.')
+            raise CmdStanRetrieveError(
+                'Cannot connect to CmdStan github repo.'
+            ) from err
     with open(file_tmp, 'r') as fd:
         response = fd.read()
         start_idx = response.find('\"tag_name\":\"v') + len('"tag_name":"v')
@@ -199,7 +201,7 @@ def retrieve_version(version):
                 'Version {} not available from github.com.'.format(
                     err.code, version
                 )
-            )
+            ) from err
         except urllib.error.URLError as err:
             print(
                 'Failed to download CmdStan version {} from github.com'.format(
@@ -214,7 +216,7 @@ def retrieve_version(version):
             print('Version {} not available from github.com.'.format(version))
             raise CmdStanRetrieveError(
                 'Version {} not available from github.com.'.format(version)
-            )
+            ) from err
     print('Download successful, file: {}'.format(file_tmp))
     try:
         tar = tarfile.open(file_tmp)
@@ -224,7 +226,9 @@ def retrieve_version(version):
             target = r'\\?\{}'.format(target)
         tar.extractall(target)
     except Exception as err:  # pylint: disable=broad-except
-        raise CmdStanInstallError('Failed to unpack file {}'.format(file_tmp))
+        raise CmdStanInstallError(
+            'Failed to unpack file {}'.format(file_tmp)
+        ) from err
     finally:
         tar.close()
     print('Unpacked download as cmdstan-{}'.format(version))
@@ -235,10 +239,10 @@ def validate_dir(install_dir):
     if not os.path.exists(install_dir):
         try:
             os.makedirs(install_dir)
-        except (IOError, OSError, PermissionError) as e:
+        except (IOError, OSError, PermissionError) as err:
             raise ValueError(
                 'Cannot create directory: {}'.format(install_dir)
-            ) from e
+            ) from err
     else:
         if not os.path.isdir(install_dir):
             raise ValueError(
@@ -248,10 +252,10 @@ def validate_dir(install_dir):
             with open('tmp_test_w', 'w'):
                 pass
             os.remove('tmp_test_w')  # cleanup
-        except (IOError, OSError, PermissionError) as e:
+        except (IOError, OSError, PermissionError) as err:
             raise ValueError(
                 'Cannot write files to directory {}'.format(install_dir)
-            ) from e
+            ) from err
 
 
 def main():
