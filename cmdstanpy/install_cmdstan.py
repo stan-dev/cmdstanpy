@@ -81,7 +81,8 @@ def install_version(cmdstan_version, overwrite, verbose):
                 env=os.environ,
             )
             while proc.poll() is None:
-                print(proc.stdout.readline().decode('utf-8').strip())
+                if verbose:
+                    print(proc.stdout.readline().decode('utf-8').strip())
             _, stderr = proc.communicate()
             if proc.returncode:
                 msgs = ['Command "make clean-all" failed']
@@ -255,7 +256,7 @@ def validate_dir(install_dir):
 
 def main():
     """Main."""
-    parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
+    parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v')
     parser.add_argument('--dir', '-d')
     parser.add_argument('--overwrite', action='store_true')
@@ -269,9 +270,9 @@ def main():
         )
     args = parser.parse_args(sys.argv[1:])
 
-    version = args.version
-    if version is None:
-        version = latest_version()
+    version = latest_version()
+    if vars(args)['version']:
+        version = vars(args)['version']
 
     if is_version_available(version):
         print('Installing CmdStan version: {}'.format(version))
@@ -284,9 +285,10 @@ def main():
     if not os.path.exists(cmdstan_dir):
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
 
-    install_dir = args.dir
-    if install_dir is None:
-        install_dir = cmdstan_dir
+    install_dir = cmdstan_dir
+    if vars(args)['dir']:
+        install_dir = vars(args)['dir']
+
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
@@ -316,10 +318,24 @@ def main():
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
-        if args.overwrite or not os.path.exists(cmdstan_version):
+        if vars(args)['overwrite'] or not (
+            os.path.exists(cmdstan_version)
+            and os.path.exists(
+                os.path.join(
+                    cmdstan_version,
+                    'examples',
+                    'bernoulli',
+                    'bernoulli' + EXTENSION,
+                )
+            )
+        ):
             try:
                 retrieve_version(version)
-                install_version(cmdstan_version, args.overwrite, args.verbose)
+                install_version(
+                    cmdstan_version=cmdstan_version,
+                    overwrite=vars(args)['overwrite'],
+                    verbose=vars(args)['verbose'],
+                )
             except RuntimeError as err:
                 print(err)
                 sys.exit(3)
@@ -328,5 +344,4 @@ def main():
 
 
 if __name__ == '__main__':
-    print(sys.argv[:1])
     main()
