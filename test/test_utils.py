@@ -4,18 +4,21 @@ import json
 import os
 import unittest
 import platform
+import random
 import shutil
 import string
-import random
+import tempfile
+import stat
 
 import numpy as np
 
-from cmdstanpy import _TMPDIR
+from cmdstanpy import _TMPDIR, _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import (
     cmdstan_path,
     set_cmdstan_path,
     validate_cmdstan_path,
     get_latest_cmdstan,
+    validate_dir,
     check_sampler_csv,
     MaybeDictToFilePath,
     read_metric,
@@ -48,11 +51,15 @@ class CmdStanPathTest(unittest.TestCase):
                 self.assertEqual(cmdstan_path(), path)
                 self.assertTrue('CMDSTAN' in os.environ)
             else:
-                install_dir = os.path.expanduser(
-                    os.path.join('~', '.cmdstanpy')
+                cmdstan_dir = os.path.expanduser(
+                    os.path.join('~', _DOT_CMDSTAN)
                 )
-                install_version = os.path.expanduser(
-                    os.path.join(install_dir, get_latest_cmdstan(install_dir))
+                if not os.path.exists(cmdstan_dir):
+                    cmdstan_dir = os.path.expanduser(
+                        os.path.join('~', _DOT_CMDSTANPY)
+                    )
+                install_version = os.path.join(
+                    cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
                 )
                 self.assertTrue(
                     os.path.samefile(cmdstan_path(), install_version)
@@ -99,18 +106,24 @@ class CmdStanPathTest(unittest.TestCase):
         if 'CMDSTAN' in os.environ:
             self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
         else:
-            install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
-            install_version = os.path.expanduser(
-                os.path.join(install_dir, get_latest_cmdstan(install_dir))
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+            if not os.path.exists(cmdstan_dir):
+                cmdstan_dir = os.path.expanduser(
+                    os.path.join('~', _DOT_CMDSTANPY)
+                )
+            install_version = os.path.join(
+                cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
             )
             set_cmdstan_path(install_version)
             self.assertEqual(install_version, cmdstan_path())
             self.assertEqual(install_version, os.environ['CMDSTAN'])
 
     def test_validate_path(self):
-        install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
-        install_version = os.path.expanduser(
-            os.path.join(install_dir, get_latest_cmdstan(install_dir))
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        if not os.path.exists(cmdstan_dir):
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+        install_version = os.path.join(
+            cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
         )
         set_cmdstan_path(install_version)
         validate_cmdstan_path(install_version)
@@ -129,6 +142,31 @@ class CmdStanPathTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
             validate_cmdstan_path(path_test)
         shutil.rmtree(folder_name)
+
+    def test_validate_dir(self):
+        path = os.path.join(_TMPDIR, 'cmdstan-M.m.p')
+        self.assertFalse(os.path.exists(path))
+        validate_dir(path)
+        self.assertTrue(os.path.exists(path))
+
+        _, file = tempfile.mkstemp(dir=_TMPDIR)
+        with self.assertRaisesRegex(Exception, 'File exists'):
+            validate_dir(file)
+
+        if platform.system() != 'Windows':
+            with self.assertRaisesRegex(Exception, 'Cannot create directory'):
+                dir = tempfile.mkdtemp(dir=_TMPDIR)
+                os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                validate_dir(os.path.join(dir, 'cmdstan-M.m.p'))
+
+    def test_munge_cmdstan_versions(self):
+        tdir = os.path.join(HERE, 'tmpdir_xxx')
+        os.mkdir(tdir)
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc1'))
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc2'))
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0'))
+        self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
+        shutil.rmtree(tdir, ignore_errors=True)
 
     def test_dict_to_file(self):
         file_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')

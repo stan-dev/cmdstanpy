@@ -41,7 +41,7 @@ The data file specifies the number of observations and their values.
 Specify a Stan model
 ^^^^^^^^^^^^^^^^^^^^
 
-The: :ref:`class_cmdstanmodel` class manages the Stan program and its corresponding compiled executable.
+The :ref:`class_cmdstanmodel` class manages the Stan program and its corresponding compiled executable.
 It provides properties and functions to inspect the model code and filepaths.
 By default, the Stan program is compiled on instantiation.
 

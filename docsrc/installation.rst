@@ -21,6 +21,7 @@ command line using ``pip``:
 The optional packages are
 
   * ``tqdm`` which allows for progress bar display during sampling
+  * ``ujson`` which provides faster IO
 
 To install CmdStanPy with all the optional packages:
 
@@ -57,11 +58,14 @@ consisting of a modern C++ compiler and the GNU-Make utility.
 Function ``install_cmdstan``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CmdStanPy provides the function ``install_cmdstan`` which
+CmdStanPy provides the function :ref:`function_install_cmdstan` which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
-By default it installs the latest version of CmdStan into a directory named
-``.cmdstanpy`` in your ``$HOME`` directory:
+
+The default install location is a hidden directory in the user ``$HOME`` directory
+named ``.cmdstan``.  (In earlier versions, the hidden directory was named ``.cmdstanpy``,
+and if directory ``$HOME/.cmdstanpy`` exists, it will continue to be used as the
+default install dir.)  This directory will be created by the install script.
 
 + From Python
 
@@ -75,14 +79,14 @@ By default it installs the latest version of CmdStan into a directory named
 .. code-block:: bash
 
     install_cmdstan
-    ls -F ~/.cmdstanpy
+    ls -F ~/.cmdstan
 
 + On Windows
 
 .. code-block:: bash
 
     python -m cmdstanpy.install_cmdstan
-    dir "%HOME%/.cmdstanpy"
+    dir "%HOME%/.cmdstan"
 
 The named arguments: `-d <directory>` and  `-v <version>`
 can be used to override these defaults:
@@ -92,17 +96,20 @@ can be used to override these defaults:
     install_cmdstan -d my_local_cmdstan -v 2.20.0
     ls -F my_local_cmdstan
 
-DIY Installion 
-^^^^^^^^^^^^^^
+DIY Installation 
+^^^^^^^^^^^^^^^^
 
 If you with to install CmdStan yourself, follow the instructions
 in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`__.
 
-Post Installion: Setting Environment Variables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Post Installation: Setting Environment Variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The default for the CmdStan installation location
-is a directory named ``.cmdstanpy`` in your ``$HOME`` directory.
+is a directory named ``.cmdstan`` in your ``$HOME`` directory.
+(In earlier versions, the hidden directory was named ``.cmdstanpy``,
+and if directory ``$HOME/.cmdstanpy`` exists, it will continue to be used as the
+default install dir.)
 
 If you have installed CmdStan in a different directory,
 then you can set the environment variable ``CMDSTAN`` to this
@@ -130,5 +137,3 @@ To use custom ``make``-tool use ``set_make_env`` function.
 
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
-
-
