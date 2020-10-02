@@ -159,7 +159,6 @@ class CmdStanPathTest(unittest.TestCase):
                 os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
                 validate_dir(os.path.join(dir, 'cmdstan-M.m.p'))
 
-
     def test_munge_cmdstan_versions(self):
         tdir = os.path.join(HERE, 'tmpdir_xxx')
         os.mkdir(tdir)
