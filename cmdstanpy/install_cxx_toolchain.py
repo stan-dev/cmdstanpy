@@ -7,7 +7,7 @@ Currently implemented platforms (platform.system)
     Linux: Not implemented
 Optional command line arguments:
    -v, --version : version, defaults to latest
-   -d, --dir : install directory, defaults to '~/.cmdstanpy
+   -d, --dir : install directory, defaults to '~/.cmdstan(py)
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
    -m --no-make : don't install mingw32-make (Windows RTools 4.0 only)
 """
@@ -21,6 +21,10 @@ import sys
 import urllib.request
 from collections import OrderedDict
 from time import sleep
+
+from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+from cmdstanpy.utils import validate_dir
+
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
@@ -206,30 +210,6 @@ def retrieve_toolchain(filename, url):
     print('Download successful, file: {}'.format(filename))
 
 
-def validate_dir(install_dir):
-    """Check that specified install directory exists, can write."""
-    if not os.path.exists(install_dir):
-        try:
-            os.makedirs(install_dir)
-        except (IOError, OSError, PermissionError) as e:
-            raise ValueError(
-                'Cannot create directory: {}'.format(install_dir)
-            ) from e
-    else:
-        if not os.path.isdir(install_dir):
-            raise ValueError(
-                'File exists, should be a directory: {}'.format(install_dir)
-            )
-        try:
-            with open('tmp_test_w', 'w'):
-                pass
-            os.remove('tmp_test_w')  # cleanup
-        except OSError as e:
-            raise ValueError(
-                'Cannot write files to directory {}'.format(install_dir)
-            ) from e
-
-
 def normalize_version(version):
     """Return maj.min part of version string."""
     if platform.system() == 'Windows':
@@ -297,7 +277,14 @@ def main():
 
     install_dir = vars(args)['dir']
     if install_dir is None:
-        install_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        if not os.path.exists(cmdstan_dir):
+            cmdstanpy_dir = os.path.expanduser(
+                os.path.join('~', _DOT_CMDSTANPY)
+            )
+            if os.path.exists(cmdstanpy_dir):
+                cmdstan_dir = cmdstanpy_dir
+        install_dir = cmdstan_dir
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 

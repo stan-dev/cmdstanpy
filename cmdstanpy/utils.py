@@ -24,7 +24,14 @@ import numpy as np
 import pandas as pd
 
 
-from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING, _CMDSTAN_THIN
+from cmdstanpy import (
+    _TMPDIR,
+    _CMDSTAN_WARMUP,
+    _CMDSTAN_SAMPLING,
+    _CMDSTAN_THIN,
+    _DOT_CMDSTAN,
+    _DOT_CMDSTANPY,
+)
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -37,72 +44,56 @@ def get_logger():
     return logger
 
 
-def get_latest_cmdstan(dot_dir: str) -> str:
+def validate_dir(install_dir: str):
+    """Check that specified install directory exists, can write."""
+    if not os.path.exists(install_dir):
+        try:
+            os.makedirs(install_dir)
+        except (IOError, OSError, PermissionError) as e:
+            raise ValueError(
+                'Cannot create directory: {}'.format(install_dir)
+            ) from e
+    else:
+        if not os.path.isdir(install_dir):
+            raise ValueError(
+                'File exists, should be a directory: {}'.format(install_dir)
+            )
+        try:
+            with open('tmp_test_w', 'w'):
+                pass
+            os.remove('tmp_test_w')  # cleanup
+        except OSError as e:
+            raise ValueError(
+                'Cannot write files to directory {}'.format(install_dir)
+            ) from e
+
+
+def get_latest_cmdstan(cmdstan_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
     Assumes directory populated via script `install_cmdstan`.
     """
     versions = [
-        name.split('-')[1]
-        for name in os.listdir(dot_dir)
-        if os.path.isdir(os.path.join(dot_dir, name))
+        ''.join(name.split('-')[1:])  # name may contain '-rc'
+        for name in os.listdir(cmdstan_dir)
+        if os.path.isdir(os.path.join(cmdstan_dir, name))
         and name.startswith('cmdstan-')
         and name[8].isdigit()
     ]
+    # munge rc for sort, e.g. 2.23-rc1 -> 2.23.-99
+    for i in range(len(versions)):  # # pylint: disable=C0200
+        tmp = versions[i].split('rc')
+        if len(tmp) == 1:
+            continue
+        rc_sortable = str(int(tmp[1]) - 100)
+        versions[i] = '.'.join([tmp[0], rc_sortable])
+
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
     latest = 'cmdstan-{}'.format(versions[len(versions) - 1])
     return latest
-
-
-class MaybeDictToFilePath:
-    """Context manager for json files."""
-
-    def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
-        self._unlink = [False] * len(objs)
-        self._paths = [''] * len(objs)
-        self._logger = logger or get_logger()
-        i = 0
-        for obj in objs:
-            if isinstance(obj, dict):
-                data_file = create_named_text_file(
-                    dir=_TMPDIR, prefix='', suffix='.json'
-                )
-                self._logger.debug('input tempfile: %s', data_file)
-                if any(
-                    not item
-                    for item in obj
-                    if isinstance(item, (Sequence, np.ndarray))
-                ):
-                    rdump(data_file, obj)
-                else:
-                    jsondump(data_file, obj)
-                self._paths[i] = data_file
-                self._unlink[i] = True
-            elif isinstance(obj, str):
-                if not os.path.exists(obj):
-                    raise ValueError("File doesn't exist {}".format(obj))
-                self._paths[i] = obj
-            elif obj is None:
-                self._paths[i] = None
-            elif i == 1 and isinstance(obj, (Integral, Real)):
-                self._paths[i] = obj
-            else:
-                raise ValueError('data must be string or dict')
-            i += 1
-
-    def __enter__(self):
-        return self._paths
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        for can_unlink, path in zip(self._unlink, self._paths):
-            if can_unlink and path:
-                try:
-                    os.remove(path)
-                except PermissionError:
-                    pass
 
 
 def validate_cmdstan_path(path: str) -> None:
@@ -117,46 +108,6 @@ def validate_cmdstan_path(path: str) -> None:
             'no CmdStan binaries found, '
             'run command line script "install_cmdstan"'
         )
-
-
-class TemporaryCopiedFile:
-    """Context manager for tmpfiles, handles spaces in filepath."""
-
-    def __init__(self, file_path: str):
-        self._path = None
-        self._tmpdir = None
-        if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
-            base_path, file_name = os.path.split(os.path.abspath(file_path))
-            os.makedirs(base_path, exist_ok=True)
-            try:
-                short_base_path = windows_short_path(base_path)
-                if os.path.exists(short_base_path):
-                    file_path = os.path.join(short_base_path, file_name)
-            except RuntimeError:
-                pass
-
-        if ' ' in os.path.abspath(file_path):
-            tmpdir = tempfile.mkdtemp()
-            if ' ' in tmpdir:
-                raise RuntimeError(
-                    'Unable to generate temporary path without spaces! \n'
-                    + 'Please move your stan file to location without spaces.'
-                )
-
-            _, path = tempfile.mkstemp(suffix='.stan', dir=tmpdir)
-
-            shutil.copy(file_path, path)
-            self._path = path
-            self._tmpdir = tmpdir
-        else:
-            self._path = file_path
-
-    def __enter__(self):
-        return self._path, self._tmpdir is not None
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._tmpdir:
-            shutil.rmtree(self._tmpdir, ignore_errors=True)
 
 
 def set_cmdstan_path(path: str) -> None:
@@ -182,12 +133,14 @@ def cmdstan_path() -> str:
     if 'CMDSTAN' in os.environ:
         cmdstan = os.environ['CMDSTAN']
     else:
-        cmdstan_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
-            raise ValueError(
-                'no CmdStan installation found, '
-                'run command line script "install_cmdstan"'
-            )
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+            if not os.path.exists(cmdstan_dir):
+                raise ValueError(
+                    'no CmdStan installation found, '
+                    'run command line script "install_cmdstan"'
+                )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
@@ -262,16 +215,19 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 )
                 toolchain_root = ''
     else:
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        if not os.path.exists(cmdstan_dir):
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         rtools_dir = os.path.expanduser(
-            os.path.join('~', '.cmdstanpy', 'RTools40')
+            os.path.join('~', cmdstan_dir, 'RTools40')
         )
         if not os.path.exists(rtools_dir):
             rtools_dir = os.path.expanduser(
-                os.path.join('~', '.cmdstanpy', 'RTools35')
+                os.path.join('~', cmdstan_dir, 'RTools35')
             )
             if not os.path.exists(rtools_dir):
                 rtools_dir = os.path.expanduser(
-                    os.path.join('~', '.cmdstanpy', 'RTools')
+                    os.path.join('~', cmdstan_dir, 'RTools')
                 )
                 if not os.path.exists(rtools_dir):
                     raise ValueError(
@@ -279,9 +235,9 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                         'run command line script "install_cxx_toolchain"'
                     )
             else:
-                rtools_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+                rtools_dir = os.path.expanduser(os.path.join('~', cmdstan_dir))
         else:
-            rtools_dir = os.path.expanduser(os.path.join('~', '.cmdstanpy'))
+            rtools_dir = os.path.expanduser(os.path.join('~', cmdstan_dir))
         compiler_path = ''
         tool_path = ''
         if version not in ('35', '3.5', '3') and os.path.exists(
@@ -444,8 +400,8 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
             val = float(rhs)
         else:
             val = int(rhs)
-    except TypeError as exc:
-        raise ValueError('bad value in Rdump file: {}'.format(rhs)) from exc
+    except TypeError as e:
+        raise ValueError('bad value in Rdump file: {}'.format(rhs)) from e
     return val
 
 
@@ -698,10 +654,10 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         )
     try:
         float(stepsize.strip())
-    except ValueError as exc:
+    except ValueError as e:
         raise ValueError(
             'line {}: invalid stepsize: {}'.format(lineno, stepsize)
-        ) from exc
+        ) from e
     line = fd.readline().strip()
     lineno += 1
     if not (
@@ -892,28 +848,146 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     return path
 
 
-def install_cmdstan(version: str = None, dir: str = None) -> bool:
+def install_cmdstan(
+    version: str = None,
+    dir: str = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> bool:
     """
-    Run 'install_cmdstan' -script
+    Download and install a CmdStan release from GitHub by running
+    script ``install_cmdstan`` as a subprocess.  Downloads the release
+    tar.gz file to temporary storage.  Retries GitHub requests in order
+    to allow for transient network outages. Builds CmdStan executables
+    and tests the compiler by building example model ``bernoulli.stan``.
+
+    :param version: CmdStan version string, e.g. "2.24.1".
+        Defaults to latest CmdStan release.
+
+    :param dir: Path to install directory.  Defaults to hidden directory
+        ``$HOME/.cmdstan`` or ``$HOME/.cmdstanpy``, if the latter exists.
+        If no directory is specified and neither of the above directories
+        exist, directory ``$HOME/.cmdstan`` will be created and populated.
+
+    :param overwrite:  Boolean value; when ``True``, will overwrite and
+        rebuild an existing CmdStan installation.  Default is ``False``.
+
+    :param verbose:  Boolean value; when ``True``, output from CmdStan build
+        processes will be streamed to the console.  Default is ``False``.
+
+    :return: Boolean value; ``True`` for success.
     """
     logger = get_logger()
     python = sys.executable
     here = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(here, 'install_cmdstan.py')
-    cmd = [python, path]
+    cmd = [python, '-u', path]
     if version is not None:
         cmd.extend(['--version', version])
     if dir is not None:
         cmd.extend(['--dir', dir])
+    if overwrite:
+        cmd.extend(['--overwrite', 'TRUE'])
+    if verbose:
+        cmd.extend(['--verbose', 'TRUE'])
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
     )
     while proc.poll() is None:
-        output = proc.stdout.readline().decode('utf-8').strip()
-        if output:
-            logger.info(output)
-    proc.communicate()
+        print(proc.stdout.readline().decode('utf-8').strip())
+
+    _, stderr = proc.communicate()
     if proc.returncode:
-        logger.warning('CmdStan installation failed')
+        logger.warning('CmdStan installation failed.')
+        if stderr:
+            logger.warning(stderr.decode('utf-8').strip())
         return False
     return True
+
+
+class MaybeDictToFilePath:
+    """Context manager for json files."""
+
+    def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
+        self._unlink = [False] * len(objs)
+        self._paths = [''] * len(objs)
+        self._logger = logger or get_logger()
+        i = 0
+        for obj in objs:
+            if isinstance(obj, dict):
+                data_file = create_named_text_file(
+                    dir=_TMPDIR, prefix='', suffix='.json'
+                )
+                self._logger.debug('input tempfile: %s', data_file)
+                if any(
+                    not item
+                    for item in obj
+                    if isinstance(item, (Sequence, np.ndarray))
+                ):
+                    rdump(data_file, obj)
+                else:
+                    jsondump(data_file, obj)
+                self._paths[i] = data_file
+                self._unlink[i] = True
+            elif isinstance(obj, str):
+                if not os.path.exists(obj):
+                    raise ValueError("File doesn't exist {}".format(obj))
+                self._paths[i] = obj
+            elif obj is None:
+                self._paths[i] = None
+            elif i == 1 and isinstance(obj, (Integral, Real)):
+                self._paths[i] = obj
+            else:
+                raise ValueError('data must be string or dict')
+            i += 1
+
+    def __enter__(self):
+        return self._paths
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for can_unlink, path in zip(self._unlink, self._paths):
+            if can_unlink and path:
+                try:
+                    os.remove(path)
+                except PermissionError:
+                    pass
+
+
+class TemporaryCopiedFile:
+    """Context manager for tmpfiles, handles spaces in filepath."""
+
+    def __init__(self, file_path: str):
+        self._path = None
+        self._tmpdir = None
+        if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
+            base_path, file_name = os.path.split(os.path.abspath(file_path))
+            os.makedirs(base_path, exist_ok=True)
+            try:
+                short_base_path = windows_short_path(base_path)
+                if os.path.exists(short_base_path):
+                    file_path = os.path.join(short_base_path, file_name)
+            except RuntimeError:
+                pass
+
+        if ' ' in os.path.abspath(file_path):
+            tmpdir = tempfile.mkdtemp()
+            if ' ' in tmpdir:
+                raise RuntimeError(
+                    'Unable to generate temporary path without spaces! \n'
+                    + 'Please move your stan file to location without spaces.'
+                )
+
+            _, path = tempfile.mkstemp(suffix='.stan', dir=tmpdir)
+
+            shutil.copy(file_path, path)
+            self._path = path
+            self._tmpdir = tmpdir
+        else:
+            self._path = file_path
+
+    def __enter__(self):
+        return self._path, self._tmpdir is not None
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._tmpdir:
+            shutil.rmtree(self._tmpdir, ignore_errors=True)
