@@ -4,9 +4,11 @@ import json
 import os
 import unittest
 import platform
+import random
 import shutil
 import string
-import random
+import tempfile
+import stat
 
 import numpy as np
 
@@ -16,6 +18,7 @@ from cmdstanpy.utils import (
     set_cmdstan_path,
     validate_cmdstan_path,
     get_latest_cmdstan,
+    validate_dir,
     check_sampler_csv,
     MaybeDictToFilePath,
     read_metric,
@@ -139,6 +142,23 @@ class CmdStanPathTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
             validate_cmdstan_path(path_test)
         shutil.rmtree(folder_name)
+
+    def test_validate_dir(self):
+        path = os.path.join(_TMPDIR, 'cmdstan-M.m.p')
+        self.assertFalse(os.path.exists(path))
+        validate_dir(path)
+        self.assertTrue(os.path.exists(path))
+
+        _, file = tempfile.mkstemp(dir=_TMPDIR)
+        with self.assertRaisesRegex(Exception, 'File exists'):
+            validate_dir(file)
+
+        if platform.system() != 'Windows':
+            with self.assertRaisesRegex(Exception, 'Cannot create directory'):
+                dir = tempfile.mkdtemp(dir=_TMPDIR)
+                os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                validate_dir(os.path.join(dir, 'cmdstan-M.m.p'))
+
 
     def test_munge_cmdstan_versions(self):
         tdir = os.path.join(HERE, 'tmpdir_xxx')
