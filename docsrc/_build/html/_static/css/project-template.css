@@ -1,0 +1,25 @@
+@import url("theme.css");
+
+.highlight * {
+    background: #eff2f5;
+}
+
+.highlight a {
+    text-decoration: underline;
+}
+
+div.version * {
+    color: #404040;
+}
+
+pre, code, .rst-content tt, .rst-content code, .rst-content tt.literal, .rst-content tt.literal, .rst-content code.literal {
+    color: #000000 !important;
+}
+
+.wy-side-nav-search>a, .wy-side-nav-search .wy-dropdown>a {
+    color: #404040;
+}
+
+.wy-side-nav-search>div.version {
+    color: #8c8c8c;
+}

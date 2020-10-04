@@ -11,7 +11,7 @@ def checkoutBranch(branch){
 }
 
 pipeline {
-    agent { label 'linux-ec2' }
+    agent { label 'gg-linux||linux-ec2' }
     options {
         skipDefaultCheckout()
         preserveStashes(buildCount: 5)
@@ -24,6 +24,7 @@ pipeline {
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
     }
     stages {
+
         stage("Create release branch") {
             steps{
                 deleteDir()
@@ -63,7 +64,11 @@ pipeline {
 
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     sh """#!/bin/bash
-                        git pull origin develop
+                        git fetch --all
+
+                        git checkout release/v${params.new_version}
+                        git checkout develop
+
                         git merge release/v${params.new_version}
 
                         git config --global auth.token ${GITHUB_TOKEN}
@@ -102,7 +107,14 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     /* Update master branch to the new version */
                     sh """#!/bin/bash
+                        git fetch --all
+
+                        git checkout v${params.new_version}
+                        git checkout master
+
                         git reset --hard v${params.new_version}
+                        git pull
+
                         git config --global auth.token ${GITHUB_TOKEN}
                         git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstanpy.git master
                     """
@@ -140,7 +152,8 @@ pipeline {
                 checkoutBranch("develop")
                 withCredentials([usernamePassword(credentialsId: 'readthedocs-snick-username-password', usernameVariable: 'RTD_USERNAME', passwordVariable: 'RTD_PASSWORD')]) {
                     sh """#!/bin/bash
-                        python change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${params.new_version}
+                        pip3 install requests
+                        python3 rtd_change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${params.new_version}
                     """
                 }
             }
