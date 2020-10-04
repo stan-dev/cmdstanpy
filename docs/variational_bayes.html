@@ -1,39 +1,40 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Variational Inference &mdash; CmdStanPy 0.9.66 documentation</title>
+  <title>Variational Inference &mdash; CmdStanPy 0.9.67 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script src="_static/js/copybutton.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Under the Hood" href="under_the_hood.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> CmdStanPy
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> CmdStanPy
           
 
           
@@ -64,7 +65,7 @@
             
             
               <div class="version">
-                0.9.66
+                0.9.67
               </div>
             
           
@@ -81,6 +82,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -109,6 +111,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -147,7 +150,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Variational Inference</li>
     
@@ -191,24 +194,24 @@ the algorithm is considered to have converged.</p>
 <div class="section" id="advi-configuration">
 <h2>ADVI configuration<a class="headerlink" href="#advi-configuration" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">algorithm</span></code>: Algorithm to use. One of: “meanfield”, “fullrank”.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">iter</span></code>: Maximum number of ADVI iterations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">grad_samples</span></code>: Number of MC draws for computing the gradient.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">elbo_samples</span></code>: Number of MC draws for estimate of ELBO.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">eta</span></code>: Stepsize scaling parameter.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adapt_iter</span></code>: Number of iterations for eta adaptation.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tol_rel_obj</span></code>: Relative tolerance parameter for convergence.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">eval_elbo</span></code>: Number of interactions between ELBO evaluations.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_samples</span></code>: Number of approximate posterior output draws to save.</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">algorithm</span></code>: Algorithm to use. One of: “meanfield”, “fullrank”.</li>
+<li><code class="docutils literal notranslate"><span class="pre">iter</span></code>: Maximum number of ADVI iterations.</li>
+<li><code class="docutils literal notranslate"><span class="pre">grad_samples</span></code>: Number of MC draws for computing the gradient.</li>
+<li><code class="docutils literal notranslate"><span class="pre">elbo_samples</span></code>: Number of MC draws for estimate of ELBO.</li>
+<li><code class="docutils literal notranslate"><span class="pre">eta</span></code>: Stepsize scaling parameter.</li>
+<li><code class="docutils literal notranslate"><span class="pre">adapt_iter</span></code>: Number of iterations for eta adaptation.</li>
+<li><code class="docutils literal notranslate"><span class="pre">tol_rel_obj</span></code>: Relative tolerance parameter for convergence.</li>
+<li><code class="docutils literal notranslate"><span class="pre">eval_elbo</span></code>: Number of interactions between ELBO evaluations.</li>
+<li><code class="docutils literal notranslate"><span class="pre">output_samples</span></code>: Number of approximate posterior output draws to save.</li>
 </ul>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: Values for all data variables in the model, specified either as a dictionary with entries matching the data variables, or as the path of a data file in JSON or Rdump format.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed for random number generator.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">inits</span></code>:  Specifies how the sampler initializes parameter values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_dir</span></code>:  Name of the directory to which CmdStan output files are written.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">save_diagnostics</span></code>:  Whether or not to the CmdStan auxiliary output file.
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code>: Values for all data variables in the model, specified either as a dictionary with entries matching the data variables, or as the path of a data file in JSON or Rdump format.</li>
+<li><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed for random number generator.</li>
+<li><code class="docutils literal notranslate"><span class="pre">inits</span></code>:  Specifies how the sampler initializes parameter values.</li>
+<li><code class="docutils literal notranslate"><span class="pre">output_dir</span></code>:  Name of the directory to which CmdStan output files are written.</li>
+<li><code class="docutils literal notranslate"><span class="pre">save_diagnostics</span></code>:  Whether or not to the CmdStan auxiliary output file.
 For the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, the diagnostics file contains sampler information for each draw
-together with the gradients on the unconstrained scale and log probabilities for all parameters in the model.</p></li>
+together with the gradients on the unconstrained scale and log probabilities for all parameters in the model.</li>
 </ul>
 <p>All of these arguments are optional; when unspecified, the CmdStan defaults will be used.</p>
 </div>
@@ -223,17 +226,17 @@ to retrieve the estimate of the
 approximate posterior mean of all model parameters,
 and the returned set of draws from this approximate posterior (if any):</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">variational_params_dict</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">variational_params_np</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">variational_params_pd</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">variational_sample</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></p></li>
+<li><code class="docutils literal notranslate"><span class="pre">column_names</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">variational_params_dict</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">variational_params_np</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">variational_params_pd</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">variational_sample</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></li>
 </ul>
 <p>In the following example, we instantiate a model and run variational inference using the default CmdStan settings:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.model</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">cmdstan_path</span>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.model</span> <span class="k">import</span> <span class="n">CmdStanModel</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="k">import</span> <span class="n">cmdstan_path</span>
 
 <span class="c1"># instantiate, compile bernoulli model</span>
 <span class="n">bernoulli_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
@@ -242,15 +245,15 @@ and the returned set of draws from this approximate posterior (if any):</p>
 <span class="c1"># run CmdStan&#39;s variational inference method, returns object `CmdStanVB`</span>
 <span class="n">bern_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
 <span class="n">bern_vb</span> <span class="o">=</span> <span class="n">bernoulli_model</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bern_data</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">bern_vb</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">bern_vb</span><span class="o">.</span><span class="n">variational_params_dict</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bern_vb</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bern_vb</span><span class="o">.</span><span class="n">variational_params_dict</span><span class="p">)</span>
 <span class="n">bern_vb</span><span class="o">.</span><span class="n">variational_sample</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
 <p>These estimates are only valid if the algorithm has converged to a good
 approximation. When the algorithm fails to do so, the <code class="docutils literal notranslate"><span class="pre">variational</span></code>
 method will throw a <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fail_stan</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datafiles_path</span><span class="p">,</span> <span class="s1">&#39;variational&#39;</span><span class="p">,</span> <span class="s1">&#39;eta_should_fail.stan&#39;</span><span class="p">)</span>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fail_stan</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datafiles_path</span><span class="p">,</span> <span class="s1">&#39;variational&#39;</span><span class="p">,</span> <span class="s1">&#39;eta_should_fail.stan&#39;</span><span class="p">)</span>
 <span class="n">fail_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">fail_stan</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
 <span class="n">vb</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">variational</span><span class="p">()</span>
@@ -260,8 +263,8 @@ method will throw a <code class="docutils literal notranslate"><span class="pre"
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Paper:  [Kucukelbir et al](<a class="reference external" href="http://arxiv.org/abs/1506.03431">http://arxiv.org/abs/1506.03431</a>)</p></li>
-<li><p>Stan manual:  <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html">https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html</a></p></li>
+<li>Paper:  [Kucukelbir et al](<a class="reference external" href="http://arxiv.org/abs/1506.03431">http://arxiv.org/abs/1506.03431</a>)</li>
+<li>Stan manual:  <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html">https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html</a></li>
 </ul>
 </div>
 </div>
@@ -286,11 +289,19 @@ method will throw a <code class="docutils literal notranslate"><span class="pre"
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, Stan Development Team
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -301,7 +312,6 @@ method will throw a <code class="docutils literal notranslate"><span class="pre"
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

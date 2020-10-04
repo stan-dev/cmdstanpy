@@ -11,6 +11,6 @@ travis.yml
 dist
 htmlcov
 *.png
-docs/_build
+docsrc/_build
 .idea
 .DS_Store

@@ -1,39 +1,40 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Stan Models in CmdStanPy &mdash; CmdStanPy 0.9.66 documentation</title>
+  <title>Stan Models in CmdStanPy &mdash; CmdStanPy 0.9.67 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script src="_static/js/copybutton.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MCMC Sampling" href="sample.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> CmdStanPy
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> CmdStanPy
           
 
           
@@ -64,7 +65,7 @@
             
             
               <div class="version">
-                0.9.66
+                0.9.67
               </div>
             
           
@@ -81,6 +82,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -110,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -148,7 +151,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Stan Models in CmdStanPy</li>
     
@@ -200,9 +203,9 @@ Optional behaviors can be specified by use of variables
 which are passed in to the <code class="docutils literal notranslate"><span class="pre">make</span></code> command as name, value pairs.</p>
 <p>Model compilation is done in two steps:</p>
 <ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">stanc</span></code> compiler translates the Stan program to C++.</p></li>
-<li><p>The C++ compiler compiles the generated code and links in
-the necessary supporting libraries.</p></li>
+<li>The <code class="docutils literal notranslate"><span class="pre">stanc</span></code> compiler translates the Stan program to C++.</li>
+<li>The C++ compiler compiles the generated code and links in
+the necessary supporting libraries.</li>
 </ul>
 <p>Therefore, both the constructor and the <code class="docutils literal notranslate"><span class="pre">compile</span></code> method
 allow optional arguments <code class="docutils literal notranslate"><span class="pre">stanc_options</span></code> and <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code> which
@@ -257,11 +260,19 @@ the model:</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, Stan Development Team
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -272,7 +283,6 @@ the model:</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

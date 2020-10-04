@@ -1,39 +1,40 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; CmdStanPy 0.9.66 documentation</title>
+  <title>Installation &mdash; CmdStanPy 0.9.67 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script src="_static/js/copybutton.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="“Hello, World”" href="hello_world.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> CmdStanPy
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> CmdStanPy
           
 
           
@@ -64,7 +65,7 @@
             
             
               <div class="version">
-                0.9.66
+                0.9.67
               </div>
             
           
@@ -81,6 +82,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -95,8 +97,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#install-cmdstan">Install CmdStan</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#function-install-cmdstan">Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#diy-installion">DIY Installion</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#post-installion-setting-environment-variables">Post Installion: Setting Environment Variables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diy-installation">DIY Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#post-installation-setting-environment-variables">Post Installation: Setting Environment Variables</a></li>
 </ul>
 </li>
 </ul>
@@ -114,6 +116,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -152,7 +155,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Installation</li>
     
@@ -189,7 +192,8 @@ command line using <code class="docutils literal notranslate"><span class="pre">
 <p>The optional packages are</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which allows for progress bar display during sampling</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which allows for progress bar display during sampling</li>
+<li><code class="docutils literal notranslate"><span class="pre">ujson</span></code> which provides faster IO</li>
 </ul>
 </div></blockquote>
 <p>To install CmdStanPy with all the optional packages:</p>
@@ -211,37 +215,39 @@ virtual environment.</p>
 <p>CmdStanPy requires an installed C++ toolchain
 consisting of a modern C++ compiler and the GNU-Make utility.</p>
 <ul class="simple">
-<li><p>Windows: CmdStanPy provides the function <code class="docutils literal notranslate"><span class="pre">install_cxx_toolchain</span></code></p></li>
-<li><p>Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default <code class="docutils literal notranslate"><span class="pre">make</span></code> utility)</p></li>
-<li><p>maxOS:  install XCode and Xcode command line tools via command: <cite>xcode-select –install</cite>.</p></li>
+<li>Windows: CmdStanPy provides the function <code class="docutils literal notranslate"><span class="pre">install_cxx_toolchain</span></code></li>
+<li>Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default <code class="docutils literal notranslate"><span class="pre">make</span></code> utility)</li>
+<li>maxOS:  install XCode and Xcode command line tools via command: <cite>xcode-select –install</cite>.</li>
 </ul>
 </div>
 <div class="section" id="function-install-cmdstan">
 <h3>Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code><a class="headerlink" href="#function-install-cmdstan" title="Permalink to this headline">¶</a></h3>
-<p>CmdStanPy provides the function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code> which
+<p>CmdStanPy provides the function <a class="reference internal" href="api.html#function-install-cmdstan"><span class="std std-ref">install_cmstan</span></a> which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
-It can be can be called from within Python or from the command line.
-By default it installs the latest version of CmdStan into a directory named
-<code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code> in your <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory:</p>
+It can be can be called from within Python or from the command line.</p>
+<p>The default install location is a hidden directory in the user <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory
+named <code class="docutils literal notranslate"><span class="pre">.cmdstan</span></code>.  (In earlier versions, the hidden directory was named <code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code>,
+and if directory <code class="docutils literal notranslate"><span class="pre">$HOME/.cmdstanpy</span></code> exists, it will continue to be used as the
+default install dir.)  This directory will be created by the install script.</p>
 <ul class="simple">
-<li><p>From Python</p></li>
+<li>From Python</li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cmdstanpy</span>
 <span class="n">cmdstanpy</span><span class="o">.</span><span class="n">install_cmdstan</span><span class="p">()</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>From the command line on Linux or MacOSX</p></li>
+<li>From the command line on Linux or MacOSX</li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan
-ls -F ~/.cmdstanpy
+ls -F ~/.cmdstan
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>On Windows</p></li>
+<li>On Windows</li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m cmdstanpy.install_cmdstan
-dir <span class="s2">&quot;%HOME%/.cmdstanpy&quot;</span>
+dir <span class="s2">&quot;%HOME%/.cmdstan&quot;</span>
 </pre></div>
 </div>
 <p>The named arguments: <cite>-d &lt;directory&gt;</cite> and  <cite>-v &lt;version&gt;</cite>
@@ -251,15 +257,18 @@ ls -F my_local_cmdstan
 </pre></div>
 </div>
 </div>
-<div class="section" id="diy-installion">
-<h3>DIY Installion<a class="headerlink" href="#diy-installion" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="diy-installation">
+<h3>DIY Installation<a class="headerlink" href="#diy-installation" title="Permalink to this headline">¶</a></h3>
 <p>If you with to install CmdStan yourself, follow the instructions
 in the <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan User’s Guide</a>.</p>
 </div>
-<div class="section" id="post-installion-setting-environment-variables">
-<h3>Post Installion: Setting Environment Variables<a class="headerlink" href="#post-installion-setting-environment-variables" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="post-installation-setting-environment-variables">
+<h3>Post Installation: Setting Environment Variables<a class="headerlink" href="#post-installation-setting-environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>The default for the CmdStan installation location
-is a directory named <code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code> in your <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory.</p>
+is a directory named <code class="docutils literal notranslate"><span class="pre">.cmdstan</span></code> in your <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory.
+(In earlier versions, the hidden directory was named <code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code>,
+and if directory <code class="docutils literal notranslate"><span class="pre">$HOME/.cmdstanpy</span></code> exists, it will continue to be used as the
+default install dir.)</p>
 <p>If you have installed CmdStan in a different directory,
 then you can set the environment variable <code class="docutils literal notranslate"><span class="pre">CMDSTAN</span></code> to this
 location and it will be picked up by CmdStanPy:</p>
@@ -304,11 +313,19 @@ get and set this environment variable:</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, Stan Development Team
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -319,7 +336,6 @@ get and set this environment variable:</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

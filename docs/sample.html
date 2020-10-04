@@ -1,39 +1,40 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MCMC Sampling &mdash; CmdStanPy 0.9.66 documentation</title>
+  <title>MCMC Sampling &mdash; CmdStanPy 0.9.67 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script src="_static/js/copybutton.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Run Generated Quantities" href="generate_quantities.html" />
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> CmdStanPy
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> CmdStanPy
           
 
           
@@ -64,7 +65,7 @@
             
             
               <div class="version">
-                0.9.66
+                0.9.67
               </div>
             
           
@@ -81,6 +82,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -110,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -148,7 +151,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>MCMC Sampling</li>
     
@@ -186,33 +189,33 @@ processor cores available.</p>
 <div class="section" id="nuts-hmc-sampler-configuration">
 <h2>NUTS-HMC sampler configuration<a class="headerlink" href="#nuts-hmc-sampler-configuration" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">chains</span></code>: Number of sampler chains.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">parallel_chains</span></code>: Number of processes to run in parallel.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed or list of per-chain seeds for the sampler’s random number generator.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">chain_ids</span></code>: The offset or list of per-chain offsets for the random number generator.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">inits</span></code>: Specifies how the sampler initializes parameter values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">iter_warmup</span></code>: Number of warmup iterations for each chain.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">iter_sampling</span></code>: Number of draws from the posterior for each chain.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">save_warmup</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, sampler saves warmup draws as part of output csv file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">thin</span></code>: Period between saved samples.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">max_treedepth</span></code>: Maximum depth of trees evaluated by NUTS sampler per iteration.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">metric</span></code>: Specification of the mass matrix.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">step_size</span></code>: Initial stepsize for HMC sampler.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adapt_engaged</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, tune stepsize and metric during warmup. The default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adapt_delta</span></code>: Adaptation target Metropolis acceptance rate. The default value is 0.8.  Increasing this value, which must be strictly less than 1, causes adaptation to use smaller step sizes. It improves the effective sample size, but may increase the time per iteration.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adapt_init_phase</span></code>: Iterations for initial phase of adaptation during which step size is adjusted so that the chain converges towards the typical set.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adapt_metric_window</span></code>: The second phase of adaptation tunes the metric and stepsize in a series of intervals.  This parameter specifies the number of iterations used for the first tuning interval; window size increases for each subsequent interval.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">adapt_step_size</span></code>: Number of iterations given over to adjusting the step size given the tuned metric during the final phase of adaptation.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fixed_param</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, call CmdStan with argument “algorithm=fixed_param”.</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">chains</span></code>: Number of sampler chains.</li>
+<li><code class="docutils literal notranslate"><span class="pre">parallel_chains</span></code>: Number of processes to run in parallel.</li>
+<li><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed or list of per-chain seeds for the sampler’s random number generator.</li>
+<li><code class="docutils literal notranslate"><span class="pre">chain_ids</span></code>: The offset or list of per-chain offsets for the random number generator.</li>
+<li><code class="docutils literal notranslate"><span class="pre">inits</span></code>: Specifies how the sampler initializes parameter values.</li>
+<li><code class="docutils literal notranslate"><span class="pre">iter_warmup</span></code>: Number of warmup iterations for each chain.</li>
+<li><code class="docutils literal notranslate"><span class="pre">iter_sampling</span></code>: Number of draws from the posterior for each chain.</li>
+<li><code class="docutils literal notranslate"><span class="pre">save_warmup</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, sampler saves warmup draws as part of output csv file.</li>
+<li><code class="docutils literal notranslate"><span class="pre">thin</span></code>: Period between saved samples.</li>
+<li><code class="docutils literal notranslate"><span class="pre">max_treedepth</span></code>: Maximum depth of trees evaluated by NUTS sampler per iteration.</li>
+<li><code class="docutils literal notranslate"><span class="pre">metric</span></code>: Specification of the mass matrix.</li>
+<li><code class="docutils literal notranslate"><span class="pre">step_size</span></code>: Initial stepsize for HMC sampler.</li>
+<li><code class="docutils literal notranslate"><span class="pre">adapt_engaged</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, tune stepsize and metric during warmup. The default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">adapt_delta</span></code>: Adaptation target Metropolis acceptance rate. The default value is 0.8.  Increasing this value, which must be strictly less than 1, causes adaptation to use smaller step sizes. It improves the effective sample size, but may increase the time per iteration.</li>
+<li><code class="docutils literal notranslate"><span class="pre">adapt_init_phase</span></code>: Iterations for initial phase of adaptation during which step size is adjusted so that the chain converges towards the typical set.</li>
+<li><code class="docutils literal notranslate"><span class="pre">adapt_metric_window</span></code>: The second phase of adaptation tunes the metric and stepsize in a series of intervals.  This parameter specifies the number of iterations used for the first tuning interval; window size increases for each subsequent interval.</li>
+<li><code class="docutils literal notranslate"><span class="pre">adapt_step_size</span></code>: Number of iterations given over to adjusting the step size given the tuned metric during the final phase of adaptation.</li>
+<li><code class="docutils literal notranslate"><span class="pre">fixed_param</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, call CmdStan with argument “algorithm=fixed_param”.</li>
 </ul>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: Values for all data variables in the model, specified either as a dictionary with entries matching the data variables, or as the path of a data file in JSON or Rdump format.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed for random number generator.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">inits</span></code>:  Specifies how the sampler initializes parameter values.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_dir</span></code>:  Name of the directory to which CmdStan output files are written.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">save_diagnostics</span></code>:  Whether or not to the CmdStan auxiliary output file.
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code>: Values for all data variables in the model, specified either as a dictionary with entries matching the data variables, or as the path of a data file in JSON or Rdump format.</li>
+<li><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed for random number generator.</li>
+<li><code class="docutils literal notranslate"><span class="pre">inits</span></code>:  Specifies how the sampler initializes parameter values.</li>
+<li><code class="docutils literal notranslate"><span class="pre">output_dir</span></code>:  Name of the directory to which CmdStan output files are written.</li>
+<li><code class="docutils literal notranslate"><span class="pre">save_diagnostics</span></code>:  Whether or not to the CmdStan auxiliary output file.
 For the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, the diagnostics file contains sampler information for each draw
-together with the gradients on the unconstrained scale and log probabilities for all parameters in the model.</p></li>
+together with the gradients on the unconstrained scale and log probabilities for all parameters in the model.</li>
 </ul>
 <p>All of these arguments are optional; when unspecified, the CmdStan defaults will be used.</p>
 </div>
@@ -227,25 +230,25 @@ which provides properties to retrieve information about the sample, as well as m
 to run CmdStan’s summary and diagnostics tools.</p>
 <p>Methods for information about the fit of the model to the data:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">summary()</span></code> - Run CmdStan’s <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stansummary.html">stansummary</a> utility on the sample.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">diagnose()</span></code> - Run CmdStan’s <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/diagnose.html">diagnose</a> utility on the sample.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sampler_diagnostics()</span></code> - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">summary()</span></code> - Run CmdStan’s <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stansummary.html">stansummary</a> utility on the sample.</li>
+<li><code class="docutils literal notranslate"><span class="pre">diagnose()</span></code> - Run CmdStan’s <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/diagnose.html">diagnose</a> utility on the sample.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sampler_diagnostics()</span></code> - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.</li>
 </ul>
 <p>Methods for managing the sample:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">save_csvfiles(dir_name)</span></code> - Move output csvfiles to specified directory.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">chains</span></code> - Number of chains</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">num_draws</span></code> - Number of post-warmup draws (i.e., sampling iterations)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">num_warmup_draws</span></code> - Number of warmup draws.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">metric</span></code> - Per chain metric by the HMC sampler.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stepsize</span></code> - Per chain stepszie used by the HMC sampler.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sample</span></code> - A 3-D numpy.ndarray which contains all post-warmup draws across all chains arranged as (draws, chains, columns).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">warmup</span></code> - A 3-D numpy.ndarray which contains all warmup draws across all chains arranged as (draws, chains, columns).</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">save_csvfiles(dir_name)</span></code> - Move output csvfiles to specified directory.</li>
+<li><code class="docutils literal notranslate"><span class="pre">chains</span></code> - Number of chains</li>
+<li><code class="docutils literal notranslate"><span class="pre">num_draws</span></code> - Number of post-warmup draws (i.e., sampling iterations)</li>
+<li><code class="docutils literal notranslate"><span class="pre">num_warmup_draws</span></code> - Number of warmup draws.</li>
+<li><code class="docutils literal notranslate"><span class="pre">metric</span></code> - Per chain metric by the HMC sampler.</li>
+<li><code class="docutils literal notranslate"><span class="pre">stepsize</span></code> - Per chain stepszie used by the HMC sampler.</li>
+<li><code class="docutils literal notranslate"><span class="pre">sample</span></code> - A 3-D numpy.ndarray which contains all post-warmup draws across all chains arranged as (draws, chains, columns).</li>
+<li><code class="docutils literal notranslate"><span class="pre">warmup</span></code> - A 3-D numpy.ndarray which contains all warmup draws across all chains arranged as (draws, chains, columns).</li>
 </ul>
 <p>Methods for downstream analysis are:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">stan_variable(var_name)</span></code> - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stan_variables()</span></code> - Return dictionary of all Stan program variables.</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">stan_variable(var_name)</span></code> - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.</li>
+<li><code class="docutils literal notranslate"><span class="pre">stan_variables()</span></code> - Return dictionary of all Stan program variables.</li>
 </ul>
 <p>By default the sampler runs 4 chains, running as many chains in parallel as there
 are available processors as determined by Python’s <code class="docutils literal notranslate"><span class="pre">multiprocessing.cpu_count()</span></code> function.
@@ -307,7 +310,7 @@ computation is done in the generated quantities block.</p>
 <p>For example, the Stan program
 <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_datagen.stan">bernoulli.stan</a>
 can be used to generate a dataset of simulated data, where each row in the dataset consists of <cite>N</cite> draws from a Bernoulli distribution given probability <cite>theta</cite>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">transformed</span> <span class="n">data</span> <span class="p">{</span>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">transformed</span> <span class="n">data</span> <span class="p">{</span>
   <span class="nb">int</span><span class="o">&lt;</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="o">&gt;</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
   <span class="n">real</span><span class="o">&lt;</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="o">&gt;</span> <span class="n">theta</span> <span class="o">=</span> <span class="mf">0.35</span><span class="p">;</span>
 <span class="p">}</span>
@@ -375,11 +378,19 @@ in <cite>N</cite> trials shows the <strong>posterior predictive distribution</st
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2019, Stan Development Team
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -390,7 +401,6 @@ in <cite>N</cite> trials shows the <strong>posterior predictive distribution</st
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
