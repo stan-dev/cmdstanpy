@@ -62,10 +62,11 @@ CmdStanPy provides the function :ref:`function_install_cmdstan` which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
 
-The default install location is a hidden directory in the user ``$HOME`` directory
-named ``.cmdstan``.  (In earlier versions, the hidden directory was named ``.cmdstanpy``,
-and if directory ``$HOME/.cmdstanpy`` exists, it will continue to be used as the
-default install dir.)  This directory will be created by the install script.
+By default, all CmdStan versions are installed into a hidden directory
+in the ``$HOME`` directory named ``.cmdstan``.  (Previously, this was was named
+``.cmdstanpy``, and if directory ``$HOME/.cmdstanpy`` exists, it will continue to
+be used as the default install dir.)  If the base install directory (i.e.,
+``$HOME/.cmdstan``) doesn't yet exist, it sill be created.
 
 + From Python
 
@@ -137,3 +138,15 @@ To use custom ``make``-tool use ``set_make_env`` function.
 
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
+
+
+Updating the CmdStan Release
+----------------------------
+
+When a new CmdStan release comes out, running the function ``install_cmdstan()``
+with no arguments will download the latest CmdStan release into the
+base install directory, and going forward, this version will be used by CmdStanPy
+unless otherwise specified explicitly.
+By default, if the latest release is already installed, running this function will
+not re-install it, in which case the cost of calling this function is just the cost
+of sending and parsing a request to GitHub.
