@@ -12,6 +12,7 @@ from cmdstanpy.install_cmdstan import (
 )
 from cmdstanpy.utils import install_cmdstan
 
+
 class InstallCmdStanTest(unittest.TestCase):
     def test_is_version_available(self):
         # check http error for bad version
@@ -43,12 +44,12 @@ class InstallCmdStanTest(unittest.TestCase):
         print('l 179')
         retcode = install_cmdstan(version=version, dir=_TMPDIR, overwrite=True)
         print('l 181: {}'.format(retcode))
-        expect_cmdstan_path = os.path.join(_TMPDIR, '-'.join(['cmdstan', version]))
+        expect_cmdstan_path = os.path.join(
+            _TMPDIR, '-'.join(['cmdstan', version])
+        )
         self.assertTrue('CMDSTAN' in os.environ)
         self.assertEqual(expect_cmdstan_path, os.environ['CMDSTAN'])
         os.environ['CMDSTAN'] = cur_path
-
-
 
 
 if __name__ == '__main__':
