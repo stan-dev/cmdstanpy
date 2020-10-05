@@ -1,9 +1,10 @@
 """install_cmdstan test"""
 
 import os
+import shutil
+from time import time
 import unittest
 
-from cmdstanpy import _TMPDIR
 from cmdstanpy.install_cmdstan import (
     is_version_available,
     latest_version,
@@ -12,6 +13,8 @@ from cmdstanpy.install_cmdstan import (
 )
 from cmdstanpy.utils import install_cmdstan
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATAFILES_PATH = os.path.join(HERE, 'data')
 
 class InstallCmdStanTest(unittest.TestCase):
     def test_is_version_available(self):
@@ -35,22 +38,27 @@ class InstallCmdStanTest(unittest.TestCase):
             retrieve_version('no_such_version')
 
     def test_install_cmdstan_specify_dir(self):
-        cur_path = ''
+        cur_cmdstan_path = ''
         if 'CMDSTAN' in os.environ:
-            cur_path = os.environ['CMDSTAN']
+            cur_cmdstan_path = os.environ['CMDSTAN']
             del os.environ['CMDSTAN']
         self.assertFalse('CMDSTAN' in os.environ)
+
         version = '2.24.1'
-        print('l 179')
-        retcode = install_cmdstan(version=version, dir=_TMPDIR, overwrite=True)
-        print('l 181: {}'.format(retcode))
+        tmpdir = os.path.join(DATAFILES_PATH, 'tmp-' + str(time()))
+        os.mkdir(tmpdir)
+        print('before install')
+        retcode = install_cmdstan(version=version, dir=tmpdir, overwrite=True)
+        print('after install, retcode: {}'.format(retcode))
         expect_cmdstan_path = os.path.join(
-            _TMPDIR, '-'.join(['cmdstan', version])
-        )
+            tmpdir, '-'.join(['cmdstan', version])
+            )
         self.assertTrue('CMDSTAN' in os.environ)
         self.assertEqual(expect_cmdstan_path, os.environ['CMDSTAN'])
-        os.environ['CMDSTAN'] = cur_path
 
+        # cleanup
+        os.environ['CMDSTAN'] = cur_cmdstan_path
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 if __name__ == '__main__':
     unittest.main()
