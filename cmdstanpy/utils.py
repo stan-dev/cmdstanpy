@@ -918,23 +918,23 @@ def install_cmdstan(
     if dir is None:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
-            cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+            cmdstanpy_dir = os.path.expanduser(
+                os.path.join('~', _DOT_CMDSTANPY)
+            )
             if os.path.exists(cmdstanpy_dir):
                 cmdstan_dir = cmdstanpy_dir
     if version is None:
         version = get_latest_cmdstan(cmdstan_dir)
     else:
-        version = '-'.join(['cmdstan',version])
-    cmdstan_path = os.path.join(cmdstan_dir, version)
+        version = '-'.join(['cmdstan', version])
+    new_cmdstan_path = os.path.join(cmdstan_dir, version)
 
     # validate, set path directly - avoid circular error messages
-    stanc_bin = os.path.join(cmdstan_path, 'bin', 'stanc' + EXTENSION)
+    stanc_bin = os.path.join(new_cmdstan_path, 'bin', 'stanc' + EXTENSION)
     if not os.path.exists(stanc_bin):
-        logger.warning(
-            'CmdStan installation failed - missing stanc compiler'
-            )
+        logger.warning('CmdStan installation failed - missing stanc compiler')
         return False
-    os.environ['CMDSTAN'] = cmdstan_path
+    os.environ['CMDSTAN'] = new_cmdstan_path
     return True
 
 
