@@ -1,14 +1,16 @@
 """install_cmdstan test"""
 
+import os
 import unittest
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.install_cmdstan import (
     is_version_available,
     latest_version,
     retrieve_version,
     CmdStanRetrieveError,
 )
-
+from cmdstanpy.utils import install_cmdstan
 
 class InstallCmdStanTest(unittest.TestCase):
     def test_is_version_available(self):
@@ -30,6 +32,23 @@ class InstallCmdStanTest(unittest.TestCase):
             CmdStanRetrieveError, 'not available from github.com'
         ):
             retrieve_version('no_such_version')
+
+    def test_install_cmdstan_specify_dir(self):
+        cur_path = ''
+        if 'CMDSTAN' in os.environ:
+            cur_path = os.environ['CMDSTAN']
+            del os.environ['CMDSTAN']
+        self.assertFalse('CMDSTAN' in os.environ)
+        version = '2.24.1'
+        print('l 179')
+        retcode = install_cmdstan(version=version, dir=_TMPDIR, overwrite=True)
+        print('l 181: {}'.format(retcode))
+        expect_cmdstan_path = os.path.join(_TMPDIR, '-'.join(['cmdstan', version]))
+        self.assertTrue('CMDSTAN' in os.environ)
+        self.assertEqual(expect_cmdstan_path, os.environ['CMDSTAN'])
+        os.environ['CMDSTAN'] = cur_path
+
+
 
 
 if __name__ == '__main__':

@@ -856,16 +856,26 @@ def install_cmdstan(
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub by running
-    script ``install_cmdstan`` as a subprocess.  Downloads the release
-    tar.gz file to temporary storage.  Retries GitHub requests in order
-    to allow for transient network outages. Builds CmdStan executables
-    and tests the compiler by building example model ``bernoulli.stan``.
+    script ``install_cmdstan`` as a subprocess.  By default, this method
+    will download and install the latest CmdStan release, if it is not
+    already installed.
+
+    The install script downloads the release tar.gz file to temporary storage.
+    If necessary, the download request to GitHub is retried several times
+    in order to allow for transient network outages. If the ``install_cmdstan``
+    script succeeds, the environment variable ``CMDSTAN`` is set to the path
+    of the installed release.
+
+    Default behaviors can be overridden by specifying the release version
+    and the base directory into which it is installed.
+    It is also possible to force a re-install of an existing version.
 
     :param version: CmdStan version string, e.g. "2.24.1".
         Defaults to latest CmdStan release.
 
-    :param dir: Path to install directory.  Defaults to hidden directory
-        ``$HOME/.cmdstan`` or ``$HOME/.cmdstanpy``, if the latter exists.
+    :param dir: Path to the base directory into which all CmdStan versions
+        are installed.  Defaults to hidden directory ``$HOME/.cmdstan`` (or
+        ``$HOME/.cmdstanpy``, if the latter exists - backwards compatibility).
         If no directory is specified and neither of the above directories
         exist, directory ``$HOME/.cmdstan`` will be created and populated.
 
@@ -887,9 +897,9 @@ def install_cmdstan(
     if dir is not None:
         cmd.extend(['--dir', dir])
     if overwrite:
-        cmd.extend(['--overwrite', 'TRUE'])
+        cmd.extend(['--overwrite'])
     if verbose:
-        cmd.extend(['--verbose', 'TRUE'])
+        cmd.extend(['--verbose'])
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
     )
@@ -902,6 +912,29 @@ def install_cmdstan(
         if stderr:
             logger.warning(stderr.decode('utf-8').strip())
         return False
+
+    # set path to newly installed version
+    cmdstan_dir = dir
+    if dir is None:
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        if not os.path.exists(cmdstan_dir):
+            cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+            if os.path.exists(cmdstanpy_dir):
+                cmdstan_dir = cmdstanpy_dir
+    if version is None:
+        version = get_latest_cmdstan(cmdstan_dir)
+    else:
+        version = '-'.join(['cmdstan',version])
+    cmdstan_path = os.path.join(cmdstan_dir, version)
+
+    # validate, set path directly - avoid circular error messages
+    stanc_bin = os.path.join(cmdstan_path, 'bin', 'stanc' + EXTENSION)
+    if not os.path.exists(stanc_bin):
+        logger.warning(
+            'CmdStan installation failed - missing stanc compiler'
+            )
+        return False
+    os.environ['CMDSTAN'] = cmdstan_path
     return True
 
 
