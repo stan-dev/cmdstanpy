@@ -16,6 +16,7 @@ from cmdstanpy.utils import install_cmdstan
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 
+
 class InstallCmdStanTest(unittest.TestCase):
     def test_is_version_available(self):
         # check http error for bad version
@@ -52,13 +53,14 @@ class InstallCmdStanTest(unittest.TestCase):
         print('after install, retcode: {}'.format(retcode))
         expect_cmdstan_path = os.path.join(
             tmpdir, '-'.join(['cmdstan', version])
-            )
+        )
         self.assertTrue('CMDSTAN' in os.environ)
         self.assertEqual(expect_cmdstan_path, os.environ['CMDSTAN'])
 
         # cleanup
         os.environ['CMDSTAN'] = cur_cmdstan_path
         shutil.rmtree(tmpdir, ignore_errors=True)
+
 
 if __name__ == '__main__':
     unittest.main()
