@@ -46,7 +46,7 @@ class InstallCmdStanTest(unittest.TestCase):
             del os.environ['CMDSTAN']
         self.assertFalse('CMDSTAN' in os.environ)
 
-        if platform.system() != 'Windows':
+        if platform.system() == 'Windows':
             return
 
         version = '2.24.1'
