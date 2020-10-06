@@ -1,6 +1,7 @@
 """install_cmdstan test"""
 
 import os
+import platform
 import shutil
 from time import time
 import unittest
@@ -45,11 +46,14 @@ class InstallCmdStanTest(unittest.TestCase):
             del os.environ['CMDSTAN']
         self.assertFalse('CMDSTAN' in os.environ)
 
+        if platform.system() == 'Windows':
+            return
+
         version = '2.24.1'
         tmpdir = os.path.join(DATAFILES_PATH, 'tmp-' + str(time()))
         os.mkdir(tmpdir)
         print('before install')
-        retcode = install_cmdstan(version=version, dir=tmpdir, overwrite=True)
+        retcode = install_cmdstan(version=version, dir=tmpdir)
         print('after install, retcode: {}'.format(retcode))
         expect_cmdstan_path = os.path.join(
             tmpdir, '-'.join(['cmdstan', version])
