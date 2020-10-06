@@ -95,7 +95,7 @@ def install_version(
             while proc.poll() is None:
                 if verbose:
                     print(proc.stdout.readline().decode('utf-8').strip())
-            stdout, stderr = proc.communicate()
+            _, stderr = proc.communicate()
             if proc.returncode:
                 msgs = ['Command "make clean-all" failed']
                 if stderr:
@@ -113,7 +113,7 @@ def install_version(
         while proc.poll() is None:
             if verbose:
                 print(proc.stdout.readline().decode('utf-8').strip())
-        stdout, stderr = proc.communicate()
+        _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Command "make build" failed']
             if stderr:
