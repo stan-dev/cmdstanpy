@@ -46,7 +46,7 @@ class InstallCmdStanTest(unittest.TestCase):
             del os.environ['CMDSTAN']
         self.assertFalse('CMDSTAN' in os.environ)
 
-        if platform.system() == 'Windows':
+        if platform.system() != 'Windows':
             return
 
         version = '2.24.1'
@@ -55,9 +55,10 @@ class InstallCmdStanTest(unittest.TestCase):
         print('before install')
         retcode = install_cmdstan(version=version, dir=tmpdir)
         print('after install, retcode: {}'.format(retcode))
+        self.assertTrue(retcode)
         expect_cmdstan_path = os.path.join(
             tmpdir, '-'.join(['cmdstan', version])
-        )
+            )
         self.assertTrue('CMDSTAN' in os.environ)
         self.assertEqual(expect_cmdstan_path, os.environ['CMDSTAN'])
 
