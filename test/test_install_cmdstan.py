@@ -1,7 +1,6 @@
 """install_cmdstan test"""
 
 import os
-import platform
 import shutil
 from time import time
 import unittest
@@ -45,9 +44,6 @@ class InstallCmdStanTest(unittest.TestCase):
             cur_cmdstan_path = os.environ['CMDSTAN']
             del os.environ['CMDSTAN']
         self.assertFalse('CMDSTAN' in os.environ)
-
-        if platform.system() == 'Windows':
-            return
 
         version = '2.24.1'
         tmpdir = os.path.join(DATAFILES_PATH, 'tmp-' + str(time()))

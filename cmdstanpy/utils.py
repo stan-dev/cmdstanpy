@@ -903,8 +903,9 @@ def install_cmdstan(
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
     )
-    while proc.poll() is None:
-        print(proc.stdout.readline().decode('utf-8').strip())
+    if platform.system() != 'Windows':
+        while proc.poll() is None:
+            print(proc.stdout.readline().decode('utf-8').strip())
 
     _, stderr = proc.communicate()
     if proc.returncode:
