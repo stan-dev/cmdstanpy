@@ -47,7 +47,7 @@ class InstallCmdStanTest(unittest.TestCase):
 
         version = '2.24.1'
         tmpdir = os.path.join(DATAFILES_PATH, 'tmp-' + str(time()))
-        os.mkdir(tmpdir)
+        os.makedirs(tmpdir, exist_ok=True)
         print('before install')
         retcode = install_cmdstan(version=version, dir=tmpdir)
         print('after install, retcode: {}'.format(retcode))
