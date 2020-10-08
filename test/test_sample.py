@@ -539,9 +539,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 2095), phis.shape)
         phi1 = fit.draws_pd(params=['phi[1]'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_pd(
-            params=['phi[1]', 'phi[10]', 'phi[100]']
-        )
+        mo_phis = fit.draws_pd(params=['phi[1]', 'phi[10]', 'phi[100]'])
         self.assertEqual((2000, 3), mo_phis.shape)
         phi2095 = fit.draws_pd(params=['phi[2095]'])
         self.assertEqual((2000, 1), phi2095.shape)
@@ -844,8 +842,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         with LogCapture() as log:
             self.assertEqual(
-                bern_fit.sample.shape,
-                (100, 2, len(BERNOULLI_COLS)),
+                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
             )
         log.check_present(
             (
@@ -857,8 +854,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         with LogCapture() as log:
             self.assertEqual(
-                bern_fit.warmup.shape,
-                (300, 2, len(BERNOULLI_COLS)),
+                bern_fit.warmup.shape, (300, 2, len(BERNOULLI_COLS))
             )
         log.check_present(
             (
