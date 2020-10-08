@@ -1,6 +1,5 @@
 """install_cmdstan test"""
 
-import platform
 import os
 import shutil
 from time import time
