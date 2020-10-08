@@ -344,7 +344,7 @@ def install_cmdstan(
         cmdstan_dir = get_dot_dir()
     if version is None:
         version = get_latest_cmdstan(cmdstan_dir)
-    new_cmdstan_path = os.path.join(cmdstan_dir, '-'.join(['cmdstan', version]))
+    new_cmdstan_path = os.path.join(cmdstan_dir, cmdstan_version)
 
     # validate, set path directly - avoid circular error messages
     stanc_bin = os.path.join(new_cmdstan_path, 'bin', 'stanc' + EXTENSION)
