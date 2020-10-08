@@ -112,7 +112,7 @@ def get_latest_cmdstan(cmdstan_dir: str) -> str:
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
-    latest = 'cmdstan-{}'.format(versions[len(versions) - 1])
+    latest = versions[len(versions) - 1]
     return latest
 
 
@@ -155,7 +155,7 @@ def cmdstan_path() -> str:
         cmdstan_dir = get_dot_dir()
         if not os.path.exists(cmdstan_dir):
             raise ValueError('no CmdStan installation found')
-        latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
+        latest_cmdstan = '-'.join(['cmdstan', get_latest_cmdstan(cmdstan_dir)])
         if latest_cmdstan is None:
             raise ValueError('no CmdStan installation found')
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)

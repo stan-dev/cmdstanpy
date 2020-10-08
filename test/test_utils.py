@@ -59,7 +59,8 @@ class CmdStanPathTest(unittest.TestCase):
                         os.path.join('~', _DOT_CMDSTANPY)
                     )
                 install_version = os.path.join(
-                    cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+                    cmdstan_dir,
+                    '-'.join(['cmdstan', get_latest_cmdstan(cmdstan_dir)])
                 )
                 self.assertTrue(
                     os.path.samefile(cmdstan_path(), install_version)
@@ -112,7 +113,8 @@ class CmdStanPathTest(unittest.TestCase):
                     os.path.join('~', _DOT_CMDSTANPY)
                 )
             install_version = os.path.join(
-                cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+                cmdstan_dir,
+                '-'.join(['cmdstan', get_latest_cmdstan(cmdstan_dir)])
             )
             set_cmdstan_path(install_version)
             self.assertEqual(install_version, cmdstan_path())
@@ -123,7 +125,8 @@ class CmdStanPathTest(unittest.TestCase):
         if not os.path.exists(cmdstan_dir):
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         install_version = os.path.join(
-            cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+            cmdstan_dir,
+            '-'.join(['cmdstan', get_latest_cmdstan(cmdstan_dir)])
         )
         set_cmdstan_path(install_version)
         validate_cmdstan_path(install_version)
@@ -161,11 +164,11 @@ class CmdStanPathTest(unittest.TestCase):
 
     def test_munge_cmdstan_versions(self):
         tdir = os.path.join(HERE, 'tmpdir_xxx')
-        os.mkdir(tdir)
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc1'))
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc2'))
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0'))
-        self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
+        os.makedirs(tdir, exist_ok=True)
+        os.makedirs(os.path.join(tdir, 'cmdstan-2.22-rc1'), exist_ok=True)
+        os.makedirs(os.path.join(tdir, 'cmdstan-2.22-rc2'), exist_ok=True)
+        os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0'), exist_ok=True)
+        self.assertEqual(get_latest_cmdstan(tdir), '2.22.0')
         shutil.rmtree(tdir, ignore_errors=True)
 
     def test_dict_to_file(self):

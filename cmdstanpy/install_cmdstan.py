@@ -141,6 +141,7 @@ def install_version(
 
 
 def is_version_available(version: str):
+    print('l 144: version {}'.format(version))
     is_available = True
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
