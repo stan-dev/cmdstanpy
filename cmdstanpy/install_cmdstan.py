@@ -382,9 +382,9 @@ if __name__ == '__main__':
                 print('Installed latest CmdStan release.')
             print('Install directory: {}'.format(os.environ['CMDSTAN']))
             sys.exit(0)
-        print("CmdStan install failed.")
+        print('CmdStan install failed.')
         sys.exit(3)
     except RuntimeError as e:
-        print("CmdStan install failed.")
+        print('CmdStan install failed.')
         print(e)
         sys.exit(3)
