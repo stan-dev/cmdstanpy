@@ -3,7 +3,12 @@
 import unittest
 import platform
 
-from cmdstanpy import install_cxx_toolchain
+from cmdstanpy.install_cxx_toolchain import (
+    install_cxx_toolchain,
+    get_config,
+    get_toolchain_name,
+    normalize_version,
+)
 
 
 class InstallCxxScriptTest(unittest.TestCase):
@@ -12,7 +17,7 @@ class InstallCxxScriptTest(unittest.TestCase):
         if platform.system() != 'Windows':
             return
         else:
-            config = install_cxx_toolchain.get_config('C:\\RTools', True)
+            config = get_config('C:\\RTools', True)
 
             config_reference = [
                 '/SP-',
@@ -37,7 +42,7 @@ class InstallCxxScriptTest(unittest.TestCase):
             r'Download for the C\+\+ toolchain on the current platform has not '
             r'been implemented:\s*\S+',
         ):
-            install_cxx_toolchain.main()
+            install_cxx_toolchain()
 
     def test_normalize_version(self):
         """Test supported versions."""
@@ -45,23 +50,17 @@ class InstallCxxScriptTest(unittest.TestCase):
             return
         else:
             for ver in ['4.0', '4', '40']:
-                self.assertEqual(
-                    install_cxx_toolchain.normalize_version(ver), '4.0'
-                )
+                self.assertEqual(normalize_version(ver), '4.0')
 
             for ver in ['3.5', '35']:
-                self.assertEqual(
-                    install_cxx_toolchain.normalize_version(ver), '3.5'
-                )
+                self.assertEqual(normalize_version(ver), '3.5')
 
     def test_toolchain_name(self):
         """Check toolchain name."""
         if platform.system() != 'Windows':
             return
         else:
-            self.assertEqual(
-                install_cxx_toolchain.get_toolchain_name(), 'RTools'
-            )
+            self.assertEqual(get_toolchain_name(), 'RTools')
 
 
 if __name__ == '__main__':

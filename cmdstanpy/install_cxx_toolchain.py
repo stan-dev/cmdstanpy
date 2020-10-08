@@ -12,7 +12,6 @@ Optional command line arguments:
    -m --no-make : don't install mingw32-make (Windows RTools 4.0 only)
 """
 import argparse
-import contextlib
 import os
 import platform
 import shutil
@@ -22,28 +21,26 @@ import urllib.request
 from collections import OrderedDict
 from time import sleep
 
-from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import validate_dir
+from cmdstanpy.utils import get_dot_dir, pushd, validate_dir
 
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
 
 
-@contextlib.contextmanager
-def pushd(new_dir):
-    """Acts like pushd/popd."""
-    previous_dir = os.getcwd()
-    os.chdir(new_dir)
-    yield
-    os.chdir(previous_dir)
+class CxxToolchainRetrieveError(RuntimeError):
+    pass
+
+
+class CxxToolchainInstallError(RuntimeError):
+    pass
 
 
 def usage():
     """Print usage."""
     print(
         """Arguments:
-        -v (--version) :CmdStan version
+        -v (--version) :Toolchain version
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
@@ -72,40 +69,35 @@ def get_config(dir, silent):
     return config
 
 
-def install_version(installation_dir, installation_file, version, silent):
+def install_version(install_dir, install_file, version, silent):
     """Install specified toolchain version."""
-    with pushd('.'):
-        print(
-            'Installing the C++ toolchain: {}'.format(
-                os.path.splitext(installation_file)[0]
-            )
+    print(
+        'Installing the C++ toolchain: {}'.format(
+            os.path.splitext(install_file)[0]
         )
-        cmd = [installation_file]
-        cmd.extend(get_config(installation_dir, silent))
-        print(' '.join(cmd))
-        proc = subprocess.Popen(
-            cmd,
-            cwd=None,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        while proc.poll() is None:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if output:
-                print(output, flush=True)
-        _, stderr = proc.communicate()
-        if proc.returncode:
-            print('Installation failed: returncode={}'.format(proc.returncode))
-            if stderr:
-                print(stderr.decode('utf-8').strip())
-            if is_installed(installation_dir, version):
-                print('Installation files found at the installation location.')
-            sys.exit(3)
-    # check installation
-    if is_installed(installation_dir, version):
-        os.remove(installation_file)
-    print('Installed {}'.format(os.path.splitext(installation_file)[0]))
+    )
+    cmd = [install_file]
+    cmd.extend(get_config(install_dir, silent))
+    print(' '.join(cmd))  # logger.info?  debug?
+    proc = subprocess.Popen(
+        cmd,
+        cwd=None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
+    )
+    while proc.poll() is None:
+        print(proc.stdout.readline().decode('utf-8').strip(), flush=True)
+    _, stderr = proc.communicate()
+    if proc.returncode:
+        msgs = ['Installation failed: returncode={}'.format(proc.returncode)]
+        if stderr:
+            msgs.append(stderr.decode('utf-8').strip())
+        raise CxxToolchainInstallError('\n'.join(msgs))
+    # cleanup
+    if has_cxx(install_dir, version):  # what if this is false?
+        os.remove(install_file)
+    print('Installed {}'.format(os.path.splitext(install_file)[0]))
 
 
 def install_mingw32_make(toolchain_loc):
@@ -131,33 +123,30 @@ def install_mingw32_make(toolchain_loc):
         'mingw-w64-x86_64-make' if IS_64BITS else 'mingw-w64-i686-make',
         '--noconfirm',
     ]
-    with pushd('.'):
-        print(' '.join(cmd))
-        proc = subprocess.Popen(
-            cmd,
-            cwd=None,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        while proc.poll() is None:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if output:
-                print(output, flush=True)
-        _, stderr = proc.communicate()
-        if proc.returncode:
-            print(
-                'mingw32-make installation failed: returncode={}'.format(
-                    proc.returncode
-                )
-            )
-            if stderr:
-                print(stderr.decode('utf-8').strip())
-            sys.exit(3)
+    print(' '.join(cmd))  # logger.info?  debug?
+    proc = subprocess.Popen(
+        cmd,
+        cwd=None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
+    )
+    while proc.poll() is None:
+        output = proc.stdout.readline().decode('utf-8').strip()
+        if output:
+            print(output, flush=True)
+    _, stderr = proc.communicate()
+    if proc.returncode:
+        msgs = [
+            'Install mingw32-make failed: returncode={}'.format(proc.returncode)
+        ]
+        if stderr:
+            msgs.append(stderr.decode('utf-8').strip())
+        raise CxxToolchainInstallError('\n'.join(msgs))
     print('Installed mingw32-make.exe')
 
 
-def is_installed(toolchain_loc, version):
+def has_cxx(toolchain_loc, version):
     """Returns True is toolchain is installed."""
     if platform.system() == 'Windows':
         if version in ['35', '3.5']:
@@ -206,7 +195,9 @@ def retrieve_toolchain(filename, url):
                 print('retry ({}/5)'.format(i + 1))
                 sleep(1)
                 continue
-            sys.exit(3)
+            raise CxxToolchainRetrieveError(
+                'Cannot download C++ toolchain.'
+            ) from err
     print('Download successful, file: {}'.format(filename))
 
 
@@ -246,12 +237,19 @@ def get_toolchain_version(name, version):
     toolchain_folder = None
     if platform.system() == 'Windows':
         toolchain_folder = '{}{}'.format(name, version.replace('.', ''))
-
     return toolchain_folder
 
 
-def main():
-    """Main."""
+def install_cxx_toolchain(
+    version: str = None,
+    dir: str = None,
+    silent: bool = False,
+    no_make: bool = False,
+):
+    """
+    Download C++ toolchain:  C++ compiler and make utility.
+    Currently only implemented for Windows; downloads RTools.
+    """
     if platform.system() not in {'Windows'}:
         msg = (
             'Download for the C++ toolchain'
@@ -259,46 +257,26 @@ def main():
         )
         raise NotImplementedError(msg % platform.system())
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v')
-    parser.add_argument('--dir', '-d')
-    parser.add_argument('--silent', '-s', action='store_true')
-    parser.add_argument('--no-make', '-m', action='store_false')
-    args = parser.parse_args(sys.argv[1:])
-
     toolchain = get_toolchain_name()
-    version = vars(args)['version']
     if version is None:
         version = latest_version()
     version = normalize_version(version)
     print("C++ toolchain '{}' version: {}".format(toolchain, version))
 
     url = get_url(version)
-
-    install_dir = vars(args)['dir']
-    if install_dir is None:
-        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-        if not os.path.exists(cmdstan_dir):
-            cmdstanpy_dir = os.path.expanduser(
-                os.path.join('~', _DOT_CMDSTANPY)
-            )
-            if os.path.exists(cmdstanpy_dir):
-                cmdstan_dir = cmdstanpy_dir
-        install_dir = cmdstan_dir
-    validate_dir(install_dir)
-    print('Install directory: {}'.format(install_dir))
+    if dir is None:
+        dir = get_dot_dir()
+    validate_dir(dir)
+    print('Install directory: {}'.format(dir))
 
     if platform.system() == 'Windows':
-        silent = 'silent' in vars(args)
         # force silent == False for 4.0 version
-        if 'silent' not in vars(args) and version in ('4.0', '4', '40'):
+        if version in ('4.0', '4', '40'):
             silent = False
-    else:
-        silent = False
 
     toolchain_folder = get_toolchain_version(toolchain, version)
-    with pushd(install_dir):
-        if is_installed(toolchain_folder, version):
+    with pushd(dir):
+        if has_cxx(toolchain_folder, version):
             print('C++ toolchain {} already installed'.format(toolchain_folder))
         else:
             if os.path.exists(toolchain_folder):
@@ -308,9 +286,9 @@ def main():
                 toolchain_folder, toolchain_folder + EXTENSION, version, silent
             )
         if (
-            'no-make' not in vars(args)
-            and (platform.system() == 'Windows')
-            and (version in ('4.0', '4', '40'))
+            no_make is not None
+            and no_make is False
+            and version in ('4.0', '4', '40')
         ):
             if os.path.exists(
                 os.path.join(
@@ -323,4 +301,24 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # pylint: disable=invalid-name
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version', '-v')
+    parser.add_argument('--dir', '-d')
+    parser.add_argument('--silent', '-s', action='store_true')
+    parser.add_argument('--no_make', '-m', action='store_false')
+    args = parser.parse_args(sys.argv[1:])
+
+    try:
+        install_cxx_toolchain(
+            version=vars(args)['version'],
+            dir=vars(args)['dir'],
+            silent=vars(args)['silent'],
+            no_make=vars(args)['no_make'],
+        )
+        sys.exit(0)
+
+    except RuntimeError as err:
+        print("C++ toolchain install failed.")
+        print(err)
+        sys.exit(3)

@@ -18,6 +18,7 @@ import shutil
 import tempfile
 import logging
 import sys
+import contextlib
 from typing import Dict, TextIO, List, Union, Tuple
 
 import numpy as np
@@ -36,12 +37,31 @@ from cmdstanpy import (
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
+@contextlib.contextmanager
+def pushd(new_dir: str):
+    """Acts like pushd/popd."""
+    previous_dir = os.getcwd()
+    os.chdir(new_dir)
+    yield
+    os.chdir(previous_dir)
+
+
 def get_logger():
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
     if len(logger.handlers) == 0:
         logging.basicConfig(level=logging.INFO)
     return logger
+
+
+def get_dot_dir() -> str:
+    """Get path to hidden dir for CmdStan install, toolchain."""
+    dot_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+    if not os.path.exists(dot_dir):
+        cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+        if os.path.exists(cmdstanpy_dir):
+            dot_dir = cmdstanpy_dir
+    return dot_dir
 
 
 def validate_dir(install_dir: str):
@@ -72,7 +92,7 @@ def get_latest_cmdstan(cmdstan_dir: str) -> str:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script `install_cmdstan`.
+    Assumes directory populated via utility `install_cmdstan`.
     """
     versions = [
         ''.join(name.split('-')[1:])  # name may contain '-rc'
@@ -105,8 +125,7 @@ def validate_cmdstan_path(path: str) -> None:
         raise ValueError('no such CmdStan directory {}'.format(path))
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'no CmdStan binaries found, '
-            'run command line script "install_cmdstan"'
+            'no CmdStan binaries found, ' 'run utility "install_cmdstan"'
         )
 
 
@@ -133,20 +152,12 @@ def cmdstan_path() -> str:
     if 'CMDSTAN' in os.environ:
         cmdstan = os.environ['CMDSTAN']
     else:
-        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        cmdstan_dir = get_dot_dir()
         if not os.path.exists(cmdstan_dir):
-            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-            if not os.path.exists(cmdstan_dir):
-                raise ValueError(
-                    'no CmdStan installation found, '
-                    'run command line script "install_cmdstan"'
-                )
+            raise ValueError('no CmdStan installation found')
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
-            raise ValueError(
-                'no CmdStan installation found, '
-                'run command line script "install_cmdstan"'
-            )
+            raise ValueError('no CmdStan installation found')
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
     validate_cmdstan_path(cmdstan)
@@ -215,29 +226,21 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
                 )
                 toolchain_root = ''
     else:
-        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-        if not os.path.exists(cmdstan_dir):
-            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        rtools_dir = os.path.expanduser(
-            os.path.join('~', cmdstan_dir, 'RTools40')
-        )
+        cmdstan_dir = get_dot_dir()
+        rtools_dir = os.path.join(cmdstan_dir, 'RTools40')
         if not os.path.exists(rtools_dir):
-            rtools_dir = os.path.expanduser(
-                os.path.join('~', cmdstan_dir, 'RTools35')
-            )
+            rtools_dir = os.path.join(cmdstan_dir, 'RTools35')
             if not os.path.exists(rtools_dir):
-                rtools_dir = os.path.expanduser(
-                    os.path.join('~', cmdstan_dir, 'RTools')
-                )
+                rtools_dir = os.path.join(cmdstan_dir, 'RTools')
                 if not os.path.exists(rtools_dir):
                     raise ValueError(
                         'no RTools installation found, '
-                        'run command line script "install_cxx_toolchain"'
+                        'run utility "install_cxx_toolchain"'
                     )
             else:
-                rtools_dir = os.path.expanduser(os.path.join('~', cmdstan_dir))
+                rtools_dir = cmdstan_dir
         else:
-            rtools_dir = os.path.expanduser(os.path.join('~', cmdstan_dir))
+            rtools_dir = cmdstan_dir
         compiler_path = ''
         tool_path = ''
         if version not in ('35', '3.5', '3') and os.path.exists(
@@ -295,7 +298,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
     if not toolchain_root:
         raise ValueError(
             'no C++ toolchain installation found, '
-            'run command line script "install_cxx_toolchain"'
+            'run utility "install_cxx_toolchain"'
         )
     logger.info('Add C++ toolchain to $PATH: %s', toolchain_root)
     os.environ['PATH'] = ';'.join(
@@ -846,97 +849,6 @@ def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
     path = fd.name
     fd.close()
     return path
-
-
-def install_cmdstan(
-    version: str = None,
-    dir: str = None,
-    overwrite: bool = False,
-    verbose: bool = False,
-) -> bool:
-    """
-    Download and install a CmdStan release from GitHub by running
-    script ``install_cmdstan`` as a subprocess.  By default, this method
-    will download and install the latest CmdStan release, if it is not
-    already installed.
-
-    The install script downloads the release tar.gz file to temporary storage.
-    If necessary, the download request to GitHub is retried several times
-    in order to allow for transient network outages. If the ``install_cmdstan``
-    script succeeds, the environment variable ``CMDSTAN`` is set to the path
-    of the installed release.
-
-    Default behaviors can be overridden by specifying the release version
-    and the base directory into which it is installed.
-    It is also possible to force a re-install of an existing version.
-
-    :param version: CmdStan version string, e.g. "2.24.1".
-        Defaults to latest CmdStan release.
-
-    :param dir: Path to the base directory into which all CmdStan versions
-        are installed.  Defaults to hidden directory ``$HOME/.cmdstan`` (or
-        ``$HOME/.cmdstanpy``, if the latter exists - backwards compatibility).
-        If no directory is specified and neither of the above directories
-        exist, directory ``$HOME/.cmdstan`` will be created and populated.
-
-    :param overwrite:  Boolean value; when ``True``, will overwrite and
-        rebuild an existing CmdStan installation.  Default is ``False``.
-
-    :param verbose:  Boolean value; when ``True``, output from CmdStan build
-        processes will be streamed to the console.  Default is ``False``.
-
-    :return: Boolean value; ``True`` for success.
-    """
-    logger = get_logger()
-    python = sys.executable
-    here = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(here, 'install_cmdstan.py')
-    cmd = [python, '-u', path]
-    if version is not None:
-        cmd.extend(['--version', version])
-    if dir is not None:
-        cmd.extend(['--dir', dir])
-    if overwrite:
-        cmd.extend(['--overwrite'])
-    if verbose:
-        cmd.extend(['--verbose'])
-    proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
-    )
-    if platform.system() != 'Windows':
-        while proc.poll() is None:
-            print(proc.stdout.readline().decode('utf-8').strip())
-
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        logger.warning('CmdStan installation failed.')
-        if stderr:
-            logger.warning(stderr.decode('utf-8').strip())
-        return False
-
-    # set path to newly installed version
-    cmdstan_dir = dir
-    if dir is None:
-        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-        if not os.path.exists(cmdstan_dir):
-            cmdstanpy_dir = os.path.expanduser(
-                os.path.join('~', _DOT_CMDSTANPY)
-            )
-            if os.path.exists(cmdstanpy_dir):
-                cmdstan_dir = cmdstanpy_dir
-    if version is None:
-        version = get_latest_cmdstan(cmdstan_dir)
-    else:
-        version = '-'.join(['cmdstan', version])
-    new_cmdstan_path = os.path.join(cmdstan_dir, version)
-
-    # validate, set path directly - avoid circular error messages
-    stanc_bin = os.path.join(new_cmdstan_path, 'bin', 'stanc' + EXTENSION)
-    if not os.path.exists(stanc_bin):
-        logger.warning('CmdStan installation failed - missing stanc compiler')
-        return False
-    os.environ['CMDSTAN'] = new_cmdstan_path
-    return True
 
 
 class MaybeDictToFilePath:

@@ -7,12 +7,13 @@ from time import time
 import unittest
 
 from cmdstanpy.install_cmdstan import (
+    install_cmdstan,
     is_version_available,
     latest_version,
     retrieve_version,
     CmdStanRetrieveError,
 )
-from cmdstanpy.utils import install_cmdstan
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -40,8 +41,6 @@ class InstallCmdStanTest(unittest.TestCase):
             retrieve_version('no_such_version')
 
     def test_install_cmdstan_specify_dir(self):
-        if platform.system() == 'Windows':
-            return  # Appveyor times out - download or build problematic
         cur_cmdstan_path = ''
         if 'CMDSTAN' in os.environ:
             cur_cmdstan_path = os.environ['CMDSTAN']

@@ -15,7 +15,6 @@ Optional command line arguments:
    -c, --compiler : add C++ compiler to path (Windows only)
 """
 import argparse
-import contextlib
 import os
 import platform
 import subprocess
@@ -26,8 +25,16 @@ import urllib.error
 from pathlib import Path
 from time import sleep
 
-from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import validate_dir
+from cmdstanpy.utils import (
+    get_dot_dir,
+    get_latest_cmdstan,
+    get_logger,
+    pushd,
+    validate_dir,
+)
+
+from cmdstanpy.install_cxx_toolchain import install_cxx_toolchain, has_cxx
+
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -38,15 +45,6 @@ class CmdStanRetrieveError(RuntimeError):
 
 class CmdStanInstallError(RuntimeError):
     pass
-
-
-@contextlib.contextmanager
-def pushd(new_dir: str):
-    """Acts like pushd/popd."""
-    previous_dir = os.getcwd()
-    os.chdir(new_dir)
-    yield
-    os.chdir(previous_dir)
 
 
 def usage():
@@ -246,25 +244,50 @@ def retrieve_version(version: str):
     print('Unpacked download as cmdstan-{}'.format(version))
 
 
-def main():
-    """Main."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v')
-    parser.add_argument('--dir', '-d')
-    parser.add_argument('--overwrite', action='store_true')
-    parser.add_argument('--verbose', action='store_true')
-    if platform.system() == 'Windows':
-        # use compiler installed with install_cxx_toolchain
-        # Install a new compiler if compiler not found
-        # Search order is RTools40, RTools35
-        parser.add_argument(
-            '--compiler', '-c', dest='compiler', action='store_true'
-        )
-    args = parser.parse_args(sys.argv[1:])
+def install_cmdstan(
+    version: str = None,
+    dir: str = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+) -> bool:
+    """
+    Download a CmdStan release from GitHub, then build executables and
+    test model compilation. Default is to install latest CmdStan release.
+    On successful install, sets the environment variable ``CMDSTAN``
+    to the path of the installed release.
 
-    version = latest_version()
-    if vars(args)['version']:
-        version = vars(args)['version']
+    Default behaviors can be overridden by specifying the release version
+    and the base directory into which it is installed.
+    An existing release version is only re-installed if argument ``overwrite``
+    is  ``True``. By default ``overwrite`` is False.
+
+    :param version: CmdStan version string, e.g. "2.24.1".
+        Defaults to latest CmdStan release.
+
+    :param dir: Path to the base directory into which all CmdStan versions
+        are installed.  Defaults to hidden directory ``$HOME/.cmdstan`` (or
+        ``$HOME/.cmdstanpy``, if the latter exists - backwards compatibility).
+        If no directory is specified and neither of the above directories
+        exist, directory ``$HOME/.cmdstan`` will be created and populated.
+
+    :param overwrite:  Boolean value; when ``True``, will overwrite and
+        rebuild an existing CmdStan installation.  Default is ``False``.
+
+    :param verbose:  Boolean value; when ``True``, output from CmdStan build
+        processes will be streamed to the console.  Default is ``False``.
+
+    :return: Boolean value; ``True`` for success.
+    """
+    logger = get_logger()
+
+    install_dir = dir
+    if dir is None:
+        install_dir = get_dot_dir()
+    validate_dir(install_dir)
+    print('Install directory: {}'.format(install_dir))
+
+    if version is None:
+        version = get_latest_cmdstan(install_dir)
 
     if is_version_available(version):
         print('Installing CmdStan version: {}'.format(version))
@@ -273,46 +296,29 @@ def main():
             'Invalid version requested: {}, cannot install.'.format(version)
         )
 
-    cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-    if not os.path.exists(cmdstan_dir):
-        cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        if os.path.exists(cmdstanpy_dir):
-            cmdstan_dir = cmdstanpy_dir
-
-    install_dir = cmdstan_dir
-    if vars(args)['dir']:
-        install_dir = vars(args)['dir']
-
-    validate_dir(install_dir)
-    print('Install directory: {}'.format(install_dir))
-
-    if platform.system() == 'Windows' and vars(args)['compiler']:
-        from .install_cxx_toolchain import (
-            main as _main_cxx,
-            is_installed as _is_installed_cxx,
-        )
+    if platform.system() == 'Windows':
+        # use compiler installed with install_cxx_toolchain
+        # Install a new compiler if compiler not found
+        # Search order is RTools40, RTools35
         from .utils import cxx_toolchain_path
 
-        cxx_loc = cmdstan_dir
+        dot_dir = get_dot_dir()
+        validate_dir(dot_dir)
         compiler_found = False
         for cxx_version in ['40', '35']:
-            if _is_installed_cxx(cxx_loc, cxx_version):
+            if has_cxx(dot_dir, cxx_version):
                 compiler_found = True
                 break
         if not compiler_found:
-            print('Installing RTools40')
-            # copy argv and clear sys.argv
-            original_argv = sys.argv[:]
-            sys.argv = sys.argv[:1]
-            _main_cxx()
-            sys.argv = original_argv
+            logger.info('Installing RTools40')  # latest(?) RTools
+            install_cxx_toolchain(version=cxx_version, dir=dot_dir)
             cxx_version = '40'
         # Add toolchain to $PATH
         cxx_toolchain_path(cxx_version)
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
-        if vars(args)['overwrite'] or not (
+        if overwrite or not (
             os.path.exists(cmdstan_version)
             and os.path.exists(
                 os.path.join(
@@ -323,19 +329,62 @@ def main():
                 )
             )
         ):
-            try:
-                retrieve_version(version)
-                install_version(
-                    cmdstan_version=cmdstan_version,
-                    overwrite=vars(args)['overwrite'],
-                    verbose=vars(args)['verbose'],
-                )
-            except RuntimeError as e:
-                print(e)
-                sys.exit(3)
+            retrieve_version(version)
+            install_version(
+                cmdstan_version=cmdstan_version,
+                overwrite=overwrite,
+                verbose=verbose,
+            )
         else:
             print('CmdStan version {} already installed'.format(version))
 
+    # set path to newly installed version
+    cmdstan_dir = dir
+    if dir is None:
+        cmdstan_dir = get_dot_dir()
+    if version is None:
+        version = get_latest_cmdstan(cmdstan_dir)
+    new_cmdstan_path = os.path.join(cmdstan_dir, '-'.join(['cmdstan', version]))
+
+    # validate, set path directly - avoid circular error messages
+    stanc_bin = os.path.join(new_cmdstan_path, 'bin', 'stanc' + EXTENSION)
+    if not os.path.exists(stanc_bin):
+        logger.warning('CmdStan installation failed - missing stanc compiler')
+        return False
+    os.environ['CMDSTAN'] = new_cmdstan_path
+    return True
+
 
 if __name__ == '__main__':
-    main()
+    # pylint: disable=invalid-name
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version', '-v')
+    parser.add_argument('--dir', '-d')
+    parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--verbose', action='store_true')
+    args = parser.parse_args(sys.argv[1:])
+
+    try:
+        if install_cmdstan(
+            version=vars(args)['version'],
+            dir=vars(args)['dir'],
+            overwrite=vars(args)['overwrite'],
+            verbose=vars(args)['verbose'],
+        ):
+
+            if vars(args)['version']:
+                print(
+                    'Installed CmdStan version {}.'.format(
+                        vars(args)['version']
+                    )
+                )
+            else:
+                print('Installed latest CmdStan release.')
+            print('Install directory: {}'.format(os.environ['CMDSTAN']))
+            sys.exit(0)
+        print("CmdStan install failed.")
+        sys.exit(3)
+    except RuntimeError as e:
+        print("CmdStan install failed.")
+        print(e)
+        sys.exit(3)
