@@ -539,9 +539,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 2095), phis.shape)
         phi1 = fit.draws_pd(params=['phi[1]'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_pd(
-            params=['phi[1]', 'phi[10]', 'phi[100]']
-        )
+        mo_phis = fit.draws_pd(params=['phi[1]', 'phi[10]', 'phi[100]'])
         self.assertEqual((2000, 3), mo_phis.shape)
         phi2095 = fit.draws_pd(params=['phi[2095]'])
         self.assertEqual((2000, 1), phi2095.shape)
@@ -775,7 +773,19 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(bern_fit.num_draws, 300)
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(
+            bern_fit.draws(inc_warmup=False).shape,
+            (100, 2, len(BERNOULLI_COLS)),
+        )
+        self.assertEqual(
             bern_fit.draws(inc_warmup=True).shape, (300, 2, len(BERNOULLI_COLS))
+        )
+        self.assertEqual(bern_fit.draws_pd().shape, (200, len(BERNOULLI_COLS)))
+        self.assertEqual(
+            bern_fit.draws_pd(inc_warmup=False).shape,
+            (200, len(BERNOULLI_COLS)),
+        )
+        self.assertEqual(
+            bern_fit.draws_pd(inc_warmup=True).shape, (600, len(BERNOULLI_COLS))
         )
 
     def test_save_warmup_thin(self):
@@ -828,6 +838,19 @@ class CmdStanMCMCTest(unittest.TestCase):
                 ' must run sampler with "save_warmup=True".',
             )
         )
+        with LogCapture() as log:
+            self.assertEqual(
+                bern_fit.draws_pd(inc_warmup=True).shape,
+                (200, len(BERNOULLI_COLS)),
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'draws from warmup iterations not available,'
+                ' must run sampler with "save_warmup=True".',
+            )
+        )
 
     def test_deprecated(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -844,8 +867,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         with LogCapture() as log:
             self.assertEqual(
-                bern_fit.sample.shape,
-                (100, 2, len(BERNOULLI_COLS)),
+                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
             )
         log.check_present(
             (
@@ -857,8 +879,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         with LogCapture() as log:
             self.assertEqual(
-                bern_fit.warmup.shape,
-                (300, 2, len(BERNOULLI_COLS)),
+                bern_fit.warmup.shape, (300, 2, len(BERNOULLI_COLS))
             )
         log.check_present(
             (
