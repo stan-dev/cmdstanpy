@@ -771,6 +771,8 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
         self.assertEqual(bern_fit.num_draws, 300)
+        self.assertEqual(bern_fit.num_draws_warmup, 200)
+        self.assertEqual(bern_fit.num_draws_sampling, 100)
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(
             bern_fit.draws(inc_warmup=False).shape,

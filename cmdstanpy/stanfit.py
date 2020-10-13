@@ -300,6 +300,7 @@ class CmdStanMCMC:
     """
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
     def __init__(
         self,
         runset: RunSet,
