@@ -613,7 +613,7 @@ class CmdStanMCMC:
                     xs = line.split(',')
                     self._draws[i, chain, :] = [float(x) for x in xs]
 
-    def summary(self, percentiles: List[int] = None) -> pd.DataFrame:
+    def summary(self, percentiles: List[int] = None, sig_figs: int = None) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output csv files.
         Echo stansummary stdout/stderr to console.
@@ -621,6 +621,8 @@ class CmdStanMCMC:
 
         :param percentiles: Ordered non-empty list of percentiles to report.
             Must be integers from (1, 99), inclusive.
+        :param sig_Figs: Number of significant figures to report.
+            Must be an integer between 1 and 10, inclusive.
         """
         percentiles_str = '--percentiles=5,50,95'
         if percentiles is not None:
@@ -641,6 +643,13 @@ class CmdStanMCMC:
             percentiles_str = '='.join(
                 ['--percentiles', ','.join([str(x) for x in percentiles])]
             )
+        sig_figs_str = '--sig_figs=2'
+        if sig_figs is not None:
+            if not isinstance(sig_figs, int):
+                raise ValueError(
+                    'invalid sig_figs argument, must be int.'
+                )
+            sig_figs_str = '--sig_figs=' + str(sig_figs)
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
@@ -653,6 +662,7 @@ class CmdStanMCMC:
         cmd = [
             cmd_path,
             percentiles_str,
+            sig_figs_str,
             '--csv_file={}'.format(tmp_csv_path),
         ] + self.runset.csv_files
         do_command(cmd, logger=self.runset._logger)
