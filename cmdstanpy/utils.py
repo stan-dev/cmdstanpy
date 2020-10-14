@@ -908,7 +908,9 @@ def install_cmdstan(
 class MaybeDictToFilePath:
     """Context manager for json files."""
 
-    def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
+    def __init__(
+        self, *objs: Union[str, dict, list], logger: logging.Logger = None
+    ):
         self._unlink = [False] * len(objs)
         self._paths = [''] * len(objs)
         self._logger = logger or get_logger()
@@ -932,6 +934,20 @@ class MaybeDictToFilePath:
             elif isinstance(obj, str):
                 if not os.path.exists(obj):
                     raise ValueError("File doesn't exist {}".format(obj))
+                self._paths[i] = obj
+            elif isinstance(obj, list):
+                if not all(isinstance(obj_item, str) for obj_item in obj):
+                    raise ValueError("Not all list items are str")
+                missing_obj_items = []
+                for obj_item in obj:
+                    if not os.path.exists(obj_item):
+                        missing_obj_items.append(obj_item)
+                if missing_obj_items:
+                    raise ValueError(
+                        "File doesn't exist: {}".format(
+                            ", ".join(missing_obj_items)
+                        )
+                    )
                 self._paths[i] = obj
             elif obj is None:
                 self._paths[i] = None

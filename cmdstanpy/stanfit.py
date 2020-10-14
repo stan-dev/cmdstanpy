@@ -527,7 +527,15 @@ class CmdStanMCMC:
                 )
                 for key in dzero:
                     if (
-                        key not in ['id', 'diagnostic_file']
+                        key
+                        not in [
+                            'id',
+                            'diagnostic_file',
+                            'metric_file',
+                            'stepsize',
+                            'init',
+                            'seed',
+                        ]
                         and dzero[key] != drest[key]
                     ):
                         raise ValueError(
@@ -715,9 +723,7 @@ class CmdStanMCMC:
                 len(self.column_names),
                 order='A',
             )
-            self._draws_pd = pd.DataFrame(
-                data=data, columns=self.column_names
-            )
+            self._draws_pd = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
             return self._draws_pd
         mask = []
@@ -759,10 +765,10 @@ class CmdStanMCMC:
                 names.append(column_name)
                 idxs.append(i)
         return pd.DataFrame(
-            self._draws[
-                self._draws_warmup:, :, idxs
-            ].reshape((dim0, dims), order='A'),
-            columns=names
+            self._draws[self._draws_warmup :, :, idxs].reshape(
+                (dim0, dims), order='A'
+            ),
+            columns=names,
         )
 
     def stan_variables(self) -> Dict:
