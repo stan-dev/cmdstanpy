@@ -938,7 +938,7 @@ class MaybeDictToFilePath:
             elif isinstance(obj, list):
                 err_msgs = []
                 missing_obj_items = []
-                for i, obj_item in obj:
+                for i, obj_item in enumerate(obj):
                     if not isinstance(obj_item, str):
                         err_msgs.append(
                             'List element {} must be a filename string, found {}'.format(
