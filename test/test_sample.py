@@ -199,7 +199,7 @@ class SampleTest(unittest.TestCase):
             inits=inits_path1,
         )
         self.assertIn(
-            'init={}'.format(inits_path1.replace("\\", "\\\\")),
+            'init={}'.format(inits_path1.replace('\\', '\\\\')),
             bern_fit.runset.__repr__(),
         )
 
@@ -212,7 +212,7 @@ class SampleTest(unittest.TestCase):
             inits=[inits_path1, inits_path2],
         )
         self.assertIn(
-            'init={}'.format(inits_path1.replace("\\", "\\\\")),
+            'init={}'.format(inits_path1.replace('\\', '\\\\')),
             bern_fit.runset.__repr__(),
         )
 
