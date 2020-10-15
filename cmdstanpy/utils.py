@@ -936,18 +936,23 @@ class MaybeDictToFilePath:
                     raise ValueError("File doesn't exist {}".format(obj))
                 self._paths[i] = obj
             elif isinstance(obj, list):
-                if not all(isinstance(obj_item, str) for obj_item in obj):
-                    raise ValueError("Not all list items are str")
+                err_msgs = []
                 missing_obj_items = []
-                for obj_item in obj:
-                    if not os.path.exists(obj_item):
-                        missing_obj_items.append(obj_item)
-                if missing_obj_items:
-                    raise ValueError(
-                        "File doesn't exist: {}".format(
-                            ", ".join(missing_obj_items)
+                for i, obj_item in obj:
+                    if not isinstance(obj_item, str):
+                        err_msgs.append(
+                            'List element {} must be a filename string, found {}'.format(
+                                i, obj_item
+                            )
                         )
-                    )
+                    elif not os.path.exists(obj_item):
+                        missing_obj_items.append(
+                            "File doesn't exist: {}".format(obj_item)
+                        )
+                if err_msgs:
+                    raise ValueError('\n'.join(err_msgs))
+                if missing_obj_items:
+                    raise ValueError('\n'.join(missing_obj_items))
                 self._paths[i] = obj
             elif obj is None:
                 self._paths[i] = None
