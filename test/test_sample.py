@@ -12,6 +12,11 @@ from time import time
 from testfixtures import LogCapture
 import pytest
 
+try:
+    import ujson as json
+except ImportError:
+    import json
+
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
@@ -176,6 +181,40 @@ class SampleTest(unittest.TestCase):
             inits=1,
         )
         self.assertIn('init=1', bern_fit.runset.__repr__())
+
+        # Save init to json
+        inits_path1 = os.path.join(_TMPDIR, 'inits_test_1.json')
+        with open(inits_path1, 'w') as fd:
+            json.dump({'theta': 0.1}, fd)
+        inits_path2 = os.path.join(_TMPDIR, 'inits_test_2.json')
+        with open(inits_path2, 'w') as fd:
+            json.dump({'theta': 0.9}, fd)
+
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
+            inits=inits_path1,
+        )
+        self.assertIn(
+            'init={}'.format(inits_path1.replace("\\", "\\\\")),
+            bern_fit.runset.__repr__(),
+        )
+
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
+            inits=[inits_path1, inits_path2],
+        )
+        self.assertIn(
+            'init={}'.format(inits_path1.replace("\\", "\\\\")),
+            bern_fit.runset.__repr__(),
+        )
 
         with self.assertRaises(ValueError):
             bern_model.sample(
@@ -539,9 +578,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 2095), phis.shape)
         phi1 = fit.draws_pd(params=['phi[1]'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_pd(
-            params=['phi[1]', 'phi[10]', 'phi[100]']
-        )
+        mo_phis = fit.draws_pd(params=['phi[1]', 'phi[10]', 'phi[100]'])
         self.assertEqual((2000, 3), mo_phis.shape)
         phi2095 = fit.draws_pd(params=['phi[2095]'])
         self.assertEqual((2000, 1), phi2095.shape)
@@ -566,6 +603,52 @@ class CmdStanMCMCTest(unittest.TestCase):
             seed=12345,
             iter_sampling=200,
             metric=jmetric,
+        )
+
+        jmetric2 = os.path.join(DATAFILES_PATH, 'bernoulli.metric-2.json')
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            metric=[jmetric, jmetric2],
+        )
+
+    def test_custom_stepsize(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        # just test that it runs without error
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            step_size=1,
+        )
+
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            step_size=[1, 2],
+        )
+
+    def test_custom_seed(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        # just test that it runs without error
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=[12345, 12347],
+            iter_sampling=200,
         )
 
     def test_adapt_schedule(self):
