@@ -941,9 +941,10 @@ class MaybeDictToFilePath:
                 for i, obj_item in enumerate(obj):
                     if not isinstance(obj_item, str):
                         err_msgs.append(
-                            'List element {} must be a filename string, found {}'.format(
-                                i, obj_item
-                            )
+                            (
+                                'List element {} must be a filename string,'
+                                ' found {}'
+                            ).format(i, obj_item)
                         )
                     elif not os.path.exists(obj_item):
                         missing_obj_items.append(
