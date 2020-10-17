@@ -647,7 +647,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             data=jdata,
             chains=2,
             parallel_chains=2,
-            seed=[12345, 12347],
+            seed=[44444, 55555],
             iter_sampling=200,
         )
 
