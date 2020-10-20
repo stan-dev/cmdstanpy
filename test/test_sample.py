@@ -340,7 +340,7 @@ class SampleTest(unittest.TestCase):
             logistic_model.sample(
                 data=logistic_data, chains=7, threads_per_chain=5
             )
-            cores = cpu_count()
+            cores = max(min(cpu_count(), 7), 1)
             expect = 'total threads: {}'.format(cores * 5)
         log.check_present(('cmdstanpy', 'DEBUG', expect))
         with self.assertRaisesRegex(
