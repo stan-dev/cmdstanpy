@@ -81,8 +81,7 @@ def get_latest_cmdstan(cmdstan_dir: str) -> str:
         and name.startswith('cmdstan-')
         and name[8].isdigit()
     ]
-    print(versions)
-    # munge rc for sort, e.g. 2.23.0-rc1 -> 2.23.0.-99
+    # munge rc for sort, e.g. 2.25.0-rc1 -> 2.25.0.-99
     for i in range(len(versions)):  # # pylint: disable=C0200
         tmp = versions[i].split('rc')
         if len(tmp) == 1:
