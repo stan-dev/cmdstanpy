@@ -300,6 +300,7 @@ class CmdStanMCMC:
     """
 
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
     def __init__(
         self,
         runset: RunSet,
@@ -368,6 +369,20 @@ class CmdStanMCMC:
                 )
             )
         return self._draws_warmup + self._draws_sampling
+
+    @property
+    def num_draws_warmup(self) -> int:
+        """Number of warmup draws per chain."""
+        if not self._validate_csv and self._draws_sampling is None:
+            return int(math.ceil((self._iter_warmup) / self._thin))
+        return self._draws_warmup
+
+    @property
+    def num_draws_sampling(self) -> int:
+        """Number of sampling (post-warmup) draws per chain."""
+        if not self._validate_csv and self._draws_sampling is None:
+            return int(math.ceil((self._iter_sampling) / self._thin))
+        return self._draws_sampling
 
     @property
     def column_names(self) -> Tuple[str, ...]:
@@ -716,12 +731,21 @@ class CmdStanMCMC:
                 if not (param in self._column_names or param in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(param))
         self._assemble_draws()
-        if self._draws_pd is None:
+
+        if inc_warmup and not self._save_warmup:
+            self._logger.warning(
+                'draws from warmup iterations not available,'
+                ' must run sampler with "save_warmup=True".'
+            )
+
+        num_draws = self._draws_sampling
+        if inc_warmup and self._save_warmup:
+            num_draws += self._draws_warmup
+        num_rows = num_draws * self.runset.chains
+        if self._draws_pd is None or self._draws_pd.shape[0] != num_rows:
             # pylint: disable=redundant-keyword-arg
             data = self.draws(inc_warmup=inc_warmup).reshape(
-                (self.num_draws * self.runset.chains),
-                len(self.column_names),
-                order='A',
+                (num_rows, len(self.column_names)), order='A'
             )
             self._draws_pd = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
@@ -756,7 +780,7 @@ class CmdStanMCMC:
         if name not in self._stan_variable_dims:
             raise ValueError('unknown name: {}'.format(name))
         self._assemble_draws()
-        dim0 = self.num_draws * self.runset.chains
+        dim0 = self._draws_sampling * self.runset.chains
         dims = np.prod(self._stan_variable_dims[name])
         pattern = r'^{}(\[[\d,]+\])?$'.format(name)
         names, idxs = [], []
