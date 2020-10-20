@@ -162,8 +162,10 @@ class CmdStanPathTest(unittest.TestCase):
     def test_munge_cmdstan_versions(self):
         tdir = os.path.join(HERE, 'tmpdir_xxx')
         os.mkdir(tdir)
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc1'))
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22-rc2'))
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0-rc1'))
+        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0-rc2'))
+        self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0-rc2')
+
         os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0'))
         self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
         shutil.rmtree(tdir, ignore_errors=True)
