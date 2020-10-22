@@ -12,6 +12,11 @@ from time import time
 from testfixtures import LogCapture
 import pytest
 
+try:
+    import ujson as json
+except ImportError:
+    import json
+
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
 from cmdstanpy.utils import EXTENSION
@@ -177,6 +182,40 @@ class SampleTest(unittest.TestCase):
         )
         self.assertIn('init=1', bern_fit.runset.__repr__())
 
+        # Save init to json
+        inits_path1 = os.path.join(_TMPDIR, 'inits_test_1.json')
+        with open(inits_path1, 'w') as fd:
+            json.dump({'theta': 0.1}, fd)
+        inits_path2 = os.path.join(_TMPDIR, 'inits_test_2.json')
+        with open(inits_path2, 'w') as fd:
+            json.dump({'theta': 0.9}, fd)
+
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
+            inits=inits_path1,
+        )
+        self.assertIn(
+            'init={}'.format(inits_path1.replace('\\', '\\\\')),
+            bern_fit.runset.__repr__(),
+        )
+
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
+            inits=[inits_path1, inits_path2],
+        )
+        self.assertIn(
+            'init={}'.format(inits_path1.replace('\\', '\\\\')),
+            bern_fit.runset.__repr__(),
+        )
+
         with self.assertRaises(ValueError):
             bern_model.sample(
                 data=jdata,
@@ -301,7 +340,7 @@ class SampleTest(unittest.TestCase):
             logistic_model.sample(
                 data=logistic_data, chains=7, threads_per_chain=5
             )
-            cores = cpu_count()
+            cores = max(min(cpu_count(), 7), 1)
             expect = 'total threads: {}'.format(cores * 5)
         log.check_present(('cmdstanpy', 'DEBUG', expect))
         with self.assertRaisesRegex(
@@ -539,9 +578,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 2095), phis.shape)
         phi1 = fit.draws_pd(params=['phi[1]'])
         self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_pd(
-            params=['phi[1]', 'phi[10]', 'phi[100]']
-        )
+        mo_phis = fit.draws_pd(params=['phi[1]', 'phi[10]', 'phi[100]'])
         self.assertEqual((2000, 3), mo_phis.shape)
         phi2095 = fit.draws_pd(params=['phi[2095]'])
         self.assertEqual((2000, 1), phi2095.shape)
@@ -566,6 +603,52 @@ class CmdStanMCMCTest(unittest.TestCase):
             seed=12345,
             iter_sampling=200,
             metric=jmetric,
+        )
+
+        jmetric2 = os.path.join(DATAFILES_PATH, 'bernoulli.metric-2.json')
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            metric=[jmetric, jmetric2],
+        )
+
+    def test_custom_stepsize(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        # just test that it runs without error
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            step_size=1,
+        )
+
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            step_size=[1, 2],
+        )
+
+    def test_custom_seed(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        # just test that it runs without error
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=[44444, 55555],
+            iter_sampling=200,
         )
 
     def test_adapt_schedule(self):
@@ -773,9 +856,23 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
         self.assertEqual(bern_fit.num_draws, 300)
+        self.assertEqual(bern_fit.num_draws_warmup, 200)
+        self.assertEqual(bern_fit.num_draws_sampling, 100)
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(
+            bern_fit.draws(inc_warmup=False).shape,
+            (100, 2, len(BERNOULLI_COLS)),
+        )
+        self.assertEqual(
             bern_fit.draws(inc_warmup=True).shape, (300, 2, len(BERNOULLI_COLS))
+        )
+        self.assertEqual(bern_fit.draws_pd().shape, (200, len(BERNOULLI_COLS)))
+        self.assertEqual(
+            bern_fit.draws_pd(inc_warmup=False).shape,
+            (200, len(BERNOULLI_COLS)),
+        )
+        self.assertEqual(
+            bern_fit.draws_pd(inc_warmup=True).shape, (600, len(BERNOULLI_COLS))
         )
 
     def test_save_warmup_thin(self):
@@ -828,6 +925,19 @@ class CmdStanMCMCTest(unittest.TestCase):
                 ' must run sampler with "save_warmup=True".',
             )
         )
+        with LogCapture() as log:
+            self.assertEqual(
+                bern_fit.draws_pd(inc_warmup=True).shape,
+                (200, len(BERNOULLI_COLS)),
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'draws from warmup iterations not available,'
+                ' must run sampler with "save_warmup=True".',
+            )
+        )
 
     def test_deprecated(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -844,8 +954,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         with LogCapture() as log:
             self.assertEqual(
-                bern_fit.sample.shape,
-                (100, 2, len(BERNOULLI_COLS)),
+                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
             )
         log.check_present(
             (
@@ -857,8 +966,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         with LogCapture() as log:
             self.assertEqual(
-                bern_fit.warmup.shape,
-                (300, 2, len(BERNOULLI_COLS)),
+                bern_fit.warmup.shape, (300, 2, len(BERNOULLI_COLS))
             )
         log.check_present(
             (

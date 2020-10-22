@@ -81,18 +81,28 @@ def get_latest_cmdstan(cmdstan_dir: str) -> str:
         and name.startswith('cmdstan-')
         and name[8].isdigit()
     ]
-    # munge rc for sort, e.g. 2.23-rc1 -> 2.23.-99
+    # munge rc for sort, e.g. 2.25.0-rc1 -> 2.25.0.-99
     for i in range(len(versions)):  # # pylint: disable=C0200
         tmp = versions[i].split('rc')
         if len(tmp) == 1:
-            continue
-        rc_sortable = str(int(tmp[1]) - 100)
-        versions[i] = '.'.join([tmp[0], rc_sortable])
+            versions[i] = '.'.join([tmp[0], '0'])
+        else:
+            rc_sortable = str(int(tmp[1]) - 100)
+            versions[i] = '.'.join([tmp[0], rc_sortable])
 
     versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
     latest = 'cmdstan-{}'.format(versions[len(versions) - 1])
+
+    # unmunge
+    tmp = latest.split('.')
+    prefix = '.'.join(tmp[0:3])
+    if int(tmp[3]) == 0:
+        latest = prefix
+    else:
+        tmp[3] = 'rc' + str(int(tmp[3]) + 100)
+        latest = '-'.join([prefix, tmp[3]])
     return latest
 
 
@@ -908,7 +918,9 @@ def install_cmdstan(
 class MaybeDictToFilePath:
     """Context manager for json files."""
 
-    def __init__(self, *objs: Union[str, dict], logger: logging.Logger = None):
+    def __init__(
+        self, *objs: Union[str, dict, list], logger: logging.Logger = None
+    ):
         self._unlink = [False] * len(objs)
         self._paths = [''] * len(objs)
         self._logger = logger or get_logger()
@@ -932,6 +944,26 @@ class MaybeDictToFilePath:
             elif isinstance(obj, str):
                 if not os.path.exists(obj):
                     raise ValueError("File doesn't exist {}".format(obj))
+                self._paths[i] = obj
+            elif isinstance(obj, list):
+                err_msgs = []
+                missing_obj_items = []
+                for i, obj_item in enumerate(obj):
+                    if not isinstance(obj_item, str):
+                        err_msgs.append(
+                            (
+                                'List element {} must be a filename string,'
+                                ' found {}'
+                            ).format(i, obj_item)
+                        )
+                    elif not os.path.exists(obj_item):
+                        missing_obj_items.append(
+                            "File doesn't exist: {}".format(obj_item)
+                        )
+                if err_msgs:
+                    raise ValueError('\n'.join(err_msgs))
+                if missing_obj_items:
+                    raise ValueError('\n'.join(missing_obj_items))
                 self._paths[i] = obj
             elif obj is None:
                 self._paths[i] = None
