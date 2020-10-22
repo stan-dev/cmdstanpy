@@ -320,6 +320,7 @@ class CmdStanMCMC:
         self._iter_warmup = runset._args.method_args.iter_warmup
         self._save_warmup = runset._args.method_args.save_warmup
         self._thin = runset._args.method_args.thin
+        self._sig_figs = runset._args.sig_figs
         # parse the remainder from csv files
         self._draws_sampling = None
         self._draws_warmup = None
@@ -613,7 +614,9 @@ class CmdStanMCMC:
                     xs = line.split(',')
                     self._draws[i, chain, :] = [float(x) for x in xs]
 
-    def summary(self, percentiles: List[int] = None, sig_figs: int = None) -> pd.DataFrame:
+    def summary(
+        self, percentiles: List[int] = None, sig_figs: int = None
+    ) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output csv files.
         Echo stansummary stdout/stderr to console.
@@ -645,9 +648,16 @@ class CmdStanMCMC:
             )
         sig_figs_str = '--sig_figs=2'
         if sig_figs is not None:
-            if not isinstance(sig_figs, int):
+            if not isinstance(sig_figs, int) or sig_figs < 1 or sig_figs > 18:
                 raise ValueError(
-                    'invalid sig_figs argument, must be int.'
+                    'sig_figs must be an integer between 1 and 18,'
+                    ' found {}'.format(sig_figs)
+                )
+            csv_sig_figs = self._sig_figs or 6
+            if sig_figs > csv_sig_figs:
+                self._logger.warning(
+                    'Requesting %d significant digits of output, but CSV files'
+                    ' only have %d digits of precision.', sig_figs, csv_sig_figs
                 )
             sig_figs_str = '--sig_figs=' + str(sig_figs)
         cmd_path = os.path.join(
@@ -725,9 +735,7 @@ class CmdStanMCMC:
                 len(self.column_names),
                 order='A',
             )
-            self._draws_pd = pd.DataFrame(
-                data=data, columns=self.column_names
-            )
+            self._draws_pd = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
             return self._draws_pd
         mask = []
@@ -769,10 +777,10 @@ class CmdStanMCMC:
                 names.append(column_name)
                 idxs.append(i)
         return pd.DataFrame(
-            self._draws[
-                self._draws_warmup:, :, idxs
-            ].reshape((dim0, dims), order='A'),
-            columns=names
+            self._draws[self._draws_warmup :, :, idxs].reshape(
+                (dim0, dims), order='A'
+            ),
+            columns=names,
         )
 
     def stan_variables(self) -> Dict:
