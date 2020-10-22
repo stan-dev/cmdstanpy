@@ -650,8 +650,11 @@ class CmdStanMCMC:
         :param sig_Figs: Number of significant figures to report.
             Must be an integer between 1 and 10, inclusive.
         """
+        n_cols = 7
         percentiles_str = '--percentiles=5,50,95'
-        if percentiles is not None:
+        if percentiles is None:
+            n_cols = 10
+        else:
             if len(percentiles) == 0:
                 raise ValueError(
                     'invalid percentiles argument, must be ordered'
@@ -666,6 +669,7 @@ class CmdStanMCMC:
                         ' non-empty list from (1, 99), inclusive.'
                     )
                 cur_pct = pct
+            n_cols += len(percentiles)
             percentiles_str = '='.join(
                 ['--percentiles', ','.join([str(x) for x in percentiles])]
             )
@@ -680,7 +684,9 @@ class CmdStanMCMC:
             if sig_figs > csv_sig_figs:
                 self._logger.warning(
                     'Requesting %d significant digits of output, but CSV files'
-                    ' only have %d digits of precision.', sig_figs, csv_sig_figs
+                    ' only have %d digits of precision.',
+                    sig_figs,
+                    csv_sig_figs,
                 )
             sig_figs_str = '--sig_figs=' + str(sig_figs)
         cmd_path = os.path.join(
