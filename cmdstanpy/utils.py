@@ -785,7 +785,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if proc.returncode:
         msg = 'ERROR\n'
         if stderr:
-            msg = '{}{} '.format(msg,stderr.decode('utf-8').strip())
+            msg = '{}{} '.format(msg, stderr.decode('utf-8').strip())
         raise RuntimeError(msg)
     if stdout:
         return stdout.decode('utf-8').strip()
