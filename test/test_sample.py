@@ -1215,13 +1215,18 @@ class CmdStanMCMCTest(unittest.TestCase):
         beta1_default = format(sum_default.iloc[1, 0], '.18g')
         self.assertTrue(beta1_default.startswith('1.3'))
 
-        sum_17 = fit.summary(sig_figs=17)
-        beta1_17 = format(sum_17.iloc[1, 0], '.18g')
-        self.assertTrue(beta1_17.startswith('1.345767078273258'))
+        if version.startswith('cmdstan-') and version[8].isdigit():
+            maj_min_p = version.split('-')[1].split('.')
+            if int(maj_min_p[0]) > 2 or (
+                int(maj_min_p[0]) == 2 and int(maj_min_p[1]) > 24
+            ):
+                sum_17 = fit.summary(sig_figs=17)
+                beta1_17 = format(sum_17.iloc[1, 0], '.18g')
+                self.assertTrue(beta1_17.startswith('1.345767078273258'))
 
-        sum_10 = fit.summary(sig_figs=10)
-        beta1_10 = format(sum_10.iloc[1, 0], '.18g')
-        self.assertTrue(beta1_10.startswith('1.34576707'))
+                sum_10 = fit.summary(sig_figs=10)
+                beta1_10 = format(sum_10.iloc[1, 0], '.18g')
+                self.assertTrue(beta1_10.startswith('1.34576707'))
 
         with self.assertRaises(ValueError):
             fit.summary(sig_figs=20)
