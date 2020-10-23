@@ -616,15 +616,23 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
         os.environ['CMDSTAN'] = good_path
-        cmdstan_args = CmdStanArgs(
-            model_name='bernoulli',
-            model_exe='bernoulli.exe',
-            chain_ids=[1, 2, 3, 4],
-            sig_figs=12,
-            method_args=sampler_args,
-        )
-        cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
-        self.assertIn('sig_figs=', ' '.join(cmd))
+        version = os.path.basename(cmdstan_path())
+        if version.startswith('cmdstan-') and version[8].isdigit():
+            maj_min_p = version.split('-')[1].split('.')
+            if int(maj_min_p[0]) > 2 or (
+                int(maj_min_p[0]) == 2 and int(maj_min_p[1]) > 24
+            ):
+                cmdstan_args = CmdStanArgs(
+                    model_name='bernoulli',
+                    model_exe='bernoulli.exe',
+                    chain_ids=[1, 2, 3, 4],
+                    sig_figs=12,
+                    method_args=sampler_args,
+                )
+                cmd = cmdstan_args.compose_command(
+                    idx=0, csv_file='bern-output-1.csv'
+                )
+                self.assertIn('sig_figs=', ' '.join(cmd))
 
 
 class GenerateQuantitesTest(unittest.TestCase):
