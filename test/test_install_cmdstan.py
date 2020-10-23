@@ -29,6 +29,10 @@ class InstallCmdStanTest(unittest.TestCase):
             CmdStanRetrieveError, 'not available from github.com'
         ):
             retrieve_version('no_such_version')
+        with self.assertRaises(ValueError):
+            retrieve_version(None)
+        with self.assertRaises(ValueError):
+            retrieve_version('')
 
 
 if __name__ == '__main__':
