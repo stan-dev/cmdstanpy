@@ -197,10 +197,9 @@ def latest_version():
 
 
 def retrieve_version(version: str):
+    """Download specified CmdStan version."""
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
-
-    """Download specified CmdStan version."""
     print('Downloading CmdStan version {}'.format(version))
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
