@@ -1215,6 +1215,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         beta1_default = format(sum_default.iloc[1, 0], '.18g')
         self.assertTrue(beta1_default.startswith('1.3'))
 
+        version = os.path.basename(cmdstan_path())
         if version.startswith('cmdstan-') and version[8].isdigit():
             maj_min_p = version.split('-')[1].split('.')
             if int(maj_min_p[0]) > 2 or (

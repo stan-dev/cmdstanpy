@@ -13,7 +13,6 @@ from cmdstanpy.install_cmdstan import (
 class InstallCmdStanTest(unittest.TestCase):
     def test_is_version_available(self):
         # check http error for bad version
-        self.assertTrue(is_version_available('2.24.1'))
         self.assertFalse(is_version_available('2.222.222-rc222'))
 
     def test_latest_version(self):
