@@ -381,6 +381,7 @@ class CmdStanModel:
         :param sig_figs: Numerical precision used for output CSV and text files.
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
 
         :param algorithm: Algorithm to use. One of: 'BFGS', 'LBFGS', 'Newton'
 
@@ -584,6 +585,7 @@ class CmdStanModel:
         :param sig_figs: Numerical precision used for output CSV and text files.
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
             csv output files are written to an output file with filename
@@ -982,6 +984,7 @@ class CmdStanModel:
         :param sig_figs: Numerical precision used for output CSV and text files.
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
             csv output files are written to an output file with filename
