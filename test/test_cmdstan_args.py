@@ -2,10 +2,13 @@
 
 import os
 import platform
+import logging
 import unittest
 from time import time
 
-from cmdstanpy import _TMPDIR
+from testfixtures import LogCapture
+
+from cmdstanpy import _TMPDIR, cmdstan_path
 from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
@@ -570,6 +573,58 @@ class CmdStanArgsTest(unittest.TestCase):
                     output_dir=read_only,
                     method_args=sampler_args,
                 )
+
+    def test_args_sig_figs(self):
+        sampler_args = SamplerArgs()
+        cmdstan_path()
+        good_path = os.environ['CMDSTAN']
+        del os.environ['CMDSTAN']
+        os.environ['CMDSTAN'] = os.path.join(
+            os.path.dirname(good_path), 'cmdstan-2.24.1'
+        )
+        with LogCapture() as log:
+            logging.getLogger()
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                sig_figs=12,
+                method_args=sampler_args,
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'arg sig_figs not valid for CmdStan version cmdstan-2.24.1, '
+                'must be version 2.25 or higher',
+            )
+        )
+        with self.assertRaises(ValueError):
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                sig_figs=-1,
+                method_args=sampler_args,
+            )
+        with self.assertRaises(ValueError):
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                sig_figs=20,
+                method_args=sampler_args,
+            )
+        os.environ['CMDSTAN'] = good_path
+        cmdstan_args = CmdStanArgs(
+            model_name='bernoulli',
+            model_exe='bernoulli.exe',
+            chain_ids=[1, 2, 3, 4],
+            sig_figs=12,
+            method_args=sampler_args,
+        )
+        cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
+        self.assertIn('sig_figs=', ' '.join(cmd))
 
 
 class GenerateQuantitesTest(unittest.TestCase):

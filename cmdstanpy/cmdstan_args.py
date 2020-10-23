@@ -9,7 +9,7 @@ from numbers import Integral, Real
 from typing import List, Union
 from numpy.random import RandomState
 
-from cmdstanpy.utils import read_metric, get_logger
+from cmdstanpy.utils import read_metric, get_logger, cmdstan_path
 
 
 class Method(Enum):
@@ -631,6 +631,17 @@ class CmdStanArgs:
                     'sig_figs must be an integer between 1 and 18,'
                     ' found {}'.format(self.sig_figs)
                 )
+            # sig_figs not valid before version 2.25; allow when version is n/a
+            version = os.path.basename(cmdstan_path())
+            if version.startswith('cmdstan-') and version[8].isdigit():
+                maj_min_p = version.split('-')[1].split('.')
+                if int(maj_min_p[0]) == 2 and int(maj_min_p[1]) < 25:
+                    self.sig_figs = None
+                    self._logger.warning(
+                        'arg sig_figs not valid for CmdStan version %s, '
+                        'must be version 2.25 or higher',
+                        version,
+                    )
 
         if self.seed is None:
             rng = RandomState()
