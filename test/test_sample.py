@@ -19,7 +19,7 @@ except ImportError:
 
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
-from cmdstanpy.utils import EXTENSION, cmdstan_path, cmdstan_version_at
+from cmdstanpy.utils import EXTENSION, cmdstan_version_at
 from cmdstanpy.stanfit import RunSet, CmdStanMCMC
 from cmdstanpy.model import CmdStanModel
 
