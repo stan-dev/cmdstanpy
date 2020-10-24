@@ -19,7 +19,7 @@ except ImportError:
 
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
-from cmdstanpy.utils import EXTENSION, cmdstan_path
+from cmdstanpy.utils import EXTENSION, cmdstan_path, cmdstan_version_at
 from cmdstanpy.stanfit import RunSet, CmdStanMCMC
 from cmdstanpy.model import CmdStanModel
 
@@ -1123,65 +1123,60 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(bern_fit.metric_type, 'diag_e')
 
     def test_validate_sample_sig_figs(self, stanfile='bernoulli.stan'):
-        version = os.path.basename(cmdstan_path())
-        if version.startswith('cmdstan-') and version[8].isdigit():
-            maj_min_p = version.split('-')[1].split('.')
-            if int(maj_min_p[0]) > 2 or (
-                int(maj_min_p[0]) == 2 and int(maj_min_p[1]) > 24
-            ):
-                stan = os.path.join(DATAFILES_PATH, stanfile)
-                bern_model = CmdStanModel(stan_file=stan)
+        if cmdstan_version_at(2, 25):
+            stan = os.path.join(DATAFILES_PATH, stanfile)
+            bern_model = CmdStanModel(stan_file=stan)
 
-                jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-                bern_fit = bern_model.sample(
+            jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+            bern_fit = bern_model.sample(
+                data=jdata,
+                chains=1,
+                seed=12345,
+                iter_sampling=100,
+            )
+            bern_draws = bern_fit.draws()
+            theta = format(bern_draws[99, 0, 7], '.18g')
+            self.assertFalse(theta.startswith('0.21238045821757600'))
+
+            bern_fit_17 = bern_model.sample(
+                data=jdata,
+                chains=1,
+                seed=12345,
+                iter_sampling=100,
+                sig_figs=17,
+            )
+            bern_draws_17 = bern_fit_17.draws()
+            theta_17 = format(bern_draws_17[99, 0, 7], '.18g')
+            self.assertTrue(theta_17.startswith('0.212380458217576007'))
+            self.assertFalse(theta_17.startswith('0.212380457'))
+
+            bern_fit = bern_model.sample(
+                data=jdata,
+                chains=1,
+                seed=12345,
+                iter_sampling=100,
+                sig_figs=9,
+            )
+            bern_draws = bern_fit.draws()
+            theta_9 = format(bern_draws[99, 0, 7], '.18g')
+            self.assertTrue(theta_9.startswith('0.212380457'))
+
+            with self.assertRaises(ValueError):
+                bern_model.sample(
                     data=jdata,
                     chains=1,
                     seed=12345,
                     iter_sampling=100,
+                    sig_figs=27,
                 )
-                bern_draws = bern_fit.draws()
-                theta = format(bern_draws[99, 0, 7], '.18g')
-                self.assertFalse(theta.startswith('0.21238045821757600'))
-
-                bern_fit_17 = bern_model.sample(
-                    data=jdata,
-                    chains=1,
-                    seed=12345,
-                    iter_sampling=100,
-                    sig_figs=17,
-                )
-                bern_draws_17 = bern_fit_17.draws()
-                theta_17 = format(bern_draws_17[99, 0, 7], '.18g')
-                self.assertTrue(theta_17.startswith('0.212380458217576007'))
-                self.assertFalse(theta_17.startswith('0.212380457'))
-
-                bern_fit = bern_model.sample(
-                    data=jdata,
-                    chains=1,
-                    seed=12345,
-                    iter_sampling=100,
-                    sig_figs=9,
-                )
-                bern_draws = bern_fit.draws()
-                theta_9 = format(bern_draws[99, 0, 7], '.18g')
-                self.assertTrue(theta_9.startswith('0.212380457'))
-
                 with self.assertRaises(ValueError):
                     bern_model.sample(
                         data=jdata,
                         chains=1,
                         seed=12345,
                         iter_sampling=100,
-                        sig_figs=27,
+                        sig_figs=-1,
                     )
-                    with self.assertRaises(ValueError):
-                        bern_model.sample(
-                            data=jdata,
-                            chains=1,
-                            seed=12345,
-                            iter_sampling=100,
-                            sig_figs=-1,
-                        )
 
     def test_validate_summary_sig_figs(self):
         # construct fit using existing sampler output
@@ -1215,19 +1210,14 @@ class CmdStanMCMCTest(unittest.TestCase):
         beta1_default = format(sum_default.iloc[1, 0], '.18g')
         self.assertTrue(beta1_default.startswith('1.3'))
 
-        version = os.path.basename(cmdstan_path())
-        if version.startswith('cmdstan-') and version[8].isdigit():
-            maj_min_p = version.split('-')[1].split('.')
-            if int(maj_min_p[0]) > 2 or (
-                int(maj_min_p[0]) == 2 and int(maj_min_p[1]) > 24
-            ):
-                sum_17 = fit.summary(sig_figs=17)
-                beta1_17 = format(sum_17.iloc[1, 0], '.18g')
-                self.assertTrue(beta1_17.startswith('1.345767078273258'))
+        if cmdstan_version_at(2, 25):
+            sum_17 = fit.summary(sig_figs=17)
+            beta1_17 = format(sum_17.iloc[1, 0], '.18g')
+            self.assertTrue(beta1_17.startswith('1.345767078273258'))
 
-                sum_10 = fit.summary(sig_figs=10)
-                beta1_10 = format(sum_10.iloc[1, 0], '.18g')
-                self.assertTrue(beta1_10.startswith('1.34576707'))
+            sum_10 = fit.summary(sig_figs=10)
+            beta1_10 = format(sum_10.iloc[1, 0], '.18g')
+            self.assertTrue(beta1_10.startswith('1.34576707'))
 
         with self.assertRaises(ValueError):
             fit.summary(sig_figs=20)

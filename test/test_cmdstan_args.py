@@ -9,6 +9,7 @@ from time import time
 from testfixtures import LogCapture
 
 from cmdstanpy import _TMPDIR, cmdstan_path
+from cmdstanpy.utils import cmdstan_version_at
 from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
@@ -576,7 +577,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
     def test_args_sig_figs(self):
         sampler_args = SamplerArgs()
-        cmdstan_path()
+        cmdstan_path()  # sets os.environ['CMDSTAN']
         good_path = os.environ['CMDSTAN']
         del os.environ['CMDSTAN']
         os.environ['CMDSTAN'] = os.path.join(
@@ -591,48 +592,42 @@ class CmdStanArgsTest(unittest.TestCase):
                 sig_figs=12,
                 method_args=sampler_args,
             )
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'arg sig_figs not valid for CmdStan version cmdstan-2.24.1, '
-                'must be version 2.25 or higher',
-            )
+        expect = (
+            'arg sig_figs not valid, CmdStan version must be 2.25 '
+            'or higher, using verson {} in directory {}'
+        ).format(
+            os.path.basename(cmdstan_path()), os.path.dirname(cmdstan_path())
         )
-        with self.assertRaises(ValueError):
-            CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe',
-                chain_ids=[1, 2, 3, 4],
-                sig_figs=-1,
-                method_args=sampler_args,
-            )
-        with self.assertRaises(ValueError):
-            CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe',
-                chain_ids=[1, 2, 3, 4],
-                sig_figs=20,
-                method_args=sampler_args,
-            )
+        log.check_present(('cmdstanpy', 'WARNING', expect))
         os.environ['CMDSTAN'] = good_path
-        version = os.path.basename(cmdstan_path())
-        if version.startswith('cmdstan-') and version[8].isdigit():
-            maj_min_p = version.split('-')[1].split('.')
-            if int(maj_min_p[0]) > 2 or (
-                int(maj_min_p[0]) == 2 and int(maj_min_p[1]) > 24
-            ):
-                cmdstan_args = CmdStanArgs(
+        if cmdstan_version_at(2, 25):
+            cmdstan_args = CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                sig_figs=12,
+                method_args=sampler_args,
+            )
+            cmd = cmdstan_args.compose_command(
+                idx=0, csv_file='bern-output-1.csv'
+            )
+            self.assertIn('sig_figs=', ' '.join(cmd))
+            with self.assertRaises(ValueError):
+                CmdStanArgs(
                     model_name='bernoulli',
                     model_exe='bernoulli.exe',
                     chain_ids=[1, 2, 3, 4],
-                    sig_figs=12,
+                    sig_figs=-1,
                     method_args=sampler_args,
                 )
-                cmd = cmdstan_args.compose_command(
-                    idx=0, csv_file='bern-output-1.csv'
+            with self.assertRaises(ValueError):
+                CmdStanArgs(
+                    model_name='bernoulli',
+                    model_exe='bernoulli.exe',
+                    chain_ids=[1, 2, 3, 4],
+                    sig_figs=20,
+                    method_args=sampler_args,
                 )
-                self.assertIn('sig_figs=', ' '.join(cmd))
 
 
 class GenerateQuantitesTest(unittest.TestCase):

@@ -641,14 +641,24 @@ class CmdStanMCMC:
         self, percentiles: List[int] = None, sig_figs: int = None
     ) -> pd.DataFrame:
         """
-        Run cmdstan/bin/stansummary over all output csv files.
-        Echo stansummary stdout/stderr to console.
-        Assemble csv tempfile contents into pandasDataFrame.
+        Run cmdstan/bin/stansummary over all output csv files, assemble
+        summary into DataFrame object; first row contains summary statistics
+        for total joint log probability `lp__`, remaining rows contain summary
+        statistics for all parameters, transformed parameters, and generated
+        quantities variables listed in the order in which they were declared
+        in the Stan program.
 
         :param percentiles: Ordered non-empty list of percentiles to report.
             Must be integers from (1, 99), inclusive.
-        :param sig_Figs: Number of significant figures to report.
-            Must be an integer between 1 and 10, inclusive.
+
+        :param sig_figs: Number of significant figures to report.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            If precision above 6 is requested, sample must have been produced
+            by CmdStan version 2.25 or later and sampler output precision
+            must equal to or greater than the requested summary precision.
+
+        :return: pandas.DataFrame
         """
         n_cols = 7
         percentiles_str = '--percentiles=5,50,95'
