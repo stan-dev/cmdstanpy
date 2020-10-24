@@ -9,7 +9,12 @@ from numbers import Integral, Real
 from typing import List, Union
 from numpy.random import RandomState
 
-from cmdstanpy.utils import read_metric, get_logger
+from cmdstanpy.utils import (
+    read_metric,
+    get_logger,
+    cmdstan_path,
+    cmdstan_version_at,
+)
 
 
 class Method(Enum):
@@ -539,6 +544,7 @@ class CmdStanArgs:
         seed: Union[int, List[int]] = None,
         inits: Union[int, float, str, List[str]] = None,
         output_dir: str = None,
+        sig_figs: str = None,
         save_diagnostics: bool = False,
         refresh: str = None,
         logger: logging.Logger = None,
@@ -551,6 +557,7 @@ class CmdStanArgs:
         self.seed = seed
         self.inits = inits
         self.output_dir = output_dir
+        self.sig_figs = sig_figs
         self.save_diagnostics = save_diagnostics
         self.refresh = refresh
         self.method_args = method_args
@@ -618,6 +625,25 @@ class CmdStanArgs:
                     'invalid path for output files,'
                     ' cannot write to dir: {}'.format(self.output_dir)
                 ) from exc
+
+        if self.sig_figs is not None:
+            if (
+                not isinstance(self.sig_figs, int)
+                or self.sig_figs < 1
+                or self.sig_figs > 18
+            ):
+                raise ValueError(
+                    'sig_figs must be an integer between 1 and 18,'
+                    ' found {}'.format(self.sig_figs)
+                )
+            if not cmdstan_version_at(2, 25):
+                self.sig_figs = None
+                self._logger.warning(
+                    'arg sig_figs not valid, CmdStan version must be 2.25 '
+                    'or higher, using verson %s in directory %s',
+                    os.path.basename(cmdstan_path()),
+                    os.path.dirname(cmdstan_path()),
+                )
 
         if self.seed is None:
             rng = RandomState()
@@ -738,5 +764,7 @@ class CmdStanArgs:
             cmd.append('diagnostic_file={}'.format(diagnostic_file))
         if self.refresh is not None:
             cmd.append('refresh={}'.format(self.refresh))
+        if self.sig_figs is not None:
+            cmd.append('sig_figs={}'.format(self.sig_figs))
         cmd = self.method_args.compose(idx, cmd)
         return cmd

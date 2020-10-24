@@ -324,6 +324,7 @@ class CmdStanModel:
         seed: int = None,
         inits: Union[Dict, float, str] = None,
         output_dir: str = None,
+        sig_figs: int = None,
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
@@ -377,6 +378,11 @@ class CmdStanModel:
             files are written. If unspecified, output files will be written
             to a temporary directory which is deleted upon session exit.
 
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
+
         :param algorithm: Algorithm to use. One of: 'BFGS', 'LBFGS', 'Newton'
 
         :param init_alpha: Line search step size for first iteration
@@ -398,6 +404,7 @@ class CmdStanModel:
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
+                sig_figs=sig_figs,
                 save_diagnostics=False,
                 method_args=optimize_args,
             )
@@ -412,6 +419,7 @@ class CmdStanModel:
         mle = CmdStanMLE(runset)
         return mle
 
+    # pylint: disable=too-many-arguments
     def sample(
         self,
         data: Union[Dict, str] = None,
@@ -435,6 +443,7 @@ class CmdStanModel:
         adapt_step_size: int = None,
         fixed_param: bool = False,
         output_dir: str = None,
+        sig_figs: int = None,
         save_diagnostics: bool = False,
         show_progress: Union[bool, str] = False,
         validate_csv: bool = True,
@@ -573,6 +582,11 @@ class CmdStanModel:
             files are written. If unspecified, output files will be written
             to a temporary directory which is deleted upon session exit.
 
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
+
         :param save_diagnostics: Whether or not to save diagnostics. If True,
             csv output files are written to an output file with filename
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
@@ -693,6 +707,7 @@ class CmdStanModel:
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
+                sig_figs=sig_figs,
                 save_diagnostics=save_diagnostics,
                 method_args=sampler_args,
                 refresh=refresh,
@@ -764,6 +779,7 @@ class CmdStanModel:
         mcmc_sample: Union[CmdStanMCMC, List[str]] = None,
         seed: int = None,
         gq_output_dir: str = None,
+        sig_figs: int = None,
     ) -> CmdStanGQ:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -806,6 +822,11 @@ class CmdStanModel:
         :param gq_output_dir:  Name of the directory in which the CmdStan output
             files are saved.  If unspecified, files will be written to a
             temporary directory which is deleted upon session exit.
+
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
 
         :return: CmdStanGQ object
         """
@@ -881,6 +902,7 @@ class CmdStanModel:
                 data=_data,
                 seed=seed,
                 output_dir=gq_output_dir,
+                sig_figs=sig_figs,
                 method_args=generate_quantities_args,
             )
             runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
@@ -905,6 +927,7 @@ class CmdStanModel:
         seed: int = None,
         inits: float = None,
         output_dir: str = None,
+        sig_figs: int = None,
         save_diagnostics: bool = False,
         algorithm: str = None,
         iter: int = None,
@@ -959,6 +982,11 @@ class CmdStanModel:
             files are written. If unspecified, output files will be written
             to a temporary directory which is deleted upon session exit.
 
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
+
         :param save_diagnostics: Whether or not to save diagnostics. If True,
             csv output files are written to an output file with filename
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
@@ -1012,6 +1040,7 @@ class CmdStanModel:
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
+                sig_figs=sig_figs,
                 save_diagnostics=save_diagnostics,
                 method_args=variational_args,
             )

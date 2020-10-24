@@ -2,10 +2,14 @@
 
 import os
 import platform
+import logging
 import unittest
 from time import time
 
-from cmdstanpy import _TMPDIR
+from testfixtures import LogCapture
+
+from cmdstanpy import _TMPDIR, cmdstan_path
+from cmdstanpy.utils import cmdstan_version_at
 from cmdstanpy.cmdstan_args import (
     Method,
     SamplerArgs,
@@ -568,6 +572,60 @@ class CmdStanArgsTest(unittest.TestCase):
                     model_exe='bernoulli.exe',
                     chain_ids=[1, 2, 3, 4],
                     output_dir=read_only,
+                    method_args=sampler_args,
+                )
+
+    def test_args_sig_figs(self):
+        sampler_args = SamplerArgs()
+        cmdstan_path()  # sets os.environ['CMDSTAN']
+        good_path = os.environ['CMDSTAN']
+        del os.environ['CMDSTAN']
+        os.environ['CMDSTAN'] = os.path.join(
+            os.path.dirname(good_path), 'cmdstan-2.24.1'
+        )
+        with LogCapture() as log:
+            logging.getLogger()
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                sig_figs=12,
+                method_args=sampler_args,
+            )
+        expect = (
+            'arg sig_figs not valid, CmdStan version must be 2.25 '
+            'or higher, using verson {} in directory {}'
+        ).format(
+            os.path.basename(cmdstan_path()), os.path.dirname(cmdstan_path())
+        )
+        log.check_present(('cmdstanpy', 'WARNING', expect))
+        os.environ['CMDSTAN'] = good_path
+        if cmdstan_version_at(2, 25):
+            cmdstan_args = CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                sig_figs=12,
+                method_args=sampler_args,
+            )
+            cmd = cmdstan_args.compose_command(
+                idx=0, csv_file='bern-output-1.csv'
+            )
+            self.assertIn('sig_figs=', ' '.join(cmd))
+            with self.assertRaises(ValueError):
+                CmdStanArgs(
+                    model_name='bernoulli',
+                    model_exe='bernoulli.exe',
+                    chain_ids=[1, 2, 3, 4],
+                    sig_figs=-1,
+                    method_args=sampler_args,
+                )
+            with self.assertRaises(ValueError):
+                CmdStanArgs(
+                    model_name='bernoulli',
+                    model_exe='bernoulli.exe',
+                    chain_ids=[1, 2, 3, 4],
+                    sig_figs=20,
                     method_args=sampler_args,
                 )
 

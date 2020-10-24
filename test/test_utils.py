@@ -15,6 +15,7 @@ import numpy as np
 from cmdstanpy import _TMPDIR, _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import (
     cmdstan_path,
+    cmdstan_version_at,
     set_cmdstan_path,
     validate_cmdstan_path,
     get_latest_cmdstan,
@@ -169,6 +170,16 @@ class CmdStanPathTest(unittest.TestCase):
         os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0'))
         self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
         shutil.rmtree(tdir, ignore_errors=True)
+
+    def test_cmdstan_version_at(self):
+        cmdstan_path()  # sets os.environ['CMDSTAN']
+        good_path = os.environ['CMDSTAN']
+        del os.environ['CMDSTAN']
+        os.environ['CMDSTAN'] = os.path.join(
+            os.path.dirname(good_path), 'cmdstan-2.24.1'
+        )
+        self.assertTrue(cmdstan_version_at(2, 24))
+        self.assertFalse(cmdstan_version_at(2, 25))
 
     def test_dict_to_file(self):
         file_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')

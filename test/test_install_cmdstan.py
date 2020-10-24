@@ -13,7 +13,6 @@ from cmdstanpy.install_cmdstan import (
 class InstallCmdStanTest(unittest.TestCase):
     def test_is_version_available(self):
         # check http error for bad version
-        self.assertTrue(is_version_available('2.24.1'))
         self.assertFalse(is_version_available('2.222.222-rc222'))
 
     def test_latest_version(self):
@@ -30,6 +29,10 @@ class InstallCmdStanTest(unittest.TestCase):
             CmdStanRetrieveError, 'not available from github.com'
         ):
             retrieve_version('no_such_version')
+        with self.assertRaises(ValueError):
+            retrieve_version(None)
+        with self.assertRaises(ValueError):
+            retrieve_version('')
 
 
 if __name__ == '__main__':
