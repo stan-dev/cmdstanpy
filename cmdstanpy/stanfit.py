@@ -660,17 +660,13 @@ class CmdStanMCMC:
 
         :return: pandas.DataFrame
         """
-        n_cols = 7
         percentiles_str = '--percentiles=5,50,95'
-        if percentiles is None:
-            n_cols = 10
-        else:
+        if percentiles is not None:
             if len(percentiles) == 0:
                 raise ValueError(
                     'invalid percentiles argument, must be ordered'
                     ' non-empty list from (1, 99), inclusive.'
                 )
-
             cur_pct = 0
             for pct in percentiles:
                 if pct > 99 or not pct > cur_pct:
@@ -679,7 +675,6 @@ class CmdStanMCMC:
                         ' non-empty list from (1, 99), inclusive.'
                     )
                 cur_pct = pct
-            n_cols += len(percentiles)
             percentiles_str = '='.join(
                 ['--percentiles', ','.join([str(x) for x in percentiles])]
             )
