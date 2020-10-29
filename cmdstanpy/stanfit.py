@@ -321,6 +321,7 @@ class CmdStanMCMC:
         self._iter_warmup = runset._args.method_args.iter_warmup
         self._save_warmup = runset._args.method_args.save_warmup
         self._thin = runset._args.method_args.thin
+        self._sig_figs = runset._args.sig_figs
         # parse the remainder from csv files
         self._draws_sampling = None
         self._draws_warmup = None
@@ -636,14 +637,28 @@ class CmdStanMCMC:
                     xs = line.split(',')
                     self._draws[i, chain, :] = [float(x) for x in xs]
 
-    def summary(self, percentiles: List[int] = None) -> pd.DataFrame:
+    def summary(
+        self, percentiles: List[int] = None, sig_figs: int = None
+    ) -> pd.DataFrame:
         """
-        Run cmdstan/bin/stansummary over all output csv files.
-        Echo stansummary stdout/stderr to console.
-        Assemble csv tempfile contents into pandasDataFrame.
+        Run cmdstan/bin/stansummary over all output csv files, assemble
+        summary into DataFrame object; first row contains summary statistics
+        for total joint log probability `lp__`, remaining rows contain summary
+        statistics for all parameters, transformed parameters, and generated
+        quantities variables listed in the order in which they were declared
+        in the Stan program.
 
         :param percentiles: Ordered non-empty list of percentiles to report.
             Must be integers from (1, 99), inclusive.
+
+        :param sig_figs: Number of significant figures to report.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            If precision above 6 is requested, sample must have been produced
+            by CmdStan version 2.25 or later and sampler output precision
+            must equal to or greater than the requested summary precision.
+
+        :return: pandas.DataFrame
         """
         percentiles_str = '--percentiles=5,50,95'
         if percentiles is not None:
@@ -652,7 +667,6 @@ class CmdStanMCMC:
                     'invalid percentiles argument, must be ordered'
                     ' non-empty list from (1, 99), inclusive.'
                 )
-
             cur_pct = 0
             for pct in percentiles:
                 if pct > 99 or not pct > cur_pct:
@@ -664,6 +678,22 @@ class CmdStanMCMC:
             percentiles_str = '='.join(
                 ['--percentiles', ','.join([str(x) for x in percentiles])]
             )
+        sig_figs_str = '--sig_figs=2'
+        if sig_figs is not None:
+            if not isinstance(sig_figs, int) or sig_figs < 1 or sig_figs > 18:
+                raise ValueError(
+                    'sig_figs must be an integer between 1 and 18,'
+                    ' found {}'.format(sig_figs)
+                )
+            csv_sig_figs = self._sig_figs or 6
+            if sig_figs > csv_sig_figs:
+                self._logger.warning(
+                    'Requesting %d significant digits of output, but CSV files'
+                    ' only have %d digits of precision.',
+                    sig_figs,
+                    csv_sig_figs,
+                )
+            sig_figs_str = '--sig_figs=' + str(sig_figs)
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
@@ -676,6 +706,7 @@ class CmdStanMCMC:
         cmd = [
             cmd_path,
             percentiles_str,
+            sig_figs_str,
             '--csv_file={}'.format(tmp_csv_path),
         ] + self.runset.csv_files
         do_command(cmd, logger=self.runset._logger)
