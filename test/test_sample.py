@@ -1147,6 +1147,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
             bern_draws_17 = bern_fit_17.draws()
             theta_17 = format(bern_draws_17[99, 0, 7], '.18g')
+            print(theta_17)
             self.assertTrue(theta_17.startswith('0.212380458217576007'))
             self.assertFalse(theta_17.startswith('0.212380457'))
 
@@ -1159,6 +1160,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
             bern_draws = bern_fit.draws()
             theta_9 = format(bern_draws[99, 0, 7], '.18g')
+            print(theta_9)
             self.assertTrue(theta_9.startswith('0.212380457'))
 
             with self.assertRaises(ValueError):
