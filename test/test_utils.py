@@ -198,6 +198,23 @@ class CmdStanPathTest(unittest.TestCase):
             with MaybeDictToFilePath(123, dict_good) as (fg1, fg2):
                 pass
 
+    def test_dicts_to_file(self):
+        file_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
+        files_good = [file_good] * 3
+        dicts_good = [{'a': 0.5 + 0.1 * i} for i in range(3)]
+        created_tmp = None
+        with MaybeDictToFilePath(files_good, dicts_good) as (fg1, fg2):
+            for f in fg1:
+                self.assertTrue(os.path.exists(f))
+            for i, f in enumerate(fg2):
+                self.assertTrue(os.path.exists(f))
+                with open(f) as f_d:
+                    self.assertEqual(json.load(f_d), dicts_good[i])
+            created_tmp = fg2
+        self.assertTrue(os.path.exists(file_good))
+        for f in created_tmp:
+            self.assertFalse(os.path.exists(f))
+
     def test_jsondump(self):
         def cmp(d1, d2):
             self.assertEqual(d1.keys(), d2.keys())
