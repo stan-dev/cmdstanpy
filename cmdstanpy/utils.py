@@ -969,18 +969,7 @@ class MaybeDictToFilePath:
         i = 0
         for obj in objs:
             if isinstance(obj, dict):
-                data_file = create_named_text_file(
-                    dir=_TMPDIR, prefix='', suffix='.json'
-                )
-                self._logger.debug('input tempfile: %s', data_file)
-                if any(
-                    not item
-                    for item in obj
-                    if isinstance(item, (Sequence, np.ndarray))
-                ):
-                    rdump(data_file, obj)
-                else:
-                    jsondump(data_file, obj)
+                data_file = self.process_dict(obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(obj, str):
@@ -990,23 +979,33 @@ class MaybeDictToFilePath:
             elif isinstance(obj, list):
                 err_msgs = []
                 missing_obj_items = []
+                processed_items = []
+                unlink = []
                 for j, obj_item in enumerate(obj):
-                    if not isinstance(obj_item, str):
+                    if isinstance(obj_item, str):
+                        if not os.path.exists(obj_item):
+                            missing_obj_items.append(
+                                "File doesn't exist: {}".format(obj_item)
+                            )
+                        processed_items.append(obj_item)
+                        unlink.append(False)
+                    elif isinstance(obj_item, dict):
+                        data_file = self.process_dict(obj_item)
+                        processed_items.append(data_file)
+                        unlink.append(True)
+                    else:
                         err_msgs.append(
                             (
-                                'List element {} must be a filename string,'
-                                ' found {}'
+                                'List element {} must be a filename string or'
+                                'dict, found {}'
                             ).format(j, obj_item)
-                        )
-                    elif not os.path.exists(obj_item):
-                        missing_obj_items.append(
-                            "File doesn't exist: {}".format(obj_item)
                         )
                 if err_msgs:
                     raise ValueError('\n'.join(err_msgs))
                 if missing_obj_items:
                     raise ValueError('\n'.join(missing_obj_items))
-                self._paths[i] = obj
+                self._paths[i] = processed_items
+                self._unlink[i] = unlink
             elif obj is None:
                 self._paths[i] = None
             elif i == 1 and isinstance(obj, (Integral, Real)):
@@ -1015,16 +1014,37 @@ class MaybeDictToFilePath:
                 raise ValueError('data must be string or dict')
             i += 1
 
+    def process_dict(self, obj_item):
+        data_file = create_named_text_file(
+            dir=_TMPDIR, prefix='', suffix='.json'
+        )
+        self._logger.debug('input tempfile: %s', data_file)
+        if any(
+            not item
+            for item in obj_item
+            if isinstance(item, (Sequence, np.ndarray))
+        ):
+            rdump(data_file, obj_item)
+        else:
+            jsondump(data_file, obj_item)
+        return data_file
+
+    def unlink_paths(self, unlink, paths):
+        for can_unlink, path in zip(unlink, paths):
+            if isinstance(can_unlink, list) and isinstance(path, list):
+                self.unlink_paths(can_unlink, path)
+            else:
+                if can_unlink and path:
+                    try:
+                        os.remove(path)
+                    except PermissionError:
+                        pass
+
     def __enter__(self):
         return self._paths
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        for can_unlink, path in zip(self._unlink, self._paths):
-            if can_unlink and path:
-                try:
-                    os.remove(path)
-                except PermissionError:
-                    pass
+        self.unlink_paths(self._unlink, self._paths)
 
 
 class TemporaryCopiedFile:

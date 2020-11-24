@@ -12,7 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from numbers import Real
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Callable, Dict, List, Union
+from inspect import signature
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -38,6 +39,17 @@ from cmdstanpy.utils import (
     get_logger,
     scan_sampler_csv,
 )
+
+# compound type for sampler initialiser
+SamplerInitsType = Union[
+    float,
+    str,
+    Dict,
+    List[str],
+    List[Dict],
+    Callable[[], Dict],
+    Callable[[int], Dict],
+]
 
 
 class CmdStanModel:
@@ -428,7 +440,7 @@ class CmdStanModel:
         threads_per_chain: Union[int, None] = None,
         seed: Union[int, List[int]] = None,
         chain_ids: Union[int, List[int]] = None,
-        inits: Union[Dict, float, str, List[str]] = None,
+        inits: SamplerInitsType = None,
         iter_warmup: int = None,
         iter_sampling: int = None,
         save_warmup: bool = False,
@@ -512,6 +524,12 @@ class CmdStanModel:
             * dictionary - pairs parameter name : initial value.
             * string - pathname to a JSON or Rdump data file.
             * list of strings - per-chain pathname to data file.
+            * list of dictionaries - per-chain initialisation dictionaries
+            * function - a function returning a dictionary of initial parameter
+              values. The function can take an optional parameter chain_id
+              through which the chain_id (if specified) or the integers from 1
+              to chains will be supplied to the function for generating initial
+              values.
 
         :param iter_warmup: Number of warmup iterations for each chain.
 
@@ -681,7 +699,23 @@ class CmdStanModel:
                 )
                 show_progress = False
 
-        # TODO:  issue 49: inits can be initialization function
+        if callable(inits):
+            sig = signature(inits)
+
+            if len(sig.parameters) == 0:
+                inits = [inits() for _ in chain_ids]
+            elif len(sig.parameters) == 1 and "chain_id" in sig.parameters:
+                inits = [inits(chain_id) for chain_id in chain_ids]
+            else:
+                raise ValueError(
+                    "If 'inits' is a function it must have zero arguments or "
+                    "a single argument 'chain_id'."
+                )
+
+            if not all(isinstance(init, dict) for init in inits):
+                raise ValueError(
+                    "If 'inits' is a function it must return a single dict."
+                )
 
         sampler_args = SamplerArgs(
             iter_warmup=iter_warmup,
