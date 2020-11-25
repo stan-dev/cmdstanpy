@@ -10,6 +10,7 @@ Optional command line arguments:
    -d, --dir : install directory, defaults to '~/.cmdstan(py)
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
    -m --no-make : don't install mingw32-make (Windows RTools 4.0 only)
+   --progress : flag, when specified show progress bar for RTools download
 """
 import argparse
 import contextlib
@@ -47,6 +48,7 @@ def usage():
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
+        --progress : flag, when specified show progress bar for RTools download
         -h (--help) : this message
         """
     )
@@ -192,12 +194,44 @@ def latest_version():
     return ''
 
 
-def retrieve_toolchain(filename, url):
+def wrap_progress_hook():
+    try:
+        from tqdm import tqdm
+
+        pbar = tqdm(
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+        )
+
+        def download_progress_hook(count, block_size, total_size):
+            if pbar.total is None:
+                pbar.total = total_size
+                pbar.reset()
+            downloaded_size = count * block_size
+            pbar.update(downloaded_size - pbar.n)
+            if pbar.n >= total_size:
+                pbar.close()
+
+    except (ImportError, ModuleNotFoundError):
+        print("tqdm was not downloaded, progressbar not shown")
+        download_progress_hook = None
+
+    return download_progress_hook
+
+
+def retrieve_toolchain(filename, url, progress=True):
     """Download toolchain from URL."""
     print('Downloading C++ toolchain: {}'.format(filename))
     for i in range(6):
         try:
-            _ = urllib.request.urlretrieve(url, filename=filename)
+            if progress:
+                progress_hook = wrap_progress_hook()
+            else:
+                progress_hook = None
+            _ = urllib.request.urlretrieve(
+                url, filename=filename, reporthook=progress_hook
+            )
             break
         except urllib.error.URLError as err:
             print('Failed to download C++ toolchain')
@@ -260,10 +294,27 @@ def main():
         raise NotImplementedError(msg % platform.system())
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v')
-    parser.add_argument('--dir', '-d')
-    parser.add_argument('--silent', '-s', action='store_true')
-    parser.add_argument('--no-make', '-m', action='store_false')
+    parser.add_argument('--version', '-v', help="version, defaults to latest")
+    parser.add_argument(
+        '--dir', '-d', help="install directory, defaults to '~/.cmdstan(py)"
+    )
+    parser.add_argument(
+        '--silent',
+        '-s',
+        action='store_true',
+        help="install with /VERYSILENT instead of /SILENT for RTools",
+    )
+    parser.add_argument(
+        '--no-make',
+        '-m',
+        action='store_false',
+        help="don't install mingw32-make (Windows RTools 4.0 only)",
+    )
+    parser.add_argument(
+        '--progress',
+        action='store_true',
+        help="flag, when specified show progress bar for CmdStan download",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     toolchain = get_toolchain_name()
@@ -288,6 +339,16 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
+    if vars(args)['progress']:
+        progress = vars(args)['progress']
+        try:
+            # pylint: disable=unused-import
+            from tqdm import tqdm  # noqa: F401
+        except (ImportError, ModuleNotFoundError):
+            progress = False
+    else:
+        progress = False
+
     if platform.system() == 'Windows':
         silent = 'silent' in vars(args)
         # force silent == False for 4.0 version
@@ -303,7 +364,9 @@ def main():
         else:
             if os.path.exists(toolchain_folder):
                 shutil.rmtree(toolchain_folder, ignore_errors=False)
-            retrieve_toolchain(toolchain_folder + EXTENSION, url)
+            retrieve_toolchain(
+                toolchain_folder + EXTENSION, url, progress=progress
+            )
             install_version(
                 toolchain_folder, toolchain_folder + EXTENSION, version, silent
             )
