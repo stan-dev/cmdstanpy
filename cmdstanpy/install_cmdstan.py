@@ -9,10 +9,11 @@ example model ``bernoulli.stan``.
 Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan(py)
-   --overwrite: flag, when specified re-installs existing version.
-   --verbose: flag, when specified prints output from CmdStan build process.
+   --overwrite: flag, when specified re-installs existing version
+   --verbose: flag, when specified prints output from CmdStan build process
+   --progress: flag, when specified show progress bar for CmdStan download
 
-   -c, --compiler : add C++ compiler to path (Windows only)
+   -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse
 import contextlib
@@ -26,10 +27,17 @@ import urllib.error
 from pathlib import Path
 from time import sleep
 
+from tqdm import tqdm
+
+
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import validate_dir
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class CmdStanRetrieveError(RuntimeError):
@@ -51,15 +59,21 @@ def pushd(new_dir: str):
 
 def usage():
     """Print usage."""
-    print(
-        """Arguments:
-        -v (--version) :CmdStan version
+    msg = """
+    Arguments:
+        -v (--version) : CmdStan version
         -d (--dir) : install directory
         --overwrite : replace installed version
         --verbose : show CmdStan build messages
-        -h (--help) : this message
+        --progress : show progress bar for CmdStan download
         """
-    )
+
+    if platform.system() == "Windows":
+        msg += "-c (--compiler) : add C++ compiler to path (Windows only)\n"
+
+    msg += "        -h (--help) : this message"
+
+    print(msg)
 
 
 def install_version(
@@ -126,6 +140,18 @@ def install_version(
                 os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
             ).as_posix(),
         ]
+        if platform.system() == "Windows":
+            # Add tbb to the $PATH on Windows
+            libtbb = os.path.join(
+                os.getcwd(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
+            )
+            os.environ['PATH'] = ';'.join(
+                list(
+                    OrderedDict.fromkeys(
+                        [libtbb] + os.environ.get('PATH', '').split(';')
+                    )
+                )
+            )
         proc = subprocess.Popen(
             cmd,
             cwd=None,
@@ -196,7 +222,33 @@ def latest_version():
     return response[start_idx:end_idx]
 
 
-def retrieve_version(version: str):
+def wrap_progress_hook():
+    try:
+        import tqdm
+
+        pbar = tqdm(
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+        )
+
+        def download_progress_hook(count, block_size, total_size):
+            if pbar.total is None:
+                pbar.total = total_size
+                pbar.reset()
+            downloaded_size = count * block_size
+            pbar.update(downloaded_size - pbar.n)
+            if pbar.n >= total_size:
+                pbar.close()
+
+    except:
+        print("tqdm was not downloaded, progressbar not shown")
+        download_progress_hook = None
+
+    return download_progress_hook
+
+
+def retrieve_version(version: str, progress=True):
     """Download specified CmdStan version."""
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
@@ -207,7 +259,13 @@ def retrieve_version(version: str):
     )
     for i in range(6):  # always retry to allow for transient URLErrors
         try:
-            file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
+            if progress:
+                progress_hook = wrap_progress_hook()
+            else:
+                progress_hook = None
+            file_tmp, _ = urllib.request.urlretrieve(
+                url, filename=None, reporthook=progress_hook
+            )
             break
         except urllib.error.HTTPError as e:
             raise CmdStanRetrieveError(
@@ -251,16 +309,37 @@ def retrieve_version(version: str):
 def main():
     """Main."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v')
-    parser.add_argument('--dir', '-d')
-    parser.add_argument('--overwrite', action='store_true')
-    parser.add_argument('--verbose', action='store_true')
+    parser.add_argument(
+        '--version', '-v', help="version, defaults to latest release version"
+    )
+    parser.add_argument(
+        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan(py)"
+    )
+    parser.add_argument(
+        '--overwrite',
+        action='store_true',
+        help="flag, when specified re-installs existing version",
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="flag, when specified prints output from CmdStan build process",
+    )
+    parser.add_argument(
+        '--progress',
+        action='store_true',
+        help="flag, when specified show progress bar for CmdStan download",
+    )
     if platform.system() == 'Windows':
         # use compiler installed with install_cxx_toolchain
         # Install a new compiler if compiler not found
         # Search order is RTools40, RTools35
         parser.add_argument(
-            '--compiler', '-c', dest='compiler', action='store_true'
+            '--compiler',
+            '-c',
+            dest='compiler',
+            action='store_true',
+            help="flag, add C++ compiler to path (Windows only)",
         )
     args = parser.parse_args(sys.argv[1:])
 
@@ -312,6 +391,11 @@ def main():
         # Add toolchain to $PATH
         cxx_toolchain_path(cxx_version)
 
+    if vars(args)['progress']:
+        progress = vars(args)['progress']
+    else:
+        progress = False
+
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
         if vars(args)['overwrite'] or not (
@@ -326,7 +410,7 @@ def main():
             )
         ):
             try:
-                retrieve_version(version)
+                retrieve_version(version, progress)
                 install_version(
                     cmdstan_version=cmdstan_version,
                     overwrite=vars(args)['overwrite'],
