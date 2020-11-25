@@ -342,6 +342,7 @@ def main():
     if vars(args)['progress']:
         progress = vars(args)['progress']
         try:
+            # pylint: disable=unused-import
             from tqdm import tqdm  # noqa: F401
         except (ImportError, ModuleNotFoundError):
             progress = False
