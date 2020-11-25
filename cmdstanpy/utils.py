@@ -272,10 +272,13 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
             [rtools40_home] if rtools40_home is not None else []
         ) + [
             os.path.join(cmdstan_dir, 'RTools40'),
+            os.path.join(cmdstan_dir_old, 'RTools40'),
             os.path.join(os.path.abspath("/"), "RTools40"),
             os.path.join(cmdstan_dir, 'RTools35'),
+            os.path.join(cmdstan_dir_old, 'RTools35'),
             os.path.join(os.path.abspath("/"), "RTools35"),
             os.path.join(cmdstan_dir, 'RTools'),
+            os.path.join(cmdstan_dir_old, 'RTools'),
             os.path.join(os.path.abspath("/"), "RTools"),
             os.path.join(os.path.abspath("/"), "RBuildTools"),
         ]:
@@ -339,7 +342,8 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str]:
     if not toolchain_root:
         raise ValueError(
             'no RTools toolchain installation found, '
-            'run command line script "python -m cmdstanpy.install_cxx_toolchain"'
+            'run command line script '
+            '"python -m cmdstanpy.install_cxx_toolchain"'
         )
     logger.info('Add C++ toolchain to $PATH: %s', toolchain_root)
     os.environ['PATH'] = ';'.join(

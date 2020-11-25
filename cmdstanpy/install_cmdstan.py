@@ -33,10 +33,6 @@ from cmdstanpy.utils import validate_dir
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
 
 class CmdStanRetrieveError(RuntimeError):
     pass
@@ -239,7 +235,7 @@ def wrap_progress_hook():
             if pbar.n >= total_size:
                 pbar.close()
 
-    except Exception as e:
+    except (ImportError, ModuleNotFoundError):
         print("tqdm is not installed, progressbar not shown")
         download_progress_hook = None
 
@@ -368,7 +364,7 @@ def main():
     if vars(args)['progress']:
         progress = vars(args)['progress']
         try:
-            from tqdm import tqdm
+            from tqdm import tqdm  # noqa: F401
         except (ImportError, ModuleNotFoundError):
             progress = False
     else:

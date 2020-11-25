@@ -213,7 +213,7 @@ def wrap_progress_hook():
             if pbar.n >= total_size:
                 pbar.close()
 
-    except:
+    except (ImportError, ModuleNotFoundError):
         print("tqdm was not downloaded, progressbar not shown")
         download_progress_hook = None
 
@@ -228,7 +228,7 @@ def retrieve_toolchain(filename, url, progress=True):
             if progress:
                 progress_hook = wrap_progress_hook()
             else:
-                progress_hook = Non
+                progress_hook = None
             _ = urllib.request.urlretrieve(
                 url, filename=filename, reporthook=progress_hook
             )
@@ -342,7 +342,7 @@ def main():
     if vars(args)['progress']:
         progress = vars(args)['progress']
         try:
-            from tqdm import tqdm
+            from tqdm import tqdm  # noqa: F401
         except (ImportError, ModuleNotFoundError):
             progress = False
     else:
