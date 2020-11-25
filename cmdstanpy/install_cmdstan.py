@@ -404,7 +404,7 @@ def main():
             # copy argv and clear sys.argv
             original_argv = sys.argv[:]
             sys.argv = [
-                item for item in sys.argv if not item.startswith("--compiler")
+                item for item in sys.argv if item not in ("--compiler", "-c")
             ]
             _main_cxx()
             sys.argv = original_argv
