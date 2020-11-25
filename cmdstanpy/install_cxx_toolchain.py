@@ -339,6 +339,15 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
+    if vars(args)['progress']:
+        progress = vars(args)['progress']
+        try:
+            from tqdm import tqdm
+        except (ImportError, ModuleNotFoundError):
+            progress = False
+    else:
+        progress = False
+
     if platform.system() == 'Windows':
         silent = 'silent' in vars(args)
         # force silent == False for 4.0 version
@@ -354,7 +363,9 @@ def main():
         else:
             if os.path.exists(toolchain_folder):
                 shutil.rmtree(toolchain_folder, ignore_errors=False)
-            retrieve_toolchain(toolchain_folder + EXTENSION, url)
+            retrieve_toolchain(
+                toolchain_folder + EXTENSION, url, progress=progress
+            )
             install_version(
                 toolchain_folder, toolchain_folder + EXTENSION, version, silent
             )

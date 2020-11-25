@@ -27,9 +27,6 @@ import urllib.error
 from pathlib import Path
 from time import sleep
 
-from tqdm import tqdm
-
-
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import validate_dir
 
@@ -242,7 +239,7 @@ def wrap_progress_hook():
                 pbar.close()
 
     except:
-        print("tqdm was not downloaded, progressbar not shown")
+        print("tqdm is not installed, progressbar not shown")
         download_progress_hook = None
 
     return download_progress_hook
@@ -369,6 +366,10 @@ def main():
 
     if vars(args)['progress']:
         progress = vars(args)['progress']
+        try:
+            from tqdm import tqdm
+        except (ImportError, ModuleNotFoundError):
+            progress = False
     else:
         progress = False
 
