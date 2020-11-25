@@ -221,7 +221,7 @@ def latest_version():
 
 def wrap_progress_hook():
     try:
-        import tqdm
+        from tqdm import tqdm
 
         pbar = tqdm(
             unit='B',
@@ -238,7 +238,7 @@ def wrap_progress_hook():
             if pbar.n >= total_size:
                 pbar.close()
 
-    except:
+    except Exception as e:
         print("tqdm is not installed, progressbar not shown")
         download_progress_hook = None
 

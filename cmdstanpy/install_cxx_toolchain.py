@@ -196,7 +196,7 @@ def latest_version():
 
 def wrap_progress_hook():
     try:
-        import tqdm
+        from tqdm import tqdm
 
         pbar = tqdm(
             unit='B',
