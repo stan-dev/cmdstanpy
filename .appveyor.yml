@@ -74,7 +74,7 @@ install:
   - "which mingw32-make"
   - "mingw32-make --version"
 
-  - "python -m cmdstanpy.install_cmdstan --progress"
+  - "python -m cmdstanpy.install_cmdstan --progress --verbose"
   - "python ../scripts/clean_examples.py"
 
   - "pip freeze"
