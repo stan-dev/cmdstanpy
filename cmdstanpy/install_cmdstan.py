@@ -367,6 +367,11 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
+    if vars(args)['progress']:
+        progress = vars(args)['progress']
+    else:
+        progress = False
+
     if platform.system() == 'Windows' and vars(args)['compiler']:
         from .install_cxx_toolchain import (
             main as _main_cxx,
@@ -376,25 +381,34 @@ def main():
 
         cxx_loc = cmdstan_dir
         compiler_found = False
-        for cxx_version in ['40', '35']:
-            if _is_installed_cxx(cxx_loc, cxx_version):
-                compiler_found = True
+        rtools40_home = os.environ.get('RTOOLS40_HOME')
+        for cxx_loc in (
+            [rtools40_home] if rtools40_home is not None else []
+        ) + [
+            cmdstan_dir,
+            os.path.join(os.path.abspath("/"), "RTools40"),
+            os.path.join(os.path.abspath("/"), "RTools"),
+            os.path.join(os.path.abspath("/"), "RTools35"),
+            os.path.join(os.path.abspath("/"), "RBuildTools"),
+        ]:
+            for cxx_version in ['40', '35']:
+                if _is_installed_cxx(cxx_loc, cxx_version):
+                    compiler_found = True
+                    break
+            if compiler_found:
                 break
         if not compiler_found:
             print('Installing RTools40')
             # copy argv and clear sys.argv
             original_argv = sys.argv[:]
-            sys.argv = sys.argv[:1]
+            sys.argv = [
+                item for item in sys.argv if not item.startswith("--compiler")
+            ]
             _main_cxx()
             sys.argv = original_argv
             cxx_version = '40'
         # Add toolchain to $PATH
         cxx_toolchain_path(cxx_version)
-
-    if vars(args)['progress']:
-        progress = vars(args)['progress']
-    else:
-        progress = False
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):

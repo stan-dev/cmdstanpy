@@ -54,6 +54,7 @@ install:
 
   - "python -m pip install --quiet --disable-pip-version-check --upgrade pip"
   - "python -m pip install --quiet -r requirements.txt"
+  - "python -m pip install --quiet -r requirements-optional.txt"
   - "python -m pip install --quiet -r requirements-test.txt"
   - "python -m pip install --quiet codecov"
 
@@ -73,7 +74,7 @@ install:
   - "which mingw32-make"
   - "mingw32-make --version"
 
-  - "python -m cmdstanpy.install_cmdstan"
+  - "python -m cmdstanpy.install_cmdstan --progress"
   - "python ../scripts/clean_examples.py"
 
   - "pip freeze"
