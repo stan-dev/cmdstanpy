@@ -1148,8 +1148,11 @@ class CmdStanMCMCTest(unittest.TestCase):
             bern_draws_17 = bern_fit_17.draws()
             theta_17 = format(bern_draws_17[99, 0, 7], '.18g')
             print("theta_17", theta_17)
-            self.assertTrue(theta_17.startswith('0.212348884540145805'))
-            self.assertFalse(theta_17.startswith('0.212348885'))
+            if platform.system() == "Windows":
+                self.assertTrue(theta_17.startswith('0.212357704884271165'))
+            else:
+                self.assertTrue(theta_17.startswith('0.212348884540145805'))
+            self.assertFalse(theta_17.startswith('0.21239'))
 
             bern_fit = bern_model.sample(
                 data=jdata,
@@ -1161,8 +1164,11 @@ class CmdStanMCMCTest(unittest.TestCase):
             bern_draws = bern_fit.draws()
             theta_9 = format(bern_draws[99, 0, 7], '.18g')
             print("theta_9", theta_9)
-            self.assertTrue(theta_9.startswith('0.21234888499999998'))
-            self.assertFalse(theta_9.startswith('0.212348885'))
+            if platform.system() == "Windows":
+                self.assertTrue(theta_9.startswith('0.212357705000000008'))
+            else:
+                self.assertTrue(theta_9.startswith('0.21234888499999998'))
+            self.assertFalse(theta_9.startswith('0.21239'))
 
             with self.assertRaises(ValueError):
                 bern_model.sample(
