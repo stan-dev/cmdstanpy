@@ -17,7 +17,7 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
       fail-fast: false
     env:
-      GITHUB_PAT: ${{ secrects.GITHUB_TOKEN }}
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout github
         uses: actions/checkout@v2
