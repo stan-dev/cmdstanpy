@@ -200,7 +200,7 @@ def get_headers():
     headers = {}
     GITHUB_PAT = os.environ.get("GITHUB_PAT")
     if GITHUB_PAT is not None:
-        headers["Authorization"] = "token {}".format(GITHUB_PATH)
+        headers["Authorization"] = "token {}".format(GITHUB_PAT)
     return headers
 
 
