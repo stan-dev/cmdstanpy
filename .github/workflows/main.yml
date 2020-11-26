@@ -82,9 +82,9 @@ jobs:
           python ../scripts/clean_examples.py
 
       - name: Submit codecov
-          run: |
-            cd run_tests
-            codecov
+        run: |
+          cd run_tests
+          codecov
 
       - name: Upload wheel to release
         uses: svenstaro/upload-release-action@v1-release
