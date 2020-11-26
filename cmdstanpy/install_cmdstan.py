@@ -155,14 +155,11 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
-        stdout = ""
         while proc.poll() is None:
-            stdout += proc.stdout.readline().decode('utf-8')
+            proc.stdout.readline().decode('utf-8')
         _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Failed to compile example model bernoulli.stan']
-            if stdout:
-                msgs.append(stdout.strip())
             if stderr:
                 msgs.append(stderr.decode('utf-8').strip())
             raise CmdStanInstallError('\n'.join(msgs))

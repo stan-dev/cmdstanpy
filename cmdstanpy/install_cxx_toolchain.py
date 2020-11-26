@@ -112,7 +112,7 @@ def install_version(
     print('Installed {}'.format(os.path.splitext(installation_file)[0]))
 
 
-def install_mingw32_make(toolchain_loc, verbose):
+def install_mingw32_make(toolchain_loc, verbose=False):
     """Install mingw32-make for Windows RTools 4.0."""
     os.environ['PATH'] = ';'.join(
         list(
@@ -146,7 +146,7 @@ def install_mingw32_make(toolchain_loc, verbose):
         )
         while proc.poll() is None:
             output = proc.stdout.readline().decode('utf-8').strip()
-            if output:
+            if output and verbose:
                 print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
@@ -333,6 +333,9 @@ def main():
 
     url = get_url(version)
 
+    if 'verbose' in vars(args):
+        verbose = vars(args)['verbose']
+
     install_dir = vars(args)['dir']
     if install_dir is None:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
@@ -346,7 +349,7 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    if vars(args)['progress']:
+    if 'progress' in vars(args):
         progress = vars(args)['progress']
         try:
             # pylint: disable=unused-import
