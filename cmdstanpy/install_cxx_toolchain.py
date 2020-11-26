@@ -74,7 +74,9 @@ def get_config(dir, silent):
     return config
 
 
-def install_version(installation_dir, installation_file, version, silent):
+def install_version(
+    installation_dir, installation_file, version, silent, verbose=False
+):
     """Install specified toolchain version."""
     with pushd('.'):
         print(
@@ -94,7 +96,7 @@ def install_version(installation_dir, installation_file, version, silent):
         )
         while proc.poll() is None:
             output = proc.stdout.readline().decode('utf-8').strip()
-            if output:
+            if output and verbose:
                 print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
@@ -110,7 +112,7 @@ def install_version(installation_dir, installation_file, version, silent):
     print('Installed {}'.format(os.path.splitext(installation_file)[0]))
 
 
-def install_mingw32_make(toolchain_loc):
+def install_mingw32_make(toolchain_loc, verbose=False):
     """Install mingw32-make for Windows RTools 4.0."""
     os.environ['PATH'] = ';'.join(
         list(
@@ -144,7 +146,7 @@ def install_mingw32_make(toolchain_loc):
         )
         while proc.poll() is None:
             output = proc.stdout.readline().decode('utf-8').strip()
-            if output:
+            if output and verbose:
                 print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
@@ -311,6 +313,11 @@ def main():
         help="don't install mingw32-make (Windows RTools 4.0 only)",
     )
     parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="flag, when specified prints output from RTools build process",
+    )
+    parser.add_argument(
         '--progress',
         action='store_true',
         help="flag, when specified show progress bar for CmdStan download",
@@ -326,6 +333,9 @@ def main():
 
     url = get_url(version)
 
+    if 'verbose' in vars(args):
+        verbose = vars(args)['verbose']
+
     install_dir = vars(args)['dir']
     if install_dir is None:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
@@ -339,7 +349,7 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    if vars(args)['progress']:
+    if 'progress' in vars(args):
         progress = vars(args)['progress']
         try:
             # pylint: disable=unused-import
@@ -368,7 +378,11 @@ def main():
                 toolchain_folder + EXTENSION, url, progress=progress
             )
             install_version(
-                toolchain_folder, toolchain_folder + EXTENSION, version, silent
+                toolchain_folder,
+                toolchain_folder + EXTENSION,
+                version,
+                silent,
+                verbose,
             )
         if (
             'no-make' not in vars(args)
@@ -382,7 +396,7 @@ def main():
             ):
                 print('mingw32-make.exe already installed')
             else:
-                install_mingw32_make(toolchain_folder)
+                install_mingw32_make(toolchain_folder, verbose)
 
 
 if __name__ == '__main__':

@@ -101,8 +101,9 @@ def install_version(
                 env=os.environ,
             )
             while proc.poll() is None:
-                if verbose:
-                    print(proc.stdout.readline().decode('utf-8').strip())
+                output = proc.stdout.readline().decode('utf-8').strip()
+                if verbose and output:
+                    print(output, flush=True)
             _, stderr = proc.communicate()
             if proc.returncode:
                 msgs = ['Command "make clean-all" failed']
@@ -119,8 +120,9 @@ def install_version(
             env=os.environ,
         )
         while proc.poll() is None:
-            if verbose:
-                print(proc.stdout.readline().decode('utf-8').strip())
+            output = proc.stdout.readline().decode('utf-8').strip()
+            if verbose and output:
+                print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Command "make build" failed']
@@ -153,6 +155,8 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
+        while proc.poll() is None:
+            proc.stdout.readline().decode('utf-8')
         _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Failed to compile example model bernoulli.stan']
