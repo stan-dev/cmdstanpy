@@ -4,9 +4,29 @@ import os
 import re
 import setuptools
 
+HERE = os.path.dirname(__file__)
+
 
 def readme_contents() -> str:
-    with open('README.md', 'r') as fd:
+    with open(os.path.join(HERE, 'README.md'), 'r') as fd:
+        src = fd.read()
+    return src
+
+
+def requirements() -> str:
+    with open(os.path.join(HERE, 'requirements.txt'), 'r') as fd:
+        src = fd.read()
+    return src.splitlines()
+
+
+def requirements_test() -> str:
+    with open(os.path.join(HERE, 'requirements-test.txt'), 'r') as fd:
+        src = fd.read()
+    return src
+
+
+def requirements_optional() -> str:
+    with open(os.path.join(HERE, 'requirements-optional.txt'), 'r') as fd:
         src = fd.read()
     return src
 
@@ -28,11 +48,11 @@ Programming Language :: Python
 Topic :: Scientific/Engineering :: Information Analysis
 """
 
-INSTALL_REQUIRES = ['numpy', 'pandas']
+INSTALL_REQUIRES = requirements()
 
 EXTRAS_REQUIRE = {
-    'all': ['tqdm', 'ujson'],
-    'tests': ['pytest', 'pytest-cov', 'testfixtures'],
+    'all': requirements_optional(),
+    'tests': requirements_test(),
     'docs': [
         'sphinx',
         'sphinx-gallery',
