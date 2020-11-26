@@ -10,7 +10,7 @@ on:
 jobs:
   cmdstanpy:
     name: tests and publish
-    runs-on: ${{ matrix.config.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
