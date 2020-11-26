@@ -59,13 +59,13 @@ jobs:
           python -m pip freeze
 
       - name: Install CmdStan (Linux, macOS)
-        if runner.os != "windows-latest"
+        if: runner.os != "windows-latest"
         run: |
           python -m cmdstanpy.install_cmdstan --progress
           python scripts/clean_examples.py
 
       - name: Install CmdStan (Windows)
-        if runner.os == "windows-latest"
+        if: runner.os == "windows-latest"
         run: |
           python -m cmdstanpy.install_cmdstan --progress --compiler
           python scripts/clean_examples.py
