@@ -76,7 +76,6 @@ install:
 
   # To skip RTools installation, use --compiler
   # This will automatically install RTools40
-  # This is done manually here to just shown an example
   - "python -m cmdstanpy.install_cmdstan --progress"
   - "python ../scripts/clean_examples.py"
 
