@@ -22,13 +22,13 @@ def requirements() -> str:
 def requirements_test() -> str:
     with open(os.path.join(HERE, 'requirements-test.txt'), 'r') as fd:
         src = fd.read()
-    return src
+    return src.splitlines()
 
 
 def requirements_optional() -> str:
     with open(os.path.join(HERE, 'requirements-optional.txt'), 'r') as fd:
         src = fd.read()
-    return src
+    return src.splitlines()
 
 
 def get_version() -> str:
