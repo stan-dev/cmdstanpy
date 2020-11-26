@@ -76,6 +76,7 @@ jobs:
           pytest -v ../test --cov=../cmdstanpy
 
       - name: Run model with requirements-optional.txt
+        run: |
           cd run_test
           python -m pip install -r ../requirements-optional.txt
           python ../test/example_script.py
