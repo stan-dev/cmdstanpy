@@ -195,13 +195,22 @@ def is_version_available(version: str):
     return is_available
 
 
+def get_headers():
+    """Create headers dictionary."""
+    headers = {}
+    GITHUB_PAT = os.environ.get("GITHUB_PAT")
+    if GITHUB_PAT is not None:
+        headers["Authorization"] = "token {}".format(GITHUB_PATH)
+    return headers
+
+
 def latest_version():
     """Report latest CmdStan release version."""
+    url = 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
+    request = urllib.request.Request(url, headers=get_headers())
     for i in range(6):
         try:
-            file_tmp, _ = urllib.request.urlretrieve(
-                'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
-            )
+            file_tmp, _ = urllib.request.urlretrieve(request)
             break
         except urllib.error.URLError as e:
             print('Cannot connect to github.')

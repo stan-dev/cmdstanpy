@@ -203,7 +203,7 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
 
         if cur_maj > maj or (cur_maj == maj and cur_min >= min):
             return True
-    except: # noqa
+    except:  # noqa
         pass
     return False
 
