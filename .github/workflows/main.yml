@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir run_tests
           cd run_tests
-          flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E266,E402,E999,E1136,F841,W503,W605 --max-line-length=80 ../cmdstanpy ../test
+          flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E266,E402,E999,F841,W503,W605 --max-line-length=80 ../cmdstanpy ../test
           pylint -v --rcfile=../.pylintrc ../cmdstanpy ../test
 
       - name: Build wheel
