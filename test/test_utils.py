@@ -74,34 +74,37 @@ class CmdStanPathTest(unittest.TestCase):
                     del os.environ['CMDSTAN']
 
     def test_non_spaces_location(self):
-        good_path = os.path.join(_TMPDIR, 'good_dir')
-        with TemporaryCopiedFile(good_path) as (pth, is_changed):
-            self.assertEqual(pth, good_path)
-            self.assertFalse(is_changed)
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            good_path = os.path.join(tmpdir, 'good_dir')
+            with TemporaryCopiedFile(good_path) as (pth, is_changed):
+                self.assertEqual(pth, good_path)
+                self.assertFalse(is_changed)
 
-        # prepare files for test
-        bad_path = os.path.join(_TMPDIR, 'bad dir')
-        os.makedirs(bad_path, exist_ok=True)
-        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
-        stan_bad = os.path.join(bad_path, 'bad name.stan')
-        shutil.copy(stan, stan_bad)
+            # prepare files for test
+            bad_path = os.path.join(tmpdir, 'bad dir')
+            os.makedirs(bad_path, exist_ok=True)
+            stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+            stan_bad = os.path.join(bad_path, 'bad name.stan')
+            shutil.copy(stan, stan_bad)
 
-        stan_copied = None
-        try:
-            with TemporaryCopiedFile(stan_bad) as (pth, is_changed):
-                stan_copied = pth
-                self.assertTrue(os.path.exists(stan_copied))
-                self.assertTrue(' ' not in stan_copied)
-                self.assertTrue(is_changed)
-                raise RuntimeError
-        except RuntimeError:
-            pass
+            stan_copied = None
+            try:
+                with TemporaryCopiedFile(stan_bad) as (pth, is_changed):
+                    stan_copied = pth
+                    self.assertTrue(os.path.exists(stan_copied))
+                    self.assertTrue(' ' not in stan_copied)
+                    self.assertTrue(is_changed)
+                    raise RuntimeError
+            except RuntimeError:
+                pass
 
-        if platform.system() != 'Windows':
-            self.assertFalse(os.path.exists(stan_copied))
+            if platform.system() != 'Windows':
+                self.assertFalse(os.path.exists(stan_copied))
 
-        # cleanup after test
-        shutil.rmtree(bad_path, ignore_errors=True)
+            # cleanup after test
+            shutil.rmtree(bad_path, ignore_errors=True)
 
     def test_set_path(self):
         if 'CMDSTAN' in os.environ:
@@ -145,41 +148,42 @@ class CmdStanPathTest(unittest.TestCase):
         shutil.rmtree(folder_name)
 
     def test_validate_dir(self):
-        path = os.path.join(_TMPDIR, 'cmdstan-M.m.p')
-        self.assertFalse(os.path.exists(path))
-        validate_dir(path)
-        self.assertTrue(os.path.exists(path))
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            path = os.path.join(tmpdir, 'cmdstan-M.m.p')
+            self.assertFalse(os.path.exists(path))
+            validate_dir(path)
+            self.assertTrue(os.path.exists(path))
 
-        _, file = tempfile.mkstemp(dir=_TMPDIR)
-        with self.assertRaisesRegex(Exception, 'File exists'):
-            validate_dir(file)
+            _, file = tempfile.mkstemp(dir=_TMPDIR)
+            with self.assertRaisesRegex(Exception, 'File exists'):
+                validate_dir(file)
 
-        if platform.system() != 'Windows':
-            with self.assertRaisesRegex(Exception, 'Cannot create directory'):
-                dir = tempfile.mkdtemp(dir=_TMPDIR)
-                os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
-                validate_dir(os.path.join(dir, 'cmdstan-M.m.p'))
+            if platform.system() != 'Windows':
+                with self.assertRaisesRegex(
+                    Exception, 'Cannot create directory'
+                ):
+                    dir = tempfile.mkdtemp(dir=_TMPDIR)
+                    os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                    validate_dir(os.path.join(dir, 'cmdstan-M.m.p'))
 
     def test_munge_cmdstan_versions(self):
-        tdir = os.path.join(HERE, 'tmpdir_xxx')
-        os.mkdir(tdir)
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0-rc1'))
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0-rc2'))
-        self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0-rc2')
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            tdir = os.path.join(tmpdir, 'tmpdir_xxx')
+            os.makedirs(tdir)
+            os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0-rc1'))
+            os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0-rc2'))
+            self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0-rc2')
 
-        os.mkdir(os.path.join(tdir, 'cmdstan-2.22.0'))
-        self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
-        shutil.rmtree(tdir, ignore_errors=True)
+            os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0'))
+            self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
 
     def test_cmdstan_version_at(self):
         cmdstan_path()  # sets os.environ['CMDSTAN']
-        good_path = os.environ['CMDSTAN']
-        del os.environ['CMDSTAN']
-        os.environ['CMDSTAN'] = os.path.join(
-            os.path.dirname(good_path), 'cmdstan-2.24.1'
-        )
-        self.assertTrue(cmdstan_version_at(2, 24))
-        self.assertFalse(cmdstan_version_at(2, 25))
+        self.assertFalse(cmdstan_version_at(99, 99))
 
     def test_dict_to_file(self):
         file_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
@@ -418,42 +422,51 @@ class WindowsShortPath(unittest.TestCase):
     def test_windows_short_path_directory(self):
         if platform.system() != 'Windows':
             return
-        original_path = os.path.join(_TMPDIR, 'new path')
-        os.makedirs(original_path, exist_ok=True)
-        assert os.path.exists(original_path)
-        assert ' ' in original_path
-        short_path = windows_short_path(original_path)
-        assert os.path.exists(short_path)
-        assert original_path != short_path
-        assert ' ' not in short_path
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            original_path = os.path.join(tmpdir, 'new path')
+            os.makedirs(original_path, exist_ok=True)
+            assert os.path.exists(original_path)
+            assert ' ' in original_path
+            short_path = windows_short_path(original_path)
+            assert os.path.exists(short_path)
+            assert original_path != short_path
+            assert ' ' not in short_path
 
     def test_windows_short_path_file(self):
         if platform.system() != 'Windows':
             return
-        original_path = os.path.join(_TMPDIR, 'new path', 'my_file.csv')
-        os.makedirs(os.path.split(original_path)[0], exist_ok=True)
-        assert os.path.exists(os.path.split(original_path)[0])
-        assert ' ' in original_path
-        assert os.path.splitext(original_path)[1] == '.csv'
-        short_path = windows_short_path(original_path)
-        assert os.path.exists(os.path.split(short_path)[0])
-        assert original_path != short_path
-        assert ' ' not in short_path
-        assert os.path.splitext(short_path)[1] == '.csv'
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            original_path = os.path.join(tmpdir, 'new path', 'my_file.csv')
+            os.makedirs(os.path.split(original_path)[0], exist_ok=True)
+            assert os.path.exists(os.path.split(original_path)[0])
+            assert ' ' in original_path
+            assert os.path.splitext(original_path)[1] == '.csv'
+            short_path = windows_short_path(original_path)
+            assert os.path.exists(os.path.split(short_path)[0])
+            assert original_path != short_path
+            assert ' ' not in short_path
+            assert os.path.splitext(short_path)[1] == '.csv'
 
     def test_windows_short_path_file_with_space(self):
         """Test that the function doesn't touch filename."""
         if platform.system() != 'Windows':
             return
-        original_path = os.path.join(_TMPDIR, 'new path', 'my file.csv')
-        os.makedirs(os.path.split(original_path)[0], exist_ok=True)
-        assert os.path.exists(os.path.split(original_path)[0])
-        assert ' ' in original_path
-        short_path = windows_short_path(original_path)
-        assert os.path.exists(os.path.split(short_path)[0])
-        assert original_path != short_path
-        assert ' ' in short_path
-        assert os.path.splitext(short_path)[1] == '.csv'
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            original_path = os.path.join(tmpdir, 'new path', 'my file.csv')
+            os.makedirs(os.path.split(original_path)[0], exist_ok=True)
+            assert os.path.exists(os.path.split(original_path)[0])
+            assert ' ' in original_path
+            short_path = windows_short_path(original_path)
+            assert os.path.exists(os.path.split(short_path)[0])
+            assert original_path != short_path
+            assert ' ' in short_path
+            assert os.path.splitext(short_path)[1] == '.csv'
 
 
 class RloadTest(unittest.TestCase):

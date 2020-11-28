@@ -173,34 +173,38 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
 
     :return: True if version at or above, else False
     """
-    path = cmdstan_path()
-    makefile = os.path.join(path, 'makefile')
-    if not os.path.exists(makefile):
-        raise ValueError(
-            'CmdStan installation {}: missing makefile'.format(path)
-        )
-    version = None
-    with open(makefile, 'r') as fd:
-        contents = fd.read()
-        start_idx = contents.find('CMDSTAN_VERSION := ') + len(
-            'CMDSTAN_VERSION := '
-        )
-        end_idx = contents.find('\n', start_idx)
-        version = contents[start_idx:end_idx]
-    if version is None:
-        raise ValueError(
-            'Cannot parse version from makefile: {}'.format(makefile)
-        )
-    splits = version.split('.')
-    if len(splits) < 2:
-        raise ValueError(
-            'Cannot parse version from makefile: {}'.format(makefile)
-        )
-    cur_maj = int(splits[0])
-    cur_min = int(splits[1])
+    # pylint:disable=bare-except
+    try:
+        path = cmdstan_path()
+        makefile = os.path.join(path, 'makefile')
+        if not os.path.exists(makefile):
+            raise ValueError(
+                'CmdStan installation {}: missing makefile'.format(path)
+            )
+        version = None
+        with open(makefile, 'r') as fd:
+            contents = fd.read()
+            start_idx = contents.find('CMDSTAN_VERSION := ') + len(
+                'CMDSTAN_VERSION := '
+            )
+            end_idx = contents.find('\n', start_idx)
+            version = contents[start_idx:end_idx]
+        if version is None:
+            raise ValueError(
+                'Cannot parse version from makefile: {}'.format(makefile)
+            )
+        splits = version.split('.')
+        if len(splits) < 2:
+            raise ValueError(
+                'Cannot parse version from makefile: {}'.format(makefile)
+            )
+        cur_maj = int(splits[0])
+        cur_min = int(splits[1])
 
-    if cur_maj > maj or (cur_maj == maj and cur_min >= min):
-        return True
+        if cur_maj > maj or (cur_maj == maj and cur_min >= min):
+            return True
+    except: # noqa
+        pass
     return False
 
 
