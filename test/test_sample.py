@@ -1146,26 +1146,6 @@ class CmdStanMCMCTest(unittest.TestCase):
                 iter_sampling=100,
                 sig_figs=17,
             )
-            bern_draws_17 = bern_fit_17.draws()
-            theta_17 = format(bern_draws_17[99, 0, 7], '.18g')
-            print("theta_17", theta_17)
-            self.assertTrue(theta_17.startswith('0.2123'))
-            self.assertTrue(len(theta_17) == 19)
-            self.assertFalse(theta_17.startswith('0.2124'))
-
-            bern_fit = bern_model.sample(
-                data=jdata,
-                chains=1,
-                seed=12345,
-                iter_sampling=100,
-                sig_figs=9,
-            )
-            bern_draws = bern_fit.draws()
-            theta_9 = format(bern_draws[99, 0, 7], '.18g')
-            print("theta_9", theta_9)
-            self.assertTrue(theta_9.startswith('0.2123'))
-            self.assertTrue(len(theta_9) == 19)
-            self.assertFalse(theta_9.startswith('0.2124'))
 
             with self.assertRaises(ValueError):
                 bern_model.sample(
