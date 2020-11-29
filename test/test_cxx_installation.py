@@ -1,7 +1,7 @@
 """install_cxx_toolchain tests"""
 
-import unittest
 import platform
+import unittest
 
 from cmdstanpy import install_cxx_toolchain
 

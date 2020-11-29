@@ -2,36 +2,36 @@
 
 import json
 import os
-import unittest
 import platform
 import random
 import shutil
+import stat
 import string
 import tempfile
-import stat
+import unittest
 
 import numpy as np
 
-from cmdstanpy import _TMPDIR, _DOT_CMDSTAN, _DOT_CMDSTANPY
+from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY, _TMPDIR
+from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import (
+    MaybeDictToFilePath,
+    TemporaryCopiedFile,
+    check_sampler_csv,
     cmdstan_path,
     cmdstan_version_at,
+    get_latest_cmdstan,
+    jsondump,
+    parse_rdump_value,
+    parse_var_dims,
+    rdump,
+    read_metric,
+    rload,
     set_cmdstan_path,
     validate_cmdstan_path,
-    get_latest_cmdstan,
     validate_dir,
-    check_sampler_csv,
-    MaybeDictToFilePath,
-    read_metric,
-    TemporaryCopiedFile,
     windows_short_path,
-    rdump,
-    rload,
-    parse_rdump_value,
-    jsondump,
-    parse_var_dims,
 )
-from cmdstanpy.model import CmdStanModel
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

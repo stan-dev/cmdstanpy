@@ -71,9 +71,10 @@ disable=bad-continuation,
     redefined-builtin,
     redundant-unittest-assert,
     too-many-branches,
-    too-many-locals
-    
-   
+    too-many-locals,
+    unsubscriptable-object
+
+
 
 
 # Enable the message, report, category or checker with the given id(s). You can

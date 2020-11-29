@@ -1,36 +1,31 @@
 """
 Utility functions
 """
+import logging
+import math
 import os
+import platform
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
 from collections import OrderedDict
 from collections.abc import Sequence
 from numbers import Integral, Real
-
-try:
-    import ujson as json
-except ImportError:
-    import json
-import math
-import platform
-import re
-import subprocess
-import shutil
-import tempfile
-import logging
-import sys
-from typing import Dict, TextIO, List, Union, Tuple
+from typing import Dict, List, TextIO, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
+import ujson as json
 
 from cmdstanpy import (
-    _TMPDIR,
-    _CMDSTAN_WARMUP,
     _CMDSTAN_SAMPLING,
     _CMDSTAN_THIN,
+    _CMDSTAN_WARMUP,
     _DOT_CMDSTAN,
     _DOT_CMDSTANPY,
+    _TMPDIR,
 )
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -203,7 +198,7 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
 
         if cur_maj > maj or (cur_maj == maj and cur_min >= min):
             return True
-    except: # noqa
+    except:  # noqa
         pass
     return False
 

@@ -1,32 +1,33 @@
 """Container objects for results of CmdStan run(s)."""
 
-import os
-import re
-import shutil
 import copy
 import logging
 import math
-from typing import List, Tuple, Dict
+import os
+import re
+import shutil
 from collections import Counter, OrderedDict
 from datetime import datetime
 from time import time
+from typing import Dict, List, Tuple
+
 import numpy as np
 import pandas as pd
 
 from cmdstanpy import _TMPDIR
+from cmdstanpy.cmdstan_args import CmdStanArgs, Method
 from cmdstanpy.utils import (
-    check_sampler_csv,
-    scan_optimize_csv,
-    scan_generated_quantities_csv,
-    scan_variational_csv,
-    create_named_text_file,
     EXTENSION,
+    check_sampler_csv,
     cmdstan_path,
+    create_named_text_file,
     do_command,
     get_logger,
     parse_var_dims,
+    scan_generated_quantities_csv,
+    scan_optimize_csv,
+    scan_variational_csv,
 )
-from cmdstanpy.cmdstan_args import Method, CmdStanArgs
 
 
 class RunSet:

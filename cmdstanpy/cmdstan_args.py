@@ -1,19 +1,20 @@
 """
 CmdStan arguments
 """
-import os
 import logging
-from time import time
+import os
 from enum import Enum, auto
 from numbers import Integral, Real
+from time import time
 from typing import List, Union
+
 from numpy.random import RandomState
 
 from cmdstanpy.utils import (
-    read_metric,
-    get_logger,
     cmdstan_path,
     cmdstan_version_at,
+    get_logger,
+    read_metric,
 )
 
 

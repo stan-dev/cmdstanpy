@@ -1,0 +1,97 @@
+name: CmdStanPy
+
+on:
+  push: 
+    branches:
+      - 'develop'
+      - 'master'
+    tags:
+      - '**'
+  pull_request:
+jobs:
+  cmdstanpy:
+    name: tests and publish
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+      fail-fast: false
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check out github
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies (python)
+        run: |
+          pip install --upgrade pip wheel
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+          pip install codecov
+
+      - name: Run flake8 and pylint
+        run: |
+          mkdir run_tests
+          cd run_tests
+          flake8 --extend-ignore=E127,E201,E202,E203,E231,E252,E266,E402,E999,F841,W503,W605 --max-line-length=80 ../cmdstanpy ../test
+          pylint -v --rcfile=../.pylintrc ../cmdstanpy ../test
+
+      - name: Build wheel
+        run: python setup.py bdist_wheel
+
+      - name: Install wheel (Linux, macOS)
+        if: matrix.os != 'windows-latest'
+        run: pip install dist/*.whl
+
+      - name: Install wheel (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          $whl = Get-ChildItem -Path dist -Filter *.whl | Select-Object -First 1
+          pip install "$whl"
+
+      - name: Show libraries
+        run: python -m pip freeze
+
+      - name: Install CmdStan (Linux, macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          python -m cmdstanpy.install_cmdstan
+          python scripts/clean_examples.py
+
+      - name: Install CmdStan (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          python -m cmdstanpy.install_cmdstan --compiler
+          python scripts/clean_examples.py
+
+      - name: Run tests
+        run: |
+          cd run_tests
+          pytest -v ../test --cov=../cmdstanpy
+
+      - name: Run model with requirements-optional.txt
+        run: |
+          cd run_tests
+          python -m pip install -r ../requirements-optional.txt
+          python ../test/example_script.py
+          python ../scripts/clean_examples.py
+
+      - name: Submit codecov
+        run: |
+          cd run_tests
+          codecov
+
+      - name: Upload to pypi
+        if: success() && startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python -m pip install --no-cache-dir twine
+          python -m twine upload -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD} --skip-existing dist/*

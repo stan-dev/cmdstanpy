@@ -17,13 +17,15 @@ Optional command line arguments:
 """
 import argparse
 import contextlib
+import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tarfile
-import urllib.request
 import urllib.error
+import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 from time import sleep
@@ -195,13 +197,22 @@ def is_version_available(version: str):
     return is_available
 
 
+def get_headers():
+    """Create headers dictionary."""
+    headers = {}
+    GITHUB_PAT = os.environ.get("GITHUB_PAT")  # pylint:disable=invalid-name
+    if GITHUB_PAT is not None:
+        headers["Authorization"] = "token {}".format(GITHUB_PAT)
+    return headers
+
+
 def latest_version():
     """Report latest CmdStan release version."""
+    url = 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
+    request = urllib.request.Request(url, headers=get_headers())
     for i in range(6):
         try:
-            file_tmp, _ = urllib.request.urlretrieve(
-                'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
-            )
+            response = urllib.request.urlopen(request).read()
             break
         except urllib.error.URLError as e:
             print('Cannot connect to github.')
@@ -213,11 +224,12 @@ def latest_version():
             raise CmdStanRetrieveError(
                 'Cannot connect to CmdStan github repo.'
             ) from e
-    with open(file_tmp, 'r') as fd:
-        response = fd.read()
-        start_idx = response.find('\"tag_name\":\"v') + len('"tag_name":"v')
-        end_idx = response.find('\"', start_idx)
-    return response[start_idx:end_idx]
+    content = json.loads(response.decode('utf-8'))
+    tag = content['tag_name']
+    match = re.search(r'v?(.+)', tag)
+    if match is not None:
+        tag = match.group(1)
+    return tag
 
 
 def wrap_progress_hook():
@@ -376,10 +388,8 @@ def main():
         progress = False
 
     if platform.system() == 'Windows' and vars(args)['compiler']:
-        from .install_cxx_toolchain import (
-            main as _main_cxx,
-            is_installed as _is_installed_cxx,
-        )
+        from .install_cxx_toolchain import is_installed as _is_installed_cxx
+        from .install_cxx_toolchain import main as _main_cxx
         from .utils import cxx_toolchain_path
 
         cxx_loc = cmdstan_dir
