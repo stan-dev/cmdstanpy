@@ -1146,6 +1146,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 iter_sampling=100,
                 sig_figs=17,
             )
+            self.assertTrue(bern_fit_17.draws().size)
 
             with self.assertRaises(ValueError):
                 bern_model.sample(
