@@ -198,7 +198,7 @@ def is_version_available(version: str):
 def get_headers():
     """Create headers dictionary."""
     headers = {}
-    GITHUB_PAT = os.environ.get("GITHUB_PAT")
+    GITHUB_PAT = os.environ.get("GITHUB_PAT")  # pylint:disable=invalid-name
     if GITHUB_PAT is not None:
         headers["Authorization"] = "token {}".format(GITHUB_PAT)
     return headers
