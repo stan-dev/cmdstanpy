@@ -1,11 +1,6 @@
 name: CmdStanPy
 
-on:
-  push:
-    branches:
-      - '**'
-    tags:
-      - '**'
+on: [push, pull_request, tags]
 
 jobs:
   cmdstanpy:
@@ -19,14 +14,14 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Checkout github
+      - name: Check out github
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies (python)
         run: |
           pip install --upgrade pip wheel
@@ -42,13 +37,11 @@ jobs:
           pylint -v --rcfile=../.pylintrc ../cmdstanpy ../test
 
       - name: Build wheel
-        run: |
-          python setup.py bdist_wheel
+        run: python setup.py bdist_wheel
 
       - name: Install wheel (Linux, macOS)
         if: matrix.os != 'windows-latest'
-        run: |
-          pip install dist/*.whl
+        run: pip install dist/*.whl
 
       - name: Install wheel (Windows)
         if: matrix.os == 'windows-latest'
@@ -57,8 +50,7 @@ jobs:
           pip install "$whl"
 
       - name: Show libraries
-        run: |
-          python -m pip freeze
+        run: python -m pip freeze
 
       - name: Install CmdStan (Linux, macOS)
         if: matrix.os != 'windows-latest'
@@ -88,16 +80,6 @@ jobs:
         run: |
           cd run_tests
           codecov
-
-      - name: Upload wheel to release
-        uses: svenstaro/upload-release-action@v1-release
-        if: success() && startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*.whl
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
 
       - name: Upload to pypi
         if: success() && startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.9'
