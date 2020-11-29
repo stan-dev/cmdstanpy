@@ -3,12 +3,11 @@ name: CmdStanPy
 on:
   push: 
     branches:
-      - '**'
+      - 'develop'
+      - 'master'
     tags:
       - '**'
   pull_request:
-    branches:
-      - '**'
 jobs:
   cmdstanpy:
     name: tests and publish
