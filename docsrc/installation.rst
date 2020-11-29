@@ -21,7 +21,6 @@ command line using ``pip``:
 The optional packages are
 
   * ``tqdm`` which allows for progress bar display during sampling
-  * ``ujson`` which provides faster IO
 
 To install CmdStanPy with all the optional packages:
 
