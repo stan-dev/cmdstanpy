@@ -61,13 +61,13 @@ jobs:
       - name: Install CmdStan (Linux, macOS)
         if: matrix.os != 'windows-latest'
         run: |
-          python -m cmdstanpy.install_cmdstan --progress
+          python -m cmdstanpy.install_cmdstan
           python scripts/clean_examples.py
 
       - name: Install CmdStan (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          python -m cmdstanpy.install_cmdstan --progress --compiler
+          python -m cmdstanpy.install_cmdstan --compiler
           python scripts/clean_examples.py
 
       - name: Run tests
