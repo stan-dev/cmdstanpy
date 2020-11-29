@@ -1,16 +1,17 @@
 """CmdStan method sample tests"""
 
+import logging
 import os
 import platform
-import logging
 import shutil
-from multiprocessing import cpu_count
-import tempfile
 import stat
+import tempfile
 import unittest
+from multiprocessing import cpu_count
 from time import time
-from testfixtures import LogCapture
+
 import pytest
+from testfixtures import LogCapture
 
 try:
     import ujson as json
@@ -18,10 +19,10 @@ except ImportError:
     import json
 
 from cmdstanpy import _TMPDIR
-from cmdstanpy.cmdstan_args import Method, SamplerArgs, CmdStanArgs
-from cmdstanpy.utils import EXTENSION, cmdstan_version_at
-from cmdstanpy.stanfit import RunSet, CmdStanMCMC
+from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
+from cmdstanpy.stanfit import CmdStanMCMC, RunSet
+from cmdstanpy.utils import EXTENSION, cmdstan_version_at
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

@@ -1,15 +1,16 @@
 """CmdStan method optimize tests"""
 
-import os
 import json
+import os
 import unittest
-import pytest
-import numpy as np
 
-from cmdstanpy.cmdstan_args import OptimizeArgs, CmdStanArgs
-from cmdstanpy.utils import EXTENSION
+import numpy as np
+import pytest
+
+from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import RunSet, CmdStanMLE
+from cmdstanpy.stanfit import CmdStanMLE, RunSet
+from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

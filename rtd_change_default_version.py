@@ -1,5 +1,6 @@
-import requests
 import sys
+
+import requests
 
 # This scrip accepts 4 arguments in order:
 # Project name in readthedocs, readthedocs username, readthedocs password and version in readthedocs to set as default.

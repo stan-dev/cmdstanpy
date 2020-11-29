@@ -2,6 +2,7 @@
 
 import os
 import re
+
 import setuptools
 
 HERE = os.path.dirname(__file__)

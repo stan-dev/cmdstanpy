@@ -4,14 +4,14 @@ import os
 import shutil
 import unittest
 from unittest.mock import Mock
-import pytest
-from testfixtures import LogCapture
-import numpy as np
-import tqdm
 
-from cmdstanpy.utils import EXTENSION
+import numpy as np
+import pytest
+import tqdm
+from testfixtures import LogCapture
+
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import cmdstan_path
+from cmdstanpy.utils import EXTENSION, cmdstan_path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

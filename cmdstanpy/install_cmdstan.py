@@ -17,13 +17,15 @@ Optional command line arguments:
 """
 import argparse
 import contextlib
+import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tarfile
-import urllib.request
 import urllib.error
+import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 from time import sleep
@@ -386,10 +388,8 @@ def main():
         progress = False
 
     if platform.system() == 'Windows' and vars(args)['compiler']:
-        from .install_cxx_toolchain import (
-            main as _main_cxx,
-            is_installed as _is_installed_cxx,
-        )
+        from .install_cxx_toolchain import is_installed as _is_installed_cxx
+        from .install_cxx_toolchain import main as _main_cxx
         from .utils import cxx_toolchain_path
 
         cxx_loc = cmdstan_dir

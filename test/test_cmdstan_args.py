@@ -1,23 +1,23 @@
 """CmdStan argument tests"""
 
+import logging
 import os
 import platform
-import logging
 import unittest
 from time import time
 
 from testfixtures import LogCapture
 
 from cmdstanpy import _TMPDIR, cmdstan_path
-from cmdstanpy.utils import cmdstan_version_at
 from cmdstanpy.cmdstan_args import (
-    Method,
-    SamplerArgs,
     CmdStanArgs,
-    OptimizeArgs,
     GenerateQuantitiesArgs,
+    Method,
+    OptimizeArgs,
+    SamplerArgs,
     VariationalArgs,
 )
+from cmdstanpy.utils import cmdstan_version_at
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

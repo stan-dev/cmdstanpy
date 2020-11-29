@@ -12,8 +12,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
 
 # import sphinx_gallery
 import sphinx_rtd_theme
@@ -44,9 +44,10 @@ extensions = [
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_show_class_members = False
 
+from distutils.version import LooseVersion
+
 # pngmath / imgmath compatibility layer for different sphinx versions
 import sphinx
-from distutils.version import LooseVersion
 
 if LooseVersion(sphinx.__version__) < LooseVersion('1.4'):
     extensions.append('sphinx.ext.pngmath')

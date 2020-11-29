@@ -26,7 +26,6 @@ from time import sleep
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import validate_dir
 
-
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
 

@@ -3,10 +3,10 @@
 import unittest
 
 from cmdstanpy.install_cmdstan import (
+    CmdStanRetrieveError,
     is_version_available,
     latest_version,
     retrieve_version,
-    CmdStanRetrieveError,
 )
 
 
