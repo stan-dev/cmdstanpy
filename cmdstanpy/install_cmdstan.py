@@ -210,7 +210,7 @@ def latest_version():
     request = urllib.request.Request(url, headers=get_headers())
     for i in range(6):
         try:
-            file_tmp, _ = urllib.request.urlretrieve(request)
+            response = urllib.request.urlopen(request).read()
             break
         except urllib.error.URLError as e:
             print('Cannot connect to github.')
@@ -222,11 +222,12 @@ def latest_version():
             raise CmdStanRetrieveError(
                 'Cannot connect to CmdStan github repo.'
             ) from e
-    with open(file_tmp, 'r') as fd:
-        response = fd.read()
-        start_idx = response.find('\"tag_name\":\"v') + len('"tag_name":"v')
-        end_idx = response.find('\"', start_idx)
-    return response[start_idx:end_idx]
+    content = json.loads(response.decode('utf-8'))
+    tag = content['tag_name']
+    match = re.search(r'v?(.+)', tag)
+    if match is not None:
+        tag = match.group(1)
+    return tag
 
 
 def wrap_progress_hook():
