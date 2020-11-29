@@ -1,7 +1,14 @@
 name: CmdStanPy
 
-on: [push, pull_request, tags]
-
+on:
+  push: 
+    branches:
+      - '**'
+    tags:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
 jobs:
   cmdstanpy:
     name: tests and publish
