@@ -35,15 +35,11 @@ def _cleanup_tmpdir():
 atexit.register(_cleanup_tmpdir)
 
 
-from .utils import (
-    set_cmdstan_path,
-    cmdstan_path,
-    set_make_env,
-    install_cmdstan,
-)  # noqa
-from .stanfit import CmdStanMCMC, CmdStanMLE, CmdStanGQ, CmdStanVB  # noqa
-from .model import CmdStanModel  # noqa
 from ._version import __version__  # noqa
+from .model import CmdStanModel  # noqa
+from .stanfit import CmdStanGQ, CmdStanMCMC, CmdStanMLE, CmdStanVB  # noqa
+from .utils import set_cmdstan_path  # noqa
+from .utils import cmdstan_path, install_cmdstan, set_make_env
 
 __all__ = [
     'set_cmdstan_path',

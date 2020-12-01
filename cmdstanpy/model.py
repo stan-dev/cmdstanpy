@@ -1,12 +1,11 @@
 """CmdStanModel"""
 
+import logging
 import os
 import platform
 import re
-import subprocess
 import shutil
-import logging
-
+import subprocess
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -16,25 +15,25 @@ from typing import Any, Dict, List, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
-    SamplerArgs,
-    OptimizeArgs,
     GenerateQuantitiesArgs,
+    OptimizeArgs,
+    SamplerArgs,
     VariationalArgs,
 )
 from cmdstanpy.compiler_opts import CompilerOptions
 from cmdstanpy.stanfit import (
-    RunSet,
+    CmdStanGQ,
     CmdStanMCMC,
     CmdStanMLE,
-    CmdStanGQ,
     CmdStanVB,
+    RunSet,
 )
 from cmdstanpy.utils import (
-    do_command,
     EXTENSION,
-    cmdstan_path,
     MaybeDictToFilePath,
     TemporaryCopiedFile,
+    cmdstan_path,
+    do_command,
     get_logger,
     scan_sampler_csv,
 )

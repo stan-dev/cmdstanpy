@@ -3,10 +3,12 @@
 import os
 import unittest
 from math import fabs
+
 import pytest
-from cmdstanpy.cmdstan_args import VariationalArgs, CmdStanArgs
+
+from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import RunSet, CmdStanVB
+from cmdstanpy.stanfit import CmdStanVB, RunSet
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

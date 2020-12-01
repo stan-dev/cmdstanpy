@@ -9,20 +9,24 @@ example model ``bernoulli.stan``.
 Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan(py)
-   --overwrite: flag, when specified re-installs existing version.
-   --verbose: flag, when specified prints output from CmdStan build process.
+   --overwrite: flag, when specified re-installs existing version
+   --verbose: flag, when specified prints output from CmdStan build process
+   --progress: flag, when specified show progress bar for CmdStan download
 
-   -c, --compiler : add C++ compiler to path (Windows only)
+   -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse
 import contextlib
+import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tarfile
-import urllib.request
 import urllib.error
+import urllib.request
+from collections import OrderedDict
 from pathlib import Path
 from time import sleep
 
@@ -51,15 +55,21 @@ def pushd(new_dir: str):
 
 def usage():
     """Print usage."""
-    print(
-        """Arguments:
-        -v (--version) :CmdStan version
+    msg = """
+    Arguments:
+        -v (--version) : CmdStan version
         -d (--dir) : install directory
         --overwrite : replace installed version
         --verbose : show CmdStan build messages
-        -h (--help) : this message
+        --progress : show progress bar for CmdStan download
         """
-    )
+
+    if platform.system() == "Windows":
+        msg += "-c (--compiler) : add C++ compiler to path (Windows only)\n"
+
+    msg += "        -h (--help) : this message"
+
+    print(msg)
 
 
 def install_version(
@@ -93,8 +103,9 @@ def install_version(
                 env=os.environ,
             )
             while proc.poll() is None:
-                if verbose:
-                    print(proc.stdout.readline().decode('utf-8').strip())
+                output = proc.stdout.readline().decode('utf-8').strip()
+                if verbose and output:
+                    print(output, flush=True)
             _, stderr = proc.communicate()
             if proc.returncode:
                 msgs = ['Command "make clean-all" failed']
@@ -111,8 +122,9 @@ def install_version(
             env=os.environ,
         )
         while proc.poll() is None:
-            if verbose:
-                print(proc.stdout.readline().decode('utf-8').strip())
+            output = proc.stdout.readline().decode('utf-8').strip()
+            if verbose and output:
+                print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Command "make build" failed']
@@ -126,6 +138,18 @@ def install_version(
                 os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
             ).as_posix(),
         ]
+        if platform.system() == "Windows":
+            # Add tbb to the $PATH on Windows
+            libtbb = os.path.join(
+                os.getcwd(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
+            )
+            os.environ['PATH'] = ';'.join(
+                list(
+                    OrderedDict.fromkeys(
+                        [libtbb] + os.environ.get('PATH', '').split(';')
+                    )
+                )
+            )
         proc = subprocess.Popen(
             cmd,
             cwd=None,
@@ -133,6 +157,8 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
+        while proc.poll() is None:
+            proc.stdout.readline().decode('utf-8')
         _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Failed to compile example model bernoulli.stan']
@@ -171,13 +197,22 @@ def is_version_available(version: str):
     return is_available
 
 
+def get_headers():
+    """Create headers dictionary."""
+    headers = {}
+    GITHUB_PAT = os.environ.get("GITHUB_PAT")  # pylint:disable=invalid-name
+    if GITHUB_PAT is not None:
+        headers["Authorization"] = "token {}".format(GITHUB_PAT)
+    return headers
+
+
 def latest_version():
     """Report latest CmdStan release version."""
+    url = 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
+    request = urllib.request.Request(url, headers=get_headers())
     for i in range(6):
         try:
-            file_tmp, _ = urllib.request.urlretrieve(
-                'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
-            )
+            response = urllib.request.urlopen(request).read()
             break
         except urllib.error.URLError as e:
             print('Cannot connect to github.')
@@ -189,14 +224,41 @@ def latest_version():
             raise CmdStanRetrieveError(
                 'Cannot connect to CmdStan github repo.'
             ) from e
-    with open(file_tmp, 'r') as fd:
-        response = fd.read()
-        start_idx = response.find('\"tag_name\":\"v') + len('"tag_name":"v')
-        end_idx = response.find('\"', start_idx)
-    return response[start_idx:end_idx]
+    content = json.loads(response.decode('utf-8'))
+    tag = content['tag_name']
+    match = re.search(r'v?(.+)', tag)
+    if match is not None:
+        tag = match.group(1)
+    return tag
 
 
-def retrieve_version(version: str):
+def wrap_progress_hook():
+    try:
+        from tqdm import tqdm
+
+        pbar = tqdm(
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+        )
+
+        def download_progress_hook(count, block_size, total_size):
+            if pbar.total is None:
+                pbar.total = total_size
+                pbar.reset()
+            downloaded_size = count * block_size
+            pbar.update(downloaded_size - pbar.n)
+            if pbar.n >= total_size:
+                pbar.close()
+
+    except (ImportError, ModuleNotFoundError):
+        print("tqdm is not installed, progressbar not shown")
+        download_progress_hook = None
+
+    return download_progress_hook
+
+
+def retrieve_version(version: str, progress=True):
     """Download specified CmdStan version."""
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
@@ -207,7 +269,13 @@ def retrieve_version(version: str):
     )
     for i in range(6):  # always retry to allow for transient URLErrors
         try:
-            file_tmp, _ = urllib.request.urlretrieve(url, filename=None)
+            if progress:
+                progress_hook = wrap_progress_hook()
+            else:
+                progress_hook = None
+            file_tmp, _ = urllib.request.urlretrieve(
+                url, filename=None, reporthook=progress_hook
+            )
             break
         except urllib.error.HTTPError as e:
             raise CmdStanRetrieveError(
@@ -251,16 +319,37 @@ def retrieve_version(version: str):
 def main():
     """Main."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v')
-    parser.add_argument('--dir', '-d')
-    parser.add_argument('--overwrite', action='store_true')
-    parser.add_argument('--verbose', action='store_true')
+    parser.add_argument(
+        '--version', '-v', help="version, defaults to latest release version"
+    )
+    parser.add_argument(
+        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan(py)"
+    )
+    parser.add_argument(
+        '--overwrite',
+        action='store_true',
+        help="flag, when specified re-installs existing version",
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="flag, when specified prints output from CmdStan build process",
+    )
+    parser.add_argument(
+        '--progress',
+        action='store_true',
+        help="flag, when specified show progress bar for CmdStan download",
+    )
     if platform.system() == 'Windows':
         # use compiler installed with install_cxx_toolchain
         # Install a new compiler if compiler not found
         # Search order is RTools40, RTools35
         parser.add_argument(
-            '--compiler', '-c', dest='compiler', action='store_true'
+            '--compiler',
+            '-c',
+            dest='compiler',
+            action='store_true',
+            help="flag, add C++ compiler to path (Windows only)",
         )
     args = parser.parse_args(sys.argv[1:])
 
@@ -288,24 +377,46 @@ def main():
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
+    if vars(args)['progress']:
+        progress = vars(args)['progress']
+        try:
+            # pylint: disable=unused-import
+            from tqdm import tqdm  # noqa: F401
+        except (ImportError, ModuleNotFoundError):
+            progress = False
+    else:
+        progress = False
+
     if platform.system() == 'Windows' and vars(args)['compiler']:
-        from .install_cxx_toolchain import (
-            main as _main_cxx,
-            is_installed as _is_installed_cxx,
-        )
+        from .install_cxx_toolchain import is_installed as _is_installed_cxx
+        from .install_cxx_toolchain import main as _main_cxx
         from .utils import cxx_toolchain_path
 
         cxx_loc = cmdstan_dir
         compiler_found = False
-        for cxx_version in ['40', '35']:
-            if _is_installed_cxx(cxx_loc, cxx_version):
-                compiler_found = True
+        rtools40_home = os.environ.get('RTOOLS40_HOME')
+        for cxx_loc in (
+            [rtools40_home] if rtools40_home is not None else []
+        ) + [
+            cmdstan_dir,
+            os.path.join(os.path.abspath("/"), "RTools40"),
+            os.path.join(os.path.abspath("/"), "RTools"),
+            os.path.join(os.path.abspath("/"), "RTools35"),
+            os.path.join(os.path.abspath("/"), "RBuildTools"),
+        ]:
+            for cxx_version in ['40', '35']:
+                if _is_installed_cxx(cxx_loc, cxx_version):
+                    compiler_found = True
+                    break
+            if compiler_found:
                 break
         if not compiler_found:
             print('Installing RTools40')
             # copy argv and clear sys.argv
             original_argv = sys.argv[:]
-            sys.argv = sys.argv[:1]
+            sys.argv = [
+                item for item in sys.argv if item not in ("--compiler", "-c")
+            ]
             _main_cxx()
             sys.argv = original_argv
             cxx_version = '40'
@@ -326,7 +437,7 @@ def main():
             )
         ):
             try:
-                retrieve_version(version)
+                retrieve_version(version, progress)
                 install_version(
                     cmdstan_version=cmdstan_version,
                     overwrite=vars(args)['overwrite'],

@@ -2,11 +2,11 @@
 import os
 import sys
 
-from cmdstanpy import CmdStanModel, cmdstan_path
-
 # explicit import to test if it is installed
 # pylint: disable=E0401,W0611,C0411
 import tqdm  # noqa
+
+from cmdstanpy import CmdStanModel, cmdstan_path
 
 
 def run_bernoulli_fit():

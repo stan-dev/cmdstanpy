@@ -10,6 +10,7 @@ Optional command line arguments:
    -d, --dir : install directory, defaults to '~/.cmdstan(py)
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
    -m --no-make : don't install mingw32-make (Windows RTools 4.0 only)
+   --progress : flag, when specified show progress bar for RTools download
 """
 import argparse
 import contextlib
@@ -24,7 +25,6 @@ from time import sleep
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import validate_dir
-
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
@@ -47,6 +47,7 @@ def usage():
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
+        --progress : flag, when specified show progress bar for RTools download
         -h (--help) : this message
         """
     )
@@ -72,7 +73,9 @@ def get_config(dir, silent):
     return config
 
 
-def install_version(installation_dir, installation_file, version, silent):
+def install_version(
+    installation_dir, installation_file, version, silent, verbose=False
+):
     """Install specified toolchain version."""
     with pushd('.'):
         print(
@@ -92,7 +95,7 @@ def install_version(installation_dir, installation_file, version, silent):
         )
         while proc.poll() is None:
             output = proc.stdout.readline().decode('utf-8').strip()
-            if output:
+            if output and verbose:
                 print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
@@ -108,7 +111,7 @@ def install_version(installation_dir, installation_file, version, silent):
     print('Installed {}'.format(os.path.splitext(installation_file)[0]))
 
 
-def install_mingw32_make(toolchain_loc):
+def install_mingw32_make(toolchain_loc, verbose=False):
     """Install mingw32-make for Windows RTools 4.0."""
     os.environ['PATH'] = ';'.join(
         list(
@@ -142,7 +145,7 @@ def install_mingw32_make(toolchain_loc):
         )
         while proc.poll() is None:
             output = proc.stdout.readline().decode('utf-8').strip()
-            if output:
+            if output and verbose:
                 print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
@@ -192,12 +195,44 @@ def latest_version():
     return ''
 
 
-def retrieve_toolchain(filename, url):
+def wrap_progress_hook():
+    try:
+        from tqdm import tqdm
+
+        pbar = tqdm(
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+        )
+
+        def download_progress_hook(count, block_size, total_size):
+            if pbar.total is None:
+                pbar.total = total_size
+                pbar.reset()
+            downloaded_size = count * block_size
+            pbar.update(downloaded_size - pbar.n)
+            if pbar.n >= total_size:
+                pbar.close()
+
+    except (ImportError, ModuleNotFoundError):
+        print("tqdm was not downloaded, progressbar not shown")
+        download_progress_hook = None
+
+    return download_progress_hook
+
+
+def retrieve_toolchain(filename, url, progress=True):
     """Download toolchain from URL."""
     print('Downloading C++ toolchain: {}'.format(filename))
     for i in range(6):
         try:
-            _ = urllib.request.urlretrieve(url, filename=filename)
+            if progress:
+                progress_hook = wrap_progress_hook()
+            else:
+                progress_hook = None
+            _ = urllib.request.urlretrieve(
+                url, filename=filename, reporthook=progress_hook
+            )
             break
         except urllib.error.URLError as err:
             print('Failed to download C++ toolchain')
@@ -260,10 +295,32 @@ def main():
         raise NotImplementedError(msg % platform.system())
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v')
-    parser.add_argument('--dir', '-d')
-    parser.add_argument('--silent', '-s', action='store_true')
-    parser.add_argument('--no-make', '-m', action='store_false')
+    parser.add_argument('--version', '-v', help="version, defaults to latest")
+    parser.add_argument(
+        '--dir', '-d', help="install directory, defaults to '~/.cmdstan(py)"
+    )
+    parser.add_argument(
+        '--silent',
+        '-s',
+        action='store_true',
+        help="install with /VERYSILENT instead of /SILENT for RTools",
+    )
+    parser.add_argument(
+        '--no-make',
+        '-m',
+        action='store_false',
+        help="don't install mingw32-make (Windows RTools 4.0 only)",
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="flag, when specified prints output from RTools build process",
+    )
+    parser.add_argument(
+        '--progress',
+        action='store_true',
+        help="flag, when specified show progress bar for CmdStan download",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     toolchain = get_toolchain_name()
@@ -274,6 +331,9 @@ def main():
     print("C++ toolchain '{}' version: {}".format(toolchain, version))
 
     url = get_url(version)
+
+    if 'verbose' in vars(args):
+        verbose = vars(args)['verbose']
 
     install_dir = vars(args)['dir']
     if install_dir is None:
@@ -287,6 +347,16 @@ def main():
         install_dir = cmdstan_dir
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
+
+    if 'progress' in vars(args):
+        progress = vars(args)['progress']
+        try:
+            # pylint: disable=unused-import
+            from tqdm import tqdm  # noqa: F401
+        except (ImportError, ModuleNotFoundError):
+            progress = False
+    else:
+        progress = False
 
     if platform.system() == 'Windows':
         silent = 'silent' in vars(args)
@@ -303,9 +373,15 @@ def main():
         else:
             if os.path.exists(toolchain_folder):
                 shutil.rmtree(toolchain_folder, ignore_errors=False)
-            retrieve_toolchain(toolchain_folder + EXTENSION, url)
+            retrieve_toolchain(
+                toolchain_folder + EXTENSION, url, progress=progress
+            )
             install_version(
-                toolchain_folder, toolchain_folder + EXTENSION, version, silent
+                toolchain_folder,
+                toolchain_folder + EXTENSION,
+                version,
+                silent,
+                verbose,
             )
         if (
             'no-make' not in vars(args)
@@ -319,7 +395,7 @@ def main():
             ):
                 print('mingw32-make.exe already installed')
             else:
-                install_mingw32_make(toolchain_folder)
+                install_mingw32_make(toolchain_folder, verbose)
 
 
 if __name__ == '__main__':
