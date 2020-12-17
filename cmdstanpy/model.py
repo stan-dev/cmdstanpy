@@ -6,6 +6,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -36,6 +37,7 @@ from cmdstanpy.utils import (
     do_command,
     get_logger,
     scan_sampler_csv,
+    proc_readline_ext
 )
 
 
@@ -1084,18 +1086,20 @@ class CmdStanModel:
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
         )
+        proc_readline_ext(proc,stderr_readline=False)
         if pbar:
-            stdout_pbar = self._read_progress(proc, pbar, idx)
-        stdout, stderr = proc.communicate()
-        if pbar:
-            stdout = stdout_pbar + stdout
+            self._read_progress(proc, pbar, idx)
+        proc.wait_log()
+        stdout = proc.get_stdout_log()
+        stderr = proc.get_stderr_log()
+        proc.wait()
         self._logger.info('finish chain %u', idx + 1)
         if stdout:
             with open(runset.stdout_files[idx], 'w+') as fd:
-                fd.write(stdout.decode('utf-8'))
+                fd.write(stdout.decode(sys.stdin.encoding, errors='ignore'))
         if stderr:
             with open(runset.stderr_files[idx], 'w+') as fd:
-                fd.write(stderr.decode('utf-8'))
+                fd.write(stderr.decode(sys.stdin.encoding, errors='ignore'))
         runset._set_retcode(idx, proc.returncode)
 
     def _read_progress(
@@ -1112,16 +1116,20 @@ class CmdStanModel:
         )
         pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
         previous_count = 0
-        stdout = b''
         changed_description = False  # Changed from 'warmup' to 'sample'
         pbar.set_description(desc=f'Chain {idx + 1} - warmup', refresh=True)
 
         try:
             # iterate while process is sampling
-            while proc.poll() is None:
-                output = proc.stdout.readline()
-                stdout += output
-                output = output.decode('utf-8').strip()
+            running=True
+            while running:
+                if(not proc.poll() is None):
+                    proc.wait_log()
+                    running=False
+                if(not proc.wait_newline(0.5)): continue
+                output = proc.qout.readline()
+                if(len(output)==0):continue
+                output = output.decode(sys.stdin.encoding, errors='ignore').strip()
                 if output.startswith('Iteration'):
                     match = re.search(pattern_compiled, output)
                     if match:
@@ -1154,4 +1162,3 @@ class CmdStanModel:
                 repr(e),
             )
 
-        return stdout

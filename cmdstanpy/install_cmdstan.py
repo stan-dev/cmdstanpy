@@ -29,9 +29,10 @@ import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 from time import sleep
+import sys
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import validate_dir
+from cmdstanpy.utils import validate_dir,proc_readline_ext
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -102,15 +103,20 @@ def install_version(
                 stderr=subprocess.PIPE,
                 env=os.environ,
             )
+            proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
             while proc.poll() is None:
-                output = proc.stdout.readline().decode('utf-8').strip()
+                if(not proc.wait_newline(0.5)): continue
+                output = proc.qout.readline()
+                if(len(output)==0):continue
+                output=output.decode(sys.stdin.encoding, errors='ignore').strip()
                 if verbose and output:
                     print(output, flush=True)
-            _, stderr = proc.communicate()
+            proc.wait_log()
+            stderr = proc.get_stderr_log()
             if proc.returncode:
                 msgs = ['Command "make clean-all" failed']
                 if stderr:
-                    msgs.append(stderr.decode('utf-8').strip())
+                    msgs.append(stderr.decode(sys.stdin.encoding, errors='ignore').strip())
                 raise CmdStanInstallError('\n'.join(msgs))
             print('Rebuilding version {}'.format(cmdstan_version))
         cmd = [make, 'build']
@@ -121,15 +127,18 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
+        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
         while proc.poll() is None:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if verbose and output:
+            if(not proc.wait_newline(0.5)): continue
+            output=proc.qout.readline().decode(sys.stdin.encoding, errors='ignore').strip()
+            if verbose and len(output)!=0:
                 print(output, flush=True)
-        _, stderr = proc.communicate()
+        proc.wait_log()
+        stderr = proc.get_stderr_log()
         if proc.returncode:
             msgs = ['Command "make build" failed']
             if stderr:
-                msgs.append(stderr.decode('utf-8').strip())
+                msgs.append(stderr.decode(sys.stdin.encoding, errors='ignore').strip())
             raise CmdStanInstallError('\n'.join(msgs))
         print('Test model compilation')
         cmd = [
@@ -157,13 +166,21 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
+        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
         while proc.poll() is None:
-            proc.stdout.readline().decode('utf-8')
-        _, stderr = proc.communicate()
+            if(not proc.wait_newline(0.5)): continue
+            if(not proc.wait_newline(0.5)): continue
+            output = proc.qout.readline()
+            if(len(output)==0):continue
+            output=output.decode(sys.stdin.encoding, errors='ignore').strip()
+            if verbose and len(output)!=0:
+                print(output, flush=True)
+        proc.wait_log()
+        stderr = proc.get_stderr_log()
         if proc.returncode:
             msgs = ['Failed to compile example model bernoulli.stan']
             if stderr:
-                msgs.append(stderr.decode('utf-8').strip())
+                msgs.append(stderr.decode(sys.stdin.encoding, errors='ignore').strip())
             raise CmdStanInstallError('\n'.join(msgs))
     print('Installed {}'.format(cmdstan_version))
 
@@ -224,7 +241,7 @@ def latest_version():
             raise CmdStanRetrieveError(
                 'Cannot connect to CmdStan github repo.'
             ) from e
-    content = json.loads(response.decode('utf-8'))
+    content = json.loads(response.decode(sys.stdin.encoding, errors='ignore'))
     tag = content['tag_name']
     match = re.search(r'v?(.+)', tag)
     if match is not None:

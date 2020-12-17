@@ -24,7 +24,7 @@ from collections import OrderedDict
 from time import sleep
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import validate_dir
+from cmdstanpy.utils import validate_dir,proc_readline_ext
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
@@ -93,15 +93,20 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
+        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
         while proc.poll() is None:
-            output = proc.stdout.readline().decode('utf-8').strip()
+            if(not proc.wait_newline(0.5)): continue
+            o=proc.qout.readline()
+            if(len(o)==0):continue
+            output = o.decode(sys.stdin.encoding, errors='ignore').strip()
             if output and verbose:
                 print(output, flush=True)
-        _, stderr = proc.communicate()
+        proc.wait_log()
+        stderr = proc.get_stderr_log()
         if proc.returncode:
             print('Installation failed: returncode={}'.format(proc.returncode))
             if stderr:
-                print(stderr.decode('utf-8').strip())
+                print(stderr.decode(sys.stdin.encoding, errors='ignore').strip())
             if is_installed(installation_dir, version):
                 print('Installation files found at the installation location.')
             sys.exit(3)
@@ -143,11 +148,16 @@ def install_mingw32_make(toolchain_loc, verbose=False):
             stderr=subprocess.PIPE,
             env=os.environ,
         )
+        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
         while proc.poll() is None:
-            output = proc.stdout.readline().decode('utf-8').strip()
+            if(not proc.wait_newline(0.5)): continue
+            o=proc.qout.readline()
+            if(len(o)==0):continue
+            output = o.decode(sys.stdin.encoding, errors='ignore').strip()
             if output and verbose:
                 print(output, flush=True)
-        _, stderr = proc.communicate()
+        proc.wait_log()
+        stderr = proc.get_stderr_log()
         if proc.returncode:
             print(
                 'mingw32-make installation failed: returncode={}'.format(
@@ -155,7 +165,7 @@ def install_mingw32_make(toolchain_loc, verbose=False):
                 )
             )
             if stderr:
-                print(stderr.decode('utf-8').strip())
+                print(stderr.decode(sys.stdin.encoding, errors='ignore').strip())
             sys.exit(3)
     print('Installed mingw32-make.exe')
 
