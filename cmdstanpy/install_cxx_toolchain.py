@@ -24,7 +24,7 @@ from collections import OrderedDict
 from time import sleep
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import validate_dir,proc_readline_ext
+from cmdstanpy.utils import validate_dir, proc_readline_ext
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
@@ -93,11 +93,13 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
-        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
+        proc_readline_ext(proc, stdout_log=False, stderr_readline=False)
         while proc.poll() is None:
-            if(not proc.wait_newline(0.5)): continue
-            o=proc.qout.readline()
-            if(len(o)==0):continue
+            if not proc.wait_newline(0.5):
+                continue
+            o = proc.qout.readline()
+            if len(o) == 0:
+                continue
             output = o.decode(sys.stdin.encoding, errors='ignore').strip()
             if output and verbose:
                 print(output, flush=True)
@@ -148,11 +150,13 @@ def install_mingw32_make(toolchain_loc, verbose=False):
             stderr=subprocess.PIPE,
             env=os.environ,
         )
-        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
+        proc_readline_ext(proc, stdout_log=False, stderr_readline=False)
         while proc.poll() is None:
-            if(not proc.wait_newline(0.5)): continue
-            o=proc.qout.readline()
-            if(len(o)==0):continue
+            if not proc.wait_newline(0.5):
+                continue
+            o = proc.qout.readline()
+            if len(o) == 0:
+                continue
             output = o.decode(sys.stdin.encoding, errors='ignore').strip()
             if output and verbose:
                 print(output, flush=True)

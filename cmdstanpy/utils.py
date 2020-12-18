@@ -941,11 +941,13 @@ def install_cmdstan(
     proc = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
     )
-    proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
+    proc_readline_ext(proc, stdout_log=False, stderr_readline=False)
     while proc.poll() is None:
-        if(not proc.wait_newline(0.5)): continue
-        output=proc.qout.readline()
-        if(len(output) == 0):continue
+        if not proc.wait_newline(0.5):
+            continue
+        output = proc.qout.readline()
+        if len(output) == 0:
+            continue
         print(output.decode(sys.stdin.encoding, errors='ignore').strip())
     proc.wait_log()
     stderr = proc.get_stderr_log()
@@ -1068,58 +1070,69 @@ class TemporaryCopiedFile:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
 
 
-def proc_readline_ext(proc,stdout_log=True,stderr_log=True,stdout_readline=True,stderr_readline=True):
-    from threading  import Thread
+def proc_readline_ext(proc, stdout_log=True, stderr_log=True,
+                        stdout_readline=True, stderr_readline=True):
+    from threading import Thread
     from queue import Queue, Empty
     from time import sleep
 
     qout = Queue()
     qerr = Queue()
-    log=[b'',b'']#0:stdout,1:stderr
-    
-    def _enqueue_output(out, queue,log_id):
-        def _r(): 
+    log = [b'', b'']  # 0:stdout,1:stderr
+
+    def _enqueue_output(out, queue, log_id):
+        def _r():
             for line in iter(out.readline, b''):
-                if(not queue is None): queue.put(line)
-                if(0<=log_id):log[log_id]+=line
+                if queue is not None:
+                    queue.put(line)
+                if 0 <= log_id:
+                    log[log_id] += line
             out.close()
         return _r
 
     def _readline_nowait(q):
         def _r():
-            try: 
+            try:
                 return q.get_nowait()
             except Empty:
                 return ''
         return _r
-    
-    to= Thread(target=_enqueue_output(proc.stdout,qout if stdout_readline else None,0 if stdout_log else -1 ) )
-    to.daemon = True # thread dies with the program
+
+    to = Thread(target=_enqueue_output(proc.stdout,
+                qout if stdout_readline else None, 0 if stdout_log else -1))
+    to.daemon = True  # thread dies with the program
     to.start()
-    te= Thread(target=_enqueue_output(proc.stderr, qerr if stderr_readline else None,1 if stderr_log else -1))
-    te.daemon = True 
+    te = Thread(target=_enqueue_output(proc.stderr,
+                qerr if stderr_readline else None, 1 if stderr_log else -1))
+    te.daemon = True
     te.start()
-    
+
     def no_newline():
         return qout.empty() and qerr.empty()
+
     def wait_newline(timeout=0.5):
         if(no_newline()):
             sleep(0.5)
             return False
         return True
-        
-    qout.readline=_readline_nowait(qout)
-    qerr.readline=_readline_nowait(qerr)
-    proc.qout=qout
-    proc.qerr=qerr    
+
+    qout.readline = _readline_nowait(qout)
+    qerr.readline = _readline_nowait(qerr)
+    proc.qout = qout
+    proc.qerr = qerr
+
     def get_stdout_log():
         return log[0]
+
     def get_stderr_log():
         return log[1]
+
     proc.get_stdout_log = get_stdout_log
     proc.get_stderr_log = get_stderr_log
-    proc.wait_newline=wait_newline
+    proc.wait_newline = wait_newline
+
     def wait_log():
         to.join()
         te.join()
+
     proc.wait_log = wait_log

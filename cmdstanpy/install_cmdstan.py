@@ -29,10 +29,9 @@ import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 from time import sleep
-import sys
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import validate_dir,proc_readline_ext
+from cmdstanpy.utils import validate_dir, proc_readline_ext
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -103,12 +102,14 @@ def install_version(
                 stderr=subprocess.PIPE,
                 env=os.environ,
             )
-            proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
+            proc_readline_ext(proc, stdout_log=False, stderr_readline=False)
             while proc.poll() is None:
-                if(not proc.wait_newline(0.5)): continue
+                if not proc.wait_newline(0.5):
+                    continue
                 output = proc.qout.readline()
-                if(len(output)==0):continue
-                output=output.decode(sys.stdin.encoding, errors='ignore').strip()
+                if len(output) == 0:
+                    continue
+                output = output.decode(sys.stdin.encoding, errors='ignore').strip()
                 if verbose and output:
                     print(output, flush=True)
             proc.wait_log()
@@ -127,11 +128,12 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
-        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
+        proc_readline_ext(proc, stdout_log=False, stderr_readline=False)
         while proc.poll() is None:
-            if(not proc.wait_newline(0.5)): continue
-            output=proc.qout.readline().decode(sys.stdin.encoding, errors='ignore').strip()
-            if verbose and len(output)!=0:
+            if not proc.wait_newline(0.5):
+                continue
+            output = proc.qout.readline().decode(sys.stdin.encoding, errors='ignore').strip()
+            if verbose and len(output) != 0:
                 print(output, flush=True)
         proc.wait_log()
         stderr = proc.get_stderr_log()
@@ -166,14 +168,15 @@ def install_version(
             stderr=subprocess.PIPE,
             env=os.environ,
         )
-        proc_readline_ext(proc,stdout_log=False,stderr_readline=False)
+        proc_readline_ext(proc, stdout_log=False, stderr_readline=False)
         while proc.poll() is None:
-            if(not proc.wait_newline(0.5)): continue
-            if(not proc.wait_newline(0.5)): continue
+            if not proc.wait_newline(0.5):
+                continue
             output = proc.qout.readline()
-            if(len(output)==0):continue
-            output=output.decode(sys.stdin.encoding, errors='ignore').strip()
-            if verbose and len(output)!=0:
+            if len(output) == 0:
+                continue
+            output = output.decode(sys.stdin.encoding, errors='ignore').strip()
+            if verbose and len(output) != 0:
                 print(output, flush=True)
         proc.wait_log()
         stderr = proc.get_stderr_log()

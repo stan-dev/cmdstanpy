@@ -1086,7 +1086,7 @@ class CmdStanModel:
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
         )
-        proc_readline_ext(proc,stderr_readline=False)
+        proc_readline_ext(proc, stderr_readline=False)
         if pbar:
             self._read_progress(proc, pbar, idx)
         proc.wait_log()
@@ -1121,14 +1121,16 @@ class CmdStanModel:
 
         try:
             # iterate while process is sampling
-            running=True
+            running = True
             while running:
                 if(not proc.poll() is None):
                     proc.wait_log()
-                    running=False
-                if(not proc.wait_newline(0.5)): continue
+                    running = False
+                if(not proc.wait_newline(0.5)):
+                    continue
                 output = proc.qout.readline()
-                if(len(output)==0):continue
+                if len(output) == 0:
+                    continue
                 output = output.decode(sys.stdin.encoding, errors='ignore').strip()
                 if output.startswith('Iteration'):
                     match = re.search(pattern_compiled, output)
@@ -1161,4 +1163,3 @@ class CmdStanModel:
                 idx,
                 repr(e),
             )
-
