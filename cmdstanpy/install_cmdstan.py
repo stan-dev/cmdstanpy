@@ -117,7 +117,9 @@ def install_version(
             if proc.returncode:
                 msgs = ['Command "make clean-all" failed']
                 if stderr:
-                    msgs.append(stderr.decode(sys.stdin.encoding, errors='ignore').strip())
+                    msgs.append(stderr.
+                                decode(sys.stdin.encoding, errors='ignore')
+                                .strip())
                 raise CmdStanInstallError('\n'.join(msgs))
             print('Rebuilding version {}'.format(cmdstan_version))
         cmd = [make, 'build']
@@ -132,7 +134,9 @@ def install_version(
         while proc.poll() is None:
             if not proc.wait_newline(0.5):
                 continue
-            output = proc.qout.readline().decode(sys.stdin.encoding, errors='ignore').strip()
+            output = proc.qout.readline().\
+                decode(sys.stdin.encoding, errors='ignore').\
+                strip()
             if verbose and len(output) != 0:
                 print(output, flush=True)
         proc.wait_log()

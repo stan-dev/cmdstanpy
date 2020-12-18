@@ -39,7 +39,7 @@ from ._version import __version__  # noqa
 from .model import CmdStanModel  # noqa
 from .stanfit import CmdStanGQ, CmdStanMCMC, CmdStanMLE, CmdStanVB  # noqa
 from .utils import set_cmdstan_path  # noqa
-from .utils import cmdstan_path, install_cmdstan, set_make_env
+from .utils import cmdstan_path, install_cmdstan, set_make_env  # noqa
 
 __all__ = [
     'set_cmdstan_path',

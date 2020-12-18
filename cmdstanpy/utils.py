@@ -822,7 +822,10 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     if proc.returncode:
         msg = 'ERROR\n'
         if stderr:
-            msg = '{}{} '.format(msg, stderr.decode(sys.stdin.encoding, errors='ignore').strip())
+            msg = '{}{} '.format(msg,
+                                 stderr.
+                                 decode(sys.stdin.encoding, errors='ignore')
+                                 .strip())
         raise RuntimeError(msg)
     if stdout:
         return stdout.decode(sys.stdin.encoding, errors='ignore').strip()
@@ -955,7 +958,9 @@ def install_cmdstan(
     if proc.returncode:
         logger.warning('CmdStan installation failed.')
         if stderr:
-            logger.warning(stderr.decode(sys.stdin.encoding, errors='ignore').strip())
+            logger.warning(stderr.
+                           decode(sys.stdin.encoding, errors='ignore')
+                           .strip())
         return False
     return True
 
@@ -1071,7 +1076,7 @@ class TemporaryCopiedFile:
 
 
 def proc_readline_ext(proc, stdout_log=True, stderr_log=True,
-                        stdout_readline=True, stderr_readline=True):
+                      stdout_readline=True, stderr_readline=True):
     from threading import Thread
     from queue import Queue, Empty
     from time import sleep

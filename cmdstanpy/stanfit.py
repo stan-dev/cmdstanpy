@@ -484,7 +484,7 @@ class CmdStanMCMC:
             self._assemble_draws()
         if not inc_warmup:
             if self._save_warmup:
-                return self._draws[self._draws_warmup :, :, :]
+                return self._draws[self._draws_warmup:, :, :]
             return self._draws
         else:
             if not self._save_warmup:
@@ -821,7 +821,7 @@ class CmdStanMCMC:
                 names.append(column_name)
                 idxs.append(i)
         return pd.DataFrame(
-            self._draws[self._draws_warmup :, :, idxs].reshape(
+            self._draws[self._draws_warmup:, :, idxs].reshape(
                 (dim0, dims), order='A'
             ),
             columns=names,
