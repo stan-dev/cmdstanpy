@@ -45,6 +45,7 @@ from .utils import extract
 __all__ = [
     'set_cmdstan_path',
     'cmdstan_path',
+    'extract',
     'set_make_env',
     'install_cmdstan',
     'CmdStanMCMC',

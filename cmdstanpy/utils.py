@@ -1063,10 +1063,15 @@ class TemporaryCopiedFile:
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
 
-            
-def extract(fit: CmdStanMCMC, parameters: Optional[List]=None, inc_diagnostics: Optional[bool]=False, inc_warmup: Optional[bool]=False) -> Dict[str, Any]:
+
+def extract(
+    fit: CmdStanMCMC,
+    parameters: Optional[List] = None,
+    inc_diagnostics: Optional[bool] = False,
+    inc_warmup: Optional[bool] = False,
+) -> Dict[str, Any]:
     """Extract ndim dictionary from CmdStanPy fit.
-    
+
     Parameters
     ----------
     fit: CmdStanMCMC
@@ -1074,26 +1079,26 @@ def extract(fit: CmdStanMCMC, parameters: Optional[List]=None, inc_diagnostics: 
     inc_diagnostics: bool
         Don't include diagnostics with default paramaters.
     inc_warmup: bool
-    
+
     Returns
     -------
-    dict    
+    dict
     """
     if parameters is None:
         parameters = fit.column_names
         if not inc_diagnostics:
             parameters = [param for param in parameters if param.endswith("__")]
-    
+
     if inc_warmup and not fit._save_warmup:
         inc_warmup = False
-    
+
     data = fit.draws(inc_warmup=inc_warmup)
     draws, chains, *_ = data.shape
     column_groups = defaultdict(list)
     column_locs = defaultdict(list)
     # iterate flat column names
     for i, col in enumerate(fit.column_names):
-        col_base, *col_tail = col.replace("]", "").replace("[", ",").split(",")
+        col_base, *col_tail = col.replace(']', '').replace('[', ',').split(',')
         if len(col_tail):
             # gather nD array locations
             column_groups[col_base].append(tuple(map(int, col_tail)))
@@ -1103,15 +1108,15 @@ def extract(fit: CmdStanMCMC, parameters: Optional[List]=None, inc_diagnostics: 
     for colname, col_dims in column_groups.items():
         # gather parameter dimensions (assumes dense arrays)
         dims[colname] = tuple(np.array(col_dims).max(0))
-    
+
     sample = {}
     valid_base_cols = []
-    # get list of parameters for extraction (basename) X.1.2 --> X
+    # get list of parameters for extraction (basename) X[1,2] --> X
     for col in parameters:
-        base_col = col.split("[")[0].split(".")[0]
+        base_col = col.split('[')[0]
         if base_col not in valid_base_cols:
             valid_base_cols.append(base_col)
-    
+
     for key in valid_base_cols:
         ndim = dims.get(key, None)
         shape_location = column_groups.get(key, None)
