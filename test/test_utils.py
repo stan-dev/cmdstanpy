@@ -623,7 +623,7 @@ class ParseVarDimsTest(unittest.TestCase):
 
     def test_extract(self):
         stan_file = os.path.join(_TMPDIR, "extract_test", "model.stan")
-        os.makedirs(os.path.basedir(stan_file), exist_ok=True)
+        os.makedirs(os.path.dirname(stan_file), exist_ok=True)
         model_code = """
             parameters { matrix[2,3] y[4]; }
             model {
