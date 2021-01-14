@@ -1086,7 +1086,9 @@ def extract(
     if parameters is None:
         parameters = fit.column_names
         if not inc_diagnostics:
-            parameters = [param for param in parameters if param.endswith("__")]
+            parameters = [
+                param for param in parameters if not param.endswith("__")
+            ]
 
     if inc_warmup and not fit._save_warmup:
         inc_warmup = False
