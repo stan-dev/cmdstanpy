@@ -1099,7 +1099,7 @@ def extract(
     # iterate flat column names
     for i, col in enumerate(fit.column_names):
         col_base, *col_tail = col.replace(']', '').replace('[', ',').split(',')
-        if len(col_tail):
+        if col_tail:
             # gather nD array locations
             column_groups[col_base].append(tuple(map(int, col_tail)))
         # gather raw data locations for each parameter
