@@ -1064,13 +1064,15 @@ class TemporaryCopiedFile:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
 
             
-def extract(fit: CmdStanMCMC, parameters: Optional[List]=None, inc_warmup: Optional[bool]=False) -> Dict[str, Any]:
+def extract(fit: CmdStanMCMC, parameters: Optional[List]=None, inc_diagnostics: Optional[bool]=False, inc_warmup: Optional[bool]=False) -> Dict[str, Any]:
     """Extract ndim dictionary from CmdStanPy fit.
     
     Parameters
     ----------
     fit: CmdStanMCMC
     parameters: list
+    inc_diagnostics: bool
+        Don't include diagnostics with default paramaters.
     inc_warmup: bool
     
     Returns
@@ -1079,6 +1081,8 @@ def extract(fit: CmdStanMCMC, parameters: Optional[List]=None, inc_warmup: Optio
     """
     if parameters is None:
         parameters = fit.column_names
+        if not inc_diagnostics:
+            parameters = [param for param in parameters if param.endswith("__")]
     
     if inc_warmup and not fit._save_warmup:
         inc_warmup = False
