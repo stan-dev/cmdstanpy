@@ -632,7 +632,7 @@ class ParseVarDimsTest(unittest.TestCase):
                             y[n, m, l] ~ normal(n, 1);
             }}}}
         """
-        with open(stan_file) as f:
+        with open(stan_file) as fd:
             print(model_code, file=f)
         model = CmdStanModel(stan_file=stan_file)
         model.compile()
