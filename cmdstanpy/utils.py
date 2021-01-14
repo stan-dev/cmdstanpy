@@ -27,7 +27,6 @@ from cmdstanpy import (
     _DOT_CMDSTANPY,
     _TMPDIR,
 )
-from cmdstanpy.stanfit import CmdStanMCMC
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -1065,7 +1064,7 @@ class TemporaryCopiedFile:
 
 
 def extract(
-    fit: CmdStanMCMC,
+    fit: Any,
     parameters: Optional[List] = None,
     inc_diagnostics: Optional[bool] = False,
     inc_warmup: Optional[bool] = False,
