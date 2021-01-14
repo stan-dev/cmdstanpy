@@ -10,10 +10,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from collections.abc import Sequence
 from numbers import Integral, Real
-from typing import Dict, List, TextIO, Tuple, Union
+from typing import Any, Dict, List, Optional, Union, TextIO, Tuple
 
 import numpy as np
 import pandas as pd
@@ -27,6 +27,7 @@ from cmdstanpy import (
     _DOT_CMDSTANPY,
     _TMPDIR,
 )
+from cmdstanpy.stanfit import CmdStanMCMC
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -1061,3 +1062,63 @@ class TemporaryCopiedFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+            
+def extract(fit: CmdStanMCMC, parameters: Optional[List]=None, inc_warmup: Optional[bool]=False) -> Dict[str, Any]:
+    """Extract ndim dictionary from CmdStanPy fit.
+    
+    Parameters
+    ----------
+    fit: CmdStanMCMC
+    parameters: list
+    inc_warmup: bool
+    
+    Returns
+    -------
+    dict    
+    """
+    if parameters is None:
+        parameters = fit.column_names
+    
+    if inc_warmup and not fit._save_warmup:
+        inc_warmup = False
+    
+    data = fit.draws(inc_warmup=inc_warmup)
+    draws, chains, *_ = data.shape
+    column_groups = defaultdict(list)
+    column_locs = defaultdict(list)
+    # iterate flat column names
+    for i, col in enumerate(fit.column_names):
+        col_base, *col_tail = col.replace("]", "").replace("[", ",").split(",")
+        if len(col_tail):
+            # gather nD array locations
+            column_groups[col_base].append(tuple(map(int, col_tail)))
+        # gather raw data locations for each parameter
+        column_locs[col_base].append(i)
+    dims = {}
+    for colname, col_dims in column_groups.items():
+        # gather parameter dimensions (assumes dense arrays)
+        dims[colname] = tuple(np.array(col_dims).max(0))
+    
+    sample = {}
+    valid_base_cols = []
+    # get list of parameters for extraction (basename) X.1.2 --> X
+    for col in parameters:
+        base_col = col.split("[")[0].split(".")[0]
+        if base_col not in valid_base_cols:
+            valid_base_cols.append(base_col)
+    
+    for key in valid_base_cols:
+        ndim = dims.get(key, None)
+        shape_location = column_groups.get(key, None)
+        if ndim is not None:
+            sample[key] = np.full((draws, chains, *ndim), np.nan)
+        if shape_location is None:
+            (i,) = column_locs[key]
+            sample[key] = data[..., i]
+        else:
+            for i, shape_loc in zip(column_locs[key], shape_location):
+                # location to insert extracted array
+                shape_loc = tuple([Ellipsis] + [j - 1 for j in shape_loc])
+                sample[key][shape_loc] = data[..., i]
+    return sample
