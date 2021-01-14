@@ -647,23 +647,23 @@ class ParseVarDimsTest(unittest.TestCase):
         sample = extract(fit)
         assert 'y' in sample
         assert 'lp__' not in sample
-        self.assertEqual(sample['y'].shape, (490, 2, 4, 3, 2))
+        self.assertEqual(sample['y'].shape, (490, 2, 4, 2, 3))
 
         sample = extract(fit, inc_warmup=True)
         assert 'y' in sample
         assert 'lp__' not in sample
-        self.assertEqual(sample['y'].shape, (490 + 490, 2, 4, 3, 2))
+        self.assertEqual(sample['y'].shape, (490 + 490, 2, 4, 2, 3))
 
         sample = extract(fit, inc_diagnostics=True)
         assert 'y' in sample
         assert 'lp__' in sample
-        self.assertEqual(sample['y'].shape, (490, 2, 4, 3, 2))
+        self.assertEqual(sample['y'].shape, (490, 2, 4, 2, 3))
         self.assertEqual(sample['lp__'].shape, (490, 2))
 
         sample = extract(fit, inc_diagnostics=True, inc_warmup=True)
         assert 'y' in sample
         assert 'lp__' in sample
-        self.assertEqual(sample['y'].shape, (490 + 490, 2, 4, 3, 2))
+        self.assertEqual(sample['y'].shape, (490 + 490, 2, 4, 2, 3))
         self.assertEqual(sample['lp__'].shape, (490 + 490, 2))
 
 
