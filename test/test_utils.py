@@ -643,6 +643,7 @@ class ParseVarDimsTest(unittest.TestCase):
             seed=12345,
             iter_sampling=490,
             iter_warmup=490,
+            save_warmup=True,
         )
         sample = extract(fit)
         assert 'y' in sample
