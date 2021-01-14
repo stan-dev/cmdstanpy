@@ -20,6 +20,7 @@ from cmdstanpy.utils import (
     check_sampler_csv,
     cmdstan_path,
     cmdstan_version_at,
+    extract,
     get_latest_cmdstan,
     jsondump,
     parse_rdump_value,
@@ -620,6 +621,50 @@ class ParseVarDimsTest(unittest.TestCase):
         self.assertEqual(vars_dict['phi'], (2, 5))
         self.assertEqual(vars_dict['bar'], (2,))
 
+    def test_extract(self):
+        stan_file = os.path.join(_TMPDIR, "extract_test", "model.stan")
+        model_code = """
+            parameters { matrix[2,3] y[4]; } 
+            model { 
+                for (n in 1:4) {
+                    for (m in 1:2) {
+                        for (l in 1:3) {
+                            y[n, m, l] ~ normal(n, 1);
+            }}}}
+        """
+        with open(stan_file) as f:
+            print("""
+        model = CmdStanModel(stan_file=stan_file)
+        model.compile()
+        fit = model.sample(
+            chains=2,
+            parallel_chains=1,
+            seed=12345,
+            iter_sampling=490,
+            iter_warmup=490,
+        )
+        sample = extract(fit)
+        assert "y" in sample
+        assert "lp__" not in sample
+        self.assertEqual(sample["y"].shape, (490, 2, 3, 2))
+        
+        sample = extract(fit, inc_warmup=True)
+        assert "y" in sample
+        assert "lp__" not in sample
+        self.assertEqual(sample["y"].shape, (490+490, 2, 4, 3, 2))
+        
+        sample = extract(fit, inc_diagnostics=True)
+        assert "y" in sample
+        assert "lp__" in sample
+        self.assertEqual(sample["y"].shape, (490, 2, 4, 3, 2))
+        self.assertEqual(sample["lp__"].shape, (490, 2))
+        
+        sample = extract(fit, inc_diagnostics=True, inc_warmup=True)
+        assert "y" in sample
+        assert "lp__" in sample
+        self.assertEqual(sample["y"].shape, (490+490, 2, 4, 3, 2))
+        self.assertEqual(sample["lp__"].shape, (490+490, 2))
+        
 
 if __name__ == '__main__':
     unittest.main()
