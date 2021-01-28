@@ -22,11 +22,9 @@ NUTS-HMC sampler configuration
 
 - ``parallel_chains``: Number of processes to run in parallel.
 
-- ``seed``: The seed or list of per-chain seeds for the sampler's random number generator.
+- ``threads_per_chains``: The number of threads to use in parallelized sections within an MCMC chain
 
 - ``chain_ids``: The offset or list of per-chain offsets for the random number generator.
-
-- ``inits``: Specifies how the sampler initializes parameter values.
 
 - ``iter_warmup``: Number of warmup iterations for each chain.
 
@@ -52,11 +50,12 @@ NUTS-HMC sampler configuration
 
 - ``adapt_step_size``: Number of iterations given over to adjusting the step size given the tuned metric during the final phase of adaptation.
 
-- ``fixed_param``: When ``True``, call CmdStan with argument "algorithm=fixed_param".  
+- ``fixed_param``: When ``True``, call CmdStan with argument "algorithm=fixed_param".
 
 .. include:: common_config.rst
 
 All of these arguments are optional; when unspecified, the CmdStan defaults will be used.
+See :meth:`~cmdstanpy.CmdStanModel.sample` for more details about the parameters.
 
 
 Example: fit model - sampler defaults
@@ -87,12 +86,12 @@ Methods for managing the sample:
 - ``stepsize`` - Per chain stepszie used by the HMC sampler.
 - ``sample`` - A 3-D numpy.ndarray which contains all post-warmup draws across all chains arranged as (draws, chains, columns).
 - ``warmup`` - A 3-D numpy.ndarray which contains all warmup draws across all chains arranged as (draws, chains, columns).
-  
+
 Methods for downstream analysis are:
-  
+
 - ``stan_variable(var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
 - ``stan_variables()`` - Return dictionary of all Stan program variables.
-  
+
 By default the sampler runs 4 chains, running as many chains in parallel as there
 are available processors as determined by Python's ``multiprocessing.cpu_count()`` function.
 For example, on a dual-processor machine with 4 virtual cores, all 4 chains will be run in parallel.
@@ -169,10 +168,10 @@ can be used to generate a dataset of simulated data, where each row in the datas
 
 .. code::
 
-    transformed data { 
+    transformed data {
       int<lower=0> N = 10;
       real<lower=0,upper=1> theta = 0.35;
-    } 
+    }
     generated quantities {
       int y_sim[N];
       for (n in 1:N)
