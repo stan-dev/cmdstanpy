@@ -884,7 +884,9 @@ def windows_short_path(path: str) -> str:
     return short_path
 
 
-def create_named_text_file(dir: str, prefix: str, suffix: str, name_only: bool = False) -> str:
+def create_named_text_file(
+    dir: str, prefix: str, suffix: str, name_only: bool = False
+) -> str:
     """
     Create a named unique file, return filename.
     Flag 'name_only' will create then delete the tmp file;
