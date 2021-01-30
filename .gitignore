@@ -16,3 +16,4 @@ docsrc/_build
 .DS_Store
 *.hpp
 *.exe
+.mypy_cache
