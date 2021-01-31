@@ -33,7 +33,7 @@
 # random
 #   seed = 12345
 # output
-#   file = multidim_vars.csv
+#   file = output.csv (Default)
 #   diagnostic_file =  (Default)
 #   refresh = 100 (Default)
 #   sig_figs = -1 (Default)
@@ -66,7 +66,7 @@ lp__,accept_stat__,stepsize__,treedepth__,n_leapfrog__,divergent__,energy__,beta
 -65.6872,0.878248,0.751162,2,7,0,66.4343,1.52524,-0.495263,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,0,1,1,1,1,0,0,1,1,1,1,0,1,1,1,1,51
 -66.5766,0.943992,0.751162,2,3,0,66.7977,1.52509,-0.903221,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1,0,0,0,1,1,1,0,0,1,1,1,1,1,1,1,0,1,0,1,1,0,0,0,1,1,1,0,1,1,1,43
 # 
-#  Elapsed Time: 0.103 seconds (Warm-up)
+#  Elapsed Time: 0.105 seconds (Warm-up)
 #                0.002 seconds (Sampling)
-#                0.105 seconds (Total)
+#                0.107 seconds (Total)
 # 

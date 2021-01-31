@@ -998,17 +998,17 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
         )
-        self.assertEqual(1, len(bern_fit._stan_variable_dims))
-        self.assertTrue('theta' in bern_fit._stan_variable_dims)
-        self.assertEqual(bern_fit._stan_variable_dims['theta'], 1)
+        self.assertEqual(1, len(bern_fit._stan_variable_dict))
+        self.assertTrue('theta' in bern_fit._stan_variable_dict)
+        self.assertEqual(bern_fit._stan_variable_dict['theta'][0], ())
         theta = bern_fit.stan_variable(name='theta')
-        self.assertEqual(theta.shape, (200, 1))
+        self.assertEqual(theta.shape, (200, ))
         with self.assertRaises(ValueError):
             bern_fit.stan_variable(name='eta')
         with self.assertRaises(ValueError):
             bern_fit.stan_variable(name='lp__')
 
-    def test_variable_lv(self):
+    def test_variables_2d(self):
         # pylint: disable=C0103
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'lotka-volterra' + EXTENSION)
@@ -1028,21 +1028,23 @@ class CmdStanMCMCTest(unittest.TestCase):
         runset._set_retcode(0, 0)
         fit = CmdStanMCMC(runset)
         self.assertEqual(20, fit.num_draws)
-        self.assertEqual(8, len(fit._stan_variable_dims))
-        self.assertTrue('z' in fit._stan_variable_dims)
-        self.assertEqual(fit._stan_variable_dims['z'], (20, 2))
-        z = fit.stan_variable(name='z')
-        self.assertEqual(z.shape, (20, 40))
-        theta = fit.stan_variable(name='theta')
-        self.assertEqual(theta.shape, (20, 4))
+        self.assertEqual(8, len(fit._stan_variable_dict))
+        self.assertTrue('z' in fit._stan_variable_dict)
+        self.assertEqual(fit._stan_variable_dict['z'][0], (20, 2))
+        vars = fit.stan_variables()
+        self.assertEqual(len(vars), len(fit._stan_variable_dict))
+        self.assertTrue('z' in vars)
+        self.assertEqual(vars['z'].shape, (20, 20, 2))
+        self.assertTrue('theta' in vars)
+        self.assertEqual(vars['theta'].shape, (20, 4))
 
-    def test_variables(self):
+    def test_variables_3d(self):
         # construct fit using existing sampler output
-        exe = os.path.join(DATAFILES_PATH, 'lotka-volterra' + EXTENSION)
-        jdata = os.path.join(DATAFILES_PATH, 'lotka-volterra.data.json')
+        exe = os.path.join(DATAFILES_PATH, 'multidim_vars' + EXTENSION)
+        jdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
         sampler_args = SamplerArgs(iter_sampling=20)
         cmdstan_args = CmdStanArgs(
-            model_name='lotka-volterra',
+            model_name='multidim_vars',
             model_exe=exe,
             chain_ids=[1],
             seed=12345,
@@ -1051,19 +1053,27 @@ class CmdStanMCMCTest(unittest.TestCase):
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=1)
-        runset._csv_files = [os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')]
+        runset._csv_files = [os.path.join(DATAFILES_PATH, 'multidim_vars.csv')]
         runset._set_retcode(0, 0)
         fit = CmdStanMCMC(runset)
         self.assertEqual(20, fit.num_draws)
-        self.assertEqual(8, len(fit._stan_variable_dims))
-        self.assertTrue('z' in fit._stan_variable_dims)
-        self.assertEqual(fit._stan_variable_dims['z'], (20, 2))
+        self.assertEqual(3, len(fit._stan_variable_dict))
+        self.assertTrue('y_rep' in fit._stan_variable_dict)
+        self.assertEqual(fit._stan_variable_dict['y_rep'][0], (5,4,3))
+        var_y_rep = fit.stan_variable(name='y_rep')
+        self.assertEqual(var_y_rep.shape, (20,5,4,3))
+        var_beta = fit.stan_variable(name='beta')
+        self.assertEqual(var_beta.shape, (20,2))
+        var_frac_60 = fit.stan_variable(name='frac_60')
+        self.assertEqual(var_frac_60.shape, (20, ))
         vars = fit.stan_variables()
-        self.assertEqual(len(vars), len(fit._stan_variable_dims))
-        self.assertTrue('z' in vars)
-        self.assertEqual(vars['z'].shape, (20, 40))
-        self.assertTrue('theta' in vars)
-        self.assertEqual(vars['theta'].shape, (20, 4))
+        self.assertEqual(len(vars), len(fit._stan_variable_dict))
+        self.assertTrue('y_rep' in vars)
+        self.assertEqual(vars['y_rep'].shape, (20,5,4,3))
+        self.assertTrue('beta' in vars)
+        self.assertEqual(vars['beta'].shape, (20,2))
+        self.assertTrue('frac_60' in vars)
+        self.assertEqual(vars['frac_60'].shape, (20, ))
 
     def test_validate(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -1089,7 +1099,7 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         with LogCapture() as log:
             logging.getLogger()
-            self.assertIsNone(bern_fit.stan_variable_dims)
+            self.assertIsNone(bern_fit.stan_variable_dict)
         expect = 'csv files not yet validated'
         msg = log.actual()[-1][-1]
         self.assertTrue(msg.startswith(expect))
@@ -1120,7 +1130,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit.validate_csv_files()
         self.assertEqual(bern_fit.num_draws, 150)
         self.assertEqual(len(bern_fit.column_names), 8)
-        self.assertEqual(len(bern_fit.stan_variable_dims), 1)
+        self.assertEqual(len(bern_fit.stan_variable_dict), 1)
         self.assertEqual(bern_fit.metric_type, 'diag_e')
 
     def test_validate_sample_sig_figs(self, stanfile='bernoulli.stan'):

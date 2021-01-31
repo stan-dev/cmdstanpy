@@ -24,7 +24,7 @@ from cmdstanpy.utils import (
     create_named_text_file,
     do_command,
     get_logger,
-    parse_var_dims,
+    parse_stan_variables,
     scan_generated_quantities_csv,
     scan_optimize_csv,
     scan_variational_csv,
@@ -34,6 +34,8 @@ from cmdstanpy.utils import (
 class RunSet:
     """
     Record of CmdStan run for a specified configuration and number of chains.
+    Records sampler return code and locations of all console, error, and output
+    files but doesn't parse file contents in any way.
     """
 
     def __init__(
@@ -334,7 +336,7 @@ class CmdStanMCMC:
         self._stepsize = None
         self._draws = None
         self._draws_pd = None
-        self._stan_variable_dims = {}
+        self._stan_variable_dict = {}
         self._validate_csv = validate_csv
         if validate_csv:
             self.validate_csv_files()
@@ -402,19 +404,24 @@ class CmdStanMCMC:
         return self._column_names
 
     @property
-    def stan_variable_dims(self) -> Dict:
+    def stan_variable_dict(self) -> Dict:
         """
-        Dict mapping Stan program variable names to variable dimensions.
-        Scalar types have int value '1'.  Structured types have list of dims,
-        e.g.,  program variable ``vector[10] foo`` has entry ``('foo', [10])``.
+        Dict mapping Stan program variable names to pair (tuple) of tuples where
+        the first element contains the variable dimensions and the second element
+        contains the CSV output file column indexes.
+        Scalar types don't have a dimension.  Structured types have list of dims.
+        e.g.,  if program variable ``int foo`` is found in the 10th column of
+        the CSV file, it will have Dict entry:  "foo" : ( (), (9) ), and if
+        program variable ``vector[10] bar`` follows in program delcaration order,
+        it will have entry ``('bar', ((10), (10, 11, 12, ..., 19)))``.
         """
-        if not self._validate_csv and len(self._stan_variable_dims) == 0:
+        if not self._validate_csv and len(self._column_names) == 0:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return copy.deepcopy(self._stan_variable_dims)
+        return copy.deepcopy(self._stan_variable_dict)
 
     @property
     def metric_type(self) -> str:
@@ -574,7 +581,7 @@ class CmdStanMCMC:
         if not self._is_fixed_param:
             self._num_params = dzero['num_params']
             self._metric_type = dzero.get('metric')
-        self._stan_variable_dims = parse_var_dims(dzero['column_names'])
+        self._stan_variable_dict = parse_stan_variables(dzero['column_names'])
 
     def _assemble_draws(self) -> None:
         """
@@ -699,9 +706,7 @@ class CmdStanMCMC:
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
-        tmp_csv_file = 'stansummary-{}-'.format(
-            self.runset._args.model_name
-        )
+        tmp_csv_file = 'stansummary-{}-'.format(self.runset._args.model_name)
         tmp_csv_path = create_named_text_file(
             dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv', name_only=True
         )
@@ -793,43 +798,55 @@ class CmdStanMCMC:
                 mask.append(name)
         return self._draws_pd[mask]
 
-    def stan_variable(self, name: str) -> pd.DataFrame:
+    def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
         """
-        Return a new DataFrame which contains the set of post-warmup draws
-        for the named Stan program variable.  Flattens the chains.
-        Underlyingly draws are in chain order, i.e., for a sample
-        consisting of N chains of M draws each, the first M array
-        elements are from chain 1, the next M are from chain 2,
-        and the last M elements are from chain N.
+        Return a numpy.ndarray which contains the set of draws
+        for the named Stan program variable.  Flattens the chains,
+        leaving the draws in chain order.  The first array dimension,
+        corresponds to number of draws or post-warmup draws in the sample,
+        per argument ``inc_warmup``.  The remaining dimensions correspond to
+        the shape of the Stan program variable.
 
-        * If the variable is a scalar variable, the shape of the DataFrame is
+        Underlyingly draws are in chain order, i.e., for a sample with
+        N chains of M draws each, the first M array elements are from chain 1,
+        the next M are from chain 2, and the last M elements are from chain N.
+
+        * If the variable is a scalar variable, the return array has shape
           ( draws X chains, 1).
-        * If the variable is a vector, the shape of the DataFrame is
+        * If the variable is a vector, the return array has shape
           ( draws X chains, len(vector))
-        * If the variable is a matrix, the shape of the DataFrame is
+        * If the variable is a matrix, the return array has shape
           ( draws X chains, size(dim 1) X size(dim 2) )
-        * If the variable is an array with N dimensions, the shape of the
-          DataFrame is ( draws X chains, size(dim 1) X ... X size(dim N))
+        * If the variable is an array with N dimensions, the return array
+          has shape ( draws X chains, size(dim 1) X ... X size(dim N))
+
+        For example, if the Stan program variable ``theta`` is a 3x3 matrix,
+        and the sample consists of 4 chains with 1000 post-warmup draws,
+        this function will return a numpy.ndarray with shape (4000,3,3).
 
         :param name: variable name
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the output, i.e., the sampler was run with ``save_warmup=True``,
+            then the warmup draws are included.  Default value is ``False``.
         """
-        if name not in self._stan_variable_dims:
+        if self._draws is None:
+            self._assemble_draws()
+        if name not in self._stan_variable_dict:
             raise ValueError('unknown name: {}'.format(name))
         self._assemble_draws()
-        dim0 = self._draws_sampling * self.runset.chains
-        dims = np.prod(self._stan_variable_dims[name])
-        pattern = r'^{}(\[[\d,]+\])?$'.format(name)
-        names, idxs = [], []
-        for i, column_name in enumerate(self.column_names):
-            if re.search(pattern, column_name):
-                names.append(column_name)
-                idxs.append(i)
-        return pd.DataFrame(
-            self._draws[self._draws_warmup :, :, idxs].reshape(
-                (dim0, dims), order='A'
-            ),
-            columns=names,
-        )
+        draw1 = 0
+        if not inc_warmup and self._save_warmup:
+            draw1 = self._draws_warmup
+        num_draws = self._draws_sampling
+        if inc_warmup and self._save_warmup:
+            num_draws += self._draws_warmup
+        dims = [ num_draws * self.runset.chains ]
+        col_idxs = self._stan_variable_dict[name][1]
+        if len(col_idxs) > 0:
+            dims.extend(self._stan_variable_dict[name][0])
+        # pylint: disable=redundant-keyword-arg
+        return self._draws[draw1:, :, col_idxs].reshape(dims, order='A')
 
     def stan_variables(self) -> Dict:
         """
@@ -837,7 +854,7 @@ class CmdStanMCMC:
         Creates copies of the data in the draws matrix.
         """
         result = {}
-        for name in self.stan_variable_dims:
+        for name in self._stan_variable_dict:
             result[name] = self.stan_variable(name)
         return result
 

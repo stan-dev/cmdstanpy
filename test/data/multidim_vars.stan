@@ -1,3 +1,4 @@
+// run with data file logistic.data.R
 data {
   int<lower=0> N;               // number of items
   int<lower=0> M;               // number of predictors

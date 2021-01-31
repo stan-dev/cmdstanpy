@@ -20,11 +20,10 @@ from cmdstanpy.utils import (
     check_sampler_csv,
     cmdstan_path,
     cmdstan_version_at,
-    extract,
     get_latest_cmdstan,
     jsondump,
     parse_rdump_value,
-    parse_var_dims,
+    parse_stan_variables,
     rdump,
     read_metric,
     rload,
@@ -565,28 +564,28 @@ class RloadTest(unittest.TestCase):
         self.assertEqual(v_struct3[6, 1], 15)
 
 
-class ParseVarDimsTest(unittest.TestCase):
+class ParseStanVariablesTest(unittest.TestCase):
     def test_parse_empty(self):
         x = []
-        vars_dict = parse_var_dims(x)
+        vars_dict = parse_stan_variables(x)
         self.assertEqual(len(vars_dict), 0)
 
     def test_parse_missing(self):
         with self.assertRaises(ValueError):
-            parse_var_dims(None)
+            parse_stan_variables(None)
 
     def test_parse_scalar(self):
         x = ['foo']
-        vars_dict = parse_var_dims(x)
+        vars_dict = parse_stan_variables(x)
         self.assertEqual(len(vars_dict), 1)
-        self.assertEqual(vars_dict['foo'], 1)
+        self.assertEqual(vars_dict['foo'][0], ())
 
     def test_parse_scalars(self):
         x = ['foo', 'foo1']
-        vars_dict = parse_var_dims(x)
+        vars_dict = parse_stan_variables(x)
         self.assertEqual(len(vars_dict), 2)
-        self.assertEqual(vars_dict['foo'], 1)
-        self.assertEqual(vars_dict['foo1'], 1)
+        self.assertEqual(vars_dict['foo'][0], ())
+        self.assertEqual(vars_dict['foo1'][0], ())
 
     def test_parse_scalar_vec_scalar(self):
         x = [
@@ -603,11 +602,11 @@ class ParseVarDimsTest(unittest.TestCase):
             'phi[10]',
             'bar',
         ]
-        vars_dict = parse_var_dims(x)
+        vars_dict = parse_stan_variables(x)
         self.assertEqual(len(vars_dict), 3)
-        self.assertEqual(vars_dict['foo'], 1)
-        self.assertEqual(vars_dict['phi'], (10,))
-        self.assertEqual(vars_dict['bar'], 1)
+        self.assertEqual(vars_dict['foo'][0], ())
+        self.assertEqual(vars_dict['phi'][0], (10,))
+        self.assertEqual(vars_dict['bar'][0], ())
 
     def test_parse_scalar_matrix_vec(self):
         x = [
@@ -625,57 +624,12 @@ class ParseVarDimsTest(unittest.TestCase):
             'bar[1]',
             'bar[2]',
         ]
-        vars_dict = parse_var_dims(x)
+        vars_dict = parse_stan_variables(x)
         self.assertEqual(len(vars_dict), 3)
-        self.assertEqual(vars_dict['foo'], 1)
-        self.assertEqual(vars_dict['phi'], (2, 5))
-        self.assertEqual(vars_dict['bar'], (2,))
+        self.assertEqual(vars_dict['foo'][0], ())
+        self.assertEqual(vars_dict['phi'][0], (2, 5))
+        self.assertEqual(vars_dict['bar'][0], (2,))
 
-    def test_extract(self):
-        stan_file = os.path.join(_TMPDIR, "extract_test", "model.stan")
-        os.makedirs(os.path.dirname(stan_file), exist_ok=True)
-        model_code = """
-            parameters { matrix[2,3] y[4]; }
-            model {
-                for (n in 1:4) {
-                    for (m in 1:2) {
-                        for (l in 1:3) {
-                            y[n, m, l] ~ normal(n, 1);
-            }}}}
-        """
-        with open(stan_file, 'w') as fd:
-            print(model_code, file=fd)
-        model = CmdStanModel(stan_file=stan_file)
-        model.compile()
-        fit = model.sample(
-            chains=2,
-            parallel_chains=1,
-            seed=12345,
-            iter_sampling=490,
-            iter_warmup=490,
-            save_warmup=True,
-        )
-        sample = extract(fit)
-        assert 'y' in sample
-        assert 'lp__' not in sample
-        self.assertEqual(sample['y'].shape, (490, 2, 4, 2, 3))
-
-        sample = extract(fit, inc_warmup=True)
-        assert 'y' in sample
-        assert 'lp__' not in sample
-        self.assertEqual(sample['y'].shape, (490 + 490, 2, 4, 2, 3))
-
-        sample = extract(fit, inc_diagnostics=True)
-        assert 'y' in sample
-        assert 'lp__' in sample
-        self.assertEqual(sample['y'].shape, (490, 2, 4, 2, 3))
-        self.assertEqual(sample['lp__'].shape, (490, 2))
-
-        sample = extract(fit, inc_diagnostics=True, inc_warmup=True)
-        assert 'y' in sample
-        assert 'lp__' in sample
-        self.assertEqual(sample['y'].shape, (490 + 490, 2, 4, 2, 3))
-        self.assertEqual(sample['lp__'].shape, (490 + 490, 2))
 
 
 if __name__ == '__main__':

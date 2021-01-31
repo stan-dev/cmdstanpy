@@ -40,12 +40,10 @@ from .model import CmdStanModel  # noqa
 from .stanfit import CmdStanGQ, CmdStanMCMC, CmdStanMLE, CmdStanVB  # noqa
 from .utils import set_cmdstan_path  # noqa
 from .utils import cmdstan_path, install_cmdstan, set_make_env
-from .utils import extract
 
 __all__ = [
     'set_cmdstan_path',
     'cmdstan_path',
-    'extract',
     'set_make_env',
     'install_cmdstan',
     'CmdStanMCMC',

@@ -652,28 +652,33 @@ def _rename_columns(names: List) -> List:
     return names
 
 
-def parse_var_dims(names: Tuple[str, ...]) -> Dict:
+def parse_stan_variables(names: Tuple[str, ...]) -> Dict:
     """
-    Use Stan CSV file column names to get variable names, dimensions.
+    Parse variable names, dimensions, and column indices from CSV file
+    header row.   Return map from variable name to pair variable dimension,
+    and output file columns for that variable.
     Assumes that CSV file has been validated and column names are correct.
     """
     if names is None:
         raise ValueError('missing argument "names"')
     vars_dict = {}
     idx = 0
+    cols = [idx]
     while idx < len(names):
         if names[idx].endswith('__'):
             pass
         elif '[' not in names[idx]:
-            vars_dict[names[idx]] = 1
+            vars_dict[names[idx]] = (tuple(), tuple(cols))
         else:
             vs = names[idx].split('[')
             if idx < len(names) - 1 and names[idx + 1].split('[')[0] == vs[0]:
                 idx += 1
+                cols.append(idx)
                 continue
             dims = [int(x) for x in vs[1][:-1].split(',')]
-            vars_dict[vs[0]] = tuple(dims)
+            vars_dict[vs[0]] = ((tuple(dims), tuple(cols)))
         idx += 1
+        cols = [idx]
     return vars_dict
 
 
@@ -1066,74 +1071,3 @@ class TemporaryCopiedFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
-
-
-def extract(
-    fit: Any,
-    parameters: Optional[List] = None,
-    inc_diagnostics: Optional[bool] = False,
-    inc_warmup: Optional[bool] = False,
-) -> Dict[str, Any]:
-    """Extract ndim dictionary from CmdStanPy fit.
-
-    Parameters
-    ----------
-    fit: CmdStanMCMC
-    parameters: list
-    inc_diagnostics: bool
-        Don't include diagnostics with default paramaters.
-    inc_warmup: bool
-
-    Returns
-    -------
-    dict
-    """
-    if parameters is None:
-        parameters = fit.column_names
-        if not inc_diagnostics:
-            parameters = [
-                param for param in parameters if not param.endswith("__")
-            ]
-
-    if inc_warmup and not fit._save_warmup:
-        inc_warmup = False
-
-    data = fit.draws(inc_warmup=inc_warmup)
-    draws, chains, *_ = data.shape
-    column_groups = defaultdict(list)
-    column_locs = defaultdict(list)
-    # iterate flat column names
-    for i, col in enumerate(fit.column_names):
-        col_base, *col_tail = col.replace(']', '').replace('[', ',').split(',')
-        if col_tail:
-            # gather nD array locations
-            column_groups[col_base].append(tuple(map(int, col_tail)))
-        # gather raw data locations for each parameter
-        column_locs[col_base].append(i)
-    dims = {}
-    for colname, col_dims in column_groups.items():
-        # gather parameter dimensions (assumes dense arrays)
-        dims[colname] = tuple(np.array(col_dims).max(0))
-
-    sample = {}
-    valid_base_cols = []
-    # get list of parameters for extraction (basename) X[1,2] --> X
-    for col in parameters:
-        base_col = col.split('[')[0]
-        if base_col not in valid_base_cols:
-            valid_base_cols.append(base_col)
-
-    for key in valid_base_cols:
-        ndim = dims.get(key, None)
-        shape_location = column_groups.get(key, None)
-        if ndim is not None:
-            sample[key] = np.full((draws, chains, *ndim), np.nan)
-        if shape_location is None:
-            (i,) = column_locs[key]
-            sample[key] = data[..., i]
-        else:
-            for i, shape_loc in zip(column_locs[key], shape_location):
-                # location to insert extracted array
-                shape_loc = tuple([Ellipsis] + [j - 1 for j in shape_loc])
-                sample[key][shape_loc] = data[..., i]
-    return sample
