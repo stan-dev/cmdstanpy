@@ -14,7 +14,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import _TMPDIR
+from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING, _CMDSTAN_THIN
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method
 from cmdstanpy.utils import (
     EXTENSION,
@@ -24,7 +24,8 @@ from cmdstanpy.utils import (
     create_named_text_file,
     do_command,
     get_logger,
-    parse_stan_variables,
+    parse_sampler_vars,
+    parse_stan_vars,
     scan_generated_quantities_csv,
     scan_optimize_csv,
     scan_variational_csv,
@@ -298,6 +299,43 @@ class RunSet:
                 ) from e
 
 
+class InferenceMetadata:
+    """
+    CmdStan configuration and contents of output file parsed out of
+    the Stan CSV file header comments and column headers.
+    Assumes valid CSV files.  Uses deepcopy for immutability.
+    """
+
+    def __init__(self, config: Dict) -> None:
+        """Initialize object from CSV headers"""
+        self._cmdstan_config = config
+        self._sampler_vars = parse_sampler_vars(names=config['column_names'])
+        stan_vars_dims, stan_vars_cols = parse_stan_vars(
+            names=config['column_names']
+        )
+        self._stan_vars_dims = stan_vars_dims
+        self._stan_vars_cols = stan_vars_cols
+
+    def __repr__(self) -> str:
+        return 'Metadata:\n{}\n'.format(self._cmdstan_config)
+
+    @property
+    def cmdstan_config(self) -> Dict:
+        return copy.deepcopy(self._cmdstan_config)
+
+    @property
+    def sampler_vars(self) -> Dict:
+        return copy.deepcopy(self._sampler_vars)
+
+    @property
+    def stan_vars_dims(self) -> Dict:
+        return copy.deepcopy(self._stan_vars_dims)
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        return copy.deepcopy(self._stan_vars_cols)
+
+
 class CmdStanMCMC:
     """
     Container for outputs from CmdStan sampler run.
@@ -320,23 +358,26 @@ class CmdStanMCMC:
         self.runset = runset
         self._logger = logger or get_logger()
         # copy info from runset
-        self._is_fixed_param = runset._args.method_args.fixed_param
         self._iter_sampling = runset._args.method_args.iter_sampling
+        if self._iter_sampling is None:
+            self._iter_sampling = _CMDSTAN_SAMPLING
         self._iter_warmup = runset._args.method_args.iter_warmup
-        self._save_warmup = runset._args.method_args.save_warmup
+        if self._iter_warmup is None:
+            self._iter_warmup = _CMDSTAN_WARMUP
         self._thin = runset._args.method_args.thin
+        if self._thin is None:
+            self._thin = _CMDSTAN_THIN
+        self._is_fixed_param = runset._args.method_args.fixed_param
+        self._save_warmup = runset._args.method_args.save_warmup
         self._sig_figs = runset._args.sig_figs
-        # parse the remainder from csv files
-        self._draws_sampling = None
-        self._draws_warmup = None
-        self._column_names = ()
-        self._num_params = None  # metric dim(s)
-        self._metric_type = None
+        # metadata from Stan CSV files
+        self._metadata = None
+        # HMC tuning params
         self._metric = None
         self._stepsize = None
+        # inference
         self._draws = None
         self._draws_pd = None
-        self._stan_variable_dict = {}
         self._validate_csv = validate_csv
         if validate_csv:
             self.validate_csv_files()
@@ -366,62 +407,97 @@ class CmdStanMCMC:
 
     @property
     def num_draws(self) -> int:
-        """Number of draws per chain."""
-        if not self._validate_csv and self._draws_sampling is None:
-            return int(
-                math.ceil(
-                    (self._iter_sampling + self._iter_warmup) / self._thin
-                )
-            )
-        return self._draws_warmup + self._draws_sampling
+        """Total number of draws per chain, i.e., thinned total iterations."""
+        return int(
+            math.ceil((self._iter_sampling + self._iter_warmup) / self._thin)
+        )
 
     @property
     def num_draws_warmup(self) -> int:
-        """Number of warmup draws per chain."""
-        if not self._validate_csv and self._draws_sampling is None:
-            return int(math.ceil((self._iter_warmup) / self._thin))
-        return self._draws_warmup
+        """Number of warmup draws per chain, i.e., thinned warmup iterations."""
+        return int(math.ceil((self._iter_warmup) / self._thin))
 
     @property
     def num_draws_sampling(self) -> int:
-        """Number of sampling (post-warmup) draws per chain."""
-        if not self._validate_csv and self._draws_sampling is None:
-            return int(math.ceil((self._iter_sampling) / self._thin))
-        return self._draws_sampling
+        """
+        Number of sampling (post-warmup) draws per chain, i.e.,
+        thinned sampling iterations.
+        """
+        return int(math.ceil((self._iter_sampling) / self._thin))
 
     @property
     def column_names(self) -> Tuple[str, ...]:
         """
-        Names of all per-draw outputs: all
-        sampler and model parameters and quantities of interest
+        Names of all outputs from the sampler, consisting of sampler parameters
+        and all components of all model parameters, transformed parameters,
+        and quantities of interest.
         """
-        if not self._validate_csv and len(self._column_names) == 0:
+        if not self._validate_csv and self._metadata is None:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return self._column_names
+        return self._metadata.cmdstan_config['column_names']
 
     @property
-    def stan_variable_dict(self) -> Dict:
+    def num_params(self) -> int:
         """
-        Dict mapping Stan program variable names to pair (tuple) of tuples where
-        the first element contains the variable dimensions and the second element
-        contains the CSV output file column indexes.
-        Scalar types don't have a dimension.  Structured types have list of dims.
-        e.g.,  if program variable ``int foo`` is found in the 10th column of
-        the CSV file, it will have Dict entry:  "foo" : ( (), (9) ), and if
-        program variable ``vector[10] bar`` follows in program delcaration order,
-        it will have entry ``('bar', ((10), (10, 11, 12, ..., 19)))``.
+        Model parameters count.  This corresponds to the size of the
+        metric; the length of the diagonal metric or the dimensions of
+        the dense metric.  All elements of parameters which are container
+        variables are counted, e.g., givan a model with 2 parameter variables
+        ``real alpha`` and ``vector[3] beta``, ``num_params`` returns 4.
         """
-        if not self._validate_csv and len(self._column_names) == 0:
+        if not self._validate_csv and self._metadata is None:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return copy.deepcopy(self._stan_variable_dict)
+        return self._metadata.cmdstan_config['num_params']
+
+    @property
+    def sampler_vars(self) -> Dict:
+        """
+        Returns map from sampler variable names to column indices.
+        """
+        if not self._validate_csv and self._metadata is None:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
+        return self._metadata.stan_vars_cols
+
+    @property
+    def stan_vars_dims(self) -> Dict:
+        """
+        Returns map from Stan program variable names to variable dimensions.
+        Scalar types are mapped to the empty tuple, e.g.,
+        program variable ``int foo`` has dimesion ``()`` and
+        program variable ``vector[10] bar`` has dimension ``(10,)``.
+        """
+        if not self._validate_csv and self._metadata is None:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
+        return self._metadata.stan_vars_dims
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        """
+        Returns map from Stan program variable names to column indices.
+        """
+        if not self._validate_csv and self._metadata is None:
+            self._logger.warning(
+                'csv files not yet validated, run method validate_csv_files()'
+                ' in order to retrieve sample metadata.'
+            )
+            return None
+        return self._metadata.stan_vars_cols
 
     @property
     def metric_type(self) -> str:
@@ -431,13 +507,13 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if not self._validate_csv and self._metric_type is None:
+        if not self._validate_csv and self._metadata is None:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return self._metric_type
+        return self._metadata.cmdstan_config['metric']
 
     @property
     def metric(self) -> np.ndarray:
@@ -477,10 +553,10 @@ class CmdStanMCMC:
 
     def draws(self, inc_warmup: bool = False) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains all draws, from both warmup and
-        sampling iterations, arranged as (draws, chains, columns) and stored
-        column major, so that the values for each parameter are contiguous
-        in memory, likewise all draws from a chain are contiguous.
+        A 3-D numpy ndarray which contains sampler draws arranged 
+        (draws, chains, columns) and stored column major so that the values
+        for each parameter are contiguous in memory, likewise all draws
+        from a chain are contiguous.
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
@@ -488,11 +564,12 @@ class CmdStanMCMC:
         """
         if not self._validate_csv and self._draws is None:
             self.validate_csv_files()
+        
         if self._draws is None:
             self._assemble_draws()
         if not inc_warmup:
             if self._save_warmup:
-                return self._draws[self._draws_warmup :, :, :]
+                return self._draws[self.num_draws_warmup :, :, :]
             return self._draws
         else:
             if not self._save_warmup:
@@ -527,7 +604,7 @@ class CmdStanMCMC:
     def validate_csv_files(self) -> None:
         """
         Checks that csv output files for all chains are consistent.
-        Populates attributes for draws, column_names, num_params, metric_type.
+        Populates attributes for metadata, draws, metric, stepsize.
         Raises exception when inconsistencies detected.
         """
         dzero = {}
@@ -572,16 +649,7 @@ class CmdStanMCMC:
                                 drest[key],
                             )
                         )
-        self._draws_sampling = dzero['draws_sampling']
-        if self._save_warmup:
-            self._draws_warmup = dzero['draws_warmup']
-        else:
-            self._draws_warmup = 0
-        self._column_names = dzero['column_names']
-        if not self._is_fixed_param:
-            self._num_params = dzero['num_params']
-            self._metric_type = dzero.get('metric')
-        self._stan_variable_dict = parse_stan_variables(dzero['column_names'])
+        self._metadata = InferenceMetadata(dzero)
 
     def _assemble_draws(self) -> None:
         """
@@ -590,23 +658,26 @@ class CmdStanMCMC:
         """
         if self._draws is not None:
             return
-        num_draws = self._draws_sampling
+
+        num_draws = self.num_draws_sampling
+        sampling_iter_start = 0
         if self._save_warmup:
-            num_draws += self._draws_warmup
+            num_draws += self.num_draws_warmup
+            sampling_iter_start = self.num_draws_warmup
         self._draws = np.empty(
-            (num_draws, self.runset.chains, len(self._column_names)),
+            (num_draws, self.runset.chains, len(self.column_names)),
             dtype=float,
             order='F',
         )
         if not self._is_fixed_param:
             self._stepsize = np.empty(self.runset.chains, dtype=float)
-            if self._metric_type == 'diag_e':
+            if self.metric_type == 'diag_e':
                 self._metric = np.empty(
-                    (self.runset.chains, self._num_params), dtype=float
+                    (self.runset.chains, self.num_params), dtype=float
                 )
             else:
                 self._metric = np.empty(
-                    (self.runset.chains, self._num_params, self._num_params),
+                    (self.runset.chains, self.num_params, self.num_params),
                     dtype=float,
                 )
         for chain in range(self.runset.chains):
@@ -618,11 +689,12 @@ class CmdStanMCMC:
                 # at columns header
                 if not self._is_fixed_param:
                     if self._save_warmup:
-                        for i in range(self._draws_warmup):
+                        for i in range(self.num_draws_warmup):
                             line = fd.readline().strip()
                             xs = line.split(',')
                             self._draws[i, chain, :] = [float(x) for x in xs]
                     # read to adaptation msg
+                    line = fd.readline().strip()
                     if line != '# Adaptation terminated':
                         while line != '# Adaptation terminated':
                             line = fd.readline().strip()
@@ -631,17 +703,17 @@ class CmdStanMCMC:
                     self._stepsize[chain] = float(stepsize.strip())
                     line = fd.readline().strip()  # metric header
                     # process metric
-                    if self._metric_type == 'diag_e':
+                    if self.metric_type == 'diag_e':
                         line = fd.readline().lstrip(' #\t').strip()
                         xs = line.split(',')
                         self._metric[chain, :] = [float(x) for x in xs]
                     else:
-                        for i in range(self._num_params):
+                        for i in range(self.num_params):
                             line = fd.readline().lstrip(' #\t').strip()
                             xs = line.split(',')
                             self._metric[chain, i, :] = [float(x) for x in xs]
                 # process draws
-                for i in range(self._draws_warmup, num_draws):
+                for i in range(sampling_iter_start, num_draws):
                     line = fd.readline().strip()
                     xs = line.split(',')
                     self._draws[i, chain, :] = [float(x) for x in xs]
@@ -757,10 +829,10 @@ class CmdStanMCMC:
         self, params: List[str] = None, inc_warmup: bool = False
     ) -> pd.DataFrame:
         """
-        Returns the assembled draws as a pandas DataFrame consisting of
+        Returns the sampler draws as a pandas DataFrame consisting of
         one column per parameter and one row per draw.
 
-        :param params: list of model parameter names.
+        :param params: list of parameter names.
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
@@ -769,7 +841,7 @@ class CmdStanMCMC:
         pnames_base = [name.split('[')[0] for name in self.column_names]
         if params is not None:
             for param in params:
-                if not (param in self._column_names or param in pnames_base):
+                if not (param in self.column_names or param in pnames_base):
                     raise ValueError('unknown parameter: {}'.format(param))
         self._assemble_draws()
 
@@ -779,9 +851,9 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
 
-        num_draws = self._draws_sampling
+        num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
-            num_draws += self._draws_warmup
+            num_draws += self.num_draws_warmup
         num_rows = num_draws * self.runset.chains
         if self._draws_pd is None or self._draws_pd.shape[0] != num_rows:
             # pylint: disable=redundant-keyword-arg
@@ -832,19 +904,19 @@ class CmdStanMCMC:
         """
         if self._draws is None:
             self._assemble_draws()
-        if name not in self._stan_variable_dict:
+        if name not in self.stan_vars_dims:
             raise ValueError('unknown name: {}'.format(name))
         self._assemble_draws()
         draw1 = 0
         if not inc_warmup and self._save_warmup:
-            draw1 = self._draws_warmup
-        num_draws = self._draws_sampling
+            draw1 = self.num_draws_warmup
+        num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
-            num_draws += self._draws_warmup
-        dims = [ num_draws * self.runset.chains ]
-        col_idxs = self._stan_variable_dict[name][1]
+            num_draws += self.num_draws_warmup
+        dims = [num_draws * self.runset.chains]
+        col_idxs = self._metadata.stan_vars_cols[name]
         if len(col_idxs) > 0:
-            dims.extend(self._stan_variable_dict[name][0])
+            dims.extend(self._metadata.stan_vars_dims[name])
         # pylint: disable=redundant-keyword-arg
         return self._draws[draw1:, :, col_idxs].reshape(dims, order='A')
 
@@ -854,7 +926,7 @@ class CmdStanMCMC:
         Creates copies of the data in the draws matrix.
         """
         result = {}
-        for name in self._stan_variable_dict:
+        for name in self.stan_vars_dims.keys():
             result[name] = self.stan_variable(name)
         return result
 

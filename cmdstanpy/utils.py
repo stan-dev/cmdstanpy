@@ -493,7 +493,6 @@ def check_sampler_csv(
         )
     if save_warmup:
         if not ('save_warmup' in meta and meta['save_warmup'] == 1):
-            print(meta)
             raise ValueError(
                 'bad csv file {}, '
                 'config error, expected save_warmup = 1'.format(path)
@@ -589,24 +588,23 @@ def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     line = fd.readline().strip()
     while len(line) > 0 and line.startswith('#'):
         lineno += 1
-        if not line.endswith('(Default)'):
-            line = line.lstrip(' #\t')
-            key_val = line.split('=')
-            if len(key_val) == 2:
-                if key_val[0].strip() == 'file' and not key_val[1].endswith(
-                    'csv'
-                ):
-                    config_dict['data_file'] = key_val[1].strip()
-                elif key_val[0].strip() != 'file':
-                    raw_val = key_val[1].strip()
+        if line.endswith('(Default)'):
+            line = line.replace('(Default)', '')
+        line = line.lstrip(' #\t')
+        key_val = line.split('=')
+        if len(key_val) == 2:
+            if key_val[0].strip() == 'file' and not key_val[1].endswith('csv'):
+                config_dict['data_file'] = key_val[1].strip()
+            elif key_val[0].strip() != 'file':
+                raw_val = key_val[1].strip()
+                try:
+                    val = int(raw_val)
+                except ValueError:
                     try:
-                        val = int(raw_val)
+                        val = float(raw_val)
                     except ValueError:
-                        try:
-                            val = float(raw_val)
-                        except ValueError:
-                            val = raw_val
-                    config_dict[key_val[0].strip()] = val
+                        val = raw_val
+                config_dict[key_val[0].strip()] = val
         cur_pos = fd.tell()
         line = fd.readline().strip()
     fd.seek(cur_pos)
@@ -639,53 +637,74 @@ def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     line = fd.readline().strip()
     lineno += 1
     names = line.split(',')
-    config_dict['column_names'] = tuple(_rename_columns(names))
-    config_dict['num_params'] = len(names) - 1
+    config_dict['column_names_raw'] = tuple(names)
+    config_dict['column_names'] = tuple(munge_varnames(names))
     return lineno
 
 
-def _rename_columns(names: List) -> List:
-    names = [
-        re.sub(r',([\d,]+)$', r'[\1]', column.replace('.', ','))
-        for column in names
-    ]
-    return names
-
-
-def parse_stan_variables(names: Tuple[str, ...]) -> Dict:
+def munge_varnames(names: List) -> List:
     """
-    Parse variable names, dimensions, and column indices from CSV file
-    header row.   Return map from variable name to pair variable dimension,
-    and output file columns for that variable.
-    Assumes that CSV file has been validated and column names are correct.
+    Change formatting for indices of container var elements
+    from use of dot separator to array-like notation, e.g.,
+    rewrite label ``y_forecast.2.4`` to ``y_forecast[2,4]``.
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    vars_dict = {}
-    idx = 0
-    cols = [idx]
-    while idx < len(names):
-        if names[idx].endswith('__'):
+    return [
+        re.sub(r',([\d,]+)$', r'[\1]', column.replace('.', ','))
+        for column in names
+    ]
+
+
+def parse_sampler_vars(names: Tuple[str, ...]) -> Dict:
+    """
+    Parses out names ending in `__` from list of CSV file column names.
+    Return a dict mapping sampler variable name to Stan CSV file column, using
+    zero-based column indexing.
+    """
+    if names is None:
+        raise ValueError('missing argument "names"')
+    return { v:k for (k,v) in enumerate(names) if v.endswith('__') }
+
+
+def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
+    """
+    Parses out Stan variable names (i.e., names not ending in `__`)
+    from list of CSV file column names.
+    Returns a pair of dicts which map variable names to dimensions and
+    variable names to columns, respectively, using zero-based column indexing.
+    Note: assumes: (a) munged varnames and (b) container vars are non-ragged
+    and dense; no checks size, indices.
+    """
+    if names is None:
+        raise ValueError('missing argument "names"')
+    dims_map = {}
+    cols_map = {}
+    idxs = []
+    for (idx, name) in enumerate(names):
+        idxs.append(idx)
+        var, *dims = name.split('[')
+        if var.endswith('__'):
+            idxs = []
             pass
-        elif '[' not in names[idx]:
-            vars_dict[names[idx]] = (tuple(), tuple(cols))
+        elif len(dims) == 0:
+            dims_map[var] = ()
+            cols_map[var] = tuple(idxs)
+            idxs = []
         else:
-            vs = names[idx].split('[')
-            if idx < len(names) - 1 and names[idx + 1].split('[')[0] == vs[0]:
-                idx += 1
-                cols.append(idx)
+            if idx < len(names) - 1 and names[idx + 1].split('[')[0] == var:
                 continue
-            dims = [int(x) for x in vs[1][:-1].split(',')]
-            vars_dict[vs[0]] = ((tuple(dims), tuple(cols)))
-        idx += 1
-        cols = [idx]
-    return vars_dict
+            dims = [int(x) for x in dims[0][:-1].split(',')]
+            dims_map[var] = tuple(dims)
+            cols_map[var] = tuple(idxs)
+            idxs = []
+    return (dims_map, cols_map)
 
 
 def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan stepsize, metric from  stan_csv file comment lines,
-    set config_dict entries 'metric' and 'num_params'
+   set config_dict entries 'metric' and 'num_params'
     """
     if 'metric' not in config_dict:
         config_dict['metric'] = 'diag_e'
