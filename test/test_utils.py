@@ -246,7 +246,7 @@ class CmdStanPathTest(unittest.TestCase):
 
         arr = np.zeros(shape=(2, 3, 4))
         self.assertTrue(isinstance(arr, np.ndarray))
-        self.assertEqual(arr.shape, (2,3,4))
+        self.assertEqual(arr.shape, (2, 3, 4))
 
         dict_3d_matrix = {'a': arr}
         file_3d_matrix = os.path.join(_TMPDIR, '3d_matrix.json')
@@ -267,7 +267,6 @@ class ReadStanCsvTest(unittest.TestCase):
         )
         self.assertEqual('bernoulli_model', dict['model'])
         self.assertEqual(10, dict['num_samples'])
-        self.assertFalse('save_warmup' in dict)
         self.assertEqual(10, dict['draws_sampling'])
         self.assertEqual(8, len(dict['column_names']))
 
@@ -568,10 +567,11 @@ class RloadTest(unittest.TestCase):
 class ParseVarsTest(unittest.TestCase):
     def test_parse_empty(self):
         x = []
-        vars_dict = parse_sampler_vars(x)
-        self.assertEqual(len(vars_dict), 0)
-        vars_dict = parse_stan_vars(x)
-        self.assertEqual(len(vars_dict), 0)
+        sampler_vars = parse_sampler_vars(x)
+        self.assertEqual(len(sampler_vars), 0)
+        stan_vars_dims, stan_vars_cols = parse_stan_vars(x)
+        self.assertEqual(len(stan_vars_dims), 0)
+        self.assertEqual(len(stan_vars_cols), 0)
 
     def test_parse_missing(self):
         with self.assertRaises(ValueError):
@@ -594,7 +594,7 @@ class ParseVarsTest(unittest.TestCase):
             'theta[4]',
             'z_init[1]',
             'z_init[2]',
-            ]
+        ]
         vars_dict = parse_sampler_vars(x)
         self.assertEqual(len(vars_dict), 7)
         self.assertEqual(vars_dict['lp__'], 0)
@@ -638,7 +638,15 @@ class ParseVarsTest(unittest.TestCase):
         self.assertEqual(dims_map['bar'], ())
         self.assertEqual(len(cols_map), 3)
         self.assertEqual(cols_map['foo'], (2,))
-        self.assertEqual(cols_map['phi'], (3, 4, 5, 6,))
+        self.assertEqual(
+            cols_map['phi'],
+            (
+                3,
+                4,
+                5,
+                6,
+            ),
+        )
         self.assertEqual(cols_map['bar'], (7,))
 
         x = [
@@ -655,9 +663,23 @@ class ParseVarsTest(unittest.TestCase):
         cols_map = {}
         dims_map, cols_map = parse_stan_vars(x)
         self.assertEqual(len(dims_map), 3)
-        self.assertEqual(dims_map['phi'], (10, 10,))
+        self.assertEqual(
+            dims_map['phi'],
+            (
+                10,
+                10,
+            ),
+        )
         self.assertEqual(len(cols_map), 3)
-        self.assertEqual(cols_map['phi'], (3, 4, 5, 6,))
+        self.assertEqual(
+            cols_map['phi'],
+            (
+                3,
+                4,
+                5,
+                6,
+            ),
+        )
 
         x = [
             'lp__',
@@ -669,7 +691,14 @@ class ParseVarsTest(unittest.TestCase):
         cols_map = {}
         dims_map, cols_map = parse_stan_vars(x)
         self.assertEqual(len(dims_map), 2)
-        self.assertEqual(dims_map['phi'], (10, 10, 10,))
+        self.assertEqual(
+            dims_map['phi'],
+            (
+                10,
+                10,
+                10,
+            ),
+        )
         self.assertEqual(len(cols_map), 2)
         self.assertEqual(cols_map['phi'], (3,))
 

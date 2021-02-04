@@ -140,9 +140,9 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(cpp_opts['STAN_THREADS'], 'TRUE')
 
     def test_model_paths(self):
-        # pylint: disable=unused-variable
         model = CmdStanModel(stan_file=BERN_STAN)  # instantiates exe
         self.assertTrue(os.path.exists(BERN_EXE))
+        self.assertEqual(model.exe_file, BERN_EXE)
 
         dotdot_stan = os.path.realpath(os.path.join('..', 'bernoulli.stan'))
         dotdot_exe = os.path.realpath(

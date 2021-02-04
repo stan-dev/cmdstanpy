@@ -3,10 +3,8 @@
 import os
 import unittest
 
-from cmdstanpy import _TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
-from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanMCMC, RunSet, InferenceMetadata
+from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
+from cmdstanpy.stanfit import RunSet, InferenceMetadata
 from cmdstanpy.utils import EXTENSION, check_sampler_csv
 
 
@@ -68,7 +66,7 @@ class InferenceMetadataTest(unittest.TestCase):
         actual = '{}'.format(metadata)
         self.assertEqual(expected, actual)
         self.assertEqual(config, metadata.cmdstan_config)
-        
+
         hmc_vars = {
             'lp__',
             'accept_stat__',
@@ -77,11 +75,11 @@ class InferenceMetadataTest(unittest.TestCase):
             'n_leapfrog__',
             'divergent__',
             'energy__',
-            }
+        }
 
         sampler_vars = metadata.sampler_vars
         self.assertEqual(hmc_vars, sampler_vars.keys())
-        bern_model_vars = { 'theta' }
+        bern_model_vars = {'theta'}
         self.assertEqual(bern_model_vars, metadata.stan_vars_dims.keys())
         self.assertEqual((), metadata.stan_vars_dims['theta'])
         self.assertEqual(bern_model_vars, metadata.stan_vars_cols.keys())

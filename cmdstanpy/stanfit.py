@@ -341,7 +341,6 @@ class CmdStanMCMC:
     Container for outputs from CmdStan sampler run.
     """
 
-    # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-public-methods
     def __init__(
         self,
@@ -428,9 +427,9 @@ class CmdStanMCMC:
     @property
     def column_names(self) -> Tuple[str, ...]:
         """
-        Names of all outputs from the sampler, consisting of sampler parameters
+        Names of all outputs from the sampler, comprising sampler parameters
         and all components of all model parameters, transformed parameters,
-        and quantities of interest.
+        and quantities of interest. (Corresponds to Stan CSV file header row.)
         """
         if not self._validate_csv and self._metadata is None:
             self._logger.warning(
@@ -553,7 +552,7 @@ class CmdStanMCMC:
 
     def draws(self, inc_warmup: bool = False) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains sampler draws arranged 
+        A 3-D numpy ndarray which contains sampler draws arranged
         (draws, chains, columns) and stored column major so that the values
         for each parameter are contiguous in memory, likewise all draws
         from a chain are contiguous.
@@ -564,12 +563,12 @@ class CmdStanMCMC:
         """
         if not self._validate_csv and self._draws is None:
             self.validate_csv_files()
-        
+
         if self._draws is None:
             self._assemble_draws()
         if not inc_warmup:
             if self._save_warmup:
-                return self._draws[self.num_draws_warmup :, :, :]
+                return self._draws[self.num_draws_warmup:, :, :]
             return self._draws
         else:
             if not self._save_warmup:
@@ -829,15 +828,20 @@ class CmdStanMCMC:
         self, params: List[str] = None, inc_warmup: bool = False
     ) -> pd.DataFrame:
         """
+        Will be removed in next version.
         Returns the sampler draws as a pandas DataFrame consisting of
-        one column per parameter and one row per draw.
+        one column per parameter and one row per draw, i.e., flattens
+        chains into single set of draws.
 
-        :param params: list of parameter names.
+        :param params: list of parameter or individual column names.
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
         """
+        self._logger.warning(
+            'method "draws_pd" is slated for removal.'
+        )
         pnames_base = [name.split('[')[0] for name in self.column_names]
         if params is not None:
             for param in params:

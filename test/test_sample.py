@@ -76,7 +76,7 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(stdout_file))
 
         self.assertEqual(bern_fit.runset.chains, 2)
-        self.assertEqual(bern_fit.num_draws, 100)
+        self.assertEqual(bern_fit.num_draws_sampling, 100)
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
 
         bern_draws = bern_fit.draws()
@@ -106,7 +106,7 @@ class SampleTest(unittest.TestCase):
             self.assertTrue(os.path.exists(stdout_file))
 
         self.assertEqual(bern_fit.runset.chains, 2)
-        self.assertEqual(bern_fit.num_draws, 100)
+        self.assertEqual(bern_fit.num_draws_sampling, 100)
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
 
         bern_sample = bern_fit.sample
@@ -465,7 +465,7 @@ class SampleTest(unittest.TestCase):
             'eta[20]',
         ]
         self.assertEqual(datagen_fit.column_names, tuple(column_names))
-        self.assertEqual(datagen_fit.num_draws, 100)
+        self.assertEqual(datagen_fit.num_draws_sampling, 100)
         self.assertEqual(datagen_fit.draws().shape, (100, 1, len(column_names)))
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.metric_type, None)
@@ -1004,7 +1004,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue('theta' in bern_fit.stan_vars_dims)
         self.assertEqual(bern_fit.stan_vars_dims['theta'], ())
         theta = bern_fit.stan_variable(name='theta')
-        self.assertEqual(theta.shape, (200, ))
+        self.assertEqual(theta.shape, (200,))
         with self.assertRaises(ValueError):
             bern_fit.stan_variable(name='eta')
         with self.assertRaises(ValueError):
@@ -1061,21 +1061,21 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(20, fit.num_draws_sampling)
         self.assertEqual(3, len(fit.stan_vars_dims))
         self.assertTrue('y_rep' in fit.stan_vars_dims)
-        self.assertEqual(fit.stan_vars_dims['y_rep'], (5,4,3))
+        self.assertEqual(fit.stan_vars_dims['y_rep'], (5, 4, 3))
         var_y_rep = fit.stan_variable(name='y_rep')
-        self.assertEqual(var_y_rep.shape, (20,5,4,3))
+        self.assertEqual(var_y_rep.shape, (20, 5, 4, 3))
         var_beta = fit.stan_variable(name='beta')
-        self.assertEqual(var_beta.shape, (20,2))
+        self.assertEqual(var_beta.shape, (20, 2))
         var_frac_60 = fit.stan_variable(name='frac_60')
-        self.assertEqual(var_frac_60.shape, (20, ))
+        self.assertEqual(var_frac_60.shape, (20,))
         vars = fit.stan_variables()
         self.assertEqual(len(vars), len(fit.stan_vars_dims))
         self.assertTrue('y_rep' in vars)
-        self.assertEqual(vars['y_rep'].shape, (20,5,4,3))
+        self.assertEqual(vars['y_rep'].shape, (20, 5, 4, 3))
         self.assertTrue('beta' in vars)
-        self.assertEqual(vars['beta'].shape, (20,2))
+        self.assertEqual(vars['beta'].shape, (20, 2))
         self.assertTrue('frac_60' in vars)
-        self.assertEqual(vars['frac_60'].shape, (20, ))
+        self.assertEqual(vars['frac_60'].shape, (20,))
 
     def test_validate(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')

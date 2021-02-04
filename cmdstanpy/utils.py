@@ -10,10 +10,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from collections.abc import Sequence
 from numbers import Integral, Real
-from typing import Any, Dict, List, Optional, Union, TextIO, Tuple
+from typing import Dict, List, Union, TextIO, Tuple
 
 import numpy as np
 import pandas as pd
@@ -664,7 +664,7 @@ def parse_sampler_vars(names: Tuple[str, ...]) -> Dict:
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    return { v:k for (k,v) in enumerate(names) if v.endswith('__') }
+    return {v: k for (k, v) in enumerate(names) if v.endswith('__')}
 
 
 def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
@@ -703,8 +703,8 @@ def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
 
 def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
-    Scan stepsize, metric from  stan_csv file comment lines,
-   set config_dict entries 'metric' and 'num_params'
+     Scan stepsize, metric from  stan_csv file comment lines,
+    set config_dict entries 'metric' and 'num_params'
     """
     if 'metric' not in config_dict:
         config_dict['metric'] = 'diag_e'
