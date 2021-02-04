@@ -456,6 +456,15 @@ class CmdStanMCMC:
             return None
         return self._metadata.cmdstan_config['num_params']
 
+
+    @property
+    def sampler_config(self) -> Dict:
+        """
+        Returns all CmdStan config
+        """
+        return self._metadata.cmdstan_config
+
+
     @property
     def sampler_vars(self) -> Dict:
         """
