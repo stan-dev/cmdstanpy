@@ -550,33 +550,49 @@ class CmdStanMCMC:
             self._assemble_draws()
         return self._stepsize
 
-    def draws(self, inc_warmup: bool = False) -> np.ndarray:
+    def draws(self,
+                  inc_warmup: bool = False,
+                  concat_chains: bool = False) -> np.ndarray:
         """
-        A 3-D numpy ndarray which contains sampler draws arranged
-        (draws, chains, columns) and stored column major so that the values
-        for each parameter are contiguous in memory, likewise all draws
-        from a chain are contiguous.
+        Returns a numpy ndarray over all draws from all chains which is
+        stored column major so that the values for a parameter are contiguous
+        in memory, likewise all draws from a chain are contiguous.
+        By default, returns a 3D array arranged (draws, chains, columns);
+        parameter ``concat_chains=True`` will return a 2D array where all
+        chains are flattened into a single column, although underlyingly,
+        given M chains of N draws, the first N draws are from chain 1, up
+        through the last N draws from chain M.
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
+
+        :param concat_chains: When ``True`` return a 2D array flattening all
+            all draws from all chains.  Default value is ``False``.
         """
         if not self._validate_csv and self._draws is None:
             self.validate_csv_files()
 
         if self._draws is None:
             self._assemble_draws()
-        if not inc_warmup:
-            if self._save_warmup:
-                return self._draws[self.num_draws_warmup:, :, :]
-            return self._draws
-        else:
-            if not self._save_warmup:
-                self._logger.warning(
-                    'draws from warmup iterations not available,'
-                    ' must run sampler with "save_warmup=True".'
-                )
-        return self._draws
+
+        start_idx = 0
+        num_draws = self.num_draws
+        if inc_warmup and not self._save_warmup:
+            self._logger.warning(
+                'draws from warmup iterations not available,'
+                ' must run sampler with "save_warmup=True".'
+            )
+        elif not inc_warmup and self._save_warmup:
+            start_idx = self.num_draws_warmup
+            num_draws = self.num_draws_sampling
+
+        if concat_chains:
+            num_rows = num_draws * self.chains
+            return self._draws[start_idx:, :, :].reshape(
+                (num_rows, len(self.column_names)), order='A'
+            )
+        return self._draws[start_idx:, :, :]
 
     @property
     def sample(self) -> np.ndarray:
@@ -607,7 +623,7 @@ class CmdStanMCMC:
         Raises exception when inconsistencies detected.
         """
         dzero = {}
-        for i in range(self.runset.chains):
+        for i in range(self.chains):
             if i == 0:
                 dzero = check_sampler_csv(
                     path=self.runset.csv_files[i],
@@ -664,22 +680,22 @@ class CmdStanMCMC:
             num_draws += self.num_draws_warmup
             sampling_iter_start = self.num_draws_warmup
         self._draws = np.empty(
-            (num_draws, self.runset.chains, len(self.column_names)),
+            (num_draws, self.chains, len(self.column_names)),
             dtype=float,
             order='F',
         )
         if not self._is_fixed_param:
-            self._stepsize = np.empty(self.runset.chains, dtype=float)
+            self._stepsize = np.empty(self.chains, dtype=float)
             if self.metric_type == 'diag_e':
                 self._metric = np.empty(
-                    (self.runset.chains, self.num_params), dtype=float
+                    (self.chains, self.num_params), dtype=float
                 )
             else:
                 self._metric = np.empty(
-                    (self.runset.chains, self.num_params, self.num_params),
+                    (self.chains, self.num_params, self.num_params),
                     dtype=float,
                 )
-        for chain in range(self.runset.chains):
+        for chain in range(self.chains):
             with open(self.runset.csv_files[chain], 'r') as fd:
                 # skip initial comments, up to columns header
                 line = fd.readline().strip()
@@ -828,7 +844,8 @@ class CmdStanMCMC:
         self, params: List[str] = None, inc_warmup: bool = False
     ) -> pd.DataFrame:
         """
-        Will be removed in next version.
+        Slated for removal
+
         Returns the sampler draws as a pandas DataFrame consisting of
         one column per parameter and one row per draw, i.e., flattens
         chains into single set of draws.
@@ -858,7 +875,7 @@ class CmdStanMCMC:
         num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
             num_draws += self.num_draws_warmup
-        num_rows = num_draws * self.runset.chains
+        num_rows = num_draws * self.chains
         if self._draws_pd is None or self._draws_pd.shape[0] != num_rows:
             # pylint: disable=redundant-keyword-arg
             data = self.draws(inc_warmup=inc_warmup).reshape(
@@ -917,7 +934,7 @@ class CmdStanMCMC:
         num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
             num_draws += self.num_draws_warmup
-        dims = [num_draws * self.runset.chains]
+        dims = [num_draws * self.chains]
         col_idxs = self._metadata.stan_vars_cols[name]
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[name])
@@ -1048,7 +1065,7 @@ class CmdStanGQ:
     def __repr__(self) -> str:
         repr = 'CmdStanGQ: model={} chains={}{}'.format(
             self.runset.model,
-            self.runset.chains,
+            self.chains,
             self.runset._args.method_args.compose(0, cmd=[]),
         )
         repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
@@ -1129,7 +1146,7 @@ class CmdStanGQ:
 
     def _assemble_generated_quantities(self) -> None:
         drawset_list = []
-        for chain in range(self.runset.chains):
+        for chain in range(self.chains):
             drawset_list.append(
                 pd.read_csv(
                     self.runset.csv_files[chain],
