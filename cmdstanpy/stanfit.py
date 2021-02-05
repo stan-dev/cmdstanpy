@@ -20,6 +20,7 @@ from cmdstanpy.utils import (
     EXTENSION,
     check_sampler_csv,
     cmdstan_path,
+    cmdstan_version_at,
     create_named_text_file,
     do_command,
     get_logger,
@@ -698,17 +699,20 @@ class CmdStanMCMC:
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
-        tmp_csv_file = 'stansummary-{}-{}-chain-'.format(
-            self.runset._args.model_name, self.runset.chains
+        tmp_csv_file = 'stansummary-{}-'.format(
+            self.runset._args.model_name
         )
         tmp_csv_path = create_named_text_file(
-            dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv'
+            dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv', name_only=True
         )
+        csv_str = '--csv_filename={}'.format(tmp_csv_path)
+        if not cmdstan_version_at(2, 24):
+            csv_str = '--csv_file={}'.format(tmp_csv_path)
         cmd = [
             cmd_path,
             percentiles_str,
             sig_figs_str,
-            '--csv_file={}'.format(tmp_csv_path),
+            csv_str,
         ] + self.runset.csv_files
         do_command(cmd, logger=self.runset._logger)
         with open(tmp_csv_path, 'rb') as fd:

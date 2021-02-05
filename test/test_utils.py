@@ -243,6 +243,16 @@ class CmdStanPathTest(unittest.TestCase):
         with open(file_zero_matrix) as fd:
             cmp(json.load(fd), dict_zero_matrix)
 
+        arr = np.zeros(shape=(2, 3, 4))
+        self.assertTrue(isinstance(arr, np.ndarray))
+        self.assertEqual(arr.shape, (2,3,4))
+
+        dict_3d_matrix = {'a': arr}
+        file_3d_matrix = os.path.join(_TMPDIR, '3d_matrix.json')
+        jsondump(file_3d_matrix, dict_3d_matrix)
+        with open(file_3d_matrix) as fd:
+            cmp(json.load(fd), dict_3d_matrix)
+
 
 class ReadStanCsvTest(unittest.TestCase):
     def test_check_sampler_csv_1(self):
