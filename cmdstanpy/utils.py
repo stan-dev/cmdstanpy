@@ -686,7 +686,6 @@ def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
         var, *dims = name.split('[')
         if var.endswith('__'):
             idxs = []
-            pass
         elif len(dims) == 0:
             dims_map[var] = ()
             cols_map[var] = tuple(idxs)
