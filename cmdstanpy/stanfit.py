@@ -429,7 +429,8 @@ class CmdStanMCMC:
         """
         Names of all outputs from the sampler, comprising sampler parameters
         and all components of all model parameters, transformed parameters,
-        and quantities of interest. (Corresponds to Stan CSV file header row.)
+        and quantities of interest. Corresponds to Stan CSV file header row,
+        with names munged to array notation, e.g. `beta[1]` not `beta.1`.
         """
         if not self._validate_csv and self._metadata is None:
             self._logger.warning(
@@ -476,7 +477,7 @@ class CmdStanMCMC:
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return self._metadata.stan_vars_cols
+        return self._metadata.sampler_vars
 
     @property
     def stan_vars_dims(self) -> Dict:
@@ -521,7 +522,7 @@ class CmdStanMCMC:
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return self._metadata.cmdstan_config['metric']
+        return self._metadata.cmdstan_config['metric']  # cmdstan arg name
 
     @property
     def metric(self) -> np.ndarray:

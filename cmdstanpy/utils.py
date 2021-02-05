@@ -13,7 +13,7 @@ import tempfile
 from collections import OrderedDict
 from collections.abc import Sequence
 from numbers import Integral, Real
-from typing import Dict, List, Union, TextIO, Tuple
+from typing import Dict, List, TextIO, Tuple, Union
 
 import numpy as np
 import pandas as pd

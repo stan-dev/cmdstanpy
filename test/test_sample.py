@@ -1193,7 +1193,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                     )
 
     def test_validate_summary_sig_figs(self):
-        # construct fit using existing sampler output
+        # construct CmdStanMCMC from logistic model output, config
         exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
         rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
         sampler_args = SamplerArgs(iter_sampling=100)
@@ -1217,7 +1217,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         retcodes = runset._retcodes
         for i in range(len(retcodes)):
             runset._set_retcode(i, 0)
-        self.assertTrue(runset._check_retcodes())
         fit = CmdStanMCMC(runset)
 
         sum_default = fit.summary()
@@ -1227,7 +1226,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         if cmdstan_version_at(2, 25):
             sum_17 = fit.summary(sig_figs=17)
             beta1_17 = format(sum_17.iloc[1, 0], '.18g')
-            self.assertTrue(beta1_17.startswith('1.345767078273258'))
+            self.assertTrue(beta1_17.startswith('1.345767078273'))
 
             sum_10 = fit.summary(sig_figs=10)
             beta1_10 = format(sum_10.iloc[1, 0], '.18g')
@@ -1237,6 +1236,71 @@ class CmdStanMCMCTest(unittest.TestCase):
             fit.summary(sig_figs=20)
         with self.assertRaises(ValueError):
             fit.summary(sig_figs=-1)
+
+    def test_metadata(self):
+        # construct CmdStanMCMC from logistic model output, config
+        exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
+        rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+        sampler_args = SamplerArgs(iter_sampling=100)
+        cmdstan_args = CmdStanArgs(
+            model_name='logistic',
+            model_exe=exe,
+            chain_ids=[1, 2, 3, 4],
+            seed=12345,
+            data=rdata,
+            output_dir=DATAFILES_PATH,
+            sig_figs=17,
+            method_args=sampler_args,
+        )
+        runset = RunSet(args=cmdstan_args)
+        runset._csv_files = [
+            os.path.join(DATAFILES_PATH, 'logistic_output_1.csv'),
+            os.path.join(DATAFILES_PATH, 'logistic_output_2.csv'),
+            os.path.join(DATAFILES_PATH, 'logistic_output_3.csv'),
+            os.path.join(DATAFILES_PATH, 'logistic_output_4.csv'),
+        ]
+        retcodes = runset._retcodes
+        for i in range(len(retcodes)):
+            runset._set_retcode(i, 0)
+        fit = CmdStanMCMC(runset)
+
+        col_names = tuple(
+            [
+                'lp__',
+                'accept_stat__',
+                'stepsize__',
+                'treedepth__',
+                'n_leapfrog__',
+                'divergent__',
+                'energy__',
+                'beta[1]',
+                'beta[2]',
+            ]
+        )
+
+        self.assertEqual(fit.chains, 4)
+        self.assertEqual(fit.chain_ids, [1, 2, 3, 4])
+        self.assertEqual(fit.num_draws, 1100)
+        self.assertEqual(fit.num_draws_warmup, 1000)
+        self.assertEqual(fit.num_draws_sampling, 100)
+        self.assertEqual(fit.column_names, col_names)
+        self.assertEqual(fit.num_params, 2)
+        self.assertEqual(fit.metric_type, 'diag_e')
+
+        self.assertEqual(fit.sampler_config['num_samples'], 100)
+        self.assertEqual(fit.sampler_config['thin'], 1)
+        self.assertEqual(fit.sampler_config['algorithm'], 'hmc')
+        self.assertEqual(fit.sampler_config['metric'], 'diag_e')
+        self.assertAlmostEqual(fit.sampler_config['delta'], 0.80)
+
+        self.assertTrue('n_leapfrog__' in fit.sampler_vars)
+        self.assertTrue('energy__' in fit.sampler_vars)
+        self.assertTrue('beta' not in fit.sampler_vars)
+        self.assertTrue('energy__' not in fit.stan_vars_dims)
+        self.assertTrue('beta' in fit.stan_vars_dims)
+        self.assertTrue('beta' in fit.stan_vars_cols)
+        self.assertEqual(fit.stan_vars_dims['beta'], tuple([2]))
+        self.assertEqual(fit.stan_vars_cols['beta'], tuple([7, 8]))
 
 
 if __name__ == '__main__':
