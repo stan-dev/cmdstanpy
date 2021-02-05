@@ -457,14 +457,12 @@ class CmdStanMCMC:
             return None
         return self._metadata.cmdstan_config['num_params']
 
-
     @property
     def sampler_config(self) -> Dict:
         """
         Returns all CmdStan config
         """
         return self._metadata.cmdstan_config
-
 
     @property
     def sampler_vars(self) -> Dict:
@@ -560,9 +558,9 @@ class CmdStanMCMC:
             self._assemble_draws()
         return self._stepsize
 
-    def draws(self,
-                  inc_warmup: bool = False,
-                  concat_chains: bool = False) -> np.ndarray:
+    def draws(
+        self, inc_warmup: bool = False, concat_chains: bool = False
+    ) -> np.ndarray:
         """
         Returns a numpy ndarray over all draws from all chains which is
         stored column major so that the values for a parameter are contiguous
@@ -866,9 +864,7 @@ class CmdStanMCMC:
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
         """
-        self._logger.warning(
-            'method "draws_pd" is slated for removal.'
-        )
+        self._logger.warning('method "draws_pd" is slated for removal.')
         pnames_base = [name.split('[')[0] for name in self.column_names]
         if params is not None:
             for param in params:
