@@ -481,6 +481,7 @@ class SampleTest(unittest.TestCase):
 
 
 class CmdStanMCMCTest(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
     def test_validate_good_run(self):
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
