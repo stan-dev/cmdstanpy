@@ -884,12 +884,17 @@ def windows_short_path(path: str) -> str:
     return short_path
 
 
-def create_named_text_file(dir: str, prefix: str, suffix: str) -> str:
+def create_named_text_file(
+    dir: str, prefix: str, suffix: str, name_only: bool = False
+) -> str:
     """
-    Create a named unique file.
+    Create a named unique file, return filename.
+    Flag 'name_only' will create then delete the tmp file;
+    this lets us create filename args for commands which
+    disallow overwriting existing files (e.g., 'stansummary').
     """
     fd = tempfile.NamedTemporaryFile(
-        mode='w+', prefix=prefix, suffix=suffix, dir=dir, delete=False
+        mode='w+', prefix=prefix, suffix=suffix, dir=dir, delete=name_only
     )
     path = fd.name
     fd.close()
