@@ -34,9 +34,9 @@ from cmdstanpy.utils import (
 
 class RunSet:
     """
-    Record of CmdStan run for a specified configuration and number of chains.
-    Records sampler return code and locations of all console, error, and output
-    files but doesn't parse file contents in any way.
+    Encapsulates the configuration and results of a call to any CmdStan
+    inference method. Records the sampler return code and locations of
+    all console, error, and output files.
     """
 
     def __init__(
@@ -159,7 +159,7 @@ class RunSet:
 
     @property
     def method(self) -> Method:
-        """Returns the CmdStan method used to generate this fit."""
+        """CmdStan method used to generate this fit."""
         return self._args.method
 
     @property
@@ -174,32 +174,26 @@ class RunSet:
 
     @property
     def cmds(self) -> List[str]:
-        """Per-chain call to CmdStan."""
+        """List of call(s) to CmdStan, one call per-chain."""
         return self._cmds
 
     @property
     def csv_files(self) -> List[str]:
-        """
-        List of paths to CmdStan output files.
-        """
+        """List of paths to CmdStan output files."""
         return self._csv_files
 
     @property
     def stdout_files(self) -> List[str]:
-        """
-        List of paths to CmdStan stdout transcripts.
-        """
+        """List of paths to CmdStan stdout transcripts."""
         return self._stdout_files
 
     @property
     def stderr_files(self) -> List[str]:
-        """
-        List of paths to CmdStan stderr transcripts.
-        """
+        """List of paths to CmdStan stderr transcripts."""
         return self._stderr_files
 
     def _check_retcodes(self) -> bool:
-        """True when all chains have retcode 0."""
+        """Returns ``True`` when all chains have retcode 0."""
         for i in range(self._chains):
             if self._retcodes[i] != 0:
                 return False
@@ -207,9 +201,7 @@ class RunSet:
 
     @property
     def diagnostic_files(self) -> List[str]:
-        """
-        List of paths to CmdStan diagnostic output files.
-        """
+        """List of paths to CmdStan diagnostic output files."""
         return self._diagnostic_files
 
     def _retcode(self, idx: int) -> int:
@@ -309,7 +301,7 @@ class InferenceMetadata:
     def __init__(self, config: Dict) -> None:
         """Initialize object from CSV headers"""
         self._cmdstan_config = config
-        self._sampler_vars = parse_sampler_vars(names=config['column_names'])
+        self._sampler_vars_cols = parse_sampler_vars(names=config['column_names'])
         stan_vars_dims, stan_vars_cols = parse_stan_vars(
             names=config['column_names']
         )
@@ -324,8 +316,8 @@ class InferenceMetadata:
         return copy.deepcopy(self._cmdstan_config)
 
     @property
-    def sampler_vars(self) -> Dict:
-        return copy.deepcopy(self._sampler_vars)
+    def sampler_vars_cols(self) -> Dict:
+        return copy.deepcopy(self._sampler_vars_cols)
 
     @property
     def stan_vars_dims(self) -> Dict:
@@ -339,6 +331,14 @@ class InferenceMetadata:
 class CmdStanMCMC:
     """
     Container for outputs from CmdStan sampler run.
+    Provides methods to summarize and diagnose the model fit
+    and accessor methods to access the entire sample or
+    individual items.
+
+    The sample is lazily instantiated on first access of either
+    the resulting sample or the HMC tuning parameters, i.e., the
+    stepsize and metric.  The sample can treated either as a 2D or
+    3D array; the former flattens all chains into a single dimension.
     """
 
     # pylint: disable=too-many-public-methods
@@ -459,13 +459,11 @@ class CmdStanMCMC:
 
     @property
     def sampler_config(self) -> Dict:
-        """
-        Returns all CmdStan config
-        """
+        """Returns dict of CmdStan configuration arguments."""
         return self._metadata.cmdstan_config
 
     @property
-    def sampler_vars(self) -> Dict:
+    def sampler_vars_cols(self) -> Dict:
         """
         Returns map from sampler variable names to column indices.
         """
@@ -475,7 +473,7 @@ class CmdStanMCMC:
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return self._metadata.sampler_vars
+        return self._metadata.sampler_vars_cols
 
     @property
     def stan_vars_dims(self) -> Dict:
@@ -852,8 +850,6 @@ class CmdStanMCMC:
         self, params: List[str] = None, inc_warmup: bool = False
     ) -> pd.DataFrame:
         """
-        Slated for removal
-
         Returns the sampler draws as a pandas DataFrame consisting of
         one column per parameter and one row per draw, i.e., flattens
         chains into single set of draws.
@@ -863,6 +859,8 @@ class CmdStanMCMC:
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
+
+        *Note:* Slated for removal
         """
         self._logger.warning('method "draws_pd" is slated for removal.')
         pnames_base = [name.split('[')[0] for name in self.column_names]
@@ -1096,7 +1094,7 @@ class CmdStanGQ:
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        A 2-D numpy ndarray which contains generated quantities draws
+        A 2D numpy ndarray which contains generated quantities draws
         for all chains where the columns correspond to the generated quantities
         block variables and the rows correspond to the draws from all chains,
         where first M draws are the first M draws of chain 1 and the

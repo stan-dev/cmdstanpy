@@ -1294,9 +1294,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.sampler_config['metric'], 'diag_e')
         self.assertAlmostEqual(fit.sampler_config['delta'], 0.80)
 
-        self.assertTrue('n_leapfrog__' in fit.sampler_vars)
-        self.assertTrue('energy__' in fit.sampler_vars)
-        self.assertTrue('beta' not in fit.sampler_vars)
+        self.assertTrue('n_leapfrog__' in fit.sampler_vars_cols)
+        self.assertTrue('energy__' in fit.sampler_vars_cols)
+        self.assertTrue('beta' not in fit.sampler_vars_cols)
         self.assertTrue('energy__' not in fit.stan_vars_dims)
         self.assertTrue('beta' in fit.stan_vars_dims)
         self.assertTrue('beta' in fit.stan_vars_cols)

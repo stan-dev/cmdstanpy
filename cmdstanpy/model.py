@@ -38,19 +38,36 @@ from cmdstanpy.utils import (
     scan_sampler_csv,
 )
 
-
+# summary from sphinx pages:
+#    A CmdStanModel object encapsulates the Stan program and provides methods for
+#    compilation and provides the following inference methods
 class CmdStanModel:
     """
-    A CmdStanModel object encapsulates the Stan program and provides
-    methods for compilation and doing inference on the model given data
-    using Stan's algorithms.  It manages program compilation and corresponding
-    Stan and C++ compiler options.
+    The constructor method allows model instantiation given either the
+    Stan program source file or the compiled executable, or both.
+    By default, the constructor will compile the Stan program on instantiation
+    unless the argument ``compile=False`` is specified.
+    The set of constructor arguments are:
 
-    The constructor method allows model instantiation given either or
-    both the Stan program source file and the compiled executable, and
-    provides accessor functions for the file locations.   By default, the
-    constructor will compile the Stan program on instantiation unless the
-    argument ``compile=False`` is specified.
+    :param model_name: Model name, used for output file names.
+        Optional, default is the base filename of the Stan program file.
+
+    :param stan_file: Path to Stan program file.
+
+    :param exe_file: Path to compiled executable file.  Optional, unless
+        no Stan program file is specified.  If both the program file and
+        the compiled executable file are specified, the base filenames
+        must match, (but different directory locations are allowed).
+
+    :param compile: Whether or not to compile the model.  Default is ``True``.
+
+    :param stanc_options: Options for stanc compiler, specified as a Python
+        dictionary containing Stanc3 compiler option name, value pairs.
+        Optional.
+       
+    :param cpp_options: Options for C++ compiler, specified as a Python
+        dictionary containing C++ compiler option name, value pairs.
+        Optional.
     """
 
     def __init__(
