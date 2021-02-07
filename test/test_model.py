@@ -11,7 +11,7 @@ import tqdm
 from testfixtures import LogCapture
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, cmdstan_path
+from cmdstanpy.utils import EXTENSION, cmdstan_path, proc_readline_ext
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -259,7 +259,9 @@ class CmdStanModelTest(unittest.TestCase):
         ]
 
         with LogCapture() as log:
-            result = model._read_progress(proc=proc_mock, pbar=pbar, idx=0)
+            proc_readline_ext(proc_mock, stderr_readline=False)
+            model._read_progress(proc=proc_mock, pbar=pbar, idx=0)
+            result = proc_mock.get_stdout_log()
             self.assertEqual([], log.actual())
             self.assertEqual(31000, pbar.total)
 
