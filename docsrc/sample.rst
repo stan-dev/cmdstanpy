@@ -15,6 +15,7 @@ to run these chains in separate processes.
 This processing can be done in parallel, up to the number of
 processor cores available.
 
+
 NUTS-HMC sampler configuration
 ------------------------------
 
@@ -32,7 +33,7 @@ NUTS-HMC sampler configuration
 
 - ``save_warmup``: When ``True``, sampler saves warmup draws as part of output csv file.
 
-- ``thin``: Period between saved samples.
+- ``thin``: Period between saved samples (draws).  Default is 1, i.e., save all iterations.
 
 - ``max_treedepth``: Maximum depth of trees evaluated by NUTS sampler per iteration.
 
@@ -70,27 +71,51 @@ The :ref:`class_cmdstanmodel` class method  ``sample`` returns a ``CmdStanMCMC``
 which provides properties to retrieve information about the sample, as well as methods
 to run CmdStan's summary and diagnostics tools.
 
-Methods for information about the fit of the model to the data:
+We distinguish between sampler iterations and the resulting sampler
+and parameter values which are written to the Stan CSV output file;
+for the latter, each reported set of estimates constitutes one row's
+worth of data and is called a "draw".  By default, all iterations are
+reported, however, the sampler can be configured to thin the draws.
+In short, the sampler is configuration specifies iterations; the
+results specify draws.
+
+Summarizing and diagnosing the fitted model:
 
 - ``summary()`` - Run CmdStan's `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__ utility on the sample.
 - ``diagnose()`` - Run CmdStan's `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__ utility on the sample.
 - ``sampler_diagnostics()`` - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.
 
-Methods for managing the sample:
+Information about the size and shape of the sample: 
 
-- ``save_csvfiles(dir_name)`` - Move output csvfiles to specified directory.
 - ``chains`` - Number of chains
-- ``num_draws`` - Number of post-warmup draws (i.e., sampling iterations)
-- ``num_warmup_draws`` - Number of warmup draws.
-- ``metric`` - Per chain metric by the HMC sampler.
-- ``stepsize`` - Per chain stepszie used by the HMC sampler.
-- ``sample`` - A 3-D numpy.ndarray which contains all post-warmup draws across all chains arranged as (draws, chains, columns).
-- ``warmup`` - A 3-D numpy.ndarray which contains all warmup draws across all chains arranged as (draws, chains, columns).
+- ``num_draws`` - Number of draws per chain, i.e., thinned iterations.
+- ``num_draws_sampling`` - Number of sampling (post-warmup) draws per chain, i.e., sampling iterations, thinned.  By default, only the post-warmup draws are reported, so that ``num_draws`` == ``num_draws_sampling``.
+- ``num_draws_warmup`` - Number of warmup draws per chain, i.e., thinned warmup iterations.
 
-Methods for downstream analysis are:
+- ``metric_type`` - Metric type used for adaptation, either ``diag_e``
+  or ``dense_e``, or ``None``, if the Stan program doesn't have any parameters.
+- ``num_params`` - Total number of parameters in the model; the sum of all scalar parameter variables and all elements of all container parameter variables
 
+- ``column_names`` - Column labels for one draw from the sampler.
+- ``sampler_vars_cols`` - Maps the sampler parameter names to output column indices.
+- ``stan_vars_cols`` - Maps the Stan progran variable names to output column indices.
+- ``stan_vars_dims`` - Maps the Stan progran variable names to dimensions; scalar variables have zero dimensions.
+
+Contents of the the sample: 
+
+- ``metric`` - Per-chain metric values, either a vector or matrix. 
+- ``step_size`` - Per-chain stepsize.
+  
+- ``draws`` - A numpy.ndarray which contains all across all chains arranged as (raws, chains, columns).
 - ``stan_variable(var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
 - ``stan_variables()`` - Return dictionary of all Stan program variables.
+
+
+Methods for saving the CmdStan output files:
+
+- ``save_csvfiles(dir_name)`` - Move output Stan CSV files to specified directory. 
+
+
 
 By default the sampler runs 4 chains, running as many chains in parallel as there
 are available processors as determined by Python's ``multiprocessing.cpu_count()`` function.
@@ -109,10 +134,25 @@ Specifying ``chains=6, parallel_chains=6`` will run all 6 chains in parallel.
     # instantiate, compile bernoulli model
     bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
 
-    # run the NUTS-HMC sampler
+    # run the NUTS-HMC sampler 
     bern_fit = bernoulli_model.sample(data=bernoulli_data)
-    bern_fit.draws().shape
+
+    # summarize the fit 
     bern_fit.summary()
+
+    # instantiate, inspect the sample 
+    bern_fit.draws.shape
+    bern_fit.draws.column_names
+    
+    sampler_variables = bern_fit.sampler_vars_cols
+    stan_variables = bern_fit.stan_vars_cols
+    print('Sampler variables:\n{}'.format(sampler_variables)) 
+    print('Stan variables:\n{}'.format(stan_variables)) 
+
+    # get parameter variable estimates
+    draws_theta = bern_fit.stan_variable(name='theta') 
+    draws_theta.shape 
+
 
 
 Example: high-level parallelization with **reduce_sum**

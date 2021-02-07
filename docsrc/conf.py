@@ -54,8 +54,8 @@ if LooseVersion(sphinx.__version__) < LooseVersion('1.4'):
 else:
     extensions.append('sphinx.ext.imgmath')
 
-autodoc_default_options = {'members': True, 'special-members': '__init__'}
-autodoc_default_flags = ['members', 'inherited-members', 'special-members']
+autodoc_default_options = {'members': True}
+autodoc_default_flags = ['members']
 autodoc_member_order = 'groupwise'
 autodoc_typehints = 'description'
 

@@ -105,7 +105,6 @@ to generate quantities of interest:
 .. code:: python
 
     bernoulli_ppc_model = CmdStanModel(stan_file='bernoulli_ppc.stan')
-    bernoulli_ppc_model.compile()
     new_quantities = bernoulli_ppc_model.generate_quantities(data=bern_data, mcmc_sample=bern_fit)
 
 The ``generate_quantities`` method returns a ``CmdStanGQ`` object which
