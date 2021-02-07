@@ -301,7 +301,9 @@ class InferenceMetadata:
     def __init__(self, config: Dict) -> None:
         """Initialize object from CSV headers"""
         self._cmdstan_config = config
-        self._sampler_vars_cols = parse_sampler_vars(names=config['column_names'])
+        self._sampler_vars_cols = parse_sampler_vars(
+            names=config['column_names']
+        )
         stan_vars_dims, stan_vars_cols = parse_stan_vars(
             names=config['column_names']
         )
@@ -406,7 +408,7 @@ class CmdStanMCMC:
 
     @property
     def num_draws(self) -> int:
-        """Total number of draws per chain, i.e., thinned total iterations."""
+        """Number of draws per chain, i.e., thinned iterations."""
         return int(
             math.ceil((self._iter_sampling + self._iter_warmup) / self._thin)
         )
@@ -560,7 +562,7 @@ class CmdStanMCMC:
         self, inc_warmup: bool = False, concat_chains: bool = False
     ) -> np.ndarray:
         """
-        Returns a numpy ndarray over all draws from all chains which is
+        Returns a numpy.ndarray over all draws from all chains which is
         stored column major so that the values for a parameter are contiguous
         in memory, likewise all draws from a chain are contiguous.
         By default, returns a 3D array arranged (draws, chains, columns);

@@ -38,10 +38,11 @@ from cmdstanpy.utils import (
     scan_sampler_csv,
 )
 
-# summary from sphinx pages:
-#    A CmdStanModel object encapsulates the Stan program and provides methods for
-#    compilation and provides the following inference methods
+
 class CmdStanModel:
+    # overview, omitted from doc comment in order to improve Sphinx docs.
+    #    A CmdStanModel object encapsulates the Stan program and provides
+    #    methods for compilation and inference.
     """
     The constructor method allows model instantiation given either the
     Stan program source file or the compiled executable, or both.
@@ -64,7 +65,7 @@ class CmdStanModel:
     :param stanc_options: Options for stanc compiler, specified as a Python
         dictionary containing Stanc3 compiler option name, value pairs.
         Optional.
-       
+
     :param cpp_options: Options for C++ compiler, specified as a Python
         dictionary containing C++ compiler option name, value pairs.
         Optional.
