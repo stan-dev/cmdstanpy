@@ -39,7 +39,7 @@ NUTS-HMC sampler configuration
 
 - ``metric``: Specification of the mass matrix.
 
-- ``step_size``: Initial stepsize for HMC sampler.
+- ``step_size``: Initial step size for HMC sampler.
 
 - ``adapt_engaged``: When ``True``, tune stepsize and metric during warmup. The default is ``True``.
 
@@ -59,35 +59,34 @@ All of these arguments are optional; when unspecified, the CmdStan defaults will
 See :meth:`~cmdstanpy.CmdStanModel.sample` for more details about the parameters.
 
 
-Example: fit model - sampler defaults
--------------------------------------
+CmdStanMCMC: HMC sample and metadata
+------------------------------------
 
-In this example we use the CmdStan example model
-`bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan>`__
-and data file
-`bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
+The :ref:`class_cmdstanmodel` class method  ``sample`` returns a :ref:`class_cmdstanmcmc` object
+which provides properties and methods to access and manage the sample; these fall into the following
+following functional categories:
 
-The :ref:`class_cmdstanmodel` class method  ``sample`` returns a ``CmdStanMCMC`` object
-which provides properties to retrieve information about the sample, as well as methods
-to run CmdStan's summary and diagnostics tools.
+**Get sample contents**
 
-We distinguish between sampler iterations and the resulting sampler
-and parameter values which are written to the Stan CSV output file;
-for the latter, each reported set of estimates constitutes one row's
-worth of data and is called a "draw".  By default, all iterations are
-reported, however, the sampler can be configured to thin the draws.
-In short, the sampler is configuration specifies iterations; the
-results specify draws.
+- ``draws`` - The numpy.ndarray which contains all across all chains arranged as (draws, chains, columns).
+- ``stan_variable(name=var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
+- ``stan_variables()`` - Returns a Python dict, key: Stan program variable name, value: numpy.ndarray of draws.
 
-Summarizing and diagnosing the fitted model:
+- ``metric`` - List of per-chain metric values, metric is either a vector ('diag_e') or matrix ('dense_e')
+- ``stepsize`` - List of per-chain step sizes.
 
-- ``summary()`` - Run CmdStan's `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__ utility on the sample.
-- ``diagnose()`` - Run CmdStan's `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__ utility on the sample.
-- ``sampler_diagnostics()`` - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.
+**Get sample metadata**
 
-Information about the size and shape of the sample: 
+- ``column_names`` - List of column labels for one draw from the sampler.
+- ``sampler_vars_cols`` - Python dict, key: sampler parameter name, value: zero-based output column index.
+- ``stan_vars_cols`` - Python dict, key: Stan program variable name, value: tuple of output column indices.
+- ``stan_vars_dims`` - Python dict, key: Stan program variable name, value: tuple of dimensions, or empty tuple, for scalar variables.
 
-- ``chains`` - Number of chains
+- ``cmdstan_config`` - Python dict, key: CmdStan argument name, value: value used for this sampler run, whether user-specified or CmdStan default.
+  
+- ``chains`` - Number of chains 
+- ``thin`` - Period between recorded iterations.
+
 - ``num_draws`` - Number of draws per chain, i.e., thinned iterations.
 - ``num_draws_sampling`` - Number of sampling (post-warmup) draws per chain, i.e., sampling iterations, thinned.  By default, only the post-warmup draws are reported, so that ``num_draws`` == ``num_draws_sampling``.
 - ``num_draws_warmup`` - Number of warmup draws per chain, i.e., thinned warmup iterations.
@@ -96,26 +95,27 @@ Information about the size and shape of the sample:
   or ``dense_e``, or ``None``, if the Stan program doesn't have any parameters.
 - ``num_params`` - Total number of parameters in the model; the sum of all scalar parameter variables and all elements of all container parameter variables
 
-- ``column_names`` - Column labels for one draw from the sampler.
-- ``sampler_vars_cols`` - Maps the sampler parameter names to output column indices.
-- ``stan_vars_cols`` - Maps the Stan progran variable names to output column indices.
-- ``stan_vars_dims`` - Maps the Stan progran variable names to dimensions; scalar variables have zero dimensions.
+**Summarize and diagnose the fit**
 
-Contents of the the sample: 
+- ``summary()`` - Run CmdStan's `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__ utility on the sample.
+- ``diagnose()`` - Run CmdStan's `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__ utility on the sample.
+- ``sampler_diagnostics()`` - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.
 
-- ``metric`` - Per-chain metric values, either a vector or matrix. 
-- ``step_size`` - Per-chain stepsize.
-  
-- ``draws`` - A numpy.ndarray which contains all across all chains arranged as (raws, chains, columns).
-- ``stan_variable(var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
-- ``stan_variables()`` - Return dictionary of all Stan program variables.
-
-
-Methods for saving the CmdStan output files:
+**Save the Stan CSV output files**
 
 - ``save_csvfiles(dir_name)`` - Move output Stan CSV files to specified directory. 
 
-
+Note that the terms `iterations` and `draws` are not synonymous.
+The HMC sampler is configured to run a specified number of iterations.
+By default, at the end of each iteration, the values of all sampler
+and parameter variables are written to the Stan CSV output file.
+Each reported set of estimates constitutes one row's worth of data,
+each row of data is called a "draw".
+The sampler argument ``thin`` controls the rate at which iterations are
+recorded as draws.  By default, ``thin`` is 1, so every
+iteration is recorded.  Increasing the thinning rate will reduce the
+frequency with which the iterations are recorded, e.g., ``thin = 5``
+will record every 5th iteration.
 
 By default the sampler runs 4 chains, running as many chains in parallel as there
 are available processors as determined by Python's ``multiprocessing.cpu_count()`` function.
@@ -123,6 +123,16 @@ For example, on a dual-processor machine with 4 virtual cores, all 4 chains will
 Continuing this example, specifying ``chains=6`` will result in 4 chains being run in parallel,
 and as soon as 2 of them are finished, the remaining 2 chains will run.
 Specifying ``chains=6, parallel_chains=6`` will run all 6 chains in parallel.
+
+
+Example: fit model - sampler defaults
+-------------------------------------
+
+In this example we use the CmdStan example model
+`bernoulli.stan <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan>`__
+and data file
+`bernoulli.data.json <https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>`__.
+
 
 .. code-block:: python
 

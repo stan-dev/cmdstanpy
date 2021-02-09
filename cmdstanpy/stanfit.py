@@ -339,7 +339,7 @@ class CmdStanMCMC:
 
     The sample is lazily instantiated on first access of either
     the resulting sample or the HMC tuning parameters, i.e., the
-    stepsize and metric.  The sample can treated either as a 2D or
+    step size and metric.  The sample can treated either as a 2D or
     3D array; the former flattens all chains into a single dimension.
     """
 
@@ -375,7 +375,7 @@ class CmdStanMCMC:
         self._metadata = None
         # HMC tuning params
         self._metric = None
-        self._stepsize = None
+        self._step_size = None
         # inference
         self._draws = None
         self._draws_pd = None
@@ -541,14 +541,14 @@ class CmdStanMCMC:
         return self._metric
 
     @property
-    def stepsize(self) -> np.ndarray:
+    def step_size(self) -> np.ndarray:
         """
-        Stepsize used by sampler for each chain.
-        When sampler algorithm 'fixed_param' is specified, stepsize is None.
+        Step size used by sampler for each chain.
+        When sampler algorithm 'fixed_param' is specified, step size is None.
         """
         if self._is_fixed_param:
             return None
-        if not self._validate_csv and self._stepsize is None:
+        if not self._validate_csv and self._step_size is None:
             self._logger.warning(
                 'csv files not yet validated, run method validate_csv_files()'
                 ' in order to retrieve sample metadata.'
@@ -556,10 +556,17 @@ class CmdStanMCMC:
             return None
         if self._draws is None:
             self._assemble_draws()
-        return self._stepsize
+        return self._step_size
+
+    @property
+    def thin(self) -> int:
+        """
+        Period between recorded iterations.  (Default is 1).
+        """
+        return self._metadata.cmdstan_config['thin']
 
     def draws(
-        self, inc_warmup: bool = False, concat_chains: bool = False
+        self, *, inc_warmup: bool = False, concat_chains: bool = False
     ) -> np.ndarray:
         """
         Returns a numpy.ndarray over all draws from all chains which is
@@ -584,19 +591,20 @@ class CmdStanMCMC:
         if self._draws is None:
             self._assemble_draws()
 
-        start_idx = 0
-        num_draws = self.num_draws
         if inc_warmup and not self._save_warmup:
             self._logger.warning(
                 'draws from warmup iterations not available,'
                 ' must run sampler with "save_warmup=True".'
             )
-        elif not inc_warmup and self._save_warmup:
+
+        num_rows = self._draws.shape[0]
+        start_idx = 0
+        if not inc_warmup and self._save_warmup:
             start_idx = self.num_draws_warmup
-            num_draws = self.num_draws_sampling
+            num_rows -= start_idx
 
         if concat_chains:
-            num_rows = num_draws * self.chains
+            num_rows *= self.chains
             return self._draws[start_idx:, :, :].reshape(
                 (num_rows, len(self.column_names)), order='A'
             )
@@ -627,7 +635,7 @@ class CmdStanMCMC:
     def validate_csv_files(self) -> None:
         """
         Checks that csv output files for all chains are consistent.
-        Populates attributes for metadata, draws, metric, stepsize.
+        Populates attributes for metadata, draws, metric, step size.
         Raises exception when inconsistencies detected.
         """
         dzero = {}
@@ -676,7 +684,7 @@ class CmdStanMCMC:
 
     def _assemble_draws(self) -> None:
         """
-        Allocates and populates the stepsize, metric, and sample arrays
+        Allocates and populates the step size, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
         if self._draws is not None:
@@ -693,7 +701,7 @@ class CmdStanMCMC:
             order='F',
         )
         if not self._is_fixed_param:
-            self._stepsize = np.empty(self.chains, dtype=float)
+            self._step_size = np.empty(self.chains, dtype=float)
             if self.metric_type == 'diag_e':
                 self._metric = np.empty(
                     (self.chains, self.num_params), dtype=float
@@ -721,9 +729,9 @@ class CmdStanMCMC:
                     if line != '# Adaptation terminated':
                         while line != '# Adaptation terminated':
                             line = fd.readline().strip()
-                    line = fd.readline().strip()  # stepsize
-                    _, stepsize = line.split('=')
-                    self._stepsize[chain] = float(stepsize.strip())
+                    line = fd.readline().strip()  # step_size
+                    _, step_size = line.split('=')
+                    self._step_size[chain] = float(step_size.strip())
                     line = fd.readline().strip()  # metric header
                     # process metric
                     if self.metric_type == 'diag_e':

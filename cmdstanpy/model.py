@@ -538,7 +538,8 @@ class CmdStanModel:
         :param save_warmup: When ``True``, sampler saves warmup draws as part of
             the Stan csv output file.
 
-        :param thin: Period between saved samples.
+        :param thin: Period between recorded iterations.  Default is 1, i.e.,
+             all iterations are recorded.  
 
         :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler
             per iteration.
@@ -558,13 +559,13 @@ class CmdStanModel:
             length must match the number of chains and all paths must be
             unique.
 
-        :param step_size: Initial stepsize for HMC sampler.  The value is either
+        :param step_size: Initial step size for HMC sampler.  The value is either
             a single number or a list of numbers which will be used as the
             global or per-chain initial step size, respectively.
             The length of the list of step sizes must match the number of
             chains.
 
-        :param adapt_engaged: When True, adapt stepsize and metric.
+        :param adapt_engaged: When True, adapt step size and metric.
 
         :param adapt_delta: Adaptation target Metropolis acceptance rate.
             The default value is 0.8.  Increasing this value, which must be
@@ -577,7 +578,7 @@ class CmdStanModel:
             towards the typical set.
 
         :param adapt_metric_window: The second phase of adaptation tunes
-            the metric and stepsize in a series of intervals.  This parameter
+            the metric and step size in a series of intervals.  This parameter
             specifies the number of iterations used for the first tuning
             interval; window size increases for each subsequent interval.
 
@@ -1017,7 +1018,7 @@ class CmdStanModel:
 
         :param elbo_samples: Number of MC draws for estimate of ELBO.
 
-        :param eta: Stepsize scaling parameter.
+        :param eta: Step size scaling parameter.
 
         :param adapt_engaged: Whether eta adaptation is engaged.
 

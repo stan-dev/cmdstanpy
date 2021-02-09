@@ -96,51 +96,24 @@ to a temporary directory which is deleted when the current Python session is ter
 
 Access the sample
 ^^^^^^^^^^^^^^^^^
-The CmdStanMCMC class has properties and methods to access the sampler
-outputs and all metadata. Accessor properties include:
 
- * draws - all draws from all chains, stored as a 3D numpy.ndarray.
- * num_draws - total number of warmup and sampling draws
- * chains - number of chains run by sampler
- * metric, stepsize - per-chain HMC tuning parameters
- * csv_files - list of Stan CSV output files which comprise the sample
+The :ref:`class_cmdstanmcmc` object
+provides properties and methods to access, summarize, and manage the sample and its metadata.
 
-The draws array is created only as needed; therefore the first time
-that any of the ouput values are accessed, i.e., either the samples
-HMC tuning parameters or the draws themselve, CmdStanPy parses the set
-of CSV output files, at the same time it parses the contain stepsize
-and metric information. Depending on the size of the sample and your
-computing environment, this may take a few seconds or more.
-
-The draws array dimension are:  draws, chains, columns, stored
-column-major (i.e., Fortan layout), so that values for each column
-of the CSV file are stored contiguously in memory, likewise all draws
-from a chain are contiguous.
-
-The draws array contains both the sampler variables and the model
-variables. Sampler variables report the sampler state and end in `__`.
-
-To see the names and output columns for all sampler and model
-variables, we call accessor functions `sampler_vars_cols` and
-`stan_vars_cols`:
+The sampler and model outputs from each chain are written out to Stan CSV files.
+The CmdStanMCMC object assembles these outputs into a
+numpy.ndarray which contains all across all chains arranged as (draws, chains, columns). 
+The `draws` method returns the draws array.
+By default, it returns the underlying 3D array.
+The optional boolean argument ``concat_chains``, when ``True``,
+will flatten the chains resulting in a 2D array.
+the size of the draws dimension is the number of sampling iterations.
 
 .. code-block:: python
 
-    sampler_variables = bern_fit.sampler_vars_cols
-    stan_variables = bern_fit.stan_vars_cols
-    print('Sampler variables:\n{}'.format(sampler_variables)) 
-    print('Stan variables:\n{}'.format(stan_variables)) 
+    bern_fit.draws().shape 
+    bern_fit.draws(concat_chains=True).shape 
 
-The NUTS-HMC sampler reports 7 variables.
-The Bernoulli example model contains a single variable `theta`.
-
-The `draws` method returns a numpy.ndarray which contains all draws
-from all chains.  By default, the sampler only outputs the post-warmup
-draws:
-
-.. code-block:: python
-
-    bern_fit.draws().shape
 
 To work with the draws from all chains for a parameter or quantity of interest
 in the model, use the ``stan_variable`` method to obtains
@@ -151,6 +124,23 @@ by flattening the draws by chains into a single column:
 
     draws_theta = bern_fit.stan_variable(name='theta') 
     draws_theta.shape 
+
+
+The draws array contains both the sampler variables and the model
+variables. Sampler variables report the sampler state and end in `__`.
+To see the names and output columns for all sampler and model
+variables, we call accessor functions ``sampler_vars_cols`` and
+``stan_vars_cols``:
+
+.. code-block:: python
+
+    sampler_variables = bern_fit.sampler_vars_cols
+    stan_variables = bern_fit.stan_vars_cols
+    print('Sampler variables:\n{}'.format(sampler_variables)) 
+    print('Stan variables:\n{}'.format(stan_variables)) 
+
+The NUTS-HMC sampler reports 7 variables.
+The Bernoulli example model contains a single variable `theta`.
                         
 Summarize the results
 ^^^^^^^^^^^^^^^^^^^^^

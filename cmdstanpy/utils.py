@@ -702,7 +702,7 @@ def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
 
 def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
-     Scan stepsize, metric from  stan_csv file comment lines,
+    Scan step size, metric from  stan_csv file comment lines,
     set config_dict entries 'metric' and 'num_params'
     """
     if 'metric' not in config_dict:
@@ -716,17 +716,17 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         )
     line = fd.readline().strip()
     lineno += 1
-    label, stepsize = line.split('=')
+    label, step_size = line.split('=')
     if not label.startswith('# Step size'):
         raise ValueError(
-            'line {}: expecting stepsize, '
+            'line {}: expecting step size, '
             'found:\n\t "{}"'.format(lineno, line)
         )
     try:
-        float(stepsize.strip())
+        float(step_size.strip())
     except ValueError as e:
         raise ValueError(
-            'line {}: invalid stepsize: {}'.format(lineno, stepsize)
+            'line {}: invalid step size: {}'.format(lineno, step_size)
         ) from e
     line = fd.readline().strip()
     lineno += 1

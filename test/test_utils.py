@@ -310,7 +310,7 @@ class ReadStanCsvTest(unittest.TestCase):
 
     def test_check_sampler_csv_metric_2(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_metric_2.csv')
-        with self.assertRaisesRegex(Exception, 'invalid stepsize'):
+        with self.assertRaisesRegex(Exception, 'invalid step size'):
             check_sampler_csv(csv_bad)
 
     def test_check_sampler_csv_metric_3(self):
