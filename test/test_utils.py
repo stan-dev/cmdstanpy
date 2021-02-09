@@ -597,8 +597,8 @@ class ParseVarsTest(unittest.TestCase):
         ]
         vars_dict = parse_sampler_vars(x)
         self.assertEqual(len(vars_dict), 7)
-        self.assertEqual(vars_dict['lp__'], 0)
-        self.assertEqual(vars_dict['stepsize__'], 2)
+        self.assertEqual(vars_dict['lp__'], (0,))
+        self.assertEqual(vars_dict['stepsize__'], (2,))
 
     def test_parse_scalars(self):
         x = ['lp__', 'foo']

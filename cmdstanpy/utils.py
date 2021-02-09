@@ -664,7 +664,9 @@ def parse_sampler_vars(names: Tuple[str, ...]) -> Dict:
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    return {v: k for (k, v) in enumerate(names) if v.endswith('__')}
+    # note: value as tuple allows structured sampler vars
+    # currently, all sampler vars a scalar, not checking for structure
+    return {v: tuple([k]) for (k, v) in enumerate(names) if v.endswith('__')}
 
 
 def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
