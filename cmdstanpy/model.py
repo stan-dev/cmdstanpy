@@ -539,7 +539,7 @@ class CmdStanModel:
             the Stan csv output file.
 
         :param thin: Period between recorded iterations.  Default is 1, i.e.,
-             all iterations are recorded.  
+             all iterations are recorded.
 
         :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler
             per iteration.
@@ -559,9 +559,9 @@ class CmdStanModel:
             length must match the number of chains and all paths must be
             unique.
 
-        :param step_size: Initial step size for HMC sampler.  The value is either
-            a single number or a list of numbers which will be used as the
-            global or per-chain initial step size, respectively.
+        :param step_size: Initial step size for HMC sampler.  The value is
+            either a single number or a list of numbers which will be used
+            as the global or per-chain initial step size, respectively.
             The length of the list of step sizes must match the number of
             chains.
 
