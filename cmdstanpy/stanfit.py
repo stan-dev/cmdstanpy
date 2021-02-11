@@ -979,9 +979,9 @@ class CmdStanMCMC:
         """
         result = {}
         self._assemble_draws()
-        for k, vs in self.sampler_vars_cols.items():
-            for v in vs:
-                result[self.column_names[v]] = self._draws[:, :, v]
+        for idxs in self.sampler_vars_cols.values():
+            for idx in idxs:
+                result[self.column_names[idx]] = self._draws[:, :, idx]
         return result
 
     def sampler_diagnostics(self) -> Dict:
