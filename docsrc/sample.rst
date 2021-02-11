@@ -68,9 +68,10 @@ following functional categories:
 
 **Get sample contents**
 
-- ``draws`` - The numpy.ndarray which contains all across all chains arranged as (draws, chains, columns).
+- ``draws`` - The numpy.ndarray which contains all across all chains. By default, returns a 3D array (draws, chains, columns); the argument ``concat_chains`` returns a 2D array which flattens the chains into a single set of draws.
 - ``stan_variable(name=var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
 - ``stan_variables()`` - Returns a Python dict, key: Stan program variable name, value: numpy.ndarray of draws.
+- ``sampler_variables()`` - Returns a a Python dict, key: sampler variable name, value: numpy.ndarray of draws. 
 
 - ``metric`` - List of per-chain metric values, metric is either a vector ('diag_e') or matrix ('dense_e')
 - ``stepsize`` - List of per-chain step sizes.
@@ -78,7 +79,7 @@ following functional categories:
 **Get sample metadata**
 
 - ``column_names`` - List of column labels for one draw from the sampler.
-- ``sampler_vars_cols`` - Python dict, key: sampler parameter name, value: zero-based output column index.
+- ``sampler_vars_cols`` - Python dict, key: sampler parameter name, value: tuple of output column indices.
 - ``stan_vars_cols`` - Python dict, key: Stan program variable name, value: tuple of output column indices.
 - ``stan_vars_dims`` - Python dict, key: Stan program variable name, value: tuple of dimensions, or empty tuple, for scalar variables.
 
@@ -87,19 +88,17 @@ following functional categories:
 - ``chains`` - Number of chains 
 - ``thin`` - Period between recorded iterations.
 
-- ``num_draws`` - Number of draws per chain, i.e., thinned iterations.
-- ``num_draws_sampling`` - Number of sampling (post-warmup) draws per chain, i.e., sampling iterations, thinned.  By default, only the post-warmup draws are reported, so that ``num_draws`` == ``num_draws_sampling``.
+- ``num_draws_sampling`` - Number of sampling (post-warmup) draws per chain, i.e., sampling iterations, thinned.
 - ``num_draws_warmup`` - Number of warmup draws per chain, i.e., thinned warmup iterations.
 
 - ``metric_type`` - Metric type used for adaptation, either ``diag_e``
   or ``dense_e``, or ``None``, if the Stan program doesn't have any parameters.
-- ``num_params`` - Total number of parameters in the model; the sum of all scalar parameter variables and all elements of all container parameter variables
+- ``num_unconstrained_params`` - Count of `unconstrained` model parameters. For metric ``diag_e``, this is the length of the diagonal vector and for metric ``dense_e`` this is the size of the full covariance matrix.
 
 **Summarize and diagnose the fit**
 
 - ``summary()`` - Run CmdStan's `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__ utility on the sample.
 - ``diagnose()`` - Run CmdStan's `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__ utility on the sample.
-- ``sampler_diagnostics()`` - Returns the sampler parameters as a map from sampler parameter names to a numpy.ndarray of dimensions draws X chains X 1.
 
 **Save the Stan CSV output files**
 

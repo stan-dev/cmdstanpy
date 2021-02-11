@@ -378,7 +378,7 @@ class CmdStanMCMC:
         self._step_size = None
         # inference
         self._draws = None
-        self._draws_pd = None
+        self._draws_pd = None  # slated for removal
         self._validate_csv = validate_csv
         if validate_csv:
             self.validate_csv_files()
@@ -405,13 +405,6 @@ class CmdStanMCMC:
     def chain_ids(self) -> List[int]:
         """Chain ids."""
         return self.runset.chain_ids
-
-    @property
-    def num_draws(self) -> int:
-        """Number of draws per chain, i.e., thinned iterations."""
-        return int(
-            math.ceil((self._iter_sampling + self._iter_warmup) / self._thin)
-        )
 
     @property
     def num_draws_warmup(self) -> int:
@@ -443,13 +436,21 @@ class CmdStanMCMC:
         return self._metadata.cmdstan_config['column_names']
 
     @property
-    def num_params(self) -> int:
+    def num_unconstrained_params(self) -> int:
         """
-        Model parameters count.  This corresponds to the size of the
-        metric; the length of the diagonal metric or the dimensions of
-        the dense metric.  All elements of parameters which are container
-        variables are counted, e.g., givan a model with 2 parameter variables
-        ``real alpha`` and ``vector[3] beta``, ``num_params`` returns 4.
+        Count of _unconstrained_ model parameters. This is the metric size;
+        for metric `diag_e`, the length of the diagonal vector, for metric
+        `dense_e` this is the size of the full covariance matrix.
+
+        If the parameter variables in a model are
+        constrained parameter types, the number of constrained and
+        unconstrained parameters may differ.  The sampler reports the
+        constrained parameters and computes with the unconstrained parameters.
+        E.g. a model with 2 parameter variables, ``real alpha`` and
+        ``vector[3] beta`` has 4 constrained and unconstrained parameters,
+        however a model with variables ``real alpha`` and ``simplex[3] beta``
+        has 4 constrained and 3 unconstrained parameters.
+        For both models, the output constains values for 4 parameters.
         """
         if not self._validate_csv and self._metadata is None:
             self._logger.warning(
@@ -457,7 +458,7 @@ class CmdStanMCMC:
                 ' in order to retrieve sample metadata.'
             )
             return None
-        return self._metadata.cmdstan_config['num_params']
+        return self._metadata.cmdstan_config['num_unconstrained_params']
 
     @property
     def sampler_config(self) -> Dict:
@@ -704,11 +705,15 @@ class CmdStanMCMC:
             self._step_size = np.empty(self.chains, dtype=float)
             if self.metric_type == 'diag_e':
                 self._metric = np.empty(
-                    (self.chains, self.num_params), dtype=float
+                    (self.chains, self.num_unconstrained_params), dtype=float
                 )
             else:
                 self._metric = np.empty(
-                    (self.chains, self.num_params, self.num_params),
+                    (
+                        self.chains,
+                        self.num_unconstrained_params,
+                        self.num_unconstrained_params,
+                    ),
                     dtype=float,
                 )
         for chain in range(self.chains):
@@ -739,7 +744,7 @@ class CmdStanMCMC:
                         xs = line.split(',')
                         self._metric[chain, :] = [float(x) for x in xs]
                     else:
-                        for i in range(self.num_params):
+                        for i in range(self.num_unconstrained_params):
                             line = fd.readline().lstrip(' #\t').strip()
                             xs = line.split(',')
                             self._metric[chain, i, :] = [float(x) for x in xs]
@@ -860,11 +865,10 @@ class CmdStanMCMC:
         self, params: List[str] = None, inc_warmup: bool = False
     ) -> pd.DataFrame:
         """
-        Returns the sampler draws as a pandas DataFrame consisting of
-        one column per parameter and one row per draw, i.e., flattens
-        chains into single set of draws.
+        Returns the sampler draws as a pandas DataFrame.  Flattens all
+        chains into single column.
 
-        :param params: list of parameter or individual column names.
+        :param params: optional list of variable names.
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
@@ -873,19 +877,25 @@ class CmdStanMCMC:
         *Note:* Slated for removal
         """
         self._logger.warning('method "draws_pd" is slated for removal.')
-        pnames_base = [name.split('[')[0] for name in self.column_names]
-        if params is not None:
-            for param in params:
-                if not (param in self.column_names or param in pnames_base):
-                    raise ValueError('unknown parameter: {}'.format(param))
-        self._assemble_draws()
-
         if inc_warmup and not self._save_warmup:
             self._logger.warning(
                 'draws from warmup iterations not available,'
                 ' must run sampler with "save_warmup=True".'
             )
-
+        self._assemble_draws()
+        mask = []
+        if params is not None:
+            for param in set(params):
+                if (
+                    param not in self.sampler_vars_cols
+                    and param not in self.stan_vars_cols
+                ):
+                    raise ValueError('unknown parameter: {}'.format(param))
+                if param in self.sampler_vars_cols:
+                    mask.append(param)
+                else:
+                    for idx in self.stan_vars_cols[param]:
+                        mask.append(self.column_names[idx])
         num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
             num_draws += self.num_draws_warmup
@@ -898,11 +908,6 @@ class CmdStanMCMC:
             self._draws_pd = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
             return self._draws_pd
-        mask = []
-        params = set(params)
-        for name in self.column_names:
-            if any(item in params for item in (name, name.split('[')[0])):
-                mask.append(name)
         return self._draws_pd[mask]
 
     def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
@@ -958,24 +963,33 @@ class CmdStanMCMC:
     def stan_variables(self) -> Dict:
         """
         Return a dictionary of all Stan program variables.
-        Creates copies of the data in the draws matrix.
         """
         result = {}
         for name in self.stan_vars_dims.keys():
             result[name] = self.stan_variable(name)
         return result
 
-    def sampler_diagnostics(self) -> Dict:
+    def sampler_variables(self) -> Dict:
         """
-        Returns the sampler diagnostics as a map from
-        column name to draws X chains X 1 ndarray.
+        Returns a dictionary of all sampler variables, i.e., all
+        output column names ending in `__`.  Assumes that all variables
+        are scalar variables where column name is variable name.
+        Maps each column name to a numpy.ndarray (draws x chains x 1)
+        containing per-draw diagnostic values.
         """
         result = {}
         self._assemble_draws()
-        diag_names = [x for x in self.column_names if x.endswith('__')]
-        for idx, value in enumerate(diag_names):
-            result[value] = self._draws[:, :, idx]
+        for k, vs in self.sampler_vars_cols.items():
+            for v in vs:
+                result[self.column_names[v]] = self._draws[:, :, v]
         return result
+
+    def sampler_diagnostics(self) -> Dict:
+        self._logger.warning(
+            'method "sampler_diagnostics" will be deprecated, '
+            'use method "sampler_variables" instead.'
+        )
+        return self.sampler_variables()
 
     def save_csvfiles(self, dir: str = None) -> None:
         """

@@ -705,7 +705,7 @@ def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
 def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     """
     Scan step size, metric from  stan_csv file comment lines,
-    set config_dict entries 'metric' and 'num_params'
+    set config_dict entries 'metric' and 'num_unconstrained_params'
     """
     if 'metric' not in config_dict:
         config_dict['metric'] = 'diag_e'
@@ -747,15 +747,15 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         )
     line = fd.readline().lstrip(' #\t')
     lineno += 1
-    num_params = len(line.split(','))
-    config_dict['num_params'] = num_params
+    num_unconstrained_params = len(line.split(','))
+    config_dict['num_unconstrained_params'] = num_unconstrained_params
     if metric == 'diag_e':
         return lineno
     else:
-        for _ in range(1, num_params):
+        for _ in range(1, num_unconstrained_params):
             line = fd.readline().lstrip(' #\t')
             lineno += 1
-            if len(line.split(',')) != num_params:
+            if len(line.split(',')) != num_unconstrained_params:
                 raise ValueError(
                     'line {}: invalid or missing mass matrix '
                     'specification'.format(lineno)

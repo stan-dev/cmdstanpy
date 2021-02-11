@@ -103,11 +103,10 @@ provides properties and methods to access, summarize, and manage the sample and 
 The sampler and model outputs from each chain are written out to Stan CSV files.
 The CmdStanMCMC object assembles these outputs into a
 numpy.ndarray which contains all across all chains arranged as (draws, chains, columns). 
-The `draws` method returns the draws array.
+The ``draws`` method returns the draws array.
 By default, it returns the underlying 3D array.
 The optional boolean argument ``concat_chains``, when ``True``,
 will flatten the chains resulting in a 2D array.
-the size of the draws dimension is the number of sampling iterations.
 
 .. code-block:: python
 

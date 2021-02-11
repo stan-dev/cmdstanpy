@@ -514,7 +514,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(runset._check_retcodes())
 
         fit = CmdStanMCMC(runset)
-        self.assertEqual(1100, fit.num_draws)
         self.assertEqual(1000, fit.num_draws_warmup)
         self.assertEqual(100, fit.num_draws_sampling)
         self.assertEqual(len(BERNOULLI_COLS), len(fit.column_names))
@@ -582,18 +581,8 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((1000, 2, 2102), fit.draws().shape)
         phis = fit.draws_pd(params=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
-        phi1 = fit.draws_pd(params=['phi[1]'])
-        self.assertEqual((2000, 1), phi1.shape)
-        mo_phis = fit.draws_pd(params=['phi[1]', 'phi[10]', 'phi[100]'])
-        self.assertEqual((2000, 3), mo_phis.shape)
-        phi2095 = fit.draws_pd(params=['phi[2095]'])
-        self.assertEqual((2000, 1), phi2095.shape)
-        with self.assertRaisesRegex(
-            ValueError, r'unknown parameter: phi\[2096\]'
-        ):
-            fit.draws_pd(params=['phi[2096]'])
-        with self.assertRaisesRegex(ValueError, 'unknown parameter: ph'):
-            fit.draws_pd(params=['ph'])
+        with self.assertRaisesRegex(ValueError, r'unknown parameter: gamma'):
+            fit.draws_pd(params=['gamma'])
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -861,7 +850,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws, 300)
         self.assertEqual(bern_fit.num_draws_warmup, 200)
         self.assertEqual(bern_fit.num_draws_sampling, 100)
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
@@ -905,7 +893,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
-        self.assertEqual(bern_fit.num_draws, 60)
         self.assertEqual(bern_fit.draws().shape, (20, 2, len(BERNOULLI_COLS)))
         self.assertEqual(
             bern_fit.draws(concat_chains=True).shape, (40, len(BERNOULLI_COLS))
@@ -1016,10 +1003,30 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
         )
-        diags = bern_fit.sampler_diagnostics()
+        diags = bern_fit.sampler_variables()
         self.assertEqual(SAMPLER_STATE, list(diags))
         for key in diags:
             self.assertEqual(diags[key].shape, (100, 2))
+            self.assertEqual(
+                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
+            )
+
+        with LogCapture() as log:
+            diags = bern_fit.sampler_diagnostics()
+            self.assertEqual(SAMPLER_STATE, list(diags))
+            for key in diags:
+                self.assertEqual(diags[key].shape, (100, 2))
+                self.assertEqual(
+                    bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
+                    )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "sample" will be deprecated,'
+                ' use method "draws" instead.',
+            )
+        )
 
     def test_variable_bern(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -1129,7 +1136,7 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         with LogCapture() as log:
             logging.getLogger()
-            self.assertIsNone(bern_fit.num_params)
+            self.assertIsNone(bern_fit.num_unconstrained_params)
         expect = 'csv files not yet validated'
         msg = log.actual()[-1][-1]
         self.assertTrue(msg.startswith(expect))
@@ -1170,9 +1177,11 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(msg.startswith(expect))
 
         # check computations match
-        self.assertEqual(bern_fit.num_draws, 150)
+        self.assertEqual(bern_fit.num_draws_warmup, 100)
+        self.assertEqual(bern_fit.num_draws_sampling, 50)
         bern_fit.validate_csv_files()
-        self.assertEqual(bern_fit.num_draws, 150)
+        self.assertEqual(bern_fit.num_draws_warmup, 100)
+        self.assertEqual(bern_fit.num_draws_sampling, 50)
         self.assertEqual(len(bern_fit.column_names), 8)
         self.assertEqual(len(bern_fit.stan_vars_dims), 1)
         self.assertEqual(len(bern_fit.stan_vars_cols.keys()), 1)
@@ -1308,11 +1317,10 @@ class CmdStanMCMCTest(unittest.TestCase):
 
         self.assertEqual(fit.chains, 4)
         self.assertEqual(fit.chain_ids, [1, 2, 3, 4])
-        self.assertEqual(fit.num_draws, 1100)
         self.assertEqual(fit.num_draws_warmup, 1000)
         self.assertEqual(fit.num_draws_sampling, 100)
         self.assertEqual(fit.column_names, col_names)
-        self.assertEqual(fit.num_params, 2)
+        self.assertEqual(fit.num_unconstrained_params, 2)
         self.assertEqual(fit.metric_type, 'diag_e')
 
         self.assertEqual(fit.sampler_config['num_samples'], 100)
