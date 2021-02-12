@@ -447,10 +447,9 @@ class CmdStanMCMC:
         unconstrained parameters may differ.  The sampler reports the
         constrained parameters and computes with the unconstrained parameters.
         E.g. a model with 2 parameter variables, ``real alpha`` and
-        ``vector[3] beta`` has 4 constrained and unconstrained parameters,
+        ``vector[3] beta`` has 4 constrained and 4 unconstrained parameters,
         however a model with variables ``real alpha`` and ``simplex[3] beta``
         has 4 constrained and 3 unconstrained parameters.
-        For both models, the output constains values for 4 parameters.
         """
         if not self._validate_csv and self._metadata is None:
             self._logger.warning(
