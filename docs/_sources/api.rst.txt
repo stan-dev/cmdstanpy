@@ -11,11 +11,22 @@ Classes
 CmdStanModel
 ============
 
+A CmdStanModel object encapsulates the Stan program. It manages program compilation and provides the following inference methods:
+
+sample
+    runs the HMC-NUTS sampler to produce a set of draws from the posterior distribution.
+
+optimize
+    produce a penalized maximum likelihood estimate (point estimate) of the model parameters.
+
+variational
+    run CmdStan’s variational inference algorithm to approximate the posterior distribution.
+
+generate_quantities
+    runs CmdStan’s generate_quantities method to produce additional quantities of interest based on draws from an existing sample.
+
 .. autoclass:: cmdstanpy.CmdStanModel
    :members:
-
-
-
 
 
 .. _class_cmdstanmcmc:

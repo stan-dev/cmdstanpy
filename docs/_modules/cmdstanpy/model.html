@@ -1,13 +1,13 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>cmdstanpy.model &mdash; CmdStanPy 0.9.67 documentation</title>
+  <title>cmdstanpy.model &mdash; CmdStanPy 0.9.68 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,11 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script type="text/javascript" src="../../_static/js/copybutton.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -50,7 +52,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> CmdStanPy
+            <a href="../../index.html" class="icon icon-home"> CmdStanPy
           
 
           
@@ -63,7 +65,7 @@
             
             
               <div class="version">
-                0.9.67
+                0.9.68
               </div>
             
           
@@ -139,6 +141,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -165,61 +169,78 @@
   <h1>Source code for cmdstanpy.model</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;CmdStanModel&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">platform</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">cpu_count</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Real</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="k">import</span> <span class="n">ThreadPoolExecutor</span>
-<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">cpu_count</span>
-<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Real</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
-
-<span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="k">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CmdStanArgs</span><span class="p">,</span>
-    <span class="n">SamplerArgs</span><span class="p">,</span>
-    <span class="n">OptimizeArgs</span><span class="p">,</span>
     <span class="n">GenerateQuantitiesArgs</span><span class="p">,</span>
+    <span class="n">OptimizeArgs</span><span class="p">,</span>
+    <span class="n">SamplerArgs</span><span class="p">,</span>
     <span class="n">VariationalArgs</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.compiler_opts</span> <span class="k">import</span> <span class="n">CompilerOptions</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.stanfit</span> <span class="k">import</span> <span class="p">(</span>
-    <span class="n">RunSet</span><span class="p">,</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.compiler_opts</span> <span class="kn">import</span> <span class="n">CompilerOptions</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.stanfit</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CmdStanGQ</span><span class="p">,</span>
     <span class="n">CmdStanMCMC</span><span class="p">,</span>
     <span class="n">CmdStanMLE</span><span class="p">,</span>
-    <span class="n">CmdStanGQ</span><span class="p">,</span>
     <span class="n">CmdStanVB</span><span class="p">,</span>
+    <span class="n">RunSet</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="k">import</span> <span class="p">(</span>
-    <span class="n">do_command</span><span class="p">,</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">EXTENSION</span><span class="p">,</span>
-    <span class="n">cmdstan_path</span><span class="p">,</span>
     <span class="n">MaybeDictToFilePath</span><span class="p">,</span>
     <span class="n">TemporaryCopiedFile</span><span class="p">,</span>
+    <span class="n">cmdstan_path</span><span class="p">,</span>
+    <span class="n">do_command</span><span class="p">,</span>
     <span class="n">get_logger</span><span class="p">,</span>
     <span class="n">scan_sampler_csv</span><span class="p">,</span>
 <span class="p">)</span>
 
 
 <div class="viewcode-block" id="CmdStanModel"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel">[docs]</a><span class="k">class</span> <span class="nc">CmdStanModel</span><span class="p">:</span>
+    <span class="c1"># overview, omitted from doc comment in order to improve Sphinx docs.</span>
+    <span class="c1">#    A CmdStanModel object encapsulates the Stan program and provides</span>
+    <span class="c1">#    methods for compilation and inference.</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A CmdStanModel object encapsulates the Stan program and provides</span>
-<span class="sd">    methods for compilation and doing inference on the model given data</span>
-<span class="sd">    using Stan&#39;s algorithms.  It manages program compilation and corresponding</span>
-<span class="sd">    Stan and C++ compiler options.</span>
+<span class="sd">    The constructor method allows model instantiation given either the</span>
+<span class="sd">    Stan program source file or the compiled executable, or both.</span>
+<span class="sd">    By default, the constructor will compile the Stan program on instantiation</span>
+<span class="sd">    unless the argument ``compile=False`` is specified.</span>
+<span class="sd">    The set of constructor arguments are:</span>
 
-<span class="sd">    The constructor method allows model instantiation given either or</span>
-<span class="sd">    both the Stan program source file and the compiled executable, and</span>
-<span class="sd">    provides accessor functions for the file locations.   By default, the</span>
-<span class="sd">    constructor will compile the Stan program on instantiation unless the</span>
-<span class="sd">    argument ``compile=False`` is specified.</span>
+<span class="sd">    :param model_name: Model name, used for output file names.</span>
+<span class="sd">        Optional, default is the base filename of the Stan program file.</span>
+
+<span class="sd">    :param stan_file: Path to Stan program file.</span>
+
+<span class="sd">    :param exe_file: Path to compiled executable file.  Optional, unless</span>
+<span class="sd">        no Stan program file is specified.  If both the program file and</span>
+<span class="sd">        the compiled executable file are specified, the base filenames</span>
+<span class="sd">        must match, (but different directory locations are allowed).</span>
+
+<span class="sd">    :param compile: Whether or not to compile the model.  Default is ``True``.</span>
+
+<span class="sd">    :param stanc_options: Options for stanc compiler, specified as a Python</span>
+<span class="sd">        dictionary containing Stanc3 compiler option name, value pairs.</span>
+<span class="sd">        Optional.</span>
+
+<span class="sd">    :param cpp_options: Options for C++ compiler, specified as a Python</span>
+<span class="sd">        dictionary containing C++ compiler option name, value pairs.</span>
+<span class="sd">        Optional.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CmdStanModel.__init__"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">stan_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -330,14 +351,14 @@
                     <span class="s1">&#39;Unable to compile Stan model file: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span>
                     <span class="p">)</span>
-                <span class="p">)</span></div>
+                <span class="p">)</span>
 
-<div class="viewcode-block" id="CmdStanModel.__repr__"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.__repr__">[docs]</a>    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanModel: name=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n\t</span><span class="s1"> stan_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n\t</span><span class="s1"> exe_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n\t</span><span class="s1"> compiler_options=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">repr</span></div>
+        <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -489,6 +510,7 @@
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inits</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">init_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="nb">iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -542,6 +564,11 @@
 <span class="sd">            files are written. If unspecified, output files will be written</span>
 <span class="sd">            to a temporary directory which is deleted upon session exit.</span>
 
+<span class="sd">        :param sig_figs: Numerical precision used for output CSV and text files.</span>
+<span class="sd">            Must be an integer between 1 and 18.  If unspecified, the default</span>
+<span class="sd">            precision for the system file I/O is used; the usual value is 6.</span>
+<span class="sd">            Introduced in CmdStan-2.25.</span>
+
 <span class="sd">        :param algorithm: Algorithm to use. One of: &#39;BFGS&#39;, &#39;LBFGS&#39;, &#39;Newton&#39;</span>
 
 <span class="sd">        :param init_alpha: Line search step size for first iteration</span>
@@ -563,6 +590,7 @@
                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
                 <span class="n">inits</span><span class="o">=</span><span class="n">_inits</span><span class="p">,</span>
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+                <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
                 <span class="n">save_diagnostics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">optimize_args</span><span class="p">,</span>
             <span class="p">)</span>
@@ -577,6 +605,7 @@
         <span class="n">mle</span> <span class="o">=</span> <span class="n">CmdStanMLE</span><span class="p">(</span><span class="n">runset</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mle</span></div>
 
+    <span class="c1"># pylint: disable=too-many-arguments</span>
 <div class="viewcode-block" id="CmdStanModel.sample"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -600,6 +629,7 @@
         <span class="n">adapt_step_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">fixed_param</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_diagnostics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">validate_csv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -677,7 +707,8 @@
 <span class="sd">        :param save_warmup: When ``True``, sampler saves warmup draws as part of</span>
 <span class="sd">            the Stan csv output file.</span>
 
-<span class="sd">        :param thin: Period between saved samples.</span>
+<span class="sd">        :param thin: Period between recorded iterations.  Default is 1, i.e.,</span>
+<span class="sd">             all iterations are recorded.</span>
 
 <span class="sd">        :param max_treedepth: Maximum depth of trees evaluated by NUTS sampler</span>
 <span class="sd">            per iteration.</span>
@@ -697,13 +728,13 @@
 <span class="sd">            length must match the number of chains and all paths must be</span>
 <span class="sd">            unique.</span>
 
-<span class="sd">        :param step_size: Initial stepsize for HMC sampler.  The value is either</span>
-<span class="sd">            a single number or a list of numbers which will be used as the</span>
-<span class="sd">            global or per-chain initial step size, respectively.</span>
+<span class="sd">        :param step_size: Initial step size for HMC sampler.  The value is</span>
+<span class="sd">            either a single number or a list of numbers which will be used</span>
+<span class="sd">            as the global or per-chain initial step size, respectively.</span>
 <span class="sd">            The length of the list of step sizes must match the number of</span>
 <span class="sd">            chains.</span>
 
-<span class="sd">        :param adapt_engaged: When True, adapt stepsize and metric.</span>
+<span class="sd">        :param adapt_engaged: When True, adapt step size and metric.</span>
 
 <span class="sd">        :param adapt_delta: Adaptation target Metropolis acceptance rate.</span>
 <span class="sd">            The default value is 0.8.  Increasing this value, which must be</span>
@@ -716,7 +747,7 @@
 <span class="sd">            towards the typical set.</span>
 
 <span class="sd">        :param adapt_metric_window: The second phase of adaptation tunes</span>
-<span class="sd">            the metric and stepsize in a series of intervals.  This parameter</span>
+<span class="sd">            the metric and step size in a series of intervals.  This parameter</span>
 <span class="sd">            specifies the number of iterations used for the first tuning</span>
 <span class="sd">            interval; window size increases for each subsequent interval.</span>
 
@@ -737,6 +768,11 @@
 <span class="sd">        :param output_dir: Name of the directory to which CmdStan output</span>
 <span class="sd">            files are written. If unspecified, output files will be written</span>
 <span class="sd">            to a temporary directory which is deleted upon session exit.</span>
+
+<span class="sd">        :param sig_figs: Numerical precision used for output CSV and text files.</span>
+<span class="sd">            Must be an integer between 1 and 18.  If unspecified, the default</span>
+<span class="sd">            precision for the system file I/O is used; the usual value is 6.</span>
+<span class="sd">            Introduced in CmdStan-2.25.</span>
 
 <span class="sd">        :param save_diagnostics: Whether or not to save diagnostics. If True,</span>
 <span class="sd">            csv output files are written to an output file with filename</span>
@@ -858,6 +894,7 @@
                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
                 <span class="n">inits</span><span class="o">=</span><span class="n">_inits</span><span class="p">,</span>
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+                <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
                 <span class="n">save_diagnostics</span><span class="o">=</span><span class="n">save_diagnostics</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">sampler_args</span><span class="p">,</span>
                 <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
@@ -929,6 +966,7 @@
         <span class="n">mcmc_sample</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">gq_output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanGQ</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s generate_quantities method which runs the generated</span>
@@ -971,6 +1009,11 @@
 <span class="sd">        :param gq_output_dir:  Name of the directory in which the CmdStan output</span>
 <span class="sd">            files are saved.  If unspecified, files will be written to a</span>
 <span class="sd">            temporary directory which is deleted upon session exit.</span>
+
+<span class="sd">        :param sig_figs: Numerical precision used for output CSV and text files.</span>
+<span class="sd">            Must be an integer between 1 and 18.  If unspecified, the default</span>
+<span class="sd">            precision for the system file I/O is used; the usual value is 6.</span>
+<span class="sd">            Introduced in CmdStan-2.25.</span>
 
 <span class="sd">        :return: CmdStanGQ object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1046,6 +1089,7 @@
                 <span class="n">data</span><span class="o">=</span><span class="n">_data</span><span class="p">,</span>
                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">gq_output_dir</span><span class="p">,</span>
+                <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">generate_quantities_args</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">runset</span> <span class="o">=</span> <span class="n">RunSet</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="n">chains</span><span class="p">,</span> <span class="n">chain_ids</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">)</span>
@@ -1070,6 +1114,7 @@
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inits</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_diagnostics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="nb">iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1124,6 +1169,11 @@
 <span class="sd">            files are written. If unspecified, output files will be written</span>
 <span class="sd">            to a temporary directory which is deleted upon session exit.</span>
 
+<span class="sd">        :param sig_figs: Numerical precision used for output CSV and text files.</span>
+<span class="sd">            Must be an integer between 1 and 18.  If unspecified, the default</span>
+<span class="sd">            precision for the system file I/O is used; the usual value is 6.</span>
+<span class="sd">            Introduced in CmdStan-2.25.</span>
+
 <span class="sd">        :param save_diagnostics: Whether or not to save diagnostics. If True,</span>
 <span class="sd">            csv output files are written to an output file with filename</span>
 <span class="sd">            template &#39;&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-diagnostic-&lt;chain_id&gt;&#39;,</span>
@@ -1137,7 +1187,7 @@
 
 <span class="sd">        :param elbo_samples: Number of MC draws for estimate of ELBO.</span>
 
-<span class="sd">        :param eta: Stepsize scaling parameter.</span>
+<span class="sd">        :param eta: Step size scaling parameter.</span>
 
 <span class="sd">        :param adapt_engaged: Whether eta adaptation is engaged.</span>
 
@@ -1177,6 +1227,7 @@
                 <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
                 <span class="n">inits</span><span class="o">=</span><span class="n">_inits</span><span class="p">,</span>
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+                <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
                 <span class="n">save_diagnostics</span><span class="o">=</span><span class="n">save_diagnostics</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">variational_args</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1251,7 +1302,7 @@
         <span class="n">previous_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">stdout</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
         <span class="n">changed_description</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Changed from &#39;warmup&#39; to &#39;sample&#39;</span>
-        <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;Chain {idx + 1} - warmup&#39;</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Chain </span><span class="si">{</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s1"> - warmup&#39;</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># iterate while process is sampling</span>
@@ -1272,13 +1323,13 @@
                             <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;sampling&#39;</span>
                             <span class="ow">and</span> <span class="ow">not</span> <span class="n">changed_description</span>
                         <span class="p">):</span>
-                            <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Chain {idx + 1} - sample&#39;</span><span class="p">)</span>
+                            <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Chain </span><span class="si">{</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s1"> - sample&#39;</span><span class="p">)</span>
                             <span class="n">changed_description</span> <span class="o">=</span> <span class="kc">True</span>
 
                         <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">current_count</span> <span class="o">-</span> <span class="n">previous_count</span><span class="p">)</span>
                         <span class="n">previous_count</span> <span class="o">=</span> <span class="n">current_count</span>
 
-            <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Chain {idx + 1} -   done&#39;</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Chain </span><span class="si">{</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s1"> -   done&#39;</span><span class="p">,</span> <span class="n">refresh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="s1">&#39;notebook&#39;</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">pbar</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">:</span>
                 <span class="c1"># In Jupyter make the bar green by closing it</span>
@@ -1298,28 +1349,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Stan Development Team
+        &#169; Copyright 2019, Stan Development Team.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
