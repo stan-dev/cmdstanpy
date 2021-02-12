@@ -97,7 +97,6 @@ method will throw a ``RuntimeError``.
 
     fail_stan = os.path.join(datafiles_path, 'variational', 'eta_should_fail.stan')
     fail_model = CmdStanModel(stan_file=fail_stan)
-    model.compile()
     vb = model.variational()
 
 

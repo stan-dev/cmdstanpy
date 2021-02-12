@@ -23,7 +23,8 @@ from cmdstanpy.utils import (
     get_latest_cmdstan,
     jsondump,
     parse_rdump_value,
-    parse_var_dims,
+    parse_sampler_vars,
+    parse_stan_vars,
     rdump,
     read_metric,
     rload,
@@ -245,7 +246,7 @@ class CmdStanPathTest(unittest.TestCase):
 
         arr = np.zeros(shape=(2, 3, 4))
         self.assertTrue(isinstance(arr, np.ndarray))
-        self.assertEqual(arr.shape, (2,3,4))
+        self.assertEqual(arr.shape, (2, 3, 4))
 
         dict_3d_matrix = {'a': arr}
         file_3d_matrix = os.path.join(_TMPDIR, '3d_matrix.json')
@@ -266,7 +267,6 @@ class ReadStanCsvTest(unittest.TestCase):
         )
         self.assertEqual('bernoulli_model', dict['model'])
         self.assertEqual(10, dict['num_samples'])
-        self.assertFalse('save_warmup' in dict)
         self.assertEqual(10, dict['draws_sampling'])
         self.assertEqual(8, len(dict['column_names']))
 
@@ -310,7 +310,7 @@ class ReadStanCsvTest(unittest.TestCase):
 
     def test_check_sampler_csv_metric_2(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_metric_2.csv')
-        with self.assertRaisesRegex(Exception, 'invalid stepsize'):
+        with self.assertRaisesRegex(Exception, 'invalid step size'):
             check_sampler_csv(csv_bad)
 
     def test_check_sampler_csv_metric_3(self):
@@ -564,71 +564,143 @@ class RloadTest(unittest.TestCase):
         self.assertEqual(v_struct3[6, 1], 15)
 
 
-class ParseVarDimsTest(unittest.TestCase):
+class ParseVarsTest(unittest.TestCase):
     def test_parse_empty(self):
         x = []
-        vars_dict = parse_var_dims(x)
-        self.assertEqual(len(vars_dict), 0)
+        sampler_vars = parse_sampler_vars(x)
+        self.assertEqual(len(sampler_vars), 0)
+        stan_vars_dims, stan_vars_cols = parse_stan_vars(x)
+        self.assertEqual(len(stan_vars_dims), 0)
+        self.assertEqual(len(stan_vars_cols), 0)
 
     def test_parse_missing(self):
         with self.assertRaises(ValueError):
-            parse_var_dims(None)
+            parse_sampler_vars(None)
+        with self.assertRaises(ValueError):
+            parse_stan_vars(None)
 
-    def test_parse_scalar(self):
-        x = ['foo']
-        vars_dict = parse_var_dims(x)
-        self.assertEqual(len(vars_dict), 1)
-        self.assertEqual(vars_dict['foo'], 1)
+    def test_parse_sampler_vars(self):
+        x = [
+            'lp__',
+            'accept_stat__',
+            'stepsize__',
+            'treedepth__',
+            'n_leapfrog__',
+            'divergent__',
+            'energy__',
+            'theta[1]',
+            'theta[2]',
+            'theta[3]',
+            'theta[4]',
+            'z_init[1]',
+            'z_init[2]',
+        ]
+        vars_dict = parse_sampler_vars(x)
+        self.assertEqual(len(vars_dict), 7)
+        self.assertEqual(vars_dict['lp__'], (0,))
+        self.assertEqual(vars_dict['stepsize__'], (2,))
 
     def test_parse_scalars(self):
-        x = ['foo', 'foo1']
-        vars_dict = parse_var_dims(x)
-        self.assertEqual(len(vars_dict), 2)
-        self.assertEqual(vars_dict['foo'], 1)
-        self.assertEqual(vars_dict['foo1'], 1)
+        x = ['lp__', 'foo']
+        dims_map, cols_map = parse_stan_vars(x)
+        self.assertEqual(len(dims_map), 1)
+        self.assertEqual(dims_map['foo'], ())
+        self.assertEqual(len(cols_map), 1)
+        self.assertEqual(cols_map['foo'], (1,))
 
-    def test_parse_scalar_vec_scalar(self):
+        dims_map = {}
+        cols_map = {}
+        x = ['lp__', 'foo1', 'foo2']
+        dims_map, cols_map = parse_stan_vars(x)
+        self.assertEqual(len(dims_map), 2)
+        self.assertEqual(dims_map['foo1'], ())
+        self.assertEqual(dims_map['foo2'], ())
+        self.assertEqual(len(cols_map), 2)
+        self.assertEqual(cols_map['foo1'], (1,))
+        self.assertEqual(cols_map['foo2'], (2,))
+
+    def test_parse_containers(self):
+        # demonstrates flaw in shortcut to get container dims
         x = [
+            'lp__',
+            'accept_stat__',
             'foo',
             'phi[1]',
             'phi[2]',
             'phi[3]',
-            'phi[4]',
-            'phi[5]',
-            'phi[6]',
-            'phi[7]',
-            'phi[8]',
-            'phi[9]',
             'phi[10]',
             'bar',
         ]
-        vars_dict = parse_var_dims(x)
-        self.assertEqual(len(vars_dict), 3)
-        self.assertEqual(vars_dict['foo'], 1)
-        self.assertEqual(vars_dict['phi'], (10,))
-        self.assertEqual(vars_dict['bar'], 1)
+        dims_map, cols_map = parse_stan_vars(x)
+        self.assertEqual(len(dims_map), 3)
+        self.assertEqual(dims_map['foo'], ())
+        self.assertEqual(dims_map['phi'], (10,))  # sic
+        self.assertEqual(dims_map['bar'], ())
+        self.assertEqual(len(cols_map), 3)
+        self.assertEqual(cols_map['foo'], (2,))
+        self.assertEqual(
+            cols_map['phi'],
+            (
+                3,
+                4,
+                5,
+                6,
+            ),
+        )
+        self.assertEqual(cols_map['bar'], (7,))
 
-    def test_parse_scalar_matrix_vec(self):
         x = [
+            'lp__',
+            'accept_stat__',
             'foo',
-            'phi[1,1]',
-            'phi[1,2]',
-            'phi[1,3]',
-            'phi[1,4]',
-            'phi[1,5]',
-            'phi[2,1]',
-            'phi[2,2]',
-            'phi[2,3]',
-            'phi[2,4]',
-            'phi[2,5]',
-            'bar[1]',
-            'bar[2]',
+            'phi[1]',
+            'phi[2]',
+            'phi[3]',
+            'phi[10,10]',
+            'bar',
         ]
-        vars_dict = parse_var_dims(x)
-        self.assertEqual(len(vars_dict), 3)
-        self.assertEqual(vars_dict['foo'], 1)
-        self.assertEqual(vars_dict['phi'], (2, 5))
-        self.assertEqual(vars_dict['bar'], (2,))
+        dims_map = {}
+        cols_map = {}
+        dims_map, cols_map = parse_stan_vars(x)
+        self.assertEqual(len(dims_map), 3)
+        self.assertEqual(
+            dims_map['phi'],
+            (
+                10,
+                10,
+            ),
+        )
+        self.assertEqual(len(cols_map), 3)
+        self.assertEqual(
+            cols_map['phi'],
+            (
+                3,
+                4,
+                5,
+                6,
+            ),
+        )
+
+        x = [
+            'lp__',
+            'accept_stat__',
+            'foo',
+            'phi[10,10,10]',
+        ]
+        dims_map = {}
+        cols_map = {}
+        dims_map, cols_map = parse_stan_vars(x)
+        self.assertEqual(len(dims_map), 2)
+        self.assertEqual(
+            dims_map['phi'],
+            (
+                10,
+                10,
+                10,
+            ),
+        )
+        self.assertEqual(len(cols_map), 2)
+        self.assertEqual(cols_map['phi'], (3,))
 
 
 if __name__ == '__main__':
