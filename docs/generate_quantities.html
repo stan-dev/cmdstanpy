@@ -1,13 +1,13 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Run Generated Quantities &mdash; CmdStanPy 0.9.67 documentation</title>
+  <title>Run Generated Quantities &mdash; CmdStanPy 0.9.68 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,11 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> CmdStanPy
+            <a href="index.html" class="icon icon-home"> CmdStanPy
           
 
           
@@ -65,7 +67,7 @@
             
             
               <div class="version">
-                0.9.67
+                0.9.68
               </div>
             
           
@@ -145,6 +147,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -156,7 +160,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/generate_quantities.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -177,14 +181,14 @@ computes <em>quantities of interest</em> (QOIs) based on the data,
 transformed data, parameters, and transformed parameters.
 It can be used to:</p>
 <ul class="simple">
-<li>generate simulated data for model testing by forward sampling</li>
-<li>generate predictions for new data</li>
-<li>calculate posterior event probabilities, including multiple
-comparisons, sign tests, etc.</li>
-<li>calculating posterior expectations</li>
-<li>transform parameters for reporting</li>
-<li>apply full Bayesian decision theory</li>
-<li>calculate log likelihoods, deviances, etc. for model comparison</li>
+<li><p>generate simulated data for model testing by forward sampling</p></li>
+<li><p>generate predictions for new data</p></li>
+<li><p>calculate posterior event probabilities, including multiple
+comparisons, sign tests, etc.</p></li>
+<li><p>calculating posterior expectations</p></li>
+<li><p>transform parameters for reporting</p></li>
+<li><p>apply full Bayesian decision theory</p></li>
+<li><p>calculate log likelihoods, deviances, etc. for model comparison</p></li>
 </ul>
 <p>The <a class="reference internal" href="api.html#class-cmdstanmodel"><span class="std std-ref">CmdStanModel</span></a> class <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method is useful once you
 have successfully fit a model to your data and have a valid
@@ -198,12 +202,12 @@ generated quantities block of the new model.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code> object
 which provides properties to retrieve information about the sample:</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">chains</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">column_names</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">generated_quantities</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">generated_quantities_pd</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">sample_plus_quantities</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chains</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generated_quantities</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generated_quantities_pd</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sample_plus_quantities</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">sample_plus_quantities</span></code> combines the existing sample
 and new quantities of interest into a pandas DataFrame object
@@ -212,10 +216,10 @@ In this way you add more columns of information to an existing sample.</p>
 <div class="section" id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">mcmc_sample</span></code> - either a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object or a list of stan-csv files</li>
-<li><code class="docutils literal notranslate"><span class="pre">data</span></code>: Values for all data variables in the model, specified either as a dictionary with entries matching the data variables, or as the path of a data file in JSON or Rdump format.</li>
-<li><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed for random number generator.</li>
-<li><code class="docutils literal notranslate"><span class="pre">gq_output_dir</span></code>:  A path or file name which will be used as the basename for the CmdStan output files.</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mcmc_sample</span></code> - either a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object or a list of stan-csv files</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: Values for all data variables in the model, specified either as a dictionary with entries matching the data variables, or as the path of a data file in JSON or Rdump format.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code>: The seed for random number generator.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gq_output_dir</span></code>:  A path or file name which will be used as the basename for the CmdStan output files.</p></li>
 </ul>
 </div>
 <div class="section" id="example-add-posterior-predictive-checks-to-bernoulli-stan">
@@ -229,7 +233,7 @@ We create the program
 <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_ppc.stan">bernoulli_ppc.stan</a>
 by adding a <code class="docutils literal notranslate"><span class="pre">generated</span> <span class="pre">quantities</span></code> block to bernoulli.stan
 which generates a new data vector <code class="docutils literal notranslate"><span class="pre">y_rep</span></code> using the current estimate of theta.</p>
-<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">generated</span> <span class="n">quantities</span> <span class="p">{</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">generated</span> <span class="n">quantities</span> <span class="p">{</span>
   <span class="nb">int</span> <span class="n">y_sim</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
   <span class="n">real</span><span class="o">&lt;</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="o">&gt;</span> <span class="n">theta_rep</span><span class="p">;</span>
   <span class="k">for</span> <span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="mi">1</span><span class="p">:</span><span class="n">N</span><span class="p">)</span>
@@ -239,8 +243,8 @@ which generates a new data vector <code class="docutils literal notranslate"><sp
 </pre></div>
 </div>
 <p>The first step is to fit model <code class="docutils literal notranslate"><span class="pre">bernoulli</span></code> to the data:</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="k">import</span> <span class="n">CmdStanModel</span><span class="p">,</span> <span class="n">cmdstan_path</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span><span class="p">,</span> <span class="n">cmdstan_path</span>
 
 <span class="n">bernoulli_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">)</span>
 <span class="n">bernoulli_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
@@ -255,8 +259,7 @@ which generates a new data vector <code class="docutils literal notranslate"><sp
 </div>
 <p>Then we compile the model <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc</span></code> and use the fit parameter estimates
 to generate quantities of interest:</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bernoulli_ppc_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_ppc.stan&#39;</span><span class="p">)</span>
-<span class="n">bernoulli_ppc_model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bernoulli_ppc_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_ppc.stan&#39;</span><span class="p">)</span>
 <span class="n">new_quantities</span> <span class="o">=</span> <span class="n">bernoulli_ppc_model</span><span class="o">.</span><span class="n">generate_quantities</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bern_data</span><span class="p">,</span> <span class="n">mcmc_sample</span><span class="o">=</span><span class="n">bern_fit</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -266,7 +269,7 @@ of the program <code class="docutils literal notranslate"><span class="pre">bern
 <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, it doesn’t contain any information on the joint log
 probability density, sampler state, or parameters or transformed
 parameter values.</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">new_quantities</span><span class="o">.</span><span class="n">column_names</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_quantities</span><span class="o">.</span><span class="n">column_names</span>
 <span class="n">new_quantities</span><span class="o">.</span><span class="n">generated_quantities</span><span class="o">.</span><span class="n">shape</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_quantities</span><span class="o">.</span><span class="n">column_names</span><span class="p">)):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">new_quantities</span><span class="o">.</span><span class="n">generated_quantities</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
@@ -274,7 +277,7 @@ parameter values.</p>
 </div>
 <p>The method <code class="docutils literal notranslate"><span class="pre">sample_plus_quantities</span></code> returns a pandas DataFrame which
 combines the input drawset with the generated quantities.</p>
-<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sample_plus</span> <span class="o">=</span> <span class="n">new_quantities</span><span class="o">.</span><span class="n">sample_plus_quantities</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sample_plus</span> <span class="o">=</span> <span class="n">new_quantities</span><span class="o">.</span><span class="n">sample_plus_quantities</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">sample_plus</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">sample_plus</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
 </pre></div>
@@ -287,37 +290,29 @@ combines the input drawset with the generated quantities.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="optimize.html" class="btn btn-neutral float-right" title="Maximum Likelihood Estimation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="sample.html" class="btn btn-neutral float-left" title="MCMC Sampling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="optimize.html" class="btn btn-neutral float-right" title="Maximum Likelihood Estimation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sample.html" class="btn btn-neutral float-left" title="MCMC Sampling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Stan Development Team
+        &#169; Copyright 2019, Stan Development Team.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

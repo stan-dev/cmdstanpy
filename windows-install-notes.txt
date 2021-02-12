@@ -1,0 +1,18 @@
+cmdstanpy.install_cxx_toolchain works on Win 10 - does it do enough?
+
+
+building CmdStan from command line requires adding RTools toolchain directories:  `mingw64/bin`  and `usr/bin` to PATH
+install-tbb problems?
+
+
+Ari:
+
+pip install cmdstanpy
+python -m cmdstanpy.install_cxx_toolchain
+python -m cmdstanpy.install_cmdstan --compiler
+
+
+then:
+
+from cmdstanpy.utils import cxx_toolchain_path
+cxx_toolchain_path()

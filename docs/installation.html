@@ -1,13 +1,13 @@
 
 
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installation &mdash; CmdStanPy 0.9.67 documentation</title>
+  <title>Installation &mdash; CmdStanPy 0.9.68 documentation</title>
   
 
   
@@ -16,7 +16,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -26,11 +29,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/copybutton.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> CmdStanPy
+            <a href="index.html" class="icon icon-home"> CmdStanPy
           
 
           
@@ -65,7 +67,7 @@
             
             
               <div class="version">
-                0.9.67
+                0.9.68
               </div>
             
           
@@ -151,6 +153,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -162,7 +166,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -192,8 +196,7 @@ command line using <code class="docutils literal notranslate"><span class="pre">
 <p>The optional packages are</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which allows for progress bar display during sampling</li>
-<li><code class="docutils literal notranslate"><span class="pre">ujson</span></code> which provides faster IO</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which allows for progress bar display during sampling</p></li>
 </ul>
 </div></blockquote>
 <p>To install CmdStanPy with all the optional packages:</p>
@@ -215,9 +218,9 @@ virtual environment.</p>
 <p>CmdStanPy requires an installed C++ toolchain
 consisting of a modern C++ compiler and the GNU-Make utility.</p>
 <ul class="simple">
-<li>Windows: CmdStanPy provides the function <code class="docutils literal notranslate"><span class="pre">install_cxx_toolchain</span></code></li>
-<li>Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default <code class="docutils literal notranslate"><span class="pre">make</span></code> utility)</li>
-<li>maxOS:  install XCode and Xcode command line tools via command: <cite>xcode-select –install</cite>.</li>
+<li><p>Windows: CmdStanPy provides the function <code class="docutils literal notranslate"><span class="pre">install_cxx_toolchain</span></code></p></li>
+<li><p>Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default <code class="docutils literal notranslate"><span class="pre">make</span></code> utility)</p></li>
+<li><p>maxOS:  install XCode and Xcode command line tools via command: <cite>xcode-select –install</cite>.</p></li>
 </ul>
 </div>
 <div class="section" id="function-install-cmdstan">
@@ -230,21 +233,21 @@ named <code class="docutils literal notranslate"><span class="pre">.cmdstan</spa
 and if directory <code class="docutils literal notranslate"><span class="pre">$HOME/.cmdstanpy</span></code> exists, it will continue to be used as the
 default install dir.)  This directory will be created by the install script.</p>
 <ul class="simple">
-<li>From Python</li>
+<li><p>From Python</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cmdstanpy</span>
 <span class="n">cmdstanpy</span><span class="o">.</span><span class="n">install_cmdstan</span><span class="p">()</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>From the command line on Linux or MacOSX</li>
+<li><p>From the command line on Linux or MacOSX</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan
 ls -F ~/.cmdstan
 </pre></div>
 </div>
 <ul class="simple">
-<li>On Windows</li>
+<li><p>On Windows</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m cmdstanpy.install_cmdstan
 dir <span class="s2">&quot;%HOME%/.cmdstan&quot;</span>
@@ -298,37 +301,29 @@ get and set this environment variable:</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="hello_world.html" class="btn btn-neutral float-right" title="“Hello, World”" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="hello_world.html" class="btn btn-neutral float-right" title="“Hello, World”" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2019, Stan Development Team
+        &#169; Copyright 2019, Stan Development Team.
 
     </p>
   </div>
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
