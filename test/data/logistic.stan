@@ -12,5 +12,5 @@ model {
     beta[m] ~ cauchy(0.0, 2.5);
   
   for (n in 1:N)
-    y[n] ~ bernoulli(inv_logit(x[n] * beta));
+    y[n] ~ bernoulli_logit(x[n] * beta);
 }
