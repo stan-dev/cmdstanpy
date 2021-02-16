@@ -1,6 +1,9 @@
 name: ReleaseCmdStanPy
 
 on:
+  push:
+    branches:    
+    - 'move-release-to-gh-actions'
   workflow_dispatch:
     inputs:
       new_version:
