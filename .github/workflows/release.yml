@@ -1,4 +1,4 @@
-name: CmdStanPyRelease
+name: ReleaseCmdStanPy
 
 on:
   workflow_dispatch:
