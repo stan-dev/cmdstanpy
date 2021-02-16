@@ -11,7 +11,7 @@ on:
         required: true
 
 jobs:
-  cmdstanpy:
+  release-cmdstanpy:
     name: publish release and read the docs update
     runs-on: ${{ matrix.os }}
     strategy:
@@ -22,7 +22,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Check out github
+      - name: Check out source code
         uses: actions/checkout@v2
 
       - name: Create release branch
