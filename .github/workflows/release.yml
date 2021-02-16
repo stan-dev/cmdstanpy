@@ -7,11 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       new_version:
-        description: 'New version, for example: 0.9.67'     
+        description: 'New version, for example: 0.9.68'     
         required: true
+        default: '0.9.68'
       old_version:
-        description: 'Old version, for example: 0.9.66'     
+        description: 'Old version, for example: 0.9.67'
         required: true
+        default: '0.9.67'
 
 jobs:
   release-cmdstanpy:
