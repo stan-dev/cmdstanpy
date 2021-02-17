@@ -46,6 +46,7 @@ jobs:
           pip install -r requirements-test.txt
           pip install codecov
           pip install sphinx
+          pip install sphinx_rtd_theme
 
       - name: Create release branch
         run: |
