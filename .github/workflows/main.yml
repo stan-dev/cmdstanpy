@@ -10,7 +10,7 @@ on:
   pull_request:
 jobs:
   cmdstanpy:
-    name: tests and publish
+    name: tests
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
