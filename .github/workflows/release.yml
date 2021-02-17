@@ -1,5 +1,9 @@
 name: ReleaseCmdStanPy
 
+env:
+  new_version: '0.9.68'
+  old_version: '0.9.67'
+
 on:
   push:
     branches:    
@@ -22,7 +26,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.9]
       fail-fast: false
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -34,15 +38,17 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git submodule update --init --recursive
           
-          git checkout -b release/v${{ github.event.inputs.new_version }}
-          sed -i 's/${{ github.event.inputs.old_version }}/${{ github.event.inputs.new_version }}/g' cmdstanpy/_version.py
+          git checkout -b release/v${{ env.new_version }}
+          sed -i 's/${{ env.old_version }}/${{ env.new_version }}/g' cmdstanpy/_version.py
           
           cd docsrc
           make github
           cd ..
           
-          git commit -m "release/v${{ github.event.inputs.new_version }}: updating version numbers" -a
-          git push -u origin release/v${{ github.event.inputs.new_version }}
+          git commit -m "release/v${{ env.new_version }}: updating version numbers" -a
+          git push -u origin release/v${{ env.new_version }}
           
           
