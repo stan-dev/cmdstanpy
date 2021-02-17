@@ -45,7 +45,8 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-test.txt
           pip install codecov
-          
+          pip install sphinx
+
       - name: Create release branch
         run: |
           git config --global user.name "github-actions[bot]"
