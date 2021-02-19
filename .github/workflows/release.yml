@@ -87,4 +87,4 @@ jobs:
         env:
           RTD_USERNAME: ${{ secrets.RTD_USERNAME }}
           RTD_PASSWORD: ${{ secrets.RTD_PASSWORD }}
-        run: python3 rtd_change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${{ github.event.inputs.new_version }}
+        run: python rtd_change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${{ github.event.inputs.new_version }}
