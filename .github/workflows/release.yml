@@ -6,9 +6,6 @@ on:
       new_version:
         description: 'New version, for example: 0.9.69'     
         required: true
-      old_version:
-        description: 'Old version, for example: 0.9.68'
-        required: true
 
 jobs:
   release-cmdstanpy:
@@ -42,7 +39,7 @@ jobs:
         run: |
           git checkout -b release/v${{ github.event.inputs.new_version }}
 
-          sed -i 's/${{ github.event.inputs.old_version }}/${{ github.event.inputs.new_version }}/g' cmdstanpy/_version.py
+          sed -i 's/^__version__ = .*$/__version__ = '\''${{ github.event.inputs.new_version }}'\''/g' cmdstanpy/_version.py
           
           cd docsrc
           make github
