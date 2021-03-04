@@ -1101,7 +1101,11 @@ class CmdStanModel:
         )
         self._logger.debug('sampling: %s', cmd)
         proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
         )
         if pbar:
             stdout_pbar = self._read_progress(proc, pbar, idx)

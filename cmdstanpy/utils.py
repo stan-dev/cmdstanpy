@@ -839,6 +839,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     proc = subprocess.Popen(
         cmd,
         cwd=cwd,
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         env=os.environ,
@@ -969,7 +970,11 @@ def install_cmdstan(
     if verbose:
         cmd.extend(['--verbose', 'TRUE'])
     proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
+        cmd,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
     )
     while proc.poll() is None:
         print(proc.stdout.readline().decode('utf-8').strip())
