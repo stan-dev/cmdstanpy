@@ -89,6 +89,7 @@ def install_version(
         proc = subprocess.Popen(
             cmd,
             cwd=None,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
@@ -139,6 +140,7 @@ def install_mingw32_make(toolchain_loc, verbose=False):
         proc = subprocess.Popen(
             cmd,
             cwd=None,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
