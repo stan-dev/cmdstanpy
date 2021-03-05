@@ -370,7 +370,7 @@ def jsondump(path: str, data: Dict) -> None:
     """Dump a dict of data to a JSON file."""
     data = data.copy()
     for key, val in data.items():
-        if isinstance(val, np.ndarray):
+        if type(val).__module__ == 'numpy':
             val = val.tolist()
             data[key] = val
     with open(path, 'w') as fd:
