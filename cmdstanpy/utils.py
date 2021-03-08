@@ -836,23 +836,50 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
     """
     if logger:
         logger.debug('cmd: %s', cmd)
-    proc = subprocess.Popen(
-        cmd,
-        cwd=cwd,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    stdout, stderr = proc.communicate()
-    if proc.returncode:
-        msg = 'ERROR\n'
-        if stderr:
-            msg = '{}{} '.format(msg, stderr.decode('utf-8').strip())
-        raise RuntimeError(msg)
-    if stdout:
-        return stdout.decode('utf-8').strip()
-    return None
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=cwd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
+        )
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:  # problem, throw RuntimeError with msg
+            try:
+                serror = os.strerror(proc.returncode)
+            except ValueError as e:
+                pass
+            if proc.returncode < 0:
+                msg = 'Command: {}\nterminated by signal'.format(cmd)
+            elif proc.returncode <= 125:
+                msg = 'Command: {}\nfailed'.format(cmd)
+            elif proc.returncode == 127:
+                msg = 'Command: {}\nfailed, program not found'.format(cmd)
+            else:
+                msg = 'Command: {}\nmost likely crashed'.format(cmd)
+            msg = '{}, returncode: {}'.format(msg, proc.returncode)
+            if serror:
+                msg = '{}, error: {}'.format(msg, serror)
+            if stderr:
+                msg = '{}, stderr: {} '.format(
+                    msg, stderr.decode('utf-8').strip()
+                )
+            raise RuntimeError(msg)
+        if stdout or stderr:  # success, return stdout, stderr, if any
+            msg = ''
+            if stdout:
+                msg = '{}'.format(stdout.decode('utf-8').strip())
+            if stderr:
+                msg = '{}\nWarning or error:\t{}'.format(
+                    msg, stderr.decode('utf-8').strip()
+                )
+            return msg
+    except OSError as e:
+        msg = 'Command: {}\nfailed with error {}\n'.format(msg, str(e))
+        raise RuntimeError(msg) from e
+    return None  # success
 
 
 def windows_short_path(path: str) -> str:

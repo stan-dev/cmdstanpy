@@ -20,6 +20,7 @@ from cmdstanpy.utils import (
     check_sampler_csv,
     cmdstan_path,
     cmdstan_version_at,
+    do_command,
     get_latest_cmdstan,
     jsondump,
     parse_rdump_value,
@@ -701,6 +702,17 @@ class ParseVarsTest(unittest.TestCase):
         )
         self.assertEqual(len(cols_map), 2)
         self.assertEqual(cols_map['phi'], (3,))
+
+
+class DoCommandTest(unittest.TestCase):
+    def test_good(self):
+        retstr = do_command('ls', HERE)
+        self.assertIsNotNone(retstr)
+
+    def test_exit(self):
+        args = ['bash', '/bin/junk']
+        with self.assertRaises(Exception):
+            do_command(args, HERE)
 
 
 if __name__ == '__main__':

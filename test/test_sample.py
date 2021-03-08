@@ -1018,7 +1018,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 self.assertEqual(diags[key].shape, (100, 2))
                 self.assertEqual(
                     bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-                    )
+                )
         log.check_present(
             (
                 'cmdstanpy',
