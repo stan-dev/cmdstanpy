@@ -98,6 +98,7 @@ def install_version(
             proc = subprocess.Popen(
                 cmd,
                 cwd=None,
+                stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=os.environ,
@@ -117,6 +118,7 @@ def install_version(
         proc = subprocess.Popen(
             cmd,
             cwd=None,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
@@ -153,6 +155,7 @@ def install_version(
         proc = subprocess.Popen(
             cmd,
             cwd=None,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
