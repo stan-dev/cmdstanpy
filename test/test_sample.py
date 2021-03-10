@@ -256,6 +256,7 @@ class SampleTest(unittest.TestCase):
                 seed=12345,
                 iter_sampling=100,
             )
+
         if platform.system() != 'Windows':
             jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
             dirname1 = 'tmp1' + str(time())
@@ -480,6 +481,13 @@ class SampleTest(unittest.TestCase):
         self.test_bernoulli_good(
             'path with space/' 'bernoulli_path_with_space.stan'
         )
+
+    def test_index_bounds_error(self):
+        oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
+        oob_model = CmdStanModel(stan_file=oob_stan)
+
+        with self.assertRaises(RuntimeError):
+            oob_model.sample()
 
 
 class CmdStanMCMCTest(unittest.TestCase):

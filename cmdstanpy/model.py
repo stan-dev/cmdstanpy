@@ -1100,26 +1100,47 @@ class CmdStanModel:
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
         self._logger.debug('sampling: %s', cmd)
-        proc = subprocess.Popen(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        if pbar:
-            stdout_pbar = self._read_progress(proc, pbar, idx)
-        stdout, stderr = proc.communicate()
-        if pbar:
-            stdout = stdout_pbar + stdout
-        self._logger.info('finish chain %u', idx + 1)
-        if stdout:
-            with open(runset.stdout_files[idx], 'w+') as fd:
-                fd.write(stdout.decode('utf-8'))
-        if stderr:
-            with open(runset.stderr_files[idx], 'w+') as fd:
-                fd.write(stderr.decode('utf-8'))
-        runset._set_retcode(idx, proc.returncode)
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=os.environ,
+            )
+            if pbar:
+                stdout_pbar = self._read_progress(proc, pbar, idx)
+            stdout, stderr = proc.communicate()
+            if pbar:
+                stdout = stdout_pbar + stdout
+
+            # check retcode, log errors
+            if proc.returncode != 0:
+                if proc.returncode < 0:
+                    msg = 'Chain {} terminated by signal {}'.format(
+                        idx + 1, proc.returncode
+                    )
+                else:
+                    msg = 'Chain {} failed, return code: {},'.format(
+                        idx + 1, proc.returncode
+                    )
+                if stderr:
+                    msg = '{}\nconsole error message: {} '.format(
+                        msg, stderr.decode('utf-8').strip()
+                    )
+                self._logger.error(msg)
+
+            self._logger.info('finish chain %u', idx + 1)
+            if stdout:
+                with open(runset.stdout_files[idx], 'w+') as fd:
+                    fd.write(stdout.decode('utf-8'))
+            if stderr:
+                with open(runset.stderr_files[idx], 'w+') as fd:
+                    fd.write(stderr.decode('utf-8'))
+            runset._set_retcode(idx, proc.returncode)
+        except OSError as e:
+            msg = 'Chain {} encounted error: {}\n'.format(idx + 1, str(e))
+            raise RuntimeError(msg) from e
 
     def _read_progress(
         self, proc: subprocess.Popen, pbar: Any, idx: int
