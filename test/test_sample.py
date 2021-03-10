@@ -485,7 +485,6 @@ class SampleTest(unittest.TestCase):
     def test_index_bounds_error(self):
         oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
         oob_model = CmdStanModel(stan_file=oob_stan)
-
         with self.assertRaises(RuntimeError):
             oob_model.sample()
 
