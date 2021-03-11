@@ -483,10 +483,11 @@ class SampleTest(unittest.TestCase):
         )
 
     def test_index_bounds_error(self):
-        oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
-        oob_model = CmdStanModel(stan_file=oob_stan)
-        with self.assertRaises(RuntimeError):
-            oob_model.sample()
+        if cmdstan_version_at(2, 25) or cmdstan_version_at(2, 26):
+            oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
+            oob_model = CmdStanModel(stan_file=oob_stan)
+            with self.assertRaises(RuntimeError):
+                oob_model.sample()
 
 
 class CmdStanMCMCTest(unittest.TestCase):
