@@ -90,7 +90,6 @@ class RunSetTest(unittest.TestCase):
             errs = runset.get_err_msgs()
             self.assertIn('Exception: variable does not exist', errs)
 
-
     def test_output_filenames(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')

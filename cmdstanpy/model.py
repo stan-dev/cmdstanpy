@@ -432,7 +432,9 @@ class CmdStanModel:
 
         if not runset._check_retcodes():
             msg = 'Error during optimization:\n{}'.format(runset.get_err_msgs())
-            msg = '{}Command and output files:\n{}'.format(msg,runset.__repr__())
+            msg = '{}Command and output files:\n{}'.format(
+                msg, runset.__repr__()
+            )
             raise RuntimeError(msg)
         mle = CmdStanMLE(runset)
         return mle
@@ -786,7 +788,9 @@ class CmdStanModel:
 
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
-                msg = '{}Command and output files:\n{}'.format(msg,runset.__repr__())
+                msg = '{}Command and output files:\n{}'.format(
+                    msg, runset.__repr__()
+                )
                 raise RuntimeError(msg)
 
             mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
@@ -936,7 +940,9 @@ class CmdStanModel:
                 msg = 'Error during generate_quantities:\n{}'.format(
                     runset.get_err_msgs()
                 )
-                msg = '{}Command and output files:\n{}'.format(msg,runset.__repr__())
+                msg = '{}Command and output files:\n{}'.format(
+                    msg, runset.__repr__()
+                )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
         return quantities
@@ -1084,7 +1090,9 @@ class CmdStanModel:
             msg = 'Error during variational inference:\n{}'.format(
                 runset.get_err_msgs()
             )
-            msg = '{}Command and output files:\n{}'.format(msg,runset.__repr__())
+            msg = '{}Command and output files:\n{}'.format(
+                msg, runset.__repr__()
+            )
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
@@ -1134,13 +1142,12 @@ class CmdStanModel:
                         idx + 1, proc.returncode
                     )
                 else:
-                    msg = 'Chain {} processing error, non-zero return code {},'.format(
-                        idx + 1, proc.returncode
+                    msg = 'Chain {} processing error'.format(idx + 1)
+                    msg = '{}, non-zero return code {}'.format(
+                        msg, proc.returncode
                     )
                 if len(console_error) > 0:
-                    msg = '{}\n error message:\n\t{}'.format(
-                        msg, console_error
-                    )
+                    msg = '{}\n error message:\n\t{}'.format(msg, console_error)
                 self._logger.error(msg)
 
         except OSError as e:
