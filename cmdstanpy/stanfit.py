@@ -606,7 +606,7 @@ class CmdStanMCMC:
         if concat_chains:
             num_rows *= self.chains
             return self._draws[start_idx:, :, :].reshape(
-                (num_rows, len(self.column_names)), order='A'
+                (num_rows, len(self.column_names)), order='F'
             )
         return self._draws[start_idx:, :, :]
 
@@ -902,7 +902,7 @@ class CmdStanMCMC:
         if self._draws_pd is None or self._draws_pd.shape[0] != num_rows:
             # pylint: disable=redundant-keyword-arg
             data = self.draws(inc_warmup=inc_warmup).reshape(
-                (num_rows, len(self.column_names)), order='A'
+                (num_rows, len(self.column_names)), order='F'
             )
             self._draws_pd = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
@@ -957,7 +957,7 @@ class CmdStanMCMC:
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[name])
         # pylint: disable=redundant-keyword-arg
-        return self._draws[draw1:, :, col_idxs].reshape(dims, order='A')
+        return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
 
     def stan_variables(self) -> Dict:
         """
