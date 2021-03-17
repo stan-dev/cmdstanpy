@@ -79,6 +79,7 @@ class RunSet:
             output_dir = _TMPDIR
         self._csv_files = [None for _ in range(chains)]
         self._diagnostic_files = [None for _ in range(chains)]
+        self._profile_files = [None for _ in range(chains)]
         self._stdout_files = [None for _ in range(chains)]
         self._stderr_files = [None for _ in range(chains)]
         self._cmds = []
@@ -103,6 +104,7 @@ class RunSet:
                 [os.path.splitext(csv_file)[0], '-stderr.txt']
             )
             self._stderr_files[i] = stderr_file
+            # optional output files:  diagnostics, profiling
             if args.save_diagnostics:
                 if args.output_dir is None:
                     diag_file = create_named_text_file(
@@ -120,9 +122,40 @@ class RunSet:
                         ),
                     )
                 self._diagnostic_files[i] = diag_file
+            if args.save_profile:
+                if args.output_dir is None:
+                    profile_file = create_named_text_file(
+                        dir=_TMPDIR,
+                        prefix='{}-profile-{}-'.format(
+                            file_basename, str(chain_ids[i])
+                        ),
+                        suffix='.csv',
+                    )
+                else:
+                    profile_file = os.path.join(
+                        output_dir,
+                        '{}-profile-{}.{}'.format(
+                            file_basename, str(chain_ids[i]), 'csv'
+                        ),
+                    )
+                self._profile_files[i] = profile_file
+            if args.save_diagnostics and args.save_profile:
+                self._cmds.append(
+                    args.compose_command(
+                        i, self._csv_files[i],
+                        self._diagnostic_files[i], self._profile_files[i]
+                    )
+                )
+            elif args.save_diagnostics:
                 self._cmds.append(
                     args.compose_command(
                         i, self._csv_files[i], self._diagnostic_files[i]
+                    )
+                )
+            elif args.save_profile:
+                self._cmds.append(
+                    args.compose_command(
+                        i, self._csv_files[i], self._profile_files[i]
                     )
                 )
             else:
@@ -141,6 +174,12 @@ class RunSet:
         ):
             repr = '{}\n diagnostics_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._diagnostic_files)
+            )
+        if self._args.save_profile and os.path.exists(
+            self._profile[0]
+        ):
+            repr = '{}\n profile_files:\n\t{}'.format(
+                repr, '\n\t'.join(self._profile_files)
             )
         if os.path.exists(self._stdout_files[0]):
             repr = '{}\n console_msgs:\n\t{}'.format(
@@ -201,7 +240,12 @@ class RunSet:
 
     @property
     def diagnostic_files(self) -> List[str]:
-        """List of paths to CmdStan diagnostic output files."""
+        """List of paths to CmdStan hamiltonian diagnostic files."""
+        return self._diagnostic_files
+
+    @property
+    def profile_files(self) -> List[str]:
+        """List of paths to CmdStan profiler files."""
         return self._diagnostic_files
 
     def _retcode(self, idx: int) -> int:
@@ -394,6 +438,7 @@ class CmdStanMCMC:
             '\n\t'.join(self.runset.csv_files),
             '\n\t'.join(self.runset.stdout_files),
         )
+        # TODO - hamiltonian, profiling files
         return repr
 
     @property
@@ -1028,6 +1073,7 @@ class CmdStanMLE:
             '\n\t'.join(self.runset.csv_files),
             '\n\t'.join(self.runset.stdout_files),
         )
+        # TODO - profiling files
         return repr
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
@@ -1222,6 +1268,7 @@ class CmdStanVB:
             '\n\t'.join(self.runset.csv_files),
             '\n\t'.join(self.runset.stdout_files),
         )
+        # TODO - diagnostic, profiling files
         return repr
 
     def _set_variational_attrs(self, sample_csv_0: str) -> None:

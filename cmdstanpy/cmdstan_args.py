@@ -497,7 +497,7 @@ class VariationalArgs:
     # pylint: disable=unused-argument
     def compose(self, idx: int, cmd: List) -> str:
         """
-        Compose CmdStan command for method-specific non-default arguments.
+        Compose CmdStan command for method<-specific non-default arguments.
         """
         cmd.append('method=variational')
         if self.algorithm is not None:
@@ -547,6 +547,7 @@ class CmdStanArgs:
         output_dir: str = None,
         sig_figs: str = None,
         save_diagnostics: bool = False,
+        save_profile: bool = False,
         refresh: str = None,
         logger: logging.Logger = None,
     ) -> None:
@@ -560,6 +561,7 @@ class CmdStanArgs:
         self.output_dir = output_dir
         self.sig_figs = sig_figs
         self.save_diagnostics = save_diagnostics
+        self.save_profile = save_profile
         self.refresh = refresh
         self.method_args = method_args
         if isinstance(method_args, SamplerArgs):
@@ -726,7 +728,10 @@ class CmdStanArgs:
                         )
 
     def compose_command(
-        self, idx: int, csv_file: str, diagnostic_file: str = None
+        self, idx: int,
+        csv_file: str,
+        diagnostic_file: str = None,
+        profile_file: str = None
     ) -> str:
         """
         Compose CmdStan command for non-default arguments.
@@ -763,6 +768,8 @@ class CmdStanArgs:
         cmd.append('file={}'.format(csv_file))
         if diagnostic_file is not None:
             cmd.append('diagnostic_file={}'.format(diagnostic_file))
+        if profile_file is not None:
+            cmd.append('profile_file={}'.format(profile_file))
         if self.refresh is not None:
             cmd.append('refresh={}'.format(self.refresh))
         if self.sig_figs is not None:

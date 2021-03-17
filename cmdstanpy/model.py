@@ -342,6 +342,7 @@ class CmdStanModel:
         inits: Union[Dict, float, str] = None,
         output_dir: str = None,
         sig_figs: int = None,
+        save_profile: bool = False,
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
@@ -400,6 +401,11 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
+        :param save_profile: Whether or not to profile auto-diff operations within
+            labelled blocks of code.  If True, csv outputs are written to a file
+            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            Introduced in CmdStan-2.26.
+
         :param algorithm: Algorithm to use. One of: 'BFGS', 'LBFGS', 'Newton'
 
         :param init_alpha: Line search step size for first iteration
@@ -422,7 +428,7 @@ class CmdStanModel:
                 inits=_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_diagnostics=False,
+                save_profile=save_profile,
                 method_args=optimize_args,
             )
 
@@ -462,6 +468,7 @@ class CmdStanModel:
         output_dir: str = None,
         sig_figs: int = None,
         save_diagnostics: bool = False,
+        save_profile: bool = False,
         show_progress: Union[bool, str] = False,
         validate_csv: bool = True,
     ) -> CmdStanMCMC:
@@ -605,10 +612,16 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to an output file with filename
+        :param save_diagnostics: Whether or not to output the position and
+            momentum information for each parameter.  If True,
+            csv outputs are written to an output file using filename
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
+
+        :param save_profile: Whether or not to profile auto-diff operations within
+            labelled blocks of code.  If True, csv outputs are written to a file
+            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            Introduced in CmdStan-2.26.
 
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
@@ -727,6 +740,7 @@ class CmdStanModel:
                 output_dir=output_dir,
                 sig_figs=sig_figs,
                 save_diagnostics=save_diagnostics,
+                save_profile=save_profile,
                 method_args=sampler_args,
                 refresh=refresh,
                 logger=self._logger,
@@ -947,6 +961,7 @@ class CmdStanModel:
         output_dir: str = None,
         sig_figs: int = None,
         save_diagnostics: bool = False,
+        save_profile: bool = False,
         algorithm: str = None,
         iter: int = None,
         grad_samples: int = None,
@@ -1006,9 +1021,14 @@ class CmdStanModel:
             Introduced in CmdStan-2.25.
 
         :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv output files are written to an output file with filename
+            csv outputs are written to an output file using filename
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
+
+        :param save_profile: Whether or not to profile auto-diff operations within
+            labelled blocks of code.  If True, csv outputs are written to a file
+            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            Introduced in CmdStan-2.26.
 
         :param algorithm: Algorithm to use. One of: 'meanfield', 'fullrank'.
 
@@ -1060,6 +1080,7 @@ class CmdStanModel:
                 output_dir=output_dir,
                 sig_figs=sig_figs,
                 save_diagnostics=save_diagnostics,
+                save_profile=save_profile,
                 method_args=variational_args,
             )
 
