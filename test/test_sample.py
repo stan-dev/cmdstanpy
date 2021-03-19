@@ -1018,7 +1018,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 self.assertEqual(diags[key].shape, (100, 2))
                 self.assertEqual(
                     bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-                    )
+                )
         log.check_present(
             (
                 'cmdstanpy',
@@ -1111,6 +1111,29 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(vars['beta'].shape, (20, 2))
         self.assertTrue('frac_60' in vars)
         self.assertEqual(vars['frac_60'].shape, (20,))
+
+    def test_variables_issue_361(self):
+        # tests that array ordering is preserved
+        stan = os.path.join(DATAFILES_PATH, 'container_vars.stan')
+        container_vars_model = CmdStanModel(stan_file=stan)
+        chain_1_fit = container_vars_model.sample(
+            chains=1, iter_sampling=4, fixed_param=True
+        )
+        v_2d_arr = chain_1_fit.stan_variable('v_2d_arr')
+        self.assertEqual(v_2d_arr.shape, (4, 2, 3))
+        # stan 1-based indexing vs. python 0-based indexing
+        for i in range(2):
+            for j in range(3):
+                self.assertEqual(v_2d_arr[0, i, j], ((i + 1) * 10) + j + 1)
+        chain_2_fit = container_vars_model.sample(
+            chains=2, iter_sampling=4, fixed_param=True
+        )
+        v_2d_arr = chain_2_fit.stan_variable('v_2d_arr')
+        self.assertEqual(v_2d_arr.shape, (8, 2, 3))
+        # stan 1-based indexing vs. python 0-based indexing
+        for i in range(2):
+            for j in range(3):
+                self.assertEqual(v_2d_arr[0, i, j], ((i + 1) * 10) + j + 1)
 
     def test_validate(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
