@@ -1338,6 +1338,51 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.stan_vars_dims['beta'], tuple([2]))
         self.assertEqual(fit.stan_vars_cols['beta'], tuple([7, 8]))
 
+    def test_save_diagnostics(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            save_diagnostics=True
+        )
+        for i in range(bern_fit.runset.chains):
+            diagnostics_file = bern_fit.runset.diagnostic_files[i]
+            self.assertTrue(os.path.exists(diagnostics_file))
+
+    def test_save_profile(self):
+        stan = os.path.join(DATAFILES_PATH, 'profile_likelihood.stan')
+        profile_model = CmdStanModel(stan_file=stan)
+        profile_fit = profile_model.sample(
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            save_profile=True
+        )
+        for i in range(profile_fit.runset.chains):
+            profile_file = profile_fit.runset.profile_files[i]
+            self.assertTrue(os.path.exists(profile_file))
+
+        profile_fit = profile_model.sample(
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            save_diagnostics=True,
+            save_profile=True,
+        )
+
+        for i in range(profile_fit.runset.chains):
+            profile_file = profile_fit.runset.profile_files[i]
+            self.assertTrue(os.path.exists(profile_file))
+            diagnostics_file = profile_fit.runset.diagnostic_files[i]
+            self.assertTrue(os.path.exists(diagnostics_file))
+
 
 if __name__ == '__main__':
     unittest.main()
