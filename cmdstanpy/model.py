@@ -401,7 +401,7 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param save_profile: Whether or not to profile auto-diff operations within
+        :param save_profile: Whether or not to profile auto-diff operations in
             labelled blocks of code.  If True, csv outputs are written to a file
             '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
@@ -618,7 +618,7 @@ class CmdStanModel:
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
-        :param save_profile: Whether or not to profile auto-diff operations within
+        :param save_profile: Whether or not to profile auto-diff operations in
             labelled blocks of code.  If True, csv outputs are written to a file
             '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
@@ -1025,7 +1025,7 @@ class CmdStanModel:
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
-        :param save_profile: Whether or not to profile auto-diff operations within
+        :param save_profile: Whether or not to profile auto-diff operations in
             labelled blocks of code.  If True, csv outputs are written to a file
             '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.

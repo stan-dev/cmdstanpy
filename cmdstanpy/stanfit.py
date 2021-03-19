@@ -142,23 +142,26 @@ class RunSet:
             if args.save_diagnostics and args.save_profile:
                 self._cmds.append(
                     args.compose_command(
-                        i, self._csv_files[i],
+                        i,
+                        self._csv_files[i],
                         diagnostic_file=self._diagnostic_files[i],
-                        profile_file=self._profile_files[i]
+                        profile_file=self._profile_files[i],
                     )
                 )
             elif args.save_diagnostics:
                 self._cmds.append(
                     args.compose_command(
-                        i, self._csv_files[i],
-                        diagnostic_file=self._diagnostic_files[i]
+                        i,
+                        self._csv_files[i],
+                        diagnostic_file=self._diagnostic_files[i],
                     )
                 )
             elif args.save_profile:
                 self._cmds.append(
                     args.compose_command(
-                        i, self._csv_files[i],
-                        profile_file=self._profile_files[i]
+                        i,
+                        self._csv_files[i],
+                        profile_file=self._profile_files[i],
                     )
                 )
             else:
@@ -178,9 +181,7 @@ class RunSet:
             repr = '{}\n diagnostics_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._diagnostic_files)
             )
-        if self._args.save_profile and os.path.exists(
-            self._profile_files[0]
-        ):
+        if self._args.save_profile and os.path.exists(self._profile_files[0]):
             repr = '{}\n profile_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._profile_files)
             )
@@ -396,7 +397,7 @@ class CmdStanMCMC:
         runset: RunSet,
         validate_csv: bool = True,
         logger: logging.Logger = None,
-   ) -> None:
+    ) -> None:
         """Initialize object."""
         if not runset.method == Method.SAMPLE:
             raise ValueError(
