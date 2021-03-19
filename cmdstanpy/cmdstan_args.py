@@ -497,7 +497,7 @@ class VariationalArgs:
     # pylint: disable=unused-argument
     def compose(self, idx: int, cmd: List) -> str:
         """
-        Compose CmdStan command for method<-specific non-default arguments.
+        Compose CmdStan command for method-specific non-default arguments.
         """
         cmd.append('method=variational')
         if self.algorithm is not None:
