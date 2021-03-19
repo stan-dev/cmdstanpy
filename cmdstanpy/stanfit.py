@@ -143,19 +143,22 @@ class RunSet:
                 self._cmds.append(
                     args.compose_command(
                         i, self._csv_files[i],
-                        self._diagnostic_files[i], self._profile_files[i]
+                        diagnostic_file=self._diagnostic_files[i],
+                        profile_file=self._profile_files[i]
                     )
                 )
             elif args.save_diagnostics:
                 self._cmds.append(
                     args.compose_command(
-                        i, self._csv_files[i], self._diagnostic_files[i]
+                        i, self._csv_files[i],
+                        diagnostic_file=self._diagnostic_files[i]
                     )
                 )
             elif args.save_profile:
                 self._cmds.append(
                     args.compose_command(
-                        i, self._csv_files[i], self._profile_files[i]
+                        i, self._csv_files[i],
+                        profile_file=self._profile_files[i]
                     )
                 )
             else:
@@ -176,7 +179,7 @@ class RunSet:
                 repr, '\n\t'.join(self._diagnostic_files)
             )
         if self._args.save_profile and os.path.exists(
-            self._profile[0]
+            self._profile_files[0]
         ):
             repr = '{}\n profile_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._profile_files)
@@ -710,6 +713,7 @@ class CmdStanMCMC:
                             'id',
                             'diagnostic_file',
                             'metric_file',
+                            'profile_file',
                             'stepsize',
                             'init',
                             'seed',

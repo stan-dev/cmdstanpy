@@ -728,8 +728,7 @@ class CmdStanArgs:
                         )
 
     def compose_command(
-        self, idx: int,
-        csv_file: str,
+        self, idx: int, csv_file: str, *,
         diagnostic_file: str = None,
         profile_file: str = None
     ) -> str:
