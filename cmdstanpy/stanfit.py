@@ -249,7 +249,7 @@ class RunSet:
     @property
     def profile_files(self) -> List[str]:
         """List of paths to CmdStan profiler files."""
-        return self._diagnostic_files
+        return self._profile_files
 
     def _retcode(self, idx: int) -> int:
         """Get retcode for chain[idx]."""
@@ -396,7 +396,7 @@ class CmdStanMCMC:
         runset: RunSet,
         validate_csv: bool = True,
         logger: logging.Logger = None,
-    ) -> None:
+   ) -> None:
         """Initialize object."""
         if not runset.method == Method.SAMPLE:
             raise ValueError(
