@@ -1,0 +1,87 @@
+name: ReleaseCmdStanPy
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        description: 'New version, for example: 0.9.69'     
+        required: true
+
+jobs:
+  release-cmdstanpy:
+    name: publish release and update read the docs default version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.9]
+      fail-fast: false
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v2
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies (python)
+        run: |
+          pip install --upgrade pip wheel twine codecov sphinx sphinx_rtd_theme requests
+          pip install -r requirements.txt
+
+      - name: Setup git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release branch
+        run: |
+          git checkout -b release/v${{ github.event.inputs.new_version }}
+
+          sed -i 's/^__version__ = .*$/__version__ = '\''${{ github.event.inputs.new_version }}'\''/g' cmdstanpy/_version.py
+          
+          cd docsrc
+          make github
+          cd ..
+          
+          git commit -m "release/v${{ github.event.inputs.new_version }}: updating version numbers" -a
+          git push -u origin release/v${{ github.event.inputs.new_version }}
+          
+      - name: Merge into develop
+        run: |
+          git checkout develop
+          git reset --hard v${{ github.event.inputs.new_version }}
+          git push origin develop
+
+      - name: Tag version
+        run: |
+          git checkout develop
+          git tag -a "v${{ github.event.inputs.new_version }}" -m "Tagging v${{ github.event.inputs.new_version }}"
+          git push origin "v${{ github.event.inputs.new_version }}"
+
+      - name: Update master to new released version
+        run: |
+          git checkout master
+          git reset --hard v${{ github.event.inputs.new_version }}
+          git push origin master
+      
+      - name: Build wheel
+        run: python setup.py bdist_wheel
+
+      - name: Install bdist_wheel
+        run: pip install dist/*.whl
+      
+      - name: Upload to pypi
+        if: success()
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: python -m twine upload -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD} --skip-existing dist/*
+
+      - name: Change default version in readthedocs.io
+        if: success()
+        env:
+          RTD_USERNAME: ${{ secrets.RTD_USERNAME }}
+          RTD_PASSWORD: ${{ secrets.RTD_PASSWORD }}
+        run: python rtd_change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${{ github.event.inputs.new_version }}
