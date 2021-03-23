@@ -343,6 +343,7 @@ class CmdStanArgsTest(unittest.TestCase):
             chain_ids=[1, 2, 3, 4],
             data=jdata,
             method_args=sampler_args,
+            refresh=10,
         )
         self.assertEqual(cmdstan_args.method, Method.SAMPLE)
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
@@ -350,6 +351,7 @@ class CmdStanArgsTest(unittest.TestCase):
         self.assertIn('data file=', ' '.join(cmd))
         self.assertIn('output file=', ' '.join(cmd))
         self.assertIn('method=sample algorithm=hmc', ' '.join(cmd))
+        self.assertIn('refresh=10', ' '.join(cmd))
 
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -574,6 +576,28 @@ class CmdStanArgsTest(unittest.TestCase):
                     output_dir=read_only,
                     method_args=sampler_args,
                 )
+
+        with self.assertRaisesRegex(
+            ValueError, 'Argument refresh must be a positive integer value'
+        ):
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                method_args=sampler_args,
+                refresh="a",
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, 'Argument refresh must be a positive integer value'
+        ):
+            CmdStanArgs(
+                model_name='bernoulli',
+                model_exe='bernoulli.exe',
+                chain_ids=[1, 2, 3, 4],
+                method_args=sampler_args,
+                refresh=0,
+            )
 
     def test_args_sig_figs(self):
         sampler_args = SamplerArgs()
