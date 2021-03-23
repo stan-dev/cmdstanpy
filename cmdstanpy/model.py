@@ -471,6 +471,7 @@ class CmdStanModel:
         save_profile: bool = False,
         show_progress: Union[bool, str] = False,
         validate_csv: bool = True,
+        refresh: int = None,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -632,6 +633,9 @@ class CmdStanModel:
             Default is ``True`` - sample csv files are scanned for completeness
             and consistency.
 
+        :param refresh: Specify the number of iterations cmdstan will take
+        between progress messages. Default value is 100.
+
         :return: CmdStanMCMC object
         """
         if chains is None:
@@ -695,8 +699,12 @@ class CmdStanModel:
             'total threads: %u', parallel_chains * threads_per_chain
         )
         os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
+        if refresh is not None and refresh < 1:
+            raise ValueError(
+                'Argument refresh must be a positive integer value, '
+                'found {}.'.format(refresh)
+            )
 
-        refresh = None
         if show_progress:
             try:
                 import tqdm
