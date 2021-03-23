@@ -699,11 +699,6 @@ class CmdStanModel:
             'total threads: %u', parallel_chains * threads_per_chain
         )
         os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
-        if refresh is not None and refresh < 1:
-            raise ValueError(
-                'Argument refresh must be a positive integer value, '
-                'found {}.'.format(refresh)
-            )
 
         if show_progress:
             try:

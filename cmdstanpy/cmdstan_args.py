@@ -628,6 +628,12 @@ class CmdStanArgs:
                     'invalid path for output files,'
                     ' cannot write to dir: {}'.format(self.output_dir)
                 ) from exc
+        if self.refresh is not None:
+            if not isinstance(self.refresh, int) or self.refresh < 1:
+                raise ValueError(
+                    'Argument refresh must be a positive integer value, '
+                    'found {}.'.format(self.refresh)
+                )
 
         if self.sig_figs is not None:
             if (
