@@ -346,6 +346,7 @@ class CmdStanModel:
         algorithm: str = None,
         init_alpha: float = None,
         iter: int = None,
+        refresh: int = None,
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -412,6 +413,9 @@ class CmdStanModel:
 
         :param iter: Total number of iterations
 
+        :param refresh: Specify the number of iterations cmdstan will take
+        between progress messages. Default value is 100.
+
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
@@ -430,6 +434,7 @@ class CmdStanModel:
                 sig_figs=sig_figs,
                 save_profile=save_profile,
                 method_args=optimize_args,
+                refresh=refresh,
             )
 
             dummy_chain_id = 0
@@ -815,6 +820,7 @@ class CmdStanModel:
         seed: int = None,
         gq_output_dir: str = None,
         sig_figs: int = None,
+        refresh: int = None,
     ) -> CmdStanGQ:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -862,6 +868,9 @@ class CmdStanModel:
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
+
+        :param refresh: Specify the number of iterations cmdstan will take
+            between progress messages. Default value is 100.
 
         :return: CmdStanGQ object
         """
@@ -939,6 +948,7 @@ class CmdStanModel:
                 output_dir=gq_output_dir,
                 sig_figs=sig_figs,
                 method_args=generate_quantities_args,
+                refresh=refresh,
             )
             runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
 
@@ -976,6 +986,7 @@ class CmdStanModel:
         eval_elbo: int = None,
         output_samples: int = None,
         require_converged: bool = True,
+        refresh: int = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1057,6 +1068,9 @@ class CmdStanModel:
         :param require_converged: Whether or not to raise an error if stan
             reports that "The algorithm may not have converged".
 
+        :param refresh: Specify the number of iterations cmdstan will take
+            between progress messages. Default value is 100.
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
@@ -1085,6 +1099,7 @@ class CmdStanModel:
                 save_diagnostics=save_diagnostics,
                 save_profile=save_profile,
                 method_args=variational_args,
+                refresh=refresh,
             )
 
             dummy_chain_id = 0
