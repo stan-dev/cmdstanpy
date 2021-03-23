@@ -548,7 +548,7 @@ class CmdStanArgs:
         sig_figs: str = None,
         save_diagnostics: bool = False,
         save_profile: bool = False,
-        refresh: str = None,
+        refresh: int = None,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
@@ -734,7 +734,10 @@ class CmdStanArgs:
                         )
 
     def compose_command(
-        self, idx: int, csv_file: str, *,
+        self,
+        idx: int,
+        csv_file: str,
+        *,
         diagnostic_file: str = None,
         profile_file: str = None
     ) -> str:
