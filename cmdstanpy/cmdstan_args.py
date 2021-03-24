@@ -548,7 +548,7 @@ class CmdStanArgs:
         sig_figs: str = None,
         save_diagnostics: bool = False,
         save_profile: bool = False,
-        refresh: str = None,
+        refresh: int = None,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
@@ -628,6 +628,12 @@ class CmdStanArgs:
                     'invalid path for output files,'
                     ' cannot write to dir: {}'.format(self.output_dir)
                 ) from exc
+        if self.refresh is not None:
+            if not isinstance(self.refresh, int) or self.refresh < 1:
+                raise ValueError(
+                    'Argument refresh must be a positive integer value, '
+                    'found {}.'.format(self.refresh)
+                )
 
         if self.sig_figs is not None:
             if (
@@ -728,7 +734,10 @@ class CmdStanArgs:
                         )
 
     def compose_command(
-        self, idx: int, csv_file: str, *,
+        self,
+        idx: int,
+        csv_file: str,
+        *,
         diagnostic_file: str = None,
         profile_file: str = None
     ) -> str:
