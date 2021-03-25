@@ -111,13 +111,17 @@ class OptimizeTest(unittest.TestCase):
     def test_optimize_rosenbrock(self):
         stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
         rose_model = CmdStanModel(stan_file=stan)
-        no_data = {}
-        mle = rose_model.optimize(
-            data=no_data, seed=1239812093, inits=None, algorithm='BFGS'
-        )
+        mle = rose_model.optimize(seed=1239812093, inits=None, algorithm='BFGS')
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
+
+    def test_optimize_no_data(self):
+        stan = os.path.join(DATAFILES_PATH, 'optimize', 'no_data.stan')
+        rose_model = CmdStanModel(stan_file=stan)
+        mle = rose_model.optimize(seed = 1239812093)
+        self.assertEqual(mle.column_names, ('lp__', 'a'))
+        self.assertAlmostEqual(mle.optimized_params_dict['a'], 0, places=3)
 
     def test_optimize_bad(self):
         stan = os.path.join(
