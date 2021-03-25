@@ -119,7 +119,7 @@ class OptimizeTest(unittest.TestCase):
     def test_optimize_no_data(self):
         stan = os.path.join(DATAFILES_PATH, 'optimize', 'no_data.stan')
         rose_model = CmdStanModel(stan_file=stan)
-        mle = rose_model.optimize(seed = 1239812093)
+        mle = rose_model.optimize(seed=1239812093)
         self.assertEqual(mle.column_names, ('lp__', 'a'))
         self.assertAlmostEqual(mle.optimized_params_dict['a'], 0, places=3)
 
