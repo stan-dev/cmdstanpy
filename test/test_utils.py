@@ -186,6 +186,8 @@ class CmdStanPathTest(unittest.TestCase):
         cmdstan_path()  # sets os.environ['CMDSTAN']
         self.assertFalse(cmdstan_version_at(99, 99))
 
+
+class DataFilesTest(unittest.TestCase):
     def test_dict_to_file(self):
         file_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
         dict_good = {'a': 0.5}
@@ -253,6 +255,14 @@ class CmdStanPathTest(unittest.TestCase):
         jsondump(file_3d_matrix, dict_3d_matrix)
         with open(file_3d_matrix) as fd:
             cmp(json.load(fd), dict_3d_matrix)
+
+        scalr = np.int32(1)
+        self.assertTrue(type(scalr).__module__ == 'numpy')
+        dict_scalr = {'a': scalr}
+        file_scalr = os.path.join(_TMPDIR, 'scalr.json')
+        jsondump(file_scalr, dict_scalr)
+        with open(file_scalr) as fd:
+            cmp(json.load(fd), dict_scalr)
 
 
 class ReadStanCsvTest(unittest.TestCase):

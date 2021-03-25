@@ -10,6 +10,8 @@ import unittest
 from multiprocessing import cpu_count
 from time import time
 
+import numpy as np
+
 import pytest
 from testfixtures import LogCapture
 
@@ -151,6 +153,17 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
 
         data_dict = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
+        bern_fit = bern_model.sample(
+            data=data_dict,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
+        )
+        self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
+
+        np_scalr_10 = np.int32(10)
+        data_dict = {'N': np_scalr_10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
         bern_fit = bern_model.sample(
             data=data_dict,
             chains=2,
