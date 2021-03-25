@@ -426,7 +426,7 @@ class CmdStanMCMC:
         self._step_size = None
         # inference
         self._draws = None
-        self._draws_pd = None  # slated for removal
+        self._draws_pd = None
         self._validate_csv = validate_csv
         if validate_csv:
             self.validate_csv_files()
@@ -922,10 +922,7 @@ class CmdStanMCMC:
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
-
-        *Note:* Slated for removal
         """
-        self._logger.warning('method "draws_pd" is slated for removal.')
         if inc_warmup and not self._save_warmup:
             self._logger.warning(
                 'draws from warmup iterations not available,'
