@@ -62,9 +62,10 @@ jobs:
 
       - name: Update master to new released version
         run: |
+          git fetch
           git checkout master
           git reset --hard v${{ github.event.inputs.new_version }}
-          git push
+          git push origin master
       
       - name: Build wheel
         run: python setup.py bdist_wheel
