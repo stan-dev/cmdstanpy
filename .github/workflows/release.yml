@@ -66,7 +66,7 @@ jobs:
           git checkout master
           git pull
           git reset --hard v${{ github.event.inputs.new_version }}
-          git push origin master
+          git push -f origin master
       
       - name: Build wheel
         run: python setup.py bdist_wheel
