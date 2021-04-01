@@ -418,7 +418,7 @@ class OptimizeArgs:
                 raise ValueError('tol_param must be type of float')
 
         if self.history_size is not None:
-            if self.algorithm = 'Newton' or self.algorithm == 'BFGS':
+            if self.algorithm == 'Newton' or self.algorithm == 'BFGS':
                 raise ValueError('history_size must not be set when algorithm is Newton or BFGS')
             if isinstance(self.history_size, Integral):
                 if self.history_size < 0:
@@ -434,20 +434,21 @@ class OptimizeArgs:
             cmd.append('algorithm={}'.format(self.algorithm.lower()))
         if self.init_alpha is not None:
             cmd.append('init_alpha={}'.format(self.init_alpha))
+        if self.tol_obj is not None:
+            cmd.append('tol_obj={}'.format(self.tol_obj))
+        if self.tol_rel_obj is not None:
+            cmd.append('tol_rel_obj={}'.format(self.tol_rel_obj))
+        if self.tol_grad is not None:
+            cmd.append('tol_grad={}'.format(self.tol_grad))
+        if self.tol_rel_grad is not None:
+            cmd.append('tol_rel_grad={}'.format(self.tol_rel_grad))
+        if self.tol_param is not None:
+            cmd.append('tol_param={}'.format(self.tol_param))
+        if self.history_size is not None:
+            cmd.append('history_size={}'.format(self.history_size))
         if self.iter is not None:
             cmd.append('iter={}'.format(self.iter))
-        if self.tol_obj is not None:
-            cmd.append('tol_obj={}'.format(self.tol_obj)
-            if self.tol_rel_obj is not None:
-                cmd.append('tol_rel_obj={}'.format(self.tol_rel_obj)
-            if self.tol_grad is not None:
-                cmd.append('tol_grad={}').format(self.tol_grad)
-            if self.tol_rel_grad is not None:
-                cmd.append('tol_rel_grad={}').format(self.tol_rel_grad)
-            if self.tol_param is not None:
-                cmd.append('tol_param={}').format(self.tol_param)
-            if self.history_size is not None:
-                cmd.append('history_size={}').format(self.history_size)
+
         return cmd
 
 
