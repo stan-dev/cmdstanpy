@@ -437,11 +437,15 @@ class CmdStanModel:
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
-            algorithm=algorithm, init_alpha=init_alpha,
-            tol_obj=tol_obj, tol_rel_obj=tol_rel_obj,
-            tol_grad=tol_grad, tol_rel_grad=tol_rel_grad,
-            tol_param=tol_param, history_size=history_size,
-            iter=iter
+            algorithm=algorithm,
+            init_alpha=init_alpha,
+            tol_obj=tol_obj,
+            tol_rel_obj=tol_rel_obj,
+            tol_grad=tol_grad,
+            tol_rel_grad=tol_rel_grad,
+            tol_param=tol_param,
+            history_size=history_size,
+            iter=iter,
         )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
