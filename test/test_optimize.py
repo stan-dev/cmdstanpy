@@ -70,7 +70,7 @@ class OptimizeTest(unittest.TestCase):
             tol_grad=1e-8,
             tol_rel_grad=1e7,
             tol_param=1e-8,
-            history_size=5
+            history_size=5,
         )
 
         # test numpy output
