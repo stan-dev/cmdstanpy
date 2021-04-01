@@ -62,9 +62,15 @@ class OptimizeTest(unittest.TestCase):
             data=jdata,
             seed=1239812093,
             inits=jinit,
-            algorithm='BFGS',
+            algorithm='LBFGS',
             init_alpha=0.001,
             iter=100,
+            tol_obj=1e-12,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5
         )
 
         # test numpy output
