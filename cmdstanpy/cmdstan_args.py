@@ -427,7 +427,8 @@ class OptimizeArgs:
         if self.history_size is not None:
             if self.algorithm == 'Newton' or self.algorithm == 'BFGS':
                 raise ValueError(
-                    'history_size must not be set when algorithm is Newton or BFGS'
+                    'history_size must not be set when algorithm is '
+                    'Newton or BFGS'
                 )
             if isinstance(self.history_size, Integral):
                 if self.history_size < 0:
