@@ -94,6 +94,34 @@ class OptimizeTest(unittest.TestCase):
             mle.optimized_params_np[1], mle.optimized_params_dict['theta']
         )
 
+    def negative_parameter_values(self, tol_obj):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
+        mle = model.optimize(
+            data=jdata,
+            seed=1239812093,
+            inits=jinit,
+            algorithm='LBFGS',
+            init_alpha=0.001,
+            iter=100,
+            tol_obj=-1,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5,
+        )
+
+        # test numpy output
+        with self.assertRaisesRegex(ValueError, 'Error during optimization'):
+            model.optimize(
+                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_obj=-1
+            )
+
+
+
     def test_optimize_good_dict(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -113,6 +141,7 @@ class OptimizeTest(unittest.TestCase):
         # test numpy output
         self.assertAlmostEqual(mle.optimized_params_np[0], -5, places=2)
         self.assertAlmostEqual(mle.optimized_params_np[1], 0.2, places=3)
+
 
     def test_optimize_rosenbrock(self):
         stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
