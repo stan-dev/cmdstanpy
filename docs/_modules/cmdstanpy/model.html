@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>cmdstanpy.model &mdash; CmdStanPy 0.9.68 documentation</title>
+  <title>cmdstanpy.model &mdash; CmdStanPy 0.9.75 documentation</title>
   
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.9.68
+                0.9.75
               </div>
             
           
@@ -511,9 +511,11 @@
         <span class="n">inits</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_profile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">init_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="nb">iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">refresh</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanMLE</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the specified CmdStan optimize algorithm to produce a</span>
@@ -569,11 +571,19 @@
 <span class="sd">            precision for the system file I/O is used; the usual value is 6.</span>
 <span class="sd">            Introduced in CmdStan-2.25.</span>
 
+<span class="sd">        :param save_profile: Whether or not to profile auto-diff operations in</span>
+<span class="sd">            labelled blocks of code.  If True, csv outputs are written to a file</span>
+<span class="sd">            &#39;&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-profile-&lt;chain_id&gt;&#39;.</span>
+<span class="sd">            Introduced in CmdStan-2.26.</span>
+
 <span class="sd">        :param algorithm: Algorithm to use. One of: &#39;BFGS&#39;, &#39;LBFGS&#39;, &#39;Newton&#39;</span>
 
 <span class="sd">        :param init_alpha: Line search step size for first iteration</span>
 
 <span class="sd">        :param iter: Total number of iterations</span>
+
+<span class="sd">        :param refresh: Specify the number of iterations cmdstan will take</span>
+<span class="sd">        between progress messages. Default value is 100.</span>
 
 <span class="sd">        :return: CmdStanMLE object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -591,8 +601,9 @@
                 <span class="n">inits</span><span class="o">=</span><span class="n">_inits</span><span class="p">,</span>
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
                 <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
-                <span class="n">save_diagnostics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">save_profile</span><span class="o">=</span><span class="n">save_profile</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">optimize_args</span><span class="p">,</span>
+                <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">dummy_chain_id</span> <span class="o">=</span> <span class="mi">0</span>
@@ -631,8 +642,10 @@
         <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_diagnostics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">save_profile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">show_progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">validate_csv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">refresh</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanMCMC</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run or more chains of the NUTS sampler to produce a set of draws</span>
@@ -774,10 +787,16 @@
 <span class="sd">            precision for the system file I/O is used; the usual value is 6.</span>
 <span class="sd">            Introduced in CmdStan-2.25.</span>
 
-<span class="sd">        :param save_diagnostics: Whether or not to save diagnostics. If True,</span>
-<span class="sd">            csv output files are written to an output file with filename</span>
+<span class="sd">        :param save_diagnostics: Whether or not to output the position and</span>
+<span class="sd">            momentum information for each parameter.  If True,</span>
+<span class="sd">            csv outputs are written to an output file using filename</span>
 <span class="sd">            template &#39;&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-diagnostic-&lt;chain_id&gt;&#39;,</span>
 <span class="sd">            e.g. &#39;bernoulli-201912081451-diagnostic-1.csv&#39;.</span>
+
+<span class="sd">        :param save_profile: Whether or not to profile auto-diff operations in</span>
+<span class="sd">            labelled blocks of code.  If True, csv outputs are written to a file</span>
+<span class="sd">            &#39;&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-profile-&lt;chain_id&gt;&#39;.</span>
+<span class="sd">            Introduced in CmdStan-2.26.</span>
 
 <span class="sd">        :param show_progress: Use tqdm progress bar to show sampling progress.</span>
 <span class="sd">            If show_progress==&#39;notebook&#39; use tqdm_notebook</span>
@@ -787,6 +806,9 @@
 <span class="sd">            When sample is large or disk i/o is slow, will speed up processing.</span>
 <span class="sd">            Default is ``True`` - sample csv files are scanned for completeness</span>
 <span class="sd">            and consistency.</span>
+
+<span class="sd">        :param refresh: Specify the number of iterations cmdstan will take</span>
+<span class="sd">        between progress messages. Default value is 100.</span>
 
 <span class="sd">        :return: CmdStanMCMC object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -852,7 +874,6 @@
         <span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;STAN_NUM_THREADS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">threads_per_chain</span><span class="p">)</span>
 
-        <span class="n">refresh</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">show_progress</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="kn">import</span> <span class="nn">tqdm</span>
@@ -896,6 +917,7 @@
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
                 <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
                 <span class="n">save_diagnostics</span><span class="o">=</span><span class="n">save_diagnostics</span><span class="p">,</span>
+                <span class="n">save_profile</span><span class="o">=</span><span class="n">save_profile</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">sampler_args</span><span class="p">,</span>
                 <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
                 <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">,</span>
@@ -967,6 +989,7 @@
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">gq_output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">refresh</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanGQ</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s generate_quantities method which runs the generated</span>
@@ -1014,6 +1037,9 @@
 <span class="sd">            Must be an integer between 1 and 18.  If unspecified, the default</span>
 <span class="sd">            precision for the system file I/O is used; the usual value is 6.</span>
 <span class="sd">            Introduced in CmdStan-2.25.</span>
+
+<span class="sd">        :param refresh: Specify the number of iterations cmdstan will take</span>
+<span class="sd">            between progress messages. Default value is 100.</span>
 
 <span class="sd">        :return: CmdStanGQ object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1091,6 +1117,7 @@
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">gq_output_dir</span><span class="p">,</span>
                 <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">generate_quantities_args</span><span class="p">,</span>
+                <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">runset</span> <span class="o">=</span> <span class="n">RunSet</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="n">chains</span><span class="p">,</span> <span class="n">chain_ids</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">)</span>
 
@@ -1116,6 +1143,7 @@
         <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_diagnostics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">save_profile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="nb">iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1127,6 +1155,7 @@
         <span class="n">eval_elbo</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">output_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">require_converged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">refresh</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanVB</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s variational inference algorithm to approximate</span>
@@ -1175,9 +1204,14 @@
 <span class="sd">            Introduced in CmdStan-2.25.</span>
 
 <span class="sd">        :param save_diagnostics: Whether or not to save diagnostics. If True,</span>
-<span class="sd">            csv output files are written to an output file with filename</span>
+<span class="sd">            csv outputs are written to an output file using filename</span>
 <span class="sd">            template &#39;&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-diagnostic-&lt;chain_id&gt;&#39;,</span>
 <span class="sd">            e.g. &#39;bernoulli-201912081451-diagnostic-1.csv&#39;.</span>
+
+<span class="sd">        :param save_profile: Whether or not to profile auto-diff operations in</span>
+<span class="sd">            labelled blocks of code.  If True, csv outputs are written to a file</span>
+<span class="sd">            &#39;&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-profile-&lt;chain_id&gt;&#39;.</span>
+<span class="sd">            Introduced in CmdStan-2.26.</span>
 
 <span class="sd">        :param algorithm: Algorithm to use. One of: &#39;meanfield&#39;, &#39;fullrank&#39;.</span>
 
@@ -1202,6 +1236,9 @@
 
 <span class="sd">        :param require_converged: Whether or not to raise an error if stan</span>
 <span class="sd">            reports that &quot;The algorithm may not have converged&quot;.</span>
+
+<span class="sd">        :param refresh: Specify the number of iterations cmdstan will take</span>
+<span class="sd">            between progress messages. Default value is 100.</span>
 
 <span class="sd">        :return: CmdStanVB object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1229,7 +1266,9 @@
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
                 <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
                 <span class="n">save_diagnostics</span><span class="o">=</span><span class="n">save_diagnostics</span><span class="p">,</span>
+                <span class="n">save_profile</span><span class="o">=</span><span class="n">save_profile</span><span class="p">,</span>
                 <span class="n">method_args</span><span class="o">=</span><span class="n">variational_args</span><span class="p">,</span>
+                <span class="n">refresh</span><span class="o">=</span><span class="n">refresh</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">dummy_chain_id</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1270,7 +1309,11 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;sampling: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
         <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-            <span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span>
+            <span class="n">cmd</span><span class="p">,</span>
+            <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
             <span class="n">stdout_pbar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_progress</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">pbar</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>

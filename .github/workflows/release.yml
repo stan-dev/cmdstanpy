@@ -51,7 +51,7 @@ jobs:
       - name: Merge into develop
         run: |
           git checkout develop
-          git reset --hard v${{ github.event.inputs.new_version }}
+          git reset --hard release/v${{ github.event.inputs.new_version }}
           git push origin develop
 
       - name: Tag version
@@ -62,9 +62,11 @@ jobs:
 
       - name: Update master to new released version
         run: |
+          git fetch origin
           git checkout master
+          git pull
           git reset --hard v${{ github.event.inputs.new_version }}
-          git push origin master
+          git push -f origin master
       
       - name: Build wheel
         run: python setup.py bdist_wheel

@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>cmdstanpy.stanfit &mdash; CmdStanPy 0.9.68 documentation</title>
+  <title>cmdstanpy.stanfit &mdash; CmdStanPy 0.9.75 documentation</title>
   
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.9.68
+                0.9.75
               </div>
             
           
@@ -248,6 +248,7 @@
             <span class="n">output_dir</span> <span class="o">=</span> <span class="n">_TMPDIR</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span> <span class="o">=</span> <span class="p">[]</span>
@@ -272,6 +273,7 @@
                 <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;-stderr.txt&#39;</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stderr_file</span>
+            <span class="c1"># optional output files:  diagnostics, profiling</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_diagnostics</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">diag_file</span> <span class="o">=</span> <span class="n">create_named_text_file</span><span class="p">(</span>
@@ -289,9 +291,46 @@
                         <span class="p">),</span>
                     <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">diag_file</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">profile_file</span> <span class="o">=</span> <span class="n">create_named_text_file</span><span class="p">(</span>
+                        <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">,</span>
+                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-profile-</span><span class="si">{}</span><span class="s1">-&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="p">),</span>
+                        <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">profile_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">output_dir</span><span class="p">,</span>
+                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-profile-</span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="s1">&#39;csv&#39;</span>
+                        <span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile_file</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_diagnostics</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
-                        <span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="n">i</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">diagnostic_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">save_diagnostics</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
+                        <span class="n">i</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">diagnostic_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
+                        <span class="n">i</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -310,6 +349,10 @@
         <span class="p">):</span>
             <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> diagnostics_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_profile</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> profile_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> console_msgs:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -370,8 +413,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">diagnostic_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan diagnostic output files.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan hamiltonian diagnostic files.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">profile_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan profiler files.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span>
 
     <span class="k">def</span> <span class="nf">_retcode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Get retcode for chain[idx].&quot;&quot;&quot;</span>
@@ -547,7 +595,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># inference</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># slated for removal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_csv</span> <span class="o">=</span> <span class="n">validate_csv</span>
         <span class="k">if</span> <span class="n">validate_csv</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">validate_csv_files</span><span class="p">()</span>
@@ -563,6 +611,7 @@
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">),</span>
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">),</span>
         <span class="p">)</span>
+        <span class="c1"># TODO - hamiltonian, profiling files</span>
         <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="nd">@property</span>
@@ -775,7 +824,7 @@
         <span class="k">if</span> <span class="n">concat_chains</span><span class="p">:</span>
             <span class="n">num_rows</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)),</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;A&#39;</span>
+                <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)),</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span></div>
 
@@ -834,6 +883,7 @@
                             <span class="s1">&#39;id&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;diagnostic_file&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;metric_file&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;profile_file&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;stepsize&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;init&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;seed&#39;</span><span class="p">,</span>
@@ -1041,10 +1091,7 @@
 <span class="sd">        :param inc_warmup: When ``True`` and the warmup draws are present in</span>
 <span class="sd">            the output, i.e., the sampler was run with ``save_warmup=True``,</span>
 <span class="sd">            then the warmup draws are included.  Default value is ``False``.</span>
-
-<span class="sd">        *Note:* Slated for removal</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;method &quot;draws_pd&quot; is slated for removal.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s1">&#39;draws from warmup iterations not available,&#39;</span>
@@ -1071,7 +1118,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_rows</span><span class="p">:</span>
             <span class="c1"># pylint: disable=redundant-keyword-arg</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)),</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;A&#39;</span>
+                <span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)),</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_draws_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1126,7 +1173,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">dims</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
         <span class="c1"># pylint: disable=redundant-keyword-arg</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CmdStanMCMC.stan_variables"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1197,6 +1244,7 @@
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">),</span>
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">),</span>
         <span class="p">)</span>
+        <span class="c1"># TODO - profiling files</span>
         <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="k">def</span> <span class="nf">_set_mle_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_csv_0</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1391,6 +1439,7 @@
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">),</span>
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">),</span>
         <span class="p">)</span>
+        <span class="c1"># TODO - diagnostic, profiling files</span>
         <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="k">def</span> <span class="nf">_set_variational_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_csv_0</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
