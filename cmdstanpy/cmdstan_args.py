@@ -391,7 +391,7 @@ class GenerateQuantitiesArgs:
         Compose CmdStan command for method-specific non-default arguments.
         """
         cmd.append('method=generate_quantities')
-        cmd.append('fitted_params={}'.format(self.sample_csv_files[idx - 1]))
+        cmd.append('fitted_params={}'.format(self.sample_csv_files[idx]))
         return cmd
 
 
