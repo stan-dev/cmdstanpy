@@ -72,7 +72,8 @@ disable=bad-continuation,
     redundant-unittest-assert,
     too-many-branches,
     too-many-locals,
-    unsubscriptable-object
+    unsubscriptable-object,
+    consider-using-with
 
 
 
