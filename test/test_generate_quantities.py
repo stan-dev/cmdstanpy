@@ -56,7 +56,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             + bern_gqs.generated_quantities_pd.shape[1],
         )
         assert_frame_equal(
-            bern_gqs.generated_quantities_pd[column_names]
+            bern_gqs.generated_quantities_pd[column_names],
             bern_gqs.mcmc_sample[column_names]
         )
 
