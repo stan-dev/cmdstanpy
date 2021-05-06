@@ -885,6 +885,7 @@ class CmdStanMCMC:
                 index_col=0,
                 comment='#',
                 float_precision='high',
+                dtype=float,
             )
         mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
@@ -1227,6 +1228,7 @@ class CmdStanGQ:
                     self.runset.csv_files[chain],
                     comment='#',
                     float_precision='high',
+                    dtype=float,
                 )
             )
         self._generated_quantities = pd.concat(drawset_list).values
