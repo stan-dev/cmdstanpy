@@ -1392,7 +1392,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_diagnostics=True
+            save_diagnostics=True,
         )
         for i in range(bern_fit.runset.chains):
             diagnostics_file = bern_fit.runset.diagnostic_files[i]
@@ -1406,7 +1406,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_profile=True
+            save_profile=True,
         )
         for i in range(profile_fit.runset.chains):
             profile_file = profile_fit.runset.profile_files[i]

@@ -21,7 +21,7 @@ print(bernoulli_model)
 
 # ### Assemble the data
 
-bern_data = { "N" : 10, "y" : [0,1,0,0,0,0,0,0,0,1] }
+bern_data = {"N": 10, "y": [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
 
 # In the CmdStan `examples/bernoulli` directory, there are data files in both `JSON` and `rdump` formats.
 # bern_json = os.path.join(bernoulli_dir, 'bernoulli.data.json')
@@ -36,7 +36,7 @@ print(bern_fit)
 bern_fit.draws().shape
 
 vars = bern_fit.stan_variables()
-for (k,v) in vars.items():
+for (k, v) in vars.items():
     print(k, v.shape)
 
 thetas = bern_fit.stan_variable(name='theta')
@@ -55,4 +55,3 @@ bern_fit.summary()
 # #### Run sampler diagnostics
 
 bern_fit.diagnose()
-
