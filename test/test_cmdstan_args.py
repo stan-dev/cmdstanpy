@@ -60,7 +60,7 @@ class SamplerArgsTest(unittest.TestCase):
     def test_args_min(self):
         args = SamplerArgs()
         args.validate(chains=4)
-        cmd = args.compose(idx=0, cmd=[])
+        cmd = args.compose(idx=1, cmd=[])
         self.assertIn('method=sample algorithm=hmc', ' '.join(cmd))
 
     def test_args_chains(self):
@@ -406,7 +406,7 @@ class CmdStanArgsTest(unittest.TestCase):
         )
         cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
         self.assertIn('bernoulli.init_1.json', ' '.join(cmd))
-        cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
+        cmd = cmdstan_args.compose_command(idx=1, csv_file='bern-output-1.csv')
         self.assertIn('bernoulli.init_2.json', ' '.join(cmd))
 
         cmdstan_args = CmdStanArgs(
