@@ -1,0 +1,1 @@
+Exception: variable does not exist; processing stage=data initialization; variable name=M; base type=int (in '/Users/mitzi/github/stan-dev/cmdstanpy/test/data/logistic.stan', line 3, column 2 to column 17)

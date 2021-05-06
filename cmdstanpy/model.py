@@ -442,7 +442,10 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
-            msg = 'Error during optimization.\n{}'.format(runset.get_err_msgs())
+            msg = 'Error during optimization:\n{}'.format(runset.get_err_msgs())
+            msg = '{}Command and output files:\n{}'.format(
+                msg, runset.__repr__()
+            )
             raise RuntimeError(msg)
         mle = CmdStanMLE(runset)
         return mle
@@ -789,7 +792,6 @@ class CmdStanModel:
                             dynamic_ncols = False
                         else:
                             dynamic_ncols = True
-
                         pbar = tqdm_pbar(
                             desc='Chain {} - warmup'.format(i + 1),
                             position=i,
@@ -807,7 +809,10 @@ class CmdStanModel:
                 self._logger.propagate = True
 
             if not runset._check_retcodes():
-                msg = 'Error during sampling.\n{}'.format(runset.get_err_msgs())
+                msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
+                msg = '{}Command and output files:\n{}'.format(
+                    msg, runset.__repr__()
+                )
                 raise RuntimeError(msg)
 
             mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
@@ -959,8 +964,11 @@ class CmdStanModel:
                     executor.submit(self._run_cmdstan, runset, i)
 
             if not runset._check_retcodes():
-                msg = 'Error during generate_quantities.\n{}'.format(
+                msg = 'Error during generate_quantities:\n{}'.format(
                     runset.get_err_msgs()
+                )
+                msg = '{}Command and output files:\n{}'.format(
+                    msg, runset.__repr__()
                 )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
@@ -1118,8 +1126,11 @@ class CmdStanModel:
         if require_converged and not valid:
             raise RuntimeError('The algorithm may not have converged.')
         if not runset._check_retcodes():
-            msg = 'Error during variational inference.\n{}'.format(
+            msg = 'Error during variational inference:\n{}'.format(
                 runset.get_err_msgs()
+            )
+            msg = '{}Command and output files:\n{}'.format(
+                msg, runset.__repr__()
             )
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
@@ -1139,26 +1150,48 @@ class CmdStanModel:
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
         self._logger.debug('sampling: %s', cmd)
-        proc = subprocess.Popen(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        if pbar:
-            stdout_pbar = self._read_progress(proc, pbar, idx)
-        stdout, stderr = proc.communicate()
-        if pbar:
-            stdout = stdout_pbar + stdout
-        self._logger.info('finish chain %u', idx + 1)
-        if stdout:
-            with open(runset.stdout_files[idx], 'w+') as fd:
-                fd.write(stdout.decode('utf-8'))
-        if stderr:
-            with open(runset.stderr_files[idx], 'w+') as fd:
-                fd.write(stderr.decode('utf-8'))
-        runset._set_retcode(idx, proc.returncode)
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=os.environ,
+            )
+            if pbar:
+                stdout_pbar = self._read_progress(proc, pbar, idx)
+            stdout, stderr = proc.communicate()
+            if pbar:
+                stdout = stdout_pbar + stdout
+
+            self._logger.info('finish chain %u', idx + 1)
+            runset._set_retcode(idx, proc.returncode)
+            if stdout:
+                with open(runset.stdout_files[idx], 'w+') as fd:
+                    fd.write(stdout.decode('utf-8'))
+            console_error = ''
+            if stderr:
+                console_error = stderr.decode('utf-8')
+                with open(runset.stderr_files[idx], 'w+') as fd:
+                    fd.write(console_error)
+
+            if proc.returncode != 0:
+                if proc.returncode < 0:
+                    msg = 'Chain {} terminated by signal {}'.format(
+                        idx + 1, proc.returncode
+                    )
+                else:
+                    msg = 'Chain {} processing error'.format(idx + 1)
+                    msg = '{}, non-zero return code {}'.format(
+                        msg, proc.returncode
+                    )
+                if len(console_error) > 0:
+                    msg = '{}\n error message:\n\t{}'.format(msg, console_error)
+                self._logger.error(msg)
+
+        except OSError as e:
+            msg = 'Chain {} encounted error: {}\n'.format(idx + 1, str(e))
+            raise RuntimeError(msg) from e
 
     def _read_progress(
         self, proc: subprocess.Popen, pbar: Any, idx: int
