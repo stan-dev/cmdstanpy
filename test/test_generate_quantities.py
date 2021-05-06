@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from pandas.util.testing import assert_frame_equal
 
 from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.model import CmdStanModel
@@ -53,6 +54,10 @@ class GenerateQuantitiesTest(unittest.TestCase):
             bern_gqs.sample_plus_quantities.shape[1],
             bern_gqs.mcmc_sample.shape[1]
             + bern_gqs.generated_quantities_pd.shape[1],
+        )
+        assert_frame_equal(
+            bern_gqs.generated_quantities_pd[column_names]
+            bern_gqs.mcmc_sample[column_names]
         )
 
     def test_gen_quantities_csv_files_bad(self):
