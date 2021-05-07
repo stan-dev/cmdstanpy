@@ -242,9 +242,7 @@ class CmdStanModelTest(unittest.TestCase):
             )
             shutil.copyfile(BERN_STAN, bern_stan_new)
             model = CmdStanModel(stan_file=bern_stan_new)
-            self.assertTrue(
-                model.exe_file.endswith(bern_exe_new.replace('\\', '/'))
-            )
+
             old_exe_time = os.path.getmtime(model.exe_file)
             os.remove(bern_exe_new)
             model.compile()
