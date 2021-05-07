@@ -227,17 +227,25 @@ class CmdStanModelTest(unittest.TestCase):
         exe_time = os.path.getmtime(model.exe_file)
         model2 = CmdStanModel(stan_file=BERN_STAN)
         self.assertEqual(exe_time, os.path.getmtime(model2.exe_file))
-        
+
     def test_model_compile_space(self):
-        with tempfile.TemporaryDirectory(prefix="cmdstanpy_testfolder_") as tmp_path:
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstanpy_testfolder_"
+        ) as tmp_path:
             path_with_space = os.path.join(tmp_path, "space in path")
             os.makedirs(path_with_space, exist_ok=True)
             shutil.copyfile(BERN_STAN, path_with_space)
-            BERN_STAN_NEW = os.path.join(path_with_space, os.path.split(BERN_STAN)[1])
-            BERN_EXE_NEW = os.path.join(path_with_space, os.path.split(BERN_EXE)[1])
+            BERN_STAN_NEW = os.path.join(
+                path_with_space, os.path.split(BERN_STAN)[1]
+            )
+            BERN_EXE_NEW = os.path.join(
+                path_with_space, os.path.split(BERN_EXE)[1]
+            )
 
             model = CmdStanModel(stan_file=BERN_STAN_NEW)
-            self.assertTrue(model.exe_file.endswith(BERN_EXE_NEW.replace('\\', '/')))
+            self.assertTrue(
+                model.exe_file.endswith(BERN_EXE_NEW.replace('\\', '/'))
+            )
             old_exe_time = os.path.getmtime(model.exe_file)
             os.remove(BERN_EXE_NEW)
             model.compile()
