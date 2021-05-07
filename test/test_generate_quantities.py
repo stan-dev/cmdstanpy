@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from pandas.testing import assert_frame_equal
 
 from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.model import CmdStanModel
@@ -124,7 +125,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         )
 
     def test_sample_plus_quantities_dedup(self):
-        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc_dup.stan')
         model = CmdStanModel(stan_file=stan)
 
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -139,6 +140,24 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertEqual(
             bern_gqs.sample_plus_quantities.shape[1],
             bern_gqs.mcmc_sample.shape[1],
+        )
+
+        column_names = [
+            'y_rep[1]',
+            'y_rep[2]',
+            'y_rep[3]',
+            'y_rep[4]',
+            'y_rep[5]',
+            'y_rep[6]',
+            'y_rep[7]',
+            'y_rep[8]',
+            'y_rep[9]',
+            'y_rep[10]',
+        ]
+
+        assert_frame_equal(
+            bern_gqs.generated_quantities_pd[column_names],
+            bern_gqs.mcmc_sample[column_names],
         )
 
 

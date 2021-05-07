@@ -1228,6 +1228,7 @@ class CmdStanGQ:
                     self.runset.csv_files[chain],
                     comment='#',
                     float_precision='high',
+                    dtype=float,
                 )
             )
         self._generated_quantities = pd.concat(drawset_list).values

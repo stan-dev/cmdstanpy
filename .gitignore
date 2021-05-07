@@ -17,3 +17,4 @@ docsrc/_build
 *.hpp
 *.exe
 .mypy_cache
+*.dll
