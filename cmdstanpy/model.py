@@ -300,7 +300,9 @@ class CmdStanModel:
                     exe_time = os.path.getmtime(exe_file)
                     if exe_time > src_time and not force:
                         do_compile = False
-                        self._logger.info('found newer exe file, not recompiling')
+                        self._logger.info(
+                            'found newer exe file, not recompiling'
+                        )
 
                 if do_compile:
                     self._logger.info(
@@ -335,7 +337,9 @@ class CmdStanModel:
                             os.path.abspath(self._stan_file)
                         )
                         new_exec_name = (
-                            os.path.basename(os.path.splitext(self._stan_file)[0])
+                            os.path.basename(
+                                os.path.splitext(self._stan_file)[0]
+                            )
                             + EXTENSION
                         )
                         self._exe_file = os.path.join(
