@@ -234,14 +234,13 @@ class CmdStanModelTest(unittest.TestCase):
         ) as tmp_path:
             path_with_space = os.path.join(tmp_path, "space in path")
             os.makedirs(path_with_space, exist_ok=True)
-            shutil.copyfile(BERN_STAN, path_with_space)
             bern_stan_new = os.path.join(
                 path_with_space, os.path.split(BERN_STAN)[1]
             )
             bern_exe_new = os.path.join(
                 path_with_space, os.path.split(BERN_EXE)[1]
             )
-
+            shutil.copyfile(BERN_STAN, bern_stan_new)
             model = CmdStanModel(stan_file=bern_stan_new)
             self.assertTrue(
                 model.exe_file.endswith(bern_exe_new.replace('\\', '/'))
