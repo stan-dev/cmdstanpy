@@ -276,7 +276,7 @@ class RunSet:
                     )
             # pre 2.27, all msgs sent to stdout, including errors
             if (
-                not cmdstan_version_at(2,27)
+                not cmdstan_version_at(2, 27)
                 and os.path.exists(self._stdout_files[i])
                 and os.stat(self._stdout_files[i]).st_size > 0
             ):
