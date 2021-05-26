@@ -263,7 +263,6 @@ class RunSet:
     def get_err_msgs(self) -> List[str]:
         """Checks console messages for each chain."""
         msgs = []
-        msgs.append(self.__repr__())
         for i in range(self._chains):
             if (
                 os.path.exists(self._stderr_files[i])
@@ -275,8 +274,10 @@ class RunSet:
                             self._chain_ids[i], fd.read()
                         )
                     )
+            # pre 2.27, all msgs sent to stdout, including errors
             if (
-                os.path.exists(self._stdout_files[i])
+                not cmdstan_version_at(2, 27)
+                and os.path.exists(self._stdout_files[i])
                 and os.stat(self._stdout_files[i]).st_size > 0
             ):
                 with open(self._stdout_files[i], 'r') as fd:
@@ -1227,6 +1228,7 @@ class CmdStanGQ:
                     self.runset.csv_files[chain],
                     comment='#',
                     float_precision='high',
+                    dtype=float,
                 )
             )
         self._generated_quantities = pd.concat(drawset_list).values

@@ -663,7 +663,7 @@ class GenerateQuantitesTest(unittest.TestCase):
         ]
         args = GenerateQuantitiesArgs(csv_files=csv_files)
         args.validate(chains=4)
-        cmd = args.compose(idx=1, cmd=[])
+        cmd = args.compose(idx=0, cmd=[])
         self.assertIn('method=generate_quantities', ' '.join(cmd))
         self.assertIn('fitted_params={}'.format(csv_files[0]), ' '.join(cmd))
 

@@ -69,7 +69,7 @@ jobs:
           git push -f origin master
       
       - name: Build wheel
-        run: python setup.py bdist_wheel
+        run: python setup.py sdist bdist_wheel
 
       - name: Install bdist_wheel
         run: pip install dist/*.whl

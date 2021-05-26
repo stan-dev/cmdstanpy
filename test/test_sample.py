@@ -269,6 +269,7 @@ class SampleTest(unittest.TestCase):
                 seed=12345,
                 iter_sampling=100,
             )
+
         if platform.system() != 'Windows':
             jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
             dirname1 = 'tmp1' + str(time())
@@ -493,6 +494,13 @@ class SampleTest(unittest.TestCase):
         self.test_bernoulli_good(
             'path with space/' 'bernoulli_path_with_space.stan'
         )
+
+    def test_index_bounds_error(self):
+        if cmdstan_version_at(2, 25) or cmdstan_version_at(2, 26):
+            oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
+            oob_model = CmdStanModel(stan_file=oob_stan)
+            with self.assertRaises(RuntimeError):
+                oob_model.sample()
 
 
 class CmdStanMCMCTest(unittest.TestCase):
@@ -1384,7 +1392,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_diagnostics=True
+            save_diagnostics=True,
         )
         for i in range(bern_fit.runset.chains):
             diagnostics_file = bern_fit.runset.diagnostic_files[i]
@@ -1398,7 +1406,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_profile=True
+            save_profile=True,
         )
         for i in range(profile_fit.runset.chains):
             profile_file = profile_fit.runset.profile_files[i]

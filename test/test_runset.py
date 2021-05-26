@@ -6,7 +6,7 @@ import unittest
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
 from cmdstanpy.stanfit import RunSet
-from cmdstanpy.utils import EXTENSION
+from cmdstanpy.utils import EXTENSION, cmdstan_version_at
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -73,13 +73,22 @@ class RunSetTest(unittest.TestCase):
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=3, chain_ids=chain_ids)
-        for i in range(3):
-            runset._set_retcode(i, 70)
-            stdout_file = 'chain-' + str(i + 1) + '-missing-data-stdout.txt'
-            path = os.path.join(DATAFILES_PATH, stdout_file)
-            runset._stdout_files[i] = path
-        errs = runset.get_err_msgs()
-        self.assertIn('Exception', errs)
+        if not cmdstan_version_at(2, 27):
+            for i in range(3):
+                runset._set_retcode(i, 70)
+                stdout_file = 'chain-' + str(i + 1) + '-missing-data-stdout.txt'
+                path = os.path.join(DATAFILES_PATH, stdout_file)
+                runset._stdout_files[i] = path
+            errs = runset.get_err_msgs()
+            self.assertIn('Exception: variable does not exist', errs)
+        else:
+            for i in range(3):
+                runset._set_retcode(i, 1)
+                stdout_file = 'chain-' + str(i + 1) + '-missing-data-stderr.txt'
+                path = os.path.join(DATAFILES_PATH, stdout_file)
+                runset._stdout_files[i] = path
+            errs = runset.get_err_msgs()
+            self.assertIn('Exception: variable does not exist', errs)
 
     def test_output_filenames(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
