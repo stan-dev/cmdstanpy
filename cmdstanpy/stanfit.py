@@ -719,6 +719,7 @@ class CmdStanMCMC:
                             'stepsize',
                             'init',
                             'seed',
+                            'start_datetime',
                         ]
                         and dzero[key] != drest[key]
                     ):

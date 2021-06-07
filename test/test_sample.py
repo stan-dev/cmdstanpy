@@ -572,7 +572,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             'Treedepth satisfactory for all transitions.', diagnostics
         )
         self.assertIn('No divergent transitions found.', diagnostics)
-        self.assertIn('E-BFMI satisfactory for all transitions.', diagnostics)
+        self.assertIn('E-BFMI satisfactory', diagnostics)
         self.assertIn('Effective sample size satisfactory.', diagnostics)
 
     def test_validate_big_run(self):

@@ -62,7 +62,7 @@ class RunSetTest(unittest.TestCase):
 
     def test_get_err_msgs(self):
         exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
-        rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+        rdata = os.path.join(DATAFILES_PATH, 'logistic.missing_data.R')
         sampler_args = SamplerArgs()
         chain_ids = [1, 2, 3]
         cmdstan_args = CmdStanArgs(
@@ -84,9 +84,9 @@ class RunSetTest(unittest.TestCase):
         else:
             for i in range(3):
                 runset._set_retcode(i, 1)
-                stdout_file = 'chain-' + str(i + 1) + '-missing-data-stderr.txt'
-                path = os.path.join(DATAFILES_PATH, stdout_file)
-                runset._stdout_files[i] = path
+                stderr_file = 'chain-' + str(i + 1) + '-missing-data-stderr.txt'
+                path = os.path.join(DATAFILES_PATH, stderr_file)
+                runset._stderr_files[i] = path
             errs = runset.get_err_msgs()
             self.assertIn('Exception: variable does not exist', errs)
 
