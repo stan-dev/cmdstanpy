@@ -38,6 +38,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
+    'sphinx_copybutton',
 ]
 
 # this is needed for some reason...
@@ -345,7 +346,3 @@ texinfo_documents = [
 #         'skltemplate': None}
 # }
 
-
-def setup(app):
-    # a copy button to copy snippet of code from the documentation
-    app.add_javascript('js/copybutton.js')
