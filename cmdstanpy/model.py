@@ -362,6 +362,12 @@ class CmdStanModel:
         save_profile: bool = False,
         algorithm: str = None,
         init_alpha: float = None,
+        tol_obj: float = None,
+        tol_rel_obj: float = None,
+        tol_grad: float = None,
+        tol_rel_grad: float = None,
+        tol_param: float = None,
+        history_size: int = None,
         iter: int = None,
         refresh: int = None,
     ) -> CmdStanMLE:
@@ -428,6 +434,23 @@ class CmdStanModel:
 
         :param init_alpha: Line search step size for first iteration
 
+        :param tol_obj: Convergence tolerance on changes in objective
+        function value
+
+        :param tol_rel_obj: Convergence tolerance on relative changes
+         in objective function value
+
+        :param tol_grad: Convergence tolerance on the norm of the gradient
+
+        :param tol_rel_grad: Convergence tolerance on the relative
+        norm of the gradient
+
+        :param tol_param: Convergence tolerance on changes in parameter value
+
+        :param history_size: Size of the history for LBFGS Hessian
+        approximation. The value should be less than the dimensionality
+        of the parameter space. 5-10 usually sufficient
+
         :param iter: Total number of iterations
 
         :param refresh: Specify the number of iterations cmdstan will take
@@ -436,7 +459,15 @@ class CmdStanModel:
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
-            algorithm=algorithm, init_alpha=init_alpha, iter=iter
+            algorithm=algorithm,
+            init_alpha=init_alpha,
+            tol_obj=tol_obj,
+            tol_rel_obj=tol_rel_obj,
+            tol_grad=tol_grad,
+            tol_rel_grad=tol_rel_grad,
+            tol_param=tol_param,
+            history_size=history_size,
+            iter=iter,
         )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):

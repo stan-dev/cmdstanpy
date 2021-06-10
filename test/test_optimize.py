@@ -62,9 +62,15 @@ class OptimizeTest(unittest.TestCase):
             data=jdata,
             seed=1239812093,
             inits=jinit,
-            algorithm='BFGS',
+            algorithm='LBFGS',
             init_alpha=0.001,
             iter=100,
+            tol_obj=1e-12,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5,
         )
 
         # test numpy output
@@ -87,6 +93,211 @@ class OptimizeTest(unittest.TestCase):
         self.assertEqual(
             mle.optimized_params_np[1], mle.optimized_params_dict['theta']
         )
+
+    def test_negative_parameter_values(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_obj=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_obj=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_grad=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_grad=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_param=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                history_size=-1,
+            )
+
+    def test_parameters_are_floats(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
+
+        with self.assertRaisesRegex(ValueError, 'must be type of float'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_obj="rabbit",
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be type of float'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_obj="rabbit",
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be type of float'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_grad="rabbit",
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be type of float'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_grad="rabbit",
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be type of float'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_param="rabbit",
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be type of int'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                history_size="rabbit",
+            )
+
+    def test_parameters_and_optimizer_compatible(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
+
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_obj=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_rel_obj=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_grad=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_rel_grad=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_param=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            'history_size must not be set when algorithm is Newton or BFGS',
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                history_size=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            'history_size must not be set when algorithm is Newton or BFGS',
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='BFGS',
+                history_size=1,
+            )
 
     def test_optimize_good_dict(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
