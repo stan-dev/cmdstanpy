@@ -7,12 +7,14 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>cmdstanpy.stanfit &mdash; CmdStanPy 0.9.75 documentation</title>
+  <title>cmdstanpy.stanfit &mdash; CmdStanPy 0.9.76 documentation</title>
   
 
   
   <link rel="stylesheet" href="../../_static/css/project-template.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/project-template.css" type="text/css" />
 
   
   
@@ -29,10 +31,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -65,7 +67,7 @@
             
             
               <div class="version">
-                0.9.75
+                0.9.76
               </div>
             
           
@@ -432,7 +434,6 @@
 <div class="viewcode-block" id="RunSet.get_err_msgs"><a class="viewcode-back" href="../../api.html#cmdstanpy.RunSet.get_err_msgs">[docs]</a>    <span class="k">def</span> <span class="nf">get_err_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Checks console messages for each chain.&quot;&quot;&quot;</span>
         <span class="n">msgs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
@@ -444,8 +445,10 @@
                             <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
+            <span class="c1"># pre 2.27, all msgs sent to stdout, including errors</span>
             <span class="k">if</span> <span class="p">(</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="ow">not</span> <span class="n">cmdstan_version_at</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">27</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span>
             <span class="p">):</span>
                 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
@@ -887,6 +890,7 @@
                             <span class="s1">&#39;stepsize&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;init&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;seed&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;start_datetime&#39;</span><span class="p">,</span>
                         <span class="p">]</span>
                         <span class="ow">and</span> <span class="n">dzero</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">drest</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                     <span class="p">):</span>
@@ -1396,6 +1400,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">chain</span><span class="p">],</span>
                     <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">,</span>
                     <span class="n">float_precision</span><span class="o">=</span><span class="s1">&#39;high&#39;</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_generated_quantities</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">drawset_list</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
@@ -1507,7 +1512,7 @@
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Stan Development Team.
+        &#169; Copyright 2021, Stan Development Team.
 
     </p>
   </div>
