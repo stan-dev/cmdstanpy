@@ -7,12 +7,14 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>cmdstanpy.model &mdash; CmdStanPy 0.9.75 documentation</title>
+  <title>cmdstanpy.model &mdash; CmdStanPy 0.9.76 documentation</title>
   
 
   
   <link rel="stylesheet" href="../../_static/css/project-template.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/project-template.css" type="text/css" />
 
   
   
@@ -29,10 +31,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/js/copybutton.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -65,7 +67,7 @@
             
             
               <div class="version">
-                0.9.75
+                0.9.76
               </div>
             
           
@@ -446,63 +448,80 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">compiler_options</span><span class="p">)</span>
 
-        <span class="n">compilation_failed</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">with</span> <span class="n">TemporaryCopiedFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">stan_file</span><span class="p">,</span> <span class="n">is_copied</span><span class="p">):</span>
-            <span class="n">exe_file</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">stan_file</span><span class="p">))</span>
-            <span class="n">exe_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="o">+</span> <span class="n">EXTENSION</span>
-            <span class="n">do_compile</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">exe_file</span><span class="p">):</span>
-                <span class="n">src_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
-                <span class="n">exe_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">exe_time</span> <span class="o">&gt;</span> <span class="n">src_time</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
-                    <span class="n">do_compile</span> <span class="o">=</span> <span class="kc">False</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;found newer exe file, not recompiling&#39;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">do_compile</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="s1">&#39;compiling stan program, exe file: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">exe_file</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                        <span class="s1">&#39;compiler options: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span>
-                    <span class="p">)</span>
-                <span class="n">make</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
-                    <span class="s1">&#39;MAKE&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;make&#39;</span>
-                    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;Windows&#39;</span>
-                    <span class="k">else</span> <span class="s1">&#39;mingw32-make&#39;</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">make</span><span class="p">]</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">compose</span><span class="p">())</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cmdstan_path</span><span class="p">(),</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                        <span class="s1">&#39;file </span><span class="si">%s</span><span class="s1">, exception </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">stan_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="n">compilation_failed</span> <span class="o">=</span> <span class="kc">True</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">compilation_failed</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">is_copied</span><span class="p">:</span>
-                    <span class="n">original_target_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="n">new_exec_name</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-                        <span class="o">+</span> <span class="n">EXTENSION</span>
-                    <span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">original_target_dir</span><span class="p">,</span> <span class="n">new_exec_name</span>
-                    <span class="p">)</span>
-                    <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">exe_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">exe_file</span>
+        <span class="c1"># check if exe file exists in original location</span>
+        <span class="n">exe_file</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">))</span>
+        <span class="n">exe_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="o">+</span> <span class="n">EXTENSION</span>
+        <span class="n">do_compile</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">exe_file</span><span class="p">):</span>
+            <span class="n">src_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
+            <span class="n">exe_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">exe_time</span> <span class="o">&gt;</span> <span class="n">src_time</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+                <span class="n">do_compile</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;found newer exe file, not recompiling&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">exe_file</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;compiled model file: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;model compilation failed&#39;</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">do_compile</span><span class="p">:</span>
+            <span class="n">compilation_failed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">with</span> <span class="n">TemporaryCopiedFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">stan_file</span><span class="p">,</span> <span class="n">is_copied</span><span class="p">):</span>
+                <span class="n">exe_file</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">stan_file</span><span class="p">))</span>
+                <span class="n">exe_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="o">+</span> <span class="n">EXTENSION</span>
+                <span class="n">do_compile</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">exe_file</span><span class="p">):</span>
+                    <span class="n">src_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
+                    <span class="n">exe_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">exe_time</span> <span class="o">&gt;</span> <span class="n">src_time</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+                        <span class="n">do_compile</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s1">&#39;found newer exe file, not recompiling&#39;</span>
+                        <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">do_compile</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="s1">&#39;compiling stan program, exe file: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">exe_file</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s1">&#39;compiler options: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span>
+                        <span class="p">)</span>
+                    <span class="n">make</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+                        <span class="s1">&#39;MAKE&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;make&#39;</span>
+                        <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;Windows&#39;</span>
+                        <span class="k">else</span> <span class="s1">&#39;mingw32-make&#39;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">make</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">compose</span><span class="p">())</span>
+                    <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cmdstan_path</span><span class="p">(),</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="s1">&#39;file </span><span class="si">%s</span><span class="s1">, exception </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">stan_file</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="n">compilation_failed</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">compilation_failed</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">is_copied</span><span class="p">:</span>
+                        <span class="n">original_target_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="n">new_exec_name</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span>
+                                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="p">)</span>
+                            <span class="o">+</span> <span class="n">EXTENSION</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                            <span class="n">original_target_dir</span><span class="p">,</span> <span class="n">new_exec_name</span>
+                        <span class="p">)</span>
+                        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">exe_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">exe_file</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;compiled model file: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;model compilation failed&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="CmdStanModel.optimize"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -611,7 +630,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_run_cmdstan</span><span class="p">(</span><span class="n">runset</span><span class="p">,</span> <span class="n">dummy_chain_id</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during optimization.</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">())</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during optimization:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">())</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">Command and output files:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">msg</span><span class="p">,</span> <span class="n">runset</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+            <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">mle</span> <span class="o">=</span> <span class="n">CmdStanMLE</span><span class="p">(</span><span class="n">runset</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mle</span></div>
@@ -958,7 +980,6 @@
                             <span class="n">dynamic_ncols</span> <span class="o">=</span> <span class="kc">False</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">dynamic_ncols</span> <span class="o">=</span> <span class="kc">True</span>
-
                         <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm_pbar</span><span class="p">(</span>
                             <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Chain </span><span class="si">{}</span><span class="s1"> - warmup&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
                             <span class="n">position</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
@@ -976,7 +997,10 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">True</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during sampling.</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">())</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during sampling:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">())</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">Command and output files:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">msg</span><span class="p">,</span> <span class="n">runset</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
+                <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
             <span class="n">mcmc</span> <span class="o">=</span> <span class="n">CmdStanMCMC</span><span class="p">(</span><span class="n">runset</span><span class="p">,</span> <span class="n">validate_csv</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">)</span>
@@ -1128,8 +1152,11 @@
                     <span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_cmdstan</span><span class="p">,</span> <span class="n">runset</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during generate_quantities.</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during generate_quantities:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">Command and output files:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">msg</span><span class="p">,</span> <span class="n">runset</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">quantities</span> <span class="o">=</span> <span class="n">CmdStanGQ</span><span class="p">(</span><span class="n">runset</span><span class="o">=</span><span class="n">runset</span><span class="p">,</span> <span class="n">mcmc_sample</span><span class="o">=</span><span class="n">sample_drawset</span><span class="p">)</span>
@@ -1287,8 +1314,11 @@
         <span class="k">if</span> <span class="n">require_converged</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;The algorithm may not have converged.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during variational inference.</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during variational inference:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">Command and output files:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">msg</span><span class="p">,</span> <span class="n">runset</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="c1"># pylint: disable=invalid-name</span>
@@ -1308,26 +1338,48 @@
             <span class="s1">&#39;threads: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;STAN_NUM_THREADS&#39;</span><span class="p">))</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;sampling: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
-        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
-            <span class="n">cmd</span><span class="p">,</span>
-            <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
-            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
-            <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
-            <span class="n">stdout_pbar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_progress</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">pbar</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
-        <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
-            <span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout_pbar</span> <span class="o">+</span> <span class="n">stdout</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;finish chain </span><span class="si">%u</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">stdout</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">stderr</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">stderr_files</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stderr</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
-        <span class="n">runset</span><span class="o">.</span><span class="n">_set_retcode</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+                <span class="n">cmd</span><span class="p">,</span>
+                <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">DEVNULL</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
+                <span class="n">stdout_pbar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_progress</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">pbar</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+            <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">pbar</span><span class="p">:</span>
+                <span class="n">stdout</span> <span class="o">=</span> <span class="n">stdout_pbar</span> <span class="o">+</span> <span class="n">stdout</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;finish chain </span><span class="si">%u</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">runset</span><span class="o">.</span><span class="n">_set_retcode</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stdout</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+            <span class="n">console_error</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">if</span> <span class="n">stderr</span><span class="p">:</span>
+                <span class="n">console_error</span> <span class="o">=</span> <span class="n">stderr</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">stderr_files</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">console_error</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Chain </span><span class="si">{}</span><span class="s1"> terminated by signal </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Chain </span><span class="si">{}</span><span class="s1"> processing error&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">, non-zero return code </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">msg</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">console_error</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> error message:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">console_error</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Chain </span><span class="si">{}</span><span class="s1"> encounted error: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
     <span class="k">def</span> <span class="nf">_read_progress</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">proc</span><span class="p">:</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">,</span> <span class="n">pbar</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span>
@@ -1397,7 +1449,7 @@
 
   <div role="contentinfo">
     <p>
-        &#169; Copyright 2019, Stan Development Team.
+        &#169; Copyright 2021, Stan Development Team.
 
     </p>
   </div>

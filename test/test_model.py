@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import tempfile
 import unittest
 from unittest.mock import Mock
 
@@ -226,6 +227,32 @@ class CmdStanModelTest(unittest.TestCase):
         exe_time = os.path.getmtime(model.exe_file)
         model2 = CmdStanModel(stan_file=BERN_STAN)
         self.assertEqual(exe_time, os.path.getmtime(model2.exe_file))
+
+    def test_model_compile_space(self):
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstanpy_testfolder_"
+        ) as tmp_path:
+            path_with_space = os.path.join(tmp_path, "space in path")
+            os.makedirs(path_with_space, exist_ok=True)
+            bern_stan_new = os.path.join(
+                path_with_space, os.path.split(BERN_STAN)[1]
+            )
+            bern_exe_new = os.path.join(
+                path_with_space, os.path.split(BERN_EXE)[1]
+            )
+            shutil.copyfile(BERN_STAN, bern_stan_new)
+            model = CmdStanModel(stan_file=bern_stan_new)
+
+            old_exe_time = os.path.getmtime(model.exe_file)
+            os.remove(bern_exe_new)
+            model.compile()
+            new_exe_time = os.path.getmtime(model.exe_file)
+            self.assertTrue(new_exe_time > old_exe_time)
+
+            # test compile with existing exe - timestamp on exe unchanged
+            exe_time = os.path.getmtime(model.exe_file)
+            model2 = CmdStanModel(stan_file=bern_stan_new)
+            self.assertEqual(exe_time, os.path.getmtime(model2.exe_file))
 
     def test_model_includes_explicit(self):
         if os.path.exists(BERN_EXE):

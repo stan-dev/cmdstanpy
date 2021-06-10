@@ -44,7 +44,7 @@ pd.DataFrame(data=thetas).plot.density()
 
 # #### Get HMC sampler tuning parameters
 
-bern_fit.stepsize
+bern_fit.step_size
 bern_fit.metric_type
 bern_fit.metric
 

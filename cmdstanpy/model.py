@@ -277,63 +277,80 @@ class CmdStanModel:
             else:
                 self._compiler_options.add(compiler_options)
 
-        compilation_failed = False
-        with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
-            exe_file = Path(exe_file).as_posix() + EXTENSION
-            do_compile = True
-            if os.path.exists(exe_file):
-                src_time = os.path.getmtime(self._stan_file)
-                exe_time = os.path.getmtime(exe_file)
-                if exe_time > src_time and not force:
-                    do_compile = False
-                    self._logger.info('found newer exe file, not recompiling')
-
-            if do_compile:
-                self._logger.info(
-                    'compiling stan program, exe file: %s', exe_file
-                )
-                if self._compiler_options is not None:
-                    self._compiler_options.validate()
-                    self._logger.info(
-                        'compiler options: %s', self._compiler_options
-                    )
-                make = os.getenv(
-                    'MAKE',
-                    'make'
-                    if platform.system() != 'Windows'
-                    else 'mingw32-make',
-                )
-                cmd = [make]
-                if self._compiler_options is not None:
-                    cmd.extend(self._compiler_options.compose())
-                cmd.append(Path(exe_file).as_posix())
-                try:
-                    do_command(cmd, cmdstan_path(), logger=self._logger)
-                except RuntimeError as e:
-                    self._logger.error(
-                        'file %s, exception %s', stan_file, str(e)
-                    )
-                    compilation_failed = True
-
-            if not compilation_failed:
-                if is_copied:
-                    original_target_dir = os.path.dirname(
-                        os.path.abspath(self._stan_file)
-                    )
-                    new_exec_name = (
-                        os.path.basename(os.path.splitext(self._stan_file)[0])
-                        + EXTENSION
-                    )
-                    self._exe_file = os.path.join(
-                        original_target_dir, new_exec_name
-                    )
-                    shutil.copy(exe_file, self._exe_file)
-                else:
-                    self._exe_file = exe_file
+        # check if exe file exists in original location
+        exe_file, _ = os.path.splitext(os.path.abspath(self._stan_file))
+        exe_file = Path(exe_file).as_posix() + EXTENSION
+        do_compile = True
+        if os.path.exists(exe_file):
+            src_time = os.path.getmtime(self._stan_file)
+            exe_time = os.path.getmtime(exe_file)
+            if exe_time > src_time and not force:
+                do_compile = False
+                self._logger.info('found newer exe file, not recompiling')
+                self._exe_file = exe_file
                 self._logger.info('compiled model file: %s', self._exe_file)
-            else:
-                self._logger.error('model compilation failed')
+        if do_compile:
+            compilation_failed = False
+            with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
+                exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
+                exe_file = Path(exe_file).as_posix() + EXTENSION
+                do_compile = True
+                if os.path.exists(exe_file):
+                    src_time = os.path.getmtime(self._stan_file)
+                    exe_time = os.path.getmtime(exe_file)
+                    if exe_time > src_time and not force:
+                        do_compile = False
+                        self._logger.info(
+                            'found newer exe file, not recompiling'
+                        )
+
+                if do_compile:
+                    self._logger.info(
+                        'compiling stan program, exe file: %s', exe_file
+                    )
+                    if self._compiler_options is not None:
+                        self._compiler_options.validate()
+                        self._logger.info(
+                            'compiler options: %s', self._compiler_options
+                        )
+                    make = os.getenv(
+                        'MAKE',
+                        'make'
+                        if platform.system() != 'Windows'
+                        else 'mingw32-make',
+                    )
+                    cmd = [make]
+                    if self._compiler_options is not None:
+                        cmd.extend(self._compiler_options.compose())
+                    cmd.append(Path(exe_file).as_posix())
+                    try:
+                        do_command(cmd, cmdstan_path(), logger=self._logger)
+                    except RuntimeError as e:
+                        self._logger.error(
+                            'file %s, exception %s', stan_file, str(e)
+                        )
+                        compilation_failed = True
+
+                if not compilation_failed:
+                    if is_copied:
+                        original_target_dir = os.path.dirname(
+                            os.path.abspath(self._stan_file)
+                        )
+                        new_exec_name = (
+                            os.path.basename(
+                                os.path.splitext(self._stan_file)[0]
+                            )
+                            + EXTENSION
+                        )
+                        self._exe_file = os.path.join(
+                            original_target_dir, new_exec_name
+                        )
+                        shutil.copy(exe_file, self._exe_file)
+                    else:
+                        self._exe_file = exe_file
+                    self._logger.info('compiled model file: %s', self._exe_file)
+                else:
+                    self._logger.error('model compilation failed')
 
     def optimize(
         self,
@@ -473,7 +490,10 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
-            msg = 'Error during optimization.\n{}'.format(runset.get_err_msgs())
+            msg = 'Error during optimization:\n{}'.format(runset.get_err_msgs())
+            msg = '{}Command and output files:\n{}'.format(
+                msg, runset.__repr__()
+            )
             raise RuntimeError(msg)
         mle = CmdStanMLE(runset)
         return mle
@@ -820,7 +840,6 @@ class CmdStanModel:
                             dynamic_ncols = False
                         else:
                             dynamic_ncols = True
-
                         pbar = tqdm_pbar(
                             desc='Chain {} - warmup'.format(i + 1),
                             position=i,
@@ -838,7 +857,10 @@ class CmdStanModel:
                 self._logger.propagate = True
 
             if not runset._check_retcodes():
-                msg = 'Error during sampling.\n{}'.format(runset.get_err_msgs())
+                msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
+                msg = '{}Command and output files:\n{}'.format(
+                    msg, runset.__repr__()
+                )
                 raise RuntimeError(msg)
 
             mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
@@ -990,8 +1012,11 @@ class CmdStanModel:
                     executor.submit(self._run_cmdstan, runset, i)
 
             if not runset._check_retcodes():
-                msg = 'Error during generate_quantities.\n{}'.format(
+                msg = 'Error during generate_quantities:\n{}'.format(
                     runset.get_err_msgs()
+                )
+                msg = '{}Command and output files:\n{}'.format(
+                    msg, runset.__repr__()
                 )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
@@ -1149,8 +1174,11 @@ class CmdStanModel:
         if require_converged and not valid:
             raise RuntimeError('The algorithm may not have converged.')
         if not runset._check_retcodes():
-            msg = 'Error during variational inference.\n{}'.format(
+            msg = 'Error during variational inference:\n{}'.format(
                 runset.get_err_msgs()
+            )
+            msg = '{}Command and output files:\n{}'.format(
+                msg, runset.__repr__()
             )
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
@@ -1170,26 +1198,48 @@ class CmdStanModel:
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
         self._logger.debug('sampling: %s', cmd)
-        proc = subprocess.Popen(
-            cmd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        if pbar:
-            stdout_pbar = self._read_progress(proc, pbar, idx)
-        stdout, stderr = proc.communicate()
-        if pbar:
-            stdout = stdout_pbar + stdout
-        self._logger.info('finish chain %u', idx + 1)
-        if stdout:
-            with open(runset.stdout_files[idx], 'w+') as fd:
-                fd.write(stdout.decode('utf-8'))
-        if stderr:
-            with open(runset.stderr_files[idx], 'w+') as fd:
-                fd.write(stderr.decode('utf-8'))
-        runset._set_retcode(idx, proc.returncode)
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=os.environ,
+            )
+            if pbar:
+                stdout_pbar = self._read_progress(proc, pbar, idx)
+            stdout, stderr = proc.communicate()
+            if pbar:
+                stdout = stdout_pbar + stdout
+
+            self._logger.info('finish chain %u', idx + 1)
+            runset._set_retcode(idx, proc.returncode)
+            if stdout:
+                with open(runset.stdout_files[idx], 'w+') as fd:
+                    fd.write(stdout.decode('utf-8'))
+            console_error = ''
+            if stderr:
+                console_error = stderr.decode('utf-8')
+                with open(runset.stderr_files[idx], 'w+') as fd:
+                    fd.write(console_error)
+
+            if proc.returncode != 0:
+                if proc.returncode < 0:
+                    msg = 'Chain {} terminated by signal {}'.format(
+                        idx + 1, proc.returncode
+                    )
+                else:
+                    msg = 'Chain {} processing error'.format(idx + 1)
+                    msg = '{}, non-zero return code {}'.format(
+                        msg, proc.returncode
+                    )
+                if len(console_error) > 0:
+                    msg = '{}\n error message:\n\t{}'.format(msg, console_error)
+                self._logger.error(msg)
+
+        except OSError as e:
+            msg = 'Chain {} encounted error: {}\n'.format(idx + 1, str(e))
+            raise RuntimeError(msg) from e
 
     def _read_progress(
         self, proc: subprocess.Popen, pbar: Any, idx: int

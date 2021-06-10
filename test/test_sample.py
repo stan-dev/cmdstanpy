@@ -269,6 +269,7 @@ class SampleTest(unittest.TestCase):
                 seed=12345,
                 iter_sampling=100,
             )
+
         if platform.system() != 'Windows':
             jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
             dirname1 = 'tmp1' + str(time())
@@ -494,6 +495,13 @@ class SampleTest(unittest.TestCase):
             'path with space/' 'bernoulli_path_with_space.stan'
         )
 
+    def test_index_bounds_error(self):
+        if cmdstan_version_at(2, 25) or cmdstan_version_at(2, 26):
+            oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
+            oob_model = CmdStanModel(stan_file=oob_stan)
+            with self.assertRaises(RuntimeError):
+                oob_model.sample()
+
 
 class CmdStanMCMCTest(unittest.TestCase):
     # pylint: disable=too-many-public-methods
@@ -564,7 +572,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             'Treedepth satisfactory for all transitions.', diagnostics
         )
         self.assertIn('No divergent transitions found.', diagnostics)
-        self.assertIn('E-BFMI satisfactory for all transitions.', diagnostics)
+        self.assertIn('E-BFMI satisfactory', diagnostics)
         self.assertIn('Effective sample size satisfactory.', diagnostics)
 
     def test_validate_big_run(self):
