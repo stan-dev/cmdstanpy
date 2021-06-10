@@ -102,32 +102,56 @@ class OptimizeTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, 'must be greater than'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_obj=-1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must be greater than'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_rel_obj=-1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must be greater than'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_grad=-1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must be greater than'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_rel_grad=-1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must be greater than'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_param=-1
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_obj=-1,
             )
 
         with self.assertRaisesRegex(ValueError, 'must be greater than'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', history_size=-1
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_obj=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_grad=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_grad=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_param=-1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'must be greater than'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                history_size=-1,
             )
 
     def test_parameters_are_floats(self):
@@ -138,32 +162,56 @@ class OptimizeTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, 'must be type of float'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_obj="rabbit"
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_obj="rabbit",
             )
-            
+
         with self.assertRaisesRegex(ValueError, 'must be type of float'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_rel_obj="rabbit"
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_obj="rabbit",
             )
-            
+
         with self.assertRaisesRegex(ValueError, 'must be type of float'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_grad="rabbit"
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_grad="rabbit",
             )
-            
+
         with self.assertRaisesRegex(ValueError, 'must be type of float'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_rel_grad="rabbit"
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_rel_grad="rabbit",
             )
-            
+
         with self.assertRaisesRegex(ValueError, 'must be type of float'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', tol_param="rabbit"
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                tol_param="rabbit",
             )
 
         with self.assertRaisesRegex(ValueError, 'must be type of int'):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='LBFGS', history_size="rabbit"
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='LBFGS',
+                history_size="rabbit",
             )
 
     def test_parameters_and_optimizer_compatible(self):
@@ -172,39 +220,83 @@ class OptimizeTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
 
-        with self.assertRaisesRegex(ValueError, 'must not be set when algorithm is Newton'):
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='Newton', tol_obj=1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must not be set when algorithm is Newton'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='Newton', tol_rel_obj=1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must not be set when algorithm is Newton'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='Newton', tol_grad=1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must not be set when algorithm is Newton'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='Newton', tol_rel_grad=1
-            )
-            
-        with self.assertRaisesRegex(ValueError, 'must not be set when algorithm is Newton'):
-            model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='Newton', tol_param=1
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_obj=1,
             )
 
-        with self.assertRaisesRegex(ValueError, 'history_size must not be set when algorithm is Newton or BFGS'):
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='Newton', history_size=1
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_rel_obj=1,
             )
 
-        with self.assertRaisesRegex(ValueError, 'history_size must not be set when algorithm is Newton or BFGS'):
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
             model.optimize(
-                data=jdata, seed=1239812093, inits=jinit, algorithm='BFGS', history_size=1
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_grad=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_rel_grad=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError, 'must not be set when algorithm is Newton'
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                tol_param=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            'history_size must not be set when algorithm is Newton or BFGS',
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='Newton',
+                history_size=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            'history_size must not be set when algorithm is Newton or BFGS',
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                algorithm='BFGS',
+                history_size=1,
             )
 
     def test_optimize_good_dict(self):
@@ -226,7 +318,6 @@ class OptimizeTest(unittest.TestCase):
         # test numpy output
         self.assertAlmostEqual(mle.optimized_params_np[0], -5, places=2)
         self.assertAlmostEqual(mle.optimized_params_np[1], 0.2, places=3)
-
 
     def test_optimize_rosenbrock(self):
         stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
