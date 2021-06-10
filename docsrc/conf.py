@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath('.')))
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-# needs_sphinx = '1.0'
+needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -38,7 +38,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
-    'sphinx_copybutton',
 ]
 
 # this is needed for some reason...
@@ -80,7 +79,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'CmdStanPy'
-copyright = '2019, Stan Development Team'
+copyright = '2021, Stan Development Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
