@@ -877,7 +877,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
                 )
             return msg
     except OSError as e:
-        msg = 'Command: {}\nfailed with error {}\n'.format(msg, str(e))
+        msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
     return None  # success
 
