@@ -9,8 +9,10 @@ import stat
 import string
 import tempfile
 import unittest
+import collections.abc
 
 import numpy as np
+import pandas as pd
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY, _TMPDIR
 from cmdstanpy.model import CmdStanModel
@@ -212,8 +214,9 @@ class DataFilesTest(unittest.TestCase):
             for k in d1:
                 data_1 = d1[k]
                 data_2 = d2[k]
-                if isinstance(data_2, np.ndarray):
-                    data_2 = data_2.tolist()
+                if isinstance(data_2, collections.abc.Collection):
+                    data_2 = np.asarray(data_2).tolist()
+
                 self.assertEqual(data_1, data_2)
 
         dict_list = {'a': [1.0, 2.0, 3.0]}
@@ -222,11 +225,19 @@ class DataFilesTest(unittest.TestCase):
         with open(file_list) as fd:
             cmp(json.load(fd), dict_list)
 
-        dict_vec = {'a': np.repeat(3, 4)}
+        arr = np.repeat(3,4)
+        dict_vec = {'a': arr}
         file_vec = os.path.join(_TMPDIR, 'vec.json')
         jsondump(file_vec, dict_vec)
         with open(file_vec) as fd:
             cmp(json.load(fd), dict_vec)
+        
+        series = pd.Series(arr)
+        dict_vec_pd = {'a': series}
+        file_vec_pd = os.path.join(_TMPDIR, 'vec_pd.json')
+        jsondump(file_vec_pd, dict_vec_pd)
+        with open(file_vec_pd) as fd:
+            cmp(json.load(fd), dict_vec_pd)
 
         dict_zero_vec = {'a': []}
         file_zero_vec = os.path.join(_TMPDIR, 'empty_vec.json')
