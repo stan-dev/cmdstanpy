@@ -225,13 +225,13 @@ class DataFilesTest(unittest.TestCase):
         with open(file_list) as fd:
             cmp(json.load(fd), dict_list)
 
-        arr = np.repeat(3,4)
+        arr = np.repeat(3, 4)
         dict_vec = {'a': arr}
         file_vec = os.path.join(_TMPDIR, 'vec.json')
         jsondump(file_vec, dict_vec)
         with open(file_vec) as fd:
             cmp(json.load(fd), dict_vec)
-        
+
         series = pd.Series(arr)
         dict_vec_pd = {'a': series}
         file_vec_pd = os.path.join(_TMPDIR, 'vec_pd.json')
