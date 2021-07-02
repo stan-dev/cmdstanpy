@@ -1005,8 +1005,8 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         diags = bern_fit.sampler_variables()
         self.assertEqual(SAMPLER_STATE, list(diags))
-        for key in diags:
-            self.assertEqual(diags[key].shape, (100, 2))
+        for diag in diags.values():
+            self.assertEqual(diag.shape, (100, 2))
             self.assertEqual(
                 bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
             )
@@ -1014,11 +1014,11 @@ class CmdStanMCMCTest(unittest.TestCase):
         with LogCapture() as log:
             diags = bern_fit.sampler_diagnostics()
             self.assertEqual(SAMPLER_STATE, list(diags))
-            for key in diags:
-                self.assertEqual(diags[key].shape, (100, 2))
+            for diag in diags.values():
+                self.assertEqual(diag.shape, (100, 2))
                 self.assertEqual(
                     bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-                    )
+                )
         log.check_present(
             (
                 'cmdstanpy',
