@@ -4,9 +4,8 @@ import os
 import unittest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
-from cmdstanpy.stanfit import RunSet, InferenceMetadata
+from cmdstanpy.stanfit import InferenceMetadata, RunSet
 from cmdstanpy.utils import EXTENSION, check_sampler_csv
-
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

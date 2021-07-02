@@ -11,7 +11,6 @@ from multiprocessing import cpu_count
 from time import time
 
 import numpy as np
-
 import pytest
 from testfixtures import LogCapture
 
