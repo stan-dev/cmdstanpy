@@ -686,11 +686,9 @@ class CmdStanArgs:
             raise ValueError('model not compiled')
 
         if self.chain_ids is not None:
-            for i in range(len(self.chain_ids)):
-                if self.chain_ids[i] < 1:
-                    raise ValueError(
-                        'invalid chain_id {}'.format(self.chain_ids[i])
-                    )
+            for chain_id in self.chain_ids:
+                if chain_id < 1:
+                    raise ValueError('invalid chain_id {}'.format(chain_id))
         if self.output_dir is not None:
             self.output_dir = os.path.realpath(
                 os.path.expanduser(self.output_dir)
@@ -777,12 +775,12 @@ class CmdStanArgs:
                             len(self.seed), len(self.chain_ids)
                         )
                     )
-                for i in range(len(self.seed)):
-                    if self.seed[i] < 0 or self.seed[i] > 2 ** 32 - 1:
+                for seed in self.seed:
+                    if seed < 0 or seed > 2 ** 32 - 1:
                         raise ValueError(
                             'seed must be an integer value'
                             ' between 0 and 2**32-1,'
-                            ' found {}'.format(self.seed[i])
+                            ' found {}'.format(seed)
                         )
 
         if isinstance(self.data, str):
@@ -819,11 +817,9 @@ class CmdStanArgs:
                         'each chain must have its own init file,'
                         ' found duplicates in inits files list.'
                     )
-                for i in range(len(self.inits)):
-                    if not os.path.exists(self.inits[i]):
-                        raise ValueError(
-                            'no such file {}'.format(self.inits[i])
-                        )
+                for inits in self.inits:
+                    if not os.path.exists(inits):
+                        raise ValueError('no such file {}'.format(inits))
 
     def compose_command(
         self,
