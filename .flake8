@@ -1,0 +1,4 @@
+[flake8]
+ignore = E127,E201,E202,E203,E231,E252,E266,E402,E999,F841,W503,W605
+max-line-length = 80
+exclude = .git,docs,docsrc,scripts,cmdstanpy_tutorial.py,rtd_change_default_version.py
