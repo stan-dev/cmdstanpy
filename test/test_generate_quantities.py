@@ -2,6 +2,7 @@
 
 import os
 import unittest
+
 from pandas.testing import assert_frame_equal
 
 from cmdstanpy.cmdstan_args import Method
