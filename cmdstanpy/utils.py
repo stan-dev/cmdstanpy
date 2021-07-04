@@ -11,7 +11,7 @@ import subprocess
 import sys
 import tempfile
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Sequence, Collection
 from numbers import Integral, Real
 from typing import Dict, List, TextIO, Tuple, Union
 
@@ -371,8 +371,10 @@ def jsondump(path: str, data: Dict) -> None:
     data = data.copy()
     for key, val in data.items():
         if type(val).__module__ == 'numpy':
-            val = val.tolist()
-            data[key] = val
+            data[key] = val.tolist()
+        elif isinstance(val, Collection):
+            data[key] = np.asarray(val).tolist()
+
     with open(path, 'w') as fd:
         json.dump(data, fd)
 
@@ -877,7 +879,7 @@ def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
                 )
             return msg
     except OSError as e:
-        msg = 'Command: {}\nfailed with error {}\n'.format(msg, str(e))
+        msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
     return None  # success
 
