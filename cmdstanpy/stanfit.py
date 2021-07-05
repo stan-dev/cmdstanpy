@@ -465,8 +465,8 @@ class CmdStanMCMC:
         for file in os.listdir(dir):
             if file.endswith(".csv"):
                 csvfiles.append(os.path.join(dir, file))
-        num_chains = len(csvfiles)
-        if num_chains == 0:
+        chains = len(csvfiles)
+        if chains == 0:
             raise ValueError('No CSV files found in directory {}'.format(dir))
         config_dict = {}
         try:
@@ -494,10 +494,10 @@ class CmdStanMCMC:
         cmdstan_args = CmdStanArgs(
             model_name=config_dict['model'],
             model_exe=config_dict['model'],
-            chain_ids=None,
+            chain_ids = [x + 1 for x in range(chains)],
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=chains)
         runset._csv_files = csvfiles
         for i in range(len(runset._retcodes)):
             runset._set_retcode(i, 0)
