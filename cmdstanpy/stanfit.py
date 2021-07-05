@@ -15,7 +15,13 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING, _CMDSTAN_THIN
-from cmdstanpy.cmdstan_args import SamplerArgs, CmdStanArgs, Method
+from cmdstanpy.cmdstan_args import (
+    CmdStanArgs,
+    Method,
+    OptimizeArgs,
+    SamplerArgs,
+    VariationalArgs,
+)
 from cmdstanpy.utils import (
     EXTENSION,
     check_sampler_csv,
@@ -464,20 +470,20 @@ class CmdStanMCMC:
             raise ValueError('No CSV files found in directory {}'.format(dir))
         config_dict = {}
         try:
-            with open(csvfiles[1], 'r') as fd:
+            with open(csvfiles[0], 'r') as fd:
                 scan_config(fd, config_dict, 0)
         except (IOError, OSError, PermissionError) as e:
             raise ValueError(
-                'Cannot read CSV file: {}'.format(csvfiles[1])
+                'Cannot read CSV file: {}'.format(csvfiles[0])
             ) from e
         if not 'model' in config_dict or not 'method' in config_dict:
             raise ValueError(
-                "File {} is not a Stan CSV file.".format(csvfiles[1])
+                "File {} is not a Stan CSV file.".format(csvfiles[0])
                 )
         if config_dict['method'] != 'sample':
             raise ValueError(
                 "File {} isn't a Stan sampler CSV file, "
-                "found method = {} ".format(csvfiles[1], config_dict['method'])
+                "found method = {} ".format(csvfiles[0], config_dict['method'])
                 )
         sampler_args = SamplerArgs(
             iter_sampling=config_dict['num_samples'],
@@ -488,7 +494,7 @@ class CmdStanMCMC:
         cmdstan_args = CmdStanArgs(
             model_name=config_dict['model'],
             model_exe=config_dict['model'],
-            chain_ids=list(range(1,num_chains+1)),
+            chain_ids=None,
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args)
@@ -1137,6 +1143,58 @@ class CmdStanMLE:
         )
         # TODO - profiling files
         return repr
+
+    @classmethod
+    def from_csv(cls, dir: str):
+        """
+        Instantiate CmdStanMLE from optimizer csvfile(s)
+        :param dir: directory path
+        """
+        if dir is None:
+            raise ValueError('Must specify path to directory with Stan CSV files.')
+        csvfiles = []
+        for file in os.listdir(dir):
+            if file.endswith(".csv"):
+                csvfiles.append(os.path.join(dir, file))
+        num_chains = len(csvfiles)
+        if num_chains == 0:
+            raise ValueError('No CSV files found in directory {}'.format(dir))
+        config_dict = {}
+        try:
+            with open(csvfiles[0], 'r') as fd:
+                scan_config(fd, config_dict, 0)
+        except (IOError, OSError, PermissionError) as e:
+            raise ValueError(
+                'Cannot read CSV file: {}'.format(csvfiles[0])
+            ) from e
+        if not 'model' in config_dict or not 'method' in config_dict:
+            raise ValueError(
+                "File {} is not a Stan CSV file.".format(csvfiles[0])
+                )
+        if not 'algorithm' in config_dict:
+            raise ValueError(
+                "File {} isn't a Stan optimizer CSV file, "
+                "missing config for algorithm".format(csvfiles[0])
+                )
+        if config_dict['method'] != 'optimize':
+            raise ValueError(
+                "File {} isn't a Stan optimizer CSV file, "
+                "found method = {} ".format(csvfiles[0], config_dict['method'])
+                )
+        optimize_args = OptimizeArgs(
+            algorithm=config_dict['algorithm'],
+        )
+        cmdstan_args = CmdStanArgs(
+            model_name=config_dict['model'],
+            model_exe=config_dict['model'],
+            chain_ids=None,
+            method_args=optimize_args,
+        )
+        runset = RunSet(args=cmdstan_args)
+        runset._csv_files = csvfiles
+        for i in range(len(runset._retcodes)):
+            runset._set_retcode(i, 0)
+        return CmdStanMLE(runset)
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
         meta = scan_optimize_csv(sample_csv_0)
