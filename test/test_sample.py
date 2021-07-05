@@ -29,6 +29,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 GOODFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-good')
 BADFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-bad')
+
+# metadata should make this unnecessary
 SAMPLER_STATE = [
     'lp__',
     'accept_stat__',
@@ -38,8 +40,8 @@ SAMPLER_STATE = [
     'divergent__',
     'energy__',
 ]
+# metadata should make this unnecessary
 BERNOULLI_COLS = SAMPLER_STATE + ['theta']
-
 
 class SampleTest(unittest.TestCase):
 
@@ -592,7 +594,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         ]
         fit = CmdStanMCMC(runset)
         phis = ['phi[{}]'.format(str(x + 1)) for x in range(2095)]
-        column_names = SAMPLER_STATE + phis
+        column_names = list(fit.sampler_vars_cols.keys()) + phis
         self.assertEqual(fit.num_draws_sampling, 1000)
         self.assertEqual(fit.column_names, tuple(column_names))
         self.assertEqual(fit.metric_type, 'diag_e')
@@ -603,6 +605,24 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual((2000, 2095), phis.shape)
         with self.assertRaisesRegex(ValueError, r'unknown parameter: gamma'):
             fit.draws_pd(params=['gamma'])
+
+    def test_instantiate_from_csvfiles(self):
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
+        bern_fit = CmdStanMCMC.from_csv(dir=csvfiles_path)
+        draws_pd = bern_fit.draws_pd()
+        self.assertEqual(
+            draws_pd.shape,
+            (bern_fit.runset.chains * bern_fit.num_draws_sampling, len(bern_fit.column_names)),
+        )
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-big')
+        big_fit = CmdStanMCMC.from_csv(dir=csvfiles_path)
+        draws_pd = big_fit.draws_pd()
+        self.assertEqual(
+            draws_pd.shape,
+            (big_fit.runset.chains * big_fit.num_draws_sampling, len(big_fit.column_names)),
+        )
+
+
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -1027,17 +1047,14 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(SAMPLER_STATE, list(diags))
         for diag in diags.values():
             self.assertEqual(diag.shape, (100, 2))
-            self.assertEqual(
-                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-            )
-
+            
         with LogCapture() as log:
             diags = bern_fit.sampler_diagnostics()
             self.assertEqual(SAMPLER_STATE, list(diags))
             for diag in diags.values():
                 self.assertEqual(diag.shape, (100, 2))
-                self.assertEqual(
-                    bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
+            self.assertEqual(
+                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
                 )
         log.check_present(
             (
