@@ -32,7 +32,6 @@ from cmdstanpy.utils import (
     get_logger,
     parse_sampler_vars,
     parse_stan_vars,
-    scan_config,
     scan_generated_quantities_csv,
     scan_optimize_csv,
     scan_variational_csv,
@@ -1142,7 +1141,7 @@ class CmdStanMLE:
         :param dir: directory path
         """
         csvfiles, config_dict = validate_csvfiles(dir, 'optimize')
-        if not 'algorithm' in config_dict:
+        if 'algorithm' not in config_dict:
             raise ValueError(
                 "Cannot find optimization algorithm"
                 " in file {}.".format(csvfiles[0])
@@ -1376,7 +1375,7 @@ class CmdStanVB:
         :param dir: directory path
         """
         csvfiles, config_dict = validate_csvfiles(dir, 'variational')
-        if not 'algorithm' in config_dict:
+        if 'algorithm' not in config_dict:
             raise ValueError(
                 "Cannot find variational algorithm"
                 " in file {}.".format(csvfiles[0])

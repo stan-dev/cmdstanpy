@@ -1046,7 +1046,7 @@ def validate_csvfiles(dir: str = None, method: str = None) -> (List[str], Dict):
             scan_config(fd, config_dict, 0)
     except (IOError, OSError, PermissionError) as e:
         raise ValueError('Cannot read CSV file: {}'.format(csvfiles[0])) from e
-    if not 'model' in config_dict or not 'method' in config_dict:
+    if 'model' not in config_dict or 'method' not in config_dict:
         raise ValueError("File {} is not a Stan CSV file.".format(csvfiles[0]))
     if config_dict['method'] != method:
         raise ValueError(
