@@ -43,6 +43,7 @@ SAMPLER_STATE = [
 # metadata should make this unnecessary
 BERNOULLI_COLS = SAMPLER_STATE + ['theta']
 
+
 class SampleTest(unittest.TestCase):
 
     # pylint: disable=no-self-use
@@ -612,17 +613,45 @@ class CmdStanMCMCTest(unittest.TestCase):
         draws_pd = bern_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
-            (bern_fit.runset.chains * bern_fit.num_draws_sampling, len(bern_fit.column_names)),
+            (
+                bern_fit.runset.chains * bern_fit.num_draws_sampling,
+                len(bern_fit.column_names),
+            ),
         )
         csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-big')
         big_fit = CmdStanMCMC.from_csv(dir=csvfiles_path)
         draws_pd = big_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
-            (big_fit.runset.chains * big_fit.num_draws_sampling, len(big_fit.column_names)),
+            (
+                big_fit.runset.chains * big_fit.num_draws_sampling,
+                len(big_fit.column_names),
+            ),
         )
 
-
+    def test_instantiate_from_csvfiles_fail(self):
+        # use optimize dataset
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'optimize')
+        with self.assertRaisesRegex(ValueError, r'result of method sample'):
+            CmdStanMCMC.from_csv(dir=csvfiles_path)
+        # use missing dir
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'no-such-directory')
+        with self.assertRaisesRegex(ValueError, r'not found'):
+            CmdStanMCMC.from_csv(dir=csvfiles_path)
+        # use none
+        with self.assertRaisesRegex(ValueError, r'Must specify directory'):
+            CmdStanMCMC.from_csv(None)
+        # no csv files
+        no_csvfiles_path = os.path.join(
+            DATAFILES_PATH, 'test-fail-empty-directory'
+        )
+        if os.path.exists(no_csvfiles_path):
+            shutil.rmtree(no_csvfiles_path, ignore_errors=True)
+        os.mkdir(no_csvfiles_path)
+        with self.assertRaisesRegex(ValueError, r'No CSV files found'):
+            CmdStanMCMC.from_csv(dir=no_csvfiles_path)
+        if os.path.exists(no_csvfiles_path):
+            shutil.rmtree(no_csvfiles_path, ignore_errors=True)
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -1047,7 +1076,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(SAMPLER_STATE, list(diags))
         for diag in diags.values():
             self.assertEqual(diag.shape, (100, 2))
-            
+
         with LogCapture() as log:
             diags = bern_fit.sampler_diagnostics()
             self.assertEqual(SAMPLER_STATE, list(diags))
@@ -1055,7 +1084,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 self.assertEqual(diag.shape, (100, 2))
             self.assertEqual(
                 bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-                )
+            )
         log.check_present(
             (
                 'cmdstanpy',

@@ -36,6 +36,7 @@ from cmdstanpy.utils import (
     scan_generated_quantities_csv,
     scan_optimize_csv,
     scan_variational_csv,
+    validate_csvfiles,
 )
 
 
@@ -456,59 +457,41 @@ class CmdStanMCMC:
     @classmethod
     def from_csv(cls, dir: str):
         """
-        Instantiate CmdStanMCMC from sampler csvfiles
+        Instantiate CmdStanMCMC from sampler CSV files.
+        Given a directory of saved Stan CSV files from one sampler run,
+        find the CSV files in the directory and create a CmdStanMCMC object.
+        Assembles all draws into in-memory ndarrays.
+
         :param dir: directory path
         """
-        if dir is None:
-            raise ValueError('Must specify path to directory with Stan CSV files.')
-        csvfiles = []
-        for file in os.listdir(dir):
-            if file.endswith(".csv"):
-                csvfiles.append(os.path.join(dir, file))
+        csvfiles, config_dict = validate_csvfiles(dir, 'sample')
         chains = len(csvfiles)
-        if chains == 0:
-            raise ValueError('No CSV files found in directory {}'.format(dir))
-        config_dict = {}
-        try:
-            with open(csvfiles[0], 'r') as fd:
-                scan_config(fd, config_dict, 0)
-        except (IOError, OSError, PermissionError) as e:
-            raise ValueError(
-                'Cannot read CSV file: {}'.format(csvfiles[0])
-            ) from e
-        if not 'model' in config_dict or not 'method' in config_dict:
-            raise ValueError(
-                "File {} is not a Stan CSV file.".format(csvfiles[0])
-                )
-        if config_dict['method'] != 'sample':
-            raise ValueError(
-                "File {} isn't a Stan sampler CSV file, "
-                "found method = {} ".format(csvfiles[0], config_dict['method'])
-                )
         sampler_args = SamplerArgs(
             iter_sampling=config_dict['num_samples'],
             iter_warmup=config_dict['num_warmup'],
             thin=config_dict['thin'],
-            save_warmup=config_dict['save_warmup']
+            save_warmup=config_dict['save_warmup'],
         )
         cmdstan_args = CmdStanArgs(
             model_name=config_dict['model'],
             model_exe=config_dict['model'],
-            chain_ids = [x + 1 for x in range(chains)],
+            chain_ids=[x + 1 for x in range(chains)],
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args, chains=chains)
-        runset._csv_files = csvfiles
-        for i in range(len(runset._retcodes)):
-            runset._set_retcode(i, 0)
-        fit = CmdStanMCMC(runset)
         try:
+            runset = RunSet(args=cmdstan_args, chains=chains)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            fit = CmdStanMCMC(runset)
             fit.draws()
+            return fit
         except (IOError, OSError, PermissionError) as e:
             raise ValueError(
-                'An error occured processing the CSV files:\n\t{}'.format(str(e))
+                'An error occured processing the CSV files:\n\t{}'.format(
+                    str(e)
+                )
             ) from e
-        return fit
 
     @property
     def chains(self) -> int:
@@ -1144,43 +1127,26 @@ class CmdStanMLE:
         # TODO - profiling files
         return repr
 
+    def _set_mle_attrs(self, sample_csv_0: str) -> None:
+        meta = scan_optimize_csv(sample_csv_0)
+        self._column_names = meta['column_names']
+        self._mle = meta['mle']
+
     @classmethod
     def from_csv(cls, dir: str):
         """
-        Instantiate CmdStanMLE from optimizer csvfile(s)
+        Instantiate CmdStanMLE from optimizer CSV file.
+        Given a directory of saved Stan CSV files from the optimizer,
+        find the CSV files in the directory and create a CmdStanMLE object.
+
         :param dir: directory path
         """
-        if dir is None:
-            raise ValueError('Must specify path to directory with Stan CSV files.')
-        csvfiles = []
-        for file in os.listdir(dir):
-            if file.endswith(".csv"):
-                csvfiles.append(os.path.join(dir, file))
-        num_chains = len(csvfiles)
-        if num_chains == 0:
-            raise ValueError('No CSV files found in directory {}'.format(dir))
-        config_dict = {}
-        try:
-            with open(csvfiles[0], 'r') as fd:
-                scan_config(fd, config_dict, 0)
-        except (IOError, OSError, PermissionError) as e:
-            raise ValueError(
-                'Cannot read CSV file: {}'.format(csvfiles[0])
-            ) from e
-        if not 'model' in config_dict or not 'method' in config_dict:
-            raise ValueError(
-                "File {} is not a Stan CSV file.".format(csvfiles[0])
-                )
+        csvfiles, config_dict = validate_csvfiles(dir, 'optimize')
         if not 'algorithm' in config_dict:
             raise ValueError(
-                "File {} isn't a Stan optimizer CSV file, "
-                "missing config for algorithm".format(csvfiles[0])
-                )
-        if config_dict['method'] != 'optimize':
-            raise ValueError(
-                "File {} isn't a Stan optimizer CSV file, "
-                "found method = {} ".format(csvfiles[0], config_dict['method'])
-                )
+                "Cannot find optimization algorithm"
+                " in file {}.".format(csvfiles[0])
+            )
         optimize_args = OptimizeArgs(
             algorithm=config_dict['algorithm'],
         )
@@ -1190,16 +1156,18 @@ class CmdStanMLE:
             chain_ids=None,
             method_args=optimize_args,
         )
-        runset = RunSet(args=cmdstan_args)
-        runset._csv_files = csvfiles
-        for i in range(len(runset._retcodes)):
-            runset._set_retcode(i, 0)
-        return CmdStanMLE(runset)
-
-    def _set_mle_attrs(self, sample_csv_0: str) -> None:
-        meta = scan_optimize_csv(sample_csv_0)
-        self._column_names = meta['column_names']
-        self._mle = meta['mle']
+        try:
+            runset = RunSet(args=cmdstan_args)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            return CmdStanMLE(runset)
+        except (IOError, OSError, PermissionError) as e:
+            raise ValueError(
+                'An error occured processing the CSV files:\n\t{}'.format(
+                    str(e)
+                )
+            ) from e
 
     @property
     def column_names(self) -> Tuple[str, ...]:
@@ -1397,6 +1365,50 @@ class CmdStanVB:
         self._column_names = meta['column_names']
         self._variational_mean = meta['variational_mean']
         self._variational_sample = meta['variational_sample']
+
+    @classmethod
+    def from_csv(cls, dir: str):
+        """
+        Instantiate CmdStanVB from variational CSV file.
+        Given a directory of saved Stan CSV files,
+        find the CSV files in the directory and create a CmdStanVB object.
+
+        :param dir: directory path
+        """
+        csvfiles, config_dict = validate_csvfiles(dir, 'variational')
+        if not 'algorithm' in config_dict:
+            raise ValueError(
+                "Cannot find variational algorithm"
+                " in file {}.".format(csvfiles[0])
+            )
+        variational_args = VariationalArgs(
+            algorithm=config_dict['algorithm'],
+            iter=config_dict['iter'],
+            grad_samples=config_dict['grad_samples'],
+            elbo_samples=config_dict['elbo_samples'],
+            eta=config_dict['eta'],
+            tol_rel_obj=config_dict['tol_rel_obj'],
+            eval_elbo=config_dict['eval_elbo'],
+            output_samples=config_dict['output_samples'],
+        )
+        cmdstan_args = CmdStanArgs(
+            model_name=config_dict['model'],
+            model_exe=config_dict['model'],
+            chain_ids=None,
+            method_args=variational_args,
+        )
+        try:
+            runset = RunSet(args=cmdstan_args)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            return CmdStanVB(runset)
+        except (IOError, OSError, PermissionError) as e:
+            raise ValueError(
+                'An error occured processing the CSV files:\n\t{}'.format(
+                    str(e)
+                )
+            ) from e
 
     @property
     def columns(self) -> int:

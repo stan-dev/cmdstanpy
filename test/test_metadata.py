@@ -14,6 +14,7 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 GOODFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-good')
 BADFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-bad')
 
+
 class InferenceMetadataTest(unittest.TestCase):
     def test_good(self):
         # construct fit using existing sampler output

@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import unittest
 
 import numpy as np
@@ -59,6 +60,31 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
+
+    def test_instantiate_from_csvfiles_fail(self):
+        # use sampler dataset
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
+        with self.assertRaisesRegex(ValueError, r'result of method optimize'):
+            CmdStanMLE.from_csv(dir=csvfiles_path)
+        # use missing dir
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'no-such-directory')
+        with self.assertRaisesRegex(ValueError, r'not found'):
+            CmdStanMLE.from_csv(dir=csvfiles_path)
+        # use none
+        with self.assertRaisesRegex(ValueError, r'Must specify directory'):
+            CmdStanMLE.from_csv(None)
+        # no csv files
+        no_csvfiles_path = os.path.join(
+            DATAFILES_PATH, 'test-fail-empty-directory'
+        )
+        if os.path.exists(no_csvfiles_path):
+            shutil.rmtree(no_csvfiles_path, ignore_errors=True)
+        os.mkdir(no_csvfiles_path)
+        with self.assertRaisesRegex(ValueError, r'No CSV files found'):
+            CmdStanMLE.from_csv(dir=no_csvfiles_path)
+        if os.path.exists(no_csvfiles_path):
+            shutil.rmtree(no_csvfiles_path, ignore_errors=True)
+        # method optimize, no algorithm specified - shouldn't happen
 
 
 class OptimizeTest(unittest.TestCase):
