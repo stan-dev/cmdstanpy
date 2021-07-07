@@ -1450,8 +1450,8 @@ def from_csv(
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
             fit = CmdStanVB(runset)
-        return fit
     except (IOError, OSError, PermissionError) as e:
         raise ValueError(
             'An error occured processing the CSV files:\n\t{}'.format(str(e))
         ) from e
+    return fit
