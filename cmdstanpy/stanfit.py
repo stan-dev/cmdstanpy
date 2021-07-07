@@ -1339,19 +1339,32 @@ class CmdStanVB:
         self.runset.save_csvfiles(dir)
 
 
-def from_csv(dir: str = None) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
+def from_csv(
+    dir: str = None, method: str = None
+) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
     """
     Given a directory of saved Stan CSV files, instantiate the CmdStan object
-    corresponding to the inference method, i.e.,  Stan CSV files from CmdStan
-    methods 'sample', 'optimize', and 'variational' result in objects of
-    class CmdStanMCMC, CmdStanMLE, and CmdStanVB, respectively.
+    corresponding to the inference method which produced these outputs, i.e.,
+    Stan CSV files from CmdStan methods 'sample', 'optimize', and 'variational'
+    result in objects of class CmdStanMCMC, CmdStanMLE, and CmdStanVB,
+    respectively.
 
     :param dir: directory path
+    :param method: method name (optional)
 
     :return: either a CmdStanMCMC, CmdStanMLE, or CmdStanVB object
     """
     if dir is None:
         raise ValueError('Must specify directory of Stan CSV files.')
+    if method is not None and method not in [
+        'sample',
+        'optimize',
+        'variational',
+    ]:
+        raise ValueError(
+            'Bad method argument {}, must be one of: '
+            '"sample", "optimize", "variational".'.format(method)
+        )
     if not os.path.exists(dir):
         raise ValueError('Directory {} not found.'.format(dir))
     csvfiles = []
@@ -1368,6 +1381,13 @@ def from_csv(dir: str = None) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
         raise ValueError('Cannot read CSV file: {}'.format(csvfiles[0])) from e
     if 'model' not in config_dict or 'method' not in config_dict:
         raise ValueError("File {} is not a Stan CSV file.".format(csvfiles[0]))
+    if method is not None and method != config_dict['method']:
+        raise ValueError(
+            'Expecting Stan CSV output files from method {}, '
+            ' found outputs from method {}'.format(
+                method, config_dict['method']
+            )
+        )
     fit = None
     try:
         if config_dict['method'] == 'sample':
@@ -1440,7 +1460,7 @@ def from_csv(dir: str = None) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
         else:
             get_logger().info(
                 'Unable to process CSV output files from method %s.',
-                (config_dict['method'])
+                (config_dict['method']),
             )
     except (IOError, OSError, PermissionError) as e:
         raise ValueError(

@@ -633,6 +633,15 @@ class CmdStanMCMCTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r'Must specify directory'):
             from_csv(None)
 
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
+        with self.assertRaisesRegex(ValueError, r'Bad method argument'):
+            from_csv(csvfiles_path, 'not-a-method')
+
+        with self.assertRaisesRegex(
+            ValueError, r'Expecting Stan CSV output files from method optimize'
+        ):
+            from_csv(csvfiles_path, 'optimize')
+
         csvfiles_path = os.path.join(DATAFILES_PATH, 'no-such-directory')
         with self.assertRaisesRegex(ValueError, r'not found'):
             from_csv(dir=csvfiles_path)
