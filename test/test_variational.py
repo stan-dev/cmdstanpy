@@ -1,7 +1,6 @@
 """CmdStan method variational tests"""
 
 import os
-import shutil
 import unittest
 from math import fabs
 
@@ -9,7 +8,7 @@ import pytest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanVB, RunSet
+from cmdstanpy.stanfit import from_csv, CmdStanVB, RunSet
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -66,7 +65,7 @@ class CmdStanVBTest(unittest.TestCase):
 
     def test_instantiate_from_csvfiles(self):
         csvfiles_path = os.path.join(DATAFILES_PATH, 'variational')
-        variational = CmdStanVB.from_csv(dir=csvfiles_path)
+        variational = from_csv(dir=csvfiles_path, method='variational')
         self.assertIn(
             'CmdStanVB: model=eta_should_be_big', variational.__repr__()
         )
@@ -82,33 +81,6 @@ class CmdStanVBTest(unittest.TestCase):
             variational.variational_params_dict['mu[2]'], 28.8141, places=2
         )
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
-
-    def test_instantiate_from_csvfiles_fail(self):
-        # use sampler dataset
-        csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
-        with self.assertRaisesRegex(
-            ValueError, r'result of method variational'
-        ):
-            CmdStanVB.from_csv(dir=csvfiles_path)
-        # use missing dir
-        csvfiles_path = os.path.join(DATAFILES_PATH, 'no-such-directory')
-        with self.assertRaisesRegex(ValueError, r'not found'):
-            CmdStanVB.from_csv(dir=csvfiles_path)
-        # use none
-        with self.assertRaisesRegex(ValueError, r'Must specify directory'):
-            CmdStanVB.from_csv(None)
-        # no csv files
-        no_csvfiles_path = os.path.join(
-            DATAFILES_PATH, 'test-fail-empty-directory'
-        )
-        if os.path.exists(no_csvfiles_path):
-            shutil.rmtree(no_csvfiles_path, ignore_errors=True)
-        os.mkdir(no_csvfiles_path)
-        with self.assertRaisesRegex(ValueError, r'No CSV files found'):
-            CmdStanVB.from_csv(dir=no_csvfiles_path)
-        if os.path.exists(no_csvfiles_path):
-            shutil.rmtree(no_csvfiles_path, ignore_errors=True)
-        # method variational, no algorithm specified - shouldn't happen
 
 
 class VariationalTest(unittest.TestCase):

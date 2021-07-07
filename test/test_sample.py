@@ -22,7 +22,7 @@ except ImportError:
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanMCMC, RunSet
+from cmdstanpy.stanfit import from_csv, CmdStanMCMC, RunSet
 from cmdstanpy.utils import EXTENSION, cmdstan_version_at
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -609,7 +609,7 @@ class CmdStanMCMCTest(unittest.TestCase):
 
     def test_instantiate_from_csvfiles(self):
         csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
-        bern_fit = CmdStanMCMC.from_csv(dir=csvfiles_path)
+        bern_fit = from_csv(dir=csvfiles_path, method='sample')
         draws_pd = bern_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
@@ -619,7 +619,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             ),
         )
         csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-big')
-        big_fit = CmdStanMCMC.from_csv(dir=csvfiles_path)
+        big_fit = from_csv(dir=csvfiles_path, method='sample')
         draws_pd = big_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
@@ -630,17 +630,20 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
 
     def test_instantiate_from_csvfiles_fail(self):
-        # use optimize dataset
-        csvfiles_path = os.path.join(DATAFILES_PATH, 'optimize')
-        with self.assertRaisesRegex(ValueError, r'result of method sample'):
-            CmdStanMCMC.from_csv(dir=csvfiles_path)
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-big')
+        with self.assertRaisesRegex(ValueError, r'argument'):
+            from_csv(dir=csvfiles_path)
+        with self.assertRaisesRegex(ValueError, r'argument'):
+            from_csv(dir=csvfiles_path, method='no-such-method')
+        with self.assertRaisesRegex(ValueError, r"isn't result of method"):
+            from_csv(dir=csvfiles_path, method='optimize')
         # use missing dir
         csvfiles_path = os.path.join(DATAFILES_PATH, 'no-such-directory')
         with self.assertRaisesRegex(ValueError, r'not found'):
-            CmdStanMCMC.from_csv(dir=csvfiles_path)
+            from_csv(dir=csvfiles_path, method='sample')
         # use none
         with self.assertRaisesRegex(ValueError, r'Must specify directory'):
-            CmdStanMCMC.from_csv(None)
+            from_csv(None, method='sample')
         # no csv files
         no_csvfiles_path = os.path.join(
             DATAFILES_PATH, 'test-fail-empty-directory'
@@ -649,7 +652,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             shutil.rmtree(no_csvfiles_path, ignore_errors=True)
         os.mkdir(no_csvfiles_path)
         with self.assertRaisesRegex(ValueError, r'No CSV files found'):
-            CmdStanMCMC.from_csv(dir=no_csvfiles_path)
+            from_csv(dir=no_csvfiles_path, method='sample')
         if os.path.exists(no_csvfiles_path):
             shutil.rmtree(no_csvfiles_path, ignore_errors=True)
 

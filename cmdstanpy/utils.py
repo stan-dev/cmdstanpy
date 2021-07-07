@@ -1017,47 +1017,6 @@ def install_cmdstan(
     return True
 
 
-def validate_csvfiles(dir: str = None, method: str = None) -> (List[str], Dict):
-    """
-    Given a directory of saved Stan CSV files and a method specification,
-    find the CSV files in the directory and validate that they are
-    Stan CSV files created by the specified method.
-
-    :param dir: directory path
-    :param method: CmdStan method name
-
-    :return: List of CSV filenames, Dict of config info
-    """
-    config_dict = {}
-    if dir is None:
-        raise ValueError('Must specify directory of Stan CSV files.')
-    if method is None:
-        raise ValueError('Must specify CmdStan method.')
-    if not os.path.exists(dir):
-        raise ValueError('Directory {} not found.'.format(dir))
-    csvfiles = []
-    for file in os.listdir(dir):
-        if file.endswith(".csv"):
-            csvfiles.append(os.path.join(dir, file))
-    if len(csvfiles) == 0:
-        raise ValueError('No CSV files found in directory {}'.format(dir))
-    try:
-        with open(csvfiles[0], 'r') as fd:
-            scan_config(fd, config_dict, 0)
-    except (IOError, OSError, PermissionError) as e:
-        raise ValueError('Cannot read CSV file: {}'.format(csvfiles[0])) from e
-    if 'model' not in config_dict or 'method' not in config_dict:
-        raise ValueError("File {} is not a Stan CSV file.".format(csvfiles[0]))
-    if config_dict['method'] != method:
-        raise ValueError(
-            "File {} isn't result of method {}, "
-            "found method = {} ".format(
-                csvfiles[0], method, config_dict['method']
-            )
-        )
-    return (csvfiles, config_dict)
-
-
 class MaybeDictToFilePath:
     """Context manager for json files."""
 
