@@ -1339,15 +1339,14 @@ class CmdStanVB:
         self.runset.save_csvfiles(dir)
 
 
-def from_csv(
-    dir: str = None, method: str = None
-) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
+def from_csv(dir: str = None) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
     """
-    Given a directory of saved Stan CSV files and a method specification,
-    instantiate the appropriate object containing the CmdStan inference.
+    Given a directory of saved Stan CSV files, instantiate the CmdStan object
+    corresponding to the inference method, i.e.,  Stan CSV files from CmdStan
+    methods 'sample', 'optimize', and 'variational' result in objects of
+    class CmdStanMCMC, CmdStanMLE, and CmdStanVB, respectively.
 
     :param dir: directory path
-    :param method: CmdStan method name
 
     :return: either a CmdStanMCMC, CmdStanMLE, or CmdStanVB object
     """
@@ -1355,11 +1354,6 @@ def from_csv(
         raise ValueError('Must specify directory of Stan CSV files.')
     if not os.path.exists(dir):
         raise ValueError('Directory {} not found.'.format(dir))
-    if method is None or method not in ['sample', 'optimize', 'variational']:
-        raise ValueError(
-            'Bad or missing value for argument "method", must be either'
-            ' "sample", "optimize", or "variational".'
-        )
     csvfiles = []
     for file in os.listdir(dir):
         if file.endswith(".csv"):
@@ -1374,16 +1368,9 @@ def from_csv(
         raise ValueError('Cannot read CSV file: {}'.format(csvfiles[0])) from e
     if 'model' not in config_dict or 'method' not in config_dict:
         raise ValueError("File {} is not a Stan CSV file.".format(csvfiles[0]))
-    if config_dict['method'] != method:
-        raise ValueError(
-            "File {} isn't result of method {}, "
-            "found method = {} ".format(
-                csvfiles[0], method, config_dict['method']
-            )
-        )
     fit = None
     try:
-        if method == 'sample':
+        if config_dict['method'] == 'sample':
             chains = len(csvfiles)
             sampler_args = SamplerArgs(
                 iter_sampling=config_dict['num_samples'],
@@ -1403,7 +1390,7 @@ def from_csv(
                 runset._set_retcode(i, 0)
             fit = CmdStanMCMC(runset)
             fit.draws()
-        elif method == 'optimize':
+        elif config_dict['method'] == 'optimize':
             if 'algorithm' not in config_dict:
                 raise ValueError(
                     "Cannot find optimization algorithm"
@@ -1423,7 +1410,7 @@ def from_csv(
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
             fit = CmdStanMLE(runset)
-        elif method == 'variational':
+        elif config_dict['method'] == 'variational':
             if 'algorithm' not in config_dict:
                 raise ValueError(
                     "Cannot find variational algorithm"
@@ -1450,6 +1437,11 @@ def from_csv(
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
             fit = CmdStanVB(runset)
+        else:
+            get_logger().info(
+                'Unable to process CSV output files from method %s.',
+                (config_dict['method'])
+            )
     except (IOError, OSError, PermissionError) as e:
         raise ValueError(
             'An error occured processing the CSV files:\n\t{}'.format(str(e))
