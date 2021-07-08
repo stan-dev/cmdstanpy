@@ -14,7 +14,14 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import _TMPDIR, _CMDSTAN_WARMUP, _CMDSTAN_SAMPLING, _CMDSTAN_THIN
+try:
+    import xarray as xr
+
+    XARRAY_INSTALLED = True
+except ImportError:
+    XARRAY_INSTALLED = False
+
+from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method
 from cmdstanpy.utils import (
     EXTENSION,
@@ -957,6 +964,61 @@ class CmdStanMCMC:
         if params is None:
             return self._draws_pd
         return self._draws_pd[mask]
+
+    def draws_xr(
+        self, vars: List[str] = None, inc_warmup: bool = False
+    ) -> "xr.Dataset":
+        """
+        Returns the sampler draws as a xarray Dataset.
+        :param vars: optional list of variable names.
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the output, i.e., the sampler was run with ``save_warmup=True``,
+            then the warmup draws are included.  Default value is ``False``.
+        """
+        if not XARRAY_INSTALLED:
+            raise RuntimeError(
+                "xarray is not installed, cannot produce draws array"
+            )
+        if inc_warmup and not self._save_warmup:
+            self._logger.warning(
+                "draws from warmup iterations not available,"
+                ' must run sampler with "save_warmup=True".'
+            )
+
+        if vars is None:
+            vars = self.stan_vars_dims.keys()
+
+        self._assemble_draws()
+
+        num_draws = self.num_draws_sampling
+        meta = self._metadata.cmdstan_config
+        attrs = {
+            "stan_version": f"{meta['stan_version_major']}."
+            f"{meta['stan_version_minor']}.{meta['stan_version_patch']}",
+            "model": meta["model"],
+            "num_unconstrained_params": self.num_unconstrained_params,
+            "num_draws_sampling": num_draws,
+        }
+        if inc_warmup and self._save_warmup:
+            num_draws += self.num_draws_warmup
+            attrs["num_draws_warmup"] = self.num_draws_warmup
+
+        data = {}
+        coordinates = {"chains": self.chain_ids, "draws": np.arange(num_draws)}
+        dims = ("draws", "chains")
+        for var in vars:
+            draw1 = 0
+            if not inc_warmup and self._save_warmup:
+                draw1 = self.num_draws_warmup
+            col_idxs = self._metadata.stan_vars_cols[var]
+            var_dims = dims + tuple(
+                f"{var}_dim_{i}" for i in range(len(self.stan_vars_dims[var]))
+            )
+            data[var] = (var_dims, np.squeeze(self._draws[draw1:, :, col_idxs]))
+
+        return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
+            'chains', 'draws', ...
+        )
 
     def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
         """
