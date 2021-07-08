@@ -1004,8 +1004,8 @@ class CmdStanMCMC:
             attrs["num_draws_warmup"] = self.num_draws_warmup
 
         data = {}
-        coordinates = {"chains": self.chain_ids, "draws": np.arange(num_draws)}
-        dims = ("draws", "chains")
+        coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
+        dims = ("draw", "chain")
         for var in vars:
             draw1 = 0
             if not inc_warmup and self._save_warmup:
@@ -1017,7 +1017,7 @@ class CmdStanMCMC:
             data[var] = (var_dims, np.squeeze(self._draws[draw1:, :, col_idxs]))
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
-            'chains', 'draws', ...
+            'chain', 'draw', ...
         )
 
     def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
