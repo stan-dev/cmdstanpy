@@ -634,7 +634,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         for file in os.listdir(csvfiles_path):
             if file.endswith(".csv"):
                 csvfiles.append(os.path.join(csvfiles_path, file))
-        bern_fit = from_csv(path=csvfiles_path)
+        bern_fit = from_csv(path=csvfiles)
         draws_pd = bern_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
@@ -677,6 +677,23 @@ class CmdStanMCMCTest(unittest.TestCase):
             ValueError, r'Expecting Stan CSV output files from method optimize'
         ):
             from_csv(csvfiles_path, 'optimize')
+
+        csvfiles = []
+        with self.assertRaisesRegex(ValueError, r'No CSV files found'):
+            from_csv(csvfiles, 'sample')
+
+        for file in os.listdir(csvfiles_path):
+            csvfiles.append(os.path.join(csvfiles_path, file))
+        with self.assertRaisesRegex(ValueError, r'Bad CSV file path spec'):
+            from_csv(csvfiles, 'sample')
+
+        csvfiles_path = os.path.join(csvfiles_path, '*')
+        with self.assertRaisesRegex(ValueError, r'Bad CSV file path spec'):
+            from_csv(csvfiles_path, 'sample')
+
+        csvfiles_path = os.path.join(csvfiles_path, '*')
+        with self.assertRaisesRegex(ValueError, r'Invalid path specification'):
+            from_csv(csvfiles_path, 'sample')
 
         csvfiles_path = os.path.join(DATAFILES_PATH, 'no-such-directory')
         with self.assertRaisesRegex(ValueError, r'Invalid path specification'):

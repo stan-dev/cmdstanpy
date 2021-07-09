@@ -1372,7 +1372,7 @@ def from_csv(
 
     csvfiles = []
     if isinstance(path, list):
-        csvfiles = list
+        csvfiles = path
     elif isinstance(path, str):
         if '*' in path:
             splits = os.path.split(path)
@@ -1399,8 +1399,8 @@ def from_csv(
     for file in csvfiles:
         if not (os.path.exists(file) and file.endswith('.csv')):
             raise ValueError(
-                'Bad CSV file path spec {},'
-                ' matched non-csv file: {}'.format(path, file)
+                'Bad CSV file path spec,'
+                ' includes non-csv file: {}'.format(file)
             )
 
     config_dict = {}
