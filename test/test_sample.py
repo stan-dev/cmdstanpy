@@ -609,7 +609,7 @@ class CmdStanMCMCTest(unittest.TestCase):
 
     def test_instantiate_from_csvfiles(self):
         csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
-        bern_fit = from_csv(dir=csvfiles_path)
+        bern_fit = from_csv(path=csvfiles_path)
         draws_pd = bern_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
@@ -619,7 +619,43 @@ class CmdStanMCMCTest(unittest.TestCase):
             ),
         )
         csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-big')
-        big_fit = from_csv(dir=csvfiles_path)
+        big_fit = from_csv(path=csvfiles_path)
+        draws_pd = big_fit.draws_pd()
+        self.assertEqual(
+            draws_pd.shape,
+            (
+                big_fit.runset.chains * big_fit.num_draws_sampling,
+                len(big_fit.column_names),
+            ),
+        )
+        # list
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
+        csvfiles = []
+        for file in os.listdir(csvfiles_path):
+            if file.endswith(".csv"):
+                csvfiles.append(os.path.join(csvfiles_path, file))
+        bern_fit = from_csv(path=csvfiles_path)
+        draws_pd = bern_fit.draws_pd()
+        self.assertEqual(
+            draws_pd.shape,
+            (
+                bern_fit.runset.chains * bern_fit.num_draws_sampling,
+                len(bern_fit.column_names),
+            ),
+        )
+        # single csvfile
+        bern_fit = from_csv(path=csvfiles[0])
+        draws_pd = bern_fit.draws_pd()
+        self.assertEqual(
+            draws_pd.shape,
+            (
+                bern_fit.num_draws_sampling,
+                len(bern_fit.column_names),
+            ),
+        )
+        # glob
+        csvfiles_path = os.path.join(csvfiles_path, '*.csv')
+        big_fit = from_csv(path=csvfiles_path)
         draws_pd = big_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
@@ -630,7 +666,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
 
     def test_instantiate_from_csvfiles_fail(self):
-        with self.assertRaisesRegex(ValueError, r'Must specify directory'):
+        with self.assertRaisesRegex(ValueError, r'Must specify path'):
             from_csv(None)
 
         csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
@@ -643,13 +679,13 @@ class CmdStanMCMCTest(unittest.TestCase):
             from_csv(csvfiles_path, 'optimize')
 
         csvfiles_path = os.path.join(DATAFILES_PATH, 'no-such-directory')
-        with self.assertRaisesRegex(ValueError, r'not found'):
-            from_csv(dir=csvfiles_path)
+        with self.assertRaisesRegex(ValueError, r'Invalid path specification'):
+            from_csv(path=csvfiles_path)
 
         wrong_method_path = os.path.join(DATAFILES_PATH, 'from_csv')
         with LogCapture() as log:
             logging.getLogger()
-            from_csv(dir=wrong_method_path)
+            from_csv(path=wrong_method_path)
         log.check_present(
             (
                 'cmdstanpy',
@@ -665,7 +701,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             shutil.rmtree(no_csvfiles_path, ignore_errors=True)
         os.mkdir(no_csvfiles_path)
         with self.assertRaisesRegex(ValueError, r'No CSV files found'):
-            from_csv(dir=no_csvfiles_path)
+            from_csv(path=no_csvfiles_path)
         if os.path.exists(no_csvfiles_path):
             shutil.rmtree(no_csvfiles_path, ignore_errors=True)
 

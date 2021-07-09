@@ -53,7 +53,7 @@ class CmdStanMLETest(unittest.TestCase):
 
     def test_instantiate_from_csvfiles(self):
         csvfiles_path = os.path.join(DATAFILES_PATH, 'optimize')
-        mle = from_csv(dir=csvfiles_path)
+        mle = from_csv(path=csvfiles_path)
         self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
         self.assertIn('method=optimize', mle.__repr__())
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))

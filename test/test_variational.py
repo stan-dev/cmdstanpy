@@ -65,7 +65,7 @@ class CmdStanVBTest(unittest.TestCase):
 
     def test_instantiate_from_csvfiles(self):
         csvfiles_path = os.path.join(DATAFILES_PATH, 'variational')
-        variational = from_csv(dir=csvfiles_path)
+        variational = from_csv(path=csvfiles_path)
         self.assertIn(
             'CmdStanVB: model=eta_should_be_big', variational.__repr__()
         )

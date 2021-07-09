@@ -1,6 +1,7 @@
 """Container objects for results of CmdStan run(s)."""
 
 import copy
+import glob
 import logging
 import math
 import os
@@ -1340,22 +1341,25 @@ class CmdStanVB:
 
 
 def from_csv(
-    dir: str = None, method: str = None
+    path: Union[str, List[str]] = None, method: str = None
 ) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
     """
-    Given a directory of saved Stan CSV files, instantiate the CmdStan object
-    corresponding to the inference method which produced these outputs, i.e.,
+    Instantiate a CmdStan object from a the Stan CSV files from a CmdStan run.
+    CSV files are specified from either a list of Stan CSV files or a single
+    filepath which can be either a directory name, a Stan CSV filename, or
+    a pathname pattern (i.e., a Python glob).  The optional argument 'method'
+    checks that the CSV files were produced by that method.
     Stan CSV files from CmdStan methods 'sample', 'optimize', and 'variational'
     result in objects of class CmdStanMCMC, CmdStanMLE, and CmdStanVB,
     respectively.
 
-    :param dir: directory path
+    :param path: directory path
     :param method: method name (optional)
 
     :return: either a CmdStanMCMC, CmdStanMLE, or CmdStanVB object
     """
-    if dir is None:
-        raise ValueError('Must specify directory of Stan CSV files.')
+    if path is None:
+        raise ValueError('Must specify path to Stan CSV files.')
     if method is not None and method not in [
         'sample',
         'optimize',
@@ -1363,16 +1367,42 @@ def from_csv(
     ]:
         raise ValueError(
             'Bad method argument {}, must be one of: '
-            '"sample", "optimize", "variational".'.format(method)
+            '"sample", "optimize", "variational"'.format(method)
         )
-    if not os.path.exists(dir):
-        raise ValueError('Directory {} not found.'.format(dir))
+
     csvfiles = []
-    for file in os.listdir(dir):
-        if file.endswith(".csv"):
-            csvfiles.append(os.path.join(dir, file))
+    if isinstance(path, list):
+        csvfiles = list
+    elif isinstance(path, str):
+        if '*' in path:
+            splits = os.path.split(path)
+            if splits[0] is not None:
+                if not (os.path.exists(splits[0]) and os.path.isdir(splits[0])):
+                    raise ValueError(
+                        'Invalid path specification, {} '
+                        ' unknown directory: {}'.format(path, splits[0])
+                    )
+            csvfiles = glob.glob(path)
+        elif os.path.exists(path) and os.path.isdir(path):
+            for file in os.listdir(path):
+                if file.endswith(".csv"):
+                    csvfiles.append(os.path.join(path, file))
+        elif os.path.exists(path):
+            csvfiles.append(path)
+        else:
+            raise ValueError('Invalid path specification: {}'.format(path))
+    else:
+        raise ValueError('Invalid path specification: {}'.format(path))
+
     if len(csvfiles) == 0:
-        raise ValueError('No CSV files found in directory {}'.format(dir))
+        raise ValueError('No CSV files found in directory {}'.format(path))
+    for file in csvfiles:
+        if not (os.path.exists(file) and file.endswith('.csv')):
+            raise ValueError(
+                'Bad CSV file path spec {},'
+                ' matched non-csv file: {}'.format(path, file)
+            )
+
     config_dict = {}
     try:
         with open(csvfiles[0], 'r') as fd:
