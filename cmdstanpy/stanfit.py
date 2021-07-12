@@ -1011,10 +1011,18 @@ class CmdStanMCMC:
             if not inc_warmup and self._save_warmup:
                 draw1 = self.num_draws_warmup
             col_idxs = self._metadata.stan_vars_cols[var]
+
             var_dims = dims + tuple(
                 f"{var}_dim_{i}" for i in range(len(self.stan_vars_dims[var]))
             )
-            data[var] = (var_dims, np.squeeze(self._draws[draw1:, :, col_idxs]))
+
+            if self.stan_vars_dims[var] == ():
+                data[var] = (
+                    var_dims,
+                    np.squeeze(self._draws[draw1:, :, col_idxs], axis=2),
+                )
+            else:
+                data[var] = (var_dims, self._draws[draw1:, :, col_idxs])
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
