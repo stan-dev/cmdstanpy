@@ -328,8 +328,9 @@ class CmdStanModel:
                             cmd, cmdstan_path(), logger=self._logger
                         )
                         if msg is not None and 'Warning or error:' in msg:
+                            msg = msg.split("Warning or error:", 1)[1].strip()
                             self._logger.warning(
-                                msg.split("Warning or error:", maxsplit=1)[1]
+                                "stanc3 has produced warnings:\n%s", msg
                             )
 
                     except RuntimeError as e:

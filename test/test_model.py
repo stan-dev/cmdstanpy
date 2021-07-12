@@ -88,17 +88,15 @@ class CmdStanModelTest(unittest.TestCase):
             CmdStanModel(
                 model_name='bern',
                 stan_file=os.path.join(
-                    DATAFILES_PATH, 'bernoulli-pedantic.stan'
+                    DATAFILES_PATH, 'bernoulli_pedantic.stan'
                 ),
                 stanc_options={'warn-pedantic': True},
             )
-            log.check_present(
-                (
-                    'cmdstanpy',
-                    'WARNING',
-                    '\tWarning: The parameter theta has no priors.',
-                )
+            expect = (
+                'stanc3 has produced warnings:\n'
+                + 'Warning: The parameter theta has no priors.'
             )
+            log.check_present(('cmdstanpy', 'WARNING', expect))
 
     def test_model_bad(self):
         with self.assertRaises(ValueError):
