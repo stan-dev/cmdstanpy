@@ -1,5 +1,6 @@
 """CmdStanModel tests"""
 
+import logging
 import os
 import shutil
 import tempfile
@@ -80,6 +81,24 @@ class CmdStanModelTest(unittest.TestCase):
         model = CmdStanModel(stan_file=BERN_STAN, compile=False)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
+
+    def test_model_pedantic(self):
+        with LogCapture() as log:
+            logging.getLogger()
+            CmdStanModel(
+                model_name='bern',
+                stan_file=os.path.join(
+                    DATAFILES_PATH, 'bernoulli-pedantic.stan'
+                ),
+                stanc_options={'warn-pedantic': True},
+            )
+            log.check_present(
+                (
+                    'cmdstanpy',
+                    'WARNING',
+                    '\tWarning: The parameter theta has no priors.',
+                )
+            )
 
     def test_model_bad(self):
         with self.assertRaises(ValueError):
