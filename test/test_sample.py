@@ -1426,6 +1426,46 @@ class CmdStanMCMCTest(unittest.TestCase):
             diagnostics_file = profile_fit.runset.diagnostic_files[i]
             self.assertTrue(os.path.exists(diagnostics_file))
 
+    def test_xarray_draws(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
+        )
+        xr_data = bern_fit.draws_xr()
+        self.assertEqual(xr_data.theta.dims, ('chain', 'draw'))
+        self.assertTrue(
+            np.allclose(
+                xr_data.theta.transpose('draw', ...).values,
+                bern_fit.draws()[:, :, -1],
+            )
+        )
+        self.assertEqual(xr_data.theta.values.shape, (2, 100))
+
+        # test inc_warmup
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_warmup=100,
+            iter_sampling=100,
+            save_warmup=True,
+        )
+        xr_data = bern_fit.draws_xr(inc_warmup=True)
+        self.assertEqual(xr_data.theta.values.shape, (2, 200))
+
+        # test that array[1] and chains=1 are properly handled dimension-wise
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_array.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_fit = bern_model.sample(
+            data=jdata, chains=1, seed=12345, iter_warmup=100, iter_sampling=100
+        )
+        xr_data = bern_fit.draws_xr()
+        self.assertEqual(xr_data.theta.dims, ('chain', 'draw', 'theta_dim_0'))
+        self.assertEqual(xr_data.theta.values.shape, (1, 100, 1))
+
 
 if __name__ == '__main__':
     unittest.main()
