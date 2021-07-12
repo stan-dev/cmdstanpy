@@ -8,7 +8,7 @@ import pytest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanVB, RunSet
+from cmdstanpy.stanfit import from_csv, CmdStanVB, RunSet
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -47,6 +47,25 @@ class CmdStanVBTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'variational', 'eta_big_output.csv')
         ]
         variational = CmdStanVB(runset)
+        self.assertIn(
+            'CmdStanVB: model=eta_should_be_big', variational.__repr__()
+        )
+        self.assertIn('method=variational', variational.__repr__())
+        self.assertEqual(
+            variational.column_names,
+            ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
+        )
+        self.assertAlmostEqual(
+            variational.variational_params_dict['mu[1]'], 31.0299, places=2
+        )
+        self.assertAlmostEqual(
+            variational.variational_params_dict['mu[2]'], 28.8141, places=2
+        )
+        self.assertEqual(variational.variational_sample.shape, (1000, 5))
+
+    def test_instantiate_from_csvfiles(self):
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'variational')
+        variational = from_csv(path=csvfiles_path)
         self.assertIn(
             'CmdStanVB: model=eta_should_be_big', variational.__repr__()
         )

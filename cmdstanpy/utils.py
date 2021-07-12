@@ -390,7 +390,7 @@ def rdump(path: str, data: Dict) -> None:
             print(line, file=fd)
 
 
-def rload(fname: str) -> dict:
+def rload(fname: str) -> Dict:
     """Parse data and parameter variable values from an R dump format file.
     This parser only supports the subset of R dump data as described
     in the "Dump Data Format" section of the CmdStan manual, i.e.,
@@ -644,7 +644,7 @@ def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def munge_varnames(names: List) -> List:
+def munge_varnames(names: List[str]) -> List[str]:
     """
     Change formatting for indices of container var elements
     from use of dot separator to array-like notation, e.g.,

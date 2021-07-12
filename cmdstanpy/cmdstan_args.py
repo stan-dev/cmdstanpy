@@ -312,7 +312,7 @@ class SamplerArgs:
 class OptimizeArgs:
     """Container for arguments for the optimizer."""
 
-    OPTIMIZE_ALGOS = {'BFGS', 'LBFGS', 'Newton'}
+    OPTIMIZE_ALGOS = {'BFGS', 'bfgs', 'LBFGS', 'lbfgs', 'Newton', 'newton'}
 
     def __init__(
         self,

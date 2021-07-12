@@ -37,7 +37,13 @@ atexit.register(_cleanup_tmpdir)
 
 from ._version import __version__  # noqa
 from .model import CmdStanModel  # noqa
-from .stanfit import CmdStanGQ, CmdStanMCMC, CmdStanMLE, CmdStanVB  # noqa
+from .stanfit import (
+    from_csv,
+    CmdStanGQ,
+    CmdStanMCMC,
+    CmdStanMLE,
+    CmdStanVB,
+)  # noqa
 from .utils import set_cmdstan_path  # noqa
 from .utils import cmdstan_path, install_cmdstan, set_make_env
 
@@ -51,4 +57,5 @@ __all__ = [
     'CmdStanGQ',
     'CmdStanVB',
     'CmdStanModel',
+    'from_csv',
 ]

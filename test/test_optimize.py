@@ -9,7 +9,7 @@ import pytest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanMLE, RunSet
+from cmdstanpy.stanfit import from_csv, CmdStanMLE, RunSet
 from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +45,15 @@ class CmdStanMLETest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
         ]
         mle = CmdStanMLE(runset)
+        self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
+        self.assertIn('method=optimize', mle.__repr__())
+        self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
+        self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
+        self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
+
+    def test_instantiate_from_csvfiles(self):
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'optimize')
+        mle = from_csv(path=csvfiles_path)
         self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
         self.assertIn('method=optimize', mle.__repr__())
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
