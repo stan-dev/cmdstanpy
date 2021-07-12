@@ -1,0 +1,27 @@
+# stan_version_major = 2
+# stan_version_minor = 25
+# stan_version_patch = 0
+# model = logistic_model
+# method = diagnose
+# id = 1
+# data
+#   file = logistic.data.R
+# init = 2 (Default)
+# random
+#   seed = 12345
+# output
+#   file = logistic_output_1.csv
+#   diagnostic_file =  (Default)
+#   refresh = 100 (Default)
+#   sig_figs = 17
+lp__,accept_stat__,stepsize__,treedepth__,n_leapfrog__,divergent__,energy__,beta.1,beta.2
+# Adaptation terminated
+# Step size = 0.867157
+# Diagonal elements of inverse mass matrix:
+# 0.0574982, 0.0750306
+-65.512400286053165,1,0.86715739477627263,2,3,0,66.280862231993666,1.4566622706449768,-0.4342590644812877
+# 
+#  Elapsed Time: 0.066 seconds (Warm-up)
+#                0.006 seconds (Sampling)
+#                0.072 seconds (Total)
+# 
