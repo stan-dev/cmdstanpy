@@ -9,7 +9,7 @@ import pytest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import from_csv, CmdStanMLE, RunSet
+from cmdstanpy.stanfit import CmdStanMLE, RunSet, from_csv
 from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -24,7 +24,9 @@ class CmdStanMLETest(unittest.TestCase):
         for root, _, files in os.walk(DATAFILES_PATH):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.hpp', '.exe', ''):
+                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
+                    filename != ".gitignore"
+                ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 
