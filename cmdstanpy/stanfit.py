@@ -1,6 +1,7 @@
 """Container objects for results of CmdStan run(s)."""
 
 import copy
+import glob
 import logging
 import math
 import os
@@ -9,7 +10,7 @@ import shutil
 from collections import Counter, OrderedDict
 from datetime import datetime
 from time import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -22,7 +23,13 @@ except ImportError:
     XARRAY_INSTALLED = False
 
 from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, Method
+from cmdstanpy.cmdstan_args import (
+    CmdStanArgs,
+    Method,
+    OptimizeArgs,
+    SamplerArgs,
+    VariationalArgs,
+)
 from cmdstanpy.utils import (
     EXTENSION,
     check_sampler_csv,
@@ -33,6 +40,7 @@ from cmdstanpy.utils import (
     get_logger,
     parse_sampler_vars,
     parse_stan_vars,
+    scan_config,
     scan_generated_quantities_csv,
     scan_optimize_csv,
     scan_variational_csv,
@@ -1400,3 +1408,162 @@ class CmdStanVB:
         :param dir: directory path
         """
         self.runset.save_csvfiles(dir)
+
+
+def from_csv(
+    path: Union[str, List[str]] = None, method: str = None
+) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
+    """
+    Instantiate a CmdStan object from a the Stan CSV files from a CmdStan run.
+    CSV files are specified from either a list of Stan CSV files or a single
+    filepath which can be either a directory name, a Stan CSV filename, or
+    a pathname pattern (i.e., a Python glob).  The optional argument 'method'
+    checks that the CSV files were produced by that method.
+    Stan CSV files from CmdStan methods 'sample', 'optimize', and 'variational'
+    result in objects of class CmdStanMCMC, CmdStanMLE, and CmdStanVB,
+    respectively.
+
+    :param path: directory path
+    :param method: method name (optional)
+
+    :return: either a CmdStanMCMC, CmdStanMLE, or CmdStanVB object
+    """
+    if path is None:
+        raise ValueError('Must specify path to Stan CSV files.')
+    if method is not None and method not in [
+        'sample',
+        'optimize',
+        'variational',
+    ]:
+        raise ValueError(
+            'Bad method argument {}, must be one of: '
+            '"sample", "optimize", "variational"'.format(method)
+        )
+
+    csvfiles = []
+    if isinstance(path, list):
+        csvfiles = path
+    elif isinstance(path, str):
+        if '*' in path:
+            splits = os.path.split(path)
+            if splits[0] is not None:
+                if not (os.path.exists(splits[0]) and os.path.isdir(splits[0])):
+                    raise ValueError(
+                        'Invalid path specification, {} '
+                        ' unknown directory: {}'.format(path, splits[0])
+                    )
+            csvfiles = glob.glob(path)
+        elif os.path.exists(path) and os.path.isdir(path):
+            for file in os.listdir(path):
+                if file.endswith(".csv"):
+                    csvfiles.append(os.path.join(path, file))
+        elif os.path.exists(path):
+            csvfiles.append(path)
+        else:
+            raise ValueError('Invalid path specification: {}'.format(path))
+    else:
+        raise ValueError('Invalid path specification: {}'.format(path))
+
+    if len(csvfiles) == 0:
+        raise ValueError('No CSV files found in directory {}'.format(path))
+    for file in csvfiles:
+        if not (os.path.exists(file) and file.endswith('.csv')):
+            raise ValueError(
+                'Bad CSV file path spec,'
+                ' includes non-csv file: {}'.format(file)
+            )
+
+    config_dict = {}
+    try:
+        with open(csvfiles[0], 'r') as fd:
+            scan_config(fd, config_dict, 0)
+    except (IOError, OSError, PermissionError) as e:
+        raise ValueError('Cannot read CSV file: {}'.format(csvfiles[0])) from e
+    if 'model' not in config_dict or 'method' not in config_dict:
+        raise ValueError("File {} is not a Stan CSV file.".format(csvfiles[0]))
+    if method is not None and method != config_dict['method']:
+        raise ValueError(
+            'Expecting Stan CSV output files from method {}, '
+            ' found outputs from method {}'.format(
+                method, config_dict['method']
+            )
+        )
+    fit = None
+    try:
+        if config_dict['method'] == 'sample':
+            chains = len(csvfiles)
+            sampler_args = SamplerArgs(
+                iter_sampling=config_dict['num_samples'],
+                iter_warmup=config_dict['num_warmup'],
+                thin=config_dict['thin'],
+                save_warmup=config_dict['save_warmup'],
+            )
+            cmdstan_args = CmdStanArgs(
+                model_name=config_dict['model'],
+                model_exe=config_dict['model'],
+                chain_ids=[x + 1 for x in range(chains)],
+                method_args=sampler_args,
+            )
+            runset = RunSet(args=cmdstan_args, chains=chains)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            fit = CmdStanMCMC(runset)
+            fit.draws()
+        elif config_dict['method'] == 'optimize':
+            if 'algorithm' not in config_dict:
+                raise ValueError(
+                    "Cannot find optimization algorithm"
+                    " in file {}.".format(csvfiles[0])
+                )
+            optimize_args = OptimizeArgs(
+                algorithm=config_dict['algorithm'],
+            )
+            cmdstan_args = CmdStanArgs(
+                model_name=config_dict['model'],
+                model_exe=config_dict['model'],
+                chain_ids=None,
+                method_args=optimize_args,
+            )
+            runset = RunSet(args=cmdstan_args)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            fit = CmdStanMLE(runset)
+        elif config_dict['method'] == 'variational':
+            if 'algorithm' not in config_dict:
+                raise ValueError(
+                    "Cannot find variational algorithm"
+                    " in file {}.".format(csvfiles[0])
+                )
+            variational_args = VariationalArgs(
+                algorithm=config_dict['algorithm'],
+                iter=config_dict['iter'],
+                grad_samples=config_dict['grad_samples'],
+                elbo_samples=config_dict['elbo_samples'],
+                eta=config_dict['eta'],
+                tol_rel_obj=config_dict['tol_rel_obj'],
+                eval_elbo=config_dict['eval_elbo'],
+                output_samples=config_dict['output_samples'],
+            )
+            cmdstan_args = CmdStanArgs(
+                model_name=config_dict['model'],
+                model_exe=config_dict['model'],
+                chain_ids=None,
+                method_args=variational_args,
+            )
+            runset = RunSet(args=cmdstan_args)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            fit = CmdStanVB(runset)
+        else:
+            get_logger().info(
+                'Unable to process CSV output files from method %s.',
+                (config_dict['method']),
+            )
+    except (IOError, OSError, PermissionError) as e:
+        raise ValueError(
+            'An error occured processing the CSV files:\n\t{}'.format(str(e))
+        ) from e
+    return fit
