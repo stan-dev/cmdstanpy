@@ -394,6 +394,12 @@ class CmdStanMCMC:
     and accessor methods to access the entire sample or
     individual items.
 
+    The argument `validate_csv` is used to supress checking of
+    the sampler output files during instantiation.  The default is ``True``.
+    The validation process scans the sampler output files
+    for completeness and consistency.  If `validate_csv` is ``False``,
+    the output files will be scanned the as needed to get sampler metadata.
+
     The sample is lazily instantiated on first access of either
     the resulting sample or the HMC tuning parameters, i.e., the
     step size and metric.  The sample can treated either as a 2D or
@@ -415,7 +421,7 @@ class CmdStanMCMC:
             )
         self.runset = runset
         self._logger = logger or get_logger()
-        # copy info from runset
+        # info from runset to be exposed
         self._iter_sampling = runset._args.method_args.iter_sampling
         if self._iter_sampling is None:
             self._iter_sampling = _CMDSTAN_SAMPLING
@@ -428,15 +434,12 @@ class CmdStanMCMC:
         self._is_fixed_param = runset._args.method_args.fixed_param
         self._save_warmup = runset._args.method_args.save_warmup
         self._sig_figs = runset._args.sig_figs
-        # metadata from Stan CSV files
+        # info to be parsed from CSV files
         self._metadata = None
-        # HMC tuning params
         self._metric = None
         self._step_size = None
-        # inference
         self._draws = None
         self._draws_pd = None
-        self._validate_csv = validate_csv
         if validate_csv:
             self.validate_csv_files()
 
@@ -485,12 +488,8 @@ class CmdStanMCMC:
         and quantities of interest. Corresponds to Stan CSV file header row,
         with names munged to array notation, e.g. `beta[1]` not `beta.1`.
         """
-        if not self._validate_csv and self._metadata is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
+        if self._metadata is None:
+            self.validate_csv_files()
         return self._metadata.cmdstan_config['column_names']
 
     @property
@@ -509,17 +508,15 @@ class CmdStanMCMC:
         however a model with variables ``real alpha`` and ``simplex[3] beta``
         has 4 constrained and 3 unconstrained parameters.
         """
-        if not self._validate_csv and self._metadata is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
+        if self._metadata is None:
+            self.validate_csv_files()
         return self._metadata.cmdstan_config['num_unconstrained_params']
 
     @property
     def sampler_config(self) -> Dict:
         """Returns dict of CmdStan configuration arguments."""
+        if self._metadata is None:
+            self.validate_csv_files()
         return self._metadata.cmdstan_config
 
     @property
@@ -527,13 +524,18 @@ class CmdStanMCMC:
         """
         Returns map from sampler variable names to column indices.
         """
-        if not self._validate_csv and self._metadata is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
+        if self._metadata is None:
+            self.validate_csv_files()
         return self._metadata.sampler_vars_cols
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        """
+        Returns map from Stan program variable names to column indices.
+        """
+        if self._metadata is None:
+            self.validate_csv_files()
+        return self._metadata.stan_vars_cols
 
     @property
     def stan_vars_dims(self) -> Dict:
@@ -543,26 +545,10 @@ class CmdStanMCMC:
         program variable ``int foo`` has dimesion ``()`` and
         program variable ``vector[10] bar`` has dimension ``(10,)``.
         """
-        if not self._validate_csv and self._metadata is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
+        if self._metadata is None:
+            self.validate_csv_files()
         return self._metadata.stan_vars_dims
 
-    @property
-    def stan_vars_cols(self) -> Dict:
-        """
-        Returns map from Stan program variable names to column indices.
-        """
-        if not self._validate_csv and self._metadata is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
-        return self._metadata.stan_vars_cols
 
     @property
     def metric_type(self) -> str:
@@ -572,12 +558,8 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if not self._validate_csv and self._metadata is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
+        if self._metadata is None:
+            self.validate_csv_files()
         return self._metadata.cmdstan_config['metric']  # cmdstan arg name
 
     @property
@@ -588,13 +570,9 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if not self._validate_csv and self._metric is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
-        if self._draws is None:
+        if self._metric is None:
+            if self._metadata is None:
+                self.validate_csv_files()
             self._assemble_draws()
         return self._metric
 
@@ -606,13 +584,9 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if not self._validate_csv and self._step_size is None:
-            self._logger.warning(
-                'csv files not yet validated, run method validate_csv_files()'
-                ' in order to retrieve sample metadata.'
-            )
-            return None
-        if self._draws is None:
+        if self._step_size is None:
+            if self._metadata is None:
+                self.validate_csv_files()
             self._assemble_draws()
         return self._step_size
 
@@ -621,7 +595,7 @@ class CmdStanMCMC:
         """
         Period between recorded iterations.  (Default is 1).
         """
-        return self._metadata.cmdstan_config['thin']
+        return self._thin
 
     def draws(
         self, *, inc_warmup: bool = False, concat_chains: bool = False
@@ -643,7 +617,7 @@ class CmdStanMCMC:
         :param concat_chains: When ``True`` return a 2D array flattening all
             all draws from all chains.  Default value is ``False``.
         """
-        if not self._validate_csv and self._draws is None:
+        if self._metadata is None:
             self.validate_csv_files()
 
         if self._draws is None:
@@ -1072,6 +1046,7 @@ class CmdStanMLE:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
+        self._metadata = None
         self._column_names = ()
         self._mle = {}
         self._set_mle_attrs(runset.csv_files[0])
@@ -1090,6 +1065,7 @@ class CmdStanMLE:
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
         meta = scan_optimize_csv(sample_csv_0)
+        self._metadata = InferenceMetadata(meta)
         self._column_names = meta['column_names']
         self._mle = meta['mle']
 
@@ -1100,6 +1076,27 @@ class CmdStanMLE:
         and all parameters, transformed parameters, and generated quantitites.
         """
         return self._column_names
+
+    @property
+    def sampler_vars_cols(self) -> Dict:
+        """
+        Returns map from sampler variable names to column indices.
+        """
+        return self._metadata.sampler_vars_cols
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        """
+        Returns map from Stan program variable names to column indices.
+        """
+        return self._metadata.stan_vars_cols
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        """
+        Returns map from Stan program variable names to column indices.
+        """
+        return self._metadata.stan_vars_cols
 
     @property
     def optimized_params_np(self) -> np.array:
@@ -1115,6 +1112,26 @@ class CmdStanMLE:
     def optimized_params_dict(self) -> OrderedDict:
         """Returns optimized params as Dict."""
         return OrderedDict(zip(self.column_names, self._mle))
+
+    def stan_variable(self, name: str) -> np.ndarray:
+        col_idxs = self._metadata.stan_vars_cols[name]
+        shape = ()
+        if len(col_idxs) > 0:
+            shape = self._metadata.stan_vars_dims[name]
+        return np.ndarray(
+            shape = shape, buffer = np.array(self._variational_mean[col_idxs])
+        )
+
+    def stan_variables(self) -> Dict:
+        """
+        Return a dictionary of all Stan program variables.
+        """
+        result = {}
+        for name in self.stan_vars_dims.keys():
+            result[name] = self.stan_variable(name)
+        return result
+
+
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
@@ -1141,6 +1158,7 @@ class CmdStanGQ:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
+        self._metadata = None
         self.mcmc_sample = mcmc_sample
         self._generated_quantities = None
         self._column_names = scan_generated_quantities_csv(
@@ -1267,6 +1285,7 @@ class CmdStanVB:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
+        self._metadata = None
         self._column_names = ()
         self._variational_mean = {}
         self._variational_sample = None
@@ -1286,6 +1305,7 @@ class CmdStanVB:
 
     def _set_variational_attrs(self, sample_csv_0: str) -> None:
         meta = scan_variational_csv(sample_csv_0)
+        self._metadata = InferenceMetadata(meta)
         self._column_names = meta['column_names']
         self._variational_mean = meta['variational_mean']
         self._variational_sample = meta['variational_sample']
@@ -1309,6 +1329,37 @@ class CmdStanVB:
         return self._column_names
 
     @property
+    def sampler_vars_cols(self) -> Dict:
+        """
+        Returns map from sampler variable names to column indices.
+        """
+        return self._metadata.sampler_vars_cols
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        """
+        Returns map from Stan program variable names to column indices.
+        """
+        return self._metadata.stan_vars_cols
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        """
+        Returns map from Stan program variable names to column indices.
+        """
+        return self._metadata.stan_vars_cols
+
+    @property
+    def stan_vars_dims(self) -> Dict:
+        """
+        Returns map from Stan program variable names to variable dimensions.
+        Scalar types are mapped to the empty tuple, e.g.,
+        program variable ``int foo`` has dimesion ``()`` and
+        program variable ``vector[10] bar`` has dimension ``(10,)``.
+        """
+        return self._metadata.stan_vars_dims
+
+    @property
     def variational_params_np(self) -> np.array:
         """Returns inferred parameter means as numpy array."""
         return self._variational_mean
@@ -1322,6 +1373,24 @@ class CmdStanVB:
     def variational_params_dict(self) -> OrderedDict:
         """Returns inferred parameter means as Dict."""
         return OrderedDict(zip(self.column_names, self._variational_mean))
+
+    def stan_variable(self, name: str) -> np.ndarray:
+        col_idxs = self._metadata.stan_vars_cols[name]
+        shape = ()
+        if len(col_idxs) > 0:
+            shape = self._metadata.stan_vars_dims[name]
+        return np.ndarray(
+            shape = shape, buffer = np.array(self._variational_mean[col_idxs])
+        )
+
+    def stan_variables(self) -> Dict:
+        """
+        Return a dictionary of all Stan program variables.
+        """
+        result = {}
+        for name in self.stan_vars_dims.keys():
+            result[name] = self.stan_variable(name)
+        return result
 
     @property
     def variational_sample(self) -> np.array:

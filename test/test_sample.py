@@ -1284,56 +1284,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
             validate_csv=False,
         )
-        # check error messages
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.column_names)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.num_unconstrained_params)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.stan_vars_dims)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.stan_vars_cols)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.metric_type)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.metric)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.step_size)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
         # check computations match
         self.assertEqual(bern_fit.num_draws_warmup, 100)
         self.assertEqual(bern_fit.num_draws_sampling, 50)
