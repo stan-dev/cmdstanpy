@@ -1182,23 +1182,8 @@ class CmdStanMCMCTest(unittest.TestCase):
 
     def test_variables_2d(self):
         # pylint: disable=C0103
-        # construct fit using existing sampler output
-        exe = os.path.join(DATAFILES_PATH, 'lotka-volterra' + EXTENSION)
-        jdata = os.path.join(DATAFILES_PATH, 'lotka-volterra.data.json')
-        sampler_args = SamplerArgs(iter_sampling=20)
-        cmdstan_args = CmdStanArgs(
-            model_name='lotka-volterra',
-            model_exe=exe,
-            chain_ids=[1],
-            seed=12345,
-            data=jdata,
-            output_dir=DATAFILES_PATH,
-            method_args=sampler_args,
-        )
-        runset = RunSet(args=cmdstan_args, chains=1)
-        runset._csv_files = [os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')]
-        runset._set_retcode(0, 0)
-        fit = CmdStanMCMC(runset)
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')
+        fit = from_csv(path=csvfiles_path)
         self.assertEqual(20, fit.num_draws_sampling)
         self.assertEqual(8, len(fit.stan_vars_dims))
         self.assertTrue('z' in fit.stan_vars_dims)
@@ -1212,22 +1197,8 @@ class CmdStanMCMCTest(unittest.TestCase):
 
     def test_variables_3d(self):
         # construct fit using existing sampler output
-        exe = os.path.join(DATAFILES_PATH, 'multidim_vars' + EXTENSION)
-        jdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
-        sampler_args = SamplerArgs(iter_sampling=20)
-        cmdstan_args = CmdStanArgs(
-            model_name='multidim_vars',
-            model_exe=exe,
-            chain_ids=[1],
-            seed=12345,
-            data=jdata,
-            output_dir=DATAFILES_PATH,
-            method_args=sampler_args,
-        )
-        runset = RunSet(args=cmdstan_args, chains=1)
-        runset._csv_files = [os.path.join(DATAFILES_PATH, 'multidim_vars.csv')]
-        runset._set_retcode(0, 0)
-        fit = CmdStanMCMC(runset)
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'multidim_vars.csv')
+        fit = from_csv(path=csvfiles_path)
         self.assertEqual(20, fit.num_draws_sampling)
         self.assertEqual(3, len(fit.stan_vars_dims))
         self.assertTrue('y_rep' in fit.stan_vars_dims)

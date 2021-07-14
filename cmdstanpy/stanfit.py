@@ -394,16 +394,16 @@ class CmdStanMCMC:
     and accessor methods to access the entire sample or
     individual items.
 
-    The argument `validate_csv` is used to supress checking of
-    the sampler output files during instantiation.  The default is ``True``.
-    The validation process scans the sampler output files
-    for completeness and consistency.  If `validate_csv` is ``False``,
-    the output files will be scanned the as needed to get sampler metadata.
-
     The sample is lazily instantiated on first access of either
     the resulting sample or the HMC tuning parameters, i.e., the
     step size and metric.  The sample can treated either as a 2D or
     3D array; the former flattens all chains into a single dimension.
+
+    The constructor argument `validate_csv` is used to supress checking of
+    the sampler output files during instantiation.  The default is ``True``.
+    The validation process scans the sampler output files
+    for completeness and consistency.  If `validate_csv` is ``False``,
+    the output files will be scanned the as needed to get sampler metadata.
     """
 
     # pylint: disable=too-many-public-methods
@@ -548,7 +548,6 @@ class CmdStanMCMC:
         if self._metadata is None:
             self.validate_csv_files()
         return self._metadata.stan_vars_dims
-
 
     @property
     def metric_type(self) -> str:
@@ -1092,11 +1091,14 @@ class CmdStanMLE:
         return self._metadata.stan_vars_cols
 
     @property
-    def stan_vars_cols(self) -> Dict:
+    def stan_vars_dims(self) -> Dict:
         """
-        Returns map from Stan program variable names to column indices.
+        Returns map from Stan program variable names to variable dimensions.
+        Scalar types are mapped to the empty tuple, e.g.,
+        program variable ``int foo`` has dimesion ``()`` and
+        program variable ``vector[10] bar`` has dimension ``(10,)``.
         """
-        return self._metadata.stan_vars_cols
+        return self._metadata.stan_vars_dims
 
     @property
     def optimized_params_np(self) -> np.array:
@@ -1114,12 +1116,14 @@ class CmdStanMLE:
         return OrderedDict(zip(self.column_names, self._mle))
 
     def stan_variable(self, name: str) -> np.ndarray:
-        col_idxs = self._metadata.stan_vars_cols[name]
+        col_idxs = list(self._metadata.stan_vars_cols[name])
+        vals = list(self._mle)
+        xs = [vals[x] for x in col_idxs]
         shape = ()
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
         return np.ndarray(
-            shape = shape, buffer = np.array(self._variational_mean[col_idxs])
+            shape = shape, buffer = np.array(xs)
         )
 
     def stan_variables(self) -> Dict:
@@ -1334,13 +1338,6 @@ class CmdStanVB:
         Returns map from sampler variable names to column indices.
         """
         return self._metadata.sampler_vars_cols
-
-    @property
-    def stan_vars_cols(self) -> Dict:
-        """
-        Returns map from Stan program variable names to column indices.
-        """
-        return self._metadata.stan_vars_cols
 
     @property
     def stan_vars_cols(self) -> Dict:

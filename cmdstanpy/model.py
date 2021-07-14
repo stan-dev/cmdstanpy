@@ -690,7 +690,7 @@ class CmdStanModel:
             and consistency.
 
         :param refresh: Specify the number of iterations cmdstan will take
-        between progress messages. Default value is 100.
+            between progress messages. Default value is 100.
 
         :return: CmdStanMCMC object
         """
