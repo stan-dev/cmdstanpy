@@ -543,7 +543,7 @@ class CmdStanMCMC:
         Returns map from Stan program variable names to variable dimensions.
         Scalar types are mapped to the empty tuple, e.g.,
         program variable ``int foo`` has dimesion ``()`` and
-        program variable ``vector[10] bar`` has dimension ``(10,)``.
+        program variable ``vector[10] bar`` has single dimension ``(10)``.
         """
         if self._metadata is None:
             self.validate_csv_files()
@@ -1125,7 +1125,7 @@ class CmdStanMLE:
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
         return np.ndarray(
-            shape = shape, buffer = np.array(xs)
+            shape=shape, buffer=np.array(xs)
         )
 
     def stan_variables(self) -> Dict:
@@ -1136,8 +1136,6 @@ class CmdStanMLE:
         for name in self.stan_vars_dims.keys():
             result[name] = self.stan_variable(name)
         return result
-
-
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
@@ -1354,7 +1352,7 @@ class CmdStanVB:
         Returns map from Stan program variable names to variable dimensions.
         Scalar types are mapped to the empty tuple, e.g.,
         program variable ``int foo`` has dimesion ``()`` and
-        program variable ``vector[10] bar`` has dimension ``(10,)``.
+        program variable ``vector[10] bar`` has single dimension ``(10)``.
         """
         return self._metadata.stan_vars_dims
 
@@ -1374,12 +1372,16 @@ class CmdStanVB:
         return OrderedDict(zip(self.column_names, self._variational_mean))
 
     def stan_variable(self, name: str) -> np.ndarray:
-        col_idxs = self._metadata.stan_vars_cols[name]
+        if name not in self.stan_vars_dims:
+            raise ValueError('unknown name: {}'.format(name))
+        col_idxs = list(self._metadata.stan_vars_cols[name])
+        vals = list(self._variational_mean)
+        xs = [vals[x] for x in col_idxs]
         shape = ()
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
         return np.ndarray(
-            shape = shape, buffer = np.array(self._variational_mean[col_idxs])
+            shape=shape, buffer=np.array(xs)
         )
 
     def stan_variables(self) -> Dict:

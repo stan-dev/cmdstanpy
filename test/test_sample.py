@@ -1181,7 +1181,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             bern_fit.stan_variable(name='lp__')
 
     def test_variables_2d(self):
-        # pylint: disable=C0103
         csvfiles_path = os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')
         fit = from_csv(path=csvfiles_path)
         self.assertEqual(20, fit.num_draws_sampling)
