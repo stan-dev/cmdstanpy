@@ -1116,6 +1116,8 @@ class CmdStanMLE:
         return OrderedDict(zip(self.column_names, self._mle))
 
     def stan_variable(self, name: str) -> np.ndarray:
+        if name not in self.stan_vars_dims:
+            raise ValueError('unknown name: {}'.format(name))
         col_idxs = list(self._metadata.stan_vars_cols[name])
         vals = list(self._mle)
         xs = [vals[x] for x in col_idxs]

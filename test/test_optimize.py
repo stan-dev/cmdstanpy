@@ -81,7 +81,7 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertTrue('theta' in bern_mle.stan_vars_dims)
         self.assertEqual(bern_mle.stan_vars_dims['theta'], ())
         theta = bern_mle.stan_variable(name='theta')
-        self.assertFalse(isinstane(theta, np.ndarray))
+        self.assertEqual(theta.shape, ())
         with self.assertRaises(ValueError):
             bern_mle.stan_variable(name='eta')
         with self.assertRaises(ValueError):
