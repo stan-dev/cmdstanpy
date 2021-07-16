@@ -658,20 +658,21 @@ def munge_varnames(names: List[str]) -> List[str]:
     ]
 
 
-def parse_sampler_vars(names: Tuple[str, ...]) -> Dict:
+def parse_method_vars(names: Tuple[str]) -> Dict[str, Tuple[int]]:
     """
     Parses out names ending in `__` from list of CSV file column names.
     Return a dict mapping sampler variable name to Stan CSV file column, using
     zero-based column indexing.
+    Currently, (Stan 2.X) all CmdStan inference method vars are scalar,
+    the map entries are tuples of int to allow for structured variables.
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    # note: value as tuple allows structured sampler vars
-    # currently, all sampler vars a scalar, not checking for structure
+    # note: method vars are currently all scalar so not checking for structure
     return {v: tuple([k]) for (k, v) in enumerate(names) if v.endswith('__')}
 
 
-def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
+def parse_stan_vars(names: Tuple[str]) -> (Dict[str, Tuple[int]], Dict[str, Tuple[int]]):
     """
     Parses out Stan variable names (i.e., names not ending in `__`)
     from list of CSV file column names.
