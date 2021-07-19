@@ -125,7 +125,9 @@ class CmdStanVBTest(unittest.TestCase):
         var_frac_60 = multidim_variational.stan_variable(name='frac_60')
         self.assertEqual(var_frac_60.shape, ())
         vars = multidim_variational.stan_variables()
-        self.assertEqual(len(vars), len(multidim_variational.metadata.stan_vars_dims))
+        self.assertEqual(
+            len(vars), len(multidim_variational.metadata.stan_vars_dims)
+        )
         self.assertTrue('y_rep' in vars)
         self.assertEqual(vars['y_rep'].shape, (5, 4, 3))
         self.assertTrue('beta' in vars)

@@ -107,7 +107,9 @@ class CmdStanMLETest(unittest.TestCase):
         )
         self.assertEqual(3, len(multidim_mle.metadata.stan_vars_dims))
         self.assertTrue('y_rep' in multidim_mle.metadata.stan_vars_dims)
-        self.assertEqual(multidim_mle.metadata.stan_vars_dims['y_rep'], (5, 4, 3))
+        self.assertEqual(
+            multidim_mle.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
+        )
         var_y_rep = multidim_mle.stan_variable(name='y_rep')
         self.assertEqual(var_y_rep.shape, (5, 4, 3))
         var_beta = multidim_mle.stan_variable(name='beta')

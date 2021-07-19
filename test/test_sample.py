@@ -1095,6 +1095,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
 
+    # pylint: disable=pointless-statement
     def test_deprecated(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -1136,7 +1137,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'cmdstanpy',
                 'WARNING',
                 'method "sampler_diagnostics" has been deprecated, '
-                'use method "method_variables" instead.'
+                'use method "method_variables" instead.',
             )
         )
         with LogCapture() as log:
@@ -1146,7 +1147,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'cmdstanpy',
                 'WARNING',
                 'method "sampler_variables" has been deprecated, '
-                'use method "method_variables" instead.'
+                'use method "method_variables" instead.',
             )
         )
         with LogCapture() as log:
@@ -1156,7 +1157,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'cmdstanpy',
                 'WARNING',
                 'property "sampler_vars_cols" has been deprecated, '
-                'use "metadata.method_vars_cols" instead.'
+                'use "metadata.method_vars_cols" instead.',
             )
         )
         with LogCapture() as log:
@@ -1166,7 +1167,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'cmdstanpy',
                 'WARNING',
                 'property "stan_vars_cols" has been deprecated, '
-                'use "metadata.stan_vars_cols" instead.'
+                'use "metadata.stan_vars_cols" instead.',
             )
         )
         with LogCapture() as log:
@@ -1176,7 +1177,7 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'cmdstanpy',
                 'WARNING',
                 'property "stan_vars_dims" has been deprecated, '
-                'use "metadata.stan_vars_dims" instead.'
+                'use "metadata.stan_vars_dims" instead.',
             )
         )
 

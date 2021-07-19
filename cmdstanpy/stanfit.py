@@ -451,7 +451,7 @@ class CmdStanMCMC:
         # info from CSV initial comments and header
         self._metadata = InferenceMetadata(self._validate_csv_files())
         # info from CSV values, instantiated lazily
-        self._metric = None 
+        self._metric = None
         self._step_size = None
         self._draws = None
         self._draws_pd = None
@@ -563,7 +563,6 @@ class CmdStanMCMC:
         has 4 constrained and 3 unconstrained parameters.
         """
         return self._metadata.cmdstan_config['num_unconstrained_params']
-    
 
     @property
     def metric_type(self) -> str:
