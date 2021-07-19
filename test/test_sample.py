@@ -1109,21 +1109,17 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         with LogCapture() as log:
-            self.assertEqual(
-                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-            )
+            bern_fit.sample
         log.check_present(
             (
                 'cmdstanpy',
                 'WARNING',
-                'method "sample" will be deprecated,'
+                'method "sample" has been deprecated,'
                 ' use method "draws" instead.',
             )
         )
         with LogCapture() as log:
-            self.assertEqual(
-                bern_fit.warmup.shape, (300, 2, len(BERNOULLI_COLS))
-            )
+            bern_fit.warmup
         log.check_present(
             (
                 'cmdstanpy',
@@ -1131,6 +1127,56 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'method "warmup" has been deprecated, instead use method'
                 ' "draws(inc_warmup=True)", returning draws from both'
                 ' warmup and sampling iterations.',
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.sampler_diagnostics()
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "sampler_diagnostics" has been deprecated, '
+                'use method "method_variables" instead.'
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.sampler_variables()
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "sampler_variables" has been deprecated, '
+                'use method "method_variables" instead.'
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.sampler_vars_cols
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "sampler_vars_cols" has been deprecated, '
+                'use "metadata.method_vars_cols" instead.'
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.stan_vars_cols
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "stan_vars_cols" has been deprecated, '
+                'use "metadata.stan_vars_cols" instead.'
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.stan_vars_dims
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "stan_vars_dims" has been deprecated, '
+                'use "metadata.stan_vars_dims" instead.'
             )
         )
 
@@ -1158,7 +1204,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'method "sample" will be deprecated,'
+                'method "sample" has been deprecated,'
                 ' use method "draws" instead.',
             )
         )

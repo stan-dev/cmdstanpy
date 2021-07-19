@@ -93,9 +93,9 @@ class CmdStanVBTest(unittest.TestCase):
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
         )
-        self.assertEqual(1, len(variational.stan_vars_dims))
-        self.assertTrue('mu' in variational.stan_vars_dims)
-        self.assertEqual(variational.stan_vars_dims['mu'], (2,))
+        self.assertEqual(1, len(variational.metadata.stan_vars_dims))
+        self.assertTrue('mu' in variational.metadata.stan_vars_dims)
+        self.assertEqual(variational.metadata.stan_vars_dims['mu'], (2,))
         mu = variational.stan_variable(name='mu')
         self.assertEqual(mu.shape, (2,))
         with self.assertRaises(ValueError):
@@ -113,10 +113,10 @@ class CmdStanVBTest(unittest.TestCase):
             seed=1239812093,
             algorithm='meanfield',
         )
-        self.assertEqual(3, len(multidim_variational.stan_vars_dims))
-        self.assertTrue('y_rep' in multidim_variational.stan_vars_dims)
+        self.assertEqual(3, len(multidim_variational.metadata.stan_vars_dims))
+        self.assertTrue('y_rep' in multidim_variational.metadata.stan_vars_dims)
         self.assertEqual(
-            multidim_variational.stan_vars_dims['y_rep'], (5, 4, 3)
+            multidim_variational.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
         )
         var_y_rep = multidim_variational.stan_variable(name='y_rep')
         self.assertEqual(var_y_rep.shape, (5, 4, 3))
@@ -125,7 +125,7 @@ class CmdStanVBTest(unittest.TestCase):
         var_frac_60 = multidim_variational.stan_variable(name='frac_60')
         self.assertEqual(var_frac_60.shape, ())
         vars = multidim_variational.stan_variables()
-        self.assertEqual(len(vars), len(multidim_variational.stan_vars_dims))
+        self.assertEqual(len(vars), len(multidim_variational.metadata.stan_vars_dims))
         self.assertTrue('y_rep' in vars)
         self.assertEqual(vars['y_rep'].shape, (5, 4, 3))
         self.assertTrue('beta' in vars)

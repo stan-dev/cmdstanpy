@@ -504,6 +504,39 @@ class CmdStanMCMC:
         return self._metadata
 
     @property
+    def sampler_vars_cols(self) -> Dict:
+        """
+        Deprecated - use "metadata.method_vars_cols" instead
+        """
+        self._logger.warning(
+            'property "sampler_vars_cols" has been deprecated, '
+            'use "metadata.method_vars_cols" instead.'
+        )
+        return self.metadata.method_vars_cols
+
+    @property
+    def stan_vars_cols(self) -> Dict:
+        """
+        Deprecated - use "metadata.stan_vars_cols" instead
+        """
+        self._logger.warning(
+            'property "stan_vars_cols" has been deprecated, '
+            'use "metadata.stan_vars_cols" instead.'
+        )
+        return self.metadata.method_vars_cols
+
+    @property
+    def stan_vars_dims(self) -> Dict:
+        """
+        Deprecated - use "metadata.stan_vars_dims" instead
+        """
+        self._logger.warning(
+            'property "stan_vars_dims" has been deprecated, '
+            'use "metadata.stan_vars_dims" instead.'
+        )
+        return self.metadata.stan_vars_dims
+
+    @property
     def column_names(self) -> Tuple[str]:
         """
         Names of all outputs from the sampler, comprising sampler parameters
@@ -621,7 +654,7 @@ class CmdStanMCMC:
         Deprecated - use method "draws()" instead.
         """
         self._logger.warning(
-            'method "sample" will be deprecated, use method "draws" instead.'
+            'method "sample" has been deprecated, use method "draws" instead.'
         )
         return self.draws()
 
@@ -961,9 +994,10 @@ class CmdStanMCMC:
         # pylint: disable=redundant-keyword-arg
         return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
 
-    def stan_variables(self) -> Dict:
+    def stan_variables(self) -> Dict[str, np.ndarray]:
         """
-        Return a dictionary of all Stan program variables.
+        Return a dictionary mapping Stan program variables names
+        to the corresponding numpy.ndarray containing the inferred values.
         """
         result = {}
         for name in self._metadata.stan_vars_dims.keys():
@@ -985,9 +1019,22 @@ class CmdStanMCMC:
                 result[self.column_names[idx]] = self._draws[:, :, idx]
         return result
 
-    def sampler_diagnostics(self) -> Dict:
+    def sampler_variables(self) -> Dict:
+        """
+        Deprecated, use "method_variables" instead
+        """
         self._logger.warning(
-            'method "sampler_diagnostics" will be deprecated, '
+            'method "sampler_variables" has been deprecated, '
+            'use method "method_variables" instead.'
+        )
+        return self.method_variables()
+
+    def sampler_diagnostics(self) -> Dict:
+        """
+        Deprecated, use "method_variables" instead
+        """
+        self._logger.warning(
+            'method "sampler_diagnostics" has been deprecated, '
             'use method "method_variables" instead.'
         )
         return self.method_variables()
@@ -1073,6 +1120,13 @@ class CmdStanMLE:
         return OrderedDict(zip(self.column_names, self._mle))
 
     def stan_variable(self, name: str) -> np.ndarray:
+        """
+        Return a numpy.ndarray which contains the estimates for the
+        for the named Stan program variable where the dimensions of the
+        numpy.ndarray match the shape of the Stan program variable.
+
+        :param name: variable name
+        """
         if name not in self._metadata.stan_vars_dims:
             raise ValueError('unknown name: {}'.format(name))
         col_idxs = list(self._metadata.stan_vars_cols[name])
@@ -1085,9 +1139,10 @@ class CmdStanMLE:
             shape=shape, buffer=np.array(xs)
         )
 
-    def stan_variables(self) -> Dict:
+    def stan_variables(self) -> Dict[str, np.ndarray]:
         """
-        Return a dictionary of all Stan program variables.
+        Return a dictionary mapping Stan program variables names
+        to the corresponding numpy.ndarray containing the inferred values.
         """
         result = {}
         for name in self._metadata.stan_vars_dims.keys():
@@ -1314,6 +1369,13 @@ class CmdStanVB:
         return self._metadata
 
     def stan_variable(self, name: str) -> np.ndarray:
+        """
+        Return a numpy.ndarray which contains the estimates for the
+        for the named Stan program variable where the dimensions of the
+        numpy.ndarray match the shape of the Stan program variable.
+
+        :param name: variable name
+        """
         if name not in self._metadata.stan_vars_dims:
             raise ValueError('unknown name: {}'.format(name))
         col_idxs = list(self._metadata.stan_vars_cols[name])
@@ -1326,9 +1388,10 @@ class CmdStanVB:
             shape=shape, buffer=np.array(xs)
         )
 
-    def stan_variables(self) -> Dict:
+    def stan_variables(self) -> Dict[str, np.ndarray]:
         """
-        Return a dictionary of all Stan program variables.
+        Return a dictionary mapping Stan program variables names
+        to the corresponding numpy.ndarray containing the inferred values.
         """
         result = {}
         for name in self._metadata.stan_vars_dims.keys():

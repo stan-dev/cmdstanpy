@@ -77,9 +77,9 @@ class CmdStanMLETest(unittest.TestCase):
             tol_param=1e-8,
             history_size=5,
         )
-        self.assertEqual(1, len(bern_mle.stan_vars_dims))
-        self.assertTrue('theta' in bern_mle.stan_vars_dims)
-        self.assertEqual(bern_mle.stan_vars_dims['theta'], ())
+        self.assertEqual(1, len(bern_mle.metadata.stan_vars_dims))
+        self.assertTrue('theta' in bern_mle.metadata.stan_vars_dims)
+        self.assertEqual(bern_mle.metadata.stan_vars_dims['theta'], ())
         theta = bern_mle.stan_variable(name='theta')
         self.assertEqual(theta.shape, ())
         with self.assertRaises(ValueError):
@@ -105,9 +105,9 @@ class CmdStanMLETest(unittest.TestCase):
             tol_param=1e-8,
             history_size=5,
         )
-        self.assertEqual(3, len(multidim_mle.stan_vars_dims))
-        self.assertTrue('y_rep' in multidim_mle.stan_vars_dims)
-        self.assertEqual(multidim_mle.stan_vars_dims['y_rep'], (5, 4, 3))
+        self.assertEqual(3, len(multidim_mle.metadata.stan_vars_dims))
+        self.assertTrue('y_rep' in multidim_mle.metadata.stan_vars_dims)
+        self.assertEqual(multidim_mle.metadata.stan_vars_dims['y_rep'], (5, 4, 3))
         var_y_rep = multidim_mle.stan_variable(name='y_rep')
         self.assertEqual(var_y_rep.shape, (5, 4, 3))
         var_beta = multidim_mle.stan_variable(name='beta')
@@ -115,7 +115,7 @@ class CmdStanMLETest(unittest.TestCase):
         var_frac_60 = multidim_mle.stan_variable(name='frac_60')
         self.assertEqual(var_frac_60.shape, ())
         vars = multidim_mle.stan_variables()
-        self.assertEqual(len(vars), len(multidim_mle.stan_vars_dims))
+        self.assertEqual(len(vars), len(multidim_mle.metadata.stan_vars_dims))
         self.assertTrue('y_rep' in vars)
         self.assertEqual(vars['y_rep'].shape, (5, 4, 3))
         self.assertTrue('beta' in vars)
