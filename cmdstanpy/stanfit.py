@@ -394,7 +394,6 @@ class InferenceMetadata:
         """
         return copy.deepcopy(self._stan_vars_cols)
 
-
     @property
     def stan_vars_dims(self) -> Dict[str, Tuple[int]]:
         """
@@ -492,7 +491,6 @@ class CmdStanMCMC:
         thinned sampling iterations.
         """
         return int(math.ceil((self._iter_sampling) / self._thin))
-
 
     @property
     def metadata(self) -> InferenceMetadata:

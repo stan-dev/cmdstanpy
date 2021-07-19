@@ -672,7 +672,8 @@ def parse_method_vars(names: Tuple[str]) -> Dict[str, Tuple[int]]:
     return {v: tuple([k]) for (k, v) in enumerate(names) if v.endswith('__')}
 
 
-def parse_stan_vars(names: Tuple[str]) -> (Dict[str, Tuple[int]], Dict[str, Tuple[int]]):
+def parse_stan_vars(names: Tuple[str]) ->
+    (Dict[str, Tuple[int]], Dict[str, Tuple[int]]):
     """
     Parses out Stan variable names (i.e., names not ending in `__`)
     from list of CSV file column names.
