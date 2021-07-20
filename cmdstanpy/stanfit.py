@@ -711,7 +711,7 @@ class CmdStanMCMC:
                         and dzero[key] != drest[key]
                     ):
                         raise ValueError(
-                            'Stan CSV file {} found CmdStan config mismatch, '
+                            'CmdStan config mismatch in Stan CSV file {}: '
                             'arg {} is {}, expected {}'.format(
                                 self.runset.csv_files[i],
                                 key,

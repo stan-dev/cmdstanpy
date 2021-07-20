@@ -949,7 +949,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(ValueError, 'header mismatch'):
+        with self.assertRaisesRegex(ValueError, 'CmdStan config mismatch'):
             CmdStanMCMC(runset)
 
         # bad draws
