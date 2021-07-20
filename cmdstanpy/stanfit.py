@@ -375,7 +375,7 @@ class InferenceMetadata:
         return copy.deepcopy(self._cmdstan_config)
 
     @property
-    def method_vars_cols(self) -> Dict[str, Tuple[int]]:
+    def method_vars_cols(self) -> Dict[str, Tuple[int, ...]]:
         """
         Returns a map from a Stan inference method variable to
         a tuple of column indices in inference engine's output array.
@@ -385,7 +385,7 @@ class InferenceMetadata:
         return copy.deepcopy(self._method_vars_cols)
 
     @property
-    def stan_vars_cols(self) -> Dict[str, Tuple[int]]:
+    def stan_vars_cols(self) -> Dict[str, Tuple[int, ...]]:
         """
         Returns a map from a Stan program variable name to a
         tuple of the column indices in the vector or matrix of
@@ -395,7 +395,7 @@ class InferenceMetadata:
         return copy.deepcopy(self._stan_vars_cols)
 
     @property
-    def stan_vars_dims(self) -> Dict[str, Tuple[int]]:
+    def stan_vars_dims(self) -> Dict[str, Tuple[int, ...]]:
         """
         Returns map from Stan program variable names to variable dimensions.
         Scalar types are mapped to the empty tuple, e.g.,
@@ -447,13 +447,14 @@ class CmdStanMCMC:
         self._is_fixed_param = runset._args.method_args.fixed_param
         self._save_warmup = runset._args.method_args.save_warmup
         self._sig_figs = runset._args.sig_figs
-        # info from CSV initial comments and header
-        self._metadata = InferenceMetadata(self._validate_csv_files())
         # info from CSV values, instantiated lazily
         self._metric = None
         self._step_size = None
         self._draws = None
         self._draws_pd = None
+        # info from CSV initial comments and header
+        config = self._validate_csv_files()
+        self._metadata = InferenceMetadata(config)
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -535,7 +536,7 @@ class CmdStanMCMC:
         return self.metadata.stan_vars_dims
 
     @property
-    def column_names(self) -> Tuple[str]:
+    def column_names(self) -> Tuple[str, ...]:
         """
         Names of all outputs from the sampler, comprising sampler parameters
         and all components of all model parameters, transformed parameters,
@@ -669,8 +670,9 @@ class CmdStanMCMC:
 
     def _validate_csv_files(self) -> dict:
         """
-        Checks that csv output files for all chains are consistent.
-        Populates attributes for metadata, draws, metric, step size.
+        Checks that Stan CSV output files for all chains are consistent
+        and returns dict containing config and column names.
+
         Raises exception when inconsistencies detected.
         """
         dzero = {}
@@ -709,8 +711,8 @@ class CmdStanMCMC:
                         and dzero[key] != drest[key]
                     ):
                         raise ValueError(
-                            'csv file header mismatch, '
-                            'file {}, key {} is {}, expected {}'.format(
+                            'Stan CSV file {} found CmdStan config mismatch, '
+                            'arg {} is {}, expected {}'.format(
                                 self.runset.csv_files[i],
                                 key,
                                 dzero[key],
@@ -1085,7 +1087,7 @@ class CmdStanMLE:
         self._mle = meta['mle']
 
     @property
-    def column_names(self) -> Tuple[str]:
+    def column_names(self) -> Tuple[str, ...]:
         """
         Names of estimated quantities, includes joint log probability,
         and all parameters, transformed parameters, and generated quantitites.
@@ -1102,7 +1104,7 @@ class CmdStanMLE:
         return self._metadata
 
     @property
-    def optimized_params_np(self) -> np.array:
+    def optimized_params_np(self) -> np.ndarray:
         """Returns optimized params as numpy array."""
         return np.asarray(self._mle)
 
@@ -1197,7 +1199,7 @@ class CmdStanGQ:
         return self.runset.chains
 
     @property
-    def column_names(self) -> Tuple[str]:
+    def column_names(self) -> Tuple[str, ...]:
         """
         Names of generated quantities of interest.
         """
@@ -1333,7 +1335,7 @@ class CmdStanVB:
         return len(self._column_names)
 
     @property
-    def column_names(self) -> Tuple[str]:
+    def column_names(self) -> Tuple[str, ...]:
         """
         Names of information items returned by sampler for each draw.
         Includes approximation information and names of model parameters
@@ -1342,7 +1344,7 @@ class CmdStanVB:
         return self._column_names
 
     @property
-    def variational_params_np(self) -> np.array:
+    def variational_params_np(self) -> np.ndarray:
         """Returns inferred parameter means as numpy array."""
         return self._variational_mean
 
@@ -1396,7 +1398,7 @@ class CmdStanVB:
         return result
 
     @property
-    def variational_sample(self) -> np.array:
+    def variational_sample(self) -> np.ndarray:
         """Returns the set of approximate posterior output draws."""
         return self._variational_sample
 
