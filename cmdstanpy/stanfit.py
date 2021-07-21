@@ -358,9 +358,7 @@ class InferenceMetadata:
     def __init__(self, config: Dict) -> None:
         """Initialize object from CSV headers"""
         self._cmdstan_config = config
-        self._method_vars_cols = parse_method_vars(
-            names=config['column_names']
-        )
+        self._method_vars_cols = parse_method_vars(names=config['column_names'])
         stan_vars_dims, stan_vars_cols = parse_stan_vars(
             names=config['column_names']
         )
@@ -1134,9 +1132,10 @@ class CmdStanMLE:
         shape = ()
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
-        return np.ndarray(
-            np.array(xs).reshape(shape)
-        )
+        print('xs: {}'.format(xs))
+        print('len xs: {}'.format(len(xs)))
+        print('shape: {}'.format(shape))
+        return np.array(xs).reshape(shape)
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -1383,9 +1382,7 @@ class CmdStanVB:
         shape = ()
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
-        return np.ndarray(
-            np.array(xs).reshape(shape)
-        )
+        return np.array(xs).reshape(shape)
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
