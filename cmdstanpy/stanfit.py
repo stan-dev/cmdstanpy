@@ -34,7 +34,6 @@ from cmdstanpy.utils import (
     parse_method_vars,
     parse_stan_vars,
     scan_config,
-    scan_generated_quantities_csv,
     scan_optimize_csv,
     scan_variational_csv,
 )
@@ -1173,12 +1172,10 @@ class CmdStanGQ:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._metadata = None
         self.mcmc_sample = mcmc_sample
         self._generated_quantities = None
-        self._column_names = scan_generated_quantities_csv(
-            self.runset.csv_files[0]
-        )['column_names']
+        config = self._validate_csv_files()
+        self._metadata = InferenceMetadata(config)
 
     def __repr__(self) -> str:
         repr = 'CmdStanGQ: model={} chains={}{}'.format(
@@ -1193,6 +1190,49 @@ class CmdStanGQ:
         )
         return repr
 
+
+    def _validate_csv_files(self) -> dict:
+        """
+        Checks that Stan CSV output files for all chains are consistent
+        and returns dict containing config and column names.
+
+        Raises exception when inconsistencies detected.
+        """
+        dzero = {}
+        for i in range(self.chains):
+            if i == 0:
+                dzero = scan_generated_quantities_csv(
+                    path=self.runset.csv_files[i],
+                )
+            else:
+                drest = check_sampler_csv(
+                    path=self.runset.csv_files[i],
+                )
+                for key in dzero:
+                    if (
+                        key
+                        not in [
+                            'id',
+                            'diagnostic_file',
+                            'metric_file',
+                            'profile_file',
+                            'init',
+                            'seed',
+                            'start_datetime',
+                        ]
+                        and dzero[key] != drest[key]
+                    ):
+                        raise ValueError(
+                            'CmdStan config mismatch in Stan CSV file {}: '
+                            'arg {} is {}, expected {}'.format(
+                                self.runset.csv_files[i],
+                                key,
+                                dzero[key],
+                                drest[key],
+                            )
+                        )
+        return dzero
+
     @property
     def chains(self) -> int:
         """Number of chains."""
@@ -1203,7 +1243,17 @@ class CmdStanGQ:
         """
         Names of generated quantities of interest.
         """
-        return self._column_names
+        return self._metadata.cmdstan_config['column_names']
+
+
+    @property
+    def metadata(self) -> InferenceMetadata:
+        """
+        Returns object which contains CmdStan configuration as well as
+        information about the names and structure of the inference method
+        and model output variables.
+        """
+        return self._metadata
 
     @property
     def generated_quantities(self) -> np.ndarray:
@@ -1235,6 +1285,70 @@ class CmdStanGQ:
             data=self._generated_quantities, columns=self.column_names
         )
 
+    def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
+        """
+        Return a numpy.ndarray which contains the set of draws
+        for the named Stan program variable.  Flattens the chains,
+        leaving the draws in chain order.  The first array dimension,
+        corresponds to number of draws or post-warmup draws in the sample,
+        per argument ``inc_warmup``.  The remaining dimensions correspond to
+        the shape of the Stan program variable.
+
+        Underlyingly draws are in chain order, i.e., for a sample with
+        N chains of M draws each, the first M array elements are from chain 1,
+        the next M are from chain 2, and the last M elements are from chain N.
+
+        * If the variable is a scalar variable, the return array has shape
+          ( draws X chains, 1).
+        * If the variable is a vector, the return array has shape
+          ( draws X chains, len(vector))
+        * If the variable is a matrix, the return array has shape
+          ( draws X chains, size(dim 1) X size(dim 2) )
+        * If the variable is an array with N dimensions, the return array
+          has shape ( draws X chains, size(dim 1) X ... X size(dim N))
+
+        For example, if the Stan program variable ``theta`` is a 3x3 matrix,
+        and the sample consists of 4 chains with 1000 post-warmup draws,
+        this function will return a numpy.ndarray with shape (4000,3,3).
+
+        :param name: variable name
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the output, i.e., the sampler was run with ``save_warmup=True``,
+            then the warmup draws are included.  Default value is ``False``.
+        """
+        model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
+        gq_var_names = self.metadata.stan_vars_cols.keys()
+        num_chains = self.metadata
+        if name in gq_var_names:
+            
+        if name not in self._metadata.stan_vars_dims:
+            raise ValueError('unknown name: {}'.format(name))
+        self._assemble_draws()
+        draw1 = 0
+        if not inc_warmup and self._save_warmup:
+            draw1 = self.num_draws_warmup
+        num_draws = self.num_draws_sampling
+        if inc_warmup and self._save_warmup:
+            num_draws += self.num_draws_warmup
+        dims = [num_draws * self.chains]
+        col_idxs = self._metadata.stan_vars_cols[name]
+        if len(col_idxs) > 0:
+            dims.extend(self._metadata.stan_vars_dims[name])
+        # pylint: disable=redundant-keyword-arg
+        return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+
+    def stan_variables(self) -> Dict[str, np.ndarray]:
+        """
+        Return a dictionary mapping Stan program variables names
+        to the corresponding numpy.ndarray containing the inferred values.
+        """
+        result = {}
+        for name in self._metadata.stan_vars_dims.keys():
+            result[name] = self.stan_variable(name)
+        return result
+
+
     @property
     def sample_plus_quantities(self) -> pd.DataFrame:
         """
@@ -1243,7 +1357,12 @@ class CmdStanGQ:
         columns in both the input and the generated quantities,
         the input column is dropped in favor of the recomputed
         values in the generate quantities drawset.
+
+        Will be deprecated in version 1.0.
         """
+        self._logger.warning(
+            'method `sample_plus_quantites` will be deprecated in version 1.0.'
+        )
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
