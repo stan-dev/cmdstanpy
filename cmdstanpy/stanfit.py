@@ -1135,7 +1135,7 @@ class CmdStanMLE:
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
         return np.ndarray(
-            shape=shape, buffer=np.array(xs)
+            np.array(xs).reshape(shape)
         )
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
@@ -1384,7 +1384,7 @@ class CmdStanVB:
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
         return np.ndarray(
-            shape=shape, buffer=np.array(xs)
+            np.array(xs).reshape(shape)
         )
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
