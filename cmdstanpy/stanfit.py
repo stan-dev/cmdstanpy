@@ -1132,9 +1132,6 @@ class CmdStanMLE:
         shape = ()
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
-        print('xs: {}'.format(xs))
-        print('len xs: {}'.format(len(xs)))
-        print('shape: {}'.format(shape))
         return np.array(xs).reshape(shape)
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
