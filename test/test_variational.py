@@ -8,7 +8,7 @@ import pytest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import from_csv, CmdStanVB, RunSet
+from cmdstanpy.stanfit import CmdStanVB, RunSet, from_csv
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -24,7 +24,9 @@ class CmdStanVBTest(unittest.TestCase):
         ):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.hpp', '.exe', ''):
+                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
+                    filename != ".gitignore"
+                ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 
@@ -146,7 +148,9 @@ class VariationalTest(unittest.TestCase):
         ):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.hpp', '.exe', ''):
+                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
+                    filename != ".gitignore"
+                ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 

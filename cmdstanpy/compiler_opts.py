@@ -16,6 +16,7 @@ STANC_OPTS = [
     'warn-uninitialized',
     'include_paths',
     'name',
+    "warn-pedantic",
 ]
 
 STANC_IGNORE_OPTS = [
