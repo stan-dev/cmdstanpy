@@ -84,6 +84,59 @@ class CmdStanVBTest(unittest.TestCase):
         )
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
 
+    def test_variables(self):
+        # pylint: disable=C0103
+        stan = os.path.join(
+            DATAFILES_PATH, 'variational', 'eta_should_be_big.stan'
+        )
+        model = CmdStanModel(stan_file=stan)
+        variational = model.variational(algorithm='meanfield', seed=12345)
+        self.assertEqual(
+            variational.column_names,
+            ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
+        )
+        self.assertEqual(1, len(variational.metadata.stan_vars_dims))
+        self.assertTrue('mu' in variational.metadata.stan_vars_dims)
+        self.assertEqual(variational.metadata.stan_vars_dims['mu'], (2,))
+        mu = variational.stan_variable(name='mu')
+        self.assertEqual(mu.shape, (2,))
+        with self.assertRaises(ValueError):
+            variational.stan_variable(name='eta')
+        with self.assertRaises(ValueError):
+            variational.stan_variable(name='lp__')
+
+    def test_variables_3d(self):
+        # construct fit using existing sampler output
+        stan = os.path.join(DATAFILES_PATH, 'multidim_vars.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+        multidim_model = CmdStanModel(stan_file=stan)
+        multidim_variational = multidim_model.variational(
+            data=jdata,
+            seed=1239812093,
+            algorithm='meanfield',
+        )
+        self.assertEqual(3, len(multidim_variational.metadata.stan_vars_dims))
+        self.assertTrue('y_rep' in multidim_variational.metadata.stan_vars_dims)
+        self.assertEqual(
+            multidim_variational.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
+        )
+        var_y_rep = multidim_variational.stan_variable(name='y_rep')
+        self.assertEqual(var_y_rep.shape, (5, 4, 3))
+        var_beta = multidim_variational.stan_variable(name='beta')
+        self.assertEqual(var_beta.shape, (2,))  # 1-element tuple
+        var_frac_60 = multidim_variational.stan_variable(name='frac_60')
+        self.assertEqual(var_frac_60.shape, ())
+        vars = multidim_variational.stan_variables()
+        self.assertEqual(
+            len(vars), len(multidim_variational.metadata.stan_vars_dims)
+        )
+        self.assertTrue('y_rep' in vars)
+        self.assertEqual(vars['y_rep'].shape, (5, 4, 3))
+        self.assertTrue('beta' in vars)
+        self.assertEqual(vars['beta'].shape, (2,))
+        self.assertTrue('frac_60' in vars)
+        self.assertEqual(vars['frac_60'].shape, ())
+
 
 class VariationalTest(unittest.TestCase):
 

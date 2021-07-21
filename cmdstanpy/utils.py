@@ -203,7 +203,7 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
     return False
 
 
-def cxx_toolchain_path(version: str = None) -> Tuple[str]:
+def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
     """
     Validate, then activate C++ toolchain directory path.
     """
@@ -469,12 +469,12 @@ def check_sampler_csv(
     elif thin > _CMDSTAN_THIN:
         if 'thin' not in meta:
             raise ValueError(
-                'bad csv file {}, '
+                'bad Stan CSV file {}, '
                 'config error, expected thin = {}'.format(path, thin)
             )
         if meta['thin'] != thin:
             raise ValueError(
-                'bad csv file {}, '
+                'bad Stan CSV file {}, '
                 'config error, expected thin = {}, found {}'.format(
                     path, thin, meta['thin']
                 )
@@ -489,19 +489,19 @@ def check_sampler_csv(
     draws_sampling = int(math.ceil(draws_sampling / thin))
     if meta['draws_sampling'] != draws_sampling:
         raise ValueError(
-            'bad csv file {}, expected {} draws, found {}'.format(
+            'bad Stan CSV file {}, expected {} draws, found {}'.format(
                 path, draws_sampling, meta['draws_sampling']
             )
         )
     if save_warmup:
         if not ('save_warmup' in meta and meta['save_warmup'] == 1):
             raise ValueError(
-                'bad csv file {}, '
+                'bad Stan CSV file {}, '
                 'config error, expected save_warmup = 1'.format(path)
             )
         if meta['draws_warmup'] != draws_warmup:
             raise ValueError(
-                'bad csv file {}, '
+                'bad Stan CSV file {}, '
                 'expected {} warmup draws, found {}'.format(
                     path, draws_warmup, meta['draws_warmup']
                 )
@@ -658,20 +658,23 @@ def munge_varnames(names: List[str]) -> List[str]:
     ]
 
 
-def parse_sampler_vars(names: Tuple[str, ...]) -> Dict:
+def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
     """
     Parses out names ending in `__` from list of CSV file column names.
     Return a dict mapping sampler variable name to Stan CSV file column, using
     zero-based column indexing.
+    Currently, (Stan 2.X) all CmdStan inference method vars are scalar,
+    the map entries are tuples of int to allow for structured variables.
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    # note: value as tuple allows structured sampler vars
-    # currently, all sampler vars a scalar, not checking for structure
+    # note: method vars are currently all scalar so not checking for structure
     return {v: tuple([k]) for (k, v) in enumerate(names) if v.endswith('__')}
 
 
-def parse_stan_vars(names: Tuple[str, ...]) -> (Dict, Dict):
+def parse_stan_vars(
+    names: Tuple[str, ...]
+) -> Tuple[Dict[str, Tuple[int, ...]], Dict[str, Tuple[int, ...]]]:
     """
     Parses out Stan variable names (i.e., names not ending in `__`)
     from list of CSV file column names.

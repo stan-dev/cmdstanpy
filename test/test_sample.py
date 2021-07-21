@@ -597,7 +597,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         ]
         fit = CmdStanMCMC(runset)
         phis = ['phi[{}]'.format(str(x + 1)) for x in range(2095)]
-        column_names = list(fit.sampler_vars_cols.keys()) + phis
+        column_names = list(fit.metadata.method_vars_cols.keys()) + phis
         self.assertEqual(fit.num_draws_sampling, 1000)
         self.assertEqual(fit.column_names, tuple(column_names))
         self.assertEqual(fit.metric_type, 'diag_e')
@@ -951,7 +951,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(ValueError, 'header mismatch'):
+        with self.assertRaisesRegex(ValueError, 'CmdStan config mismatch'):
             CmdStanMCMC(runset)
 
         # bad draws
@@ -1097,6 +1097,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
 
+    # pylint: disable=pointless-statement
     def test_deprecated(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -1111,21 +1112,17 @@ class CmdStanMCMCTest(unittest.TestCase):
             save_warmup=True,
         )
         with LogCapture() as log:
-            self.assertEqual(
-                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-            )
+            bern_fit.sample
         log.check_present(
             (
                 'cmdstanpy',
                 'WARNING',
-                'method "sample" will be deprecated,'
+                'method "sample" has been deprecated,'
                 ' use method "draws" instead.',
             )
         )
         with LogCapture() as log:
-            self.assertEqual(
-                bern_fit.warmup.shape, (300, 2, len(BERNOULLI_COLS))
-            )
+            bern_fit.warmup
         log.check_present(
             (
                 'cmdstanpy',
@@ -1133,6 +1130,56 @@ class CmdStanMCMCTest(unittest.TestCase):
                 'method "warmup" has been deprecated, instead use method'
                 ' "draws(inc_warmup=True)", returning draws from both'
                 ' warmup and sampling iterations.',
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.sampler_diagnostics()
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "sampler_diagnostics" has been deprecated, '
+                'use method "method_variables" instead.',
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.sampler_variables()
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'method "sampler_variables" has been deprecated, '
+                'use method "method_variables" instead.',
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.sampler_vars_cols
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "sampler_vars_cols" has been deprecated, '
+                'use "metadata.method_vars_cols" instead.',
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.stan_vars_cols
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "stan_vars_cols" has been deprecated, '
+                'use "metadata.stan_vars_cols" instead.',
+            )
+        )
+        with LogCapture() as log:
+            bern_fit.stan_vars_dims
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "stan_vars_dims" has been deprecated, '
+                'use "metadata.stan_vars_dims" instead.',
             )
         )
 
@@ -1143,7 +1190,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
         )
-        diags = bern_fit.sampler_variables()
+        diags = bern_fit.method_variables()
         self.assertEqual(SAMPLER_STATE, list(diags))
         for diag in diags.values():
             self.assertEqual(diag.shape, (100, 2))
@@ -1160,7 +1207,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'method "sample" will be deprecated,'
+                'method "sample" has been deprecated,'
                 ' use method "draws" instead.',
             )
         )
@@ -1172,9 +1219,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         bern_fit = bern_model.sample(
             data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
         )
-        self.assertEqual(1, len(bern_fit.stan_vars_dims))
-        self.assertTrue('theta' in bern_fit.stan_vars_dims)
-        self.assertEqual(bern_fit.stan_vars_dims['theta'], ())
+        self.assertEqual(1, len(bern_fit.metadata.stan_vars_dims))
+        self.assertTrue('theta' in bern_fit.metadata.stan_vars_dims)
+        self.assertEqual(bern_fit.metadata.stan_vars_dims['theta'], ())
         theta = bern_fit.stan_variable(name='theta')
         self.assertEqual(theta.shape, (200,))
         with self.assertRaises(ValueError):
@@ -1183,30 +1230,14 @@ class CmdStanMCMCTest(unittest.TestCase):
             bern_fit.stan_variable(name='lp__')
 
     def test_variables_2d(self):
-        # pylint: disable=C0103
-        # construct fit using existing sampler output
-        exe = os.path.join(DATAFILES_PATH, 'lotka-volterra' + EXTENSION)
-        jdata = os.path.join(DATAFILES_PATH, 'lotka-volterra.data.json')
-        sampler_args = SamplerArgs(iter_sampling=20)
-        cmdstan_args = CmdStanArgs(
-            model_name='lotka-volterra',
-            model_exe=exe,
-            chain_ids=[1],
-            seed=12345,
-            data=jdata,
-            output_dir=DATAFILES_PATH,
-            method_args=sampler_args,
-        )
-        runset = RunSet(args=cmdstan_args, chains=1)
-        runset._csv_files = [os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')]
-        runset._set_retcode(0, 0)
-        fit = CmdStanMCMC(runset)
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')
+        fit = from_csv(path=csvfiles_path)
         self.assertEqual(20, fit.num_draws_sampling)
-        self.assertEqual(8, len(fit.stan_vars_dims))
-        self.assertTrue('z' in fit.stan_vars_dims)
-        self.assertEqual(fit.stan_vars_dims['z'], (20, 2))
+        self.assertEqual(8, len(fit.metadata.stan_vars_dims))
+        self.assertTrue('z' in fit.metadata.stan_vars_dims)
+        self.assertEqual(fit.metadata.stan_vars_dims['z'], (20, 2))
         vars = fit.stan_variables()
-        self.assertEqual(len(vars), len(fit.stan_vars_dims))
+        self.assertEqual(len(vars), len(fit.metadata.stan_vars_dims))
         self.assertTrue('z' in vars)
         self.assertEqual(vars['z'].shape, (20, 20, 2))
         self.assertTrue('theta' in vars)
@@ -1214,26 +1245,12 @@ class CmdStanMCMCTest(unittest.TestCase):
 
     def test_variables_3d(self):
         # construct fit using existing sampler output
-        exe = os.path.join(DATAFILES_PATH, 'multidim_vars' + EXTENSION)
-        jdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
-        sampler_args = SamplerArgs(iter_sampling=20)
-        cmdstan_args = CmdStanArgs(
-            model_name='multidim_vars',
-            model_exe=exe,
-            chain_ids=[1],
-            seed=12345,
-            data=jdata,
-            output_dir=DATAFILES_PATH,
-            method_args=sampler_args,
-        )
-        runset = RunSet(args=cmdstan_args, chains=1)
-        runset._csv_files = [os.path.join(DATAFILES_PATH, 'multidim_vars.csv')]
-        runset._set_retcode(0, 0)
-        fit = CmdStanMCMC(runset)
+        csvfiles_path = os.path.join(DATAFILES_PATH, 'multidim_vars.csv')
+        fit = from_csv(path=csvfiles_path)
         self.assertEqual(20, fit.num_draws_sampling)
-        self.assertEqual(3, len(fit.stan_vars_dims))
-        self.assertTrue('y_rep' in fit.stan_vars_dims)
-        self.assertEqual(fit.stan_vars_dims['y_rep'], (5, 4, 3))
+        self.assertEqual(3, len(fit.metadata.stan_vars_dims))
+        self.assertTrue('y_rep' in fit.metadata.stan_vars_dims)
+        self.assertEqual(fit.metadata.stan_vars_dims['y_rep'], (5, 4, 3))
         var_y_rep = fit.stan_variable(name='y_rep')
         self.assertEqual(var_y_rep.shape, (20, 5, 4, 3))
         var_beta = fit.stan_variable(name='beta')
@@ -1241,7 +1258,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         var_frac_60 = fit.stan_variable(name='frac_60')
         self.assertEqual(var_frac_60.shape, (20,))
         vars = fit.stan_variables()
-        self.assertEqual(len(vars), len(fit.stan_vars_dims))
+        self.assertEqual(len(vars), len(fit.metadata.stan_vars_dims))
         self.assertTrue('y_rep' in vars)
         self.assertEqual(vars['y_rep'].shape, (20, 5, 4, 3))
         self.assertTrue('beta' in vars)
@@ -1284,67 +1301,13 @@ class CmdStanMCMCTest(unittest.TestCase):
             iter_sampling=100,
             thin=2,
             save_warmup=True,
-            validate_csv=False,
         )
-        # check error messages
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.column_names)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.num_unconstrained_params)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.stan_vars_dims)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.stan_vars_cols)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.metric_type)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.metric)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        with LogCapture() as log:
-            logging.getLogger()
-            self.assertIsNone(bern_fit.step_size)
-        expect = 'csv files not yet validated'
-        msg = log.actual()[-1][-1]
-        self.assertTrue(msg.startswith(expect))
-
-        # check computations match
-        self.assertEqual(bern_fit.num_draws_warmup, 100)
-        self.assertEqual(bern_fit.num_draws_sampling, 50)
-        bern_fit.validate_csv_files()
+        # _validate_csv_files called during instantiation
         self.assertEqual(bern_fit.num_draws_warmup, 100)
         self.assertEqual(bern_fit.num_draws_sampling, 50)
         self.assertEqual(len(bern_fit.column_names), 8)
-        self.assertEqual(len(bern_fit.stan_vars_dims), 1)
-        self.assertEqual(len(bern_fit.stan_vars_cols.keys()), 1)
+        self.assertEqual(len(bern_fit.metadata.stan_vars_dims), 1)
+        self.assertEqual(len(bern_fit.metadata.stan_vars_cols.keys()), 1)
         self.assertEqual(bern_fit.metric_type, 'diag_e')
 
     def test_validate_sample_sig_figs(self, stanfile='bernoulli.stan'):
@@ -1460,7 +1423,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset._set_retcode(i, 0)
         fit = CmdStanMCMC(runset)
-
+        print(fit.metadata)
+        meta = fit.metadata
+        print(type(meta))
         col_names = tuple(
             [
                 'lp__',
@@ -1483,20 +1448,20 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.num_unconstrained_params, 2)
         self.assertEqual(fit.metric_type, 'diag_e')
 
-        self.assertEqual(fit.sampler_config['num_samples'], 100)
-        self.assertEqual(fit.sampler_config['thin'], 1)
-        self.assertEqual(fit.sampler_config['algorithm'], 'hmc')
-        self.assertEqual(fit.sampler_config['metric'], 'diag_e')
-        self.assertAlmostEqual(fit.sampler_config['delta'], 0.80)
+        self.assertEqual(fit.metadata.cmdstan_config['num_samples'], 100)
+        self.assertEqual(fit.metadata.cmdstan_config['thin'], 1)
+        self.assertEqual(fit.metadata.cmdstan_config['algorithm'], 'hmc')
+        self.assertEqual(fit.metadata.cmdstan_config['metric'], 'diag_e')
+        self.assertAlmostEqual(fit.metadata.cmdstan_config['delta'], 0.80)
 
-        self.assertTrue('n_leapfrog__' in fit.sampler_vars_cols)
-        self.assertTrue('energy__' in fit.sampler_vars_cols)
-        self.assertTrue('beta' not in fit.sampler_vars_cols)
-        self.assertTrue('energy__' not in fit.stan_vars_dims)
-        self.assertTrue('beta' in fit.stan_vars_dims)
-        self.assertTrue('beta' in fit.stan_vars_cols)
-        self.assertEqual(fit.stan_vars_dims['beta'], tuple([2]))
-        self.assertEqual(fit.stan_vars_cols['beta'], tuple([7, 8]))
+        self.assertTrue('n_leapfrog__' in fit.metadata.method_vars_cols)
+        self.assertTrue('energy__' in fit.metadata.method_vars_cols)
+        self.assertTrue('beta' not in fit.metadata.method_vars_cols)
+        self.assertTrue('energy__' not in fit.metadata.stan_vars_dims)
+        self.assertTrue('beta' in fit.metadata.stan_vars_dims)
+        self.assertTrue('beta' in fit.metadata.stan_vars_cols)
+        self.assertEqual(fit.metadata.stan_vars_dims['beta'], tuple([2]))
+        self.assertEqual(fit.metadata.stan_vars_cols['beta'], tuple([7, 8]))
 
     def test_save_diagnostics(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')

@@ -534,7 +534,6 @@ class CmdStanModel:
         save_diagnostics: bool = False,
         save_profile: bool = False,
         show_progress: Union[bool, str] = False,
-        validate_csv: bool = True,
         refresh: int = None,
     ) -> CmdStanMCMC:
         """
@@ -692,13 +691,8 @@ class CmdStanModel:
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
-        :param validate_csv: If ``False``, skip scan of sample csv output file.
-            When sample is large or disk i/o is slow, will speed up processing.
-            Default is ``True`` - sample csv files are scanned for completeness
-            and consistency.
-
         :param refresh: Specify the number of iterations cmdstan will take
-        between progress messages. Default value is 100.
+            between progress messages. Default value is 100.
 
         :return: CmdStanMCMC object
         """
@@ -871,7 +865,7 @@ class CmdStanModel:
                 )
                 raise RuntimeError(msg)
 
-            mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
+            mcmc = CmdStanMCMC(runset, logger=self._logger)
         return mcmc
 
     def generate_quantities(

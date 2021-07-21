@@ -62,6 +62,71 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
 
+    def test_variable_bern(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_model = CmdStanModel(stan_file=stan)
+        bern_mle = bern_model.optimize(
+            data=jdata,
+            seed=1239812093,
+            algorithm='LBFGS',
+            init_alpha=0.001,
+            iter=100,
+            tol_obj=1e-12,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5,
+        )
+        self.assertEqual(1, len(bern_mle.metadata.stan_vars_dims))
+        self.assertTrue('theta' in bern_mle.metadata.stan_vars_dims)
+        self.assertEqual(bern_mle.metadata.stan_vars_dims['theta'], ())
+        theta = bern_mle.stan_variable(name='theta')
+        self.assertEqual(theta.shape, ())
+        with self.assertRaises(ValueError):
+            bern_mle.stan_variable(name='eta')
+        with self.assertRaises(ValueError):
+            bern_mle.stan_variable(name='lp__')
+
+    def test_variables_3d(self):
+        # construct fit using existing sampler output
+        stan = os.path.join(DATAFILES_PATH, 'multidim_vars.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+        multidim_model = CmdStanModel(stan_file=stan)
+        multidim_mle = multidim_model.optimize(
+            data=jdata,
+            seed=1239812093,
+            algorithm='LBFGS',
+            init_alpha=0.001,
+            iter=100,
+            tol_obj=1e-12,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5,
+        )
+        self.assertEqual(3, len(multidim_mle.metadata.stan_vars_dims))
+        self.assertTrue('y_rep' in multidim_mle.metadata.stan_vars_dims)
+        self.assertEqual(
+            multidim_mle.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
+        )
+        var_y_rep = multidim_mle.stan_variable(name='y_rep')
+        self.assertEqual(var_y_rep.shape, (5, 4, 3))
+        var_beta = multidim_mle.stan_variable(name='beta')
+        self.assertEqual(var_beta.shape, (2,))  # 1-element tuple
+        var_frac_60 = multidim_mle.stan_variable(name='frac_60')
+        self.assertEqual(var_frac_60.shape, ())
+        vars = multidim_mle.stan_variables()
+        self.assertEqual(len(vars), len(multidim_mle.metadata.stan_vars_dims))
+        self.assertTrue('y_rep' in vars)
+        self.assertEqual(vars['y_rep'].shape, (5, 4, 3))
+        self.assertTrue('beta' in vars)
+        self.assertEqual(vars['beta'].shape, (2,))
+        self.assertTrue('frac_60' in vars)
+        self.assertEqual(vars['frac_60'].shape, ())
+
 
 class OptimizeTest(unittest.TestCase):
     def test_optimize_good(self):

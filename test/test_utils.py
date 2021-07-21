@@ -26,7 +26,7 @@ from cmdstanpy.utils import (
     get_latest_cmdstan,
     jsondump,
     parse_rdump_value,
-    parse_sampler_vars,
+    parse_method_vars,
     parse_stan_vars,
     rdump,
     read_metric,
@@ -589,7 +589,7 @@ class RloadTest(unittest.TestCase):
 class ParseVarsTest(unittest.TestCase):
     def test_parse_empty(self):
         x = []
-        sampler_vars = parse_sampler_vars(x)
+        sampler_vars = parse_method_vars(x)
         self.assertEqual(len(sampler_vars), 0)
         stan_vars_dims, stan_vars_cols = parse_stan_vars(x)
         self.assertEqual(len(stan_vars_dims), 0)
@@ -597,11 +597,11 @@ class ParseVarsTest(unittest.TestCase):
 
     def test_parse_missing(self):
         with self.assertRaises(ValueError):
-            parse_sampler_vars(None)
+            parse_method_vars(None)
         with self.assertRaises(ValueError):
             parse_stan_vars(None)
 
-    def test_parse_sampler_vars(self):
+    def test_parse_method_vars(self):
         x = [
             'lp__',
             'accept_stat__',
@@ -617,7 +617,7 @@ class ParseVarsTest(unittest.TestCase):
             'z_init[1]',
             'z_init[2]',
         ]
-        vars_dict = parse_sampler_vars(x)
+        vars_dict = parse_method_vars(x)
         self.assertEqual(len(vars_dict), 7)
         self.assertEqual(vars_dict['lp__'], (0,))
         self.assertEqual(vars_dict['stepsize__'], (2,))
