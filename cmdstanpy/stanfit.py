@@ -34,6 +34,7 @@ from cmdstanpy.utils import (
     parse_method_vars,
     parse_stan_vars,
     scan_config,
+    scan_generated_quantities_csv,
     scan_optimize_csv,
     scan_variational_csv,
 )
@@ -489,6 +490,14 @@ class CmdStanMCMC:
         thinned sampling iterations.
         """
         return int(math.ceil((self._iter_sampling) / self._thin))
+
+    def expected_csv_rows() -> int:
+        """
+        Expected number of rows of data in a Stan CSV file based on config.
+        """
+        if self._save_warmup:
+            return self.num_draws_warmup + self.num_draws_sampling
+        return self.num_draws_sampling
 
     @property
     def metadata(self) -> InferenceMetadata:
@@ -1160,7 +1169,12 @@ class CmdStanGQ:
     Container for outputs from CmdStan generate_quantities run.
     """
 
-    def __init__(self, runset: RunSet, mcmc_sample: pd.DataFrame) -> None:
+    def __init__(
+        self,
+        runset: RunSet,
+        mcmc_sample: pd.DataFrame,
+        logger: logging.Logger = None,
+    ) -> None:
         """Initialize object."""
         if not runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError(
@@ -1168,6 +1182,7 @@ class CmdStanGQ:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
+        self._logger = logger or get_logger()
         self.mcmc_sample = mcmc_sample
         self._generated_quantities = None
         config = self._validate_csv_files()
@@ -1186,7 +1201,6 @@ class CmdStanGQ:
         )
         return repr
 
-
     def _validate_csv_files(self) -> dict:
         """
         Checks that Stan CSV output files for all chains are consistent
@@ -1201,7 +1215,7 @@ class CmdStanGQ:
                     path=self.runset.csv_files[i],
                 )
             else:
-                drest = check_sampler_csv(
+                drest = scan_generated_quantities_csv(
                     path=self.runset.csv_files[i],
                 )
                 for key in dzero:
@@ -1209,6 +1223,7 @@ class CmdStanGQ:
                         key
                         not in [
                             'id',
+                            'fitted_params',
                             'diagnostic_file',
                             'metric_file',
                             'profile_file',
@@ -1241,7 +1256,6 @@ class CmdStanGQ:
         """
         return self._metadata.cmdstan_config['column_names']
 
-
     @property
     def metadata(self) -> InferenceMetadata:
         """
@@ -1254,12 +1268,17 @@ class CmdStanGQ:
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        A 2D numpy ndarray which contains generated quantities draws
-        for all chains where the columns correspond to the generated quantities
-        block variables and the rows correspond to the draws from all chains,
-        where first M draws are the first M draws of chain 1 and the
-        last M draws are the last M draws of chain N, i.e.,
-        flattened chain, draw ordering.
+        Returns a numpy.ndarray over all draws from all chains which is
+        stored column major so that the values for a parameter are contiguous
+        in memory, likewise all draws from a chain are contiguous.
+        By default, returns a 3D array arranged (draws, chains, columns);
+        parameter ``concat_chains=True`` will return a 2D array where all
+        chains are flattened into a single column, although underlyingly,
+        given M chains of N draws, the first N draws are from chain 1, up
+        through the last N draws from chain M.
+
+        :param concat_chains: When ``True`` return a 2D array flattening all
+            all draws from all chains.  Default value is ``False``.
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
@@ -1270,13 +1289,17 @@ class CmdStanGQ:
     @property
     def generated_quantities_pd(self) -> pd.DataFrame:
         """
-        Returns the generated quantities as a pandas DataFrame consisting of
-        one column per quantity of interest and one row per draw.
+        Returns the sampler draws as a pandas DataFrame.  Flattens all
+        chains into single column.
+
+        :param params: optional list of variable names.
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
+
+
         return pd.DataFrame(
             data=self._generated_quantities, columns=self.column_names
         )
@@ -1315,24 +1338,21 @@ class CmdStanGQ:
         """
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
-        num_chains = self.metadata
-        if name in gq_var_names:
-            
-        if name not in self._metadata.stan_vars_dims:
+        if not (name in model_var_names or name in gq_var_names):
             raise ValueError('unknown name: {}'.format(name))
+        if name not in gq_var_names:
+            return self.mcmc_sample.stan_variable(name)
+
         self._assemble_draws()
-        draw1 = 0
-        if not inc_warmup and self._save_warmup:
-            draw1 = self.num_draws_warmup
-        num_draws = self.num_draws_sampling
-        if inc_warmup and self._save_warmup:
-            num_draws += self.num_draws_warmup
+        num_draws = self._generated_quantities.shape[0]
         dims = [num_draws * self.chains]
         col_idxs = self._metadata.stan_vars_cols[name]
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[name])
         # pylint: disable=redundant-keyword-arg
-        return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+        return self._generated_quantities[:, :, col_idxs].reshape(
+            dims, order='F'
+        )
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -1340,10 +1360,14 @@ class CmdStanGQ:
         to the corresponding numpy.ndarray containing the inferred values.
         """
         result = {}
-        for name in self._metadata.stan_vars_dims.keys():
+        model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
+        gq_var_names = self.metadata.stan_vars_cols.keys()
+        for name in gq_var_names:
             result[name] = self.stan_variable(name)
+        for name in model_var_names:
+            if name not in gq_var_names:
+                result[name] = self.stan_variable(name)
         return result
-
 
     @property
     def sample_plus_quantities(self) -> pd.DataFrame:
@@ -1378,17 +1402,20 @@ class CmdStanGQ:
         )
 
     def _assemble_generated_quantities(self) -> None:
-        drawset_list = []
+        # use numpy genfromtext
+        num_draws = self.mcmc_sample.draws().shape[0]
+        self._generated_quantities = np.empty(
+            (num_draws, self.chains, len(self.column_names)),
+            dtype=float,
+            order='F',
+        )
+        idx = 0
         for chain in range(self.chains):
-            drawset_list.append(
-                pd.read_csv(
-                    self.runset.csv_files[chain],
-                    comment='#',
-                    float_precision='high',
-                    dtype=float,
-                )
+            self_generated_quantities[ :, chain, :] = np.loadtxt(
+                self.runset.csv_files[chain],
+                dtype=np.ndarray,
+                ndim=2
             )
-        self._generated_quantities = pd.concat(drawset_list).values
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
