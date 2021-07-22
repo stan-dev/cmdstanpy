@@ -930,10 +930,6 @@ class CmdStanModel:
 
         :return: CmdStanGQ object
         """
-        sample_csv_files = []
-        sample_drawset_pd = None
-        chains = 0
-        save_warmup = False
         if isinstance(mcmc_sample, CmdStanMCMC):
             sample_csv_files = mcmc_sample.runset.csv_files
         elif isinstance(mcmc_sample, list):
@@ -942,8 +938,8 @@ class CmdStanModel:
                     'Expecting list of Stan CSV files, found empty list'
                 )
             try:
-                sample_fit = from_csv(mcmc_sample)
                 sample_csv_files = mcmc_sample
+                sample_fit = from_csv(sample_csv_files)
                 mcmc_sample = sample_fit
             except ValueError as e:
                 raise ValueError(
@@ -952,7 +948,6 @@ class CmdStanModel:
                         repr(e), '\n\t'.join(mcmc_sample)
                     )
                 ) from e
-
         else:
             raise ValueError(
                 'MCMC sample must be either CmdStanMCMC object'
@@ -965,7 +960,6 @@ class CmdStanModel:
                 'Sample contains saved wormup draws which will be used '
                 'to generate additional quantities of interest.'
             )
-
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files
         )

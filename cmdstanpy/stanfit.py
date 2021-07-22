@@ -1339,17 +1339,12 @@ class CmdStanGQ:
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        Returns a numpy.ndarray over all draws from all chains which is
-        stored column major so that the values for a parameter are contiguous
-        in memory, likewise all draws from a chain are contiguous.
-        By default, returns a 3D array arranged (draws, chains, columns);
-        parameter ``concat_chains=True`` will return a 2D array where all
-        chains are flattened into a single column, although underlyingly,
-        given M chains of N draws, the first N draws are from chain 1, up
-        through the last N draws from chain M.
-
-        :param concat_chains: When ``True`` return a 2D array flattening all
-            all draws from all chains.  Default value is ``False``.
+        A 2D numpy ndarray which contains generated quantities draws
+        for all chains where the columns correspond to the generated quantities
+        block variables and the rows correspond to the draws from all chains,
+        where first M draws are the first M draws of chain 1 and the
+        last M draws are the last M draws of chain N, i.e.,
+        flattened chain, draw ordering.
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
@@ -1366,9 +1361,8 @@ class CmdStanGQ:
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
         if self._generated_quantities_pd is None:
-            num_rows = self._generated_quantities.shape[0] * self.chains
             self._generated_quantities_pd = pd.DataFrame(
-                data=self._generated_quantities.reshape((num_rows, len(self.column_names)), order='F'), columns=self.column_names
+                data=self._generated_quantities, columns=self.column_names
             )
         return self._generated_quantities_pd
 
@@ -1410,13 +1404,9 @@ class CmdStanGQ:
             return self.mcmc_sample.stan_variable(name, inc_warmup=warmup)
 
         self._assemble_draws()
-        num_draws = self._generated_quantities.shape[0]
-        dims = [num_draws * self.chains]
         col_idxs = self._metadata.stan_vars_cols[name]
-        if len(col_idxs) > 0:
-            dims.extend(self._metadata.stan_vars_dims[name])
         # pylint: disable=redundant-keyword-arg
-        return self._generated_quantities[:, :, col_idxs].reshape(
+        return self._generated_quantities[:, col_idxs].reshape(
             dims, order='F'
         )
 
@@ -1479,7 +1469,7 @@ class CmdStanGQ:
     def _assemble_generated_quantities(self) -> None:
         # use numpy genfromtext
         num_draws = self.mcmc_sample.draws().shape[0]
-        self._generated_quantities = np.empty(
+        gq_sample = np.empty(
             (num_draws, self.chains, len(self.column_names)),
             dtype=float,
             order='F',
@@ -1488,10 +1478,13 @@ class CmdStanGQ:
         for chain in range(self.chains):
             with open(self.runset.csv_files[chain], 'r') as fd:
                 lines = (line for line in fd if not line.startswith('#'))
-                self.generated_quantities[:, chain, :] = np.loadtxt(
+                gq_sample[:, chain, :] = np.loadtxt(
                     lines, dtype=np.ndarray, ndmin=2, skiprows=1, delimiter=','
                 )
-
+        num_rows = gq_sample.shape[0] * self.chains
+        self._generated_quantities = gq_sample.reshape(
+            (num_rows, len(self.column_names)), order='F'
+        )
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
