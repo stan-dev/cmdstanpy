@@ -105,6 +105,10 @@ class GenerateQuantitiesTest(unittest.TestCase):
             self.assertEqual(bern_gqs.runset._retcode(i), 0)
             csv_file = bern_gqs.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
+
+        # bernoulli_ppc gq var is vector y_rep[10]
+        self.assertEqual(bern_gqs.generated_quantities.shape, (400, 10))
+
         column_names = [
             'y_rep[1]',
             'y_rep[2]',
