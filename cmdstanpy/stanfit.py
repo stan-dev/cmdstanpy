@@ -1242,7 +1242,7 @@ class CmdStanGQ:
     def __init__(
         self,
         runset: RunSet,
-        mcmc_sample: pd.DataFrame,
+        mcmc_sample: CmdStanMCMC,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
@@ -1255,6 +1255,7 @@ class CmdStanGQ:
         self._logger = logger or get_logger()
         self.mcmc_sample = mcmc_sample
         self._generated_quantities = None
+        self._generated_quantities_pd = None
         config = self._validate_csv_files()
         self._metadata = InferenceMetadata(config)
 
@@ -1359,28 +1360,25 @@ class CmdStanGQ:
     @property
     def generated_quantities_pd(self) -> pd.DataFrame:
         """
-        Returns the sampler draws as a pandas DataFrame.  Flattens all
+        Returns the generated quantities as a pandas DataFrame.  Flattens all
         chains into single column.
-
-        :param params: optional list of variable names.
         """
-        if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
+        if self._generated_quantities_pd is None:
+            num_rows = self._generated_quantities.shape[0] * self.chains
+            self._generated_quantities_pd = pd.DataFrame(
+                data=self._generated_quantities.reshape((num_rows, len(self.column_names)), order='F'), columns=self.column_names
+            )
+        return self._generated_quantities_pd
 
-
-        return pd.DataFrame(
-            data=self._generated_quantities, columns=self.column_names
-        )
-
-    def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
+    def stan_variable(self, name: str) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
         for the named Stan program variable.  Flattens the chains,
         leaving the draws in chain order.  The first array dimension,
-        corresponds to number of draws or post-warmup draws in the sample,
-        per argument ``inc_warmup``.  The remaining dimensions correspond to
+        corresponds to number of draws in the sample.
+        The remaining dimensions correspond to
         the shape of the Stan program variable.
 
         Underlyingly draws are in chain order, i.e., for a sample with
@@ -1401,17 +1399,15 @@ class CmdStanGQ:
         this function will return a numpy.ndarray with shape (4000,3,3).
 
         :param name: variable name
-
-        :param inc_warmup: When ``True`` and the warmup draws are present in
-            the output, i.e., the sampler was run with ``save_warmup=True``,
-            then the warmup draws are included.  Default value is ``False``.
         """
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
+        warmup = mcmc_sample.metadata.cmdstan_config['save_warmup']
+        print(warmup)
         if not (name in model_var_names or name in gq_var_names):
             raise ValueError('unknown name: {}'.format(name))
         if name not in gq_var_names:
-            return self.mcmc_sample.stan_variable(name)
+            return self.mcmc_sample.stan_variable(name, inc_warmup=warmup)
 
         self._assemble_draws()
         num_draws = self._generated_quantities.shape[0]
@@ -1442,32 +1438,41 @@ class CmdStanGQ:
     @property
     def sample_plus_quantities(self) -> pd.DataFrame:
         """
+        Deprecated - use "sample_plus_quantities_pd" instead
+        """
+        self._logger.warning(
+            'property "sample_plus_quantities" has been deprecated, '
+            'use "sample_plus_quantities_pd" instead.'
+        )
+        return self.sample_plus_quantities_pd
+
+    @property
+    def sample_plus_quantities_pd(self) -> pd.DataFrame:
+        """
         Returns the column-wise concatenation of the input drawset
         with generated quantities drawset.  If there are duplicate
         columns in both the input and the generated quantities,
         the input column is dropped in favor of the recomputed
         values in the generate quantities drawset.
-
-        Will be deprecated in version 1.0.
         """
-        self._logger.warning(
-            'method `sample_plus_quantites` will be deprecated in version 1.0.'
-        )
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
 
-        cols_1 = self.mcmc_sample.columns.tolist()
-        cols_2 = self.generated_quantities_pd.columns.tolist()
-
+        cols_1 = self.mcmc_sample.column_names
+        cols_2 = self.column_names
         dups = [
             item
             for item, count in Counter(cols_1 + cols_2).items()
             if count > 1
         ]
+        warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
         return pd.concat(
-            [self.mcmc_sample.drop(columns=dups), self.generated_quantities_pd],
+            [
+                self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
+                self.generated_quantities_pd,
+            ],
             axis=1,
         )
 
@@ -1481,11 +1486,12 @@ class CmdStanGQ:
         )
         idx = 0
         for chain in range(self.chains):
-            self_generated_quantities[ :, chain, :] = np.loadtxt(
-                self.runset.csv_files[chain],
-                dtype=np.ndarray,
-                ndim=2
-            )
+            with open(self.runset.csv_files[chain], 'r') as fd:
+                lines = (line for line in fd if not line.startswith('#'))
+                self.generated_quantities[:, chain, :] = np.loadtxt(
+                    lines, dtype=np.ndarray, ndmin=2, skiprows=1, delimiter=','
+                )
+
 
     def save_csvfiles(self, dir: str = None) -> None:
         """

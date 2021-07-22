@@ -52,8 +52,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
         self.assertEqual(
-            bern_gqs.sample_plus_quantities.shape[1],
-            bern_gqs.mcmc_sample.shape[1]
+            bern_gqs.sample_plus_quantities_pd.shape[1],
+            bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.generated_quantities_pd.shape[1],
         )
 
@@ -73,7 +73,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         for i in range(4):
             csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
 
-        with self.assertRaisesRegex(Exception, 'Invalid mcmc_sample'):
+        with self.assertRaisesRegex(Exception, 'Invalid sample from Stan CSV files'):
             model.generate_quantities(data=jdata, mcmc_sample=csv_files)
 
     def test_gen_quanties_mcmc_sample(self):
@@ -118,10 +118,9 @@ class GenerateQuantitiesTest(unittest.TestCase):
             'y_rep[10]',
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
-        self.assertEqual(bern_fit.draws_pd().shape, bern_gqs.mcmc_sample.shape)
         self.assertEqual(
-            bern_gqs.sample_plus_quantities.shape[1],
-            bern_gqs.mcmc_sample.shape[1]
+            bern_gqs.sample_plus_quantities_pd.shape[1],
+            bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.generated_quantities_pd.shape[1],
         )
 
@@ -139,8 +138,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
         )
         bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
         self.assertEqual(
-            bern_gqs.sample_plus_quantities.shape[1],
-            bern_gqs.mcmc_sample.shape[1],
+            bern_gqs.sample_plus_quantities_pd.shape[-1],
+            bern_gqs.mcmc_sample.draws().shape[-1],
         )
 
         column_names = [
@@ -155,10 +154,9 @@ class GenerateQuantitiesTest(unittest.TestCase):
             'y_rep[9]',
             'y_rep[10]',
         ]
-
         assert_frame_equal(
             bern_gqs.generated_quantities_pd[column_names],
-            bern_gqs.mcmc_sample[column_names],
+            bern_gqs.mcmc_sample.draws_pd(params =['y_rep'])
         )
 
 
