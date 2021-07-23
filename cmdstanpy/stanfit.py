@@ -38,6 +38,7 @@ from cmdstanpy.utils import (
     create_named_text_file,
     do_command,
     get_logger,
+    flatten_chains,
     parse_method_vars,
     parse_stan_vars,
     scan_config,
@@ -498,14 +499,6 @@ class CmdStanMCMC:
         """
         return int(math.ceil((self._iter_sampling) / self._thin))
 
-    def expected_csv_rows() -> int:
-        """
-        Expected number of rows of data in a Stan CSV file based on config.
-        """
-        if self._save_warmup:
-            return self.num_draws_warmup + self.num_draws_sampling
-        return self.num_draws_sampling
-
     @property
     def metadata(self) -> InferenceMetadata:
         """
@@ -653,10 +646,7 @@ class CmdStanMCMC:
             num_rows -= start_idx
 
         if concat_chains:
-            num_rows *= self.chains
-            return self._draws[start_idx:, :, :].reshape(
-                (num_rows, len(self.column_names)), order='F'
-            )
+            return flatten_chains(self._draws[start_idx:, :, :])
         return self._draws[start_idx:, :, :]
 
     @property
@@ -950,10 +940,10 @@ class CmdStanMCMC:
         num_rows = num_draws * self.chains
         if self._draws_pd is None or self._draws_pd.shape[0] != num_rows:
             # pylint: disable=redundant-keyword-arg
-            data = self.draws(inc_warmup=inc_warmup).reshape(
-                (num_rows, len(self.column_names)), order='F'
+            self._draws_pd = pd.DataFrame(
+                data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
+                columns=self.column_names
             )
-            self._draws_pd = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
             return self._draws_pd
         return self._draws_pd[mask]
@@ -1350,7 +1340,7 @@ class CmdStanGQ:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
-        return self._generated_quantities
+        return flatten_chains(self._generated_quantities)
 
     @property
     def generated_quantities_pd(self) -> pd.DataFrame:
@@ -1362,7 +1352,7 @@ class CmdStanGQ:
             self._assemble_generated_quantities()
         if self._generated_quantities_pd is None:
             self._generated_quantities_pd = pd.DataFrame(
-                data=self._generated_quantities, columns=self.column_names
+                data=flatten_chains(self._generated_quantities), columns=self.column_names
             )
         return self._generated_quantities_pd
 
@@ -1402,13 +1392,10 @@ class CmdStanGQ:
             raise ValueError('unknown name: {}'.format(name))
         if name not in gq_var_names:
             return self.mcmc_sample.stan_variable(name, inc_warmup=warmup)
-
-        self._assemble_draws()
-        col_idxs = self._metadata.stan_vars_cols[name]
-        # pylint: disable=redundant-keyword-arg
-        return self._generated_quantities[:, col_idxs].reshape(
-            dims, order='F'
-        )
+        else:  # is gq variable
+            self._assemble_draws()
+            col_idxs = self._metadata.stan_vars_cols[name]
+            return flatten_chains(self._generated_quantities)[:, col_idxs]
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -1481,10 +1468,8 @@ class CmdStanGQ:
                 gq_sample[:, chain, :] = np.loadtxt(
                     lines, dtype=np.ndarray, ndmin=2, skiprows=1, delimiter=','
                 )
-        num_rows = gq_sample.shape[0] * self.chains
-        self._generated_quantities = gq_sample.reshape(
-            (num_rows, len(self.column_names)), order='F'
-        )
+        self._generated_quantities = gq_sample
+
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
@@ -1556,17 +1541,23 @@ class CmdStanVB:
 
     @property
     def variational_params_np(self) -> np.ndarray:
-        """Returns inferred parameter means as numpy array."""
+        """
+        Returns inferred parameter means as numpy array.
+        """
         return self._variational_mean
 
     @property
     def variational_params_pd(self) -> pd.DataFrame:
-        """Returns inferred parameter means as pandas DataFrame."""
+        """
+        Returns inferred parameter means as pandas DataFrame.
+        """
         return pd.DataFrame([self._variational_mean], columns=self.column_names)
 
     @property
     def variational_params_dict(self) -> OrderedDict:
-        """Returns inferred parameter means as Dict."""
+        """
+        Returns inferred parameter means as Dict.
+        """
         return OrderedDict(zip(self.column_names, self._variational_mean))
 
     @property
