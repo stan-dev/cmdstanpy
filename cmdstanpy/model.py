@@ -36,7 +36,6 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
-    scan_sampler_csv,
 )
 
 

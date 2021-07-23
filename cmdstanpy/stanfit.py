@@ -1386,14 +1386,14 @@ class CmdStanGQ:
         """
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
-        warmup = mcmc_sample.metadata.cmdstan_config['save_warmup']
+        warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
         print(warmup)
         if not (name in model_var_names or name in gq_var_names):
             raise ValueError('unknown name: {}'.format(name))
         if name not in gq_var_names:
             return self.mcmc_sample.stan_variable(name, inc_warmup=warmup)
         else:  # is gq variable
-            self._assemble_draws()
+            self._assemble_generated_quantities()
             col_idxs = self._metadata.stan_vars_cols[name]
             return flatten_chains(self._generated_quantities)[:, col_idxs]
 
@@ -1461,7 +1461,6 @@ class CmdStanGQ:
             dtype=float,
             order='F',
         )
-        idx = 0
         for chain in range(self.chains):
             with open(self.runset.csv_files[chain], 'r') as fd:
                 lines = (line for line in fd if not line.startswith('#'))
