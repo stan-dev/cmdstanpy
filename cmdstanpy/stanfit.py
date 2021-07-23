@@ -1455,7 +1455,8 @@ class CmdStanGQ:
 
     def _assemble_generated_quantities(self) -> None:
         # use numpy genfromtext
-        num_draws = self.mcmc_sample.draws().shape[0]
+        warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+        num_draws = self.mcmc_sample.draws(inc_warmup=warmup).shape[0]
         gq_sample = np.empty(
             (num_draws, self.chains, len(self.column_names)),
             dtype=float,
