@@ -35,6 +35,7 @@ from cmdstanpy.utils import (
     validate_cmdstan_path,
     validate_dir,
     windows_short_path,
+    flatten_chains,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -734,6 +735,18 @@ class DoCommandTest(unittest.TestCase):
         args = ['bash', '/bin/junk']
         with self.assertRaises(Exception):
             do_command(args, HERE)
+
+
+class FlattenTest(unittest.TestCase):
+    def test_good(self):
+        array_3d = np.empty((200, 4, 4))
+        flattened = flatten_chains(array_3d)
+        self.assertEqual(flattened.shape, (800, 4))
+
+    def test_bad(self):
+        array_2d = np.empty((200, 4))
+        with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
+            flatten_chains(array_2d)
 
 
 if __name__ == '__main__':

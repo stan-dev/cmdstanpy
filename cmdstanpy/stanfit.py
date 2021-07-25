@@ -38,6 +38,7 @@ from cmdstanpy.utils import (
     create_named_text_file,
     do_command,
     get_logger,
+    flatten_chains,
     parse_method_vars,
     parse_stan_vars,
     scan_config,
@@ -645,10 +646,7 @@ class CmdStanMCMC:
             num_rows -= start_idx
 
         if concat_chains:
-            num_rows *= self.chains
-            return self._draws[start_idx:, :, :].reshape(
-                (num_rows, len(self.column_names)), order='F'
-            )
+            return flatten_chains(self._draws[start_idx:, :, :])
         return self._draws[start_idx:, :, :]
 
     @property
@@ -942,10 +940,10 @@ class CmdStanMCMC:
         num_rows = num_draws * self.chains
         if self._draws_pd is None or self._draws_pd.shape[0] != num_rows:
             # pylint: disable=redundant-keyword-arg
-            data = self.draws(inc_warmup=inc_warmup).reshape(
-                (num_rows, len(self.column_names)), order='F'
+            self._draws_pd = pd.DataFrame(
+                data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
+                columns=self.column_names,
             )
-            self._draws_pd = pd.DataFrame(data=data, columns=self.column_names)
         if params is None:
             return self._draws_pd
         return self._draws_pd[mask]
@@ -1231,7 +1229,12 @@ class CmdStanGQ:
     Container for outputs from CmdStan generate_quantities run.
     """
 
-    def __init__(self, runset: RunSet, mcmc_sample: pd.DataFrame) -> None:
+    def __init__(
+        self,
+        runset: RunSet,
+        mcmc_sample: CmdStanMCMC,
+        logger: logging.Logger = None,
+    ) -> None:
         """Initialize object."""
         if not runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError(
@@ -1239,12 +1242,13 @@ class CmdStanGQ:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._metadata = None
+        self._logger = logger or get_logger()
         self.mcmc_sample = mcmc_sample
         self._generated_quantities = None
-        self._column_names = scan_generated_quantities_csv(
-            self.runset.csv_files[0]
-        )['column_names']
+        self._generated_quantities_pd = None
+        config = self._validate_csv_files()
+        config['save_warmup']
+        self._metadata = InferenceMetadata(config)
 
     def __repr__(self) -> str:
         repr = 'CmdStanGQ: model={} chains={}{}'.format(
@@ -1259,17 +1263,74 @@ class CmdStanGQ:
         )
         return repr
 
+    def _validate_csv_files(self) -> dict:
+        """
+        Checks that Stan CSV output files for all chains are consistent
+        and returns dict containing config and column names.
+
+        Raises exception when inconsistencies detected.
+        """
+        dzero = {}
+        for i in range(self.chains):
+            if i == 0:
+                dzero = scan_generated_quantities_csv(
+                    path=self.runset.csv_files[i],
+                )
+            else:
+                drest = scan_generated_quantities_csv(
+                    path=self.runset.csv_files[i],
+                )
+                for key in dzero:
+                    if (
+                        key
+                        not in [
+                            'id',
+                            'fitted_params',
+                            'diagnostic_file',
+                            'metric_file',
+                            'profile_file',
+                            'init',
+                            'seed',
+                            'start_datetime',
+                        ]
+                        and dzero[key] != drest[key]
+                    ):
+                        raise ValueError(
+                            'CmdStan config mismatch in Stan CSV file {}: '
+                            'arg {} is {}, expected {}'.format(
+                                self.runset.csv_files[i],
+                                key,
+                                dzero[key],
+                                drest[key],
+                            )
+                        )
+        return dzero
+
     @property
     def chains(self) -> int:
         """Number of chains."""
         return self.runset.chains
 
     @property
+    def chain_ids(self) -> List[int]:
+        """Chain ids."""
+        return self.runset.chain_ids
+
+    @property
     def column_names(self) -> Tuple[str, ...]:
         """
         Names of generated quantities of interest.
         """
-        return self._column_names
+        return self._metadata.cmdstan_config['column_names']
+
+    @property
+    def metadata(self) -> InferenceMetadata:
+        """
+        Returns object which contains CmdStan configuration as well as
+        information about the names and structure of the inference method
+        and model output variables.
+        """
+        return self._metadata
 
     @property
     def generated_quantities(self) -> np.ndarray:
@@ -1285,61 +1346,209 @@ class CmdStanGQ:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
-        return self._generated_quantities
+        return flatten_chains(self._generated_quantities)
 
     @property
     def generated_quantities_pd(self) -> pd.DataFrame:
         """
-        Returns the generated quantities as a pandas DataFrame consisting of
-        one column per quantity of interest and one row per draw.
+        Returns the generated quantities as a pandas DataFrame.  Flattens all
+        chains into single column.
         """
-        if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
-        return pd.DataFrame(
-            data=self._generated_quantities, columns=self.column_names
-        )
-
+        if self._generated_quantities_pd is None:
+            self._generated_quantities_pd = pd.DataFrame(
+                data=flatten_chains(self._generated_quantities),
+                columns=self.column_names,
+            )
+        return self._generated_quantities_pd
     @property
     def sample_plus_quantities(self) -> pd.DataFrame:
+        """
+        Deprecated - use method "sample_plus_quantities_pd" instead
+        """
+        self._logger.warning(
+            'property "sample_plus_quantities" has been deprecated, '
+            'use method "sample_plus_quantities_pd" instead.'
+        )
+        return self.sample_plus_quantities_pd()
+
+
+    def sample_plus_quantities_pd(self, inc_warmup: bool = False) -> pd.DataFrame:
         """
         Returns the column-wise concatenation of the input drawset
         with generated quantities drawset.  If there are duplicate
         columns in both the input and the generated quantities,
         the input column is dropped in favor of the recomputed
         values in the generate quantities drawset.
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
 
-        cols_1 = self.mcmc_sample.columns.tolist()
-        cols_2 = self.generated_quantities_pd.columns.tolist()
-
+        cols_1 = self.mcmc_sample.column_names
+        cols_2 = self.column_names
         dups = [
             item
             for item, count in Counter(cols_1 + cols_2).items()
             if count > 1
         ]
+        if not include_warmup and self.mcmc_sample.metadata.cmdstan_config['save_warmup']:
+            draw1 = self.mcmc_sample.num_draws_warmup
+            return pd.concat(
+                [
+                    self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
+                    self.generated_quantities_pd[draw1:]
+                ],
+                axis=1,
+            )
         return pd.concat(
-            [self.mcmc_sample.drop(columns=dups), self.generated_quantities_pd],
+            [
+                self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
+                self.generated_quantities_pd
+            ],
             axis=1,
         )
 
-    def _assemble_generated_quantities(self) -> None:
-        drawset_list = []
-        for chain in range(self.chains):
-            drawset_list.append(
-                pd.read_csv(
-                    self.runset.csv_files[chain],
-                    comment='#',
-                    float_precision='high',
-                    dtype=float,
-                )
+    def generated_quantities_xr(
+        self, vars: List[str] = None, inc_warmup: bool = False
+    ) -> "xr.Dataset":
+        """
+        Returns the generated quantities draws as a xarray Dataset.
+        :param vars: optional list of variable names.
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
+        """
+        if not XARRAY_INSTALLED:
+            raise RuntimeError(
+                "xarray is not installed, cannot produce draws array"
             )
-        self._generated_quantities = pd.concat(drawset_list).values
+        if vars is None:
+            vars = self.metadata.stan_vars_cols.keys()
+
+        self._assemble_draws()
+
+        num_draws = self.mcmc_sample.num_draws_sampling
+        sample_meta = self.mcmc_sample.metadata.cmdstan_config
+        attrs = {
+            "stan_version": f"{sample_meta['stan_version_major']}."
+            f"{saple_meta['stan_version_minor']}.{saple_meta['stan_version_patch']}",
+            "model": saple_meta["model"],
+            "num_unconstrained_params": self.mcmc_sample.num_unconstrained_params,
+            "num_draws_sampling": num_draws,
+        }
+        if inc_warmup and saple_meta['save_warmup']:
+            num_draws += self.mcmc_sample.num_draws_warmup
+            attrs["num_draws_warmup"] = self.num_draws_warmup
+
+        data = {}
+        coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
+        dims = ("draw", "chain")
+        for var in vars:
+            draw1 = 0
+            if not inc_warmup and saple_meta['save_warmup']:
+                draw1 = self.mcmc_sample.num_draws_warmup
+            col_idxs = self._metadata.stan_vars_cols[var]
+
+            var_dims = dims + tuple(
+                f"{var}_dim_{i}" for i in range(len(self.stan_vars_dims[var]))
+            )
+
+            if self.stan_vars_dims[var] == ():
+                data[var] = (
+                    var_dims,
+                    np.squeeze(self._draws[draw1:, :, col_idxs], axis=2),
+                )
+            else:
+                data[var] = (var_dims, self._draws[draw1:, :, col_idxs])
+
+        return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
+            'chain', 'draw', ...
+        )
+
+    def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
+        """
+        Return a numpy.ndarray which contains the set of draws
+        for the named Stan program variable.  Flattens the chains,
+        leaving the draws in chain order.  The first array dimension,
+        corresponds to number of draws in the sample.
+        The remaining dimensions correspond to
+        the shape of the Stan program variable.
+
+        Underlyingly draws are in chain order, i.e., for a sample with
+        N chains of M draws each, the first M array elements are from chain 1,
+        the next M are from chain 2, and the last M elements are from chain N.
+
+        * If the variable is a scalar variable, the return array has shape
+          ( draws X chains, 1).
+        * If the variable is a vector, the return array has shape
+          ( draws X chains, len(vector))
+        * If the variable is a matrix, the return array has shape
+          ( draws X chains, size(dim 1) X size(dim 2) )
+        * If the variable is an array with N dimensions, the return array
+          has shape ( draws X chains, size(dim 1) X ... X size(dim N))
+
+        For example, if the Stan program variable ``theta`` is a 3x3 matrix,
+        and the sample consists of 4 chains with 1000 post-warmup draws,
+        this function will return a numpy.ndarray with shape (4000,3,3).
+
+        :param name: variable name
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
+        """
+        model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
+        gq_var_names = self.metadata.stan_vars_cols.keys()
+        if not (name in model_var_names or name in gq_var_names):
+            raise ValueError('unknown name: {}'.format(name))
+        if name not in gq_var_names:
+            return self.mcmc_sample.stan_variable(name, inc_warmup=inc_warmup)
+        else:  # is gq variable
+            self._assemble_generated_quantities()
+            col_idxs = self._metadata.stan_vars_cols[name]
+            if not include_warmup and self.mcmc_sample.metadata.cmdstan_config['save_warmup']:
+                draw1 = self.mcmc_sample.num_draws_warmup
+                return flatten_chains(self._generated_quantities)[draw1:, col_idxs]
+            return flatten_chains(self._generated_quantities)[:, col_idxs]
+
+    def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
+        """
+        Return a dictionary mapping Stan program variables names
+        to the corresponding numpy.ndarray containing the inferred values.
+        """
+        result = {}
+        model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
+        gq_var_names = self.metadata.stan_vars_cols.keys()
+        for name in gq_var_names:
+            result[name] = self.stan_variable(name, inc_warmup)
+        for name in model_var_names:
+            if name not in gq_var_names:
+                result[name] = self.stan_variable(name, inc_warmup)
+        return result
+
+    def _assemble_generated_quantities(self) -> None:
+        # use numpy genfromtext
+        warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+        num_draws = self.mcmc_sample.draws(inc_warmup=warmup).shape[0]
+        gq_sample = np.empty(
+            (num_draws, self.chains, len(self.column_names)),
+            dtype=float,
+            order='F',
+        )
+        for chain in range(self.chains):
+            with open(self.runset.csv_files[chain], 'r') as fd:
+                lines = (line for line in fd if not line.startswith('#'))
+                gq_sample[:, chain, :] = np.loadtxt(
+                    lines, dtype=np.ndarray, ndmin=2, skiprows=1, delimiter=','
+                )
+        self._generated_quantities = gq_sample
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
@@ -1411,17 +1620,23 @@ class CmdStanVB:
 
     @property
     def variational_params_np(self) -> np.ndarray:
-        """Returns inferred parameter means as numpy array."""
+        """
+        Returns inferred parameter means as numpy array.
+        """
         return self._variational_mean
 
     @property
     def variational_params_pd(self) -> pd.DataFrame:
-        """Returns inferred parameter means as pandas DataFrame."""
+        """
+        Returns inferred parameter means as pandas DataFrame.
+        """
         return pd.DataFrame([self._variational_mean], columns=self.column_names)
 
     @property
     def variational_params_dict(self) -> OrderedDict:
-        """Returns inferred parameter means as Dict."""
+        """
+        Returns inferred parameter means as Dict.
+        """
         return OrderedDict(zip(self.column_names, self._variational_mean))
 
     @property

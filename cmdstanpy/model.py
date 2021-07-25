@@ -22,6 +22,7 @@ from cmdstanpy.cmdstan_args import (
 )
 from cmdstanpy.compiler_opts import CompilerOptions
 from cmdstanpy.stanfit import (
+    from_csv,
     CmdStanGQ,
     CmdStanMCMC,
     CmdStanMLE,
@@ -35,7 +36,6 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
-    scan_sampler_csv,
 )
 
 
@@ -929,66 +929,36 @@ class CmdStanModel:
 
         :return: CmdStanGQ object
         """
-        sample_csv_files = []
-        sample_drawset = None
-        chains = 0
-
         if isinstance(mcmc_sample, CmdStanMCMC):
             sample_csv_files = mcmc_sample.runset.csv_files
-            sample_drawset = mcmc_sample.draws_pd()
-            chains = mcmc_sample.chains
-            chain_ids = mcmc_sample.chain_ids
         elif isinstance(mcmc_sample, list):
             if len(mcmc_sample) < 1:
-                raise ValueError('MCMC sample cannot be empty list')
-            sample_csv_files = mcmc_sample
-            chains = len(sample_csv_files)
-            chain_ids = [x + 1 for x in range(chains)]
+                raise ValueError(
+                    'Expecting list of Stan CSV files, found empty list'
+                )
+            try:
+                sample_csv_files = mcmc_sample
+                sample_fit = from_csv(sample_csv_files)
+                mcmc_sample = sample_fit
+            except ValueError as e:
+                raise ValueError(
+                    'Invalid sample from Stan CSV files, error:\n\t{}\n\t'
+                    ' while processing files\n\t{}'.format(
+                        repr(e), '\n\t'.join(mcmc_sample)
+                    )
+                ) from e
         else:
             raise ValueError(
                 'MCMC sample must be either CmdStanMCMC object'
-                ' or list of paths to sample csv_files.'
+                ' or list of paths to sample Stan CSV files.'
             )
-        try:
-            if sample_drawset is None:  # assemble sample from csv files
-                config = {}
-                # scan 1st csv file to get config
-                try:
-                    config = scan_sampler_csv(sample_csv_files[0])
-                except ValueError:
-                    config = scan_sampler_csv(sample_csv_files[0], True)
-                conf_iter_sampling = None
-                if 'num_samples' in config:
-                    conf_iter_sampling = int(config['num_samples'])
-                conf_iter_warmup = None
-                if 'num_warmup' in config:
-                    conf_iter_warmup = int(config['num_warmup'])
-                conf_thin = None
-                if 'thin' in config:
-                    conf_thin = int(config['thin'])
-                sampler_args = SamplerArgs(
-                    iter_sampling=conf_iter_sampling,
-                    iter_warmup=conf_iter_warmup,
-                    thin=conf_thin,
-                )
-                args = CmdStanArgs(
-                    self._name,
-                    self._exe_file,
-                    chain_ids=chain_ids,
-                    method_args=sampler_args,
-                )
-                runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
-                runset._csv_files = sample_csv_files
-                sample_fit = CmdStanMCMC(runset)
-                sample_drawset = sample_fit.draws_pd()
-        except ValueError as exc:
-            raise ValueError(
-                'Invalid mcmc_sample, error:\n\t{}\n\t'
-                ' while processing files\n\t{}'.format(
-                    repr(exc), '\n\t'.join(sample_csv_files)
-                )
-            ) from exc
-
+        chains = mcmc_sample.chains
+        chain_ids = mcmc_sample.chain_ids
+        if mcmc_sample.metadata.cmdstan_config['save_warmup']:
+            self._logger.warning(
+                'Sample contains saved wormup draws which will be used '
+                'to generate additional quantities of interest.'
+            )
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files
         )
@@ -1021,7 +991,7 @@ class CmdStanModel:
                     msg, runset.__repr__()
                 )
                 raise RuntimeError(msg)
-            quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
+            quantities = CmdStanGQ(runset=runset, mcmc_sample=mcmc_sample)
         return quantities
 
     def variational(
