@@ -1027,12 +1027,17 @@ def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
 
     :param draws_array: 3D array of draws
     """
-    if len(draws_array.shape) < 2 or len(draws_array.shape) > 3:
-        raise ValueError('Expecting 3D array, found array with {} dims'.format(draws_array.shape))
+    if len(draws_array.shape) != 3:
+        raise ValueError(
+            'Expecting 3D array, found array with {} dims'.format(
+                lens(draws_array.shape)
+            )
+        )
 
     num_rows = draws_array.shape[0] * draws_array.shape[1]
     num_cols = draws_array.shape[2]
     return draws_array.reshape((num_rows, num_cols), order='F')
+
 
 class MaybeDictToFilePath:
     """Context manager for json files."""

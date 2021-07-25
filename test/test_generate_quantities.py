@@ -4,7 +4,7 @@ import logging
 import os
 import unittest
 
-from numpy.testing import (assert_array_equal, assert_raises)
+from numpy.testing import assert_array_equal, assert_raises
 from pandas.testing import assert_frame_equal
 from testfixtures import LogCapture
 
@@ -82,11 +82,13 @@ class GenerateQuantitiesTest(unittest.TestCase):
         for i in range(4):
             csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
 
-        with self.assertRaisesRegex(Exception, 'Invalid sample from Stan CSV files'):
+        with self.assertRaisesRegex(
+            Exception, 'Invalid sample from Stan CSV files'
+        ):
             model.generate_quantities(data=jdata, mcmc_sample=csv_files)
 
     def test_gen_quanties_mcmc_sample(self):
-        #fitted_params sample
+        # fitted_params sample
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -122,9 +124,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
             + bern_gqs.generated_quantities_pd.shape[1],
         )
 
-
     def test_gen_quanties_mcmc_sample_save_warmup(self):
-        #fitted_params sample
+        # fitted_params sample
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -135,7 +136,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             seed=12345,
             iter_warmup=100,
             iter_sampling=100,
-            save_warmup = True,
+            save_warmup=True,
         )
         # gq_model
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
@@ -143,16 +144,21 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         with LogCapture() as log:
             logging.getLogger()
-            bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+            bern_gqs = model.generate_quantities(
+                data=jdata, mcmc_sample=bern_fit
+            )
             self.assertEqual(bern_gqs.generated_quantities.shape, (800, 10))
         log.check_present(
-            ('cmdstanpy', 'WARNING',
+            (
+                'cmdstanpy',
+                'WARNING',
                 'Sample contains saved wormup draws which will be used to generate '
-                'additional quantities of interest.')
+                'additional quantities of interest.',
+            )
         )
 
     def test_sample_plus_quantities_dedup(self):
-        #fitted_params - model GQ block: y_rep is PPC of theta
+        # fitted_params - model GQ block: y_rep is PPC of theta
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -171,8 +177,9 @@ class GenerateQuantitiesTest(unittest.TestCase):
             AssertionError,
             assert_array_equal,
             bern_fit.stan_variable(name='y_rep'),
-            bern_gqs.stan_variable(name='y_rep')
+            bern_gqs.stan_variable(name='y_rep'),
         )
+
 
 if __name__ == '__main__':
     unittest.main()

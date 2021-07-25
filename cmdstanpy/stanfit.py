@@ -942,7 +942,7 @@ class CmdStanMCMC:
             # pylint: disable=redundant-keyword-arg
             self._draws_pd = pd.DataFrame(
                 data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-                columns=self.column_names
+                columns=self.column_names,
             )
         if params is None:
             return self._draws_pd
@@ -1247,6 +1247,7 @@ class CmdStanGQ:
         self._generated_quantities = None
         self._generated_quantities_pd = None
         config = self._validate_csv_files()
+        config['save_warmup']
         self._metadata = InferenceMetadata(config)
 
     def __repr__(self) -> str:
@@ -1311,6 +1312,11 @@ class CmdStanGQ:
         return self.runset.chains
 
     @property
+    def chain_ids(self) -> List[int]:
+        """Chain ids."""
+        return self.runset.chain_ids
+
+    @property
     def column_names(self) -> Tuple[str, ...]:
         """
         Names of generated quantities of interest.
@@ -1352,11 +1358,121 @@ class CmdStanGQ:
             self._assemble_generated_quantities()
         if self._generated_quantities_pd is None:
             self._generated_quantities_pd = pd.DataFrame(
-                data=flatten_chains(self._generated_quantities), columns=self.column_names
+                data=flatten_chains(self._generated_quantities),
+                columns=self.column_names,
             )
         return self._generated_quantities_pd
+    @property
+    def sample_plus_quantities(self) -> pd.DataFrame:
+        """
+        Deprecated - use method "sample_plus_quantities_pd" instead
+        """
+        self._logger.warning(
+            'property "sample_plus_quantities" has been deprecated, '
+            'use method "sample_plus_quantities_pd" instead.'
+        )
+        return self.sample_plus_quantities_pd()
 
-    def stan_variable(self, name: str) -> np.ndarray:
+
+    def sample_plus_quantities_pd(self, inc_warmup: bool = False) -> pd.DataFrame:
+        """
+        Returns the column-wise concatenation of the input drawset
+        with generated quantities drawset.  If there are duplicate
+        columns in both the input and the generated quantities,
+        the input column is dropped in favor of the recomputed
+        values in the generate quantities drawset.
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
+        """
+        if not self.runset.method == Method.GENERATE_QUANTITIES:
+            raise ValueError('Bad runset method {}.'.format(self.runset.method))
+        if self._generated_quantities is None:
+            self._assemble_generated_quantities()
+
+        cols_1 = self.mcmc_sample.column_names
+        cols_2 = self.column_names
+        dups = [
+            item
+            for item, count in Counter(cols_1 + cols_2).items()
+            if count > 1
+        ]
+        if not include_warmup and self.mcmc_sample.metadata.cmdstan_config['save_warmup']:
+            draw1 = self.mcmc_sample.num_draws_warmup
+            return pd.concat(
+                [
+                    self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
+                    self.generated_quantities_pd[draw1:]
+                ],
+                axis=1,
+            )
+        return pd.concat(
+            [
+                self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
+                self.generated_quantities_pd
+            ],
+            axis=1,
+        )
+
+    def generated_quantities_xr(
+        self, vars: List[str] = None, inc_warmup: bool = False
+    ) -> "xr.Dataset":
+        """
+        Returns the generated quantities draws as a xarray Dataset.
+        :param vars: optional list of variable names.
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
+        """
+        if not XARRAY_INSTALLED:
+            raise RuntimeError(
+                "xarray is not installed, cannot produce draws array"
+            )
+        if vars is None:
+            vars = self.metadata.stan_vars_cols.keys()
+
+        self._assemble_draws()
+
+        num_draws = self.mcmc_sample.num_draws_sampling
+        sample_meta = self.mcmc_sample.metadata.cmdstan_config
+        attrs = {
+            "stan_version": f"{sample_meta['stan_version_major']}."
+            f"{saple_meta['stan_version_minor']}.{saple_meta['stan_version_patch']}",
+            "model": saple_meta["model"],
+            "num_unconstrained_params": self.mcmc_sample.num_unconstrained_params,
+            "num_draws_sampling": num_draws,
+        }
+        if inc_warmup and saple_meta['save_warmup']:
+            num_draws += self.mcmc_sample.num_draws_warmup
+            attrs["num_draws_warmup"] = self.num_draws_warmup
+
+        data = {}
+        coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
+        dims = ("draw", "chain")
+        for var in vars:
+            draw1 = 0
+            if not inc_warmup and saple_meta['save_warmup']:
+                draw1 = self.mcmc_sample.num_draws_warmup
+            col_idxs = self._metadata.stan_vars_cols[var]
+
+            var_dims = dims + tuple(
+                f"{var}_dim_{i}" for i in range(len(self.stan_vars_dims[var]))
+            )
+
+            if self.stan_vars_dims[var] == ():
+                data[var] = (
+                    var_dims,
+                    np.squeeze(self._draws[draw1:, :, col_idxs], axis=2),
+                )
+            else:
+                data[var] = (var_dims, self._draws[draw1:, :, col_idxs])
+
+        return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
+            'chain', 'draw', ...
+        )
+
+    def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
         for the named Stan program variable.  Flattens the chains,
@@ -1383,21 +1499,26 @@ class CmdStanGQ:
         this function will return a numpy.ndarray with shape (4000,3,3).
 
         :param name: variable name
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
         """
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
-        warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
-        print(warmup)
         if not (name in model_var_names or name in gq_var_names):
             raise ValueError('unknown name: {}'.format(name))
         if name not in gq_var_names:
-            return self.mcmc_sample.stan_variable(name, inc_warmup=warmup)
+            return self.mcmc_sample.stan_variable(name, inc_warmup=inc_warmup)
         else:  # is gq variable
             self._assemble_generated_quantities()
             col_idxs = self._metadata.stan_vars_cols[name]
+            if not include_warmup and self.mcmc_sample.metadata.cmdstan_config['save_warmup']:
+                draw1 = self.mcmc_sample.num_draws_warmup
+                return flatten_chains(self._generated_quantities)[draw1:, col_idxs]
             return flatten_chains(self._generated_quantities)[:, col_idxs]
 
-    def stan_variables(self) -> Dict[str, np.ndarray]:
+    def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
@@ -1406,52 +1527,11 @@ class CmdStanGQ:
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
         for name in gq_var_names:
-            result[name] = self.stan_variable(name)
+            result[name] = self.stan_variable(name, inc_warmup)
         for name in model_var_names:
             if name not in gq_var_names:
-                result[name] = self.stan_variable(name)
+                result[name] = self.stan_variable(name, inc_warmup)
         return result
-
-    @property
-    def sample_plus_quantities(self) -> pd.DataFrame:
-        """
-        Deprecated - use "sample_plus_quantities_pd" instead
-        """
-        self._logger.warning(
-            'property "sample_plus_quantities" has been deprecated, '
-            'use "sample_plus_quantities_pd" instead.'
-        )
-        return self.sample_plus_quantities_pd
-
-    @property
-    def sample_plus_quantities_pd(self) -> pd.DataFrame:
-        """
-        Returns the column-wise concatenation of the input drawset
-        with generated quantities drawset.  If there are duplicate
-        columns in both the input and the generated quantities,
-        the input column is dropped in favor of the recomputed
-        values in the generate quantities drawset.
-        """
-        if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError('Bad runset method {}.'.format(self.runset.method))
-        if self._generated_quantities is None:
-            self._assemble_generated_quantities()
-
-        cols_1 = self.mcmc_sample.column_names
-        cols_2 = self.column_names
-        dups = [
-            item
-            for item, count in Counter(cols_1 + cols_2).items()
-            if count > 1
-        ]
-        warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
-        return pd.concat(
-            [
-                self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
-                self.generated_quantities_pd,
-            ],
-            axis=1,
-        )
 
     def _assemble_generated_quantities(self) -> None:
         # use numpy genfromtext
@@ -1469,7 +1549,6 @@ class CmdStanGQ:
                     lines, dtype=np.ndarray, ndmin=2, skiprows=1, delimiter=','
                 )
         self._generated_quantities = gq_sample
-
 
     def save_csvfiles(self, dir: str = None) -> None:
         """
