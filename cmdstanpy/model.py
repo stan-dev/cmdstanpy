@@ -324,7 +324,15 @@ class CmdStanModel:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
                     try:
-                        do_command(cmd, cmdstan_path(), logger=self._logger)
+                        msg = do_command(
+                            cmd, cmdstan_path(), logger=self._logger
+                        )
+                        if msg is not None and 'Warning or error:' in msg:
+                            msg = msg.split("Warning or error:", 1)[1].strip()
+                            self._logger.warning(
+                                "stanc3 has produced warnings:\n%s", msg
+                            )
+
                     except RuntimeError as e:
                         self._logger.error(
                             'file %s, exception %s', stan_file, str(e)

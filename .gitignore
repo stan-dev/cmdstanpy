@@ -14,7 +14,5 @@ htmlcov
 docsrc/_build
 .idea
 .DS_Store
-*.hpp
-*.exe
 .mypy_cache
 *.dll
