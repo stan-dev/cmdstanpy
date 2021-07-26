@@ -13,9 +13,10 @@ line_length = 80
 [tool.mypy]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
-#no_implicit_optional = true
-disallow_any_generics = true
+no_implicit_optional = true
+# disallow_any_generics = true # disabled due to issues with numpy < 1.20
 warn_return_any = true
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = ['tqdm', 'pandas', 'ujson']

@@ -5,7 +5,7 @@ import logging
 import os
 from enum import Enum, auto
 from time import time
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from numpy.random import RandomState
 
@@ -34,18 +34,18 @@ class SamplerArgs:
 
     def __init__(
         self,
-        iter_warmup: int = None,
-        iter_sampling: int = None,
+        iter_warmup: Optional[int] = None,
+        iter_sampling: Optional[int] = None,
         save_warmup: bool = False,
-        thin: int = None,
-        max_treedepth: int = None,
-        metric: Union[str, List[str]] = None,
-        step_size: Union[float, List[float]] = None,
+        thin: Optional[int] = None,
+        max_treedepth: Optional[int] = None,
+        metric: Union[str, List[str], None] = None,
+        step_size: Union[float, List[float], None] = None,
         adapt_engaged: bool = True,
-        adapt_delta: float = None,
-        adapt_init_phase: int = None,
-        adapt_metric_window: int = None,
-        adapt_step_size: int = None,
+        adapt_delta: Optional[float] = None,
+        adapt_init_phase: Optional[int] = None,
+        adapt_metric_window: Optional[int] = None,
+        adapt_step_size: Optional[int] = None,
         fixed_param: bool = False,
     ) -> None:
         """Initialize object."""
@@ -313,15 +313,15 @@ class OptimizeArgs:
 
     def __init__(
         self,
-        algorithm: str = None,
-        init_alpha: float = None,
-        iter: int = None,
-        tol_obj: float = None,
-        tol_rel_obj: float = None,
-        tol_grad: float = None,
-        tol_rel_grad: float = None,
-        tol_param: float = None,
-        history_size: int = None,
+        algorithm: Optional[str] = None,
+        init_alpha: Optional[float] = None,
+        iter: Optional[int] = None,
+        tol_obj: Optional[float] = None,
+        tol_rel_obj: Optional[float] = None,
+        tol_grad: Optional[float] = None,
+        tol_rel_grad: Optional[float] = None,
+        tol_param: Optional[float] = None,
+        history_size: Optional[int] = None,
     ) -> None:
 
         self.algorithm = algorithm
@@ -333,6 +333,7 @@ class OptimizeArgs:
         self.tol_rel_grad = tol_rel_grad
         self.tol_param = tol_param
         self.history_size = history_size
+        self.thin = None
 
     def validate(
         self, chains: Optional[int] = None  # pylint: disable=unused-argument
@@ -498,16 +499,16 @@ class VariationalArgs:
 
     def __init__(
         self,
-        algorithm: str = None,
-        iter: int = None,
-        grad_samples: int = None,
-        elbo_samples: int = None,
-        eta: float = None,
-        adapt_iter: int = None,
+        algorithm: Optional[str] = None,
+        iter: Optional[int] = None,
+        grad_samples: Optional[int] = None,
+        elbo_samples: Optional[int] = None,
+        eta: Optional[float] = None,
+        adapt_iter: Optional[int] = None,
         adapt_engaged: bool = True,
-        tol_rel_obj: float = None,
-        eval_elbo: int = None,
-        output_samples: int = None,
+        tol_rel_obj: Optional[float] = None,
+        eval_elbo: Optional[int] = None,
+        output_samples: Optional[int] = None,
     ) -> None:
         self.algorithm = algorithm
         self.iter = iter
@@ -635,7 +636,7 @@ class CmdStanArgs:
         method_args: Union[
             SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
         ],
-        data: Union[str, dict, None] = None,
+        data: Union[str, Dict[str, Any], None] = None,
         seed: Union[int, List[int], None] = None,
         inits: Union[int, float, str, List[str], None] = None,
         output_dir: Optional[str] = None,

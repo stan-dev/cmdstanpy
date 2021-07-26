@@ -209,16 +209,16 @@ class CmdStanModel:
         return self._exe_file
 
     @property
-    def stanc_options(self) -> Dict:
+    def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
         """Options to stanc compilers."""
         return self._compiler_options._stanc_options
 
     @property
-    def cpp_options(self) -> Dict:
+    def cpp_options(self) -> Dict[str, Union[bool, int]]:
         """Options to C++ compilers."""
         return self._compiler_options._cpp_options
 
-    def code(self) -> str:
+    def code(self) -> Optional[str]:
         """Return Stan program as a string."""
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
@@ -236,8 +236,8 @@ class CmdStanModel:
     def compile(
         self,
         force: bool = False,
-        stanc_options: Dict[str, Any] = None,
-        cpp_options: Dict[str, Any] = None,
+        stanc_options: Optional[Dict[str, Any]] = None,
+        cpp_options: Optional[Dict[str, Any]] = None,
         override_options: bool = False,
     ) -> None:
         """
@@ -360,22 +360,22 @@ class CmdStanModel:
 
     def optimize(
         self,
-        data: Union[Dict, str] = None,
-        seed: int = None,
-        inits: Union[Dict, float, str] = None,
-        output_dir: str = None,
-        sig_figs: int = None,
+        data: Union[Dict[str, Any], str, None] = None,
+        seed: Optional[int] = None,
+        inits: Union[Dict[str, float], float, str, None] = None,
+        output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
         save_profile: bool = False,
-        algorithm: str = None,
-        init_alpha: float = None,
-        tol_obj: float = None,
-        tol_rel_obj: float = None,
-        tol_grad: float = None,
-        tol_rel_grad: float = None,
-        tol_param: float = None,
-        history_size: int = None,
-        iter: int = None,
-        refresh: int = None,
+        algorithm: Optional[str] = None,
+        init_alpha: Optional[float] = None,
+        tol_obj: Optional[float] = None,
+        tol_rel_obj: Optional[float] = None,
+        tol_grad: Optional[float] = None,
+        tol_rel_grad: Optional[float] = None,
+        tol_param: Optional[float] = None,
+        history_size: Optional[int] = None,
+        iter: Optional[int] = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -507,32 +507,32 @@ class CmdStanModel:
     # pylint: disable=too-many-arguments
     def sample(
         self,
-        data: Union[Dict, str] = None,
-        chains: Union[int, None] = None,
-        parallel_chains: Union[int, None] = None,
-        threads_per_chain: Union[int, None] = None,
-        seed: Union[int, List[int]] = None,
-        chain_ids: Union[int, List[int]] = None,
-        inits: Union[Dict, float, str, List[str]] = None,
-        iter_warmup: int = None,
-        iter_sampling: int = None,
+        data: Union[Dict[str, Any], str, None] = None,
+        chains: Optional[int] = None,
+        parallel_chains: Optional[int] = None,
+        threads_per_chain: Optional[int] = None,
+        seed: Union[int, List[int], None] = None,
+        chain_ids: Union[int, List[int], None] = None,
+        inits: Union[Dict[str, float], float, str, List[str], None] = None,
+        iter_warmup: Optional[int] = None,
+        iter_sampling: Optional[int] = None,
         save_warmup: bool = False,
-        thin: int = None,
-        max_treedepth: int = None,
-        metric: Union[str, List[str]] = None,
-        step_size: Union[float, List[float]] = None,
+        thin: Optional[int] = None,
+        max_treedepth: Optional[int] = None,
+        metric: Union[str, List[str], None] = None,
+        step_size: Union[float, List[float], None] = None,
         adapt_engaged: bool = True,
-        adapt_delta: float = None,
-        adapt_init_phase: int = None,
-        adapt_metric_window: int = None,
-        adapt_step_size: int = None,
+        adapt_delta: Optional[float] = None,
+        adapt_init_phase: Optional[int] = None,
+        adapt_metric_window: Optional[int] = None,
+        adapt_step_size: Optional[int] = None,
         fixed_param: bool = False,
-        output_dir: str = None,
-        sig_figs: int = None,
+        output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
         save_diagnostics: bool = False,
         save_profile: bool = False,
         show_progress: Union[bool, str] = False,
-        refresh: int = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -868,12 +868,12 @@ class CmdStanModel:
 
     def generate_quantities(
         self,
-        data: Union[Dict, str] = None,
-        mcmc_sample: Union[CmdStanMCMC, List[str]] = None,
-        seed: int = None,
-        gq_output_dir: str = None,
-        sig_figs: int = None,
-        refresh: int = None,
+        data: Union[Dict[str, Any], str, None] = None,
+        mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
+        seed: Optional[int] = None,
+        gq_output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanGQ:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -1024,25 +1024,25 @@ class CmdStanModel:
 
     def variational(
         self,
-        data: Union[Dict, str] = None,
-        seed: int = None,
-        inits: float = None,
-        output_dir: str = None,
-        sig_figs: int = None,
+        data: Union[Dict[str, Any], str, None] = None,
+        seed: Optional[int] = None,
+        inits: Optional[float] = None,
+        output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
         save_diagnostics: bool = False,
         save_profile: bool = False,
-        algorithm: str = None,
-        iter: int = None,
-        grad_samples: int = None,
-        elbo_samples: int = None,
-        eta: float = None,
+        algorithm: Optional[str] = None,
+        iter: Optional[int] = None,
+        grad_samples: Optional[int] = None,
+        elbo_samples: Optional[int] = None,
+        eta: Optional[float] = None,
         adapt_engaged: bool = True,
-        adapt_iter: int = None,
-        tol_rel_obj: float = None,
-        eval_elbo: int = None,
-        output_samples: int = None,
+        adapt_iter: Optional[int] = None,
+        tol_rel_obj: Optional[float] = None,
+        eval_elbo: Optional[int] = None,
+        output_samples: Optional[int] = None,
         require_converged: bool = True,
-        refresh: int = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1242,7 +1242,10 @@ class CmdStanModel:
             raise RuntimeError(msg) from e
 
     def _read_progress(
-        self, proc: subprocess.Popen, pbar: Any, idx: int
+        self,
+        proc: subprocess.Popen,  # [] - Popoen is only generic in 3.9
+        pbar: Any,
+        idx: int,
     ) -> bytes:
         """
         Update tqdm progress bars according to CmdStan console progress msgs.
