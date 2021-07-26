@@ -58,7 +58,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
         self.assertEqual(
-            bern_gqs.sample_plus_quantities_pd.shape[1],
+            bern_gqs.sample_plus_quantities_pd().shape[1],
             bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.generated_quantities_pd.shape[1],
         )
@@ -118,7 +118,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertEqual(bern_gqs.generated_quantities.shape, (400, 10))
         self.assertEqual(bern_gqs.generated_quantities_pd.shape, (400, 10))
         self.assertEqual(
-            bern_gqs.sample_plus_quantities_pd.shape[1],
+            bern_gqs.sample_plus_quantities_pd().shape[1],
             bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.generated_quantities_pd.shape[1],
         )
