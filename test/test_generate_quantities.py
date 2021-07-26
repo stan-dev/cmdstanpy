@@ -5,7 +5,6 @@ import os
 import unittest
 
 from numpy.testing import assert_array_equal, assert_raises
-from pandas.testing import assert_frame_equal
 from testfixtures import LogCapture
 
 from cmdstanpy.cmdstan_args import Method
@@ -152,8 +151,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Sample contains saved wormup draws which will be used to generate '
-                'additional quantities of interest.',
+                'Sample contains saved wormup draws which will be used to '
+                'generate additional quantities of interest.',
             )
         )
 

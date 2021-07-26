@@ -1030,7 +1030,7 @@ def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
     if len(draws_array.shape) != 3:
         raise ValueError(
             'Expecting 3D array, found array with {} dims'.format(
-                lens(draws_array.shape)
+                len(draws_array.shape)
             )
         )
 
