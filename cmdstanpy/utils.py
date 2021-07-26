@@ -11,9 +11,17 @@ import subprocess
 import sys
 import tempfile
 from collections import OrderedDict
-from collections.abc import Sequence, Collection
-from numbers import Integral, Real
-from typing import Dict, List, TextIO, Tuple, Union
+from collections.abc import Collection, Sequence
+from typing import (
+    Any,
+    Dict,
+    List,
+    MutableMapping,
+    Optional,
+    TextIO,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
@@ -31,7 +39,7 @@ from cmdstanpy import (
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
-def get_logger():
+def get_logger() -> logging.Logger:
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
     if len(logger.handlers) == 0:
@@ -39,7 +47,7 @@ def get_logger():
     return logger
 
 
-def validate_dir(install_dir: str):
+def validate_dir(install_dir: str) -> None:
     """Check that specified install directory exists, can write."""
     if not os.path.exists(install_dir):
         try:
@@ -63,7 +71,7 @@ def validate_dir(install_dir: str):
             ) from e
 
 
-def get_latest_cmdstan(cmdstan_dir: str) -> str:
+def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
@@ -423,7 +431,7 @@ def rload(fname: str) -> Dict:
     return data_dict
 
 
-def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
+def parse_rdump_value(rhs: str) -> Union[int, float, np.ndarray]:
     """Process right hand side of Rdump variable assignment statement.
     Value is either scalar, vector, or multi-dim structure.
     Use regex to capture structure values, dimensions.
@@ -432,7 +440,7 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
         r'structure\(\s*c\((?P<vals>[^)]*)\)'
         r'(,\s*\.Dim\s*=\s*c\s*\((?P<dims>[^)]*)\s*\))?\)'
     )
-    val = None
+    # val = None
     try:
         if rhs.startswith('structure'):
             parse = pat.match(rhs)
@@ -523,7 +531,7 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     return dict
 
 
-def scan_optimize_csv(path: str) -> Dict:
+def scan_optimize_csv(path: str) -> Dict[str, List[float]]:
     """Process optimizer stan_csv output file line by line."""
     dict = {}
     lineno = 0
@@ -581,7 +589,7 @@ def scan_variational_csv(path: str) -> Dict:
     return dict
 
 
-def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_config(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
     """
     Scan initial stan_csv file comments lines and
     save non-default configuration information to config_dict.
@@ -632,7 +640,9 @@ def scan_warmup_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_column_names(
+    fd: TextIO, config_dict: MutableMapping[str, Any], lineno: int
+) -> int:
     """
     Process columns header, add to config_dict as 'column_names'
     """
@@ -834,7 +844,9 @@ def read_rdump_metric(path: str) -> List[int]:
     return list(metric_dict['inv_metric'].shape)
 
 
-def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
+def do_command(
+    cmd: List[str], cwd: str = None, logger: logging.Logger = None
+) -> str:
     """
     Spawn process, print stdout/stderr to console.
     Throws RuntimeError on non-zero returncode.
@@ -1024,7 +1036,9 @@ class MaybeDictToFilePath:
     """Context manager for json files."""
 
     def __init__(
-        self, *objs: Union[str, dict, list], logger: logging.Logger = None
+        self,
+        *objs: Union[str, Dict, List, int, float, None],
+        logger: logging.Logger = None
     ):
         self._unlink = [False] * len(objs)
         self._paths = [''] * len(objs)
@@ -1072,16 +1086,16 @@ class MaybeDictToFilePath:
                 self._paths[i] = obj
             elif obj is None:
                 self._paths[i] = None
-            elif i == 1 and isinstance(obj, (Integral, Real)):
+            elif i == 1 and isinstance(obj, (int, float)):
                 self._paths[i] = obj
             else:
                 raise ValueError('data must be string or dict')
             i += 1
 
-    def __enter__(self):
+    def __enter__(self) -> List[str]:
         return self._paths
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         for can_unlink, path in zip(self._unlink, self._paths):
             if can_unlink and path:
                 try:

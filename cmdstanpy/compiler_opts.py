@@ -5,7 +5,7 @@ Makefile options for stanc and C++ compilers
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from cmdstanpy.utils import get_logger
 
@@ -60,13 +60,14 @@ class CompilerOptions:
 
     def __init__(
         self,
-        stanc_options: Dict = None,
-        cpp_options: Dict = None,
+        *,
+        stanc_options: Dict[str, Any] = None,
+        cpp_options: Dict[str, Any] = None,
         logger: logging.Logger = None,
     ) -> None:
         """Initialize object."""
-        self._stanc_options = stanc_options
-        self._cpp_options = cpp_options
+        self._stanc_options = stanc_options if stanc_options is not None else {}
+        self._cpp_options = cpp_options if cpp_options is not None else {}
         self._logger = logger or get_logger()
 
     def __repr__(self) -> str:

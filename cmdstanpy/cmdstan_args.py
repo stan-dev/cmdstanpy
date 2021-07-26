@@ -4,9 +4,8 @@ CmdStan arguments
 import logging
 import os
 from enum import Enum, auto
-from numbers import Integral, Real
 from time import time
-from typing import List, Union
+from typing import List, Optional, Union
 
 from numpy.random import RandomState
 
@@ -26,7 +25,7 @@ class Method(Enum):
     GENERATE_QUANTITIES = auto()
     VARIATIONAL = auto()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
@@ -66,7 +65,7 @@ class SamplerArgs:
         self.fixed_param = fixed_param
         self.diagnostic_file = None
 
-    def validate(self, chains: int) -> None:
+    def validate(self, chains: Optional[int]) -> None:
         """
         Check arguments correctness and consistency.
 
@@ -74,7 +73,7 @@ class SamplerArgs:
         * if file(s) for metric are supplied, check contents.
         * length of per-chain lists equals specified # of chains
         """
-        if not isinstance(chains, Integral) or chains < 1:
+        if not isinstance(chains, int) or chains < 1:
             raise ValueError(
                 'sampler expects number of chains to be greater than 0'
             )
@@ -103,9 +102,7 @@ class SamplerArgs:
                 raise ValueError(msg)
 
         if self.iter_warmup is not None:
-            if self.iter_warmup < 0 or not isinstance(
-                self.iter_warmup, Integral
-            ):
+            if self.iter_warmup < 0 or not isinstance(self.iter_warmup, int):
                 raise ValueError(
                     'iter_warmup must be a non-negative integer,'
                     ' found {}'.format(self.iter_warmup)
@@ -116,28 +113,28 @@ class SamplerArgs:
                 )
         if self.iter_sampling is not None:
             if self.iter_sampling < 0 or not isinstance(
-                self.iter_sampling, Integral
+                self.iter_sampling, int
             ):
                 raise ValueError(
                     'iter_sampling must be a non-negative integer,'
                     ' found {}'.format(self.iter_sampling)
                 )
         if self.thin is not None:
-            if self.thin < 1 or not isinstance(self.thin, Integral):
+            if self.thin < 1 or not isinstance(self.thin, int):
                 raise ValueError(
                     'thin must be a positive integer,'
                     'found {}'.format(self.thin)
                 )
         if self.max_treedepth is not None:
             if self.max_treedepth < 1 or not isinstance(
-                self.max_treedepth, Integral
+                self.max_treedepth, int
             ):
                 raise ValueError(
                     'max_treedepth must be a positive integer,'
                     ' found {}'.format(self.max_treedepth)
                 )
         if self.step_size is not None:
-            if isinstance(self.step_size, Real):
+            if isinstance(self.step_size, (float, int)):
                 if self.step_size <= 0:
                     raise ValueError(
                         'step_size must be > 0, found {}'.format(self.step_size)
@@ -218,7 +215,7 @@ class SamplerArgs:
                 )
         if self.adapt_init_phase is not None:
             if self.adapt_init_phase < 0 or not isinstance(
-                self.adapt_init_phase, Integral
+                self.adapt_init_phase, int
             ):
                 raise ValueError(
                     'adapt_init_phase must be a non-negative integer,'
@@ -226,7 +223,7 @@ class SamplerArgs:
                 )
         if self.adapt_metric_window is not None:
             if self.adapt_metric_window < 0 or not isinstance(
-                self.adapt_metric_window, Integral
+                self.adapt_metric_window, int
             ):
                 raise ValueError(
                     'adapt_metric_window must be a non-negative integer,'
@@ -234,7 +231,7 @@ class SamplerArgs:
                 )
         if self.adapt_step_size is not None:
             if self.adapt_step_size < 0 or not isinstance(
-                self.adapt_step_size, Integral
+                self.adapt_step_size, int
             ):
                 raise ValueError(
                     'adapt_step_size must be a non-negative integer,'
@@ -259,7 +256,7 @@ class SamplerArgs:
                 ' or adaptation parameters.'
             )
 
-    def compose(self, idx: int, cmd: List) -> str:
+    def compose(self, idx: int, cmd: List[str]) -> List[str]:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
@@ -317,13 +314,13 @@ class OptimizeArgs:
     def __init__(
         self,
         algorithm: str = None,
-        init_alpha: Real = None,
+        init_alpha: float = None,
         iter: int = None,
-        tol_obj: Real = None,
-        tol_rel_obj: Real = None,
-        tol_grad: Real = None,
-        tol_rel_grad: Real = None,
-        tol_param: Real = None,
+        tol_obj: float = None,
+        tol_rel_obj: float = None,
+        tol_grad: float = None,
+        tol_rel_grad: float = None,
+        tol_param: float = None,
         history_size: int = None,
     ) -> None:
 
@@ -337,7 +334,9 @@ class OptimizeArgs:
         self.tol_param = tol_param
         self.history_size = history_size
 
-    def validate(self, chains=None) -> None:  # pylint: disable=unused-argument
+    def validate(
+        self, chains: Optional[int] = None  # pylint: disable=unused-argument
+    ) -> None:
         """
         Check arguments correctness and consistency.
         """
@@ -356,14 +355,14 @@ class OptimizeArgs:
                 raise ValueError(
                     'init_alpha must not be set when algorithm is Newton'
                 )
-            if isinstance(self.init_alpha, Real):
+            if isinstance(self.init_alpha, float):
                 if self.init_alpha <= 0:
                     raise ValueError('init_alpha must be greater than 0')
             else:
                 raise ValueError('init_alpha must be type of float')
 
         if self.iter is not None:
-            if isinstance(self.iter, Integral):
+            if isinstance(self.iter, int):
                 if self.iter < 0:
                     raise ValueError('iter must be greater than 0')
             else:
@@ -374,7 +373,7 @@ class OptimizeArgs:
                 raise ValueError(
                     'tol_obj must not be set when algorithm is Newton'
                 )
-            if isinstance(self.tol_obj, Real):
+            if isinstance(self.tol_obj, float):
                 if self.tol_obj <= 0:
                     raise ValueError('tol_obj must be greater than 0')
             else:
@@ -385,7 +384,7 @@ class OptimizeArgs:
                 raise ValueError(
                     'tol_rel_obj must not be set when algorithm is Newton'
                 )
-            if isinstance(self.tol_rel_obj, Real):
+            if isinstance(self.tol_rel_obj, float):
                 if self.tol_rel_obj <= 0:
                     raise ValueError('tol_rel_obj must be greater than 0')
             else:
@@ -396,7 +395,7 @@ class OptimizeArgs:
                 raise ValueError(
                     'tol_grad must not be set when algorithm is Newton'
                 )
-            if isinstance(self.tol_grad, Real):
+            if isinstance(self.tol_grad, float):
                 if self.tol_grad <= 0:
                     raise ValueError('tol_grad must be greater than 0')
             else:
@@ -407,7 +406,7 @@ class OptimizeArgs:
                 raise ValueError(
                     'tol_rel_grad must not be set when algorithm is Newton'
                 )
-            if isinstance(self.tol_rel_grad, Real):
+            if isinstance(self.tol_rel_grad, float):
                 if self.tol_rel_grad <= 0:
                     raise ValueError('tol_rel_grad must be greater than 0')
             else:
@@ -418,7 +417,7 @@ class OptimizeArgs:
                 raise ValueError(
                     'tol_param must not be set when algorithm is Newton'
                 )
-            if isinstance(self.tol_param, Real):
+            if isinstance(self.tol_param, float):
                 if self.tol_param <= 0:
                     raise ValueError('tol_param must be greater than 0')
             else:
@@ -430,14 +429,14 @@ class OptimizeArgs:
                     'history_size must not be set when algorithm is '
                     'Newton or BFGS'
                 )
-            if isinstance(self.history_size, Integral):
+            if isinstance(self.history_size, int):
                 if self.history_size < 0:
                     raise ValueError('history_size must be greater than 0')
             else:
                 raise ValueError('history_size must be type of int')
 
     # pylint: disable=unused-argument
-    def compose(self, idx: int, cmd: List) -> str:
+    def compose(self, idx: int, cmd: List[str]) -> List[str]:
         """compose command string for CmdStan for non-default arg values."""
         cmd.append('method=optimize')
         if self.algorithm:
@@ -469,7 +468,9 @@ class GenerateQuantitiesArgs:
         """Initialize object."""
         self.sample_csv_files = csv_files
 
-    def validate(self, chains: int) -> None:  # pylint: disable=unused-argument
+    def validate(
+        self, chains: Optional[int] = None  # pylint: disable=unused-argument
+    ) -> None:
         """
         Check arguments correctness and consistency.
 
@@ -481,7 +482,7 @@ class GenerateQuantitiesArgs:
                     'Invalid path for sample csv file: {}'.format(csv)
                 )
 
-    def compose(self, idx: int, cmd: List) -> str:
+    def compose(self, idx: int, cmd: List[str]) -> List[str]:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
@@ -501,10 +502,10 @@ class VariationalArgs:
         iter: int = None,
         grad_samples: int = None,
         elbo_samples: int = None,
-        eta: Real = None,
+        eta: float = None,
         adapt_iter: int = None,
         adapt_engaged: bool = True,
-        tol_rel_obj: Real = None,
+        tol_rel_obj: float = None,
         eval_elbo: int = None,
         output_samples: int = None,
     ) -> None:
@@ -519,7 +520,9 @@ class VariationalArgs:
         self.eval_elbo = eval_elbo
         self.output_samples = output_samples
 
-    def validate(self, chains=None) -> None:  # pylint: disable=unused-argument
+    def validate(
+        self, chains: Optional[int] = None  # pylint: disable=unused-argument
+    ) -> None:
         """
         Check arguments correctness and consistency.
         """
@@ -533,56 +536,52 @@ class VariationalArgs:
                 )
             )
         if self.iter is not None:
-            if self.iter < 1 or not isinstance(self.iter, Integral):
+            if self.iter < 1 or not isinstance(self.iter, int):
                 raise ValueError(
                     'iter must be a positive integer,'
                     ' found {}'.format(self.iter)
                 )
         if self.grad_samples is not None:
-            if self.grad_samples < 1 or not isinstance(
-                self.grad_samples, Integral
-            ):
+            if self.grad_samples < 1 or not isinstance(self.grad_samples, int):
                 raise ValueError(
                     'grad_samples must be a positive integer,'
                     ' found {}'.format(self.grad_samples)
                 )
         if self.elbo_samples is not None:
-            if self.elbo_samples < 1 or not isinstance(
-                self.elbo_samples, Integral
-            ):
+            if self.elbo_samples < 1 or not isinstance(self.elbo_samples, int):
                 raise ValueError(
                     'elbo_samples must be a positive integer,'
                     ' found {}'.format(self.elbo_samples)
                 )
         if self.eta is not None:
-            if self.eta < 0 or not isinstance(self.eta, (Integral, Real)):
+            if self.eta < 0 or not isinstance(self.eta, (int, float)):
                 raise ValueError(
                     'eta must be a non-negative number,'
                     ' found {}'.format(self.eta)
                 )
         if self.adapt_iter is not None:
-            if self.adapt_iter < 1 or not isinstance(self.adapt_iter, Integral):
+            if self.adapt_iter < 1 or not isinstance(self.adapt_iter, int):
                 raise ValueError(
                     'adapt_iter must be a positive integer,'
                     ' found {}'.format(self.adapt_iter)
                 )
         if self.tol_rel_obj is not None:
             if self.tol_rel_obj <= 0 or not isinstance(
-                self.tol_rel_obj, (Integral, Real)
+                self.tol_rel_obj, (int, float)
             ):
                 raise ValueError(
                     'tol_rel_obj must be a positive number,'
                     ' found {}'.format(self.tol_rel_obj)
                 )
         if self.eval_elbo is not None:
-            if self.eval_elbo < 1 or not isinstance(self.eval_elbo, Integral):
+            if self.eval_elbo < 1 or not isinstance(self.eval_elbo, int):
                 raise ValueError(
                     'eval_elbo must be a positive integer,'
                     ' found {}'.format(self.eval_elbo)
                 )
         if self.output_samples is not None:
             if self.output_samples < 1 or not isinstance(
-                self.output_samples, Integral
+                self.output_samples, int
             ):
                 raise ValueError(
                     'output_samples must be a positive integer,'
@@ -590,7 +589,7 @@ class VariationalArgs:
                 )
 
     # pylint: disable=unused-argument
-    def compose(self, idx: int, cmd: List) -> str:
+    def compose(self, idx: int, cmd: List[str]) -> List[str]:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
@@ -631,20 +630,20 @@ class CmdStanArgs:
     def __init__(
         self,
         model_name: str,
-        model_exe: str,
+        model_exe: Optional[str],
         chain_ids: Union[List[int], None],
         method_args: Union[
             SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
         ],
-        data: Union[str, dict] = None,
-        seed: Union[int, List[int]] = None,
-        inits: Union[int, float, str, List[str]] = None,
-        output_dir: str = None,
-        sig_figs: str = None,
+        data: Union[str, dict, None] = None,
+        seed: Union[int, List[int], None] = None,
+        inits: Union[int, float, str, List[str], None] = None,
+        output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
         save_diagnostics: bool = False,
         save_profile: bool = False,
-        refresh: int = None,
-        logger: logging.Logger = None,
+        refresh: Optional[int] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
@@ -790,7 +789,7 @@ class CmdStanArgs:
             raise ValueError('data must be string or dict')
 
         if self.inits is not None:
-            if isinstance(self.inits, (Integral, Real)):
+            if isinstance(self.inits, (float, int)):
                 if self.inits < 0:
                     raise ValueError(
                         'inits must be > 0, found {}'.format(self.inits)
@@ -826,13 +825,13 @@ class CmdStanArgs:
         idx: int,
         csv_file: str,
         *,
-        diagnostic_file: str = None,
-        profile_file: str = None
-    ) -> str:
+        diagnostic_file: Optional[str] = None,
+        profile_file: Optional[str] = None
+    ) -> List[str]:
         """
         Compose CmdStan command for non-default arguments.
         """
-        cmd = []
+        cmd: List[str] = []
         if idx is not None and self.chain_ids is not None:
             if idx < 0 or idx > len(self.chain_ids) - 1:
                 raise ValueError(
@@ -840,10 +839,10 @@ class CmdStanArgs:
                         idx, len(self.chain_ids)
                     )
                 )
-            cmd.append(self.model_exe)
+            cmd.append(self.model_exe)  # type: ignore # guaranteed by validate
             cmd.append('id={}'.format(self.chain_ids[idx]))
         else:
-            cmd.append(self.model_exe)
+            cmd.append(self.model_exe)  # type: ignore # guaranteed by validate
 
         if self.seed is not None:
             if not isinstance(self.seed, list):

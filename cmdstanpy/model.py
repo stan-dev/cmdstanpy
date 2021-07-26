@@ -9,9 +9,8 @@ import subprocess
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
-from numbers import Real
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -73,13 +72,13 @@ class CmdStanModel:
 
     def __init__(
         self,
-        model_name: str = None,
-        stan_file: str = None,
-        exe_file: str = None,
+        model_name: Optional[str] = None,
+        stan_file: Optional[str] = None,
+        exe_file: Optional[str] = None,
         compile: bool = True,
-        stanc_options: Dict = None,
-        cpp_options: Dict = None,
-        logger: logging.Logger = None,
+        stanc_options: Optional[Dict[str, Any]] = None,
+        cpp_options: Optional[Dict[str, Any]] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """
         Initialize object given constructor args.
@@ -92,7 +91,7 @@ class CmdStanModel:
         :param cpp_options: Options for C++ compiler.
         :param logger: Python logger object.
         """
-        self._name = None
+        self._name = ''
         self._stan_file = None
         self._exe_file = None
         self._compiler_options = CompilerOptions(
@@ -124,7 +123,7 @@ class CmdStanModel:
                 raise ValueError(
                     'invalid stan filename {}'.format(self._stan_file)
                 )
-            if self._name is None:
+            if not self._name:
                 self._name, _ = os.path.splitext(filename)
             # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
@@ -147,7 +146,7 @@ class CmdStanModel:
             if not os.path.exists(self._exe_file):
                 raise ValueError('no such file {}'.format(self._exe_file))
             _, exename = os.path.split(self._exe_file)
-            if self._name is None:
+            if not self._name:
                 self._name, _ = os.path.splitext(exename)
             else:
                 if self._name != os.path.splitext(exename)[0]:
@@ -157,8 +156,7 @@ class CmdStanModel:
                         ' found: {}.'.format(self._name, exename)
                     )
 
-        if self._compiler_options is not None:
-            self._compiler_options.validate()
+        self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
@@ -201,12 +199,12 @@ class CmdStanModel:
         return self._name
 
     @property
-    def stan_file(self) -> str:
+    def stan_file(self) -> Optional[str]:
         """Full path to Stan program file."""
         return self._stan_file
 
     @property
-    def exe_file(self) -> str:
+    def exe_file(self) -> Optional[str]:
         """Full path to Stan exe file."""
         return self._exe_file
 
@@ -238,8 +236,8 @@ class CmdStanModel:
     def compile(
         self,
         force: bool = False,
-        stanc_options: Dict = None,
-        cpp_options: Dict = None,
+        stanc_options: Dict[str, Any] = None,
+        cpp_options: Dict[str, Any] = None,
         override_options: bool = False,
     ) -> None:
         """
@@ -520,7 +518,7 @@ class CmdStanModel:
         iter_sampling: int = None,
         save_warmup: bool = False,
         thin: int = None,
-        max_treedepth: float = None,
+        max_treedepth: int = None,
         metric: Union[str, List[str]] = None,
         step_size: Union[float, List[float]] = None,
         adapt_engaged: bool = True,
@@ -835,10 +833,10 @@ class CmdStanModel:
                             tqdm_pbar = tqdm.tqdm
                         # enable dynamic_ncols for advanced users
                         # currently hidden feature
-                        dynamic_ncols = os.environ.get(
+                        dynamic_ncols_raw = os.environ.get(
                             'TQDM_DYNAMIC_NCOLS', 'False'
                         )
-                        if dynamic_ncols.lower() in ['0', 'false']:
+                        if dynamic_ncols_raw.lower() in ['0', 'false']:
                             dynamic_ncols = False
                         else:
                             dynamic_ncols = True
@@ -1037,10 +1035,10 @@ class CmdStanModel:
         iter: int = None,
         grad_samples: int = None,
         elbo_samples: int = None,
-        eta: Real = None,
+        eta: float = None,
         adapt_engaged: bool = True,
         adapt_iter: int = None,
-        tol_rel_obj: Real = None,
+        tol_rel_obj: float = None,
         eval_elbo: int = None,
         output_samples: int = None,
         require_converged: bool = True,
@@ -1263,7 +1261,7 @@ class CmdStanModel:
 
         try:
             # iterate while process is sampling
-            while proc.poll() is None:
+            while proc.poll() is None and proc.stdout is not None:
                 output = proc.stdout.readline()
                 stdout += output
                 output = output.decode('utf-8').strip()
