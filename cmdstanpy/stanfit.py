@@ -1211,7 +1211,7 @@ class CmdStanMLE:
         return pd.DataFrame([self._mle], columns=self.column_names)
 
     @property
-    def optimized_params_dict(self) -> OrderedDict[str, float]:
+    def optimized_params_dict(self) -> Dict[str, float]:
         """Returns optimized params as Dict."""
         return OrderedDict(zip(self.column_names, self._mle))
 
@@ -1446,7 +1446,7 @@ class CmdStanVB:
         return pd.DataFrame([self._variational_mean], columns=self.column_names)
 
     @property
-    def variational_params_dict(self) -> OrderedDict[str, np.ndarray]:
+    def variational_params_dict(self) -> Dict[str, np.ndarray]:
         """Returns inferred parameter means as Dict."""
         return OrderedDict(zip(self.column_names, self._variational_mean))
 
