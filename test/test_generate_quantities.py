@@ -1,11 +1,11 @@
 """CmdStan method generate_quantities tests"""
 
+import json
 import logging
 import os
 import unittest
 
 from numpy.testing import assert_array_equal, assert_raises
-from pandas.testing import assert_frame_equal
 from testfixtures import LogCapture
 
 from cmdstanpy.cmdstan_args import Method
@@ -16,7 +16,7 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class GenerateQuantitiesTest(unittest.TestCase):
-    def test_gen_quantities_csv_files(self):
+    def test_from_csv_files(self):
         # fitted_params sample - list of filenames
         goodfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', 'bern')
         csv_files = []
@@ -59,12 +59,12 @@ class GenerateQuantitiesTest(unittest.TestCase):
         ]
         self.assertEqual(bern_gqs.column_names, tuple(column_names))
         self.assertEqual(
-            bern_gqs.sample_plus_quantities_pd.shape[1],
+            bern_gqs.sample_plus_quantities_pd().shape[1],
             bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.generated_quantities_pd.shape[1],
         )
 
-    def test_gen_quantities_csv_files_bad(self):
+    def test_from_csv_files_bad(self):
         # gq model
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
@@ -87,7 +87,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         ):
             model.generate_quantities(data=jdata, mcmc_sample=csv_files)
 
-    def test_gen_quanties_mcmc_sample(self):
+    def test_from_mcmc_sample(self):
         # fitted_params sample
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
@@ -119,12 +119,39 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertEqual(bern_gqs.generated_quantities.shape, (400, 10))
         self.assertEqual(bern_gqs.generated_quantities_pd.shape, (400, 10))
         self.assertEqual(
-            bern_gqs.sample_plus_quantities_pd.shape[1],
+            bern_gqs.sample_plus_quantities_pd().shape[1],
             bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.generated_quantities_pd.shape[1],
         )
 
-    def test_gen_quanties_mcmc_sample_save_warmup(self):
+        theta = bern_gqs.stan_variable(name='theta')
+        self.assertEqual(theta.shape, (400,))
+        y_rep = bern_gqs.stan_variable(name='y_rep')
+        self.assertEqual(y_rep.shape, (400, 10))
+        with self.assertRaises(ValueError):
+            bern_gqs.stan_variable(name='eta')
+        with self.assertRaises(ValueError):
+            bern_gqs.stan_variable(name='lp__')
+
+        vars_dict = bern_gqs.stan_variables()
+        var_names = list(
+            bern_gqs.mcmc_sample.metadata.stan_vars_cols.keys()
+        ) + list(bern_gqs.metadata.stan_vars_cols.keys())
+        self.assertEqual(set(var_names), set(list(vars_dict.keys())))
+
+        xr_data = bern_gqs.generated_quantities_xr()
+        self.assertEqual(xr_data.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
+        self.assertEqual(xr_data.y_rep.values.shape, (4, 100, 10))
+
+        xr_data_plus = bern_gqs.sample_plus_quantities_xr()
+        self.assertEqual(
+            xr_data_plus.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0')
+        )
+        self.assertEqual(xr_data_plus.y_rep.values.shape, (4, 100, 10))
+        self.assertEqual(xr_data_plus.theta.dims, ('chain', 'draw'))
+        self.assertEqual(xr_data_plus.theta.values.shape, (4, 100))
+
+    def test_from_mcmc_sample_save_warmup(self):
         # fitted_params sample
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
@@ -147,15 +174,56 @@ class GenerateQuantitiesTest(unittest.TestCase):
             bern_gqs = model.generate_quantities(
                 data=jdata, mcmc_sample=bern_fit
             )
-            self.assertEqual(bern_gqs.generated_quantities.shape, (800, 10))
         log.check_present(
             (
                 'cmdstanpy',
                 'WARNING',
-                'Sample contains saved wormup draws which will be used to generate '
-                'additional quantities of interest.',
+                'Sample contains saved wormup draws which will be used to '
+                'generate additional quantities of interest.',
             )
         )
+        self.assertEqual(bern_gqs.generated_quantities.shape, (800, 10))
+        self.assertEqual(bern_gqs.generated_quantities_pd.shape, (800, 10))
+
+        self.assertEqual(bern_gqs.sample_plus_quantities_pd().shape[0], 400)
+        self.assertEqual(
+            bern_gqs.sample_plus_quantities_pd(inc_warmup=True).shape[0], 800
+        )
+
+        theta = bern_gqs.stan_variable(name='theta')
+        self.assertEqual(theta.shape, (400,))
+        y_rep = bern_gqs.stan_variable(name='y_rep')
+        self.assertEqual(y_rep.shape, (400, 10))
+        with self.assertRaises(ValueError):
+            bern_gqs.stan_variable(name='eta')
+        with self.assertRaises(ValueError):
+            bern_gqs.stan_variable(name='lp__')
+
+        vars_dict = bern_gqs.stan_variables()
+        var_names = list(
+            bern_gqs.mcmc_sample.metadata.stan_vars_cols.keys()
+        ) + list(bern_gqs.metadata.stan_vars_cols.keys())
+        self.assertEqual(set(var_names), set(list(vars_dict.keys())))
+
+        xr_data = bern_gqs.generated_quantities_xr()
+        self.assertEqual(xr_data.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
+        self.assertEqual(xr_data.y_rep.values.shape, (4, 100, 10))
+
+        xr_data_plus = bern_gqs.sample_plus_quantities_xr()
+        self.assertEqual(
+            xr_data_plus.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0')
+        )
+        self.assertEqual(xr_data_plus.y_rep.values.shape, (4, 100, 10))
+        self.assertEqual(xr_data_plus.theta.dims, ('chain', 'draw'))
+        self.assertEqual(xr_data_plus.theta.values.shape, (4, 100))
+
+        xr_data_plus = bern_gqs.sample_plus_quantities_xr(inc_warmup=True)
+        self.assertEqual(
+            xr_data_plus.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0')
+        )
+        self.assertEqual(xr_data_plus.y_rep.values.shape, (4, 200, 10))
+        self.assertEqual(xr_data_plus.theta.dims, ('chain', 'draw'))
+        self.assertEqual(xr_data_plus.theta.values.shape, (4, 200))
 
     def test_sample_plus_quantities_dedup(self):
         # fitted_params - model GQ block: y_rep is PPC of theta
@@ -173,12 +241,19 @@ class GenerateQuantitiesTest(unittest.TestCase):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc_dup.stan')
         model = CmdStanModel(stan_file=stan)
         bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+        # check that models have different y_rep values
         assert_raises(
             AssertionError,
             assert_array_equal,
             bern_fit.stan_variable(name='y_rep'),
             bern_gqs.stan_variable(name='y_rep'),
         )
+        # check that stan_variable returns values from gq model
+        with open(jdata) as fd:
+            bern_data = json.load(fd)
+        y_rep = bern_gqs.stan_variable(name='y_rep')
+        for i in range(10):
+            self.assertEqual(y_rep[0, i], bern_data['y'][i])
 
 
 if __name__ == '__main__':

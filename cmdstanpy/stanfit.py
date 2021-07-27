@@ -969,8 +969,7 @@ class CmdStanMCMC:
             )
 
         if vars is None:
-            vars = self.stan_vars_dims.keys()
-
+            vars = self._metadata.stan_vars_dims.keys()
         self._assemble_draws()
 
         num_draws = self.num_draws_sampling
@@ -988,24 +987,18 @@ class CmdStanMCMC:
 
         data = {}
         coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
-        dims = ("draw", "chain")
         for var in vars:
-            draw1 = 0
+            start_row = 0
             if not inc_warmup and self._save_warmup:
-                draw1 = self.num_draws_warmup
-            col_idxs = self._metadata.stan_vars_cols[var]
-
-            var_dims = dims + tuple(
-                f"{var}_dim_{i}" for i in range(len(self.stan_vars_dims[var]))
+                start_row = self.num_draws_warmup
+            add_var_to_xarray(
+                data,
+                var,
+                self._metadata.stan_vars_dims[var],
+                self._metadata.stan_vars_cols[var],
+                start_row,
+                self._draws,
             )
-
-            if self.stan_vars_dims[var] == ():
-                data[var] = (
-                    var_dims,
-                    np.squeeze(self._draws[draw1:, :, col_idxs], axis=2),
-                )
-            else:
-                data[var] = (var_dims, self._draws[draw1:, :, col_idxs])
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
@@ -1247,7 +1240,6 @@ class CmdStanGQ:
         self._generated_quantities = None
         self._generated_quantities_pd = None
         config = self._validate_csv_files()
-        config['save_warmup']
         self._metadata = InferenceMetadata(config)
 
     def __repr__(self) -> str:
@@ -1362,58 +1354,6 @@ class CmdStanGQ:
                 columns=self.column_names,
             )
         return self._generated_quantities_pd
-    @property
-    def sample_plus_quantities(self) -> pd.DataFrame:
-        """
-        Deprecated - use method "sample_plus_quantities_pd" instead
-        """
-        self._logger.warning(
-            'property "sample_plus_quantities" has been deprecated, '
-            'use method "sample_plus_quantities_pd" instead.'
-        )
-        return self.sample_plus_quantities_pd()
-
-
-    def sample_plus_quantities_pd(self, inc_warmup: bool = False) -> pd.DataFrame:
-        """
-        Returns the column-wise concatenation of the input drawset
-        with generated quantities drawset.  If there are duplicate
-        columns in both the input and the generated quantities,
-        the input column is dropped in favor of the recomputed
-        values in the generate quantities drawset.
-
-        :param inc_warmup: When ``True`` and the warmup draws are present in
-            the MCMC sample, then the warmup draws are included.
-            Default value is ``False``.
-        """
-        if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError('Bad runset method {}.'.format(self.runset.method))
-        if self._generated_quantities is None:
-            self._assemble_generated_quantities()
-
-        cols_1 = self.mcmc_sample.column_names
-        cols_2 = self.column_names
-        dups = [
-            item
-            for item, count in Counter(cols_1 + cols_2).items()
-            if count > 1
-        ]
-        if not include_warmup and self.mcmc_sample.metadata.cmdstan_config['save_warmup']:
-            draw1 = self.mcmc_sample.num_draws_warmup
-            return pd.concat(
-                [
-                    self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
-                    self.generated_quantities_pd[draw1:]
-                ],
-                axis=1,
-            )
-        return pd.concat(
-            [
-                self.mcmc_sample.draws_pd(inc_warmup=warmup).drop(columns=dups),
-                self.generated_quantities_pd
-            ],
-            axis=1,
-        )
 
     def generated_quantities_xr(
         self, vars: List[str] = None, inc_warmup: bool = False
@@ -1431,43 +1371,165 @@ class CmdStanGQ:
             )
         if vars is None:
             vars = self.metadata.stan_vars_cols.keys()
-
-        self._assemble_draws()
+        self._assemble_generated_quantities()
 
         num_draws = self.mcmc_sample.num_draws_sampling
-        sample_meta = self.mcmc_sample.metadata.cmdstan_config
+        sample_config = self.mcmc_sample.metadata.cmdstan_config
         attrs = {
-            "stan_version": f"{sample_meta['stan_version_major']}."
-            f"{saple_meta['stan_version_minor']}.{saple_meta['stan_version_patch']}",
-            "model": saple_meta["model"],
-            "num_unconstrained_params": self.mcmc_sample.num_unconstrained_params,
+            "stan_version": f"{sample_config['stan_version_major']}."
+            f"{sample_config['stan_version_minor']}."
+            f"{sample_config['stan_version_patch']}",
+            "model": sample_config["model"],
+            "num_unconstrained_params":
+            self.mcmc_sample.num_unconstrained_params,
             "num_draws_sampling": num_draws,
         }
-        if inc_warmup and saple_meta['save_warmup']:
+        if inc_warmup and sample_config['save_warmup']:
             num_draws += self.mcmc_sample.num_draws_warmup
-            attrs["num_draws_warmup"] = self.num_draws_warmup
+            attrs["num_draws_warmup"] = self.mcmc_sample.num_draws_warmup
 
         data = {}
         coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
-        dims = ("draw", "chain")
         for var in vars:
-            draw1 = 0
-            if not inc_warmup and saple_meta['save_warmup']:
-                draw1 = self.mcmc_sample.num_draws_warmup
-            col_idxs = self._metadata.stan_vars_cols[var]
-
-            var_dims = dims + tuple(
-                f"{var}_dim_{i}" for i in range(len(self.stan_vars_dims[var]))
+            start_row = 0
+            if not inc_warmup and sample_config['save_warmup']:
+                start_row = self.mcmc_sample.num_draws_warmup
+            add_var_to_xarray(
+                data,
+                var,
+                self._metadata.stan_vars_dims[var],
+                self._metadata.stan_vars_cols[var],
+                start_row,
+                self._generated_quantities,
             )
 
-            if self.stan_vars_dims[var] == ():
-                data[var] = (
-                    var_dims,
-                    np.squeeze(self._draws[draw1:, :, col_idxs], axis=2),
-                )
-            else:
-                data[var] = (var_dims, self._draws[draw1:, :, col_idxs])
+        return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
+            'chain', 'draw', ...
+        )
 
+    @property
+    def sample_plus_quantities(self) -> pd.DataFrame:
+        """
+        Deprecated - use method "sample_plus_quantities_pd" instead
+        """
+        self._logger.warning(
+            'property "sample_plus_quantities" has been deprecated, '
+            'use method "sample_plus_quantities_pd" instead.'
+        )
+        return self.sample_plus_quantities_pd()
+
+    def sample_plus_quantities_pd(
+        self, inc_warmup: bool = False
+    ) -> pd.DataFrame:
+        """
+        Returns the column-wise concatenation of the input drawset
+        with generated quantities drawset.  If there are duplicate
+        columns in both the input and the generated quantities,
+        the input column is dropped in favor of the recomputed
+        values in the generate quantities drawset.
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
+        """
+        if not self.runset.method == Method.GENERATE_QUANTITIES:
+            raise ValueError('Bad runset method {}.'.format(self.runset.method))
+        if self._generated_quantities is None:
+            self._assemble_generated_quantities()
+        cols_1 = self.mcmc_sample.column_names
+        cols_2 = self.column_names
+        dups = [
+            item
+            for item, count in Counter(cols_1 + cols_2).items()
+            if count > 1
+        ]
+        if (
+            self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+            and not inc_warmup
+        ):
+            draw1 = self.mcmc_sample.num_draws_warmup * self.chains
+            return pd.concat(
+                [
+                    self.mcmc_sample.draws_pd().drop(columns=dups),
+                    self.generated_quantities_pd[draw1:].reset_index(),
+                ],
+                axis='columns',
+            )
+        return pd.concat(
+            [
+                self.mcmc_sample.draws_pd(inc_warmup=inc_warmup).drop(
+                    columns=dups
+                ),
+                self.generated_quantities_pd,
+            ],
+            axis='columns',
+        )
+
+    def sample_plus_quantities_xr(
+        self, inc_warmup: bool = False
+    ) -> "xr.Dataset":
+        """
+        Returns xarray object over variables in mcmc sample and
+        generated quantitites.  De-duplicates variables in both drawsets,
+        using values from generated quantities drawset.
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``.
+        """
+        if not XARRAY_INSTALLED:
+            raise RuntimeError(
+                "xarray is not installed, cannot produce draws array"
+            )
+
+        self._assemble_generated_quantities()
+        num_draws = self.mcmc_sample.num_draws_sampling
+        sample_config = self.mcmc_sample.metadata.cmdstan_config
+        attrs = {
+            "stan_version": f"{sample_config['stan_version_major']}."
+            f"{sample_config['stan_version_minor']}."
+            f"{sample_config['stan_version_patch']}",
+            "model": sample_config["model"],
+            "num_unconstrained_params":
+            self.mcmc_sample.num_unconstrained_params,
+            "num_draws_sampling": num_draws,
+        }
+        if inc_warmup and sample_config['save_warmup']:
+            num_draws += self.mcmc_sample.num_draws_warmup
+            attrs["num_draws_warmup"] = self.mcmc_sample.num_draws_warmup
+
+        data = {}
+        coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
+
+        start_row = 0
+        if not inc_warmup and sample_config['save_warmup']:
+            start_row = self.mcmc_sample.num_draws_warmup
+        for var in self._metadata.stan_vars_cols.keys():
+            add_var_to_xarray(
+                data,
+                var,
+                self._metadata.stan_vars_dims[var],
+                self._metadata.stan_vars_cols[var],
+                start_row,
+                self._generated_quantities,
+            )
+        mcmc_vars = [
+            x
+            for x in self.mcmc_sample.metadata.stan_vars_cols.keys()
+            if x not in self._metadata.stan_vars_cols.keys()
+        ]
+        start_row = 0
+        for var in mcmc_vars:
+            add_var_to_xarray(
+                data,
+                var,
+                self.mcmc_sample.metadata.stan_vars_dims[var],
+                self.mcmc_sample.metadata.stan_vars_cols[var],
+                start_row,
+                self.mcmc_sample.draws(
+                    inc_warmup=inc_warmup, concat_chains=False
+                ),
+            )
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
         )
@@ -1513,9 +1575,14 @@ class CmdStanGQ:
         else:  # is gq variable
             self._assemble_generated_quantities()
             col_idxs = self._metadata.stan_vars_cols[name]
-            if not include_warmup and self.mcmc_sample.metadata.cmdstan_config['save_warmup']:
-                draw1 = self.mcmc_sample.num_draws_warmup
-                return flatten_chains(self._generated_quantities)[draw1:, col_idxs]
+            if (
+                not inc_warmup
+                and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+            ):
+                draw1 = self.mcmc_sample.num_draws_warmup * self.chains
+                return flatten_chains(self._generated_quantities)[
+                    draw1:, col_idxs
+                ]
             return flatten_chains(self._generated_quantities)[:, col_idxs]
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
@@ -1524,11 +1591,11 @@ class CmdStanGQ:
         to the corresponding numpy.ndarray containing the inferred values.
         """
         result = {}
-        model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
+        sample_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
         for name in gq_var_names:
             result[name] = self.stan_variable(name, inc_warmup)
-        for name in model_var_names:
+        for name in sample_var_names:
             if name not in gq_var_names:
                 result[name] = self.stan_variable(name, inc_warmup)
         return result
@@ -1850,3 +1917,27 @@ def from_csv(
             'An error occured processing the CSV files:\n\t{}'.format(str(e))
         ) from e
     return fit
+
+
+def add_var_to_xarray(
+    data: Dict[str, xr.DataArray],
+    var_name: str,
+    dims: Tuple[int, ...],
+    col_idxs: Tuple[int, ...],
+    start_row: int,
+    drawset: np.ndarray,
+) -> None:
+    """
+    Adds Stan variable values and labels to an xarray DataArray
+    """
+    var_dims = ('draw', 'chain')
+    if dims:
+        var_dims = ("draw", "chain") + tuple(
+            f"{var_name}_dim_{i}" for i in range(len(dims))
+        )
+        data[var_name] = (var_dims, drawset[start_row:, :, col_idxs])
+    else:
+        data[var_name] = (
+            var_dims,
+            np.squeeze(drawset[start_row:, :, col_idxs], axis=2),
+        )
