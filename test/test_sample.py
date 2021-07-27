@@ -1424,6 +1424,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             runset._set_retcode(i, 0)
         fit = CmdStanMCMC(runset)
         meta = fit.metadata
+        self.assertEqual(meta.cmdstan_config['model'], 'logistic_model')
         col_names = tuple(
             [
                 'lp__',
