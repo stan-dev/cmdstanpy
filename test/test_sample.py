@@ -1525,6 +1525,12 @@ class CmdStanMCMCTest(unittest.TestCase):
         )
         self.assertEqual(xr_data.theta.values.shape, (2, 100))
 
+        xr_data = bern_fit.draws_xr(vars=['theta'])
+        self.assertEqual(xr_data.theta.values.shape, (2, 100))
+
+        with self.assertRaises(KeyError):
+            xr_data = bern_fit.draws_xr(vars=['eta'])
+
         # test inc_warmup
         bern_fit = bern_model.sample(
             data=jdata,

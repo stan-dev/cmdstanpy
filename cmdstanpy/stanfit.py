@@ -970,7 +970,6 @@ class CmdStanMCMC:
 
         if vars is None:
             vars = self._metadata.stan_vars_dims.keys()
-
         self._assemble_draws()
 
         num_draws = self.num_draws_sampling
@@ -988,24 +987,18 @@ class CmdStanMCMC:
 
         data = {}
         coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
-        dims = ("draw", "chain")
         for var in vars:
-            draw1 = 0
+            start_row = 0
             if not inc_warmup and self._save_warmup:
-                draw1 = self.num_draws_warmup
-            col_idxs = self._metadata.stan_vars_cols[var]
-
-            var_dims = dims + tuple(
-                f"{var}_dim_{i}" for i in range(len(self.stan_vars_dims[var]))
+                start_row = self.num_draws_warmup
+            add_var_to_xarray(
+                data,
+                var,
+                self._metadata.stan_vars_dims[var],
+                self._metadata.stan_vars_cols[var],
+                start_row,
+                self._draws,
             )
-
-            if self._metadata.stan_vars_dims[var] == ():
-                data[var] = (
-                    var_dims,
-                    np.squeeze(self._draws[draw1:, :, col_idxs], axis=2),
-                )
-            else:
-                data[var] = (var_dims, self._draws[draw1:, :, col_idxs])
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
@@ -1378,8 +1371,7 @@ class CmdStanGQ:
             )
         if vars is None:
             vars = self.metadata.stan_vars_cols.keys()
-        if self._generated_quantities is None:
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
 
         num_draws = self.mcmc_sample.num_draws_sampling
         sample_config = self.mcmc_sample.metadata.cmdstan_config
@@ -1398,29 +1390,18 @@ class CmdStanGQ:
 
         data = {}
         coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
-        dims = ("draw", "chain")
         for var in vars:
-            draw1 = 0
+            start_row = 0
             if not inc_warmup and sample_config['save_warmup']:
-                draw1 = self.mcmc_sample.num_draws_warmup
-            col_idxs = self._metadata.stan_vars_cols[var]
-            var_dims = dims + tuple(
-                f"{var}_dim_{i}"
-                for i in range(len(self.metadata.stan_vars_dims[var]))
+                start_row = self.mcmc_sample.num_draws_warmup
+            add_var_to_xarray(
+                data,
+                var,
+                self._metadata.stan_vars_dims[var],
+                self._metadata.stan_vars_cols[var],
+                start_row,
+                self._generated_quantities,
             )
-
-            if self.metadata.stan_vars_dims[var] == ():
-                data[var] = (
-                    var_dims,
-                    np.squeeze(
-                        self._generated_quantities[draw1:, :, col_idxs], axis=2
-                    ),
-                )
-            else:
-                data[var] = (
-                    var_dims,
-                    self._generated_quantities[draw1:, :, col_idxs],
-                )
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
@@ -1455,7 +1436,6 @@ class CmdStanGQ:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
         if self._generated_quantities is None:
             self._assemble_generated_quantities()
-
         cols_1 = self.mcmc_sample.column_names
         cols_2 = self.column_names
         dups = [
@@ -1464,18 +1444,16 @@ class CmdStanGQ:
             if count > 1
         ]
         if (
-            not inc_warmup
-            and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+            self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+            and not inc_warmup
         ):
-            draw1 = self.mcmc_sample.num_draws_warmup
+            draw1 = self.mcmc_sample.num_draws_warmup * self.chains
             return pd.concat(
                 [
-                    self.mcmc_sample.draws_pd(inc_warmup=inc_warmup).drop(
-                        columns=dups
-                    ),
-                    self.generated_quantities_pd[draw1:],
+                    self.mcmc_sample.draws_pd().drop(columns=dups),
+                    self.generated_quantities_pd[draw1:].reset_index(),
                 ],
-                axis=1,
+                axis='columns',
             )
         return pd.concat(
             [
@@ -1484,7 +1462,7 @@ class CmdStanGQ:
                 ),
                 self.generated_quantities_pd,
             ],
-            axis=1,
+            axis='columns',
         )
 
     def sample_plus_quantities_xr(
@@ -1503,11 +1481,8 @@ class CmdStanGQ:
             raise RuntimeError(
                 "xarray is not installed, cannot produce draws array"
             )
-        vars = set(self.mcmc_sample.column_names + self.column_names)
 
-        if self._generated_quantities is None:
-            self._assemble_generated_quantities()
-
+        self._assemble_generated_quantities()
         num_draws = self.mcmc_sample.num_draws_sampling
         sample_config = self.mcmc_sample.metadata.cmdstan_config
         attrs = {
@@ -1525,50 +1500,36 @@ class CmdStanGQ:
 
         data = {}
         coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
-        dims = ("draw", "chain")
-        for var in vars:
-            draw1 = 0
-            if not inc_warmup and sample_config['save_warmup']:
-                draw1 = self.mcmc_sample.num_draws_warmup
-            if var in self.column_names:
-                col_idxs = self._metadata.stan_vars_cols[var]
-                var_dims = dims + tuple(
-                    f"{var}_dim_{i}"
-                    for i in range(len(self._metadata.stan_vars_dims[var]))
-                )
-                if self._metadata.stan_vars_dims[var] == ():
-                    data[var] = (
-                        var_dims,
-                        np.squeeze(
-                            self._generated_quantities[draw1:, :, col_idxs],
-                            axis=2,
-                        ),
-                    )
-                else:
-                    data[var] = (
-                        var_dims,
-                        self._generated_quantities[draw1:, :, col_idxs],
-                    )
-            else:
-                col_idxs = self.mcmc_sample.stan_vars_cols[var]
-                var_dims = dims + tuple(
-                    f"{var}_dim_{i}"
-                    for i in range(len(self.mcmc_sample.stan_vars_dims[var]))
-                )
-                if self.mcmc_sample.stan_vars_dims[var] == ():
-                    data[var] = (
-                        var_dims,
-                        np.squeeze(
-                            self.mcmc_sample.draws()[draw1:, :, col_idxs],
-                            axis=2,
-                        ),
-                    )
-                else:
-                    data[var] = (
-                        var_dims,
-                        self.mcmc_sample.draws()[draw1:, :, col_idxs],
-                    )
 
+        start_row = 0
+        if not inc_warmup and sample_config['save_warmup']:
+            start_row = self.mcmc_sample.num_draws_warmup
+        for var in self._metadata.stan_vars_cols.keys():
+            add_var_to_xarray(
+                data,
+                var,
+                self._metadata.stan_vars_dims[var],
+                self._metadata.stan_vars_cols[var],
+                start_row,
+                self._generated_quantities,
+            )
+        mcmc_vars = [
+            x
+            for x in self.mcmc_sample.metadata.stan_vars_cols.keys()
+            if x not in self._metadata.stan_vars_cols.keys()
+        ]
+        start_row = 0
+        for var in mcmc_vars:
+            add_var_to_xarray(
+                data,
+                var,
+                self.mcmc_sample.metadata.stan_vars_dims[var],
+                self.mcmc_sample.metadata.stan_vars_cols[var],
+                start_row,
+                self.mcmc_sample.draws(
+                    inc_warmup=inc_warmup, concat_chains=False
+                ),
+            )
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
         )
@@ -1618,7 +1579,7 @@ class CmdStanGQ:
                 not inc_warmup
                 and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
             ):
-                draw1 = self.mcmc_sample.num_draws_warmup
+                draw1 = self.mcmc_sample.num_draws_warmup * self.chains
                 return flatten_chains(self._generated_quantities)[
                     draw1:, col_idxs
                 ]
@@ -1956,3 +1917,27 @@ def from_csv(
             'An error occured processing the CSV files:\n\t{}'.format(str(e))
         ) from e
     return fit
+
+
+def add_var_to_xarray(
+    data: Dict[str, xr.DataArray],
+    var_name: str,
+    dims: Tuple[int, ...],
+    col_idxs: Tuple[int, ...],
+    start_row: int,
+    drawset: np.ndarray,
+) -> None:
+    """
+    Adds Stan variable values and labels to an xarray DataArray
+    """
+    var_dims = ('draw', 'chain')
+    if dims:
+        var_dims = ("draw", "chain") + tuple(
+            f"{var_name}_dim_{i}" for i in range(len(dims))
+        )
+        data[var_name] = (var_dims, drawset[start_row:, :, col_idxs])
+    else:
+        data[var_name] = (
+            var_dims,
+            np.squeeze(drawset[start_row:, :, col_idxs], axis=2),
+        )
