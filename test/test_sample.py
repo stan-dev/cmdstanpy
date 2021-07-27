@@ -1423,9 +1423,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         for i in range(len(retcodes)):
             runset._set_retcode(i, 0)
         fit = CmdStanMCMC(runset)
-        print(fit.metadata)
         meta = fit.metadata
-        print(type(meta))
         col_names = tuple(
             [
                 'lp__',
@@ -1553,6 +1551,14 @@ class CmdStanMCMCTest(unittest.TestCase):
         xr_data = bern_fit.draws_xr()
         self.assertEqual(xr_data.theta.dims, ('chain', 'draw', 'theta_dim_0'))
         self.assertEqual(xr_data.theta.values.shape, (1, 100, 1))
+
+        xr_var = bern_fit.draws_xr(vars='theta')
+        self.assertEqual(xr_var.theta.dims, ('chain', 'draw', 'theta_dim_0'))
+        self.assertEqual(xr_var.theta.values.shape, (1, 100, 1))
+
+        xr_var = bern_fit.draws_xr(vars=['theta'])
+        self.assertEqual(xr_var.theta.dims, ('chain', 'draw', 'theta_dim_0'))
+        self.assertEqual(xr_var.theta.values.shape, (1, 100, 1))
 
 
 if __name__ == '__main__':

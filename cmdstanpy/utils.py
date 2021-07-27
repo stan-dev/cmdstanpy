@@ -1100,7 +1100,6 @@ def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
         return None
 
     return download_progress_hook
->>>>>>> 5aac1d4c189e7d83839b463a7794a996f68370eb
 
 
 class MaybeDictToFilePath:

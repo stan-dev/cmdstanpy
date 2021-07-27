@@ -671,7 +671,6 @@ class CmdStanMCMC:
             return flatten_chains(self._draws[start_idx:, :, :])  # type: ignore
         return self._draws[start_idx:, :, :]  # type: ignore
 
-
     @property
     def sample(self) -> np.ndarray:
         """
@@ -975,11 +974,13 @@ class CmdStanMCMC:
         return self._draws_pd[mask]
 
     def draws_xr(
-        self, vars_in: Optional[List[str]] = None, inc_warmup: bool = False
+        self,
+        vars: Union[str, List[str], None] = None,
+        inc_warmup: bool = False
     ) -> "xr.Dataset":
         """
         Returns the sampler draws as a xarray Dataset.
-        :param vars_in: optional list of variable names.
+        :param vars: optional list of variable names.
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
@@ -993,10 +994,12 @@ class CmdStanMCMC:
                 "draws from warmup iterations not available,"
                 ' must run sampler with "save_warmup=True".'
             )
-        if vars_in is None:
-            vars = list(self._metadata.stan_vars_dims.keys())
+        if vars is None:
+            vars_list = list(self.metadata.stan_vars_cols.keys())
+        elif isinstance(vars, str):
+            vars_list = [vars]
         else:
-            vars = vars_in
+            vars_list = vars
 
         self._assemble_draws()
 
@@ -1018,12 +1021,11 @@ class CmdStanMCMC:
             "chain": self.chain_ids,
             "draw": np.arange(num_draws),
         }
-        dims = ("draw", "chain")
-        for var in vars:
+        for var in vars_list:
             start_row = 0
             if not inc_warmup and self._save_warmup:
                 start_row = self.num_draws_warmup
-            add_var_to_xarray(
+            build_xarray_data(
                 data,
                 var,
                 self._metadata.stan_vars_dims[var],
@@ -1257,7 +1259,7 @@ class CmdStanGQ:
         self,
         runset: RunSet,
         mcmc_sample: CmdStanMCMC,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         if not runset.method == Method.GENERATE_QUANTITIES:
@@ -1268,8 +1270,8 @@ class CmdStanGQ:
         self.runset = runset
         self._logger = logger or get_logger()
         self.mcmc_sample = mcmc_sample
-        self._generated_quantities = None
-        self._generated_quantities_pd = None
+        self._generated_quantities = np.array(())
+        self._generated_quantities_pd = pd.DataFrame()
         config = self._validate_csv_files()
         self._metadata = InferenceMetadata(config)
 
@@ -1367,7 +1369,7 @@ class CmdStanGQ:
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
-        if self._generated_quantities is None:
+        if self._generated_quantities.shape == (0,):
             self._assemble_generated_quantities()
         return flatten_chains(self._generated_quantities)
 
@@ -1377,9 +1379,9 @@ class CmdStanGQ:
         Returns the generated quantities as a pandas DataFrame.  Flattens all
         chains into single column.
         """
-        if self._generated_quantities is None:
+        if self._generated_quantities.shape == (0, ):
             self._assemble_generated_quantities()
-        if self._generated_quantities_pd is None:
+        if self._generated_quantities_pd.shape == (0,0):
             self._generated_quantities_pd = pd.DataFrame(
                 data=flatten_chains(self._generated_quantities),
                 columns=self.column_names,
@@ -1387,7 +1389,9 @@ class CmdStanGQ:
         return self._generated_quantities_pd
 
     def generated_quantities_xr(
-        self, vars: List[str] = None, inc_warmup: bool = False
+        self,
+        vars: Union[str, List[str], None] = None,
+        inc_warmup: bool = False
     ) -> "xr.Dataset":
         """
         Returns the generated quantities draws as a xarray Dataset.
@@ -1401,7 +1405,11 @@ class CmdStanGQ:
                 "xarray is not installed, cannot produce draws array"
             )
         if vars is None:
-            vars = self.metadata.stan_vars_cols.keys()
+            vars_list = list(self.metadata.stan_vars_cols.keys())
+        elif isinstance(vars, str):
+            vars_list = [vars]
+        else:
+            vars_list = vars
         self._assemble_generated_quantities()
 
         num_draws = self.mcmc_sample.num_draws_sampling
@@ -1421,11 +1429,11 @@ class CmdStanGQ:
 
         data = {}
         coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
-        for var in vars:
+        for var in vars_list:
             start_row = 0
             if not inc_warmup and sample_config['save_warmup']:
                 start_row = self.mcmc_sample.num_draws_warmup
-            add_var_to_xarray(
+            build_xarray_data(
                 data,
                 var,
                 self._metadata.stan_vars_dims[var],
@@ -1465,7 +1473,7 @@ class CmdStanGQ:
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
-        if self._generated_quantities is None:
+        if self._generated_quantities.shape == (0, ):
             self._assemble_generated_quantities()
         cols_1 = self.mcmc_sample.column_names
         cols_2 = self.column_names
@@ -1536,7 +1544,7 @@ class CmdStanGQ:
         if not inc_warmup and sample_config['save_warmup']:
             start_row = self.mcmc_sample.num_draws_warmup
         for var in self._metadata.stan_vars_cols.keys():
-            add_var_to_xarray(
+            build_xarray_data(
                 data,
                 var,
                 self._metadata.stan_vars_dims[var],
@@ -1551,7 +1559,7 @@ class CmdStanGQ:
         ]
         start_row = 0
         for var in mcmc_vars:
-            add_var_to_xarray(
+            build_xarray_data(
                 data,
                 var,
                 self.mcmc_sample.metadata.stan_vars_dims[var],
@@ -1945,8 +1953,8 @@ def from_csv(
         ) from e
 
 
-def add_var_to_xarray(
-    data: Dict[str, xr.DataArray],
+def build_xarray_data(
+    data: Dict[str, Tuple[Tuple[str,...], np.ndarray]],
     var_name: str,
     dims: Tuple[int, ...],
     col_idxs: Tuple[int, ...],
@@ -1954,7 +1962,8 @@ def add_var_to_xarray(
     drawset: np.ndarray,
 ) -> None:
     """
-    Adds Stan variable values and labels to an xarray DataArray
+    Adds Stan variable name, labels, and values to a dictionary
+    that will be used to construct an xarray DataSet.
     """
     var_dims = ('draw', 'chain')
     if dims:

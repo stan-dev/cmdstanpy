@@ -143,6 +143,14 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertEqual(xr_data.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
         self.assertEqual(xr_data.y_rep.values.shape, (4, 100, 10))
 
+        xr_var = bern_gqs.generated_quantities_xr(vars='y_rep')
+        self.assertEqual(xr_var.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
+        self.assertEqual(xr_var.y_rep.values.shape, (4, 100, 10))
+
+        xr_var = bern_gqs.generated_quantities_xr(vars=['y_rep'])
+        self.assertEqual(xr_var.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
+        self.assertEqual(xr_var.y_rep.values.shape, (4, 100, 10))
+
         xr_data_plus = bern_gqs.sample_plus_quantities_xr()
         self.assertEqual(
             xr_data_plus.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0')
