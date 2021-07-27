@@ -13,7 +13,6 @@ Optional command line arguments:
    --progress : flag, when specified show progress bar for RTools download
 """
 import argparse
-import contextlib
 import os
 import platform
 import shutil
@@ -22,22 +21,13 @@ import sys
 import urllib.request
 from collections import OrderedDict
 from time import sleep
-from typing import Callable, Iterator, List, Optional
+from typing import List
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import validate_dir
+from cmdstanpy.utils import pushd, validate_dir, wrap_progress_hook
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
-
-
-@contextlib.contextmanager
-def pushd(new_dir: str) -> Iterator[None]:
-    """Acts like pushd/popd."""
-    previous_dir = os.getcwd()
-    os.chdir(new_dir)
-    yield
-    os.chdir(previous_dir)
 
 
 def usage() -> None:
@@ -202,34 +192,6 @@ def latest_version() -> str:
     if platform.system() == 'Windows':
         return '4.0'
     return ''
-
-
-def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
-    try:
-        from tqdm import tqdm
-
-        pbar = tqdm(
-            unit='B',
-            unit_scale=True,
-            unit_divisor=1024,
-        )
-
-        def download_progress_hook(
-            count: int, block_size: int, total_size: int
-        ) -> None:
-            if pbar.total is None:
-                pbar.total = total_size
-                pbar.reset()
-            downloaded_size = count * block_size
-            pbar.update(downloaded_size - pbar.n)
-            if pbar.n >= total_size:
-                pbar.close()
-
-    except (ImportError, ModuleNotFoundError):
-        print("tqdm was not downloaded, progressbar not shown")
-        return None
-
-    return download_progress_hook
 
 
 def retrieve_toolchain(filename: str, url: str, progress: bool = True) -> None:

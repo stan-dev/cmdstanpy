@@ -1,6 +1,7 @@
 """
 Utility functions
 """
+import contextlib
 import logging
 import math
 import os
@@ -14,7 +15,9 @@ from collections import OrderedDict
 from collections.abc import Collection, Sequence
 from typing import (
     Any,
+    Callable,
     Dict,
+    Iterator,
     List,
     MutableMapping,
     Optional,
@@ -1060,6 +1063,44 @@ def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
     num_rows = draws_array.shape[0] * draws_array.shape[1]
     num_cols = draws_array.shape[2]
     return draws_array.reshape((num_rows, num_cols), order='F')
+
+
+@contextlib.contextmanager
+def pushd(new_dir: str) -> Iterator[None]:
+    """Acts like pushd/popd."""
+    previous_dir = os.getcwd()
+    os.chdir(new_dir)
+    yield
+    os.chdir(previous_dir)
+
+
+def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
+    try:
+        from tqdm import tqdm
+
+        pbar = tqdm(
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+        )
+
+        def download_progress_hook(
+            count: int, block_size: int, total_size: int
+        ) -> None:
+            if pbar.total is None:
+                pbar.total = total_size
+                pbar.reset()
+            downloaded_size = count * block_size
+            pbar.update(downloaded_size - pbar.n)
+            if pbar.n >= total_size:
+                pbar.close()
+
+    except (ImportError, ModuleNotFoundError):
+        print("tqdm was not downloaded, progressbar not shown")
+        return None
+
+    return download_progress_hook
+>>>>>>> 5aac1d4c189e7d83839b463a7794a996f68370eb
 
 
 class MaybeDictToFilePath:
