@@ -11,9 +11,17 @@ import subprocess
 import sys
 import tempfile
 from collections import OrderedDict
-from collections.abc import Sequence, Collection
-from numbers import Integral, Real
-from typing import Dict, List, TextIO, Tuple, Union
+from collections.abc import Collection, Sequence
+from typing import (
+    Any,
+    Dict,
+    List,
+    MutableMapping,
+    Optional,
+    TextIO,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
@@ -31,7 +39,7 @@ from cmdstanpy import (
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
-def get_logger():
+def get_logger() -> logging.Logger:
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
     if len(logger.handlers) == 0:
@@ -39,7 +47,7 @@ def get_logger():
     return logger
 
 
-def validate_dir(install_dir: str):
+def validate_dir(install_dir: str) -> None:
     """Check that specified install directory exists, can write."""
     if not os.path.exists(install_dir):
         try:
@@ -63,7 +71,7 @@ def validate_dir(install_dir: str):
             ) from e
 
 
-def get_latest_cmdstan(cmdstan_dir: str) -> str:
+def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
@@ -203,7 +211,7 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
     return False
 
 
-def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
+def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
     """
     Validate, then activate C++ toolchain directory path.
     """
@@ -231,14 +239,14 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
                         'Found invalid installion for RTools40 on %s',
                         toolchain_root,
                     )
-                    toolchain_root = None
+                    toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
                     'Found invalid installion for RTools40 on %s',
                     toolchain_root,
                 )
-                toolchain_root = None
+                toolchain_root = ''
 
         elif os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
             compiler_path = os.path.join(
@@ -255,14 +263,14 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
                         'Found invalid installion for RTools35 on %s',
                         toolchain_root,
                     )
-                    toolchain_root = None
+                    toolchain_root = ''
             else:
                 compiler_path = ''
                 logger.warning(
                     'Found invalid installion for RTools35 on %s',
                     toolchain_root,
                 )
-                toolchain_root = None
+                toolchain_root = ''
     else:
         rtools40_home = os.environ.get('RTOOLS40_HOME')
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
@@ -300,7 +308,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
                                 'Found invalid installation for RTools40 on %s',
                                 toolchain_root,
                             )
-                            toolchain_root = None
+                            toolchain_root = ''
                         else:
                             break
                     else:
@@ -309,7 +317,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
                             'Found invalid installation for RTools40 on %s',
                             toolchain_root,
                         )
-                        toolchain_root = None
+                        toolchain_root = ''
                 else:
                     compiler_path = os.path.join(
                         toolchain_root,
@@ -325,7 +333,7 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
                                 'Found invalid installation for RTools35 on %s',
                                 toolchain_root,
                             )
-                            toolchain_root = None
+                            toolchain_root = ''
                         else:
                             break
                     else:
@@ -334,9 +342,9 @@ def cxx_toolchain_path(version: str = None) -> Tuple[str, ...]:
                             'Found invalid installation for RTools35 on %s',
                             toolchain_root,
                         )
-                        toolchain_root = None
+                        toolchain_root = ''
             else:
-                toolchain_root = None
+                toolchain_root = ''
 
     if not toolchain_root:
         raise ValueError(
@@ -366,7 +374,7 @@ def _rdump_array(key: str, val: np.ndarray) -> str:
         return struct
 
 
-def jsondump(path: str, data: Dict) -> None:
+def jsondump(path: str, data: Dict[str, Any]) -> None:
     """Dump a dict of data to a JSON file."""
     data = data.copy()
     for key, val in data.items():
@@ -379,7 +387,7 @@ def jsondump(path: str, data: Dict) -> None:
         json.dump(data, fd)
 
 
-def rdump(path: str, data: Dict) -> None:
+def rdump(path: str, data: Dict[str, Any]) -> None:
     """Dump a dict of data to a R dump format file."""
     with open(path, 'w') as fd:
         for key, val in data.items():
@@ -390,7 +398,7 @@ def rdump(path: str, data: Dict) -> None:
             print(line, file=fd)
 
 
-def rload(fname: str) -> Dict:
+def rload(fname: str) -> Optional[Dict[str, Union[int, float, np.ndarray]]]:
     """Parse data and parameter variable values from an R dump format file.
     This parser only supports the subset of R dump data as described
     in the "Dump Data Format" section of the CmdStan manual, i.e.,
@@ -423,7 +431,7 @@ def rload(fname: str) -> Dict:
     return data_dict
 
 
-def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
+def parse_rdump_value(rhs: str) -> Union[int, float, np.ndarray]:
     """Process right hand side of Rdump variable assignment statement.
     Value is either scalar, vector, or multi-dim structure.
     Use regex to capture structure values, dimensions.
@@ -432,7 +440,7 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
         r'structure\(\s*c\((?P<vals>[^)]*)\)'
         r'(,\s*\.Dim\s*=\s*c\s*\((?P<dims>[^)]*)\s*\))?\)'
     )
-    val = None
+    val: Union[int, float, np.ndarray]
     try:
         if rhs.startswith('structure'):
             parse = pat.match(rhs)
@@ -457,11 +465,11 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.array]:
 def check_sampler_csv(
     path: str,
     is_fixed_param: bool = False,
-    iter_sampling: int = None,
-    iter_warmup: int = None,
+    iter_sampling: Optional[int] = None,
+    iter_warmup: Optional[int] = None,
     save_warmup: bool = False,
-    thin: int = None,
-) -> Dict:
+    thin: Optional[int] = None,
+) -> Dict[str, Any]:
     """Capture essential config, shape from stan_csv file."""
     meta = scan_sampler_csv(path, is_fixed_param)
     if thin is None:
@@ -509,9 +517,9 @@ def check_sampler_csv(
     return meta
 
 
-def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
+def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
     """Process sampler stan_csv output file line by line."""
-    dict = {}
+    dict: Dict[str, Any] = {}
     lineno = 0
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
@@ -523,9 +531,9 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict:
     return dict
 
 
-def scan_optimize_csv(path: str) -> Dict:
+def scan_optimize_csv(path: str) -> Dict[str, Any]:
     """Process optimizer stan_csv output file line by line."""
-    dict = {}
+    dict: Dict[str, Any] = {}
     lineno = 0
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
@@ -536,11 +544,11 @@ def scan_optimize_csv(path: str) -> Dict:
     return dict
 
 
-def scan_generated_quantities_csv(path: str) -> Dict:
+def scan_generated_quantities_csv(path: str) -> Dict[str, Any]:
     """
     Process standalone generated quantities stan_csv output file line by line.
     """
-    dict = {}
+    dict: Dict[str, Any] = {}
     lineno = 0
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
@@ -548,9 +556,9 @@ def scan_generated_quantities_csv(path: str) -> Dict:
     return dict
 
 
-def scan_variational_csv(path: str) -> Dict:
+def scan_variational_csv(path: str) -> Dict[str, Any]:
     """Process advi stan_csv output file line by line."""
-    dict = {}
+    dict: Dict[str, Any] = {}
     lineno = 0
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
@@ -581,7 +589,7 @@ def scan_variational_csv(path: str) -> Dict:
     return dict
 
 
-def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_config(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
     """
     Scan initial stan_csv file comments lines and
     save non-default configuration information to config_dict.
@@ -599,6 +607,7 @@ def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
                 config_dict['data_file'] = key_val[1].strip()
             elif key_val[0].strip() != 'file':
                 raw_val = key_val[1].strip()
+                val: Union[int, float, str]
                 try:
                     val = int(raw_val)
                 except ValueError:
@@ -613,7 +622,9 @@ def scan_config(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_warmup_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_warmup_iters(
+    fd: TextIO, config_dict: Dict[str, Any], lineno: int
+) -> int:
     """
     Check warmup iterations, if any.
     """
@@ -632,7 +643,9 @@ def scan_warmup_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
     return lineno
 
 
-def scan_column_names(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_column_names(
+    fd: TextIO, config_dict: MutableMapping[str, Any], lineno: int
+) -> int:
     """
     Process columns header, add to config_dict as 'column_names'
     """
@@ -685,9 +698,10 @@ def parse_stan_vars(
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    dims_map = {}
-    cols_map = {}
+    dims_map: Dict[str, Tuple[int, ...]] = {}
+    cols_map: Dict[str, Tuple[int, ...]] = {}
     idxs = []
+    dims: Union[List[str], List[int]]
     for (idx, name) in enumerate(names):
         idxs.append(idx)
         var, *dims = name.split('[')
@@ -707,7 +721,7 @@ def parse_stan_vars(
     return (dims_map, cols_map)
 
 
-def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_metric(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
     """
     Scan step size, metric from  stan_csv file comment lines,
     set config_dict entries 'metric' and 'num_unconstrained_params'
@@ -768,7 +782,9 @@ def scan_metric(fd: TextIO, config_dict: Dict, lineno: int) -> int:
         return lineno
 
 
-def scan_sampling_iters(fd: TextIO, config_dict: Dict, lineno: int) -> int:
+def scan_sampling_iters(
+    fd: TextIO, config_dict: Dict[str, Any], lineno: int
+) -> int:
     """
     Parse sampling iteration, save number of iterations to config_dict.
     """
@@ -802,8 +818,8 @@ def read_metric(path: str) -> List[int]:
         with open(path, 'r') as fd:
             metric_dict = json.load(fd)
         if 'inv_metric' in metric_dict:
-            dims = np.asarray(metric_dict['inv_metric'])
-            return list(dims.shape)
+            dims_np = np.asarray(metric_dict['inv_metric'])
+            return list(dims_np.shape)
         else:
             raise ValueError(
                 'metric file {}, bad or missing'
@@ -824,7 +840,7 @@ def read_rdump_metric(path: str) -> List[int]:
     Find dimensions of variable named 'inv_metric' in Rdump data file.
     """
     metric_dict = rload(path)
-    if not (
+    if metric_dict is None or not (
         'inv_metric' in metric_dict
         and isinstance(metric_dict['inv_metric'], np.ndarray)
     ):
@@ -834,7 +850,11 @@ def read_rdump_metric(path: str) -> List[int]:
     return list(metric_dict['inv_metric'].shape)
 
 
-def do_command(cmd: str, cwd: str = None, logger: logging.Logger = None) -> str:
+def do_command(
+    cmd: List[str],
+    cwd: Optional[str] = None,
+    logger: Optional[logging.Logger] = None,
+) -> Optional[str]:
     """
     Spawn process, print stdout/stderr to console.
     Throws RuntimeError on non-zero returncode.
@@ -916,7 +936,10 @@ def windows_short_path(path: str) -> str:
     from ctypes import wintypes
 
     # pylint: disable=invalid-name
-    _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
+    _GetShortPathNameW = (
+        ctypes.windll.kernel32.GetShortPathNameW  # type: ignore
+    )
+
     _GetShortPathNameW.argtypes = [
         wintypes.LPCWSTR,
         wintypes.LPWSTR,
@@ -960,8 +983,8 @@ def create_named_text_file(
 
 
 def install_cmdstan(
-    version: str = None,
-    dir: str = None,
+    version: Optional[str] = None,
+    dir: Optional[str] = None,
     overwrite: bool = False,
     verbose: bool = False,
 ) -> bool:
@@ -1008,7 +1031,7 @@ def install_cmdstan(
         stderr=subprocess.PIPE,
         env=os.environ,
     )
-    while proc.poll() is None:
+    while proc.poll() is None and proc.stdout:
         print(proc.stdout.readline().decode('utf-8').strip())
 
     _, stderr = proc.communicate()
@@ -1043,10 +1066,12 @@ class MaybeDictToFilePath:
     """Context manager for json files."""
 
     def __init__(
-        self, *objs: Union[str, dict, list], logger: logging.Logger = None
+        self,
+        *objs: Union[str, Dict[Any, Any], List[Any], int, float, None],
+        logger: Optional[logging.Logger] = None
     ):
         self._unlink = [False] * len(objs)
-        self._paths = [''] * len(objs)
+        self._paths: List[Any] = [''] * len(objs)
         self._logger = logger or get_logger()
         i = 0
         for obj in objs:
@@ -1091,16 +1116,16 @@ class MaybeDictToFilePath:
                 self._paths[i] = obj
             elif obj is None:
                 self._paths[i] = None
-            elif i == 1 and isinstance(obj, (Integral, Real)):
+            elif i == 1 and isinstance(obj, (int, float)):
                 self._paths[i] = obj
             else:
                 raise ValueError('data must be string or dict')
             i += 1
 
-    def __enter__(self):
+    def __enter__(self) -> List[str]:
         return self._paths
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         for can_unlink, path in zip(self._unlink, self._paths):
             if can_unlink and path:
                 try:
@@ -1113,7 +1138,6 @@ class TemporaryCopiedFile:
     """Context manager for tmpfiles, handles spaces in filepath."""
 
     def __init__(self, file_path: str):
-        self._path = None
         self._tmpdir = None
         if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
             base_path, file_name = os.path.split(os.path.abspath(file_path))
@@ -1141,9 +1165,9 @@ class TemporaryCopiedFile:
         else:
             self._path = file_path
 
-    def __enter__(self):
+    def __enter__(self) -> Tuple[str, bool]:
         return self._path, self._tmpdir is not None
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)

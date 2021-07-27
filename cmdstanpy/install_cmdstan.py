@@ -29,6 +29,7 @@ import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 from time import sleep
+from typing import Callable, Dict, Iterator, Optional
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import validate_dir
@@ -45,7 +46,7 @@ class CmdStanInstallError(RuntimeError):
 
 
 @contextlib.contextmanager
-def pushd(new_dir: str):
+def pushd(new_dir: str) -> Iterator[None]:
     """Acts like pushd/popd."""
     previous_dir = os.getcwd()
     os.chdir(new_dir)
@@ -53,7 +54,7 @@ def pushd(new_dir: str):
     os.chdir(previous_dir)
 
 
-def usage():
+def usage() -> None:
     """Print usage."""
     msg = """
     Arguments:
@@ -74,7 +75,7 @@ def usage():
 
 def install_version(
     cmdstan_version: str, overwrite: bool = False, verbose: bool = False
-):
+) -> None:
     """
     Build specified CmdStan version by spawning subprocesses to
     run the Make utility on the downloaded CmdStan release src files.
@@ -104,9 +105,10 @@ def install_version(
                 env=os.environ,
             )
             while proc.poll() is None:
-                output = proc.stdout.readline().decode('utf-8').strip()
-                if verbose and output:
-                    print(output, flush=True)
+                if proc.stdout:
+                    output = proc.stdout.readline().decode('utf-8').strip()
+                    if verbose and output:
+                        print(output, flush=True)
             _, stderr = proc.communicate()
             if proc.returncode:
                 msgs = ['Command "make clean-all" failed']
@@ -124,9 +126,11 @@ def install_version(
             env=os.environ,
         )
         while proc.poll() is None:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if verbose and output:
-                print(output, flush=True)
+            if proc.stdout:
+
+                output = proc.stdout.readline().decode('utf-8').strip()
+                if verbose and output:
+                    print(output, flush=True)
         _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Command "make build" failed']
@@ -161,7 +165,8 @@ def install_version(
             env=os.environ,
         )
         while proc.poll() is None:
-            proc.stdout.readline().decode('utf-8')
+            if proc.stdout:
+                proc.stdout.readline().decode('utf-8')
         _, stderr = proc.communicate()
         if proc.returncode:
             msgs = ['Failed to compile example model bernoulli.stan']
@@ -171,7 +176,7 @@ def install_version(
     print('Installed {}'.format(cmdstan_version))
 
 
-def is_version_available(version: str):
+def is_version_available(version: str) -> bool:
     is_available = True
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
@@ -200,7 +205,7 @@ def is_version_available(version: str):
     return is_available
 
 
-def get_headers():
+def get_headers() -> Dict[str, str]:
     """Create headers dictionary."""
     headers = {}
     GITHUB_PAT = os.environ.get("GITHUB_PAT")  # pylint:disable=invalid-name
@@ -209,7 +214,7 @@ def get_headers():
     return headers
 
 
-def latest_version():
+def latest_version() -> str:
     """Report latest CmdStan release version."""
     url = 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
     request = urllib.request.Request(url, headers=get_headers())
@@ -232,10 +237,10 @@ def latest_version():
     match = re.search(r'v?(.+)', tag)
     if match is not None:
         tag = match.group(1)
-    return tag
+    return tag  # type: ignore
 
 
-def wrap_progress_hook():
+def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
     try:
         from tqdm import tqdm
 
@@ -245,7 +250,9 @@ def wrap_progress_hook():
             unit_divisor=1024,
         )
 
-        def download_progress_hook(count, block_size, total_size):
+        def download_progress_hook(
+            count: int, block_size: int, total_size: int
+        ) -> None:
             if pbar.total is None:
                 pbar.total = total_size
                 pbar.reset()
@@ -256,12 +263,12 @@ def wrap_progress_hook():
 
     except (ImportError, ModuleNotFoundError):
         print("tqdm is not installed, progressbar not shown")
-        download_progress_hook = None
+        return None
 
     return download_progress_hook
 
 
-def retrieve_version(version: str, progress=True):
+def retrieve_version(version: str, progress: bool = True) -> None:
     """Download specified CmdStan version."""
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
@@ -273,7 +280,9 @@ def retrieve_version(version: str, progress=True):
     for i in range(6):  # always retry to allow for transient URLErrors
         try:
             if progress:
-                progress_hook = wrap_progress_hook()
+                progress_hook: Optional[
+                    Callable[[int, int, int], None]
+                ] = wrap_progress_hook()
             else:
                 progress_hook = None
             file_tmp, _ = urllib.request.urlretrieve(
@@ -319,7 +328,7 @@ def retrieve_version(version: str, progress=True):
     print('Unpacked download as cmdstan-{}'.format(version))
 
 
-def main():
+def main() -> None:
     """Main."""
     parser = argparse.ArgumentParser()
     parser.add_argument(

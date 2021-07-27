@@ -1,5 +1,6 @@
 """utils test"""
 
+import collections.abc
 import json
 import os
 import platform
@@ -9,7 +10,6 @@ import stat
 import string
 import tempfile
 import unittest
-import collections.abc
 
 import numpy as np
 import pandas as pd
@@ -25,8 +25,8 @@ from cmdstanpy.utils import (
     do_command,
     get_latest_cmdstan,
     jsondump,
-    parse_rdump_value,
     parse_method_vars,
+    parse_rdump_value,
     parse_stan_vars,
     rdump,
     read_metric,

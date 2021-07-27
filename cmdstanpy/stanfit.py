@@ -10,7 +10,16 @@ import shutil
 from collections import Counter, OrderedDict
 from datetime import datetime
 from time import time
-from typing import Dict, List, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Hashable,
+    List,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
@@ -59,8 +68,8 @@ class RunSet:
         self,
         args: CmdStanArgs,
         chains: int = 4,
-        chain_ids: List[int] = None,
-        logger: logging.Logger = None,
+        chain_ids: Optional[List[int]] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         self._args = args
@@ -93,11 +102,11 @@ class RunSet:
             output_dir = args.output_dir
         else:
             output_dir = _TMPDIR
-        self._csv_files = [None for _ in range(chains)]
-        self._diagnostic_files = [None for _ in range(chains)]
-        self._profile_files = [None for _ in range(chains)]
-        self._stdout_files = [None for _ in range(chains)]
-        self._stderr_files = [None for _ in range(chains)]
+        self._csv_files = ['' for _ in range(chains)]
+        self._diagnostic_files = ['' for _ in range(chains)]
+        self._profile_files = ['' for _ in range(chains)]
+        self._stdout_files = ['' for _ in range(chains)]
+        self._stderr_files = ['' for _ in range(chains)]
         self._cmds = []
         for i in range(chains):
             if args.output_dir is None:
@@ -232,7 +241,7 @@ class RunSet:
         return self._chain_ids
 
     @property
-    def cmds(self) -> List[str]:
+    def cmds(self) -> List[List[str]]:
         """List of call(s) to CmdStan, one call per-chain."""
         return self._cmds
 
@@ -276,7 +285,7 @@ class RunSet:
         """Set retcode for chain[idx] to val."""
         self._retcodes[idx] = val
 
-    def get_err_msgs(self) -> List[str]:
+    def get_err_msgs(self) -> str:
         """Checks console messages for each chain."""
         msgs = []
         for i in range(self._chains):
@@ -309,7 +318,7 @@ class RunSet:
                     )
         return '\n'.join(msgs)
 
-    def save_csvfiles(self, dir: str = None) -> None:
+    def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
         Moves csvfiles to specified directory.
 
@@ -363,7 +372,7 @@ class InferenceMetadata:
     Assumes valid CSV files.
     """
 
-    def __init__(self, config: Dict) -> None:
+    def __init__(self, config: Dict[str, Any]) -> None:
         """Initialize object from CSV headers"""
         self._cmdstan_config = config
         self._method_vars_cols = parse_method_vars(names=config['column_names'])
@@ -377,7 +386,7 @@ class InferenceMetadata:
         return 'Metadata:\n{}\n'.format(self._cmdstan_config)
 
     @property
-    def cmdstan_config(self) -> Dict:
+    def cmdstan_config(self) -> Dict[str, Any]:
         return copy.deepcopy(self._cmdstan_config)
 
     @property
@@ -430,7 +439,7 @@ class CmdStanMCMC:
     def __init__(
         self,
         runset: RunSet,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         if not runset.method == Method.SAMPLE:
@@ -441,26 +450,36 @@ class CmdStanMCMC:
         self.runset = runset
         self._logger = logger or get_logger()
         # info from runset to be exposed
-        self._iter_sampling = runset._args.method_args.iter_sampling
-        if self._iter_sampling is None:
+        sampler_args = self.runset._args.method_args
+        assert isinstance(
+            sampler_args, SamplerArgs
+        )  # make the typechecker happy
+        iter_sampling = sampler_args.iter_sampling
+        if iter_sampling is None:
             self._iter_sampling = _CMDSTAN_SAMPLING
-        self._iter_warmup = runset._args.method_args.iter_warmup
-        if self._iter_warmup is None:
+        else:
+            self._iter_sampling = iter_sampling
+        iter_warmup = sampler_args.iter_warmup
+        if iter_warmup is None:
             self._iter_warmup = _CMDSTAN_WARMUP
-        self._thin = runset._args.method_args.thin
-        if self._thin is None:
-            self._thin = _CMDSTAN_THIN
-        self._is_fixed_param = runset._args.method_args.fixed_param
-        self._save_warmup = runset._args.method_args.save_warmup
+        else:
+            self._iter_warmup = iter_warmup
+        thin = sampler_args.thin
+        if thin is None:
+            self._thin: int = _CMDSTAN_THIN
+        else:
+            self._thin = thin
+        self._is_fixed_param = sampler_args.fixed_param
+        self._save_warmup = sampler_args.save_warmup
         self._sig_figs = runset._args.sig_figs
         # info from CSV values, instantiated lazily
-        self._metric = None
-        self._step_size = None
-        self._draws = None
-        self._draws_pd = None
+        self._metric = np.array(())
+        self._step_size = np.array(())
+        self._draws = np.array(())
+        self._draws_pd = pd.DataFrame()
         # info from CSV initial comments and header
         config = self._validate_csv_files()
-        self._metadata = InferenceMetadata(config)
+        self._metadata: InferenceMetadata = InferenceMetadata(config)
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -509,7 +528,7 @@ class CmdStanMCMC:
         return self._metadata
 
     @property
-    def sampler_vars_cols(self) -> Dict:
+    def sampler_vars_cols(self) -> Dict[str, Tuple[int, ...]]:
         """
         Deprecated - use "metadata.method_vars_cols" instead
         """
@@ -520,7 +539,7 @@ class CmdStanMCMC:
         return self.metadata.method_vars_cols
 
     @property
-    def stan_vars_cols(self) -> Dict:
+    def stan_vars_cols(self) -> Dict[str, Tuple[int, ...]]:
         """
         Deprecated - use "metadata.stan_vars_cols" instead
         """
@@ -531,7 +550,7 @@ class CmdStanMCMC:
         return self.metadata.method_vars_cols
 
     @property
-    def stan_vars_dims(self) -> Dict:
+    def stan_vars_dims(self) -> Dict[str, Tuple[int, ...]]:
         """
         Deprecated - use "metadata.stan_vars_dims" instead
         """
@@ -549,7 +568,7 @@ class CmdStanMCMC:
         and quantities of interest. Corresponds to Stan CSV file header row,
         with names munged to array notation, e.g. `beta[1]` not `beta.1`.
         """
-        return self._metadata.cmdstan_config['column_names']
+        return self._metadata.cmdstan_config['column_names']  # type: ignore
 
     @property
     def num_unconstrained_params(self) -> int:
@@ -567,39 +586,42 @@ class CmdStanMCMC:
         however a model with variables ``real alpha`` and ``simplex[3] beta``
         has 4 constrained and 3 unconstrained parameters.
         """
-        return self._metadata.cmdstan_config['num_unconstrained_params']
+        return self._metadata.cmdstan_config[  # type: ignore
+            'num_unconstrained_params'
+        ]
 
     @property
-    def metric_type(self) -> str:
+    def metric_type(self) -> Optional[str]:
         """
         Metric type used for adaptation, either 'diag_e' or 'dense_e'.
         When sampler algorithm 'fixed_param' is specified, metric_type is None.
         """
         if self._is_fixed_param:
             return None
-        return self._metadata.cmdstan_config['metric']  # cmdstan arg name
+        # cmdstan arg name
+        return self._metadata.cmdstan_config['metric']  # type: ignore
 
     @property
-    def metric(self) -> np.ndarray:
+    def metric(self) -> Optional[np.ndarray]:
         """
         Metric used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, metric is None.
         """
         if self._is_fixed_param:
             return None
-        if self._metric is None:
+        if self._metric.shape == (0,):
             self._assemble_draws()
         return self._metric
 
     @property
-    def step_size(self) -> np.ndarray:
+    def step_size(self) -> Optional[np.ndarray]:
         """
         Step size used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, step size is None.
         """
         if self._is_fixed_param:
             return None
-        if self._step_size is None:
+        if self._step_size.shape == (0,):
             self._assemble_draws()
         return self._step_size
 
@@ -630,7 +652,7 @@ class CmdStanMCMC:
         :param concat_chains: When ``True`` return a 2D array flattening all
             all draws from all chains.  Default value is ``False``.
         """
-        if self._draws is None:
+        if self._draws.shape == (0,):
             self._assemble_draws()
 
         if inc_warmup and not self._save_warmup:
@@ -646,8 +668,9 @@ class CmdStanMCMC:
             num_rows -= start_idx
 
         if concat_chains:
-            return flatten_chains(self._draws[start_idx:, :, :])
-        return self._draws[start_idx:, :, :]
+            return flatten_chains(self._draws[start_idx:, :, :])  # type: ignore
+        return self._draws[start_idx:, :, :]  # type: ignore
+
 
     @property
     def sample(self) -> np.ndarray:
@@ -671,7 +694,7 @@ class CmdStanMCMC:
         )
         return self.draws(inc_warmup=True)
 
-    def _validate_csv_files(self) -> dict:
+    def _validate_csv_files(self) -> Dict[str, Any]:
         """
         Checks that Stan CSV output files for all chains are consistent
         and returns dict containing config and column names.
@@ -729,7 +752,7 @@ class CmdStanMCMC:
         Allocates and populates the step size, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
-        if self._draws is not None:
+        if self._draws.shape != (0,):
             return
 
         num_draws = self.num_draws_sampling
@@ -794,9 +817,12 @@ class CmdStanMCMC:
                     line = fd.readline().strip()
                     xs = line.split(',')
                     self._draws[i, chain, :] = [float(x) for x in xs]
+        assert self._draws is not None
 
     def summary(
-        self, percentiles: List[int] = None, sig_figs: int = None
+        self,
+        percentiles: Optional[List[int]] = None,
+        sig_figs: Optional[int] = None,
     ) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output csv files, assemble
@@ -881,7 +907,7 @@ class CmdStanMCMC:
         mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
         return summary_data[mask]
 
-    def diagnose(self) -> str:
+    def diagnose(self) -> Optional[str]:
         """
         Run cmdstan/bin/diagnose over all output csv files.
         Returns output of diagnose (stdout/stderr).
@@ -903,7 +929,7 @@ class CmdStanMCMC:
         return result
 
     def draws_pd(
-        self, params: List[str] = None, inc_warmup: bool = False
+        self, params: Optional[List[str]] = None, inc_warmup: bool = False
     ) -> pd.DataFrame:
         """
         Returns the sampler draws as a pandas DataFrame.  Flattens all
@@ -938,7 +964,7 @@ class CmdStanMCMC:
         if inc_warmup and self._save_warmup:
             num_draws += self.num_draws_warmup
         num_rows = num_draws * self.chains
-        if self._draws_pd is None or self._draws_pd.shape[0] != num_rows:
+        if self._draws_pd.shape[0] != num_rows:
             # pylint: disable=redundant-keyword-arg
             self._draws_pd = pd.DataFrame(
                 data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
@@ -949,11 +975,11 @@ class CmdStanMCMC:
         return self._draws_pd[mask]
 
     def draws_xr(
-        self, vars: List[str] = None, inc_warmup: bool = False
+        self, vars_in: Optional[List[str]] = None, inc_warmup: bool = False
     ) -> "xr.Dataset":
         """
         Returns the sampler draws as a xarray Dataset.
-        :param vars: optional list of variable names.
+        :param vars_in: optional list of variable names.
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
@@ -967,14 +993,16 @@ class CmdStanMCMC:
                 "draws from warmup iterations not available,"
                 ' must run sampler with "save_warmup=True".'
             )
+        if vars_in is None:
+            vars = list(self._metadata.stan_vars_dims.keys())
+        else:
+            vars = vars_in
 
-        if vars is None:
-            vars = self._metadata.stan_vars_dims.keys()
         self._assemble_draws()
 
         num_draws = self.num_draws_sampling
         meta = self._metadata.cmdstan_config
-        attrs = {
+        attrs: MutableMapping[Hashable, Any] = {
             "stan_version": f"{meta['stan_version_major']}."
             f"{meta['stan_version_minor']}.{meta['stan_version_patch']}",
             "model": meta["model"],
@@ -985,8 +1013,12 @@ class CmdStanMCMC:
             num_draws += self.num_draws_warmup
             attrs["num_draws_warmup"] = self.num_draws_warmup
 
-        data = {}
-        coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
+        data: MutableMapping[Hashable, Any] = {}
+        coordinates: MutableMapping[Hashable, Any] = {
+            "chain": self.chain_ids,
+            "draw": np.arange(num_draws),
+        }
+        dims = ("draw", "chain")
         for var in vars:
             start_row = 0
             if not inc_warmup and self._save_warmup:
@@ -1050,7 +1082,9 @@ class CmdStanMCMC:
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[name])
         # pylint: disable=redundant-keyword-arg
-        return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+        return self._draws[draw1:, :, col_idxs].reshape(  # type: ignore
+            dims, order='F'
+        )
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -1062,7 +1096,7 @@ class CmdStanMCMC:
             result[name] = self.stan_variable(name)
         return result
 
-    def method_variables(self) -> Dict:
+    def method_variables(self) -> Dict[str, np.ndarray]:
         """
         Returns a dictionary of all sampler variables, i.e., all
         output column names ending in `__`.  Assumes that all variables
@@ -1077,7 +1111,7 @@ class CmdStanMCMC:
                 result[self.column_names[idx]] = self._draws[:, :, idx]
         return result
 
-    def sampler_variables(self) -> Dict:
+    def sampler_variables(self) -> Dict[str, np.ndarray]:
         """
         Deprecated, use "method_variables" instead
         """
@@ -1087,7 +1121,7 @@ class CmdStanMCMC:
         )
         return self.method_variables()
 
-    def sampler_diagnostics(self) -> Dict:
+    def sampler_diagnostics(self) -> Dict[str, np.ndarray]:
         """
         Deprecated, use "method_variables" instead
         """
@@ -1097,7 +1131,7 @@ class CmdStanMCMC:
         )
         return self.method_variables()
 
-    def save_csvfiles(self, dir: str = None) -> None:
+    def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
         Move output csvfiles to specified directory.  If files were
         written to the temporary session directory, clean filename.
@@ -1122,9 +1156,6 @@ class CmdStanMLE:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._metadata = None
-        self._column_names = ()
-        self._mle = {}
         self._set_mle_attrs(runset.csv_files[0])
 
     def __repr__(self) -> str:
@@ -1142,8 +1173,8 @@ class CmdStanMLE:
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
         meta = scan_optimize_csv(sample_csv_0)
         self._metadata = InferenceMetadata(meta)
-        self._column_names = meta['column_names']
-        self._mle = meta['mle']
+        self._column_names: Tuple[str, ...] = meta['column_names']
+        self._mle: List[float] = meta['mle']
 
     @property
     def column_names(self) -> Tuple[str, ...]:
@@ -1173,7 +1204,7 @@ class CmdStanMLE:
         return pd.DataFrame([self._mle], columns=self.column_names)
 
     @property
-    def optimized_params_dict(self) -> OrderedDict:
+    def optimized_params_dict(self) -> Dict[str, float]:
         """Returns optimized params as Dict."""
         return OrderedDict(zip(self.column_names, self._mle))
 
@@ -1190,7 +1221,7 @@ class CmdStanMLE:
         col_idxs = list(self._metadata.stan_vars_cols[name])
         vals = list(self._mle)
         xs = [vals[x] for x in col_idxs]
-        shape = ()
+        shape: Tuple[int, ...] = ()
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
         return np.array(xs).reshape(shape)
@@ -1205,7 +1236,7 @@ class CmdStanMLE:
             result[name] = self.stan_variable(name)
         return result
 
-    def save_csvfiles(self, dir: str = None) -> None:
+    def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
         Move output csvfiles to specified directory.  If files were
         written to the temporary session directory, clean filename.
@@ -1438,7 +1469,7 @@ class CmdStanGQ:
             self._assemble_generated_quantities()
         cols_1 = self.mcmc_sample.column_names
         cols_2 = self.column_names
-        dups = [
+        dups = [  # type: ignore
             item
             for item, count in Counter(cols_1 + cols_2).items()
             if count > 1
@@ -1617,7 +1648,7 @@ class CmdStanGQ:
                 )
         self._generated_quantities = gq_sample
 
-    def save_csvfiles(self, dir: str = None) -> None:
+    def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
         Move output csvfiles to specified directory.  If files were
         written to the temporary session directory, clean filename.
@@ -1642,10 +1673,6 @@ class CmdStanVB:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._metadata = None
-        self._column_names = ()
-        self._variational_mean = {}
-        self._variational_sample = None
         self._set_variational_attrs(runset.csv_files[0])
 
     def __repr__(self) -> str:
@@ -1663,9 +1690,10 @@ class CmdStanVB:
     def _set_variational_attrs(self, sample_csv_0: str) -> None:
         meta = scan_variational_csv(sample_csv_0)
         self._metadata = InferenceMetadata(meta)
-        self._column_names = meta['column_names']
-        self._variational_mean = meta['variational_mean']
-        self._variational_sample = meta['variational_sample']
+        # these three assignments don't grant type information
+        self._column_names: Tuple[str, ...] = meta['column_names']
+        self._variational_mean: np.ndarray = meta['variational_mean']
+        self._variational_sample: np.ndarray = meta['variational_sample']
 
     @property
     def columns(self) -> int:
@@ -1700,10 +1728,8 @@ class CmdStanVB:
         return pd.DataFrame([self._variational_mean], columns=self.column_names)
 
     @property
-    def variational_params_dict(self) -> OrderedDict:
-        """
-        Returns inferred parameter means as Dict.
-        """
+    def variational_params_dict(self) -> Dict[str, np.ndarray]:
+        """Returns inferred parameter means as Dict."""
         return OrderedDict(zip(self.column_names, self._variational_mean))
 
     @property
@@ -1728,7 +1754,7 @@ class CmdStanVB:
         col_idxs = list(self._metadata.stan_vars_cols[name])
         vals = list(self._variational_mean)
         xs = [vals[x] for x in col_idxs]
-        shape = ()
+        shape: Tuple[int, ...] = ()
         if len(col_idxs) > 0:
             shape = self._metadata.stan_vars_dims[name]
         return np.array(xs).reshape(shape)
@@ -1748,7 +1774,7 @@ class CmdStanVB:
         """Returns the set of approximate posterior output draws."""
         return self._variational_sample
 
-    def save_csvfiles(self, dir: str = None) -> None:
+    def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
         Move output csvfiles to specified directory.  If files were
         written to the temporary session directory, clean filename.
@@ -1761,8 +1787,8 @@ class CmdStanVB:
 
 
 def from_csv(
-    path: Union[str, List[str]] = None, method: str = None
-) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
+    path: Union[str, List[str], None] = None, method: Optional[str] = None
+) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB, None]:
     """
     Instantiate a CmdStan object from a the Stan CSV files from a CmdStan run.
     CSV files are specified from either a list of Stan CSV files or a single
@@ -1823,7 +1849,7 @@ def from_csv(
                 ' includes non-csv file: {}'.format(file)
             )
 
-    config_dict = {}
+    config_dict: Dict[str, Any] = {}
     try:
         with open(csvfiles[0], 'r') as fd:
             scan_config(fd, config_dict, 0)
@@ -1838,7 +1864,6 @@ def from_csv(
                 method, config_dict['method']
             )
         )
-    fit = None
     try:
         if config_dict['method'] == 'sample':
             chains = len(csvfiles)
@@ -1860,6 +1885,7 @@ def from_csv(
                 runset._set_retcode(i, 0)
             fit = CmdStanMCMC(runset)
             fit.draws()
+            return fit
         elif config_dict['method'] == 'optimize':
             if 'algorithm' not in config_dict:
                 raise ValueError(
@@ -1879,7 +1905,7 @@ def from_csv(
             runset._csv_files = csvfiles
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
-            fit = CmdStanMLE(runset)
+            return CmdStanMLE(runset)
         elif config_dict['method'] == 'variational':
             if 'algorithm' not in config_dict:
                 raise ValueError(
@@ -1906,17 +1932,17 @@ def from_csv(
             runset._csv_files = csvfiles
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
-            fit = CmdStanVB(runset)
+            return CmdStanVB(runset)
         else:
             get_logger().info(
                 'Unable to process CSV output files from method %s.',
                 (config_dict['method']),
             )
+            return None
     except (IOError, OSError, PermissionError) as e:
         raise ValueError(
             'An error occured processing the CSV files:\n\t{}'.format(str(e))
         ) from e
-    return fit
 
 
 def add_var_to_xarray(

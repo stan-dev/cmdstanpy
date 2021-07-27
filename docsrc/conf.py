@@ -344,4 +344,3 @@ texinfo_documents = [
 #     'reference_url': {
 #         'skltemplate': None}
 # }
-
