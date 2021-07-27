@@ -182,7 +182,7 @@ class OptimizeTest(unittest.TestCase):
                 seed=1239812093,
                 inits=jinit,
                 algorithm='LBFGS',
-                tol_obj=-1,
+                tol_obj=-1.0,
             )
 
         with self.assertRaisesRegex(ValueError, 'must be greater than'):
@@ -191,7 +191,7 @@ class OptimizeTest(unittest.TestCase):
                 seed=1239812093,
                 inits=jinit,
                 algorithm='LBFGS',
-                tol_rel_obj=-1,
+                tol_rel_obj=-1.0,
             )
 
         with self.assertRaisesRegex(ValueError, 'must be greater than'):
@@ -200,7 +200,7 @@ class OptimizeTest(unittest.TestCase):
                 seed=1239812093,
                 inits=jinit,
                 algorithm='LBFGS',
-                tol_grad=-1,
+                tol_grad=-1.0,
             )
 
         with self.assertRaisesRegex(ValueError, 'must be greater than'):
@@ -209,7 +209,7 @@ class OptimizeTest(unittest.TestCase):
                 seed=1239812093,
                 inits=jinit,
                 algorithm='LBFGS',
-                tol_rel_grad=-1,
+                tol_rel_grad=-1.0,
             )
 
         with self.assertRaisesRegex(ValueError, 'must be greater than'):
@@ -218,7 +218,7 @@ class OptimizeTest(unittest.TestCase):
                 seed=1239812093,
                 inits=jinit,
                 algorithm='LBFGS',
-                tol_param=-1,
+                tol_param=-1.0,
             )
 
         with self.assertRaisesRegex(ValueError, 'must be greater than'):
