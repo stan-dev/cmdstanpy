@@ -549,6 +549,15 @@ class CmdStanMCMCTest(unittest.TestCase):
             draws_pd.shape,
             (fit.runset.chains * fit.num_draws_sampling, len(fit.column_names)),
         )
+        with LogCapture() as log:
+            self.assertEqual(fit.draws_pd(params=['theta']).shape, (400, 1))
+        log.check_present(
+            (
+                "cmdstanpy",
+                "WARNING",
+                "Keyword params is depreciated, use 'vars' instead",
+            )
+        )
 
         summary = fit.summary()
         self.assertIn('5%', list(summary.columns))
@@ -604,9 +613,9 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.step_size.shape, (2,))
         self.assertEqual(fit.metric.shape, (2, 2095))
         self.assertEqual((1000, 2, 2102), fit.draws().shape)
-        phis = fit.draws_pd(params=['phi'])
+        phis = fit.draws_pd(vars=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
-        with self.assertRaisesRegex(ValueError, r'unknown parameter: gamma'):
+        with self.assertRaisesRegex(ValueError, r'unknown variable: gamma'):
             fit.draws_pd(params=['gamma'])
 
     def test_instantiate_from_csvfiles(self):

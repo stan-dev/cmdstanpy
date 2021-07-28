@@ -928,36 +928,56 @@ class CmdStanMCMC:
         return result
 
     def draws_pd(
-        self, params: Optional[List[str]] = None, inc_warmup: bool = False
+        self,
+        vars: Union[List[str], str, None] = None,
+        inc_warmup: bool = False,
+        *,
+        params: Union[List[str], str, None] = None,
     ) -> pd.DataFrame:
         """
         Returns the sampler draws as a pandas DataFrame.  Flattens all
-        chains into single column.
+        chains into single column.  Container variables (array, matrix)
+        consist of multiple columns, one column per element. E.g. variable
+        'matrix[2,2] foo' comprises 4 columns, 'foo[1,1], ... foo[2,2]'.
 
-        :param params: optional list of variable names.
+        :param vars: optional list of variable names.
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
         """
+        if params is not None:
+            if vars is not None:
+                raise ValueError(
+                    "Cannot use both vars and (depreciated) params"
+                )
+            get_logger().warning(
+                "Keyword params is depreciated, use 'vars' instead"
+            )
+            vars = params
+        if isinstance(vars, str):
+            vars_list = [vars]
+        else:
+            vars_list = vars
+
         if inc_warmup and not self._save_warmup:
-            self._logger.warning(
+            get_logger().warning(
                 'draws from warmup iterations not available,'
                 ' must run sampler with "save_warmup=True".'
             )
         self._assemble_draws()
         mask = []
-        if params is not None:
-            for param in set(params):
+        if vars is not None:
+            for var in set(vars_list):
                 if (
-                    param not in self.metadata.method_vars_cols
-                    and param not in self.metadata.stan_vars_cols
+                    var not in self.metadata.method_vars_cols
+                    and var not in self.metadata.stan_vars_cols
                 ):
-                    raise ValueError('unknown parameter: {}'.format(param))
-                if param in self.metadata.method_vars_cols:
-                    mask.append(param)
+                    raise ValueError('unknown variable: {}'.format(var))
+                if var in self.metadata.method_vars_cols:
+                    mask.append(var)
                 else:
-                    for idx in self.metadata.stan_vars_cols[param]:
+                    for idx in self.metadata.stan_vars_cols[var]:
                         mask.append(self.column_names[idx])
         num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
@@ -969,14 +989,12 @@ class CmdStanMCMC:
                 data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
                 columns=self.column_names,
             )
-        if params is None:
+        if vars is None:
             return self._draws_pd
         return self._draws_pd[mask]
 
     def draws_xr(
-        self,
-        vars: Union[str, List[str], None] = None,
-        inc_warmup: bool = False
+        self, vars: Union[str, List[str], None] = None, inc_warmup: bool = False
     ) -> "xr.Dataset":
         """
         Returns the sampler draws as a xarray Dataset.
@@ -1379,9 +1397,9 @@ class CmdStanGQ:
         Returns the generated quantities as a pandas DataFrame.  Flattens all
         chains into single column.
         """
-        if self._generated_quantities.shape == (0, ):
+        if self._generated_quantities.shape == (0,):
             self._assemble_generated_quantities()
-        if self._generated_quantities_pd.shape == (0,0):
+        if self._generated_quantities_pd.shape == (0, 0):
             self._generated_quantities_pd = pd.DataFrame(
                 data=flatten_chains(self._generated_quantities),
                 columns=self.column_names,
@@ -1389,9 +1407,7 @@ class CmdStanGQ:
         return self._generated_quantities_pd
 
     def generated_quantities_xr(
-        self,
-        vars: Union[str, List[str], None] = None,
-        inc_warmup: bool = False
+        self, vars: Union[str, List[str], None] = None, inc_warmup: bool = False
     ) -> "xr.Dataset":
         """
         Returns the generated quantities draws as a xarray Dataset.
@@ -1473,7 +1489,7 @@ class CmdStanGQ:
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
-        if self._generated_quantities.shape == (0, ):
+        if self._generated_quantities.shape == (0,):
             self._assemble_generated_quantities()
         cols_1 = self.mcmc_sample.column_names
         cols_2 = self.column_names
@@ -1954,7 +1970,7 @@ def from_csv(
 
 
 def build_xarray_data(
-    data: Dict[str, Tuple[Tuple[str,...], np.ndarray]],
+    data: Dict[str, Tuple[Tuple[str, ...], np.ndarray]],
     var_name: str,
     dims: Tuple[int, ...],
     col_idxs: Tuple[int, ...],
