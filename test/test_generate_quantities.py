@@ -186,7 +186,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Sample contains saved wormup draws which will be used to '
+                'Sample contains saved warmup draws which will be used to '
                 'generate additional quantities of interest.',
             )
         )

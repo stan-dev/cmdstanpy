@@ -954,7 +954,7 @@ class CmdStanModel:
         chain_ids = mcmc_sample.chain_ids
         if mcmc_sample.metadata.cmdstan_config['save_warmup']:
             self._logger.warning(
-                'Sample contains saved wormup draws which will be used '
+                'Sample contains saved warmup draws which will be used '
                 'to generate additional quantities of interest.'
             )
         generate_quantities_args = GenerateQuantitiesArgs(
