@@ -990,6 +990,7 @@ def install_cmdstan(
     dir: Optional[str] = None,
     overwrite: bool = False,
     verbose: bool = False,
+    compiler: bool = False,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub by running
@@ -1012,6 +1013,10 @@ def install_cmdstan(
     :param verbose:  Boolean value; when ``True``, output from CmdStan build
         processes will be streamed to the console.  Default is ``False``.
 
+    :param compiler: Boolean value; when ``True`` on WINDOWS ONLY, use the
+        C++ compiler from the ``install_cxx_toolchain`` command or install
+        one if none is found.
+
     :return: Boolean value; ``True`` for success.
     """
     logger = get_logger()
@@ -1024,9 +1029,11 @@ def install_cmdstan(
     if dir is not None:
         cmd.extend(['--dir', dir])
     if overwrite:
-        cmd.extend(['--overwrite'])
+        cmd.append('--overwrite')
     if verbose:
-        cmd.extend(['--verbose'])
+        cmd.append('--verbose')
+    if compiler:
+        cmd.append('--compiler')
     proc = subprocess.Popen(
         cmd,
         stdin=subprocess.DEVNULL,
