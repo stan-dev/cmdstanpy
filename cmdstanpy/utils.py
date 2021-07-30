@@ -1024,9 +1024,9 @@ def install_cmdstan(
     if dir is not None:
         cmd.extend(['--dir', dir])
     if overwrite:
-        cmd.extend(['--overwrite', 'TRUE'])
+        cmd.extend(['--overwrite'])
     if verbose:
-        cmd.extend(['--verbose', 'TRUE'])
+        cmd.extend(['--verbose'])
     proc = subprocess.Popen(
         cmd,
         stdin=subprocess.DEVNULL,
