@@ -214,7 +214,9 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
     return False
 
 
-def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
+def cxx_toolchain_path(
+    version: Optional[str] = None, install_dir: Optional[str] = None
+) -> Tuple[str, ...]:
     """
     Validate, then activate C++ toolchain directory path.
     """
@@ -279,19 +281,30 @@ def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         cmdstan_dir_old = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         for toolchain_root in (
-            [rtools40_home] if rtools40_home is not None else []
-        ) + [
-            os.path.join(cmdstan_dir, 'RTools40'),
-            os.path.join(cmdstan_dir_old, 'RTools40'),
-            os.path.join(os.path.abspath("/"), "RTools40"),
-            os.path.join(cmdstan_dir, 'RTools35'),
-            os.path.join(cmdstan_dir_old, 'RTools35'),
-            os.path.join(os.path.abspath("/"), "RTools35"),
-            os.path.join(cmdstan_dir, 'RTools'),
-            os.path.join(cmdstan_dir_old, 'RTools'),
-            os.path.join(os.path.abspath("/"), "RTools"),
-            os.path.join(os.path.abspath("/"), "RBuildTools"),
-        ]:
+            ([rtools40_home] if rtools40_home is not None else [])
+            + (
+                [
+                    os.path.join(install_dir, 'RTools40'),
+                    os.path.join(install_dir, 'RTools35'),
+                    os.path.join(install_dir, 'RTools30'),
+                    os.path.join(install_dir, 'RTools'),
+                ]
+                if install_dir is not None
+                else []
+            )
+            + [
+                os.path.join(cmdstan_dir, 'RTools40'),
+                os.path.join(cmdstan_dir_old, 'RTools40'),
+                os.path.join(os.path.abspath("/"), "RTools40"),
+                os.path.join(cmdstan_dir, 'RTools35'),
+                os.path.join(cmdstan_dir_old, 'RTools35'),
+                os.path.join(os.path.abspath("/"), "RTools35"),
+                os.path.join(cmdstan_dir, 'RTools'),
+                os.path.join(cmdstan_dir_old, 'RTools'),
+                os.path.join(os.path.abspath("/"), "RTools"),
+                os.path.join(os.path.abspath("/"), "RBuildTools"),
+            ]
+        ):
             compiler_path = ''
             tool_path = ''
 

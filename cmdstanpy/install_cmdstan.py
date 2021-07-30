@@ -405,7 +405,7 @@ def main() -> None:
             sys.argv = original_argv
             cxx_version = '40'
         # Add toolchain to $PATH
-        cxx_toolchain_path(cxx_version)
+        cxx_toolchain_path(cxx_version, vars(args)['dir'])
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
