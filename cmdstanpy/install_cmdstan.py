@@ -127,6 +127,16 @@ def install_version(
             if stderr:
                 msgs.append(stderr.decode('utf-8').strip())
             raise CmdStanInstallError('\n'.join(msgs))
+        if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
+            raise CmdStanInstallError(
+                f"bin/stansummary{EXTENSION} not found"
+                ", please rebuild or report a bug!"
+            )
+        if not os.path.exists(os.path.join('bin', 'diagnose' + EXTENSION)):
+            raise CmdStanInstallError(
+                f"bin/stansummary{EXTENSION} not found"
+                ", please rebuild or report a bug!"
+            )
         print('Test model compilation')
         cmd = [
             make,
@@ -395,7 +405,7 @@ def main() -> None:
             sys.argv = original_argv
             cxx_version = '40'
         # Add toolchain to $PATH
-        cxx_toolchain_path(cxx_version)
+        cxx_toolchain_path(cxx_version, vars(args)['dir'])
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
