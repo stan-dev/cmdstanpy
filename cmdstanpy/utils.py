@@ -1064,7 +1064,10 @@ def install_cmdstan(
             logger.warning(stderr.decode('utf-8').strip())
         return False
     if dir is not None:
-        set_cmdstan_path(os.path.join(dir, get_latest_cmdstan(dir)))
+        if version is not None:
+            set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
+        else:
+            set_cmdstan_path(os.path.join(dir, get_latest_cmdstan(dir)))
     return True
 
 
