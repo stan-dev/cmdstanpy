@@ -1043,6 +1043,8 @@ def install_cmdstan(
         if stderr:
             logger.warning(stderr.decode('utf-8').strip())
         return False
+    if dir is not None:
+        set_cmdstan_path(os.path.join(dir, get_latest_cmdstan(dir)))
     return True
 
 
