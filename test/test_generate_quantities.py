@@ -42,8 +42,8 @@ class GenerateQuantitiesTest(unittest.TestCase):
             csv_file = bern_gqs.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
 
-        self.assertEqual(bern_gqs.generated_quantities.shape, (400, 10))
-        self.assertEqual(bern_gqs.generated_quantities_pd.shape, (400, 10))
+        self.assertEqual(bern_gqs.gq_draws().shape, (100, 4, 10))
+        self.assertEqual(bern_gqs.gq_draws_pd().shape, (400, 10))
 
         column_names = [
             'y_rep[1]',
@@ -61,7 +61,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertEqual(
             bern_gqs.sample_plus_quantities_pd().shape[1],
             bern_gqs.mcmc_sample.draws_pd().shape[1]
-            + bern_gqs.generated_quantities_pd.shape[1],
+            + bern_gqs.gq_draws_pd().shape[1],
         )
 
     def test_from_csv_files_bad(self):
@@ -116,12 +116,12 @@ class GenerateQuantitiesTest(unittest.TestCase):
             csv_file = bern_gqs.runset.csv_files[i]
             self.assertTrue(os.path.exists(csv_file))
 
-        self.assertEqual(bern_gqs.generated_quantities.shape, (400, 10))
-        self.assertEqual(bern_gqs.generated_quantities_pd.shape, (400, 10))
+        self.assertEqual(bern_gqs.gq_draws().shape, (100, 4, 10))
+        self.assertEqual(bern_gqs.gq_draws_pd().shape, (400, 10))
         self.assertEqual(
             bern_gqs.sample_plus_quantities_pd().shape[1],
             bern_gqs.mcmc_sample.draws_pd().shape[1]
-            + bern_gqs.generated_quantities_pd.shape[1],
+            + bern_gqs.gq_draws_pd().shape[1],
         )
 
         theta = bern_gqs.stan_variable(name='theta')
@@ -139,15 +139,15 @@ class GenerateQuantitiesTest(unittest.TestCase):
         ) + list(bern_gqs.metadata.stan_vars_cols.keys())
         self.assertEqual(set(var_names), set(list(vars_dict.keys())))
 
-        xr_data = bern_gqs.generated_quantities_xr()
+        xr_data = bern_gqs.gq_draws_xr()
         self.assertEqual(xr_data.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
         self.assertEqual(xr_data.y_rep.values.shape, (4, 100, 10))
 
-        xr_var = bern_gqs.generated_quantities_xr(vars='y_rep')
+        xr_var = bern_gqs.gq_draws_xr(vars='y_rep')
         self.assertEqual(xr_var.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
         self.assertEqual(xr_var.y_rep.values.shape, (4, 100, 10))
 
-        xr_var = bern_gqs.generated_quantities_xr(vars=['y_rep'])
+        xr_var = bern_gqs.gq_draws_xr(vars=['y_rep'])
         self.assertEqual(xr_var.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
         self.assertEqual(xr_var.y_rep.values.shape, (4, 100, 10))
 
@@ -190,8 +190,37 @@ class GenerateQuantitiesTest(unittest.TestCase):
                 'generate additional quantities of interest.',
             )
         )
-        self.assertEqual(bern_gqs.generated_quantities.shape, (800, 10))
-        self.assertEqual(bern_gqs.generated_quantities_pd.shape, (800, 10))
+        self.assertEqual(bern_gqs.gq_draws().shape, (100, 4, 10))
+        self.assertEqual(
+            bern_gqs.gq_draws(concat_chains=False, inc_warmup=False).shape,
+            (100, 4, 10),
+        )
+        self.assertEqual(
+            bern_gqs.gq_draws(concat_chains=False, inc_warmup=True).shape,
+            (200, 4, 10),
+        )
+        self.assertEqual(
+            bern_gqs.gq_draws(concat_chains=True, inc_warmup=False).shape,
+            (400, 10),
+        )
+        self.assertEqual(
+            bern_gqs.gq_draws(concat_chains=True, inc_warmup=True).shape,
+            (800, 10),
+        )
+
+        self.assertEqual(bern_gqs.gq_draws_pd().shape, (400, 10))
+        self.assertEqual(
+            bern_gqs.gq_draws_pd(inc_warmup=False).shape, (400, 10)
+        )
+        self.assertEqual(bern_gqs.gq_draws_pd(inc_warmup=True).shape, (800, 10))
+        self.assertEqual(
+            bern_gqs.gq_draws_pd(vars=['y_rep'], inc_warmup=False).shape,
+            (400, 10),
+        )
+        self.assertEqual(
+            bern_gqs.gq_draws_pd(vars='y_rep', inc_warmup=False).shape,
+            (400, 10),
+        )
 
         self.assertEqual(bern_gqs.sample_plus_quantities_pd().shape[0], 400)
         self.assertEqual(
@@ -213,7 +242,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         ) + list(bern_gqs.metadata.stan_vars_cols.keys())
         self.assertEqual(set(var_names), set(list(vars_dict.keys())))
 
-        xr_data = bern_gqs.generated_quantities_xr()
+        xr_data = bern_gqs.gq_draws_xr()
         self.assertEqual(xr_data.y_rep.dims, ('chain', 'draw', 'y_rep_dim_0'))
         self.assertEqual(xr_data.y_rep.values.shape, (4, 100, 10))
 
@@ -262,6 +291,39 @@ class GenerateQuantitiesTest(unittest.TestCase):
         y_rep = bern_gqs.stan_variable(name='y_rep')
         for i in range(10):
             self.assertEqual(y_rep[0, i], bern_data['y'][i])
+
+    def test_deprecated(self):
+        goodfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', 'bern')
+        csv_files = []
+        for i in range(4):
+            csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
+
+        # gq_model
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=csv_files)
+        with LogCapture() as log:
+            bern_gqs.generated_quantities
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "generated_quantities" has been deprecated, '
+                'use method "gq_draws" instead.',
+            )
+        )
+        with LogCapture() as log:
+            bern_gqs.generated_quantities_pd
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'property "generated_quantities_pd" has been deprecated, '
+                'use method "gq_draws_pd" instead.',
+            )
+        )
 
 
 if __name__ == '__main__':

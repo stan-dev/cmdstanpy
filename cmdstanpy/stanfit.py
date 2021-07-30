@@ -641,9 +641,9 @@ class CmdStanMCMC:
         in memory, likewise all draws from a chain are contiguous.
         By default, returns a 3D array arranged (draws, chains, columns);
         parameter ``concat_chains=True`` will return a 2D array where all
-        chains are flattened into a single column, although underlyingly,
-        given M chains of N draws, the first N draws are from chain 1, up
-        through the last N draws from chain M.
+        chains are flattened into a single column, preserving chain order,
+        so that given M chains of N draws, the first N draws are from chain 1,
+        up through the last N draws from chain M.
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
@@ -652,20 +652,18 @@ class CmdStanMCMC:
         :param concat_chains: When ``True`` return a 2D array flattening all
             all draws from all chains.  Default value is ``False``.
         """
-        if self._draws.shape == (0,):
+        if self._draws.size == 0:
             self._assemble_draws()
 
         if inc_warmup and not self._save_warmup:
             self._logger.warning(
-                'draws from warmup iterations not available,'
-                ' must run sampler with "save_warmup=True".'
+                "sample doesn't contain draws from warmup iterations,"
+                ' rerun sampler with "save_warmup=True".'
             )
 
-        num_rows = self._draws.shape[0]
         start_idx = 0
         if not inc_warmup and self._save_warmup:
             start_idx = self.num_draws_warmup
-            num_rows -= start_idx
 
         if concat_chains:
             return flatten_chains(self._draws[start_idx:, :, :])  # type: ignore
@@ -935,10 +933,11 @@ class CmdStanMCMC:
         params: Union[List[str], str, None] = None,
     ) -> pd.DataFrame:
         """
-        Returns the sampler draws as a pandas DataFrame.  Flattens all
-        chains into single column.  Container variables (array, matrix)
-        consist of multiple columns, one column per element. E.g. variable
-        'matrix[2,2] foo' comprises 4 columns, 'foo[1,1], ... foo[2,2]'.
+        Returns the sample draws as a pandas DataFrame.
+        Flattens all chains into single column.  Container variables
+        (array, vector, matrix) will span multiple columns, one column
+        per element. E.g. variable 'matrix[2,2] foo' spans 4 columns:
+        'foo[1,1], ... foo[2,2]'.
 
         :param vars: optional list of variable names.
 
@@ -979,6 +978,8 @@ class CmdStanMCMC:
                 else:
                     for idx in self.metadata.stan_vars_cols[var]:
                         mask.append(self.column_names[idx])
+        else:
+            mask = list(self.column_names)
         num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
             num_draws += self.num_draws_warmup
@@ -989,8 +990,6 @@ class CmdStanMCMC:
                 data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
                 columns=self.column_names,
             )
-        if vars is None:
-            return self._draws_pd
         return self._draws_pd[mask]
 
     def draws_xr(
@@ -1288,8 +1287,7 @@ class CmdStanGQ:
         self.runset = runset
         self._logger = logger or get_logger()
         self.mcmc_sample = mcmc_sample
-        self._generated_quantities = np.array(())
-        self._generated_quantities_pd = pd.DataFrame()
+        self._gq_draws = np.array(())
         config = self._validate_csv_files()
         self._metadata = InferenceMetadata(config)
 
@@ -1378,35 +1376,127 @@ class CmdStanGQ:
     @property
     def generated_quantities(self) -> np.ndarray:
         """
-        A 2D numpy ndarray which contains generated quantities draws
-        for all chains where the columns correspond to the generated quantities
-        block variables and the rows correspond to the draws from all chains,
-        where first M draws are the first M draws of chain 1 and the
-        last M draws are the last M draws of chain N, i.e.,
-        flattened chain, draw ordering.
+        Deprecated - use method ``gq_draws`` instead.
         """
-        if not self.runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError('Bad runset method {}.'.format(self.runset.method))
-        if self._generated_quantities.shape == (0,):
+        self._logger.warning(
+            'property "generated_quantities" has been deprecated, '
+            'use method "gq_draws" instead.'
+        )
+        if self._gq_draws.size == 0:
             self._assemble_generated_quantities()
-        return flatten_chains(self._generated_quantities)
+        return flatten_chains(self._gq_draws)
 
     @property
     def generated_quantities_pd(self) -> pd.DataFrame:
         """
-        Returns the generated quantities as a pandas DataFrame.  Flattens all
-        chains into single column.
+        Deprecated - use method ``gq_draws_pd`` instead.
         """
-        if self._generated_quantities.shape == (0,):
+        self._logger.warning(
+            'property "generated_quantities_pd" has been deprecated, '
+            'use method "gq_draws_pd" instead.'
+        )
+        if self._gq_draws.size == 0:
             self._assemble_generated_quantities()
-        if self._generated_quantities_pd.shape == (0, 0):
-            self._generated_quantities_pd = pd.DataFrame(
-                data=flatten_chains(self._generated_quantities),
-                columns=self.column_names,
-            )
-        return self._generated_quantities_pd
+        return pd.DataFrame(
+            data=flatten_chains(self._gq_draws),
+            columns=self.column_names,
+        )
 
-    def generated_quantities_xr(
+    def gq_draws(
+        self, *, inc_warmup: bool = False, concat_chains: bool = False
+    ) -> np.ndarray:
+        """
+        Returns a numpy.ndarray over the generated quantities draws from
+        all chains which is stored column major so that the values
+        for a parameter are contiguous in memory, likewise all draws from
+        a chain are contiguous.  By default, returns a 3D array arranged
+        (draws, chains, columns); parameter ``concat_chains=True`` will
+        return a 2D array where all chains are flattened into a single column,
+        preserving chain order, so that given M chains of N draws,
+        the first N draws are from chain 1, ..., and the the last N draws
+        are from chain M.
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the output, i.e., the sampler was run with ``save_warmup=True``,
+            then the warmup draws are included.  Default value is ``False``.
+
+        :param concat_chains: When ``True`` return a 2D array flattening all
+            all draws from all chains.  Default value is ``False``.
+        """
+        if self._gq_draws.size == 0:
+            self._assemble_generated_quantities()
+        if (
+            inc_warmup
+            and not self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+        ):
+            get_logger().warning(
+                "sample doesn't contain draws from warmup iterations,"
+                ' rerun sampler with "save_warmup=True".'
+            )
+
+        start_idx = 0
+        if (
+            not inc_warmup
+            and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+        ):
+            start_idx = self.mcmc_sample.num_draws_warmup
+
+        if concat_chains:
+            return flatten_chains(
+                self._gq_draws[start_idx:, :, :]
+            )  # type: ignore
+        return self._gq_draws[start_idx:, :, :]  # type: ignore
+
+    def gq_draws_pd(
+        self,
+        vars: Union[List[str], str, None] = None,
+        inc_warmup: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Returns the generated quantities draws as a pandas DataFrame.
+        Flattens all chains into single column.  Container variables
+        (array, vector, matrix) will span multiple columns, one column
+        per element. E.g. variable 'matrix[2,2] foo' spans 4 columns:
+        'foo[1,1], ... foo[2,2]'.
+
+        :param vars: optional list of variable names.
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the output, i.e., the sampler was run with ``save_warmup=True``,
+            then the warmup draws are included.  Default value is ``False``.
+        """
+        if vars is not None:
+            if isinstance(vars, str):
+                vars_list = [vars]
+            else:
+                vars_list = vars
+
+        if (
+            inc_warmup
+            and not self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+        ):
+            get_logger().warning(
+                'draws from warmup iterations not available,'
+                ' must run sampler with "save_warmup=True".'
+            )
+        self._assemble_generated_quantities()
+
+        cols_names = []
+        if vars is not None:
+            for var in set(vars_list):
+                if var not in self.metadata.stan_vars_cols:
+                    raise ValueError('unknown variable: {}'.format(var))
+                for idx in self.metadata.stan_vars_cols[var]:
+                    cols_names.append(self.column_names[idx])
+        else:
+            cols_names = list(self.column_names)
+
+        return pd.DataFrame(
+            data=flatten_chains(self.gq_draws(inc_warmup=inc_warmup)),
+            columns=self.column_names,
+        )[cols_names]
+
+    def gq_draws_xr(
         self, vars: Union[str, List[str], None] = None, inc_warmup: bool = False
     ) -> "xr.Dataset":
         """
@@ -1455,7 +1545,7 @@ class CmdStanGQ:
                 self._metadata.stan_vars_dims[var],
                 self._metadata.stan_vars_cols[var],
                 start_row,
-                self._generated_quantities,
+                self._gq_draws,
             )
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
@@ -1489,7 +1579,7 @@ class CmdStanGQ:
         """
         if not self.runset.method == Method.GENERATE_QUANTITIES:
             raise ValueError('Bad runset method {}.'.format(self.runset.method))
-        if self._generated_quantities.shape == (0,):
+        if self._gq_draws.shape == (0,):
             self._assemble_generated_quantities()
         cols_1 = self.mcmc_sample.column_names
         cols_2 = self.column_names
@@ -1566,7 +1656,7 @@ class CmdStanGQ:
                 self._metadata.stan_vars_dims[var],
                 self._metadata.stan_vars_cols[var],
                 start_row,
-                self._generated_quantities,
+                self._gq_draws,
             )
         mcmc_vars = [
             x
@@ -1635,10 +1725,8 @@ class CmdStanGQ:
                 and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
             ):
                 draw1 = self.mcmc_sample.num_draws_warmup * self.chains
-                return flatten_chains(self._generated_quantities)[
-                    draw1:, col_idxs
-                ]
-            return flatten_chains(self._generated_quantities)[:, col_idxs]
+                return flatten_chains(self._gq_draws)[draw1:, col_idxs]
+            return flatten_chains(self._gq_draws)[:, col_idxs]
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
@@ -1670,7 +1758,7 @@ class CmdStanGQ:
                 gq_sample[:, chain, :] = np.loadtxt(
                     lines, dtype=np.ndarray, ndmin=2, skiprows=1, delimiter=','
                 )
-        self._generated_quantities = gq_sample
+        self._gq_draws = gq_sample
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
