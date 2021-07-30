@@ -214,7 +214,9 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
     return False
 
 
-def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
+def cxx_toolchain_path(
+    version: Optional[str] = None, install_dir: Optional[str] = None
+) -> Tuple[str, ...]:
     """
     Validate, then activate C++ toolchain directory path.
     """
@@ -279,19 +281,30 @@ def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         cmdstan_dir_old = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         for toolchain_root in (
-            [rtools40_home] if rtools40_home is not None else []
-        ) + [
-            os.path.join(cmdstan_dir, 'RTools40'),
-            os.path.join(cmdstan_dir_old, 'RTools40'),
-            os.path.join(os.path.abspath("/"), "RTools40"),
-            os.path.join(cmdstan_dir, 'RTools35'),
-            os.path.join(cmdstan_dir_old, 'RTools35'),
-            os.path.join(os.path.abspath("/"), "RTools35"),
-            os.path.join(cmdstan_dir, 'RTools'),
-            os.path.join(cmdstan_dir_old, 'RTools'),
-            os.path.join(os.path.abspath("/"), "RTools"),
-            os.path.join(os.path.abspath("/"), "RBuildTools"),
-        ]:
+            ([rtools40_home] if rtools40_home is not None else [])
+            + (
+                [
+                    os.path.join(install_dir, 'RTools40'),
+                    os.path.join(install_dir, 'RTools35'),
+                    os.path.join(install_dir, 'RTools30'),
+                    os.path.join(install_dir, 'RTools'),
+                ]
+                if install_dir is not None
+                else []
+            )
+            + [
+                os.path.join(cmdstan_dir, 'RTools40'),
+                os.path.join(cmdstan_dir_old, 'RTools40'),
+                os.path.join(os.path.abspath("/"), "RTools40"),
+                os.path.join(cmdstan_dir, 'RTools35'),
+                os.path.join(cmdstan_dir_old, 'RTools35'),
+                os.path.join(os.path.abspath("/"), "RTools35"),
+                os.path.join(cmdstan_dir, 'RTools'),
+                os.path.join(cmdstan_dir_old, 'RTools'),
+                os.path.join(os.path.abspath("/"), "RTools"),
+                os.path.join(os.path.abspath("/"), "RBuildTools"),
+            ]
+        ):
             compiler_path = ''
             tool_path = ''
 
@@ -990,6 +1003,7 @@ def install_cmdstan(
     dir: Optional[str] = None,
     overwrite: bool = False,
     verbose: bool = False,
+    compiler: bool = False,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub by running
@@ -1012,6 +1026,10 @@ def install_cmdstan(
     :param verbose:  Boolean value; when ``True``, output from CmdStan build
         processes will be streamed to the console.  Default is ``False``.
 
+    :param compiler: Boolean value; when ``True`` on WINDOWS ONLY, use the
+        C++ compiler from the ``install_cxx_toolchain`` command or install
+        one if none is found.
+
     :return: Boolean value; ``True`` for success.
     """
     logger = get_logger()
@@ -1024,9 +1042,11 @@ def install_cmdstan(
     if dir is not None:
         cmd.extend(['--dir', dir])
     if overwrite:
-        cmd.extend(['--overwrite', 'TRUE'])
+        cmd.append('--overwrite')
     if verbose:
-        cmd.extend(['--verbose', 'TRUE'])
+        cmd.append('--verbose')
+    if compiler:
+        cmd.append('--compiler')
     proc = subprocess.Popen(
         cmd,
         stdin=subprocess.DEVNULL,
@@ -1043,6 +1063,11 @@ def install_cmdstan(
         if stderr:
             logger.warning(stderr.decode('utf-8').strip())
         return False
+    if dir is not None:
+        if version is not None:
+            set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
+        else:
+            set_cmdstan_path(os.path.join(dir, get_latest_cmdstan(dir)))
     return True
 
 
