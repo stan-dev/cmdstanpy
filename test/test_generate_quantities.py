@@ -305,7 +305,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=csv_files)
         with LogCapture() as log:
-            bern_gqs.generated_quantities
+            self.assertEqual(bern_gqs.generated_quantities.shape, (400, 10))
         log.check_present(
             (
                 'cmdstanpy',
@@ -315,7 +315,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             )
         )
         with LogCapture() as log:
-            bern_gqs.generated_quantities_pd
+            self.assertEqual(bern_gqs.generated_quantities_pd.shape, (400, 10))
         log.check_present(
             (
                 'cmdstanpy',
