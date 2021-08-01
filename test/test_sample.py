@@ -646,6 +646,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             if file.endswith(".csv"):
                 csvfiles.append(os.path.join(csvfiles_path, file))
         bern_fit = from_csv(path=csvfiles)
+        print(bern_fit.metadata.method_vars_cols.keys())
+
         draws_pd = bern_fit.draws_pd()
         self.assertEqual(
             draws_pd.shape,
@@ -1142,7 +1144,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
         with LogCapture() as log:
-            bern_fit.sampler_diagnostics()
+            self.assertTrue('lp__' in bern_fit.sampler_diagnostics())
         log.check_present(
             (
                 'cmdstanpy',
@@ -1152,7 +1154,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
         with LogCapture() as log:
-            bern_fit.sampler_variables()
+            self.assertTrue('lp__' in bern_fit.sampler_variables())
         log.check_present(
             (
                 'cmdstanpy',
@@ -1162,7 +1164,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
         with LogCapture() as log:
-            bern_fit.sampler_vars_cols
+            self.assertTrue('lp__' in bern_fit.sampler_vars_cols)
         log.check_present(
             (
                 'cmdstanpy',
@@ -1172,7 +1174,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
         with LogCapture() as log:
-            bern_fit.stan_vars_cols
+            self.assertTrue('theta' in bern_fit.stan_vars_cols)
         log.check_present(
             (
                 'cmdstanpy',
@@ -1182,7 +1184,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
         with LogCapture() as log:
-            bern_fit.stan_vars_dims
+            self.assertTrue('theta' in bern_fit.stan_vars_dims)
         log.check_present(
             (
                 'cmdstanpy',
