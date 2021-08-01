@@ -65,11 +65,11 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                "sample doesn't contain draws from warmup iterations, rerun sampler with "
-                 '"save_warmup=True".',
+                "sample doesn't contain draws from warmup iterations, "
+                'rerun sampler with "save_warmup=True".',
             )
         )
-            
+
         # draws_pd()
         self.assertEqual(bern_gqs.draws_pd().shape, (400, 10))
         self.assertEqual(
@@ -77,10 +77,6 @@ class GenerateQuantitiesTest(unittest.TestCase):
             bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.draws_pd().shape[1],
         )
-
-
-
-
 
     def test_from_csv_files_bad(self):
         # gq model
