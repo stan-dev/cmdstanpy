@@ -928,6 +928,7 @@ class CmdStanModel:
         :return: CmdStanGQ object
         """
         if isinstance(mcmc_sample, CmdStanMCMC):
+            mcmc_fit = mcmc_sample
             sample_csv_files = mcmc_sample.runset.csv_files
         elif isinstance(mcmc_sample, list):
             if len(mcmc_sample) < 1:
@@ -937,7 +938,7 @@ class CmdStanModel:
             try:
                 sample_csv_files = mcmc_sample
                 sample_fit = from_csv(sample_csv_files)
-                mcmc_sample = sample_fit
+                mcmc_fit = sample_fit
             except ValueError as e:
                 raise ValueError(
                     'Invalid sample from Stan CSV files, error:\n\t{}\n\t'
@@ -950,9 +951,9 @@ class CmdStanModel:
                 'MCMC sample must be either CmdStanMCMC object'
                 ' or list of paths to sample Stan CSV files.'
             )
-        chains = mcmc_sample.chains
-        chain_ids = mcmc_sample.chain_ids
-        if mcmc_sample.metadata.cmdstan_config['save_warmup']:
+        chains = mcmc_fit.chains
+        chain_ids = mcmc_fit.chain_ids
+        if mcmc_fit.metadata.cmdstan_config['save_warmup']:
             self._logger.warning(
                 'Sample contains saved warmup draws which will be used '
                 'to generate additional quantities of interest.'
@@ -989,7 +990,7 @@ class CmdStanModel:
                     msg, runset.__repr__()
                 )
                 raise RuntimeError(msg)
-            quantities = CmdStanGQ(runset=runset, mcmc_sample=mcmc_sample)
+            quantities = CmdStanGQ(runset=runset, mcmc_sample=mcmc_fit)
         return quantities
 
     def variational(

@@ -665,7 +665,7 @@ class CmdStanMCMC:
             start_idx = self.num_draws_warmup
 
         if concat_chains:
-            return flatten_chains(self._draws[start_idx:, :, :])  # type: ignore
+            return flatten_chains(self._draws[start_idx:, :, :])
         return self._draws[start_idx:, :, :]  # type: ignore
 
     @property
@@ -953,10 +953,11 @@ class CmdStanMCMC:
                 "Keyword params is depreciated, use 'vars' instead"
             )
             vars = params
-        if isinstance(vars, str):
-            vars_list = [vars]
-        else:
-            vars_list = vars
+        if vars is not None:
+            if isinstance(vars, str):
+                vars_list = [vars]
+            else:
+                vars_list = vars
 
         if inc_warmup and not self._save_warmup:
             get_logger().warning(
@@ -1354,7 +1355,7 @@ class CmdStanGQ:
         """
         Names of generated quantities of interest.
         """
-        return self._metadata.cmdstan_config['column_names']
+        return self._metadata.cmdstan_config['column_names']  # type: ignore
 
     @property
     def metadata(self) -> InferenceMetadata:
@@ -1447,7 +1448,7 @@ class CmdStanGQ:
         if inc_sample:
             cols_1 = self.mcmc_sample.column_names
             cols_2 = self.column_names
-            dups = [  # type: ignore
+            dups = [
                 item
                 for item, count in Counter(cols_1 + cols_2).items()
                 if count > 1
@@ -1471,18 +1472,16 @@ class CmdStanGQ:
                         self._draws,
                     )
                 )[start_idx:, :, :]
-            )  # type: ignore
+            )
         if concat_chains:
-            return flatten_chains(self._draws[start_idx:, :, :])  # type: ignore
+            return flatten_chains(self._draws[start_idx:, :, :])
         if inc_sample:
-            return np.dstack(
+            return np.dstack(  # type: ignore
                 (
                     np.delete(self.mcmc_sample.draws(), drop_cols, axis=1),
                     self._draws,
                 )
-            )[
-                start_idx:, :, :
-            ]  # type: ignore
+            )[start_idx:, :, :]
         return self._draws[start_idx:, :, :]  # type: ignore
 
     def draws_pd(
@@ -1559,7 +1558,7 @@ class CmdStanGQ:
         elif inc_sample and vars is None:
             cols_1 = self.mcmc_sample.column_names
             cols_2 = self.column_names
-            dups = [  # type: ignore
+            dups = [
                 item
                 for item, count in Counter(cols_1 + cols_2).items()
                 if count > 1
@@ -1718,8 +1717,10 @@ class CmdStanGQ:
                 and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
             ):
                 draw1 = self.mcmc_sample.num_draws_warmup * self.chains
-                return flatten_chains(self._draws)[draw1:, col_idxs]
-            return flatten_chains(self._draws)[:, col_idxs]
+                return flatten_chains(self._draws)[  # type: ignore
+                    draw1:, col_idxs
+                ]
+            return flatten_chains(self._draws)[:, col_idxs]  # type: ignore
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
