@@ -4,10 +4,10 @@ import json
 import logging
 import os
 import unittest
+import numpy as np
 import pandas as pd
 
 from numpy.testing import assert_array_equal, assert_raises
-from pandas._testing import assert_series_equal
 from testfixtures import LogCapture
 
 from cmdstanpy.cmdstan_args import Method
@@ -156,10 +156,11 @@ class GenerateQuantitiesTest(unittest.TestCase):
         )
         row1_sample_pd = bern_fit.draws_pd().iloc[0]
         row1_gqs_pd = bern_gqs.draws_pd().iloc[0]
-        assert_series_equal(
-            pd.concat((row1_sample_pd, row1_gqs_pd), axis=0),
-            bern_gqs.draws_pd(inc_sample=True).iloc[0],
-            check_index=False,
+        self.assertTrue(
+            np.array_equal(
+                pd.concat((row1_sample_pd, row1_gqs_pd), axis=0).values,
+                bern_gqs.draws_pd(inc_sample=True).iloc[0].values
+            )
         )
         # draws_xr
         xr_data = bern_gqs.draws_xr()
