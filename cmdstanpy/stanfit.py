@@ -1269,7 +1269,6 @@ class CmdStanGQ:
         self,
         runset: RunSet,
         mcmc_sample: CmdStanMCMC,
-        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         if not runset.method == Method.GENERATE_QUANTITIES:
@@ -1278,7 +1277,6 @@ class CmdStanGQ:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._logger = logger or get_logger()
         self.mcmc_sample = mcmc_sample
         self._draws = np.array(())
         config = self._validate_csv_files()
@@ -1371,7 +1369,7 @@ class CmdStanGQ:
         """
         Deprecated - use method ``draws`` instead.
         """
-        self._logger.warning(
+        get_logger().warning(
             'property "generated_quantities" has been deprecated, '
             'use method "draws" instead.'
         )
@@ -1384,7 +1382,7 @@ class CmdStanGQ:
         """
         Deprecated - use method ``draws_pd`` instead.
         """
-        self._logger.warning(
+        get_logger().warning(
             'property "generated_quantities_pd" has been deprecated, '
             'use method "draws_pd" instead.'
         )
@@ -1400,7 +1398,7 @@ class CmdStanGQ:
         """
         Deprecated - use method "draws_pd(inc_sample=True)" instead.
         """
-        self._logger.warning(
+        get_logger().warning(
             'property "sample_plus_quantities" has been deprecated, '
             'use method "draws_pd(inc_sample=True)" instead.'
         )
