@@ -207,6 +207,18 @@ class GenerateQuantitiesTest(unittest.TestCase):
             bern_gqs.stan_variable(var='eta')
         with self.assertRaises(ValueError):
             bern_gqs.stan_variable(var='lp__')
+        with self.assertRaises(ValueError):
+            bern_gqs.stan_variable(var='lp__', name='theta')
+
+        with LogCapture() as log:
+            self.assertEqual(bern_gqs.stan_variable(name='theta').shape, (400,))
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Keyword "name" is depreciated, use "var" instead.',
+            )
+        )
 
         vars_dict = bern_gqs.stan_variables()
         var_names = list(

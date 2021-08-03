@@ -1242,6 +1242,8 @@ class CmdStanMCMCTest(unittest.TestCase):
             bern_fit.stan_variable(var='eta')
         with self.assertRaises(ValueError):
             bern_fit.stan_variable(var='lp__')
+        with self.assertRaises(ValueError):
+            bern_fit.stan_variable(var='lp__', name='theta')
 
         with LogCapture() as log:
             self.assertEqual(bern_fit.stan_variable(name='theta').shape, (200,))
