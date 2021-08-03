@@ -295,6 +295,10 @@ class DataFilesTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             write_stan_json(file_bad, dict_badtype)
 
+        dict_badtype_nested = {'a': ['a string']}
+        with self.assertRaises(ValueError):
+            write_stan_json(file_bad, dict_badtype_nested)
+
         dict_inf = {'a': [np.inf]}
         with self.assertRaises(ValueError):
             write_stan_json(file_bad, dict_inf)

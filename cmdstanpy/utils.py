@@ -412,17 +412,27 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     data_out = {}
     for key, val in data.items():
         if val is not None:
-            if type(val).__module__ != 'numpy' and not isinstance(
-                val, (Collection, bool, int, float)
+            if isinstance(val, (str, bytes)) or (
+                type(val).__module__ != 'numpy'
+                and not isinstance(val, (Collection, bool, int, float))
             ):
                 raise TypeError(
-                    f"Invalid type '{type(val)}'' provided to "
+                    f"Invalid type '{type(val)}' provided to "
                     + f"write_stan_json for key '{key}'"
                 )
-            if not np.all(np.isfinite(val)):
+            try:
+                if not np.all(np.isfinite(val)):
+                    raise ValueError(
+                        "Input to write_stan_json has nan or infinite "
+                        + f"values for key '{key}'"
+                    )
+            except TypeError:
+                # handles cases like val == ['hello']
+                # pylint: disable=raise-missing-from
                 raise ValueError(
-                    "Input to write_stan_json has nan or infinite "
-                    + f"values for key '{key}'"
+                    "Invalid type provided to "
+                    + f"write_stan_json for key '{key}' "
+                    + f"as part of collection {type(val)}"
                 )
 
         if type(val).__module__ == 'numpy':
