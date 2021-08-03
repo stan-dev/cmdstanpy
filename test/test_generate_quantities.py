@@ -67,7 +67,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                "sample doesn't contain draws from warmup iterations, "
+                "Sample doesn't contain draws from warmup iterations, "
                 'rerun sampler with "save_warmup=True".',
             )
         )
@@ -159,7 +159,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
         self.assertTrue(
             np.array_equal(
                 pd.concat((row1_sample_pd, row1_gqs_pd), axis=0).values,
-                bern_gqs.draws_pd(inc_sample=True).iloc[0].values
+                bern_gqs.draws_pd(inc_sample=True).iloc[0].values,
             )
         )
         # draws_xr
@@ -199,14 +199,14 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
 
-        theta = bern_gqs.stan_variable(name='theta')
+        theta = bern_gqs.stan_variable(var='theta')
         self.assertEqual(theta.shape, (400,))
-        y_rep = bern_gqs.stan_variable(name='y_rep')
+        y_rep = bern_gqs.stan_variable(var='y_rep')
         self.assertEqual(y_rep.shape, (400, 10))
         with self.assertRaises(ValueError):
-            bern_gqs.stan_variable(name='eta')
+            bern_gqs.stan_variable(var='eta')
         with self.assertRaises(ValueError):
-            bern_gqs.stan_variable(name='lp__')
+            bern_gqs.stan_variable(var='lp__')
 
         vars_dict = bern_gqs.stan_variables()
         var_names = list(
@@ -275,14 +275,14 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (400, 10),
         )
 
-        theta = bern_gqs.stan_variable(name='theta')
+        theta = bern_gqs.stan_variable(var='theta')
         self.assertEqual(theta.shape, (400,))
-        y_rep = bern_gqs.stan_variable(name='y_rep')
+        y_rep = bern_gqs.stan_variable(var='y_rep')
         self.assertEqual(y_rep.shape, (400, 10))
         with self.assertRaises(ValueError):
-            bern_gqs.stan_variable(name='eta')
+            bern_gqs.stan_variable(var='eta')
         with self.assertRaises(ValueError):
-            bern_gqs.stan_variable(name='lp__')
+            bern_gqs.stan_variable(var='lp__')
 
         vars_dict = bern_gqs.stan_variables()
         var_names = list(
@@ -334,13 +334,13 @@ class GenerateQuantitiesTest(unittest.TestCase):
         assert_raises(
             AssertionError,
             assert_array_equal,
-            bern_fit.stan_variable(name='y_rep'),
-            bern_gqs.stan_variable(name='y_rep'),
+            bern_fit.stan_variable(var='y_rep'),
+            bern_gqs.stan_variable(var='y_rep'),
         )
         # check that stan_variable returns values from gq model
         with open(jdata) as fd:
             bern_data = json.load(fd)
-        y_rep = bern_gqs.stan_variable(name='y_rep')
+        y_rep = bern_gqs.stan_variable(var='y_rep')
         for i in range(10):
             self.assertEqual(y_rep[0, i], bern_data['y'][i])
 
@@ -362,7 +362,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'property "generated_quantities" has been deprecated, '
+                'Property "generated_quantities" has been deprecated, '
                 'use method "draws" instead.',
             )
         )
@@ -372,7 +372,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'property "generated_quantities_pd" has been deprecated, '
+                'Property "generated_quantities_pd" has been deprecated, '
                 'use method "draws_pd" instead.',
             )
         )

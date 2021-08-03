@@ -77,14 +77,14 @@ class RunSet:
         self._logger = logger or get_logger()
         if chains < 1:
             raise ValueError(
-                'chains must be positive integer value, '
+                'Chains must be positive integer value, '
                 'found {}'.format(chains)
             )
         if chain_ids is None:
             chain_ids = [x + 1 for x in range(chains)]
         elif len(chain_ids) != chains:
             raise ValueError(
-                'mismatch between number of chains and chain_ids, '
+                'Mismatch between number of chains and chain_ids, '
                 'found {} chains, but {} chain_ids'.format(
                     chains, len(chain_ids)
                 )
@@ -333,12 +333,12 @@ class RunSet:
                 pass
             os.remove(test_path)  # cleanup
         except (IOError, OSError, PermissionError) as exc:
-            raise Exception('cannot save to path: {}'.format(dir)) from exc
+            raise Exception('Cannot save to path: {}'.format(dir)) from exc
 
         for i in range(self.chains):
             if not os.path.exists(self._csv_files[i]):
                 raise ValueError(
-                    'cannot access csv file {}'.format(self._csv_files[i])
+                    'Cannot access csv file {}'.format(self._csv_files[i])
                 )
 
             path, filename = os.path.split(self._csv_files[i])
@@ -351,7 +351,7 @@ class RunSet:
             to_path = os.path.join(dir, filename)
             if os.path.exists(to_path):
                 raise ValueError(
-                    'file exists, not overwriting: {}'.format(to_path)
+                    'File exists, not overwriting: {}'.format(to_path)
                 )
             try:
                 self._logger.debug(
@@ -361,7 +361,7 @@ class RunSet:
                 self._csv_files[i] = to_path
             except (IOError, OSError, PermissionError) as e:
                 raise ValueError(
-                    'cannot save to file: {}'.format(to_path)
+                    'Cannot save to file: {}'.format(to_path)
                 ) from e
 
 
@@ -532,7 +532,7 @@ class CmdStanMCMC:
         Deprecated - use "metadata.method_vars_cols" instead
         """
         self._logger.warning(
-            'property "sampler_vars_cols" has been deprecated, '
+            'Property "sampler_vars_cols" has been deprecated, '
             'use "metadata.method_vars_cols" instead.'
         )
         return self.metadata.method_vars_cols
@@ -543,7 +543,7 @@ class CmdStanMCMC:
         Deprecated - use "metadata.stan_vars_cols" instead
         """
         self._logger.warning(
-            'property "stan_vars_cols" has been deprecated, '
+            'Property "stan_vars_cols" has been deprecated, '
             'use "metadata.stan_vars_cols" instead.'
         )
         return self.metadata.stan_vars_cols
@@ -554,7 +554,7 @@ class CmdStanMCMC:
         Deprecated - use "metadata.stan_vars_dims" instead
         """
         self._logger.warning(
-            'property "stan_vars_dims" has been deprecated, '
+            'Property "stan_vars_dims" has been deprecated, '
             'use "metadata.stan_vars_dims" instead.'
         )
         return self.metadata.stan_vars_dims
@@ -656,7 +656,7 @@ class CmdStanMCMC:
 
         if inc_warmup and not self._save_warmup:
             self._logger.warning(
-                "sample doesn't contain draws from warmup iterations,"
+                "Sample doesn't contain draws from warmup iterations,"
                 ' rerun sampler with "save_warmup=True".'
             )
 
@@ -674,7 +674,7 @@ class CmdStanMCMC:
         Deprecated - use method "draws()" instead.
         """
         self._logger.warning(
-            'method "sample" has been deprecated, use method "draws" instead.'
+            'Method "sample" has been deprecated, use method "draws" instead.'
         )
         return self.draws()
 
@@ -684,7 +684,7 @@ class CmdStanMCMC:
         Deprecated - use "draws(inc_warmup=True)"
         """
         self._logger.warning(
-            'method "warmup" has been deprecated, instead use method'
+            'Method "warmup" has been deprecated, instead use method'
             ' "draws(inc_warmup=True)", returning draws from both'
             ' warmup and sampling iterations.'
         )
@@ -844,14 +844,14 @@ class CmdStanMCMC:
         if percentiles is not None:
             if len(percentiles) == 0:
                 raise ValueError(
-                    'invalid percentiles argument, must be ordered'
+                    'Invalid percentiles argument, must be ordered'
                     ' non-empty list from (1, 99), inclusive.'
                 )
             cur_pct = 0
             for pct in percentiles:
                 if pct > 99 or not pct > cur_pct:
                     raise ValueError(
-                        'invalid percentiles spec, must be ordered'
+                        'Invalid percentiles spec, must be ordered'
                         ' non-empty list from (1, 99), inclusive.'
                     )
                 cur_pct = pct
@@ -862,7 +862,7 @@ class CmdStanMCMC:
         if sig_figs is not None:
             if not isinstance(sig_figs, int) or sig_figs < 1 or sig_figs > 18:
                 raise ValueError(
-                    'sig_figs must be an integer between 1 and 18,'
+                    'Keyword "sig_figs" must be an integer between 1 and 18,'
                     ' found {}'.format(sig_figs)
                 )
             csv_sig_figs = self._sig_figs or 6
@@ -950,7 +950,7 @@ class CmdStanMCMC:
                     "Cannot use both vars and (depreciated) params"
                 )
             get_logger().warning(
-                "Keyword params is depreciated, use 'vars' instead"
+                'Keyword "params" is depreciated, use "vars" instead.'
             )
             vars = params
         if vars is not None:
@@ -961,7 +961,7 @@ class CmdStanMCMC:
 
         if inc_warmup and not self._save_warmup:
             get_logger().warning(
-                'draws from warmup iterations not available,'
+                'Draws from warmup iterations not available,'
                 ' must run sampler with "save_warmup=True".'
             )
 
@@ -973,7 +973,7 @@ class CmdStanMCMC:
                     var not in self.metadata.method_vars_cols
                     and var not in self.metadata.stan_vars_cols
                 ):
-                    raise ValueError('unknown variable: {}'.format(var))
+                    raise ValueError('Unknown variable: {}'.format(var))
                 if var in self.metadata.method_vars_cols:
                     cols.append(var)
                 else:
@@ -999,11 +999,11 @@ class CmdStanMCMC:
         """
         if not XARRAY_INSTALLED:
             raise RuntimeError(
-                "xarray is not installed, cannot produce draws array"
+                'Package "xarray" is not installed, cannot produce draws array.'
             )
         if inc_warmup and not self._save_warmup:
             self._logger.warning(
-                "draws from warmup iterations not available,"
+                "Draws from warmup iterations not available,"
                 ' must run sampler with "save_warmup=True".'
             )
         if vars is None:
@@ -1048,7 +1048,9 @@ class CmdStanMCMC:
             'chain', 'draw', ...
         )
 
-    def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
+    def stan_variable(
+        self, var: str = None, inc_warmup: bool = False, *, name: str = None
+    ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
         for the named Stan program variable.  Flattens the chains,
@@ -1074,14 +1076,25 @@ class CmdStanMCMC:
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
 
-        :param name: variable name
+        :param var: variable name
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
         """
-        if name not in self._metadata.stan_vars_dims:
-            raise ValueError('unknown name: {}'.format(name))
+        if name is not None:
+            if var is not None:
+                raise ValueError(
+                    'Cannot use both "var" and (depreciated) "name"'
+                )
+            get_logger().warning(
+                'Keyword "name" is depreciated, use "var" instead.'
+            )
+            var = name
+        if var is None:
+            raise ValueError('No variable name specified.')
+        if var not in self._metadata.stan_vars_dims:
+            raise ValueError('Unknown variable name: {}'.format(var))
         self._assemble_draws()
         draw1 = 0
         if not inc_warmup and self._save_warmup:
@@ -1090,9 +1103,9 @@ class CmdStanMCMC:
         if inc_warmup and self._save_warmup:
             num_draws += self.num_draws_warmup
         dims = [num_draws * self.chains]
-        col_idxs = self._metadata.stan_vars_cols[name]
+        col_idxs = self._metadata.stan_vars_cols[var]
         if len(col_idxs) > 0:
-            dims.extend(self._metadata.stan_vars_dims[name])
+            dims.extend(self._metadata.stan_vars_dims[var])
         # pylint: disable=redundant-keyword-arg
         return self._draws[draw1:, :, col_idxs].reshape(  # type: ignore
             dims, order='F'
@@ -1128,7 +1141,7 @@ class CmdStanMCMC:
         Deprecated, use "method_variables" instead
         """
         self._logger.warning(
-            'method "sampler_variables" has been deprecated, '
+            'Method "sampler_variables" has been deprecated, '
             'use method "method_variables" instead.'
         )
         return self.method_variables()
@@ -1138,7 +1151,7 @@ class CmdStanMCMC:
         Deprecated, use "method_variables" instead
         """
         self._logger.warning(
-            'method "sampler_diagnostics" has been deprecated, '
+            'Method "sampler_diagnostics" has been deprecated, '
             'use method "method_variables" instead.'
         )
         return self.method_variables()
@@ -1220,22 +1233,33 @@ class CmdStanMLE:
         """Returns optimized params as Dict."""
         return OrderedDict(zip(self.column_names, self._mle))
 
-    def stan_variable(self, name: str) -> np.ndarray:
+    def stan_variable(self, var: str = None, *, name: str = None) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
         numpy.ndarray match the shape of the Stan program variable.
 
-        :param name: variable name
+        :param var: variable name
         """
-        if name not in self._metadata.stan_vars_dims:
-            raise ValueError('unknown name: {}'.format(name))
-        col_idxs = list(self._metadata.stan_vars_cols[name])
+        if name is not None:
+            if var is not None:
+                raise ValueError(
+                    'Cannot use both "var" and (depreciated) "name".'
+                )
+            get_logger().warning(
+                'Keyword "name" is depreciated, use "var" instead.'
+            )
+            var = name
+        if var is None:
+            raise ValueError('no variable name specified.')
+        if var not in self._metadata.stan_vars_dims:
+            raise ValueError('unknown variable name: {}'.format(var))
+        col_idxs = list(self._metadata.stan_vars_cols[var])
         vals = list(self._mle)
         xs = [vals[x] for x in col_idxs]
         shape: Tuple[int, ...] = ()
         if len(col_idxs) > 0:
-            shape = self._metadata.stan_vars_dims[name]
+            shape = self._metadata.stan_vars_dims[var]
         return np.array(xs).reshape(shape)
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
@@ -1370,7 +1394,7 @@ class CmdStanGQ:
         Deprecated - use method ``draws`` instead.
         """
         get_logger().warning(
-            'property "generated_quantities" has been deprecated, '
+            'Property "generated_quantities" has been deprecated, '
             'use method "draws" instead.'
         )
         if self._draws.size == 0:
@@ -1383,7 +1407,7 @@ class CmdStanGQ:
         Deprecated - use method ``draws_pd`` instead.
         """
         get_logger().warning(
-            'property "generated_quantities_pd" has been deprecated, '
+            'Property "generated_quantities_pd" has been deprecated, '
             'use method "draws_pd" instead.'
         )
         if self._draws.size == 0:
@@ -1399,7 +1423,7 @@ class CmdStanGQ:
         Deprecated - use method "draws_pd(inc_sample=True)" instead.
         """
         get_logger().warning(
-            'property "sample_plus_quantities" has been deprecated, '
+            'Property "sample_plus_quantities" has been deprecated, '
             'use method "draws_pd(inc_sample=True)" instead.'
         )
         return self.draws_pd(inc_sample=True)
@@ -1440,7 +1464,7 @@ class CmdStanGQ:
             and not self.mcmc_sample.metadata.cmdstan_config['save_warmup']
         ):
             get_logger().warning(
-                "sample doesn't contain draws from warmup iterations,"
+                "Sample doesn't contain draws from warmup iterations,"
                 ' rerun sampler with "save_warmup=True".'
             )
         if inc_sample:
@@ -1511,7 +1535,7 @@ class CmdStanGQ:
             and not self.mcmc_sample.metadata.cmdstan_config['save_warmup']
         ):
             get_logger().warning(
-                'draws from warmup iterations not available,'
+                'Draws from warmup iterations not available,'
                 ' must run sampler with "save_warmup=True".'
             )
         self._assemble_generated_quantities()
@@ -1529,7 +1553,7 @@ class CmdStanGQ:
                 ):
                     mcmc_vars.append(var)
                 else:
-                    raise ValueError('unknown variable: {}'.format(var))
+                    raise ValueError('Unknown variable: {}'.format(var))
         else:
             gq_cols = list(self.column_names)
 
@@ -1600,7 +1624,7 @@ class CmdStanGQ:
         """
         if not XARRAY_INSTALLED:
             raise RuntimeError(
-                "xarray is not installed, cannot produce draws array"
+                'Package "xarray" is not installed, cannot produce draws array.'
             )
         mcmc_vars_list = []
         dup_vars = []
@@ -1615,7 +1639,7 @@ class CmdStanGQ:
                         mcmc_vars_list.append(var)
                         dup_vars.append(var)
                     else:
-                        raise ValueError('unknown variable: {}'.format(var))
+                        raise ValueError('Unknown variable: {}'.format(var))
         else:
             vars_list = list(self.metadata.stan_vars_cols.keys())
             if inc_sample:
@@ -1669,7 +1693,9 @@ class CmdStanGQ:
             'chain', 'draw', ...
         )
 
-    def stan_variable(self, name: str, inc_warmup: bool = False) -> np.ndarray:
+    def stan_variable(
+        self, var: str = None, inc_warmup: bool = False, *, name: str = None
+    ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
         for the named Stan program variable.  Flattens the chains,
@@ -1695,21 +1721,32 @@ class CmdStanGQ:
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
 
-        :param name: variable name
+        :param var: variable name
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the MCMC sample, then the warmup draws are included.
             Default value is ``False``.
         """
+        if name is not None:
+            if var is not None:
+                raise ValueError(
+                    'Cannot use both "var" and (depreciated) "name"'
+                )
+            get_logger().warning(
+                'Keyword "name" is depreciated, use "var" instead.'
+            )
+            var = name
+        if var is None:
+            raise ValueError('No variable name specified.')
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
-        if not (name in model_var_names or name in gq_var_names):
-            raise ValueError('unknown name: {}'.format(name))
-        if name not in gq_var_names:
-            return self.mcmc_sample.stan_variable(name, inc_warmup=inc_warmup)
+        if not (var in model_var_names or var in gq_var_names):
+            raise ValueError('Unknown variable name: {}'.format(var))
+        if var not in gq_var_names:
+            return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable
             self._assemble_generated_quantities()
-            col_idxs = self._metadata.stan_vars_cols[name]
+            col_idxs = self._metadata.stan_vars_cols[var]
             if (
                 not inc_warmup
                 and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
@@ -1845,22 +1882,33 @@ class CmdStanVB:
         """
         return self._metadata
 
-    def stan_variable(self, name: str) -> np.ndarray:
+    def stan_variable(self, var: str = None, *, name: str = None) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
         numpy.ndarray match the shape of the Stan program variable.
 
-        :param name: variable name
+        :param var: variable name
         """
-        if name not in self._metadata.stan_vars_dims:
-            raise ValueError('unknown name: {}'.format(name))
-        col_idxs = list(self._metadata.stan_vars_cols[name])
+        if name is not None:
+            if var is not None:
+                raise ValueError(
+                    'Cannot use both "var" and (depreciated) "name"'
+                )
+            get_logger().warning(
+                'Keyword "name" is depreciated, use "var" instead.'
+            )
+            var = name
+        if var is None:
+            raise ValueError('No variable name specified.')
+        if var not in self._metadata.stan_vars_dims:
+            raise ValueError('Unknown variable name: {}'.format(var))
+        col_idxs = list(self._metadata.stan_vars_cols[var])
         vals = list(self._variational_mean)
         xs = [vals[x] for x in col_idxs]
         shape: Tuple[int, ...] = ()
         if len(col_idxs) > 0:
-            shape = self._metadata.stan_vars_dims[name]
+            shape = self._metadata.stan_vars_dims[var]
         return np.array(xs).reshape(shape)
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
