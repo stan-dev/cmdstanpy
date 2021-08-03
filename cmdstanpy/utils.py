@@ -12,13 +12,14 @@ import subprocess
 import sys
 import tempfile
 from collections import OrderedDict
-from collections.abc import Collection, Sequence
+from collections.abc import Collection
 from typing import (
     Any,
     Callable,
     Dict,
     Iterator,
     List,
+    Mapping,
     MutableMapping,
     Optional,
     TextIO,
@@ -379,39 +380,61 @@ def cxx_toolchain_path(
     return compiler_path, tool_path
 
 
-def _rdump_array(key: str, val: np.ndarray) -> str:
-    """Flatten numpy ndarray, format as Rdump variable declaration."""
-    c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'
-    if (val.size,) == val.shape:
-        return '{key} <- {c}'.format(key=key, c=c)
-    else:
-        dim = '.Dim = c{}'.format(val.shape)
-        struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
-        return struct
+def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
+    """
+    Dump a mapping of strings to data to a JSON file.
 
+    Values can be any numeric type, a boolean (converted to int),
+    or any collection compatible with ``numpy.asarray``, e.g a
+    pandas.Series.
 
-def jsondump(path: str, data: Dict[str, Any]) -> None:
-    """Dump a dict of data to a JSON file."""
-    data = data.copy()
+    Produces a file compatible with the
+    `Json Format for Cmdstan
+    <https://mc-stan.org/docs/2_27/cmdstan-guide/json.html>`__
+
+    :param path: File path for the created json. Will be overwritten if
+    already in existence.
+    :param data: A mapping from strings to values. This can be a dictionary
+    or something more exotic like an xarray.Dataset. This will be copied
+    before type conversion, not modified
+    """
+    data_out = {}
     for key, val in data.items():
+        if val is not None:
+            if isinstance(val, (str, bytes)) or (
+                type(val).__module__ != 'numpy'
+                and not isinstance(val, (Collection, bool, int, float))
+            ):
+                raise TypeError(
+                    f"Invalid type '{type(val)}' provided to "
+                    + f"write_stan_json for key '{key}'"
+                )
+            try:
+                if not np.all(np.isfinite(val)):
+                    raise ValueError(
+                        "Input to write_stan_json has nan or infinite "
+                        + f"values for key '{key}'"
+                    )
+            except TypeError:
+                # handles cases like val == ['hello']
+                # pylint: disable=raise-missing-from
+                raise ValueError(
+                    "Invalid type provided to "
+                    + f"write_stan_json for key '{key}' "
+                    + f"as part of collection {type(val)}"
+                )
+
         if type(val).__module__ == 'numpy':
-            data[key] = val.tolist()
+            data_out[key] = val.tolist()
         elif isinstance(val, Collection):
-            data[key] = np.asarray(val).tolist()
+            data_out[key] = np.asarray(val).tolist()
+        elif isinstance(val, bool):
+            data_out[key] = int(val)
+        else:
+            data_out[key] = val
 
     with open(path, 'w') as fd:
-        json.dump(data, fd)
-
-
-def rdump(path: str, data: Dict[str, Any]) -> None:
-    """Dump a dict of data to a R dump format file."""
-    with open(path, 'w') as fd:
-        for key, val in data.items():
-            if isinstance(val, (np.ndarray, Sequence)):
-                line = _rdump_array(key, np.asarray(val))
-            else:
-                line = '{} <- {}'.format(key, val)
-            print(line, file=fd)
+        json.dump(data_out, fd)
 
 
 def rload(fname: str) -> Optional[Dict[str, Union[int, float, np.ndarray]]]:
@@ -1132,27 +1155,20 @@ class MaybeDictToFilePath:
 
     def __init__(
         self,
-        *objs: Union[str, Dict[Any, Any], List[Any], int, float, None],
-        logger: Optional[logging.Logger] = None
+        *objs: Union[str, Mapping[str, Any], List[Any], int, float, None],
+        logger: Optional[logging.Logger] = None,
     ):
         self._unlink = [False] * len(objs)
         self._paths: List[Any] = [''] * len(objs)
         self._logger = logger or get_logger()
         i = 0
         for obj in objs:
-            if isinstance(obj, dict):
+            if isinstance(obj, Mapping):
                 data_file = create_named_text_file(
                     dir=_TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
-                if any(
-                    not item
-                    for item in obj
-                    if isinstance(item, (Sequence, np.ndarray))
-                ):
-                    rdump(data_file, obj)
-                else:
-                    jsondump(data_file, obj)
+                write_stan_json(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(obj, str):
