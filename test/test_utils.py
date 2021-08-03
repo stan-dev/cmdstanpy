@@ -1,5 +1,6 @@
 """utils test"""
 
+import collections.abc
 import json
 import os
 import platform
@@ -9,7 +10,6 @@ import stat
 import string
 import tempfile
 import unittest
-import collections.abc
 
 import numpy as np
 import pandas as pd
@@ -23,18 +23,18 @@ from cmdstanpy.utils import (
     cmdstan_path,
     cmdstan_version_at,
     do_command,
+    flatten_chains,
     get_latest_cmdstan,
-    jsondump,
+    parse_method_vars,
     parse_rdump_value,
-    parse_sampler_vars,
     parse_stan_vars,
-    rdump,
     read_metric,
     rload,
     set_cmdstan_path,
     validate_cmdstan_path,
     validate_dir,
     windows_short_path,
+    write_stan_json,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -208,7 +208,7 @@ class DataFilesTest(unittest.TestCase):
             with MaybeDictToFilePath(123, dict_good) as (fg1, fg2):
                 pass
 
-    def test_jsondump(self):
+    def test_write_stan_json(self):
         def cmp(d1, d2):
             self.assertEqual(d1.keys(), d2.keys())
             for k in d1:
@@ -221,40 +221,58 @@ class DataFilesTest(unittest.TestCase):
 
         dict_list = {'a': [1.0, 2.0, 3.0]}
         file_list = os.path.join(_TMPDIR, 'list.json')
-        jsondump(file_list, dict_list)
+        write_stan_json(file_list, dict_list)
         with open(file_list) as fd:
             cmp(json.load(fd), dict_list)
 
         arr = np.repeat(3, 4)
         dict_vec = {'a': arr}
         file_vec = os.path.join(_TMPDIR, 'vec.json')
-        jsondump(file_vec, dict_vec)
+        write_stan_json(file_vec, dict_vec)
         with open(file_vec) as fd:
             cmp(json.load(fd), dict_vec)
+
+        dict_bool = {'a': False}
+        file_bool = os.path.join(_TMPDIR, 'bool.json')
+        write_stan_json(file_bool, dict_bool)
+        with open(file_bool) as fd:
+            cmp(json.load(fd), {'a': 0})
+
+        dict_none = {'a': None}
+        file_none = os.path.join(_TMPDIR, 'none.json')
+        write_stan_json(file_none, dict_none)
+        with open(file_none) as fd:
+            cmp(json.load(fd), dict_none)
 
         series = pd.Series(arr)
         dict_vec_pd = {'a': series}
         file_vec_pd = os.path.join(_TMPDIR, 'vec_pd.json')
-        jsondump(file_vec_pd, dict_vec_pd)
+        write_stan_json(file_vec_pd, dict_vec_pd)
         with open(file_vec_pd) as fd:
             cmp(json.load(fd), dict_vec_pd)
 
+        df_vec = pd.DataFrame(dict_list)
+        file_pd = os.path.join(_TMPDIR, 'pd.json')
+        write_stan_json(file_pd, df_vec)
+        with open(file_pd) as fd:
+            cmp(json.load(fd), dict_list)
+
         dict_zero_vec = {'a': []}
         file_zero_vec = os.path.join(_TMPDIR, 'empty_vec.json')
-        jsondump(file_zero_vec, dict_zero_vec)
+        write_stan_json(file_zero_vec, dict_zero_vec)
         with open(file_zero_vec) as fd:
             cmp(json.load(fd), dict_zero_vec)
 
         dict_zero_matrix = {'a': [[], [], []]}
         file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
-        jsondump(file_zero_matrix, dict_zero_matrix)
+        write_stan_json(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
             cmp(json.load(fd), dict_zero_matrix)
 
         arr = np.zeros(shape=(5, 0))
         dict_zero_matrix = {'a': arr}
         file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
-        jsondump(file_zero_matrix, dict_zero_matrix)
+        write_stan_json(file_zero_matrix, dict_zero_matrix)
         with open(file_zero_matrix) as fd:
             cmp(json.load(fd), dict_zero_matrix)
 
@@ -264,7 +282,7 @@ class DataFilesTest(unittest.TestCase):
 
         dict_3d_matrix = {'a': arr}
         file_3d_matrix = os.path.join(_TMPDIR, '3d_matrix.json')
-        jsondump(file_3d_matrix, dict_3d_matrix)
+        write_stan_json(file_3d_matrix, dict_3d_matrix)
         with open(file_3d_matrix) as fd:
             cmp(json.load(fd), dict_3d_matrix)
 
@@ -272,9 +290,28 @@ class DataFilesTest(unittest.TestCase):
         self.assertTrue(type(scalr).__module__ == 'numpy')
         dict_scalr = {'a': scalr}
         file_scalr = os.path.join(_TMPDIR, 'scalr.json')
-        jsondump(file_scalr, dict_scalr)
+        write_stan_json(file_scalr, dict_scalr)
         with open(file_scalr) as fd:
             cmp(json.load(fd), dict_scalr)
+
+    def test_write_stan_json_bad(self):
+        file_bad = os.path.join(_TMPDIR, 'bad.json')
+
+        dict_badtype = {'a': 'a string'}
+        with self.assertRaises(TypeError):
+            write_stan_json(file_bad, dict_badtype)
+
+        dict_badtype_nested = {'a': ['a string']}
+        with self.assertRaises(ValueError):
+            write_stan_json(file_bad, dict_badtype_nested)
+
+        dict_inf = {'a': [np.inf]}
+        with self.assertRaises(ValueError):
+            write_stan_json(file_bad, dict_inf)
+
+        dict_nan = {'a': np.nan}
+        with self.assertRaises(ValueError):
+            write_stan_json(file_bad, dict_nan)
 
 
 class ReadStanCsvTest(unittest.TestCase):
@@ -545,21 +582,6 @@ class RloadTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             rload(dfile)
 
-    def test_roundtrip_metric(self):
-        dfile = os.path.join(DATAFILES_PATH, 'metric_diag.data.R')
-        data_dict_1 = rload(dfile)
-        self.assertEqual(data_dict_1['inv_metric'].shape, (3,))
-
-        dfile_tmp = os.path.join(DATAFILES_PATH, 'tmp.data.R')
-        rdump(dfile_tmp, data_dict_1)
-        data_dict_2 = rload(dfile_tmp)
-
-        self.assertTrue('inv_metric' in data_dict_2)
-        for i, x in enumerate(data_dict_2['inv_metric']):
-            self.assertEqual(x, data_dict_2['inv_metric'][i])
-
-        os.remove(dfile_tmp)
-
     def test_parse_rdump_value(self):
         struct1 = (
             'structure(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),.Dim=c(2,8))'
@@ -589,7 +611,7 @@ class RloadTest(unittest.TestCase):
 class ParseVarsTest(unittest.TestCase):
     def test_parse_empty(self):
         x = []
-        sampler_vars = parse_sampler_vars(x)
+        sampler_vars = parse_method_vars(x)
         self.assertEqual(len(sampler_vars), 0)
         stan_vars_dims, stan_vars_cols = parse_stan_vars(x)
         self.assertEqual(len(stan_vars_dims), 0)
@@ -597,11 +619,11 @@ class ParseVarsTest(unittest.TestCase):
 
     def test_parse_missing(self):
         with self.assertRaises(ValueError):
-            parse_sampler_vars(None)
+            parse_method_vars(None)
         with self.assertRaises(ValueError):
             parse_stan_vars(None)
 
-    def test_parse_sampler_vars(self):
+    def test_parse_method_vars(self):
         x = [
             'lp__',
             'accept_stat__',
@@ -617,7 +639,7 @@ class ParseVarsTest(unittest.TestCase):
             'z_init[1]',
             'z_init[2]',
         ]
-        vars_dict = parse_sampler_vars(x)
+        vars_dict = parse_method_vars(x)
         self.assertEqual(len(vars_dict), 7)
         self.assertEqual(vars_dict['lp__'], (0,))
         self.assertEqual(vars_dict['stepsize__'], (2,))
@@ -734,6 +756,27 @@ class DoCommandTest(unittest.TestCase):
         args = ['bash', '/bin/junk']
         with self.assertRaises(Exception):
             do_command(args, HERE)
+
+
+class FlattenTest(unittest.TestCase):
+    def test_good(self):
+        array_3d = np.empty((200, 4, 4))
+        vals = [1.0, 2.0, 3.0, 4.0]
+        pos = [(0, 0, 0), (0, 1, 1), (0, 2, 2), (0, 3, 3)]
+        draws, chains, cols = zip(*pos)
+        array_3d[draws, chains, cols] = vals
+        flattened = flatten_chains(array_3d)
+
+        self.assertEqual(flattened.shape, (800, 4))
+        self.assertEqual(flattened[0, 0], 1.0)
+        self.assertEqual(flattened[200, 1], 2.0)
+        self.assertEqual(flattened[400, 2], 3.0)
+        self.assertEqual(flattened[600, 3], 4.0)
+
+    def test_bad(self):
+        array_2d = np.empty((200, 4))
+        with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
+            flatten_chains(array_2d)
 
 
 if __name__ == '__main__':

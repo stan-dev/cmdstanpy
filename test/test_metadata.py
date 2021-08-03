@@ -66,8 +66,8 @@ class InferenceMetadataTest(unittest.TestCase):
             'energy__',
         }
 
-        sampler_vars_cols = metadata.sampler_vars_cols
-        self.assertEqual(hmc_vars, sampler_vars_cols.keys())
+        method_vars_cols = metadata.method_vars_cols
+        self.assertEqual(hmc_vars, method_vars_cols.keys())
         bern_model_vars = {'theta'}
         self.assertEqual(bern_model_vars, metadata.stan_vars_dims.keys())
         self.assertEqual((), metadata.stan_vars_dims['theta'])

@@ -3,11 +3,12 @@
 
 # ### Import CmdStanPy classes and methods
 
-import matplotlib
-import pandas as pd
 import os
 
-from cmdstanpy import cmdstan_path, CmdStanModel
+import matplotlib
+import pandas as pd
+
+from cmdstanpy import CmdStanModel, cmdstan_path
 
 # ### Instantiate & compile the model
 

@@ -9,9 +9,8 @@ import subprocess
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
-from numbers import Real
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -22,6 +21,7 @@ from cmdstanpy.cmdstan_args import (
 )
 from cmdstanpy.compiler_opts import CompilerOptions
 from cmdstanpy.stanfit import (
+    from_csv,
     CmdStanGQ,
     CmdStanMCMC,
     CmdStanMLE,
@@ -35,7 +35,6 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
-    scan_sampler_csv,
 )
 
 
@@ -73,13 +72,13 @@ class CmdStanModel:
 
     def __init__(
         self,
-        model_name: str = None,
-        stan_file: str = None,
-        exe_file: str = None,
+        model_name: Optional[str] = None,
+        stan_file: Optional[str] = None,
+        exe_file: Optional[str] = None,
         compile: bool = True,
-        stanc_options: Dict = None,
-        cpp_options: Dict = None,
-        logger: logging.Logger = None,
+        stanc_options: Optional[Dict[str, Any]] = None,
+        cpp_options: Optional[Dict[str, Any]] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """
         Initialize object given constructor args.
@@ -92,7 +91,7 @@ class CmdStanModel:
         :param cpp_options: Options for C++ compiler.
         :param logger: Python logger object.
         """
-        self._name = None
+        self._name = ''
         self._stan_file = None
         self._exe_file = None
         self._compiler_options = CompilerOptions(
@@ -124,7 +123,7 @@ class CmdStanModel:
                 raise ValueError(
                     'invalid stan filename {}'.format(self._stan_file)
                 )
-            if self._name is None:
+            if not self._name:
                 self._name, _ = os.path.splitext(filename)
             # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
@@ -147,7 +146,7 @@ class CmdStanModel:
             if not os.path.exists(self._exe_file):
                 raise ValueError('no such file {}'.format(self._exe_file))
             _, exename = os.path.split(self._exe_file)
-            if self._name is None:
+            if not self._name:
                 self._name, _ = os.path.splitext(exename)
             else:
                 if self._name != os.path.splitext(exename)[0]:
@@ -157,8 +156,7 @@ class CmdStanModel:
                         ' found: {}.'.format(self._name, exename)
                     )
 
-        if self._compiler_options is not None:
-            self._compiler_options.validate()
+        self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             # Add tbb to the $PATH on Windows
@@ -201,26 +199,26 @@ class CmdStanModel:
         return self._name
 
     @property
-    def stan_file(self) -> str:
+    def stan_file(self) -> Optional[str]:
         """Full path to Stan program file."""
         return self._stan_file
 
     @property
-    def exe_file(self) -> str:
+    def exe_file(self) -> Optional[str]:
         """Full path to Stan exe file."""
         return self._exe_file
 
     @property
-    def stanc_options(self) -> Dict:
+    def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
         """Options to stanc compilers."""
         return self._compiler_options._stanc_options
 
     @property
-    def cpp_options(self) -> Dict:
+    def cpp_options(self) -> Dict[str, Union[bool, int]]:
         """Options to C++ compilers."""
         return self._compiler_options._cpp_options
 
-    def code(self) -> str:
+    def code(self) -> Optional[str]:
         """Return Stan program as a string."""
         if not self._stan_file:
             raise RuntimeError('Please specify source file')
@@ -238,8 +236,8 @@ class CmdStanModel:
     def compile(
         self,
         force: bool = False,
-        stanc_options: Dict = None,
-        cpp_options: Dict = None,
+        stanc_options: Optional[Dict[str, Any]] = None,
+        cpp_options: Optional[Dict[str, Any]] = None,
         override_options: bool = False,
     ) -> None:
         """
@@ -324,7 +322,15 @@ class CmdStanModel:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
                     try:
-                        do_command(cmd, cmdstan_path(), logger=self._logger)
+                        msg = do_command(
+                            cmd, cmdstan_path(), logger=self._logger
+                        )
+                        if msg is not None and 'Warning or error:' in msg:
+                            msg = msg.split("Warning or error:", 1)[1].strip()
+                            self._logger.warning(
+                                "stanc3 has produced warnings:\n%s", msg
+                            )
+
                     except RuntimeError as e:
                         self._logger.error(
                             'file %s, exception %s', stan_file, str(e)
@@ -354,22 +360,22 @@ class CmdStanModel:
 
     def optimize(
         self,
-        data: Union[Dict, str] = None,
-        seed: int = None,
-        inits: Union[Dict, float, str] = None,
-        output_dir: str = None,
-        sig_figs: int = None,
+        data: Union[Mapping[str, Any], str, None] = None,
+        seed: Optional[int] = None,
+        inits: Union[Dict[str, float], float, str, None] = None,
+        output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
         save_profile: bool = False,
-        algorithm: str = None,
-        init_alpha: float = None,
-        tol_obj: float = None,
-        tol_rel_obj: float = None,
-        tol_grad: float = None,
-        tol_rel_grad: float = None,
-        tol_param: float = None,
-        history_size: int = None,
-        iter: int = None,
-        refresh: int = None,
+        algorithm: Optional[str] = None,
+        init_alpha: Optional[float] = None,
+        tol_obj: Optional[float] = None,
+        tol_rel_obj: Optional[float] = None,
+        tol_grad: Optional[float] = None,
+        tol_rel_grad: Optional[float] = None,
+        tol_param: Optional[float] = None,
+        history_size: Optional[int] = None,
+        iter: Optional[int] = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -501,33 +507,32 @@ class CmdStanModel:
     # pylint: disable=too-many-arguments
     def sample(
         self,
-        data: Union[Dict, str] = None,
-        chains: Union[int, None] = None,
-        parallel_chains: Union[int, None] = None,
-        threads_per_chain: Union[int, None] = None,
-        seed: Union[int, List[int]] = None,
-        chain_ids: Union[int, List[int]] = None,
-        inits: Union[Dict, float, str, List[str]] = None,
-        iter_warmup: int = None,
-        iter_sampling: int = None,
+        data: Union[Mapping[str, Any], str, None] = None,
+        chains: Optional[int] = None,
+        parallel_chains: Optional[int] = None,
+        threads_per_chain: Optional[int] = None,
+        seed: Union[int, List[int], None] = None,
+        chain_ids: Union[int, List[int], None] = None,
+        inits: Union[Dict[str, float], float, str, List[str], None] = None,
+        iter_warmup: Optional[int] = None,
+        iter_sampling: Optional[int] = None,
         save_warmup: bool = False,
-        thin: int = None,
-        max_treedepth: float = None,
-        metric: Union[str, List[str]] = None,
-        step_size: Union[float, List[float]] = None,
+        thin: Optional[int] = None,
+        max_treedepth: Optional[int] = None,
+        metric: Union[str, List[str], None] = None,
+        step_size: Union[float, List[float], None] = None,
         adapt_engaged: bool = True,
-        adapt_delta: float = None,
-        adapt_init_phase: int = None,
-        adapt_metric_window: int = None,
-        adapt_step_size: int = None,
+        adapt_delta: Optional[float] = None,
+        adapt_init_phase: Optional[int] = None,
+        adapt_metric_window: Optional[int] = None,
+        adapt_step_size: Optional[int] = None,
         fixed_param: bool = False,
-        output_dir: str = None,
-        sig_figs: int = None,
+        output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
         save_diagnostics: bool = False,
         save_profile: bool = False,
         show_progress: Union[bool, str] = False,
-        validate_csv: bool = True,
-        refresh: int = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS sampler to produce a set of draws
@@ -684,13 +689,8 @@ class CmdStanModel:
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
-        :param validate_csv: If ``False``, skip scan of sample csv output file.
-            When sample is large or disk i/o is slow, will speed up processing.
-            Default is ``True`` - sample csv files are scanned for completeness
-            and consistency.
-
         :param refresh: Specify the number of iterations cmdstan will take
-        between progress messages. Default value is 100.
+            between progress messages. Default value is 100.
 
         :return: CmdStanMCMC object
         """
@@ -833,10 +833,10 @@ class CmdStanModel:
                             tqdm_pbar = tqdm.tqdm
                         # enable dynamic_ncols for advanced users
                         # currently hidden feature
-                        dynamic_ncols = os.environ.get(
+                        dynamic_ncols_raw = os.environ.get(
                             'TQDM_DYNAMIC_NCOLS', 'False'
                         )
-                        if dynamic_ncols.lower() in ['0', 'false']:
+                        if dynamic_ncols_raw.lower() in ['0', 'false']:
                             dynamic_ncols = False
                         else:
                             dynamic_ncols = True
@@ -863,17 +863,17 @@ class CmdStanModel:
                 )
                 raise RuntimeError(msg)
 
-            mcmc = CmdStanMCMC(runset, validate_csv, logger=self._logger)
+            mcmc = CmdStanMCMC(runset, logger=self._logger)
         return mcmc
 
     def generate_quantities(
         self,
-        data: Union[Dict, str] = None,
-        mcmc_sample: Union[CmdStanMCMC, List[str]] = None,
-        seed: int = None,
-        gq_output_dir: str = None,
-        sig_figs: int = None,
-        refresh: int = None,
+        data: Union[Mapping[str, Any], str, None] = None,
+        mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
+        seed: Optional[int] = None,
+        gq_output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanGQ:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -927,66 +927,37 @@ class CmdStanModel:
 
         :return: CmdStanGQ object
         """
-        sample_csv_files = []
-        sample_drawset = None
-        chains = 0
-
         if isinstance(mcmc_sample, CmdStanMCMC):
+            mcmc_fit = mcmc_sample
             sample_csv_files = mcmc_sample.runset.csv_files
-            sample_drawset = mcmc_sample.draws_pd()
-            chains = mcmc_sample.chains
-            chain_ids = mcmc_sample.chain_ids
         elif isinstance(mcmc_sample, list):
             if len(mcmc_sample) < 1:
-                raise ValueError('MCMC sample cannot be empty list')
-            sample_csv_files = mcmc_sample
-            chains = len(sample_csv_files)
-            chain_ids = [x + 1 for x in range(chains)]
+                raise ValueError(
+                    'Expecting list of Stan CSV files, found empty list'
+                )
+            try:
+                sample_csv_files = mcmc_sample
+                sample_fit = from_csv(sample_csv_files)
+                mcmc_fit = sample_fit
+            except ValueError as e:
+                raise ValueError(
+                    'Invalid sample from Stan CSV files, error:\n\t{}\n\t'
+                    ' while processing files\n\t{}'.format(
+                        repr(e), '\n\t'.join(mcmc_sample)
+                    )
+                ) from e
         else:
             raise ValueError(
                 'MCMC sample must be either CmdStanMCMC object'
-                ' or list of paths to sample csv_files.'
+                ' or list of paths to sample Stan CSV files.'
             )
-        try:
-            if sample_drawset is None:  # assemble sample from csv files
-                config = {}
-                # scan 1st csv file to get config
-                try:
-                    config = scan_sampler_csv(sample_csv_files[0])
-                except ValueError:
-                    config = scan_sampler_csv(sample_csv_files[0], True)
-                conf_iter_sampling = None
-                if 'num_samples' in config:
-                    conf_iter_sampling = int(config['num_samples'])
-                conf_iter_warmup = None
-                if 'num_warmup' in config:
-                    conf_iter_warmup = int(config['num_warmup'])
-                conf_thin = None
-                if 'thin' in config:
-                    conf_thin = int(config['thin'])
-                sampler_args = SamplerArgs(
-                    iter_sampling=conf_iter_sampling,
-                    iter_warmup=conf_iter_warmup,
-                    thin=conf_thin,
-                )
-                args = CmdStanArgs(
-                    self._name,
-                    self._exe_file,
-                    chain_ids=chain_ids,
-                    method_args=sampler_args,
-                )
-                runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
-                runset._csv_files = sample_csv_files
-                sample_fit = CmdStanMCMC(runset)
-                sample_drawset = sample_fit.draws_pd()
-        except ValueError as exc:
-            raise ValueError(
-                'Invalid mcmc_sample, error:\n\t{}\n\t'
-                ' while processing files\n\t{}'.format(
-                    repr(exc), '\n\t'.join(sample_csv_files)
-                )
-            ) from exc
-
+        chains = mcmc_fit.chains
+        chain_ids = mcmc_fit.chain_ids
+        if mcmc_fit.metadata.cmdstan_config['save_warmup']:
+            self._logger.warning(
+                'Sample contains saved warmup draws which will be used '
+                'to generate additional quantities of interest.'
+            )
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files
         )
@@ -1019,30 +990,30 @@ class CmdStanModel:
                     msg, runset.__repr__()
                 )
                 raise RuntimeError(msg)
-            quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
+            quantities = CmdStanGQ(runset=runset, mcmc_sample=mcmc_fit)
         return quantities
 
     def variational(
         self,
-        data: Union[Dict, str] = None,
-        seed: int = None,
-        inits: float = None,
-        output_dir: str = None,
-        sig_figs: int = None,
+        data: Union[Mapping[str, Any], str, None] = None,
+        seed: Optional[int] = None,
+        inits: Optional[float] = None,
+        output_dir: Optional[str] = None,
+        sig_figs: Optional[int] = None,
         save_diagnostics: bool = False,
         save_profile: bool = False,
-        algorithm: str = None,
-        iter: int = None,
-        grad_samples: int = None,
-        elbo_samples: int = None,
-        eta: Real = None,
+        algorithm: Optional[str] = None,
+        iter: Optional[int] = None,
+        grad_samples: Optional[int] = None,
+        elbo_samples: Optional[int] = None,
+        eta: Optional[float] = None,
         adapt_engaged: bool = True,
-        adapt_iter: int = None,
-        tol_rel_obj: Real = None,
-        eval_elbo: int = None,
-        output_samples: int = None,
+        adapt_iter: Optional[int] = None,
+        tol_rel_obj: Optional[float] = None,
+        eval_elbo: Optional[int] = None,
+        output_samples: Optional[int] = None,
         require_converged: bool = True,
-        refresh: int = None,
+        refresh: Optional[int] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1242,7 +1213,10 @@ class CmdStanModel:
             raise RuntimeError(msg) from e
 
     def _read_progress(
-        self, proc: subprocess.Popen, pbar: Any, idx: int
+        self,
+        proc: subprocess.Popen,  # [] - Popoen is only generic in 3.9
+        pbar: Any,
+        idx: int,
     ) -> bytes:
         """
         Update tqdm progress bars according to CmdStan console progress msgs.
@@ -1261,7 +1235,7 @@ class CmdStanModel:
 
         try:
             # iterate while process is sampling
-            while proc.poll() is None:
+            while proc.poll() is None and proc.stdout is not None:
                 output = proc.stdout.readline()
                 stdout += output
                 output = output.decode('utf-8').strip()

@@ -25,7 +25,7 @@ _DOT_CMDSTANPY = '.cmdstanpy'
 _DOT_CMDSTAN = '.cmdstan'
 
 
-def _cleanup_tmpdir():
+def _cleanup_tmpdir() -> None:
     """Force deletion of _TMPDIR."""
     print('deleting tmpfiles dir: {}'.format(_TMPDIR))
     shutil.rmtree(_TMPDIR, ignore_errors=True)
@@ -37,15 +37,15 @@ atexit.register(_cleanup_tmpdir)
 
 from ._version import __version__  # noqa
 from .model import CmdStanModel  # noqa
-from .stanfit import (
-    from_csv,
+from .stanfit import (  # noqa
     CmdStanGQ,
     CmdStanMCMC,
     CmdStanMLE,
     CmdStanVB,
-)  # noqa
+    from_csv,
+)
 from .utils import set_cmdstan_path  # noqa
-from .utils import cmdstan_path, install_cmdstan, set_make_env
+from .utils import cmdstan_path, install_cmdstan, set_make_env, write_stan_json
 
 __all__ = [
     'set_cmdstan_path',
@@ -58,4 +58,5 @@ __all__ = [
     'CmdStanVB',
     'CmdStanModel',
     'from_csv',
+    'write_stan_json',
 ]

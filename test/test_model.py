@@ -1,5 +1,6 @@
 """CmdStanModel tests"""
 
+import logging
 import os
 import shutil
 import tempfile
@@ -43,7 +44,9 @@ class CmdStanModelTest(unittest.TestCase):
         for root, _, files in os.walk(DATAFILES_PATH):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', ''):
+                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
+                    filename != ".gitignore"
+                ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
 
@@ -80,6 +83,22 @@ class CmdStanModelTest(unittest.TestCase):
         model = CmdStanModel(stan_file=BERN_STAN, compile=False)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
+
+    def test_model_pedantic(self):
+        with LogCapture() as log:
+            logging.getLogger()
+            CmdStanModel(
+                model_name='bern',
+                stan_file=os.path.join(
+                    DATAFILES_PATH, 'bernoulli_pedantic.stan'
+                ),
+                stanc_options={'warn-pedantic': True},
+            )
+            expect = (
+                'stanc3 has produced warnings:\n'
+                + 'Warning: The parameter theta has no priors.'
+            )
+            log.check_present(('cmdstanpy', 'WARNING', expect))
 
     def test_model_bad(self):
         with self.assertRaises(ValueError):
