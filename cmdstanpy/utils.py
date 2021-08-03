@@ -1094,6 +1094,25 @@ def install_cmdstan(
     return True
 
 
+def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
+    """
+    Flatten a 3D array of draws X chains X variable into 2D array
+    where all chains are concatenated into a single column.
+
+    :param draws_array: 3D array of draws
+    """
+    if len(draws_array.shape) != 3:
+        raise ValueError(
+            'Expecting 3D array, found array with {} dims'.format(
+                len(draws_array.shape)
+            )
+        )
+
+    num_rows = draws_array.shape[0] * draws_array.shape[1]
+    num_cols = draws_array.shape[2]
+    return draws_array.reshape((num_rows, num_cols), order='F')
+
+
 @contextlib.contextmanager
 def pushd(new_dir: str) -> Iterator[None]:
     """Acts like pushd/popd."""

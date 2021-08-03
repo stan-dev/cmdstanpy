@@ -6,6 +6,7 @@ import unittest
 
 import numpy as np
 import pytest
+from testfixtures import LogCapture
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 from cmdstanpy.model import CmdStanModel
@@ -82,12 +83,21 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertEqual(1, len(bern_mle.metadata.stan_vars_dims))
         self.assertTrue('theta' in bern_mle.metadata.stan_vars_dims)
         self.assertEqual(bern_mle.metadata.stan_vars_dims['theta'], ())
-        theta = bern_mle.stan_variable(name='theta')
+        theta = bern_mle.stan_variable(var='theta')
         self.assertEqual(theta.shape, ())
         with self.assertRaises(ValueError):
-            bern_mle.stan_variable(name='eta')
+            bern_mle.stan_variable(var='eta')
         with self.assertRaises(ValueError):
-            bern_mle.stan_variable(name='lp__')
+            bern_mle.stan_variable(var='lp__')
+        with LogCapture() as log:
+            self.assertEqual(bern_mle.stan_variable(name='theta').shape, ())
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Keyword "name" is depreciated, use "var" instead.',
+            )
+        )
 
     def test_variables_3d(self):
         # construct fit using existing sampler output
@@ -112,11 +122,11 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertEqual(
             multidim_mle.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
         )
-        var_y_rep = multidim_mle.stan_variable(name='y_rep')
+        var_y_rep = multidim_mle.stan_variable(var='y_rep')
         self.assertEqual(var_y_rep.shape, (5, 4, 3))
-        var_beta = multidim_mle.stan_variable(name='beta')
+        var_beta = multidim_mle.stan_variable(var='beta')
         self.assertEqual(var_beta.shape, (2,))  # 1-element tuple
-        var_frac_60 = multidim_mle.stan_variable(name='frac_60')
+        var_frac_60 = multidim_mle.stan_variable(var='frac_60')
         self.assertEqual(var_frac_60.shape, ())
         vars = multidim_mle.stan_variables()
         self.assertEqual(len(vars), len(multidim_mle.metadata.stan_vars_dims))

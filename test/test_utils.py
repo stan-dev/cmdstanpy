@@ -23,6 +23,7 @@ from cmdstanpy.utils import (
     cmdstan_path,
     cmdstan_version_at,
     do_command,
+    flatten_chains,
     get_latest_cmdstan,
     parse_method_vars,
     parse_rdump_value,
@@ -755,6 +756,27 @@ class DoCommandTest(unittest.TestCase):
         args = ['bash', '/bin/junk']
         with self.assertRaises(Exception):
             do_command(args, HERE)
+
+
+class FlattenTest(unittest.TestCase):
+    def test_good(self):
+        array_3d = np.empty((200, 4, 4))
+        vals = [1.0, 2.0, 3.0, 4.0]
+        pos = [(0, 0, 0), (0, 1, 1), (0, 2, 2), (0, 3, 3)]
+        draws, chains, cols = zip(*pos)
+        array_3d[draws, chains, cols] = vals
+        flattened = flatten_chains(array_3d)
+
+        self.assertEqual(flattened.shape, (800, 4))
+        self.assertEqual(flattened[0, 0], 1.0)
+        self.assertEqual(flattened[200, 1], 2.0)
+        self.assertEqual(flattened[400, 2], 3.0)
+        self.assertEqual(flattened[600, 3], 4.0)
+
+    def test_bad(self):
+        array_2d = np.empty((200, 4))
+        with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
+            flatten_chains(array_2d)
 
 
 if __name__ == '__main__':
