@@ -251,6 +251,12 @@ class DataFilesTest(unittest.TestCase):
         with open(file_vec_pd) as fd:
             cmp(json.load(fd), dict_vec_pd)
 
+        df_vec = pd.DataFrame(dict_list)
+        file_pd = os.path.join(_TMPDIR, 'pd.json')
+        write_stan_json(file_pd, df_vec)
+        with open(file_pd) as fd:
+            cmp(json.load(fd), dict_list)
+
         dict_zero_vec = {'a': []}
         file_zero_vec = os.path.join(_TMPDIR, 'empty_vec.json')
         write_stan_json(file_zero_vec, dict_zero_vec)
