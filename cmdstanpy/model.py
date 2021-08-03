@@ -10,7 +10,7 @@ from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -360,7 +360,7 @@ class CmdStanModel:
 
     def optimize(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         seed: Optional[int] = None,
         inits: Union[Dict[str, float], float, str, None] = None,
         output_dir: Optional[str] = None,
@@ -507,7 +507,7 @@ class CmdStanModel:
     # pylint: disable=too-many-arguments
     def sample(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         chains: Optional[int] = None,
         parallel_chains: Optional[int] = None,
         threads_per_chain: Optional[int] = None,
@@ -868,7 +868,7 @@ class CmdStanModel:
 
     def generate_quantities(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
         seed: Optional[int] = None,
         gq_output_dir: Optional[str] = None,
@@ -1024,7 +1024,7 @@ class CmdStanModel:
 
     def variational(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         seed: Optional[int] = None,
         inits: Optional[float] = None,
         output_dir: Optional[str] = None,
