@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 from collections import OrderedDict
-from collections.abc import Collection, Sequence
+from collections.abc import Collection
 from typing import (
     Any,
     Callable,
@@ -380,17 +380,6 @@ def cxx_toolchain_path(
     return compiler_path, tool_path
 
 
-def _rdump_array(key: str, val: np.ndarray) -> str:
-    """Flatten numpy ndarray, format as Rdump variable declaration."""
-    c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'
-    if (val.size,) == val.shape:
-        return '{key} <- {c}'.format(key=key, c=c)
-    else:
-        dim = '.Dim = c{}'.format(val.shape)
-        struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
-        return struct
-
-
 def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     """
     Dump a mapping of strings to data to a JSON file.
@@ -446,17 +435,6 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
 
     with open(path, 'w') as fd:
         json.dump(data_out, fd)
-
-
-def rdump(path: str, data: Dict[str, Any]) -> None:
-    """Dump a dict of data to a R dump format file."""
-    with open(path, 'w') as fd:
-        for key, val in data.items():
-            if isinstance(val, (np.ndarray, Sequence)):
-                line = _rdump_array(key, np.asarray(val))
-            else:
-                line = '{} <- {}'.format(key, val)
-            print(line, file=fd)
 
 
 def rload(fname: str) -> Optional[Dict[str, Union[int, float, np.ndarray]]]:
@@ -1158,7 +1136,7 @@ class MaybeDictToFilePath:
 
     def __init__(
         self,
-        *objs: Union[str, Dict[Any, Any], List[Any], int, float, None],
+        *objs: Union[str, Mapping[str, Any], List[Any], int, float, None],
         logger: Optional[logging.Logger] = None,
     ):
         self._unlink = [False] * len(objs)
@@ -1171,14 +1149,7 @@ class MaybeDictToFilePath:
                     dir=_TMPDIR, prefix='', suffix='.json'
                 )
                 self._logger.debug('input tempfile: %s', data_file)
-                if any(
-                    not item
-                    for item in obj
-                    if isinstance(item, (Sequence, np.ndarray))
-                ):
-                    rdump(data_file, obj)
-                else:
-                    write_stan_json(data_file, obj)
+                write_stan_json(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(obj, str):

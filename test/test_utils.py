@@ -27,7 +27,6 @@ from cmdstanpy.utils import (
     parse_method_vars,
     parse_rdump_value,
     parse_stan_vars,
-    rdump,
     read_metric,
     rload,
     set_cmdstan_path,
@@ -581,21 +580,6 @@ class RloadTest(unittest.TestCase):
         dfile = os.path.join(DATAFILES_PATH, 'rdump_bad_3.data.R')
         with self.assertRaises(ValueError):
             rload(dfile)
-
-    def test_roundtrip_metric(self):
-        dfile = os.path.join(DATAFILES_PATH, 'metric_diag.data.R')
-        data_dict_1 = rload(dfile)
-        self.assertEqual(data_dict_1['inv_metric'].shape, (3,))
-
-        dfile_tmp = os.path.join(DATAFILES_PATH, 'tmp.data.R')
-        rdump(dfile_tmp, data_dict_1)
-        data_dict_2 = rload(dfile_tmp)
-
-        self.assertTrue('inv_metric' in data_dict_2)
-        for i, x in enumerate(data_dict_2['inv_metric']):
-            self.assertEqual(x, data_dict_2['inv_metric'][i])
-
-        os.remove(dfile_tmp)
 
     def test_parse_rdump_value(self):
         struct1 = (
