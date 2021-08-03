@@ -1166,7 +1166,7 @@ class MaybeDictToFilePath:
         self._logger = logger or get_logger()
         i = 0
         for obj in objs:
-            if isinstance(obj, dict):
+            if isinstance(obj, Mapping):
                 data_file = create_named_text_file(
                     dir=_TMPDIR, prefix='', suffix='.json'
                 )
