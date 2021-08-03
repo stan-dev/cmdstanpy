@@ -416,7 +416,8 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
                 val, (Collection, bool, int, float)
             ):
                 raise TypeError(
-                    f"Invalid type '{type(val)}'' provided to write_stan_json"
+                    f"Invalid type '{type(val)}'' provided to "
+                    + f"write_stan_json for key '{key}'"
                 )
             if not np.all(np.isfinite(val)):
                 raise ValueError(
