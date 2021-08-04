@@ -45,7 +45,7 @@ from .stanfit import (  # noqa
     from_csv,
 )
 from .utils import set_cmdstan_path  # noqa
-from .utils import cmdstan_path, install_cmdstan, set_make_env
+from .utils import cmdstan_path, install_cmdstan, set_make_env, write_stan_json
 
 __all__ = [
     'set_cmdstan_path',
@@ -58,4 +58,5 @@ __all__ = [
     'CmdStanVB',
     'CmdStanModel',
     'from_csv',
+    'write_stan_json',
 ]

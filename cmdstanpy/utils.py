@@ -2,6 +2,7 @@
 Utility functions
 """
 import contextlib
+import functools
 import logging
 import math
 import os
@@ -12,13 +13,14 @@ import subprocess
 import sys
 import tempfile
 from collections import OrderedDict
-from collections.abc import Collection, Sequence
+from collections.abc import Collection
 from typing import (
     Any,
     Callable,
     Dict,
     Iterator,
     List,
+    Mapping,
     MutableMapping,
     Optional,
     TextIO,
@@ -42,6 +44,7 @@ from cmdstanpy import (
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
+@functools.lru_cache(maxsize=None)
 def get_logger() -> logging.Logger:
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
@@ -214,7 +217,9 @@ def cmdstan_version_at(maj: int, min: int) -> bool:
     return False
 
 
-def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
+def cxx_toolchain_path(
+    version: Optional[str] = None, install_dir: Optional[str] = None
+) -> Tuple[str, ...]:
     """
     Validate, then activate C++ toolchain directory path.
     """
@@ -279,19 +284,30 @@ def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         cmdstan_dir_old = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         for toolchain_root in (
-            [rtools40_home] if rtools40_home is not None else []
-        ) + [
-            os.path.join(cmdstan_dir, 'RTools40'),
-            os.path.join(cmdstan_dir_old, 'RTools40'),
-            os.path.join(os.path.abspath("/"), "RTools40"),
-            os.path.join(cmdstan_dir, 'RTools35'),
-            os.path.join(cmdstan_dir_old, 'RTools35'),
-            os.path.join(os.path.abspath("/"), "RTools35"),
-            os.path.join(cmdstan_dir, 'RTools'),
-            os.path.join(cmdstan_dir_old, 'RTools'),
-            os.path.join(os.path.abspath("/"), "RTools"),
-            os.path.join(os.path.abspath("/"), "RBuildTools"),
-        ]:
+            ([rtools40_home] if rtools40_home is not None else [])
+            + (
+                [
+                    os.path.join(install_dir, 'RTools40'),
+                    os.path.join(install_dir, 'RTools35'),
+                    os.path.join(install_dir, 'RTools30'),
+                    os.path.join(install_dir, 'RTools'),
+                ]
+                if install_dir is not None
+                else []
+            )
+            + [
+                os.path.join(cmdstan_dir, 'RTools40'),
+                os.path.join(cmdstan_dir_old, 'RTools40'),
+                os.path.join(os.path.abspath("/"), "RTools40"),
+                os.path.join(cmdstan_dir, 'RTools35'),
+                os.path.join(cmdstan_dir_old, 'RTools35'),
+                os.path.join(os.path.abspath("/"), "RTools35"),
+                os.path.join(cmdstan_dir, 'RTools'),
+                os.path.join(cmdstan_dir_old, 'RTools'),
+                os.path.join(os.path.abspath("/"), "RTools"),
+                os.path.join(os.path.abspath("/"), "RBuildTools"),
+            ]
+        ):
             compiler_path = ''
             tool_path = ''
 
@@ -366,39 +382,61 @@ def cxx_toolchain_path(version: Optional[str] = None) -> Tuple[str, ...]:
     return compiler_path, tool_path
 
 
-def _rdump_array(key: str, val: np.ndarray) -> str:
-    """Flatten numpy ndarray, format as Rdump variable declaration."""
-    c = 'c(' + ', '.join(map(str, val.T.flat)) + ')'
-    if (val.size,) == val.shape:
-        return '{key} <- {c}'.format(key=key, c=c)
-    else:
-        dim = '.Dim = c{}'.format(val.shape)
-        struct = '{key} <- structure({c}, {dim})'.format(key=key, c=c, dim=dim)
-        return struct
+def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
+    """
+    Dump a mapping of strings to data to a JSON file.
 
+    Values can be any numeric type, a boolean (converted to int),
+    or any collection compatible with ``numpy.asarray``, e.g a
+    pandas.Series.
 
-def jsondump(path: str, data: Dict[str, Any]) -> None:
-    """Dump a dict of data to a JSON file."""
-    data = data.copy()
+    Produces a file compatible with the
+    `Json Format for Cmdstan
+    <https://mc-stan.org/docs/2_27/cmdstan-guide/json.html>`__
+
+    :param path: File path for the created json. Will be overwritten if
+    already in existence.
+    :param data: A mapping from strings to values. This can be a dictionary
+    or something more exotic like an xarray.Dataset. This will be copied
+    before type conversion, not modified
+    """
+    data_out = {}
     for key, val in data.items():
+        if val is not None:
+            if isinstance(val, (str, bytes)) or (
+                type(val).__module__ != 'numpy'
+                and not isinstance(val, (Collection, bool, int, float))
+            ):
+                raise TypeError(
+                    f"Invalid type '{type(val)}' provided to "
+                    + f"write_stan_json for key '{key}'"
+                )
+            try:
+                if not np.all(np.isfinite(val)):
+                    raise ValueError(
+                        "Input to write_stan_json has nan or infinite "
+                        + f"values for key '{key}'"
+                    )
+            except TypeError:
+                # handles cases like val == ['hello']
+                # pylint: disable=raise-missing-from
+                raise ValueError(
+                    "Invalid type provided to "
+                    + f"write_stan_json for key '{key}' "
+                    + f"as part of collection {type(val)}"
+                )
+
         if type(val).__module__ == 'numpy':
-            data[key] = val.tolist()
+            data_out[key] = val.tolist()
         elif isinstance(val, Collection):
-            data[key] = np.asarray(val).tolist()
+            data_out[key] = np.asarray(val).tolist()
+        elif isinstance(val, bool):
+            data_out[key] = int(val)
+        else:
+            data_out[key] = val
 
     with open(path, 'w') as fd:
-        json.dump(data, fd)
-
-
-def rdump(path: str, data: Dict[str, Any]) -> None:
-    """Dump a dict of data to a R dump format file."""
-    with open(path, 'w') as fd:
-        for key, val in data.items():
-            if isinstance(val, (np.ndarray, Sequence)):
-                line = _rdump_array(key, np.asarray(val))
-            else:
-                line = '{} <- {}'.format(key, val)
-            print(line, file=fd)
+        json.dump(data_out, fd)
 
 
 def rload(fname: str) -> Optional[Dict[str, Union[int, float, np.ndarray]]]:
@@ -856,14 +894,12 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
-    logger: Optional[logging.Logger] = None,
 ) -> Optional[str]:
     """
     Spawn process, print stdout/stderr to console.
     Throws RuntimeError on non-zero returncode.
     """
-    if logger:
-        logger.debug('cmd: %s', cmd)
+    get_logger().debug('cmd: %s', cmd)
     try:
         proc = subprocess.Popen(
             cmd,
@@ -990,6 +1026,7 @@ def install_cmdstan(
     dir: Optional[str] = None,
     overwrite: bool = False,
     verbose: bool = False,
+    compiler: bool = False,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub by running
@@ -1012,6 +1049,10 @@ def install_cmdstan(
     :param verbose:  Boolean value; when ``True``, output from CmdStan build
         processes will be streamed to the console.  Default is ``False``.
 
+    :param compiler: Boolean value; when ``True`` on WINDOWS ONLY, use the
+        C++ compiler from the ``install_cxx_toolchain`` command or install
+        one if none is found.
+
     :return: Boolean value; ``True`` for success.
     """
     logger = get_logger()
@@ -1024,9 +1065,11 @@ def install_cmdstan(
     if dir is not None:
         cmd.extend(['--dir', dir])
     if overwrite:
-        cmd.extend(['--overwrite', 'TRUE'])
+        cmd.append('--overwrite')
     if verbose:
-        cmd.extend(['--verbose', 'TRUE'])
+        cmd.append('--verbose')
+    if compiler:
+        cmd.append('--compiler')
     proc = subprocess.Popen(
         cmd,
         stdin=subprocess.DEVNULL,
@@ -1043,7 +1086,33 @@ def install_cmdstan(
         if stderr:
             logger.warning(stderr.decode('utf-8').strip())
         return False
+    if dir is not None:
+        if version is not None:
+            set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
+        else:
+            set_cmdstan_path(
+                os.path.join(dir, get_latest_cmdstan(dir))  # type: ignore
+            )
     return True
+
+
+def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
+    """
+    Flatten a 3D array of draws X chains X variable into 2D array
+    where all chains are concatenated into a single column.
+
+    :param draws_array: 3D array of draws
+    """
+    if len(draws_array.shape) != 3:
+        raise ValueError(
+            'Expecting 3D array, found array with {} dims'.format(
+                len(draws_array.shape)
+            )
+        )
+
+    num_rows = draws_array.shape[0] * draws_array.shape[1]
+    num_cols = draws_array.shape[2]
+    return draws_array.reshape((num_rows, num_cols), order='F')
 
 
 @contextlib.contextmanager
@@ -1088,27 +1157,18 @@ class MaybeDictToFilePath:
 
     def __init__(
         self,
-        *objs: Union[str, Dict[Any, Any], List[Any], int, float, None],
-        logger: Optional[logging.Logger] = None
+        *objs: Union[str, Mapping[str, Any], List[Any], int, float, None],
     ):
         self._unlink = [False] * len(objs)
         self._paths: List[Any] = [''] * len(objs)
-        self._logger = logger or get_logger()
         i = 0
         for obj in objs:
-            if isinstance(obj, dict):
+            if isinstance(obj, Mapping):
                 data_file = create_named_text_file(
                     dir=_TMPDIR, prefix='', suffix='.json'
                 )
-                self._logger.debug('input tempfile: %s', data_file)
-                if any(
-                    not item
-                    for item in obj
-                    if isinstance(item, (Sequence, np.ndarray))
-                ):
-                    rdump(data_file, obj)
-                else:
-                    jsondump(data_file, obj)
+                get_logger().debug('input tempfile: %s', data_file)
+                write_stan_json(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
             elif isinstance(obj, str):

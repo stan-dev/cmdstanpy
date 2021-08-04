@@ -5,6 +5,7 @@ import unittest
 from math import fabs
 
 import pytest
+from testfixtures import LogCapture
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
@@ -98,12 +99,12 @@ class CmdStanVBTest(unittest.TestCase):
         self.assertEqual(1, len(variational.metadata.stan_vars_dims))
         self.assertTrue('mu' in variational.metadata.stan_vars_dims)
         self.assertEqual(variational.metadata.stan_vars_dims['mu'], (2,))
-        mu = variational.stan_variable(name='mu')
+        mu = variational.stan_variable(var='mu')
         self.assertEqual(mu.shape, (2,))
         with self.assertRaises(ValueError):
-            variational.stan_variable(name='eta')
+            variational.stan_variable(var='eta')
         with self.assertRaises(ValueError):
-            variational.stan_variable(name='lp__')
+            variational.stan_variable(var='lp__')
 
     def test_variables_3d(self):
         # construct fit using existing sampler output
@@ -120,11 +121,11 @@ class CmdStanVBTest(unittest.TestCase):
         self.assertEqual(
             multidim_variational.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
         )
-        var_y_rep = multidim_variational.stan_variable(name='y_rep')
+        var_y_rep = multidim_variational.stan_variable(var='y_rep')
         self.assertEqual(var_y_rep.shape, (5, 4, 3))
-        var_beta = multidim_variational.stan_variable(name='beta')
+        var_beta = multidim_variational.stan_variable(var='beta')
         self.assertEqual(var_beta.shape, (2,))  # 1-element tuple
-        var_frac_60 = multidim_variational.stan_variable(name='frac_60')
+        var_frac_60 = multidim_variational.stan_variable(var='frac_60')
         self.assertEqual(var_frac_60.shape, ())
         vars = multidim_variational.stan_variables()
         self.assertEqual(
@@ -136,6 +137,19 @@ class CmdStanVBTest(unittest.TestCase):
         self.assertEqual(vars['beta'].shape, (2,))
         self.assertTrue('frac_60' in vars)
         self.assertEqual(vars['frac_60'].shape, ())
+        with self.assertRaises(ValueError):
+            multidim_variational.stan_variable(var='beta', name='yrep')
+        with LogCapture() as log:
+            self.assertEqual(
+                multidim_variational.stan_variable(name='beta').shape, (2,)
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Keyword "name" is deprecated, use "var" instead.',
+            )
+        )
 
 
 class VariationalTest(unittest.TestCase):

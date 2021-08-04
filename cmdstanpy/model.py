@@ -10,7 +10,7 @@ from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -26,6 +26,7 @@ from cmdstanpy.stanfit import (
     CmdStanMLE,
     CmdStanVB,
     RunSet,
+    from_csv,
 )
 from cmdstanpy.utils import (
     EXTENSION,
@@ -34,7 +35,6 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
-    scan_sampler_csv,
 )
 
 
@@ -89,7 +89,6 @@ class CmdStanModel:
         :param compile: Whether or not to compile the model.
         :param stanc_options: Options for stanc compiler.
         :param cpp_options: Options for C++ compiler.
-        :param logger: Python logger object.
         """
         self._name = ''
         self._stan_file = None
@@ -97,7 +96,11 @@ class CmdStanModel:
         self._compiler_options = CompilerOptions(
             stanc_options=stanc_options, cpp_options=cpp_options
         )
-        self._logger = logger or get_logger()
+        if logger is not None:
+            get_logger().warning(
+                "Parameter 'logger' is deprecated."
+                " Control logging behavior via logging.getLogger('cmdstanpy')"
+            )
 
         if model_name is not None:
             if not model_name.strip():
@@ -228,7 +231,7 @@ class CmdStanModel:
             with open(self._stan_file, 'r') as fd:
                 code = fd.read()
         except IOError:
-            self._logger.error(
+            get_logger().error(
                 'Cannot read file Stan file: %s', self._stan_file
             )
         return code
@@ -284,9 +287,9 @@ class CmdStanModel:
             exe_time = os.path.getmtime(exe_file)
             if exe_time > src_time and not force:
                 do_compile = False
-                self._logger.info('found newer exe file, not recompiling')
+                get_logger().info('found newer exe file, not recompiling')
                 self._exe_file = exe_file
-                self._logger.info('compiled model file: %s', self._exe_file)
+                get_logger().info('compiled model file: %s', self._exe_file)
         if do_compile:
             compilation_failed = False
             with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
@@ -298,17 +301,17 @@ class CmdStanModel:
                     exe_time = os.path.getmtime(exe_file)
                     if exe_time > src_time and not force:
                         do_compile = False
-                        self._logger.info(
+                        get_logger().info(
                             'found newer exe file, not recompiling'
                         )
 
                 if do_compile:
-                    self._logger.info(
+                    get_logger().info(
                         'compiling stan program, exe file: %s', exe_file
                     )
                     if self._compiler_options is not None:
                         self._compiler_options.validate()
-                        self._logger.info(
+                        get_logger().info(
                             'compiler options: %s', self._compiler_options
                         )
                     make = os.getenv(
@@ -322,17 +325,15 @@ class CmdStanModel:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
                     try:
-                        msg = do_command(
-                            cmd, cmdstan_path(), logger=self._logger
-                        )
+                        msg = do_command(cmd, cmdstan_path())
                         if msg is not None and 'Warning or error:' in msg:
                             msg = msg.split("Warning or error:", 1)[1].strip()
-                            self._logger.warning(
+                            get_logger().warning(
                                 "stanc3 has produced warnings:\n%s", msg
                             )
 
                     except RuntimeError as e:
-                        self._logger.error(
+                        get_logger().error(
                             'file %s, exception %s', stan_file, str(e)
                         )
                         compilation_failed = True
@@ -354,13 +355,13 @@ class CmdStanModel:
                         shutil.copy(exe_file, self._exe_file)
                     else:
                         self._exe_file = exe_file
-                    self._logger.info('compiled model file: %s', self._exe_file)
+                    get_logger().info('compiled model file: %s', self._exe_file)
                 else:
-                    self._logger.error('model compilation failed')
+                    get_logger().error('model compilation failed')
 
     def optimize(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         seed: Optional[int] = None,
         inits: Union[Dict[str, float], float, str, None] = None,
         output_dir: Optional[str] = None,
@@ -507,7 +508,7 @@ class CmdStanModel:
     # pylint: disable=too-many-arguments
     def sample(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         chains: Optional[int] = None,
         parallel_chains: Optional[int] = None,
         threads_per_chain: Optional[int] = None,
@@ -732,7 +733,7 @@ class CmdStanModel:
         if parallel_chains is None:
             parallel_chains = max(min(cpu_count(), chains), 1)
         elif parallel_chains > chains:
-            self._logger.info(
+            get_logger().info(
                 'Requesting %u parallel_chains for %u chains,'
                 ' running all chains in parallel.',
                 parallel_chains,
@@ -751,7 +752,7 @@ class CmdStanModel:
                 'Argument threads_per_chain must be a positive integer value, '
                 'found {}.'.format(threads_per_chain)
             )
-        self._logger.debug(
+        get_logger().debug(
             'total threads: %u', parallel_chains * threads_per_chain
         )
         os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
@@ -760,9 +761,9 @@ class CmdStanModel:
             try:
                 import tqdm
 
-                self._logger.propagate = False
+                get_logger().propagate = False
             except ImportError:
-                self._logger.warning(
+                get_logger().warning(
                     (
                         'Package tqdm not installed, cannot show progress '
                         'information. Please install tqdm with '
@@ -802,7 +803,6 @@ class CmdStanModel:
                 save_profile=save_profile,
                 method_args=sampler_args,
                 refresh=refresh,
-                logger=self._logger,
             )
             runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
             pbar = None
@@ -827,7 +827,7 @@ class CmdStanModel:
                                     'issuecomment-384743637 and remember to '
                                     'stop & start your jupyter server.'
                                 )
-                                self._logger.warning(msg)
+                                get_logger().warning(msg)
                                 tqdm_pbar = tqdm.tqdm
                         else:
                             tqdm_pbar = tqdm.tqdm
@@ -854,7 +854,7 @@ class CmdStanModel:
                 pbar.close()
             if show_progress:
                 # re-enable logger for console
-                self._logger.propagate = True
+                get_logger().propagate = True
 
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
@@ -863,12 +863,12 @@ class CmdStanModel:
                 )
                 raise RuntimeError(msg)
 
-            mcmc = CmdStanMCMC(runset, logger=self._logger)
+            mcmc = CmdStanMCMC(runset)
         return mcmc
 
     def generate_quantities(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
         seed: Optional[int] = None,
         gq_output_dir: Optional[str] = None,
@@ -927,66 +927,37 @@ class CmdStanModel:
 
         :return: CmdStanGQ object
         """
-        sample_csv_files = []
-        sample_drawset = None
-        chains = 0
-
         if isinstance(mcmc_sample, CmdStanMCMC):
+            mcmc_fit = mcmc_sample
             sample_csv_files = mcmc_sample.runset.csv_files
-            sample_drawset = mcmc_sample.draws_pd()
-            chains = mcmc_sample.chains
-            chain_ids = mcmc_sample.chain_ids
         elif isinstance(mcmc_sample, list):
             if len(mcmc_sample) < 1:
-                raise ValueError('MCMC sample cannot be empty list')
-            sample_csv_files = mcmc_sample
-            chains = len(sample_csv_files)
-            chain_ids = [x + 1 for x in range(chains)]
+                raise ValueError(
+                    'Expecting list of Stan CSV files, found empty list'
+                )
+            try:
+                sample_csv_files = mcmc_sample
+                sample_fit = from_csv(sample_csv_files)
+                mcmc_fit = sample_fit  # type: ignore
+            except ValueError as e:
+                raise ValueError(
+                    'Invalid sample from Stan CSV files, error:\n\t{}\n\t'
+                    ' while processing files\n\t{}'.format(
+                        repr(e), '\n\t'.join(mcmc_sample)
+                    )
+                ) from e
         else:
             raise ValueError(
                 'MCMC sample must be either CmdStanMCMC object'
-                ' or list of paths to sample csv_files.'
+                ' or list of paths to sample Stan CSV files.'
             )
-        try:
-            if sample_drawset is None:  # assemble sample from csv files
-                config = {}
-                # scan 1st csv file to get config
-                try:
-                    config = scan_sampler_csv(sample_csv_files[0])
-                except ValueError:
-                    config = scan_sampler_csv(sample_csv_files[0], True)
-                conf_iter_sampling = None
-                if 'num_samples' in config:
-                    conf_iter_sampling = int(config['num_samples'])
-                conf_iter_warmup = None
-                if 'num_warmup' in config:
-                    conf_iter_warmup = int(config['num_warmup'])
-                conf_thin = None
-                if 'thin' in config:
-                    conf_thin = int(config['thin'])
-                sampler_args = SamplerArgs(
-                    iter_sampling=conf_iter_sampling,
-                    iter_warmup=conf_iter_warmup,
-                    thin=conf_thin,
-                )
-                args = CmdStanArgs(
-                    self._name,
-                    self._exe_file,
-                    chain_ids=chain_ids,
-                    method_args=sampler_args,
-                )
-                runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
-                runset._csv_files = sample_csv_files
-                sample_fit = CmdStanMCMC(runset)
-                sample_drawset = sample_fit.draws_pd()
-        except ValueError as exc:
-            raise ValueError(
-                'Invalid mcmc_sample, error:\n\t{}\n\t'
-                ' while processing files\n\t{}'.format(
-                    repr(exc), '\n\t'.join(sample_csv_files)
-                )
-            ) from exc
-
+        chains = mcmc_fit.chains
+        chain_ids = mcmc_fit.chain_ids
+        if mcmc_fit.metadata.cmdstan_config['save_warmup']:
+            get_logger().warning(
+                'Sample contains saved warmup draws which will be used '
+                'to generate additional quantities of interest.'
+            )
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=sample_csv_files
         )
@@ -1019,12 +990,12 @@ class CmdStanModel:
                     msg, runset.__repr__()
                 )
                 raise RuntimeError(msg)
-            quantities = CmdStanGQ(runset=runset, mcmc_sample=sample_drawset)
+            quantities = CmdStanGQ(runset=runset, mcmc_sample=mcmc_fit)
         return quantities
 
     def variational(
         self,
-        data: Union[Dict[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         seed: Optional[int] = None,
         inits: Optional[float] = None,
         output_dir: Optional[str] = None,
@@ -1193,11 +1164,11 @@ class CmdStanModel:
         Spawn process, capture console output to file, record returncode.
         """
         cmd = runset.cmds[idx]
-        self._logger.info('start chain %u', idx + 1)
-        self._logger.debug(
+        get_logger().info('start chain %u', idx + 1)
+        get_logger().debug(
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
-        self._logger.debug('sampling: %s', cmd)
+        get_logger().debug('sampling: %s', cmd)
         try:
             proc = subprocess.Popen(
                 cmd,
@@ -1212,7 +1183,7 @@ class CmdStanModel:
             if pbar:
                 stdout = stdout_pbar + stdout
 
-            self._logger.info('finish chain %u', idx + 1)
+            get_logger().info('finish chain %u', idx + 1)
             runset._set_retcode(idx, proc.returncode)
             if stdout:
                 with open(runset.stdout_files[idx], 'w+') as fd:
@@ -1235,12 +1206,13 @@ class CmdStanModel:
                     )
                 if len(console_error) > 0:
                     msg = '{}\n error message:\n\t{}'.format(msg, console_error)
-                self._logger.error(msg)
+                get_logger().error(msg)
 
         except OSError as e:
             msg = 'Chain {} encounted error: {}\n'.format(idx + 1, str(e))
             raise RuntimeError(msg) from e
 
+    # pylint: disable=no-self-use
     def _read_progress(
         self,
         proc: subprocess.Popen,  # [] - Popoen is only generic in 3.9
@@ -1294,7 +1266,7 @@ class CmdStanModel:
                 pbar.close()
 
         except Exception as e:  # pylint: disable=broad-except
-            self._logger.warning(
+            get_logger().warning(
                 'Chain %s: Failed to read the progress on the fly. Error: %s',
                 idx,
                 repr(e),
