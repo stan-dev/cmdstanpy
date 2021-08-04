@@ -44,7 +44,7 @@ from cmdstanpy import (
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
-@functools.cache
+@functools.lru_cache(maxsize=None)
 def get_logger() -> logging.Logger:
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
