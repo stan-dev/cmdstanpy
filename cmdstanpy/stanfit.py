@@ -418,7 +418,7 @@ class InferenceMetadata:
         """
         Returns map from Stan program variable names to variable dimensions.
         Scalar types are mapped to the empty tuple, e.g.,
-        program variable ``int foo`` has dimesion ``()`` and
+        program variable ``int foo`` has dimension ``()`` and
         program variable ``vector[10] bar`` has single dimension ``(10)``.
         Uses deepcopy for immutability.
         """
@@ -1216,7 +1216,7 @@ class CmdStanMLE:
     def column_names(self) -> Tuple[str, ...]:
         """
         Names of estimated quantities, includes joint log probability,
-        and all parameters, transformed parameters, and generated quantitites.
+        and all parameters, transformed parameters, and generated quantities.
         """
         return self._column_names
 
