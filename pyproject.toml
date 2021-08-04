@@ -19,5 +19,11 @@ warn_return_any = true
 # warn_unused_ignores = true # can't be run on CI due to windows having different ctypes
 
 [[tool.mypy.overrides]]
-module = ['tqdm', 'pandas', 'ujson', 'numpy']
+module = [
+    'tqdm',
+    'pandas',
+    'ujson',
+    'numpy', # these two are required for py36, which numpy 1.21 doesn't support
+    'numpy.random'
+    ]
 ignore_missing_imports = true
