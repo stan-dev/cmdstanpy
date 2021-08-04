@@ -555,7 +555,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Keyword "params" is depreciated, use "vars" instead.',
+                'Keyword "params" is deprecated, use "vars" instead.',
             )
         )
         self.assertEqual(fit.draws_pd(vars=['theta']).shape, (400, 1))
@@ -1251,7 +1251,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Keyword "name" is depreciated, use "var" instead.',
+                'Keyword "name" is deprecated, use "var" instead.',
             )
         )
 

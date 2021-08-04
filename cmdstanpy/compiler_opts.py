@@ -68,7 +68,11 @@ class CompilerOptions:
         """Initialize object."""
         self._stanc_options = stanc_options if stanc_options is not None else {}
         self._cpp_options = cpp_options if cpp_options is not None else {}
-        self._logger = logger or get_logger()
+        if logger is not None:
+            get_logger().warning(
+                "Parameter 'logger' is deprecated."
+                " Control logging behavior via logging.getLogger('cmdstanpy')"
+            )
 
     def __repr__(self) -> str:
         return 'stanc_options={}, cpp_options={}'.format(
@@ -105,7 +109,7 @@ class CompilerOptions:
         paths = None
         for key, val in self._stanc_options.items():
             if key in STANC_IGNORE_OPTS:
-                self._logger.info('ignoring compiler option: %s', key)
+                get_logger().info('ignoring compiler option: %s', key)
                 ignore.append(key)
             elif key not in STANC_OPTS:
                 raise ValueError(

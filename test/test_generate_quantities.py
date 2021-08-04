@@ -4,9 +4,9 @@ import json
 import logging
 import os
 import unittest
+
 import numpy as np
 import pandas as pd
-
 from numpy.testing import assert_array_equal, assert_raises
 from testfixtures import LogCapture
 
@@ -216,7 +216,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Keyword "name" is depreciated, use "var" instead.',
+                'Keyword "name" is deprecated, use "var" instead.',
             )
         )
 
