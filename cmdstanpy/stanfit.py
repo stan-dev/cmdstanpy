@@ -725,6 +725,7 @@ class CmdStanMCMC:
                     save_warmup=self._save_warmup,
                     thin=self._thin,
                 )
+                # pylint: disable=consider-using-dict-items
                 for key in dzero:
                     if (
                         key
@@ -1348,6 +1349,7 @@ class CmdStanGQ:
                 drest = scan_generated_quantities_csv(
                     path=self.runset.csv_files[i],
                 )
+                # pylint: disable=consider-using-dict-items
                 for key in dzero:
                     if (
                         key
