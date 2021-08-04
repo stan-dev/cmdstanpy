@@ -16,8 +16,8 @@ disallow_incomplete_defs = true
 no_implicit_optional = true
 # disallow_any_generics = true # disabled due to issues with numpy < 1.20
 warn_return_any = true
-warn_unused_ignores = true
+# warn_unused_ignores = true # can't be run on CI due to windows having different ctypes
 
 [[tool.mypy.overrides]]
-module = ['tqdm', 'pandas', 'ujson']
+module = ['tqdm', 'pandas', 'ujson', 'numpy']
 ignore_missing_imports = true
