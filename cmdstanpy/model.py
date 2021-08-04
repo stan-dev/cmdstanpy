@@ -89,7 +89,6 @@ class CmdStanModel:
         :param compile: Whether or not to compile the model.
         :param stanc_options: Options for stanc compiler.
         :param cpp_options: Options for C++ compiler.
-        :param logger: Python logger object.
         """
         self._name = ''
         self._stan_file = None
@@ -864,7 +863,7 @@ class CmdStanModel:
                 )
                 raise RuntimeError(msg)
 
-            mcmc = CmdStanMCMC(runset, logger=get_logger())
+            mcmc = CmdStanMCMC(runset)
         return mcmc
 
     def generate_quantities(
