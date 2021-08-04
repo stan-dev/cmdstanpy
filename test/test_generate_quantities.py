@@ -1,20 +1,31 @@
 """CmdStan method generate_quantities tests"""
 
+import contextlib
 import json
 import logging
 import os
 import unittest
+from importlib import reload
 
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_equal, assert_raises
 from testfixtures import LogCapture
 
+import cmdstanpy.stanfit
 from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.model import CmdStanModel
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
+
+
+@contextlib.contextmanager
+def without_import(library, module):
+    with unittest.mock.patch.dict('sys.modules', {library: None}):
+        reload(module)
+        yield
+    reload(module)
 
 
 class GenerateQuantitiesTest(unittest.TestCase):
@@ -388,6 +399,32 @@ class GenerateQuantitiesTest(unittest.TestCase):
                 'use method "draws_pd" instead.',
             )
         )
+
+    def test_no_xarray(self):
+        with without_import('xarray', cmdstanpy.stanfit):
+            with self.assertRaises(ImportError):
+                # if this fails the testing framework is the problem
+                import xarray as _  # noqa
+
+            stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+            bern_model = CmdStanModel(stan_file=stan)
+            jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+            bern_fit = bern_model.sample(
+                data=jdata,
+                chains=4,
+                parallel_chains=2,
+                seed=12345,
+                iter_sampling=100,
+            )
+            stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+            model = CmdStanModel(stan_file=stan)
+
+            bern_gqs = model.generate_quantities(
+                data=jdata, mcmc_sample=bern_fit
+            )
+
+            with self.assertRaises(RuntimeError):
+                bern_gqs.draws_xr()
 
 
 if __name__ == '__main__':
