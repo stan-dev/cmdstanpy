@@ -61,7 +61,16 @@ CmdStanVB
 .. autoclass:: cmdstanpy.CmdStanVB
    :members:
 
-.. _class_runset:
+.. _class_inferencemetadata:
+
+
+InferenceMetadata
+=================
+
+.. autoclass:: cmdstanpy.InferenceMetadata
+   :members:
+
+.. _class_runset: 
 
 RunSet
 ======
@@ -100,3 +109,13 @@ set_make_env
 ============
 
 .. autofunction:: cmdstanpy.set_make_env
+
+from_csv
+========
+
+.. autofunction:: cmdstanpy.from_csv
+
+write_stan_json
+===============
+
+.. autofunction:: cmdstanpy.write_stan_json

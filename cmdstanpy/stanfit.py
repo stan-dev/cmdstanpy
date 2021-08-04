@@ -992,7 +992,9 @@ class CmdStanMCMC:
     ) -> "xr.Dataset":
         """
         Returns the sampler draws as a xarray Dataset.
+
         :param vars: optional list of variable names.
+
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
@@ -1617,7 +1619,9 @@ class CmdStanGQ:
     ) -> "xr.Dataset":
         """
         Returns the generated quantities draws as a xarray Dataset.
+
         :param vars: optional list of variable names.
+
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the MCMC sample, then the warmup draws are included.
             Default value is ``False``.

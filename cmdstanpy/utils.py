@@ -393,10 +393,11 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     <https://mc-stan.org/docs/2_27/cmdstan-guide/json.html>`__
 
     :param path: File path for the created json. Will be overwritten if
-    already in existence.
+        already in existence.
+
     :param data: A mapping from strings to values. This can be a dictionary
-    or something more exotic like an xarray.Dataset. This will be copied
-    before type conversion, not modified
+        or something more exotic like an xarray.Dataset. This will be copied
+        before type conversion, not modified
     """
     data_out = {}
     for key, val in data.items():

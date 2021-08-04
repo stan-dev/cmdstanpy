@@ -28,15 +28,17 @@ generated quantities block of the new model.
 
 
 The ``generate_quantities`` method returns a ``CmdStanGQ`` object
-which provides properties to retrieve information about the sample:
+which provides properties to retrieve information about the metatdata
+and sample:
+
+- ``chains``: Number of sampler chains. 
+- ``chain_ids``: The offset or list of per-chain offsets for the random number generator. 
+
+- ``draws`` - The numpy.ndarray which contains all across all chains. By default, returns a 3D array (draws, chains, columns); the argument ``concat_chains`` returns a 2D array which flattens the chains into a single set of draws.
+- ``stan_variable(name=var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable.
+- ``stan_variables()`` - Returns a Python dict, key: Stan program variable name, value: numpy.ndarray of draws.
 
 
-- ``chains``
-- ``column_names``
-- ``generated_quantities``
-- ``generated_quantities_pd``
-- ``sample_plus_quantities``
-- ``save_csvfiles()``
 
 The ``sample_plus_quantities`` combines the existing sample
 and new quantities of interest into a pandas DataFrame object
