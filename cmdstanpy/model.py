@@ -336,6 +336,21 @@ class CmdStanModel:
                         get_logger().error(
                             'file %s, exception %s', stan_file, str(e)
                         )
+                        if 'PCH file' in str(e):
+                            get_logger().warning(
+                                "%s, %s",
+                                "CmdStan's precompiled header (PCH) files ",
+                                "may need to be rebuilt.",
+                            )
+                            get_logger().warning(
+                                "%s %s",
+                                "If your model failed to compile please run ",
+                                "install_cmdstan(overwrite=True).",
+                            )
+                            get_logger().warning(
+                                "If the issue persists please open a bug report"
+                            )
+
                         compilation_failed = True
 
                 if not compilation_failed:
