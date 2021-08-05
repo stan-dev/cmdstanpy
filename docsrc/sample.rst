@@ -1,8 +1,9 @@
 MCMC Sampling
 =============
 
-The :ref:`class_cmdstanmodel` class method  ``sample`` invokes Stan's adaptive HMC-NUTS
-sampler which uses the Hamiltonian Monte Carlo (HMC) algorithm
+The :ref:`class_cmdstanmodel` class method  ``sample`` invokes
+`Stan's adaptive HMC-NUTS sampler <https://mc-stan.org/docs/2_27/cmdstan-guide/mcmc-config.html#mcmc-config>`_
+which uses the Hamiltonian Monte Carlo (HMC) algorithm
 and its adaptive variant the no-U-turn sampler (NUTS) to produce a set of
 draws from the posterior distribution of the model parameters conditioned on the data.
 
@@ -83,7 +84,7 @@ All of these arguments are optional; when unspecified, the CmdStan defaults will
 See :meth:`~cmdstanpy.CmdStanModel.sample` for more details about the parameters.
 
 
-Sampler results: the CmdStanMCMC object 
+Results: the CmdStanMCMC object 
 ---------------------------------------
 
 The :ref:`class_cmdstanmodel` method  ``sample`` returns a :ref:`class_cmdstanmcmc` object

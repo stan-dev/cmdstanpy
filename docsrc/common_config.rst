@@ -9,3 +9,8 @@
 - ``save_diagnostics``:  Whether or not to the CmdStan auxiliary output file.
   For the ``sample`` method, the diagnostics file contains sampler information for each draw
   together with the gradients on the unconstrained scale and log probabilities for all parameters in the model.
+
+
+- ``sig_figs``: Numerical precision used for output CSV and text files. Must be an integer between 1 and 18.  If unspecified, the default precision for the system file I/O is used; the usual value is 6.
+  
+- ``refresh``: Specifies the number of inference method iterations between progress messages. Default value is 100.  Value ``refresh = 0`` suppresses output of iteration number messages.
