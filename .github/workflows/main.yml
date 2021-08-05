@@ -70,13 +70,11 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           python -m cmdstanpy.install_cmdstan
-          python scripts/clean_examples.py
 
       - name: Install CmdStan (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           python -m cmdstanpy.install_cmdstan --compiler
-          python scripts/clean_examples.py
 
       - name: Run tests
         run: |
@@ -89,7 +87,6 @@ jobs:
           cd run_tests
           python -m pip install -r ../requirements-optional.txt
           python ../test/example_script.py
-          python ../scripts/clean_examples.py
 
       - name: Submit codecov
         run: |
