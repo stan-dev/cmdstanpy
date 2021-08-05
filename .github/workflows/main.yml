@@ -32,7 +32,8 @@ jobs:
         run: |
           echo "::set-output name=version::$(curl -s 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest' | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["tag_name"])')"
         shell: bash
-      - uses: actions/cache@v2
+      - name: Cache cmdstan installation
+        uses: actions/cache@v2
         with:
           path: ~/.cmdstan
           key: ${{ runner.os }}-cmdstan-${{ steps.check-cmdstan.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
