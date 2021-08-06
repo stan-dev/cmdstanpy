@@ -53,7 +53,7 @@ Results:  the CmdStanGQ object
 
 The :ref:`class_cmdstanmodel` method  ``generate`` returns a :ref:`class_cmdstangq` object,
 which provides access to the input sample containing the fitted parameters via property ``mcmc_sample``,
-and properties and methods to access and manage the new set of generated quantitites.
+and properties and methods to access and manage the new set of generated quantities.
 
 The generated quantities can be accessed either in terms of the CSV file column labels, or in terms of the underlying Stan model variables.
 These methods have argument `inc_sample` which returns columns and variables from both the input sample and the new generated quantities.
@@ -74,37 +74,28 @@ The following methods allow access in terms of the CSV file column labels:
 
 The following methods allow access in terms of the sampler and model variable names:
   
-- ``draws_xr`` - Returns the sample as an xarray.DataSet.  By default, contains all method and Stan model variables; the argument ``vars`` allows the specification of one or more variables of interest.   If the sample contains saved warmup draws, these are not included by default; to get the warmup draws as well, use argument ``inc_warmup=True``.
+- ``draws_xr`` - Returns the sample as an xarray.DataSet.  By default, all generated quantities block variables; the argument ``vars`` allows the specification of one or more variables of interest.   If the sample contains saved warmup draws, these are not included by default; to get the warmup draws as well, use argument ``inc_warmup=True``.  To get all variables from the input sample as well as the new generated quantities, use argument ``inc_sample=True``.
   
-- ``stan_variable(var=var_name)`` - Returns a numpy.ndarray which contains the set of draws in the sample for the named Stan program variable. 
+- ``stan_variable(var=var_name)`` - Returns a numpy.ndarray which contains the set of draws for a named generated quantities block variable.    If the sample contains saved warmup draws, these are not included by default; to get the warmup draws as well, use argument ``inc_warmup=True``.  To get a variable from the input sample, use argument ``inc_sample=True``.
 
-- ``stan_variables()`` - Returns a Python dict, key: Stan program variable name, value: numpy.ndarray of draws.
-
-
-- ``chains``: Number of sampler chains. 
-- ``chain_ids``: The offset or list of per-chain offsets for the random number generator. 
-
-- ``draws`` - The numpy.ndarray which contains all across all chains. By default, returns a 3D array (draws, chains, columns); the argument ``concat_chains`` returns a 2D array which flattens the chains into a single set of draws.
-
+- ``stan_variables()`` - Returns a Python dict, key: Stan program variable name, value: numpy.ndarray of draws. If the sample contains saved warmup draws, these are not included by default; to get the warmup draws as well, use argument ``inc_warmup=True``.  To get variable from the input sample as well as from the new generated quantities, use argument ``inc_sample=True``.
 
 Sample metadata and properties
 """"""""""""""""""""""""""""""
 
 The property ``metadata`` returns a :ref:`class_inferencemetadata` object which describes the inference engine configuration and outputs.
 
-- ``metadata.method_vars_cols`` - Python dict, key: sampler parameter name, value: tuple of output column indices.
 - ``metadata.stan_vars_cols`` - Python dict, key: Stan program variable name, value: tuple of output column indices.
 - ``metadata.stan_vars_dims`` - Python dict, key: Stan program variable name, value: tuple of dimensions, or empty tuple, for scalar variables.
 
 - ``metadata.cmdstan_config`` - Python dict, key: CmdStan argument name, value: value used for this sampler run, whether user-specified or CmdStan default. 
 
-The :ref:`class_cmdstanmcmc` object also provides the following properties:
+The :ref:`class_cmdstangq` object also provides the following properties:
 
 - ``column_names`` - List of column labels for one draw from the sampler. 
 - ``chains`` - Number of chains 
 - ``chains_ids`` - Chain ids
 
-******** STOPPED HERE *******
 
 Example: add posterior predictive checks to ``bernoulli.stan``
 --------------------------------------------------------------
@@ -158,7 +149,7 @@ to generate quantities of interest:
     new_quantities = bernoulli_ppc_model.generate_quantities(data=bern_data, mcmc_sample=bern_fit)
 
 The ``generate_quantities`` method returns a ``CmdStanGQ`` object which
-contains the values for all variables in the generated quantitites block
+contains the values for all variables in the generated quantities block
 of the program ``bernoulli_ppc.stan``. Unlike the output from the
 ``sample`` method, it doesn’t contain any information on the joint log
 probability density, sampler state, or parameters or transformed
@@ -172,11 +163,11 @@ parameter values.
         print(new_quantities.generated_quantities[:,i].mean())
 
 
-The method ``sample_plus_quantities`` returns a pandas DataFrame which
+The method ``draws_pd(inc_sample=True)`` returns a pandas DataFrame which
 combines the input drawset with the generated quantities.
 
 .. code:: python
 
-    sample_plus = new_quantities.sample_plus_quantities
+    sample_plus_pd = new_quantities.draws_pd(inc_sample=True)
     print(sample_plus.shape)
     print(sample_plus.columns)        
