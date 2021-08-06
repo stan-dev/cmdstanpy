@@ -27,16 +27,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Get Cmdstan Version
-        id: check-cmdstan
-        run: |
-          echo "::set-output name=version::$(curl -s 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest' | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["tag_name"])')"
-        shell: bash
-      - name: Cache cmdstan installation
-        uses: actions/cache@v2
-        with:
-          path: ~/.cmdstan
-          key: ${{ runner.os }}-cmdstan-${{ steps.check-cmdstan.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
+
       - name: Install dependencies (python)
         run: |
           pip install --upgrade pip wheel
@@ -61,10 +52,23 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           $whl = Get-ChildItem -Path dist -Filter *.whl | Select-Object -First 1
-          pip install "$whl"
+          pip install "$whl" 
 
       - name: Show libraries
         run: python -m pip freeze
+
+      - name: Get Cmdstan Version
+        id: check-cmdstan
+        # get the latest cmdstan version to use as part of the cache key
+        run: |
+          echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
+        shell: bash
+
+      - name: Cmdstan installation cacheing
+        uses: actions/cache@v2
+        with:
+          path: ~/.cmdstan
+          key: ${{ runner.os }}-cmdstan-${{ steps.check-cmdstan.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
 
       - name: Install CmdStan (Linux, macOS)
         if: matrix.os != 'windows-latest'
