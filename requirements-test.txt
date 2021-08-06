@@ -2,6 +2,7 @@ flake8
 pylint
 pytest
 pytest-cov
+mypy
 testfixtures
 tqdm
 xarray

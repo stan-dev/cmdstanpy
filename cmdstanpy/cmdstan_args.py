@@ -668,7 +668,11 @@ class CmdStanArgs:
         elif isinstance(method_args, VariationalArgs):
             self.method = Method.VARIATIONAL
         self.method_args.validate(len(chain_ids) if chain_ids else None)
-        self._logger = logger or get_logger()
+        if logger is not None:
+            get_logger().warning(
+                "Parameter 'logger' is deprecated."
+                " Control logging behavior via logging.getLogger('cmdstanpy')"
+            )
         self.validate()
 
     def validate(self) -> None:
@@ -696,7 +700,7 @@ class CmdStanArgs:
             if not os.path.exists(self.output_dir):
                 try:
                     os.makedirs(self.output_dir)
-                    self._logger.info(
+                    get_logger().info(
                         'created output directory: %s', self.output_dir
                     )
                 except (RuntimeError, PermissionError) as exc:
@@ -740,7 +744,7 @@ class CmdStanArgs:
                 )
             if not cmdstan_version_at(2, 25):
                 self.sig_figs = None
-                self._logger.warning(
+                get_logger().warning(
                     'arg sig_figs not valid, CmdStan version must be 2.25 '
                     'or higher, using verson %s in directory %s',
                     os.path.basename(cmdstan_path()),
