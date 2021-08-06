@@ -10,12 +10,12 @@ on:
   pull_request:
 jobs:
   get-cmdstan-version:
-    name: version check
+    # get the latest cmdstan version to use as part of the cache key
+    name: grab version
     runs-on: ubuntu-latest
     steps:
       - name: Get CmdStan version
         id: check-cmdstan
-        # get the latest cmdstan version to use as part of the cache key
         run: |
           echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
     outputs:
