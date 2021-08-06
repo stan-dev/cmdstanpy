@@ -45,7 +45,7 @@ CmdStanMLE
 .. autoclass:: cmdstanpy.CmdStanMLE
    :members:
 
-.. _class_cmdstanqq:
+.. _class_cmdstangq:
 
 CmdStanGQ
 =========

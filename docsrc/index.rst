@@ -19,6 +19,7 @@
    overview
    installation
    hello_world
+   deeper_dive
    stan_models
    sample
    generate_quantities
