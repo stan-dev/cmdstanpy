@@ -1142,8 +1142,19 @@ class CmdStanModel:
             errors = re.findall(pat, contents)
             if len(errors) > 0:
                 valid = False
-        if require_converged and not valid:
-            raise RuntimeError('The algorithm may not have converged.')
+        if not valid:
+            if require_converged:
+                raise RuntimeError(
+                    'The algorithm may not have converged.\n'
+                    'If you would like to inspect the output, '
+                    're-call with require_converged=False'
+                )
+            # else:
+            get_logger().warning(
+                '%s\n%s',
+                'The algorithm may not have converged.',
+                'Proceeding because require_converged is set to False',
+            )
         if not runset._check_retcodes():
             msg = 'Error during variational inference:\n{}'.format(
                 runset.get_err_msgs()

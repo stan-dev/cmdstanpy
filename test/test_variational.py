@@ -235,12 +235,22 @@ class VariationalTest(unittest.TestCase):
         )
         model = CmdStanModel(stan_file=stan)
         with self.assertRaisesRegex(
-            RuntimeError, 'algorithm may not have converged'
+            RuntimeError,
+            r'algorithm may not have converged\.\n.*require_converged',
         ):
             model.variational(algorithm='meanfield', seed=12345)
 
-        model.variational(
-            algorithm='meanfield', seed=12345, require_converged=False
+        with LogCapture() as log:
+            model.variational(
+                algorithm='meanfield', seed=12345, require_converged=False
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'The algorithm may not have converged.\n'
+                'Proceeding because require_converged is set to False',
+            )
         )
 
 
