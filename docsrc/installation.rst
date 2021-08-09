@@ -29,6 +29,12 @@ but installation is possible in an existing environment:
 These commands will install CmdStanPy, CmdStan, and the
 required compilers for using CmdStan on your system.
 
+Note that CmdStan is only available on conda for versions
+2.27.0 and newer. If you require an older version, you must use
+one of the following methods to install it. If you require a
+version of CmdStan *newer* than 2.27.0, but not the latest,
+you can install it in the standard conda way by specifying
+``cmdstan==VERSION`` in the install command.
 
 Pip (non-Conda) users 
 -------------------------
