@@ -507,8 +507,7 @@ class SampleTest(unittest.TestCase):
         datagen_model = CmdStanModel(stan_file=stan)
         datagen_fit = datagen_model.sample(iter_sampling=100)
         self.assertEqual(
-            datagen_fit.draws().shape,
-            (100, 4, len(datagen_fit.column_names))
+            datagen_fit.draws().shape, (100, 4, len(datagen_fit.column_names))
         )  # ran 4 chains, set fixed_param=True afterwards
 
     def test_bernoulli_file_with_space(self):
@@ -758,6 +757,11 @@ class CmdStanMCMCTest(unittest.TestCase):
             from_csv(path=no_csvfiles_path)
         if os.path.exists(no_csvfiles_path):
             shutil.rmtree(no_csvfiles_path, ignore_errors=True)
+
+    def test_from_csv_fixed_param(self):
+        csv_path = os.path.join(DATAFILES_PATH, 'fixed_param_sample.csv')
+        fixed_param_sample = from_csv(path=csv_path)
+        self.assertEqual(fixed_param_sample.draws_pd().shape, (100, 85))
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):

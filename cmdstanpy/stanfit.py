@@ -2056,9 +2056,9 @@ def from_csv(
                     iter_sampling=config_dict['num_samples'],
                     iter_warmup=config_dict['num_warmup'],
                     thin=config_dict['thin'],
-                    save_warmup=config_dict['save_warmup']
+                    save_warmup=config_dict['save_warmup'],
                 )
-            except (ValueError):
+            except ValueError:
                 try:
                     check_sampler_csv(
                         csvfiles[0],
@@ -2066,14 +2066,14 @@ def from_csv(
                         iter_sampling=config_dict['num_samples'],
                         iter_warmup=config_dict['num_warmup'],
                         thin=config_dict['thin'],
-                        save_warmup=config_dict['save_warmup']
+                        save_warmup=config_dict['save_warmup'],
                     )
                     sampler_args = SamplerArgs(
                         iter_sampling=config_dict['num_samples'],
                         iter_warmup=config_dict['num_warmup'],
                         thin=config_dict['thin'],
                         save_warmup=config_dict['save_warmup'],
-                        fixed_param=True
+                        fixed_param=True,
                     )
                 except (ValueError) as e:
                     raise ValueError(
