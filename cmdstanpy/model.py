@@ -336,6 +336,21 @@ class CmdStanModel:
                         get_logger().error(
                             'file %s, exception %s', stan_file, str(e)
                         )
+                        if 'PCH file' in str(e):
+                            get_logger().warning(
+                                "%s, %s",
+                                "CmdStan's precompiled header (PCH) files ",
+                                "may need to be rebuilt.",
+                            )
+                            get_logger().warning(
+                                "%s %s",
+                                "If your model failed to compile please run ",
+                                "install_cmdstan(overwrite=True).",
+                            )
+                            get_logger().warning(
+                                "If the issue persists please open a bug report"
+                            )
+
                         compilation_failed = True
 
                 if not compilation_failed:
@@ -1142,8 +1157,19 @@ class CmdStanModel:
             errors = re.findall(pat, contents)
             if len(errors) > 0:
                 valid = False
-        if require_converged and not valid:
-            raise RuntimeError('The algorithm may not have converged.')
+        if not valid:
+            if require_converged:
+                raise RuntimeError(
+                    'The algorithm may not have converged.\n'
+                    'If you would like to inspect the output, '
+                    're-call with require_converged=False'
+                )
+            # else:
+            get_logger().warning(
+                '%s\n%s',
+                'The algorithm may not have converged.',
+                'Proceeding because require_converged is set to False',
+            )
         if not runset._check_retcodes():
             msg = 'Error during variational inference:\n{}'.format(
                 runset.get_err_msgs()

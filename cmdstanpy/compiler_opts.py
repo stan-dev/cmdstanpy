@@ -40,14 +40,6 @@ STANC_IGNORE_OPTS = [
     'version',
 ]
 
-CPP_OPTS = [
-    'STAN_OPENCL',
-    'OPENCL_DEVICE_ID',
-    'OPENCL_PLATFORM_ID',
-    'STAN_MPI',
-    'STAN_THREADS',
-]
-
 
 class CompilerOptions:
     """
@@ -151,18 +143,10 @@ class CompilerOptions:
         """
         if self._cpp_options is None:
             return
-        if (
-            'OPENCL_DEVICE_ID' in self._cpp_options.keys()
-            or 'OPENCL_PLATFORM_ID' in self._cpp_options.keys()
-        ):
-            self._cpp_options['STAN_OPENCL'] = 'TRUE'
-
-        for key, val in self._cpp_options.items():
-            if key not in CPP_OPTS:
-                raise ValueError(
-                    'unknown CmdStan makefile option: {}'.format(key)
-                )
-            if key in ['OPENCL_DEVICE_ID', 'OPENCL_PLATFORM_ID']:
+        for key in ['OPENCL_DEVICE_ID', 'OPENCL_PLATFORM_ID']:
+            if key in self._cpp_options:
+                self._cpp_options['STAN_OPENCL'] = 'TRUE'
+                val = self._cpp_options[key]
                 if not isinstance(val, int) or val < 0:
                     raise ValueError(
                         '{} must be a non-negative integer value,'

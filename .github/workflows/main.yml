@@ -9,7 +9,20 @@ on:
       - '**'
   pull_request:
 jobs:
+  get-cmdstan-version:
+    # get the latest cmdstan version to use as part of the cache key
+    name: grab version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get CmdStan version
+        id: check-cmdstan
+        run: |
+          echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
+    outputs:
+      version: ${{ steps.check-cmdstan.outputs.version }}
+
   cmdstanpy:
+    needs: get-cmdstan-version
     name: tests
     runs-on: ${{ matrix.os }}
     strategy:
@@ -52,22 +65,26 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           $whl = Get-ChildItem -Path dist -Filter *.whl | Select-Object -First 1
-          pip install "$whl"
+          pip install "$whl" 
 
       - name: Show libraries
         run: python -m pip freeze
+
+      - name: CmdStan installation cacheing
+        uses: actions/cache@v2
+        with:
+          path: ~/.cmdstan
+          key: ${{ runner.os }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
 
       - name: Install CmdStan (Linux, macOS)
         if: matrix.os != 'windows-latest'
         run: |
           python -m cmdstanpy.install_cmdstan
-          python scripts/clean_examples.py
 
       - name: Install CmdStan (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           python -m cmdstanpy.install_cmdstan --compiler
-          python scripts/clean_examples.py
 
       - name: Run tests
         run: |
@@ -80,7 +97,6 @@ jobs:
           cd run_tests
           python -m pip install -r ../requirements-optional.txt
           python ../test/example_script.py
-          python ../scripts/clean_examples.py
 
       - name: Submit codecov
         run: |
