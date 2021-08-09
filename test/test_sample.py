@@ -508,8 +508,8 @@ class SampleTest(unittest.TestCase):
         datagen_fit = datagen_model.sample(iter_sampling=100)
         self.assertEqual(
             datagen_fit.draws().shape,
-            (100, 1, len(datagen_fit.column_names))
-        )
+            (100, 4, len(datagen_fit.column_names))
+        )  # ran 4 chains, set fixed_param=True afterwards
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
