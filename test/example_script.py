@@ -15,7 +15,7 @@ def run_bernoulli_fit():
         cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan'
     )
     bernoulli_model = CmdStanModel(stan_file=bernoulli_path)
-    bernoulli_model.compile()
+    bernoulli_model.compile(force=True)
 
     # specify data, fit the model
     bernoulli_data = {'N': 10, 'y': [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
