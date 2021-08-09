@@ -593,6 +593,8 @@ class CmdStanMCMC:
         however a model with variables ``real alpha`` and ``simplex[3] beta``
         has 4 constrained and 3 unconstrained parameters.
         """
+        if self._is_fixed_param:
+            return 0
         return self._metadata.cmdstan_config[  # type: ignore
             'num_unconstrained_params'
         ]
