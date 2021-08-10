@@ -165,7 +165,7 @@ class CmdStanModel:
         if platform.system() == 'Windows':
             try:
                 ctypes.cdll.LoadLibrary('tbb')
-            except FileNotFoundError:
+            except (FileNotFoundError, OSError):
                 # Add tbb to the $PATH on Windows
                 libtbb = os.environ.get('STAN_TBB')
                 if libtbb is None:
