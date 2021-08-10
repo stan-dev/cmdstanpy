@@ -1,5 +1,6 @@
 """CmdStanModel"""
 
+import ctypes
 import logging
 import os
 import platform
@@ -162,19 +163,25 @@ class CmdStanModel:
         self._compiler_options.validate()
 
         if platform.system() == 'Windows':
-            # Add tbb to the $PATH on Windows
-            libtbb = os.environ.get('STAN_TBB')
-            if libtbb is None:
-                libtbb = os.path.join(
-                    cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
-                )
-            os.environ['PATH'] = ';'.join(
-                list(
-                    OrderedDict.fromkeys(
-                        [libtbb] + os.environ.get('PATH', '').split(';')
+            try:
+                ctypes.cdll.LoadLibrary('tbb')
+            except FileNotFoundError:
+                # Add tbb to the $PATH on Windows
+                libtbb = os.environ.get('STAN_TBB')
+                if libtbb is None:
+                    libtbb = os.path.join(
+                        cmdstan_path(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
+                    )
+                get_logger().debug("Adding TBB (%s) to PATH", libtbb)
+                os.environ['PATH'] = ';'.join(
+                    list(
+                        OrderedDict.fromkeys(
+                            [libtbb] + os.environ.get('PATH', '').split(';')
+                        )
                     )
                 )
-            )
+            else:
+                get_logger().debug("TBB already found in load path")
 
         if compile and self._exe_file is None:
             self.compile()
