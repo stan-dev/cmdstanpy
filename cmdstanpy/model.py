@@ -1220,7 +1220,14 @@ class CmdStanModel:
             runset._set_retcode(idx, proc.returncode)
             if stdout:
                 with open(runset.stdout_files[idx], 'w+') as fd:
-                    fd.write(stdout.decode('utf-8'))
+                    contents = stdout.decode('utf-8')  # bugfix 425
+                    if 'running fixed_param sampler' in contents:
+                        sampler_args = runset._args.method_args
+                        assert isinstance(
+                            sampler_args, SamplerArgs
+                        )  # make the typechecker happy
+                        sampler_args.fixed_param = True
+                    fd.write(contents)
             console_error = ''
             if stderr:
                 console_error = stderr.decode('utf-8')
