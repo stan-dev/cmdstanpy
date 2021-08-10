@@ -593,6 +593,8 @@ class CmdStanMCMC:
         however a model with variables ``real alpha`` and ``simplex[3] beta``
         has 4 constrained and 3 unconstrained parameters.
         """
+        if self._is_fixed_param:
+            return 0
         return self._metadata.cmdstan_config[  # type: ignore
             'num_unconstrained_params'
         ]
@@ -2049,6 +2051,37 @@ def from_csv(
                 thin=config_dict['thin'],
                 save_warmup=config_dict['save_warmup'],
             )
+            # bugfix 425, check for fixed_params output
+            try:
+                check_sampler_csv(
+                    csvfiles[0],
+                    iter_sampling=config_dict['num_samples'],
+                    iter_warmup=config_dict['num_warmup'],
+                    thin=config_dict['thin'],
+                    save_warmup=config_dict['save_warmup'],
+                )
+            except ValueError:
+                try:
+                    check_sampler_csv(
+                        csvfiles[0],
+                        is_fixed_param=True,
+                        iter_sampling=config_dict['num_samples'],
+                        iter_warmup=config_dict['num_warmup'],
+                        thin=config_dict['thin'],
+                        save_warmup=config_dict['save_warmup'],
+                    )
+                    sampler_args = SamplerArgs(
+                        iter_sampling=config_dict['num_samples'],
+                        iter_warmup=config_dict['num_warmup'],
+                        thin=config_dict['thin'],
+                        save_warmup=config_dict['save_warmup'],
+                        fixed_param=True,
+                    )
+                except (ValueError) as e:
+                    raise ValueError(
+                        'Invalid or corrupt Stan CSV output file, '
+                    ) from e
+
             cmdstan_args = CmdStanArgs(
                 model_name=config_dict['model'],
                 model_exe=config_dict['model'],

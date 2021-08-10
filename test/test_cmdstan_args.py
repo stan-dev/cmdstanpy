@@ -138,14 +138,6 @@ class SamplerArgsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(iter_warmup=100, fixed_param=True)
-        with self.assertRaises(ValueError):
-            args.validate(chains=2)
-
-        args = SamplerArgs(save_warmup=True, fixed_param=True)
-        with self.assertRaises(ValueError):
-            args.validate(chains=2)
-
         args = SamplerArgs(max_treedepth=12, fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)

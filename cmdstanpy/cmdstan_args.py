@@ -239,9 +239,7 @@ class SamplerArgs:
                 )
 
         if self.fixed_param and (
-            (self.iter_warmup is not None and self.iter_warmup > 0)
-            or self.save_warmup
-            or self.max_treedepth is not None
+            self.max_treedepth is not None
             or self.metric is not None
             or self.step_size is not None
             or not (
@@ -252,8 +250,7 @@ class SamplerArgs:
             )
         ):
             raise ValueError(
-                'when fixed_param=True, cannot specify warmup'
-                ' or adaptation parameters.'
+                'when fixed_param=True, cannot specify adaptation parameters.'
             )
 
     def compose(self, idx: int, cmd: List[str]) -> List[str]:
