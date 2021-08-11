@@ -1,20 +1,20 @@
-a"Hello, World"
-______________
+"Hello, World"
+--------------
 
-Bayesian estimation via Stan's HMC-NUTS sampler 
-------------------------------------------------
+Fitting a Stan model using the NUTS-HMC sampler
+***********************************************
 
-To exercise the essential functions of CmdStanPy we show how to run
-Stan's HMC-NUTS sampler to estimate the posterior probability
-of the model parameters conditioned on the data, 
-using the example Stan model ``bernoulli.stan``
-and corresponding dataset ``bernoulli.data.json`` which are
-distributed with CmdStan.
+In order to verify the installation and also to demonstrate
+the CmdStanPy workflow, we use CmdStanPy to fit the
+the example Stan model ``bernoulli.stan``
+to the dataset ``bernoulli.data.json``.
+The example model and data are included with the CmdStan distribution
+in subdirectory `examples/bernoulli`.
 
 The Stan model
 ^^^^^^^^^^^^^^
 
-The example Stan model ``bernoulli.stan``  is a simple model for binary data:
+The model ``bernoulli.stan``  is a simple model for binary data:
 given a set of N observations of i.i.d. binary data
 `y[1] ... y[N]`, it calculates the Bernoulli chance-of-success `theta`.
 
@@ -34,7 +34,8 @@ given a set of N observations of i.i.d. binary data
 
 The :ref:`class_cmdstanmodel` class manages the Stan program and its corresponding compiled executable.
 It provides properties and functions to inspect the model code and filepaths.
-By default, the Stan program is compiled on instantiation.
+CmdStanPy, uses the environment variable ``CMDSTAN`` to find the CmdStan installation.
+The function ``cmdstan_path`` gets the value of this environment variable.
 
 .. code-block:: python
 
@@ -97,36 +98,30 @@ to a temporary directory which is deleted when the current Python session is ter
     print(bernoulli_fit)
 
 
-Inference results
-^^^^^^^^^^^^^^^^^
+Accessing the sample
+^^^^^^^^^^^^^^^^^^^^
 
 The CmdStan `sample` method outputs are a set of per-chain
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__,
-as well as any messages sent to either the shell's stdout and stderr output devices.
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__.
 The filenames follow the template '<model_name>-<YYYYMMDDHHMM>-<chain_id>'
 plus the file suffix '.csv'.
-There are also correspondingly named files with suffix '.txt' and '.err'
-which contains all messages send to stdout and stderr.
 The CmdStanPy :ref:`class_cmdstanmcmc` has methods to assemble the contents
 of these files into memory as well as methods to manage the disk files.
 
-Information from the Stan CSV files header comments and header row
-and can be accessed via the `metadata` property.
-
-The set of draws from all chains can be accessed either in terms of the CSV file
-columns, or in terms of the sampler and Stan program variables.
-Underlyingly, the drawset is stored as an
+Underlyingly, the draws from all chains are stored as an
 a numpy.ndarray with dimensions: draws, chains, columns.
-
+CmdStanPy provides accessor methods which return the sample
+either in terms of the CSV file columns or in terms of the
+sampler and Stan program variables.
 The ``draws`` and ``draws_pd`` methods return the sample contents
 in columnar format.
 
-
-The `stan_variable`` method to returns a numpy.ndarray object
+The ``stan_variable`` method to returns a numpy.ndarray object
 which contains the set of all draws in the sample for the named Stan program variable.
 The draws from all chains are flattened into a single drawset.
 The first ndarray dimension is the number of draws X number of chains.
 The remaining ndarray dimensions correspond to the Stan program variable dimension.
+The ``stan_variables`` method returns a Python dict over all Stan model variables.
 
 .. code-block:: python
 
@@ -136,22 +131,6 @@ The remaining ndarray dimensions correspond to the Stan program variable dimensi
     draws_theta = bernoulli_fit.stan_variable(name='theta') 
     draws_theta.shape 
 
-The draws array contains both the sampler method variables
-and the model variables. The sampler method variables report
-the sampler state.  All method variables end in `__`.
-The `InferenceMetadata` properties ``method_vars_cols``
-and ``stan_vars_cols`` map the method and model variable
-names to the column or columns that they span.
-
-.. code-block:: python
-
-    sampler_variables = bernoulli_fit.metadata.method_vars_cols
-    stan_variables = bernoulli_fit.metadata.stan_vars_cols
-    print('Sampler variables:\n{}'.format(sampler_variables)) 
-    print('Stan variables:\n{}'.format(stan_variables)) 
-
-The NUTS-HMC sampler reports 7 variables.
-The Bernoulli example model contains a single variable `theta`.
                         
 CmdStan utilities:  `stansummary`, `diagnose`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
