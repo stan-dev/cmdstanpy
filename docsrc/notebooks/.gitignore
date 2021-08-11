@@ -1,0 +1,9 @@
+# this line ignores everything
+*
+!/**/
+# and then this 'unignores' anything with an extension
+!*.*
+# and we re-ignore hpp and exe files
+*.hpp
+*.exe
+.ipynb_checkpoints
