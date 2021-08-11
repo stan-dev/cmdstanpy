@@ -160,6 +160,11 @@ def cmdstan_path() -> str:
                     'no CmdStan installation found, '
                     'run command line script "install_cmdstan"'
                 )
+            get_logger().warning(
+                "Using ~/.cmdstanpy is deprecated and"
+                " will not be automatically detected in version 1.0!\n"
+                " Please rename to ~/.cmdstan"
+            )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
