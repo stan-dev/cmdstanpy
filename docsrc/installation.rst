@@ -27,7 +27,10 @@ but installation is possible in an existing environment:
     conda install -c conda-forge cmdstanpy
 
 These commands will install CmdStanPy, CmdStan, and the
-required compilers for using CmdStan on your system.
+required compilers for using CmdStan on your system inside
+a conda environment. To use them, run ``conda activate cmdstan``,
+or whichever name you used for your environment (following ``-n``
+above).
 
 Note that CmdStan is only available on conda for versions
 2.27.0 and newer. If you require an older version, you must use
