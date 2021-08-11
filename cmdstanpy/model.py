@@ -535,7 +535,7 @@ class CmdStanModel:
         refresh: Optional[int] = None,
     ) -> CmdStanMCMC:
         """
-        Run or more chains of the NUTS sampler to produce a set of draws
+        Run or more chains of the NUTS-HMC sampler to produce a set of draws
         from the posterior distribution of a model conditioned on some data.
 
         This function validates the specified configuration, composes a call to
