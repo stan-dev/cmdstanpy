@@ -6,4 +6,5 @@
 # and we re-ignore hpp and exe files
 *.hpp
 *.exe
+*.csv
 .ipynb_checkpoints
