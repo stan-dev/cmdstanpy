@@ -338,23 +338,6 @@ intersphinx_mapping = {
     'xarray': ('https://xarray.pydata.org/en/stable/', None),
 }
 
-napoleon_preprocess_types = True
-napoleon_type_aliases = {
-    "string": ":class:`string <str>`",
-    "array": ":term:`array`",
-    # objects without namespace
-    "DataArray": "~xarray.DataArray",
-    "Dataset": "~xarray.Dataset",
-    "Variable": "~xarray.Variable",
-    "ndarray": "~numpy.ndarray",
-    "Series": "~pandas.Series",
-    "DataFrame": "~pandas.DataFrame",
-    "CmdStanMCMC": "~cmdstanpy.CmdStanMCMC",
-    "CmdStanMLE": "~cmdstanpy.CmdStanMLE",
-    "CmdStanMCVB": "~cmdstanpy.CmdStanMCVB",
-    "CmdStanMCGQ": "~cmdstanpy.CmdStanMCGQ",
-}
-
 #
 # # sphinx-gallery configuration
 # sphinx_gallery_conf = {
