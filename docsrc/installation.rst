@@ -153,7 +153,8 @@ default install dir.)
 If you have installed CmdStan in a different directory,
 then you can set the environment variable ``CMDSTAN`` to this
 location and it will be picked up by CmdStanPy. Note: This is done
-for you if you installed via ``conda``.
+for you if you installed via ``conda``, as cmdstan will be installed
+in the ``bin/`` subfolder of the environment directory.
 
 .. code-block:: bash
 
