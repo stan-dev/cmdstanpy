@@ -2,7 +2,7 @@ MCMC Sampling
 =============
 
 The :ref:`class_cmdstanmodel` class method  ``sample`` invokes
-`Stan's adaptive HMC-NUTS sampler <https://mc-stan.org/docs/2_27/cmdstan-guide/mcmc-config.html#mcmc-config>`_
+`Stan's adaptive HMC-NUTS sampler <https://mc-stan.org/docs/cmdstan-guide/mcmc-config.html#mcmc-config>`_
 which uses the Hamiltonian Monte Carlo (HMC) algorithm
 and its adaptive variant the no-U-turn sampler (NUTS) to produce a set of
 draws from the posterior distribution of the model parameters conditioned on the data.
@@ -94,7 +94,7 @@ following functional categories:
 Fitted estimates
 """"""""""""""""
 
-The sampler returns a set of draws as a `Stan CSV file <https://mc-stan.org/docs/2_27/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`_.
+The sampler returns a set of draws as a `Stan CSV file <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`_.
 The sample can be accessed either in terms of the CSV file column labels, or in terms of the underlying Stan sampler and model variables.
 
 The following methods allow access in terms of the CSV file column labels: 

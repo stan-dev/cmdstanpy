@@ -83,8 +83,11 @@ either as a filepath or a Python dict; in this example, we use the
 example datafile `bernoulli.data.json`:
 
 By default, the ``sample`` method runs 4 sampler chains.
-If the ``output_dir`` argument is omitted, the output files are written
-to a temporary directory which is deleted when the current Python session is terminated.
+The ``output_dir`` argument is an optional argument which specifies
+the path to the output directory used by CmdStan.
+If this argument is omitted, the output files are written
+to a temporary directory which is deleted when the current Python session is terminated. [#]_
+
 
 .. code-block:: python
 
@@ -160,13 +163,24 @@ The ``diagnose`` method runs this utility and prints the output to the console.
 
 Managing Stan CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^
-    
-The ``save_csvfiles`` function moves the CmdStan CSV output files
+
+The `CmdStanMCMC` object keeps track of all output files produced
+by the sampler run.
+The ``save_csvfiles`` function moves the CSV files
 to a specified directory.
 
 .. code-block:: python
 
     bernoulli_fit.save_csvfiles(dir='some/path')
+
+.. rubric:: Footnotes
+
+.. [#] Because CmdStan is file-based and because model development
+       more often than not requires many successive runs of a model,
+       sending outputs to a temporary directory avoids filling up
+       the filesystem with unneeded CSV files. Since more user time
+       is spent in model development, not saving outputs
+       is the default option.
 
 .. comment
   Progress bar
@@ -207,3 +221,5 @@ to a specified directory.
   .. code-block:: bash
   
       jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
+      

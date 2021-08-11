@@ -19,13 +19,7 @@
    overview
    installation
    hello_world
-   deeper_dive
-   stan_models
-   sample
-   generate_quantities
-   optimize
-   variational_bayes
-   under_the_hood
+   workflow
    api
 
 :ref:`genindex`
