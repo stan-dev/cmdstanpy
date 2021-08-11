@@ -430,9 +430,7 @@ class CmdStanMCMC:
 
     The sample is lazily instantiated on first access of either
     the resulting sample or the HMC tuning parameters, i.e., the
-    step size and metric.  The sample can viewed either as a 2D array
-    of draws from all chains by sampler and model variables, or as a
-    3D array of draws by chains by variables.
+    step size and metric.
     """
 
     # pylint: disable=too-many-public-methods
