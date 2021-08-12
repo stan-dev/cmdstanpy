@@ -12,6 +12,14 @@
 
 .. moduleauthor:: Stan Developement Team
 
+CmdStanPy is a lightweight interface to Stan for Python users which
+provides the necessary objects and functions to do Bayesian inference
+given a probability model and data.
+It wraps the
+`CmdStan <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`_
+command line interface in a small set of
+Python classes which provide methods to do analysis and manage the resulting
+set of model, data, and posterior estimates.
 
 .. toctree::
    :maxdepth: 4
