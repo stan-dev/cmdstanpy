@@ -24,7 +24,7 @@ from time import sleep
 from typing import List
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import pushd, validate_dir, wrap_progress_hook
+from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
@@ -317,6 +317,11 @@ def main() -> None:
             )
             if os.path.exists(cmdstanpy_dir):
                 cmdstan_dir = cmdstanpy_dir
+                get_logger().warning(
+                    "Using ~/.cmdstanpy is deprecated and"
+                    " will not be automatically detected in version 1.0!\n"
+                    " Please rename to ~/.cmdstan"
+                )
         install_dir = cmdstan_dir
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))

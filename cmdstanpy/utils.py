@@ -160,6 +160,11 @@ def cmdstan_path() -> str:
                     'no CmdStan installation found, '
                     'run command line script "install_cmdstan"'
                 )
+            get_logger().warning(
+                "Using ~/.cmdstanpy is deprecated and"
+                " will not be automatically detected in version 1.0!\n"
+                " Please rename to ~/.cmdstan"
+            )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
@@ -1039,8 +1044,8 @@ def install_cmdstan(
         Defaults to latest CmdStan release.
 
     :param dir: Path to install directory.  Defaults to hidden directory
-        ``$HOME/.cmdstan`` or ``$HOME/.cmdstanpy``, if the latter exists.
-        If no directory is specified and neither of the above directories
+        ``$HOME/.cmdstan``.
+        If no directory is specified and the above directory does not
         exist, directory ``$HOME/.cmdstan`` will be created and populated.
 
     :param overwrite:  Boolean value; when ``True``, will overwrite and
