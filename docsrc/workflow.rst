@@ -8,35 +8,24 @@ developing a model, fitting the data, and evaluating the results.
 The Bayesian workflow for model comparison and model expansion
 provides a framework for organizing these activities.
 
-CmdStanPy provides the functionality needed to
-compile the model and assemble the data, do inference,
-and to validate, access, and export the resulting inference data.
-For each CmdStan inference method there is a CmdStanPy class which manages
-the resulting inference method outputs:
+CmdStanPy provides the tools needed to
+compile a Stan model, assemble input data,
+do inference on the model conditioned on the data,
+and validate, access, and export the results.
+The following sections describe the process of building, running, and
+managing the resulting inference for a single model and set of inputs.
 
-* method `sample` returns a `CmdStanMCMC` object
-
-* method `optimize` returns a `CmdStanMLE` object
-
-* method `variational` returns a `CmdStanVB` object
-
-* method `generate` returns a `CmdStanGQ` object
-
-These objects have a common set of methods for accessing the
-inference results and metadata, as well as method-specific properties.
-
-The following sections describe how to carry out one iteration
-of the Bayesian workflow using CmdStanPy.
 During the course of an analysis, it is expected that this sequence
 of commands will be carried out repeatedly,
 either to compare different models or to compare the results of
 difference infenence methods.
 
+.. _model-compilation:
 
-Specifying a Stan model
-^^^^^^^^^^^^^^^^^^^^^^^
+Compile the Stan model
+^^^^^^^^^^^^^^^^^^^^^^
 
-The: :ref:`class_cmdstanmodel` class manages the Stan program and its corresponding compiled executable and
+The: :class:`cmdstanpy.CmdStanModel` class manages the Stan program and its corresponding compiled executable and
 provides properties and functions to inspect the model code and filepaths.
 
 A model object can be instantiated by specifying either the Stan program file path
@@ -47,7 +36,7 @@ If both the model and executable file are specified,
 the constructor will compare the filesystem timestamps and
 will only compile the program if the Stan file has a later timestamp which
 indicates that the program may have been edited.
-The constructor argument `compile=False` will override the default behavoir.
+The constructor argument ``compile=False`` will override the default behavoir.
 
 .. code-block:: python
 
@@ -61,12 +50,9 @@ The constructor argument `compile=False` will override the default behavoir.
     my_model.exe_file
     my_model.code()
 
-.. _model-compilation:
-
-The `CmdStanModel` class provides a `compile` method which can be used to
-recompile the model as needed and and the argument `force=True` can be used
-to insure that the Stan program is recompiled, even if the timestamp on the
-executable file is new than the timestamp on the Stan program file.
+The method :meth:`cmdstanpy.CmdStanModel.compile` is used to compile the model as needed.
+When the argument ``force=True`` is present, CmdStanPy will always compile the model,
+even if the existing executable file is newer than the Stan program file.
  
 Model compilation is carried out via the GNU Make build tool.
 The CmdStan ``makefile`` contains a set of general rules which
@@ -108,9 +94,8 @@ the model:
     )
 
 
-
-Assembling model data inputs and initializations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Assemble input and initialization data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CmdStan is file-based interface, therefore all model input and
 initialization data must be supplied as JSON files, as described in the
@@ -119,75 +104,90 @@ CmdStan User's Guide:
 
 CmdStanPy inference methods allow inputs and initializations
 to be specified as in-memory Python dictionary objects
-which are then converted to JSON via the utility method `write_stan_json`.
-This method is available as part of the CmdStanPy API.
-It should be used to create JSON input files whenever
+which are then converted to JSON via the utility method :func:`cmdstanpy.write_stan_json`.
+This method should be used to create JSON input files whenever
 these inputs contain either a collection compatible with
 numpy arrays or pandas.Series.
 
 
-Doing inference
-^^^^^^^^^^^^^^^
+Run the CmdStan inference engine
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+For each CmdStan inference method, there is a corresponding method on the CmdStanModel class.
 
-List of inference methods documentation, 1 sentence summary of each
+* The :meth:`cmdstanpy.CmdStanModel.sample` method runs Stan's
+  `HMC-NUTS sampler <https://mc-stan.org/docs/reference-manual/hamiltonian-monte-carlo.html>`_
+  and returns a :class:`cmdstanpy.CmdStanMCMC` object which contains
+  a sample from the posterior distribution of the model conditioned on the data.
+
+* The :meth:`cmdstanpy.CmdStanModel.variational` method runs Stan's
+  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`_
+  and returns   a :class:`cmdstanpy.CmdStanVB` object which contains
+  an approximation the posterior distribution in the unconstrained variable space.
+
+* The :meth:`cmdstanpy.CmdStanModel.optimize` runs one of
+  `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`_
+  to find a mode of the density specified by the Stan program.  It
+  returns a :class:`cmdstanpy.CmdStanMLE` object.
+
+* The :meth:`cmdstanpy.CmdStanModel.generate` method runs Stan's
+  `generate_quantities method <https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html>`_
+  which generates additional quantities of interest from a mode. Its take an existing sample as input and
+  uses the parameter estimates in the sample to run the Stan program's ``generated quantities`` block.
+  It returns a :class:`cmdstanpy.CmdStanGQ` object.
 
   
-Working with the inference engine outputs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Validate, view, export the inference engine outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Common accessor methods
-
-
-Per method outputs
-
-
-
-
+The inference engine results objects 
+``CmdStanMCMC``, ``CmdStanVB``, ``CmdStanMLE`` and ``CmdStanGQ``
+contain the CmdStan method configuration information
+and the location of all output files produced.
+The provide a common set methods for accessing the inference results and metadata,
+as well as method-specific informational properties and methods.objects 
 
 
+By `metadata` we mean the information parsed from the header comments and header row of the
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html>`_.
+into a :class:`cmdstanpy.InferenceMetadata` object which is exposed via
+the object's `metadata` property.
 
+* The metadata :meth:`cmdstanpy.InferenceMetadata.cmdstan_config`
+  property provides the CmdStan configuration information parsed out
+  of the Stan CSV file header.
 
+* The metadata :meth:`cmdstanpy.InferenceMetadata.method_vars_cols`
+  property returns the names, column indices of the inference engine method variables,
+  e.g.,
+  `the NUTS-HMC sampler output variables <https://mc-stan.org/docs/cmdstan-guide/mcmc-intro.html#mcmc_output_csv>`_
+  are ``lp__``, ..., ``energy__``.
 
+* The metadata :meth:`cmdstanpy.InferenceMetadata.stan_vars_cols`
+  property returns the names, column indices of all Stan model variables.
+  Container variables will span as many columns, one column per element.
 
+* The metadata :meth:`cmdstanpy.InferenceMetadata.stan_vars_dims`
+  property specifies the names, dimensions of the Stan model variables.
 
+The CSV data is assembled into the inference result object.
+CmdStanPy provides accessor methods which return this information
+either as columnar data (i.e., in terms of the CSV file columns),
+or as method and model variables.
 
+The ``draws`` and ``draws_pd`` methods return the sample contents
+in columnar format, as a numpy.ndarray or pandas.DataFrame, respectively.
 
-
-
-"hello world" outtakes
-""""""""""""""""""""""
-CmdStanPy also saves all CmdStan messages and error messages into 
-files with the same template basename and with suffix '.txt' and '.err', respectively.
-
-
-Information from the Stan CSV files header comments and header row
-is parsed into a :ref:`class_inferencemetadata` object which
-can be accessed via the `CmdStanMCMC` object's `metadata` property.
+The ``stan_variable`` method to returns a numpy.ndarray object
+which contains the set of all draws in the sample for the named Stan program variable.
+The draws from all chains are flattened into a single drawset.
+The first ndarray dimension is the number of draws X number of chains.
+The remaining ndarray dimensions correspond to the Stan program variable dimension.
 The ``stan_variables`` method returns a Python dict over all Stan model variables.
-The ``method_variables`` method returns a Python dict over all NUTS-HMC sampler method
-output variables.
 
+The ``model_variables`` method returns a Python dict over all inference
+method variables.
 
-Information from the Stan CSV files header comments and header row
-is parsed into a :ref:`class_inferencemetadata` object which
-can be accessed via the `CmdStanMCMC` object's `metadata` property.
-The NUTS-HMC sampler reports both the estimates for all variables
-in the Stan program's `parameter`, `transformed parameter`, and `generated quantities` 
-NUTS-HMC sampler 
-The draws array contains both the sampler method variables
-and the model variables. The sampler method variables report
-the sampler state.  All method variables end in `__`.
-The `InferenceMetadata` properties ``method_vars_cols``
-and ``stan_vars_cols`` map the method and model variable
-names to the column or columns that they span.
-
-.. code-block:: python
-
-    sampler_variables = bernoulli_fit.metadata.method_vars_cols
-    stan_variables = bernoulli_fit.metadata.stan_vars_cols
-    print('Sampler variables:\n{}'.format(sampler_variables)) 
-    print('Stan variables:\n{}'.format(stan_variables)) 
-
-The NUTS-HMC sampler reports 7 variables.
-The Bernoulli example model contains a single variable `theta`.
+The ``draws_xr`` method returns the sample contents as an
+`xarray.DataSet <http://xarray.pydata.org/en/stable/generated/xarray.Dataset.html>`_
+which maps the method and model variable names to their respective values.
