@@ -162,7 +162,7 @@ The :meth:`~CmdStanMCMC.diagnose` method runs this utility and prints the output
 
 .. ipython:: python
 
-    bernoulli_fit.diagnose()
+    print(bernoulli_fit.diagnose())
 
 Managing Stan CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^
