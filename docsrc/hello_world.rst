@@ -1,3 +1,5 @@
+.. py:currentmodule:: cmdstanpy
+
 "Hello, World"
 --------------
 
@@ -76,10 +78,10 @@ The data file `bernoulli.data.json` contains the following inputs:
 Fitting the model
 ^^^^^^^^^^^^^^^^^
 
-The :meth:`cmdstanpy.CmdStanModel.sample` method is used to do Bayesian inference
+The :meth:`CmdStanModel.sample` method is used to do Bayesian inference
 over the model conditioned on data using  using Hamiltonian Monte Carlo
 (HMC) sampling. It runs Stan's HMC-NUTS sampler on the model and data and
-returns a :ref:`class_cmdstanmcmc` object.  The data can be specified
+returns a :class:`CmdStanMCMC` object.  The data can be specified
 either as a filepath or a Python dictionary; in this example, we use the
 example datafile `bernoulli.data.json`:
 
@@ -109,7 +111,7 @@ The CmdStan `sample` method outputs are a set of per-chain
 `Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__.
 The filenames follow the template '<model_name>-<YYYYMMDDHHMM>-<chain_id>'
 plus the file suffix '.csv'.
-The :class:`cmdstanpy.CmdStanMCMC` class provides methods to assemble the contents
+The :class:`CmdStanMCMC` class provides methods to assemble the contents
 of these files in memory as well as methods to manage the disk files.
 
 Underlyingly, the draws from all chains are stored as an
@@ -117,15 +119,15 @@ a numpy.ndarray with dimensions: draws, chains, columns.
 CmdStanPy provides accessor methods which return the sample
 either in terms of the CSV file columns or in terms of the
 sampler and Stan program variables.
-The ``draws`` and ``draws_pd`` methods return the sample contents
+The :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd` methods return the sample contents
 in columnar format.
 
-The :py:meth:`~cmdstanpy.CmdStanMCMC.stan_variable` method to returns a numpy.ndarray object
+The :meth:`~CmdStanMCMC.stan_variable` method to returns a numpy.ndarray object
 which contains the set of all draws in the sample for the named Stan program variable.
 The draws from all chains are flattened into a single drawset.
 The first ndarray dimension is the number of draws X number of chains.
 The remaining ndarray dimensions correspond to the Stan program variable dimension.
-The ``stan_variables`` method returns a Python dict over all Stan model variables.
+The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all Stan model variables.
 
 .. code-block:: python
 
@@ -143,7 +145,7 @@ CmdStan is distributed with a posterior analysis utility
 `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__
 that reads the outputs of all chains and computes summary statistics
 for all sampler and model parameters and quantities of interest.
-The :ref:`class_cmdstanmcmc` method ``summary`` runs this utility and returns
+The :class:`CmdStanMCMC` method :meth:`~CmdStanMCMC.summary` runs this utility and returns
 summaries of the total joint log-probability density **lp__** plus
 all model parameters and quantities of interest in a pandas.DataFrame:
 
@@ -156,7 +158,7 @@ CmdStan is distributed with a second posterior analysis utility
 which analyzes the per-draw sampler parameters across all chains
 looking for potential problems which indicate that the sample
 isn't a representative sample from the posterior.
-The ``diagnose`` method runs this utility and prints the output to the console.
+The :meth:`~CmdStanMCMC.diagnose` method runs this utility and prints the output to the console.
 
 .. code-block:: python
 
@@ -165,9 +167,9 @@ The ``diagnose`` method runs this utility and prints the output to the console.
 Managing Stan CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``CmdStanMCMC`` object keeps track of all output files produced
+The :class:`CmdStanMCMC` object keeps track of all output files produced
 by the sampler run.
-The ``save_csvfiles`` function moves the CSV files
+The :meth:`~CmdStanMCMC.save_csvfiles` function moves the CSV files
 to a specified directory.
 
 .. code-block:: python

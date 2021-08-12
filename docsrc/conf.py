@@ -313,6 +313,24 @@ texinfo_documents = [
     )
 ]
 
+
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "string": ":class:`string <str>`",
+    "array": ":term:`array`",
+    # objects without namespace
+    "DataArray": "~xarray.DataArray",
+    "Dataset": "~xarray.Dataset",
+    "Variable": "~xarray.Variable",
+    "ndarray": "~numpy.ndarray",
+    "Series": "~pandas.Series",
+    "DataFrame": "~pandas.DataFrame",
+    "CmdStanMCMC": "~cmdstanpy.CmdStanMCMC",
+    "CmdStanMLE": "~cmdstanpy.CmdStanMLE",
+    "CmdStanMCVB": "~cmdstanpy.CmdStanMCVB",
+    "CmdStanMCGQ": "~cmdstanpy.CmdStanMCGQ",
+}
+
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []
 
