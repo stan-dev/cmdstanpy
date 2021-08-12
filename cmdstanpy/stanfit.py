@@ -387,6 +387,12 @@ class InferenceMetadata:
 
     @property
     def cmdstan_config(self) -> Dict[str, Any]:
+        """
+        Returns a dictionary containing a set of name, value pairs
+        parsed out of the Stan CSV file header.  These include the
+        command configuration and the CSV file header row information.
+        Uses deepcopy for immutability.
+        """
         return copy.deepcopy(self._cmdstan_config)
 
     @property
@@ -394,7 +400,7 @@ class InferenceMetadata:
         """
         Returns a map from a Stan inference method variable to
         a tuple of column indices in inference engine's output array.
-        Sampler variable names always end in `__`, e.g. `lp__`.
+        Method variable names always end in `__`, e.g. `lp__`.
         Uses deepcopy for immutability.
         """
         return copy.deepcopy(self._method_vars_cols)
