@@ -123,6 +123,8 @@ For each CmdStan inference method, there is a corresponding method on the :class
   It returns a :class:`CmdStanMCMC` object which contains
   a sample from the posterior distribution of the model conditioned on the data.
 
+  See an example notebook `here <examples/MCMC%20Sampling.ipynb>`__.
+
 * The :meth:`~CmdStanModel.variational` method runs Stan's
   `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`_. 
 

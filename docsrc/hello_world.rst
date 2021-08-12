@@ -40,7 +40,7 @@ CmdStanPy, manages the environment variable ``CMDSTAN`` which specifies the path
 the local CmdStan installation.
 The function :func:`cmdstanpy.cmdstan_path` returns the value of this environment variable.
 
-.. code-block:: python
+.. ipython:: python
 
     # import packages
     import os
@@ -92,13 +92,13 @@ If this argument is omitted, the output files are written
 to a temporary directory which is deleted when the current Python session is terminated. [#]_
 
 
-.. code-block:: python
+.. ipython:: python
 
     # specify data file
     bernoulli_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
 
     # fit the model 
-    bernoulli_fit = bernoulli_model.sample(data=bernoulli_data, output_dir='.') 
+    bernoulli_fit = bernoulli_model.sample(data=bernoulli_data) 
 
     # printing the object reports sampler commands, output files
     print(bernoulli_fit)
@@ -129,7 +129,7 @@ The first ndarray dimension is the number of draws X number of chains.
 The remaining ndarray dimensions correspond to the Stan program variable dimension.
 The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all Stan model variables.
 
-.. code-block:: python
+.. ipython:: python
 
     bernoulli_fit.draws().shape 
     bernoulli_fit.draws(concat_chains=True).shape 
@@ -149,7 +149,7 @@ The :class:`CmdStanMCMC` method :meth:`~CmdStanMCMC.summary` runs this utility a
 summaries of the total joint log-probability density **lp__** plus
 all model parameters and quantities of interest in a pandas.DataFrame:
 
-.. code-block:: python
+.. ipython:: python
 
     bernoulli_fit.summary()
 
@@ -160,7 +160,7 @@ looking for potential problems which indicate that the sample
 isn't a representative sample from the posterior.
 The :meth:`~CmdStanMCMC.diagnose` method runs this utility and prints the output to the console.
 
-.. code-block:: python
+.. ipython:: python
 
     bernoulli_fit.diagnose()
 
@@ -172,7 +172,8 @@ by the sampler run.
 The :meth:`~CmdStanMCMC.save_csvfiles` function moves the CSV files
 to a specified directory.
 
-.. code-block:: python
+.. ipython:: python
+    :verbatim:
 
     bernoulli_fit.save_csvfiles(dir='some/path')
 

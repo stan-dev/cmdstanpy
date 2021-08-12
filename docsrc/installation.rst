@@ -102,9 +102,7 @@ downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
 
 The default install location is a hidden directory in the user ``$HOME`` directory
-named ``.cmdstan``.  (In earlier versions, the hidden directory was named ``.cmdstanpy``,
-and if directory ``$HOME/.cmdstanpy`` exists, it will continue to be used as the
-default install dir.)  This directory will be created by the install script.
+named ``.cmdstan``.  This directory will be created by the install script.
 
 + From Python
 

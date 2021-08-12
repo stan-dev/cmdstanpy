@@ -38,6 +38,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
+    "nbsphinx",
+    "sphinx_copybutton",
 ]
 
 # this is needed for some reason...
@@ -330,6 +334,8 @@ napoleon_type_aliases = {
     "CmdStanMCVB": "~cmdstanpy.CmdStanMCVB",
     "CmdStanMCGQ": "~cmdstanpy.CmdStanMCGQ",
 }
+
+nbsphinx_allow_errors = True
 
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []
