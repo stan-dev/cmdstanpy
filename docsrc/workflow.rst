@@ -101,8 +101,8 @@ Assemble input and initialization data
 
 CmdStan is file-based interface, therefore all model input and
 initialization data must be supplied as JSON files, as described in the
-CmdStan User's Guide:
-<https://mc-stan.org/docs/cmdstan-guide/json.html>.
+`CmdStan User's Guide
+<https://mc-stan.org/docs/cmdstan-guide/json.html>`__.
 
 CmdStanPy inference methods allow inputs and initializations
 to be specified as in-memory Python dictionary objects
