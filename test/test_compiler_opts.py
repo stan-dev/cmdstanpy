@@ -121,11 +121,6 @@ class CompilerOptsTest(unittest.TestCase):
         opts.validate()
         self.assertEqual(opts.compose(), ['STAN_MPI=TRUE'])
 
-        cpp_opts['STAN_BAD'] = 'TRUE'
-        opts = CompilerOptions(cpp_options=cpp_opts)
-        with self.assertRaises(ValueError):
-            opts.validate()
-
     def test_opts_cpp_opencl(self):
         cpp_opts = {'OPENCL_DEVICE_ID': 1}
         opts = CompilerOptions(cpp_options=cpp_opts)

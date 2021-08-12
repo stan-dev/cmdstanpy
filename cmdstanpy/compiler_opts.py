@@ -40,14 +40,6 @@ STANC_IGNORE_OPTS = [
     'version',
 ]
 
-CPP_OPTS = [
-    'STAN_OPENCL',
-    'OPENCL_DEVICE_ID',
-    'OPENCL_PLATFORM_ID',
-    'STAN_MPI',
-    'STAN_THREADS',
-]
-
 
 class CompilerOptions:
     """
@@ -68,7 +60,11 @@ class CompilerOptions:
         """Initialize object."""
         self._stanc_options = stanc_options if stanc_options is not None else {}
         self._cpp_options = cpp_options if cpp_options is not None else {}
-        self._logger = logger or get_logger()
+        if logger is not None:
+            get_logger().warning(
+                "Parameter 'logger' is deprecated."
+                " Control logging behavior via logging.getLogger('cmdstanpy')"
+            )
 
     def __repr__(self) -> str:
         return 'stanc_options={}, cpp_options={}'.format(
@@ -105,7 +101,7 @@ class CompilerOptions:
         paths = None
         for key, val in self._stanc_options.items():
             if key in STANC_IGNORE_OPTS:
-                self._logger.info('ignoring compiler option: %s', key)
+                get_logger().info('ignoring compiler option: %s', key)
                 ignore.append(key)
             elif key not in STANC_OPTS:
                 raise ValueError(
@@ -147,18 +143,10 @@ class CompilerOptions:
         """
         if self._cpp_options is None:
             return
-        if (
-            'OPENCL_DEVICE_ID' in self._cpp_options.keys()
-            or 'OPENCL_PLATFORM_ID' in self._cpp_options.keys()
-        ):
-            self._cpp_options['STAN_OPENCL'] = 'TRUE'
-
-        for key, val in self._cpp_options.items():
-            if key not in CPP_OPTS:
-                raise ValueError(
-                    'unknown CmdStan makefile option: {}'.format(key)
-                )
-            if key in ['OPENCL_DEVICE_ID', 'OPENCL_PLATFORM_ID']:
+        for key in ['OPENCL_DEVICE_ID', 'OPENCL_PLATFORM_ID']:
+            if key in self._cpp_options:
+                self._cpp_options['STAN_OPENCL'] = 'TRUE'
+                val = self._cpp_options[key]
                 if not isinstance(val, int) or val < 0:
                     raise ValueError(
                         '{} must be a non-negative integer value,'

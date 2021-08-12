@@ -2,6 +2,7 @@
 Utility functions
 """
 import contextlib
+import functools
 import logging
 import math
 import os
@@ -43,6 +44,7 @@ from cmdstanpy import (
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
+@functools.lru_cache(maxsize=None)
 def get_logger() -> logging.Logger:
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
@@ -893,14 +895,12 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
-    logger: Optional[logging.Logger] = None,
 ) -> Optional[str]:
     """
     Spawn process, print stdout/stderr to console.
     Throws RuntimeError on non-zero returncode.
     """
-    if logger:
-        logger.debug('cmd: %s', cmd)
+    get_logger().debug('cmd: %s', cmd)
     try:
         proc = subprocess.Popen(
             cmd,
@@ -1091,7 +1091,9 @@ def install_cmdstan(
         if version is not None:
             set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
         else:
-            set_cmdstan_path(os.path.join(dir, get_latest_cmdstan(dir)))
+            set_cmdstan_path(
+                os.path.join(dir, get_latest_cmdstan(dir))  # type: ignore
+            )
     return True
 
 
@@ -1157,18 +1159,16 @@ class MaybeDictToFilePath:
     def __init__(
         self,
         *objs: Union[str, Mapping[str, Any], List[Any], int, float, None],
-        logger: Optional[logging.Logger] = None,
     ):
         self._unlink = [False] * len(objs)
         self._paths: List[Any] = [''] * len(objs)
-        self._logger = logger or get_logger()
         i = 0
         for obj in objs:
             if isinstance(obj, Mapping):
                 data_file = create_named_text_file(
                     dir=_TMPDIR, prefix='', suffix='.json'
                 )
-                self._logger.debug('input tempfile: %s', data_file)
+                get_logger().debug('input tempfile: %s', data_file)
                 write_stan_json(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True

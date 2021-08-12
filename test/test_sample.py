@@ -1,5 +1,6 @@
 """CmdStan method sample tests"""
 
+import contextlib
 import logging
 import os
 import platform
@@ -7,6 +8,7 @@ import shutil
 import stat
 import tempfile
 import unittest
+from importlib import reload
 from multiprocessing import cpu_count
 from time import time
 
@@ -19,6 +21,7 @@ try:
 except ImportError:
     import json
 
+import cmdstanpy.stanfit
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
@@ -42,6 +45,14 @@ SAMPLER_STATE = [
 ]
 # metadata should make this unnecessary
 BERNOULLI_COLS = SAMPLER_STATE + ['theta']
+
+
+@contextlib.contextmanager
+def without_import(library, module):
+    with unittest.mock.patch.dict('sys.modules', {library: None}):
+        reload(module)
+        yield
+    reload(module)
 
 
 class SampleTest(unittest.TestCase):
@@ -491,6 +502,15 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.step_size, None)
 
+    def test_fixed_param_unspecified(self):
+        stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
+        datagen_model = CmdStanModel(stan_file=stan)
+        datagen_fit = datagen_model.sample(iter_sampling=100)
+        self.assertEqual(
+            datagen_fit.draws().shape, (100, 4, len(datagen_fit.column_names))
+        )  # ran 4 chains, set fixed_param=True afterwards
+        self.assertEqual(datagen_fit.num_unconstrained_params, 0)
+
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
 
@@ -555,7 +575,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Keyword "params" is depreciated, use "vars" instead.',
+                'Keyword "params" is deprecated, use "vars" instead.',
             )
         )
         self.assertEqual(fit.draws_pd(vars=['theta']).shape, (400, 1))
@@ -738,6 +758,12 @@ class CmdStanMCMCTest(unittest.TestCase):
             from_csv(path=no_csvfiles_path)
         if os.path.exists(no_csvfiles_path):
             shutil.rmtree(no_csvfiles_path, ignore_errors=True)
+
+    def test_from_csv_fixed_param(self):
+        csv_path = os.path.join(DATAFILES_PATH, 'fixed_param_sample.csv')
+        fixed_param_sample = from_csv(path=csv_path)
+        self.assertEqual(fixed_param_sample.draws_pd().shape, (100, 85))
+        self.assertEqual(fixed_param_sample.num_unconstrained_params, 0)
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -1117,7 +1143,17 @@ class CmdStanMCMCTest(unittest.TestCase):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
-        bern_model = CmdStanModel(stan_file=stan)
+        with LogCapture() as log:
+            bern_model = CmdStanModel(stan_file=stan, logger="Not None")
+        log.check_present(
+            (
+                "cmdstanpy",
+                "WARNING",
+                "Parameter 'logger' is deprecated."
+                " Control logging behavior via logging.getLogger('cmdstanpy')",
+            )
+        )
+
         bern_fit = bern_model.sample(
             data=jdata,
             chains=2,
@@ -1251,7 +1287,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Keyword "name" is depreciated, use "var" instead.',
+                'Keyword "name" is deprecated, use "var" instead.',
             )
         )
 
@@ -1586,6 +1622,26 @@ class CmdStanMCMCTest(unittest.TestCase):
         xr_var = bern_fit.draws_xr(vars=['theta'])
         self.assertEqual(xr_var.theta.dims, ('chain', 'draw', 'theta_dim_0'))
         self.assertEqual(xr_var.theta.values.shape, (1, 100, 1))
+
+    def test_no_xarray(self):
+        with without_import('xarray', cmdstanpy.stanfit):
+            with self.assertRaises(ImportError):
+                # if this fails the testing framework is the problem
+                import xarray as _  # noqa
+
+            stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+            jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+            bern_model = CmdStanModel(stan_file=stan)
+            bern_fit = bern_model.sample(
+                data=jdata,
+                chains=2,
+                seed=12345,
+                iter_warmup=100,
+                iter_sampling=100,
+            )
+
+            with self.assertRaises(RuntimeError):
+                bern_fit.draws_xr()
 
 
 if __name__ == '__main__':

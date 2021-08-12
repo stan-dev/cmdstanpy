@@ -46,8 +46,8 @@ from cmdstanpy.utils import (
     cmdstan_version_at,
     create_named_text_file,
     do_command,
-    get_logger,
     flatten_chains,
+    get_logger,
     parse_method_vars,
     parse_stan_vars,
     scan_config,
@@ -74,7 +74,11 @@ class RunSet:
         """Initialize object."""
         self._args = args
         self._chains = chains
-        self._logger = logger or get_logger()
+        if logger is not None:
+            get_logger().warning(
+                "Parameter 'logger' is deprecated."
+                " Control logging behavior via logging.getLogger('cmdstanpy)'"
+            )
         if chains < 1:
             raise ValueError(
                 'Chains must be positive integer value, '
@@ -354,7 +358,7 @@ class RunSet:
                     'File exists, not overwriting: {}'.format(to_path)
                 )
             try:
-                self._logger.debug(
+                get_logger().debug(
                     'saving tmpfile: "%s" as: "%s"', self._csv_files[i], to_path
                 )
                 shutil.move(self._csv_files[i], to_path)
@@ -420,7 +424,7 @@ class InferenceMetadata:
         """
         Returns map from Stan program variable names to variable dimensions.
         Scalar types are mapped to the empty tuple, e.g.,
-        program variable ``int foo`` has dimesion ``()`` and
+        program variable ``int foo`` has dimension ``()`` and
         program variable ``vector[10] bar`` has single dimension ``(10)``.
         Uses deepcopy for immutability.
         """
@@ -452,7 +456,11 @@ class CmdStanMCMC:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        self._logger = logger or get_logger()
+        if logger is not None:
+            get_logger().warning(
+                "Parameter 'logger' is deprecated."
+                " Control logging behavior via logging.getLogger('cmdstanpy')"
+            )
         # info from runset to be exposed
         sampler_args = self.runset._args.method_args
         assert isinstance(
@@ -535,7 +543,7 @@ class CmdStanMCMC:
         """
         Deprecated - use "metadata.method_vars_cols" instead
         """
-        self._logger.warning(
+        get_logger().warning(
             'Property "sampler_vars_cols" has been deprecated, '
             'use "metadata.method_vars_cols" instead.'
         )
@@ -546,7 +554,7 @@ class CmdStanMCMC:
         """
         Deprecated - use "metadata.stan_vars_cols" instead
         """
-        self._logger.warning(
+        get_logger().warning(
             'Property "stan_vars_cols" has been deprecated, '
             'use "metadata.stan_vars_cols" instead.'
         )
@@ -557,7 +565,7 @@ class CmdStanMCMC:
         """
         Deprecated - use "metadata.stan_vars_dims" instead
         """
-        self._logger.warning(
+        get_logger().warning(
             'Property "stan_vars_dims" has been deprecated, '
             'use "metadata.stan_vars_dims" instead.'
         )
@@ -589,6 +597,8 @@ class CmdStanMCMC:
         however a model with variables ``real alpha`` and ``simplex[3] beta``
         has 4 constrained and 3 unconstrained parameters.
         """
+        if self._is_fixed_param:
+            return 0
         return self._metadata.cmdstan_config[  # type: ignore
             'num_unconstrained_params'
         ]
@@ -659,7 +669,7 @@ class CmdStanMCMC:
             self._assemble_draws()
 
         if inc_warmup and not self._save_warmup:
-            self._logger.warning(
+            get_logger().warning(
                 "Sample doesn't contain draws from warmup iterations,"
                 ' rerun sampler with "save_warmup=True".'
             )
@@ -677,7 +687,7 @@ class CmdStanMCMC:
         """
         Deprecated - use method "draws()" instead.
         """
-        self._logger.warning(
+        get_logger().warning(
             'Method "sample" has been deprecated, use method "draws" instead.'
         )
         return self.draws()
@@ -687,7 +697,7 @@ class CmdStanMCMC:
         """
         Deprecated - use "draws(inc_warmup=True)"
         """
-        self._logger.warning(
+        get_logger().warning(
             'Method "warmup" has been deprecated, instead use method'
             ' "draws(inc_warmup=True)", returning draws from both'
             ' warmup and sampling iterations.'
@@ -721,6 +731,7 @@ class CmdStanMCMC:
                     save_warmup=self._save_warmup,
                     thin=self._thin,
                 )
+                # pylint: disable=consider-using-dict-items
                 for key in dzero:
                     if (
                         key
@@ -871,7 +882,7 @@ class CmdStanMCMC:
                 )
             csv_sig_figs = self._sig_figs or 6
             if sig_figs > csv_sig_figs:
-                self._logger.warning(
+                get_logger().warning(
                     'Requesting %d significant digits of output, but CSV files'
                     ' only have %d digits of precision.',
                     sig_figs,
@@ -894,7 +905,7 @@ class CmdStanMCMC:
             sig_figs_str,
             csv_str,
         ] + self.runset.csv_files
-        do_command(cmd, logger=self.runset._logger)
+        do_command(cmd)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
                 fd,
@@ -923,9 +934,9 @@ class CmdStanMCMC:
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         cmd = [cmd_path] + self.runset.csv_files
-        result = do_command(cmd=cmd, logger=self.runset._logger)
+        result = do_command(cmd=cmd)
         if result:
-            self.runset._logger.info(result)
+            get_logger().info(result)
         return result
 
     def draws_pd(
@@ -950,11 +961,9 @@ class CmdStanMCMC:
         """
         if params is not None:
             if vars is not None:
-                raise ValueError(
-                    "Cannot use both vars and (depreciated) params"
-                )
+                raise ValueError("Cannot use both vars and (deprecated) params")
             get_logger().warning(
-                'Keyword "params" is depreciated, use "vars" instead.'
+                'Keyword "params" is deprecated, use "vars" instead.'
             )
             vars = params
         if vars is not None:
@@ -1008,7 +1017,7 @@ class CmdStanMCMC:
                 'Package "xarray" is not installed, cannot produce draws array.'
             )
         if inc_warmup and not self._save_warmup:
-            self._logger.warning(
+            get_logger().warning(
                 "Draws from warmup iterations not available,"
                 ' must run sampler with "save_warmup=True".'
             )
@@ -1055,7 +1064,11 @@ class CmdStanMCMC:
         )
 
     def stan_variable(
-        self, var: str = None, inc_warmup: bool = False, *, name: str = None
+        self,
+        var: Optional[str] = None,
+        inc_warmup: bool = False,
+        *,
+        name: Optional[str] = None,
     ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
@@ -1091,10 +1104,10 @@ class CmdStanMCMC:
         if name is not None:
             if var is not None:
                 raise ValueError(
-                    'Cannot use both "var" and (depreciated) "name"'
+                    'Cannot use both "var" and (deprecated) "name"'
                 )
             get_logger().warning(
-                'Keyword "name" is depreciated, use "var" instead.'
+                'Keyword "name" is deprecated, use "var" instead.'
             )
             var = name
         if var is None:
@@ -1146,7 +1159,7 @@ class CmdStanMCMC:
         """
         Deprecated, use "method_variables" instead
         """
-        self._logger.warning(
+        get_logger().warning(
             'Method "sampler_variables" has been deprecated, '
             'use method "method_variables" instead.'
         )
@@ -1156,7 +1169,7 @@ class CmdStanMCMC:
         """
         Deprecated, use "method_variables" instead
         """
-        self._logger.warning(
+        get_logger().warning(
             'Method "sampler_diagnostics" has been deprecated, '
             'use method "method_variables" instead.'
         )
@@ -1211,7 +1224,7 @@ class CmdStanMLE:
     def column_names(self) -> Tuple[str, ...]:
         """
         Names of estimated quantities, includes joint log probability,
-        and all parameters, transformed parameters, and generated quantitites.
+        and all parameters, transformed parameters, and generated quantities.
         """
         return self._column_names
 
@@ -1239,7 +1252,9 @@ class CmdStanMLE:
         """Returns optimized params as Dict."""
         return OrderedDict(zip(self.column_names, self._mle))
 
-    def stan_variable(self, var: str = None, *, name: str = None) -> np.ndarray:
+    def stan_variable(
+        self, var: Optional[str] = None, *, name: Optional[str] = None
+    ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -1250,10 +1265,10 @@ class CmdStanMLE:
         if name is not None:
             if var is not None:
                 raise ValueError(
-                    'Cannot use both "var" and (depreciated) "name".'
+                    'Cannot use both "var" and (deprecated) "name".'
                 )
             get_logger().warning(
-                'Keyword "name" is depreciated, use "var" instead.'
+                'Keyword "name" is deprecated, use "var" instead.'
             )
             var = name
         if var is None:
@@ -1342,6 +1357,7 @@ class CmdStanGQ:
                 drest = scan_generated_quantities_csv(
                     path=self.runset.csv_files[i],
                 )
+                # pylint: disable=consider-using-dict-items
                 for key in dzero:
                     if (
                         key
@@ -1481,7 +1497,7 @@ class CmdStanGQ:
                 for item, count in Counter(cols_1 + cols_2).items()
                 if count > 1
             ]
-            drop_cols = []
+            drop_cols: List[int] = []
             for dup in dups:
                 drop_cols.extend(self.mcmc_sample.metadata.stan_vars_cols[dup])
 
@@ -1661,21 +1677,25 @@ class CmdStanGQ:
 
         num_draws = self.mcmc_sample.num_draws_sampling
         sample_config = self.mcmc_sample.metadata.cmdstan_config
-        attrs = {
+        attrs: MutableMapping[Hashable, Any] = {
             "stan_version": f"{sample_config['stan_version_major']}."
             f"{sample_config['stan_version_minor']}."
             f"{sample_config['stan_version_patch']}",
             "model": sample_config["model"],
-            "num_unconstrained_params":
-            self.mcmc_sample.num_unconstrained_params,
+            "num_unconstrained_params": (
+                self.mcmc_sample.num_unconstrained_params
+            ),
             "num_draws_sampling": num_draws,
         }
         if inc_warmup and sample_config['save_warmup']:
             num_draws += self.mcmc_sample.num_draws_warmup
             attrs["num_draws_warmup"] = self.mcmc_sample.num_draws_warmup
 
-        data = {}
-        coordinates = {"chain": self.chain_ids, "draw": np.arange(num_draws)}
+        data: MutableMapping[Hashable, Any] = {}
+        coordinates: MutableMapping[Hashable, Any] = {
+            "chain": self.chain_ids,
+            "draw": np.arange(num_draws),
+        }
 
         for var in vars_list:
             build_xarray_data(
@@ -1702,7 +1722,11 @@ class CmdStanGQ:
         )
 
     def stan_variable(
-        self, var: str = None, inc_warmup: bool = False, *, name: str = None
+        self,
+        var: Optional[str] = None,
+        inc_warmup: bool = False,
+        *,
+        name: Optional[str] = None,
     ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
@@ -1738,10 +1762,10 @@ class CmdStanGQ:
         if name is not None:
             if var is not None:
                 raise ValueError(
-                    'Cannot use both "var" and (depreciated) "name"'
+                    'Cannot use both "var" and (deprecated) "name"'
                 )
             get_logger().warning(
-                'Keyword "name" is depreciated, use "var" instead.'
+                'Keyword "name" is deprecated, use "var" instead.'
             )
             var = name
         if var is None:
@@ -1890,7 +1914,9 @@ class CmdStanVB:
         """
         return self._metadata
 
-    def stan_variable(self, var: str = None, *, name: str = None) -> np.ndarray:
+    def stan_variable(
+        self, var: Optional[str] = None, *, name: Optional[str] = None
+    ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -1901,10 +1927,10 @@ class CmdStanVB:
         if name is not None:
             if var is not None:
                 raise ValueError(
-                    'Cannot use both "var" and (depreciated) "name"'
+                    'Cannot use both "var" and (deprecated) "name"'
                 )
             get_logger().warning(
-                'Keyword "name" is depreciated, use "var" instead.'
+                'Keyword "name" is deprecated, use "var" instead.'
             )
             var = name
         if var is None:
@@ -2033,6 +2059,37 @@ def from_csv(
                 thin=config_dict['thin'],
                 save_warmup=config_dict['save_warmup'],
             )
+            # bugfix 425, check for fixed_params output
+            try:
+                check_sampler_csv(
+                    csvfiles[0],
+                    iter_sampling=config_dict['num_samples'],
+                    iter_warmup=config_dict['num_warmup'],
+                    thin=config_dict['thin'],
+                    save_warmup=config_dict['save_warmup'],
+                )
+            except ValueError:
+                try:
+                    check_sampler_csv(
+                        csvfiles[0],
+                        is_fixed_param=True,
+                        iter_sampling=config_dict['num_samples'],
+                        iter_warmup=config_dict['num_warmup'],
+                        thin=config_dict['thin'],
+                        save_warmup=config_dict['save_warmup'],
+                    )
+                    sampler_args = SamplerArgs(
+                        iter_sampling=config_dict['num_samples'],
+                        iter_warmup=config_dict['num_warmup'],
+                        thin=config_dict['thin'],
+                        save_warmup=config_dict['save_warmup'],
+                        fixed_param=True,
+                    )
+                except (ValueError) as e:
+                    raise ValueError(
+                        'Invalid or corrupt Stan CSV output file, '
+                    ) from e
+
             cmdstan_args = CmdStanArgs(
                 model_name=config_dict['model'],
                 model_exe=config_dict['model'],
@@ -2106,7 +2163,7 @@ def from_csv(
 
 
 def build_xarray_data(
-    data: Dict[str, Tuple[Tuple[str, ...], np.ndarray]],
+    data: MutableMapping[Hashable, Tuple[Tuple[str, ...], np.ndarray]],
     var_name: str,
     dims: Tuple[int, ...],
     col_idxs: Tuple[int, ...],
@@ -2117,11 +2174,9 @@ def build_xarray_data(
     Adds Stan variable name, labels, and values to a dictionary
     that will be used to construct an xarray DataSet.
     """
-    var_dims = ('draw', 'chain')
+    var_dims: Tuple[str, ...] = ('draw', 'chain')
     if dims:
-        var_dims = ("draw", "chain") + tuple(
-            f"{var_name}_dim_{i}" for i in range(len(dims))
-        )
+        var_dims += tuple(f"{var_name}_dim_{i}" for i in range(len(dims)))
         data[var_name] = (var_dims, drawset[start_row:, :, col_idxs])
     else:
         data[var_name] = (
