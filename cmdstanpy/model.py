@@ -457,26 +457,26 @@ class CmdStanModel:
         :param init_alpha: Line search step size for first iteration
 
         :param tol_obj: Convergence tolerance on changes in objective
-            function value
+        function value
 
         :param tol_rel_obj: Convergence tolerance on relative changes
-            in objective function value
+         in objective function value
 
         :param tol_grad: Convergence tolerance on the norm of the gradient
 
         :param tol_rel_grad: Convergence tolerance on the relative
-            norm of the gradient
+        norm of the gradient
 
         :param tol_param: Convergence tolerance on changes in parameter value
 
         :param history_size: Size of the history for LBFGS Hessian
-            approximation. The value should be less than the dimensionality
-            of the parameter space. 5-10 usually sufficient
+        approximation. The value should be less than the dimensionality
+        of the parameter space. 5-10 usually sufficient
 
         :param iter: Total number of iterations
 
         :param refresh: Specify the number of iterations cmdstan will take
-            between progress messages. Default value is 100.
+        between progress messages. Default value is 100.
 
         :return: CmdStanMLE object
         """

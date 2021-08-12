@@ -82,8 +82,8 @@ cmdstan_path
 
 .. _function_install_cmdstan:
 
-install_cmdstan
-===============
+install_cmstan
+==============
 
 .. autofunction:: cmdstanpy.install_cmdstan
 
