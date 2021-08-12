@@ -1044,8 +1044,8 @@ def install_cmdstan(
         Defaults to latest CmdStan release.
 
     :param dir: Path to install directory.  Defaults to hidden directory
-        ``$HOME/.cmdstan`` or ``$HOME/.cmdstanpy``, if the latter exists.
-        If no directory is specified and neither of the above directories
+        ``$HOME/.cmdstan``.
+        If no directory is specified and the above directory does not exist
         exist, directory ``$HOME/.cmdstan`` will be created and populated.
 
     :param overwrite:  Boolean value; when ``True``, will overwrite and

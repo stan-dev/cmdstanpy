@@ -8,7 +8,7 @@ example model ``bernoulli.stan``.
 
 Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
-   -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan(py)
+   -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
    --verbose: flag, when specified prints output from CmdStan build process
    --progress: flag, when specified show progress bar for CmdStan download
@@ -307,7 +307,7 @@ def main() -> None:
         '--version', '-v', help="version, defaults to latest release version"
     )
     parser.add_argument(
-        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan(py)"
+        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan"
     )
     parser.add_argument(
         '--overwrite',
