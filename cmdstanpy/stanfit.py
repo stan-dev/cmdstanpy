@@ -1758,6 +1758,10 @@ class CmdStanGQ:
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the MCMC sample, then the warmup draws are included.
             Default value is ``False``.
+
+        See Also
+        --------
+        :meth:`cmdstanpy.CmdStanVB.stan_variable`
         """
         if name is not None:
             if var is not None:

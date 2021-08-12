@@ -120,7 +120,7 @@ sampler and Stan program variables.
 The ``draws`` and ``draws_pd`` methods return the sample contents
 in columnar format.
 
-The ``stan_variable`` method to returns a numpy.ndarray object
+The :py:meth:`~cmdstanpy.CmdStanMCMC.stan_variable` method to returns a numpy.ndarray object
 which contains the set of all draws in the sample for the named Stan program variable.
 The draws from all chains are flattened into a single drawset.
 The first ndarray dimension is the number of draws X number of chains.
