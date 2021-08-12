@@ -34,7 +34,7 @@ given a set of N observations of i.i.d. binary data
       y ~ bernoulli(theta);
     }
 
-The :ref:`class_cmdstanmodel` class manages the Stan program and its corresponding compiled executable.
+The :class:`CmdStanModel` class manages the Stan program and its corresponding compiled executable.
 It provides properties and functions to inspect the model code and filepaths.
 CmdStanPy, manages the environment variable ``CMDSTAN`` which specifies the path to
 the local CmdStan installation.

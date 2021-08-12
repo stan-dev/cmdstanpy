@@ -193,6 +193,9 @@ the :meth:`~CmdStanMCMC.draws_xr` method  of these two objects returns the sampl
 contents as an :py:class:`xarray.Dataset` which maps the method and model variable
 names to their respective values.
 
+The :meth:`~CmdStanMCMC.method_variables` method returns a Python dict over all inference
+method variables.
+
 All inference objects expose the following methods:
 
 The :meth:`~CmdStanMCMC.stan_variable` method to returns a numpy.ndarray object
@@ -201,7 +204,3 @@ The draws from all chains are flattened into a single drawset.
 The first ndarray dimension is the number of draws X number of chains.
 The remaining ndarray dimensions correspond to the Stan program variable dimension.
 The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all Stan model variables.
-
-The :meth:`~CmdStanMCMC.method_variables` method returns a Python dict over all inference
-method variables.
-

@@ -352,7 +352,7 @@ intersphinx_mapping = {
         None,
     ),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-    'pandas': ('https://pandas.pydata.org/pandas-docs/stable', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
     'xarray': ('https://xarray.pydata.org/en/stable/', None),
 }
 

@@ -97,7 +97,7 @@ consisting of a modern C++ compiler and the GNU-Make utility.
 Function ``install_cmdstan``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CmdStanPy provides the function :ref:`function_install_cmdstan` which
+CmdStanPy provides the function :func:`~cmdstanpy.install_cmdstan` which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
 

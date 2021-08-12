@@ -387,8 +387,8 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     Dump a mapping of strings to data to a JSON file.
 
     Values can be any numeric type, a boolean (converted to int),
-    or any collection compatible with ``numpy.asarray``, e.g a
-    pandas.Series.
+    or any collection compatible with :func:`numpy.asarray`, e.g a
+    :class:`pandas.Series`.
 
     Produces a file compatible with the
     `Json Format for Cmdstan
@@ -398,8 +398,8 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
         already in existence.
 
     :param data: A mapping from strings to values. This can be a dictionary
-        or something more exotic like an xarray.Dataset. This will be copied
-        before type conversion, not modified
+        or something more exotic like an :class:`xarray.Dataset`. This will be
+        copied before type conversion, not modified
     """
     data_out = {}
     for key, val in data.items():
