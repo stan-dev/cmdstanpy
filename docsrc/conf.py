@@ -138,7 +138,8 @@ html_style = 'css/project-template.css'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'sphinx_rtd_theme'
-html_theme = 'theme'  # a customized version of pydata-sphinx-theme
+html_theme = 'theme'  # a slight customization of pydata-sphinx-theme, which still depends on it:
+# https://pydata-sphinx-theme.readthedocs.io/en/latest/index.html
 html_theme_path = ['.']  # make sphinx search for themes in current dir
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -147,9 +148,35 @@ html_theme_path = ['.']  # make sphinx search for themes in current dir
 
 html_theme_options = {
     "navbar_start": ["navbar-logo", "title"],
+    "page_sidebar_items": ["search-field", "page-toc", "edit-this-page"],
+    "icon_links": [
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/mcmc_stan",
+            "icon": "fab fa-twitter",
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/stan-dev/cmdstanpy",
+            "icon": "fab fa-github",
+        },
+        {
+            "name": "Forums",
+            "url": "https://discourse.mc-stan.org/",
+            "icon": "fas fa-users",
+        },
+    ],
+    "use_edit_page_button": True,
 }
-# Add any paths that contain custom themes here, relative to this directory.
-# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+html_sidebars = {"**": []}
+
+html_context = {
+    "github_user": "stan-dev",
+    "github_repo": "cmdstanpy",
+    "github_version": "develop",
+    "doc_path": "docsrc",
+}
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
