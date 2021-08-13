@@ -95,7 +95,7 @@ class CmdStanMLETest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Keyword "name" is depreciated, use "var" instead.',
+                'Keyword "name" is deprecated, use "var" instead.',
             )
         )
 

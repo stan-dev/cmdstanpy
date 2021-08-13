@@ -38,6 +38,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
+    "nbsphinx",
+    "sphinx_copybutton",
 ]
 
 # this is needed for some reason...
@@ -313,6 +317,26 @@ texinfo_documents = [
     )
 ]
 
+
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "string": ":class:`string <str>`",
+    "array": ":term:`array`",
+    # objects without namespace
+    "DataArray": "~xarray.DataArray",
+    "Dataset": "~xarray.Dataset",
+    "Variable": "~xarray.Variable",
+    "ndarray": "~numpy.ndarray",
+    "Series": "~pandas.Series",
+    "DataFrame": "~pandas.DataFrame",
+    "CmdStanMCMC": "~cmdstanpy.CmdStanMCMC",
+    "CmdStanMLE": "~cmdstanpy.CmdStanMLE",
+    "CmdStanMCVB": "~cmdstanpy.CmdStanMCVB",
+    "CmdStanMCGQ": "~cmdstanpy.CmdStanMCGQ",
+}
+
+nbsphinx_allow_errors = True
+
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []
 
@@ -328,14 +352,16 @@ texinfo_documents = [
 
 # # Example configuration for intersphinx: refer to the Python standard library.
 # # intersphinx configuration
-# intersphinx_mapping = {
-#     'python': ('https://docs.python.org/{.major}'.format(
-#         sys.version_info), None),
-#     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-#     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-#     'matplotlib': ('https://matplotlib.org/', None),
-#     'sklearn': ('http://scikit-learn.org/stable', None)
-# }
+intersphinx_mapping = {
+    'python': (
+        'https://docs.python.org/{.major}'.format(sys.version_info),
+        None,
+    ),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'xarray': ('https://xarray.pydata.org/en/stable/', None),
+}
+
 #
 # # sphinx-gallery configuration
 # sphinx_gallery_conf = {

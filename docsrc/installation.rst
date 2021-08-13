@@ -1,17 +1,48 @@
 Installation
 ============
 
-Both CmdStanPy and CmdStan must be installed;
-since the CmdStanPy package contains utility ``install_cmdstan``,
-we recommend installing the CmdStanPy package first.
+CmdStanPy is a pure-Python3 package, but it relies on CmdStan for all
+of its functionality. There are several ways to install CmdStan and CmdStanPy, 
+which depend on the kind of user you are. 
 
 
-Install package CmdStanPy
+Conda users (Recommended)
 -------------------------
 
-CmdStanPy is a pure-Python3 package.
+If you use `conda <https://docs.conda.io/en/latest/>`__, 
+installation of both can be done very simply. CmdStanPy
+and CmdStan are both available via the 
+`conda-forge <https://conda-forge.org/>`__ repository.
 
-It can be installed from PyPI via URL: https://pypi.org/project/cmdstanpy/ or from the
+We recommend creating a new environment for CmdStan[Py]:
+
+.. code-block:: bash
+
+    conda create -n cmdstan -c conda-forge cmdstanpy
+
+but installation is possible in an existing environment:
+
+.. code-block:: bash
+
+    conda install -c conda-forge cmdstanpy
+
+These commands will install CmdStanPy, CmdStan, and the
+required compilers for using CmdStan on your system inside
+a conda environment. To use them, run ``conda activate cmdstan``,
+or whichever name you used for your environment (following ``-n``
+above).
+
+Note that CmdStan is only available on conda for versions
+2.27.0 and newer. If you require an older version, you must use
+one of the following methods to install it. If you require a
+version of CmdStan *newer* than 2.27.0, but not the latest,
+you can install it in the standard conda way by specifying
+``cmdstan==VERSION`` in the install command.
+
+Pip (non-Conda) users 
+-------------------------
+
+CmdStan can also be installed from PyPI via URL: https://pypi.org/project/cmdstanpy/ or from the
 command line using ``pip``:
 
 .. code-block:: bash
@@ -20,7 +51,8 @@ command line using ``pip``:
 
 The optional packages are
 
-  * ``tqdm`` which allows for progress bar display during sampling
+* ``tqdm`` which allows for progress bar display during sampling
+* ``xarray``, an n-dimension labeled dataset package which can be used for outputs
 
 To install CmdStanPy with all the optional packages:
 
@@ -35,12 +67,18 @@ To install the current develop branch from GitHub:
     pip install -e git+https://github.com/stan-dev/cmdstanpy@/develop
 
 
-*Note for PyStan users:*  PyStan and CmdStanPy should be installed in separate environments.
+If CmdStanPy is installed in this manner, 
+**you must install CmdStan**. The recommended way for Pip users 
+to do so is via the ``install_cmdstan`` function 
+:ref:`described below<install-cmdstan-fun>`
+
+*Note for PyStan & RTools users:*  PyStan and CmdStanPy should be installed in 
+separate environments if you are using the RTools toolchain (primarily Windows users).
 If you already have PyStan installed, you should take care to install CmdStanPy in its own
 virtual environment.
 
-Install CmdStan
----------------
+Installing CmdStan
+------------------
 
 Prerequisites
 ^^^^^^^^^^^^^
@@ -54,17 +92,17 @@ consisting of a modern C++ compiler and the GNU-Make utility.
 
 + maxOS:  install XCode and Xcode command line tools via command: `xcode-select --install`.
 
+.. _install-cmdstan-fun:
+
 Function ``install_cmdstan``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CmdStanPy provides the function :ref:`function_install_cmdstan` which
+CmdStanPy provides the function :func:`~cmdstanpy.install_cmdstan` which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
 
 The default install location is a hidden directory in the user ``$HOME`` directory
-named ``.cmdstan``.  (In earlier versions, the hidden directory was named ``.cmdstanpy``,
-and if directory ``$HOME/.cmdstanpy`` exists, it will continue to be used as the
-default install dir.)  This directory will be created by the install script.
+named ``.cmdstan``.  This directory will be created by the install script.
 
 + From Python
 
@@ -112,7 +150,9 @@ default install dir.)
 
 If you have installed CmdStan in a different directory,
 then you can set the environment variable ``CMDSTAN`` to this
-location and it will be picked up by CmdStanPy:
+location and it will be picked up by CmdStanPy. Note: This is done
+for you if you installed via ``conda``, as cmdstan will be installed
+in the ``bin/`` subfolder of the environment directory.
 
 .. code-block:: bash
 
