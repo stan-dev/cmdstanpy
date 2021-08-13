@@ -147,7 +147,7 @@ html_theme_path = ['.']  # make sphinx search for themes in current dir
 # html_theme_options = {}
 
 html_theme_options = {
-    "navbar_start": ["navbar-logo", "title"],
+    "navbar_start": ["title"],
     "page_sidebar_items": ["search-field", "page-toc", "edit-this-page"],
     "icon_links": [
         {
@@ -169,7 +169,7 @@ html_theme_options = {
     "use_edit_page_button": True,
 }
 
-html_sidebars = {"**": []}
+html_sidebars = {"**": [], "index": ['logo'], "overview": ['logo']}
 
 html_context = {
     "github_user": "stan-dev",
@@ -187,7 +187,7 @@ html_context = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'images/logo_icon.png'
+html_logo = '_static/images/logo_icon.png'
 
 
 # The name of an image file (within the static path) to use as favicon of the
