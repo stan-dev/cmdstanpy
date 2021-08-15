@@ -10,8 +10,14 @@ In order to verify the installation and also to demonstrate
 the CmdStanPy workflow, we use CmdStanPy to fit the
 the example Stan model ``bernoulli.stan``
 to the dataset ``bernoulli.data.json``.
-The example model and data are included with the CmdStan distribution
-in subdirectory `examples/bernoulli`.
+This model and data are included with the CmdStan distribution
+in subdirectory ``examples/bernoulli``.
+This example allows the user to verify that CmdStanPy, CmdStan,
+the StanC compiler, and the C++ toolchain have all been properly installed.
+For substantive example models and
+guidance on coding statistical models in Stan, see
+the `CmdStan User's Guide <https://mc-stan.org/docs/2_27/stan-users-guide/index.html>`_.
+
 
 The Stan model
 ^^^^^^^^^^^^^^
@@ -38,7 +44,7 @@ The :class:`CmdStanModel` class manages the Stan program and its corresponding c
 It provides properties and functions to inspect the model code and filepaths.
 CmdStanPy, manages the environment variable ``CMDSTAN`` which specifies the path to
 the local CmdStan installation.
-The function :func:`cmdstanpy.cmdstan_path` returns the value of this environment variable.
+The function :func:`~cmdstan_path` returns the value of this environment variable.
 
 .. ipython:: python
 
@@ -78,18 +84,18 @@ The data file `bernoulli.data.json` contains the following inputs:
 Fitting the model
 ^^^^^^^^^^^^^^^^^
 
-The :meth:`CmdStanModel.sample` method is used to do Bayesian inference
+The :meth:`~CmdStanModel.sample` method is used to do Bayesian inference
 over the model conditioned on data using  using Hamiltonian Monte Carlo
 (HMC) sampling. It runs Stan's HMC-NUTS sampler on the model and data and
 returns a :class:`CmdStanMCMC` object.  The data can be specified
 either as a filepath or a Python dictionary; in this example, we use the
 example datafile `bernoulli.data.json`:
 
-By default, the ``sample`` method runs 4 sampler chains.
+By default, the :meth:`~CmdStanModel.sample` method runs 4 sampler chains.
 The ``output_dir`` argument is an optional argument which specifies
 the path to the output directory used by CmdStan.
 If this argument is omitted, the output files are written
-to a temporary directory which is deleted when the current Python session is terminated. [#]_
+to a temporary directory which is deleted when the current Python session is terminated.
 
 
 .. ipython:: python
@@ -107,7 +113,7 @@ to a temporary directory which is deleted when the current Python session is ter
 Accessing the sample
 ^^^^^^^^^^^^^^^^^^^^
 
-The CmdStan `sample` method outputs are a set of per-chain
+The :meth:`~CmdStanModel.sample` method outputs are a set of per-chain
 `Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__.
 The filenames follow the template '<model_name>-<YYYYMMDDHHMM>-<chain_id>'
 plus the file suffix '.csv'.
@@ -177,14 +183,6 @@ to a specified directory.
 
     bernoulli_fit.save_csvfiles(dir='some/path')
 
-.. rubric:: Footnotes
-
-.. [#] Because CmdStan is file-based and because model development
-       more often than not requires many successive runs of a model,
-       sending outputs to a temporary directory avoids filling up
-       the filesystem with unneeded CSV files. Since more user time
-       is spent in model development, not saving outputs
-       is the default option.
 
 .. comment
   Progress bar

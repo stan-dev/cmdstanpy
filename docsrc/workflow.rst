@@ -3,24 +3,36 @@
 CmdStanPy Workflow
 __________________
 
-
-Developing a good analysis of a problem or dataset is an
-open-ended process, usually requiring many iterations of
-developing a model, fitting the data, and evaluating the results.
-The Bayesian workflow for model comparison and model expansion
-provides a framework for organizing these activities.
-
-CmdStanPy provides the tools needed to
+The statistical modeling enterprise has two principal modalities:
+development and production.
+The focus of development is model building, comparison, and validation.
+Many models are written and fitted to many kinds of data.
+The focus of production is using a trusted model on real-world data
+to obtain estimates for decision-making.
+In both modalities, the essential workflow remains the same:
 compile a Stan model, assemble input data,
 do inference on the model conditioned on the data,
 and validate, access, and export the results.
+
+Model development and testing is an
+open-ended process, usually requiring many iterations of
+developing a model, fitting the data, and evaluating the results.
+Since more user time is spent in model development,
+CmdStanPy defaults favor development mode.
+CmdStan is file-based interface.
+On the assumption that model development will require
+many successive runs of a model, by default, outputs are written
+to a temporary directory to avoid filling up the filesystem with
+unneeded CmdStan output files.
+Non-default options allow all filepaths to be fully specified
+so that scripts can be used to distribute analysis jobs across
+nodes and machines.
+
+The Bayesian workflow for model comparison and model expansion
+provides a framework for model development, much of which
+also applies to monitoring model performance in production.
 The following sections describe the process of building, running, and
 managing the resulting inference for a single model and set of inputs.
-
-During the course of an analysis, it is expected that this sequence
-of commands will be carried out repeatedly,
-either to compare different models or to compare the results of
-difference infenence methods.
 
 .. _model-compilation:
 

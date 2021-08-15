@@ -64,10 +64,10 @@ To install the current develop branch from GitHub:
 
 .. code-block:: bash
 
-    pip install -e git+https://github.com/stan-dev/cmdstanpy@/develop
+    pip install -e git+https://github.com/stan-dev/cmdstanpy@/develop#egg=cmdstanpy
 
 
-If CmdStanPy is installed in this manner, 
+If you install CmdStanPy from GitHub,
 **you must install CmdStan**. The recommended way for Pip users 
 to do so is via the ``install_cmdstan`` function 
 :ref:`described below<install-cmdstan-fun>`
@@ -143,20 +143,16 @@ Post Installation: Setting Environment Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The default for the CmdStan installation location
-is a directory named ``.cmdstan`` in your ``$HOME`` directory.
-(In earlier versions, the hidden directory was named ``.cmdstanpy``,
-and if directory ``$HOME/.cmdstanpy`` exists, it will continue to be used as the
-default install dir.)
-
+is a directory named ``.cmdstan`` in your ``$HOME`` directory. [1]_
 If you have installed CmdStan in a different directory,
 then you can set the environment variable ``CMDSTAN`` to this
-location and it will be picked up by CmdStanPy. Note: This is done
+location and it will be picked up by CmdStanPy. `Note:` This is done
 for you if you installed via ``conda``, as cmdstan will be installed
 in the ``bin/`` subfolder of the environment directory.
 
 .. code-block:: bash
 
-    export CMDSTAN='/path/to/cmdstan-2.24.0'
+    export CMDSTAN='/path/to/cmdstan-2.27.0'
 
 
 The CmdStanPy commands ``cmdstan_path`` and ``set_cmdstan_path``
@@ -176,3 +172,11 @@ To use custom ``make``-tool use ``set_make_env`` function.
 
     from cmdstanpy import set_make_env
     set_make_env("mingw32-make.exe") # On Windows with mingw32-make
+
+
+.. rubric:: Footnotes
+
+.. [1]  In earlier versions, the hidden directory was named ``.cmdstanpy``;
+   use of this directory has been deprecated.
+
+    
