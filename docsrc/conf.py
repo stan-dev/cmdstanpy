@@ -23,6 +23,27 @@ import sphinx_rtd_theme
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.dirname(os.path.abspath('.')))
 
+
+# this sets up logging to print all logging messages
+# the ipython directive doesn't show logging, so this is a hack
+import logging
+from logging import StreamHandler
+
+
+class PrintHandler(StreamHandler):
+    def __init__(self):
+        StreamHandler.__init__(self)
+
+    def emit(self, record):
+        msg = self.format(record)
+        print('INFO:cmdstanpy:' + msg)
+
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger('cmdstanpy')
+logger.addHandler(PrintHandler())
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
