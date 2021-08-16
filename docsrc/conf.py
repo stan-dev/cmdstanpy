@@ -14,9 +14,35 @@
 
 import os
 import sys
+import subprocess
 
-# import sphinx_gallery
-import sphinx_rtd_theme
+# debug info
+print("python exec:", sys.executable)
+print("sys.path:", sys.path)
+print("environment:", os.environ)
+
+if "conda" in sys.executable:
+    print("conda environment:")
+    subprocess.run(["conda", "list"])
+    subprocess.run(["conda", "info"])
+
+else:
+    print("pip environment:")
+    subprocess.run([sys.executable, "-m", "pip", "list"])
+
+# hacky for RTD - which doesn't actually call conda activate
+# see: https://github.com/readthedocs/readthedocs.org/issues/5339
+if os.environ.get('READTHEDOCS', False):
+    import cmdstanpy
+    cmdstanpy.set_cmdstan_path(
+        '/home/docs/checkouts/readthedocs.org/user_builds/cmdstanpy/'
+        'conda/latest/bin/cmdstan'
+    )
+
+    os.environ['CXX'] = (
+        '/home/docs/checkouts/readthedocs.org/user_builds/cmdstanpy/'
+        'conda/latest/bin/x86_64-conda-linux-gnu-c++'
+    )
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
