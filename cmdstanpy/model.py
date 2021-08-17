@@ -1,6 +1,5 @@
 """CmdStanModel"""
 
-import ctypes
 import logging
 import os
 import platform
@@ -163,9 +162,12 @@ class CmdStanModel:
         self._compiler_options.validate()
 
         if platform.system() == 'Windows':
-            try:
-                ctypes.cdll.LoadLibrary('tbb')
-            except (FileNotFoundError, OSError):
+            check = subprocess.run(
+                ["where.exe", "tbb.dll"], capture_output=True, check=False
+            )
+            if b'tbb.dll' in check.stdout:
+                get_logger().debug("TBB already found in load path")
+            else:
                 # Add tbb to the $PATH on Windows
                 libtbb = os.environ.get('STAN_TBB')
                 if libtbb is None:
@@ -180,8 +182,6 @@ class CmdStanModel:
                         )
                     )
                 )
-            else:
-                get_logger().debug("TBB already found in load path")
 
         if compile and self._exe_file is None:
             self.compile()
