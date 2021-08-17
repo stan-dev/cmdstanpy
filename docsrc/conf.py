@@ -189,7 +189,9 @@ html_style = 'css/project-template.css'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme' # https://pydata-sphinx-theme.readthedocs.io/en/latest/index.html
+# theme is customized via _templates/
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -197,20 +199,36 @@ html_theme = 'sphinx_rtd_theme'
 # html_theme_options = {}
 
 html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
-    'style_nav_header_background': '#edf0f2',
-    # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False,
+    "navbar_start": ["title"],
+    "page_sidebar_items": ["search-field", "page-toc", "edit-this-page"],
+    "icon_links": [
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/mcmc_stan",
+            "icon": "fab fa-twitter",
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/stan-dev/cmdstanpy",
+            "icon": "fab fa-github",
+        },
+        {
+            "name": "Forums",
+            "url": "https://discourse.mc-stan.org/",
+            "icon": "fas fa-users",
+        },
+    ],
+    "use_edit_page_button": True,
 }
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+html_sidebars = {"**": [], "index": ['logo'], "overview": ['logo']}
+
+html_context = {
+    "github_user": "stan-dev",
+    "github_repo": "cmdstanpy",
+    "github_version": "develop",
+    "doc_path": "docsrc",
+}
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -221,7 +239,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'images/logo_icon.png'
+html_logo = '_static/images/logo_icon.png'
 
 
 # The name of an image file (within the static path) to use as favicon of the
