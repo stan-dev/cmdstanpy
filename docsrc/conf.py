@@ -34,6 +34,7 @@ else:
 # see: https://github.com/readthedocs/readthedocs.org/issues/5339
 if os.environ.get('READTHEDOCS', False):
     import cmdstanpy
+
     cmdstanpy.set_cmdstan_path(
         '/home/docs/checkouts/readthedocs.org/user_builds/cmdstanpy/'
         'conda/latest/bin/cmdstan'
@@ -190,7 +191,7 @@ html_style = 'css/project-template.css'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'sphinx_rtd_theme'
-html_theme = 'pydata_sphinx_theme' # https://pydata-sphinx-theme.readthedocs.io/en/latest/index.html
+html_theme = 'pydata_sphinx_theme'  # https://pydata-sphinx-theme.readthedocs.io/en/latest/index.html
 # theme is customized via _templates/
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -219,6 +220,7 @@ html_theme_options = {
         },
     ],
     "use_edit_page_button": True,
+    "show_toc_level": 2,
 }
 
 html_sidebars = {"**": [], "index": ['logo'], "overview": ['logo']}

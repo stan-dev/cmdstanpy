@@ -25,10 +25,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install os dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install pandoc -y
+
       - name: Install dependencies (python)
         run: |
-          pip install --upgrade pip wheel twine codecov sphinx sphinx_rtd_theme requests
+          pip install --upgrade pip wheel twine codecov sphinx nbsphinx ipython ipykernel pydata-sphinx-theme requests sphinx-copybutton matplotlib
           pip install -r requirements.txt
+          pip install -e .
+
+      - name: Install CmdStan 
+        run: |
+          python -m cmdstanpy.install_cmdstan
 
       - name: Setup git identity
         run: |
