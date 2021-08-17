@@ -1,184 +1,219 @@
 
-
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>cmdstanpy – Python interface to CmdStan &mdash; CmdStanPy 0.9.76 documentation</title>
-  
 
-  
-  <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/project-template.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 0.9.77 documentation</title>
     
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
 
     
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Overview" href="overview.html" /> 
-</head>
+    <link rel="next" title="Overview" href="overview.html" />
 
-<body class="wy-body-for-nav">
-
-   
-  <div class="wy-grid-for-nav">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
     
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search"  style="background: #edf0f2" >
-          
+<link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
-          
-            <a href="#" class="icon icon-home"> CmdStanPy
-          
-
-          
-            
-            <img src="_static/logo_icon.png" class="logo" alt="Logo"/>
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                0.9.76
-              </div>
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hello_world.html">“Hello, World”</a></li>
-<li class="toctree-l1"><a class="reference internal" href="stan_models.html">Stan Models in CmdStanPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sample.html">MCMC Sampling</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generate_quantities.html">Run Generated Quantities</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optimize.html">Maximum Likelihood Estimation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="variational_bayes.html">Variational Inference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="under_the_hood.html">Under the Hood</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
-</ul>
-
-            
-          
-        </div>
-        
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">CmdStanPy</a>
-        
-      </nav>
-
-
-      <div class="wy-nav-content">
-        
-        <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-        
-      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmdstanpy</span></code> – Python interface to CmdStan</li>
+    <div class="container-fluid" id="banner"></div>
+
     
+<nav id="navbar-main" class="navbar navbar-dark navbar-expand-lg fixed-top bd-navbar"
+    style="background-color: #222222;"><div class="container-xl">
+
+  <div id="navbar-start">
     
-      <li class="wy-breadcrumbs-aside">
-        
-          
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
+    <!-- This will display the version of the docs -->
+<a class='navbar-brand' href='index.html'>CmdStanPy 0.9.77</a>
     
-  </ul>
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
 
   
-  <hr/>
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="overview.html">
+  Overview
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="hello_world.html">
+  “Hello, World”
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="workflow.html">
+  CmdStanPy Workflow
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="examples.html">
+  CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="api.html">
+  API Reference
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums">
+            <span><i class="fas fa-users"></i></span>
+            <label class="sr-only">Forums</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+</nav>
+
+
+    <div class="container-xl">
+      <div class="row">
+          
             
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><div class="text-center">
+    <img src="_static/images/logo_tm.png" alt="The Stan Logo" width="120">
+</div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                <form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/index.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
   <div class="section" id="module-cmdstanpy">
 <span id="cmdstanpy-python-interface-to-cmdstan"></span><h1><a class="reference internal" href="#module-cmdstanpy" title="cmdstanpy: A lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms."><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmdstanpy</span></code></a> – Python interface to CmdStan<a class="headerlink" href="#module-cmdstanpy" title="Permalink to this headline">¶</a></h1>
+<p>CmdStanPy is a lightweight interface to Stan for Python users which
+provides the necessary objects and functions to do Bayesian inference
+given a probability model and data.
+It wraps the
+<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan</a>
+command line interface in a small set of
+Python classes which provide methods to do analysis and manage the resulting
+set of model, data, and posterior estimates.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#install-package-cmdstanpy">Install package CmdStanPy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#install-cmdstan">Install CmdStan</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#conda-users-recommended">Conda users (Recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#pip-non-conda-users">Pip (non-Conda) users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-cmdstan">Installing CmdStan</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="installation.html#prerequisites">Prerequisites</a></li>
 <li class="toctree-l3"><a class="reference internal" href="installation.html#function-install-cmdstan">Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="installation.html#diy-installation">DIY Installation</a></li>
@@ -188,52 +223,41 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">“Hello, World”</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="hello_world.html#bayesian-estimation-via-stan-s-hmc-nuts-sampler">Bayesian estimation via Stan’s HMC-NUTS sampler</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="hello_world.html#instantiate-the-stan-model-assemble-the-data">Instantiate the Stan model, assemble the data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hello_world.html#run-the-hmc-nuts-sampler">Run the HMC-NUTS sampler</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hello_world.html#access-the-sample">Access the sample</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hello_world.html#summarize-the-results">Summarize the results</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hello_world.html#save-the-stan-csv-files">Save the Stan CSV files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hello_world.html#fitting-a-stan-model-using-the-nuts-hmc-sampler">Fitting a Stan model using the NUTS-HMC sampler</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#the-stan-model">The Stan model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#data-inputs">Data inputs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#fitting-the-model">Fitting the model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#accessing-the-sample">Accessing the sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#cmdstan-utilities-stansummary-diagnose">CmdStan utilities:  <cite>stansummary</cite>, <cite>diagnose</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#managing-stan-csv-files">Managing Stan CSV files</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="stan_models.html">Stan Models in CmdStanPy</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="stan_models.html#model-compilation">Model compilation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="stan_models.html#specifying-a-custom-make-tool">Specifying a custom Make tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">CmdStanPy Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#compile-the-stan-model">Compile the Stan model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#assemble-input-and-initialization-data">Assemble input and initialization data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#run-the-cmdstan-inference-engine">Run the CmdStan inference engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow.html#validate-view-export-the-inference-engine-outputs">Validate, view, export the inference engine outputs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="workflow.html#metadata">Metadata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="workflow.html#output-data">Output data</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sample.html">MCMC Sampling</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sample.html#nuts-hmc-sampler-configuration">NUTS-HMC sampler configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sample.html#cmdstanmcmc-hmc-sample-and-metadata">CmdStanMCMC: HMC sample and metadata</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sample.html#example-fit-model-sampler-defaults">Example: fit model - sampler defaults</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sample.html#example-high-level-parallelization-with-reduce-sum">Example: high-level parallelization with <strong>reduce_sum</strong></a></li>
-<li class="toctree-l2"><a class="reference internal" href="sample.html#example-generate-data-fixed-param-true">Example: generate data - <cite>fixed_param=True</cite></a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">CmdStanPy Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/MCMC%20Sampling.html">MCMC Sampling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/MCMC%20Sampling.html#Fitting-a-model-to-data">Fitting a model to data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/MCMC%20Sampling.html#Running-a-data-generating-model-using-fixed_param=True">Running a data-generating model using <code class="docutils literal notranslate"><span class="pre">fixed_param=True</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="generate_quantities.html">Run Generated Quantities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="generate_quantities.html#configuration">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generate_quantities.html#example-add-posterior-predictive-checks-to-bernoulli-stan">Example: add posterior predictive checks to <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Maximum%20Likelihood%20Estimation.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Variational%20Inference.html">Variational Inference in Stan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/Variational%20Inference.html#Example:-variational-inference-for-model-bernoulli.stan">Example: variational inference for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="optimize.html">Maximum Likelihood Estimation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="optimize.html#optimize-configuration">Optimize configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="optimize.html#example-estamate-mle-for-model-bernoulli-stan-by-optimization">Example: estamate MLE for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code> by optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="optimize.html#references">References</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="variational_bayes.html">Variational Inference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="variational_bayes.html#advi-configuration">ADVI configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="variational_bayes.html#example-variational-inference-for-model-bernoulli-stan">Example: variational inference for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="variational_bayes.html#references">References</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="under_the_hood.html">Under the Hood</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="under_the_hood.html#file-handling">File Handling</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="under_the_hood.html#input-data">Input Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="under_the_hood.html#output-files">Output Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Run%20Generated%20Quantities.html">Generating new quantities of interest.</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/Run%20Generated%20Quantities.html#Example:-add-posterior-predictive-checks-to-bernoulli.stan">Example: add posterior predictive checks to <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -245,14 +269,17 @@
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmle">CmdStanMLE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstangq">CmdStanGQ</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanvb">CmdStanVB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#inferencemetadata">InferenceMetadata</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#runset">RunSet</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#functions">Functions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstan-path">cmdstan_path</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#install-cmstan">install_cmstan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#install-cmdstan">install_cmdstan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#set-cmdstan-path">set_cmdstan_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#set-make-env">set_make_env</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#from-csv">from_csv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#write-stan-json">write_stan_json</a></li>
 </ul>
 </li>
 </ul>
@@ -263,50 +290,39 @@
 </div>
 
 
-           </div>
-           
-          </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="overview.html" class="btn btn-neutral float-right" title="Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+    <a class='right-next' id="next-link" href="overview.html" title="next page">Overview</a>
 
-  <hr/>
+              </div>
+              
+          </main>
+          
 
-  <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Stan Development Team.
-
-    </p>
-  </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-        </div>
       </div>
-
-    </section>
-
-  </div>
+    </div>
   
+  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
 
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script>
-
-  
-  
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
     
-   
-
-</body>
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Stan Development Team.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
 </html>
