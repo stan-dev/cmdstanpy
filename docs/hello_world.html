@@ -348,15 +348,15 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="gp">In [8]: </span><span class="nb">print</span><span class="p">(</span><span class="n">bernoulli_fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-1-ox_9r6nr.csv</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-2-fx3p_i3j.csv</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-3-aaq8514n.csv</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-4-sjhliy9r.csv</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-1-5hcz4pmp.csv</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-2-ho9nbv1t.csv</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-3-bxn_0syr.csv</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-4-1o86_n37.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-1-ox_9r6nr-stdout.txt</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-2-fx3p_i3j-stdout.txt</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-3-aaq8514n-stdout.txt</span>
-<span class="go">	/tmp/tmpxl3l3hz9/bernoulli-202108172010-4-sjhliy9r-stdout.txt</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-1-5hcz4pmp-stdout.txt</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-2-ho9nbv1t-stdout.txt</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-3-bxn_0syr-stdout.txt</span>
+<span class="go">	/tmp/tmp2ac09t4t/bernoulli-202108172117-4-1o86_n37-stdout.txt</span>
 </pre></div>
 </div>
 </div>
@@ -408,8 +408,8 @@ all model parameters and quantities of interest in a pandas.DataFrame:</p>
 <span class="gh">Out[13]: </span><span class="go"></span>
 <span class="go">       Mean    MCSE  StdDev     5%   50%   95%   N_Eff  N_Eff/s  R_hat</span>
 <span class="go">name                                                                  </span>
-<span class="go">lp__  -7.30  0.0240    0.78 -8.900 -7.00 -6.80  1100.0  26000.0    1.0</span>
-<span class="go">theta  0.25  0.0037    0.12  0.074  0.24  0.48  1100.0  26000.0    1.0</span>
+<span class="go">lp__  -7.30  0.0200    0.80 -9.000 -7.00 -6.80  1600.0  31000.0    1.0</span>
+<span class="go">theta  0.25  0.0033    0.12  0.076  0.23  0.47  1400.0  27000.0    1.0</span>
 </pre></div>
 </div>
 <p>CmdStan is distributed with a second posterior analysis utility
@@ -419,7 +419,7 @@ looking for potential problems which indicate that the sample
 isn’t a representative sample from the posterior.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose" title="cmdstanpy.CmdStanMCMC.diagnose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnose()</span></code></a> method runs this utility and prints the output to the console.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="nb">print</span><span class="p">(</span><span class="n">bernoulli_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
-<span class="go">INFO:cmdstanpy:Processing csv files: /tmp/tmpxl3l3hz9/bernoulli-202108172010-1-ox_9r6nr.csv, /tmp/tmpxl3l3hz9/bernoulli-202108172010-2-fx3p_i3j.csv, /tmp/tmpxl3l3hz9/bernoulli-202108172010-3-aaq8514n.csv, /tmp/tmpxl3l3hz9/bernoulli-202108172010-4-sjhliy9r.csv</span>
+<span class="go">INFO:cmdstanpy:Processing csv files: /tmp/tmp2ac09t4t/bernoulli-202108172117-1-5hcz4pmp.csv, /tmp/tmp2ac09t4t/bernoulli-202108172117-2-ho9nbv1t.csv, /tmp/tmp2ac09t4t/bernoulli-202108172117-3-bxn_0syr.csv, /tmp/tmp2ac09t4t/bernoulli-202108172117-4-1o86_n37.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>
@@ -435,7 +435,7 @@ The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose"
 <span class="go">Split R-hat values satisfactory all parameters.</span>
 
 <span class="go">Processing complete, no problems detected.</span>
-<span class="go">Processing csv files: /tmp/tmpxl3l3hz9/bernoulli-202108172010-1-ox_9r6nr.csv, /tmp/tmpxl3l3hz9/bernoulli-202108172010-2-fx3p_i3j.csv, /tmp/tmpxl3l3hz9/bernoulli-202108172010-3-aaq8514n.csv, /tmp/tmpxl3l3hz9/bernoulli-202108172010-4-sjhliy9r.csv</span>
+<span class="go">Processing csv files: /tmp/tmp2ac09t4t/bernoulli-202108172117-1-5hcz4pmp.csv, /tmp/tmp2ac09t4t/bernoulli-202108172117-2-ho9nbv1t.csv, /tmp/tmp2ac09t4t/bernoulli-202108172117-3-bxn_0syr.csv, /tmp/tmp2ac09t4t/bernoulli-202108172117-4-1o86_n37.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>
