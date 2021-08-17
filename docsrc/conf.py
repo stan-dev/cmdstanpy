@@ -14,13 +14,61 @@
 
 import os
 import sys
+import subprocess
 
-# import sphinx_gallery
+# debug info
+print("python exec:", sys.executable)
+print("sys.path:", sys.path)
+print("environment:", os.environ)
+
+if "conda" in sys.executable:
+    print("conda environment:")
+    subprocess.run(["conda", "list"])
+    subprocess.run(["conda", "info"])
+
+else:
+    print("pip environment:")
+    subprocess.run([sys.executable, "-m", "pip", "list"])
+
+# hacky for RTD - which doesn't actually call conda activate
+# see: https://github.com/readthedocs/readthedocs.org/issues/5339
+if os.environ.get('READTHEDOCS', False):
+    import cmdstanpy
+    cmdstanpy.set_cmdstan_path(
+        '/home/docs/checkouts/readthedocs.org/user_builds/cmdstanpy/'
+        'conda/latest/bin/cmdstan'
+    )
+
+    os.environ['CXX'] = (
+        '/home/docs/checkouts/readthedocs.org/user_builds/cmdstanpy/'
+        'conda/latest/bin/x86_64-conda-linux-gnu-c++'
+    )
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.dirname(os.path.abspath('.')))
+
+
+# this sets up logging to print all logging messages
+# the ipython directive doesn't show logging, so this is a hack
+import logging
+from logging import StreamHandler
+
+
+class PrintHandler(StreamHandler):
+    def __init__(self):
+        StreamHandler.__init__(self)
+
+    def emit(self, record):
+        msg = self.format(record)
+        print('INFO:cmdstanpy:' + msg)
+
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger('cmdstanpy')
+logger.addHandler(PrintHandler())
 
 # -- General configuration ------------------------------------------------
 
@@ -37,6 +85,10 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
+    "nbsphinx",
+    "sphinx_copybutton",
 ]
 
 # this is needed for some reason...
@@ -330,6 +382,26 @@ texinfo_documents = [
     )
 ]
 
+
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "string": ":class:`string <str>`",
+    "array": ":term:`array`",
+    # objects without namespace
+    "DataArray": "~xarray.DataArray",
+    "Dataset": "~xarray.Dataset",
+    "Variable": "~xarray.Variable",
+    "ndarray": "~numpy.ndarray",
+    "Series": "~pandas.Series",
+    "DataFrame": "~pandas.DataFrame",
+    "CmdStanMCMC": "~cmdstanpy.CmdStanMCMC",
+    "CmdStanMLE": "~cmdstanpy.CmdStanMLE",
+    "CmdStanMCVB": "~cmdstanpy.CmdStanMCVB",
+    "CmdStanMCGQ": "~cmdstanpy.CmdStanMCGQ",
+}
+
+nbsphinx_allow_errors = True
+
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []
 
@@ -345,14 +417,16 @@ texinfo_documents = [
 
 # # Example configuration for intersphinx: refer to the Python standard library.
 # # intersphinx configuration
-# intersphinx_mapping = {
-#     'python': ('https://docs.python.org/{.major}'.format(
-#         sys.version_info), None),
-#     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-#     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-#     'matplotlib': ('https://matplotlib.org/', None),
-#     'sklearn': ('http://scikit-learn.org/stable', None)
-# }
+intersphinx_mapping = {
+    'python': (
+        'https://docs.python.org/{.major}'.format(sys.version_info),
+        None,
+    ),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'xarray': ('https://xarray.pydata.org/en/stable/', None),
+}
+
 #
 # # sphinx-gallery configuration
 # sphinx_gallery_conf = {

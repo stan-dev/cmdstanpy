@@ -42,6 +42,7 @@ from .stanfit import (  # noqa
     CmdStanMCMC,
     CmdStanMLE,
     CmdStanVB,
+    InferenceMetadata,
     from_csv,
 )
 from .utils import set_cmdstan_path  # noqa
@@ -57,6 +58,7 @@ __all__ = [
     'CmdStanGQ',
     'CmdStanVB',
     'CmdStanModel',
+    'InferenceMetadata',
     'from_csv',
     'write_stan_json',
 ]
