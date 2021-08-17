@@ -35,14 +35,16 @@ else:
 if os.environ.get('READTHEDOCS', False):
     import cmdstanpy
 
+    version = 'v' + cmdstanpy.__version__
+
     cmdstanpy.set_cmdstan_path(
         '/home/docs/checkouts/readthedocs.org/user_builds/cmdstanpy/'
-        'conda/latest/bin/cmdstan'
+        'conda/' + version + '/bin/cmdstan'
     )
 
     os.environ['CXX'] = (
         '/home/docs/checkouts/readthedocs.org/user_builds/cmdstanpy/'
-        'conda/latest/bin/x86_64-conda-linux-gnu-c++'
+        'conda/' + version + '/bin/x86_64-conda-linux-gnu-c++'
     )
 
 # If extensions (or modules to document with autodoc) are in another directory,
