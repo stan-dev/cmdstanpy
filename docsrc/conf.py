@@ -190,9 +190,8 @@ html_style = 'css/project-template.css'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'sphinx_rtd_theme'
-html_theme = 'theme'  # a slight customization of pydata-sphinx-theme, which still depends on it:
+html_theme = 'pydata_sphinx_theme'  # a slight customization of pydata-sphinx-theme, which still depends on it:
 # https://pydata-sphinx-theme.readthedocs.io/en/latest/index.html
-html_theme_path = ['.']  # make sphinx search for themes in current dir
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
