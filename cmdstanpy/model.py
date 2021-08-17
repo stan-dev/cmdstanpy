@@ -403,7 +403,7 @@ class CmdStanModel:
         Unspecified arguments are not included in the call to CmdStan, i.e.,
         those arguments will have CmdStan default values.
 
-        The ``CmdStanMLE`` object records the command, the return code,
+        The :class:`CmdStanMLE` object records the command, the return code,
         and the paths to the optimize method output csv and console files.
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
@@ -422,7 +422,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            ``numpy.random.RandomState()`` is used to generate a seed.
+            :class:`numpy.random.RandomState` is used to generate a seed.
 
         :param inits:  Specifies how the sampler initializes parameter values.
             Initialization is either uniform random on a range centered on 0,
@@ -457,26 +457,26 @@ class CmdStanModel:
         :param init_alpha: Line search step size for first iteration
 
         :param tol_obj: Convergence tolerance on changes in objective
-        function value
+            function value
 
         :param tol_rel_obj: Convergence tolerance on relative changes
-         in objective function value
+            in objective function value
 
         :param tol_grad: Convergence tolerance on the norm of the gradient
 
         :param tol_rel_grad: Convergence tolerance on the relative
-        norm of the gradient
+            norm of the gradient
 
         :param tol_param: Convergence tolerance on changes in parameter value
 
         :param history_size: Size of the history for LBFGS Hessian
-        approximation. The value should be less than the dimensionality
-        of the parameter space. 5-10 usually sufficient
+            approximation. The value should be less than the dimensionality
+            of the parameter space. 5-10 usually sufficient
 
         :param iter: Total number of iterations
 
         :param refresh: Specify the number of iterations cmdstan will take
-        between progress messages. Default value is 100.
+            between progress messages. Default value is 100.
 
         :return: CmdStanMLE object
         """
@@ -551,7 +551,7 @@ class CmdStanModel:
         refresh: Optional[int] = None,
     ) -> CmdStanMCMC:
         """
-        Run or more chains of the NUTS sampler to produce a set of draws
+        Run or more chains of the NUTS-HMC sampler to produce a set of draws
         from the posterior distribution of a model conditioned on some data.
 
         This function validates the specified configuration, composes a call to
@@ -560,7 +560,7 @@ class CmdStanModel:
         Unspecified arguments are not included in the call to CmdStan, i.e.,
         those arguments will have CmdStan default values.
 
-        For each chain, the ``CmdStanMCMC`` object records the command,
+        For each chain, the :class:`CmdStanMCMC` object records the command,
         the return code, the sampler output file paths, and the corresponding
         console outputs, if any. The output files are written either to a
         specified output directory or to a temporary directory which is deleted
@@ -581,7 +581,7 @@ class CmdStanModel:
         :param chains: Number of sampler chains, must be a positive integer.
 
         :param parallel_chains: Number of processes to run in parallel. Must be
-            a positive integer.  Defaults to ``multiprocessing.cpu_count()``.
+            a positive integer.  Defaults to :func:`multiprocessing.cpu_count`.
 
         :param threads_per_chain: The number of threads to use in parallelized
             sections within an MCMC chain (e.g., when using the Stan functions
@@ -591,7 +591,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            ``numpy.random.RandomState()``
+            :class:`numpy.random.RandomState`
             is used to generate a seed which will be used for all chains.
             When the same seed is used across all chains,
             the chain-id is used to advance the RNG to avoid dependent samples.
@@ -894,11 +894,11 @@ class CmdStanModel:
         Run CmdStan's generate_quantities method which runs the generated
         quantities block of a model given an existing sample.
 
-        This function takes a CmdStanMCMC object and the dataset used to
-        generate that sample and calls to the CmdStan ``generate_quantities``
+        This function takes a :class:`CmdStanMCMC` object and the dataset used
+        to generate that sample and calls to the CmdStan ``generate_quantities``
         method to generate additional quantities of interest.
 
-        The ``CmdStanGQ`` object records the command, the return code,
+        The :class:`CmdStanGQ` object records the command, the return code,
         and the paths to the generate method output csv and console files.
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
@@ -915,13 +915,13 @@ class CmdStanModel:
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
-        :param mcmc_sample: Can be either a ``CmdStanMCMC`` object returned by
-            the ``sample`` method or a list of stan-csv files generated
+        :param mcmc_sample: Can be either a :class:`CmdStanMCMC` object returned
+            by the :meth:`sample` method or a list of stan-csv files generated
             by fitting the model to the data using any Stan interface.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            ``numpy.random.RandomState()``
+            :class:`numpy.random.RandomState`
             is used to generate a seed which will be used for all chains.
             *NOTE: Specifying the seed will guarantee the same result for
             multiple invocations of this method with the same inputs.  However
@@ -1040,7 +1040,7 @@ class CmdStanModel:
         Unspecified arguments are not included in the call to CmdStan, i.e.,
         those arguments will have CmdStan default values.
 
-        The ``CmdStanVB`` object records the command, the return code,
+        The :class:`CmdStanVB` object records the command, the return code,
         and the paths to the variational method output csv and console files.
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
@@ -1059,7 +1059,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            ``numpy.random.RandomState()``
+            :class:`numpy.random.RandomState`
             is used to generate a seed which will be used for all chains.
 
         :param inits:  Specifies how the sampler initializes parameter values.
@@ -1213,7 +1213,14 @@ class CmdStanModel:
             runset._set_retcode(idx, proc.returncode)
             if stdout:
                 with open(runset.stdout_files[idx], 'w+') as fd:
-                    fd.write(stdout.decode('utf-8'))
+                    contents = stdout.decode('utf-8')  # bugfix 425
+                    if 'running fixed_param sampler' in contents:
+                        sampler_args = runset._args.method_args
+                        assert isinstance(
+                            sampler_args, SamplerArgs
+                        )  # make the typechecker happy
+                        sampler_args.fixed_param = True
+                    fd.write(contents)
             console_error = ''
             if stderr:
                 console_error = stderr.decode('utf-8')

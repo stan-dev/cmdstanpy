@@ -160,6 +160,11 @@ def cmdstan_path() -> str:
                     'no CmdStan installation found, '
                     'run command line script "install_cmdstan"'
                 )
+            get_logger().warning(
+                "Using ~/.cmdstanpy is deprecated and"
+                " will not be automatically detected in version 1.0!\n"
+                " Please rename to ~/.cmdstan"
+            )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
@@ -387,18 +392,19 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     Dump a mapping of strings to data to a JSON file.
 
     Values can be any numeric type, a boolean (converted to int),
-    or any collection compatible with ``numpy.asarray``, e.g a
-    pandas.Series.
+    or any collection compatible with :func:`numpy.asarray`, e.g a
+    :class:`pandas.Series`.
 
     Produces a file compatible with the
     `Json Format for Cmdstan
     <https://mc-stan.org/docs/2_27/cmdstan-guide/json.html>`__
 
     :param path: File path for the created json. Will be overwritten if
-    already in existence.
+        already in existence.
+
     :param data: A mapping from strings to values. This can be a dictionary
-    or something more exotic like an xarray.Dataset. This will be copied
-    before type conversion, not modified
+        or something more exotic like an :class:`xarray.Dataset`. This will be
+        copied before type conversion, not modified
     """
     data_out = {}
     for key, val in data.items():
@@ -1039,8 +1045,8 @@ def install_cmdstan(
         Defaults to latest CmdStan release.
 
     :param dir: Path to install directory.  Defaults to hidden directory
-        ``$HOME/.cmdstan`` or ``$HOME/.cmdstanpy``, if the latter exists.
-        If no directory is specified and neither of the above directories
+        ``$HOME/.cmdstan``.
+        If no directory is specified and the above directory does not
         exist, directory ``$HOME/.cmdstan`` will be created and populated.
 
     :param overwrite:  Boolean value; when ``True``, will overwrite and

@@ -8,7 +8,7 @@ example model ``bernoulli.stan``.
 
 Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
-   -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan(py)
+   -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
    --verbose: flag, when specified prints output from CmdStan build process
    --progress: flag, when specified show progress bar for CmdStan download
@@ -31,7 +31,7 @@ from time import sleep
 from typing import Callable, Dict, Optional
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import pushd, validate_dir, wrap_progress_hook
+from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -307,7 +307,7 @@ def main() -> None:
         '--version', '-v', help="version, defaults to latest release version"
     )
     parser.add_argument(
-        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan(py)"
+        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan"
     )
     parser.add_argument(
         '--overwrite',
@@ -353,6 +353,11 @@ def main() -> None:
         cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         if os.path.exists(cmdstanpy_dir):
             cmdstan_dir = cmdstanpy_dir
+            get_logger().warning(
+                "Using ~/.cmdstanpy is deprecated and"
+                " will not be automatically detected in version 1.0!\n"
+                " Please rename to ~/.cmdstan"
+            )
 
     install_dir = cmdstan_dir
     if vars(args)['dir']:

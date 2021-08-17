@@ -327,6 +327,10 @@ class RunSet:
         Moves csvfiles to specified directory.
 
         :param dir: directory path
+
+        See Also
+        --------
+        cmdstanpy.from_csv
         """
         if dir is None:
             dir = os.path.realpath('.')
@@ -391,6 +395,12 @@ class InferenceMetadata:
 
     @property
     def cmdstan_config(self) -> Dict[str, Any]:
+        """
+        Returns a dictionary containing a set of name, value pairs
+        parsed out of the Stan CSV file header.  These include the
+        command configuration and the CSV file header row information.
+        Uses deepcopy for immutability.
+        """
         return copy.deepcopy(self._cmdstan_config)
 
     @property
@@ -398,7 +408,7 @@ class InferenceMetadata:
         """
         Returns a map from a Stan inference method variable to
         a tuple of column indices in inference engine's output array.
-        Sampler variable names always end in `__`, e.g. `lp__`.
+        Method variable names always end in `__`, e.g. `lp__`.
         Uses deepcopy for immutability.
         """
         return copy.deepcopy(self._method_vars_cols)
@@ -430,13 +440,11 @@ class CmdStanMCMC:
     Container for outputs from CmdStan sampler run.
     Provides methods to summarize and diagnose the model fit
     and accessor methods to access the entire sample or
-    individual items.
+    individual items. Created by :meth:`CmdStanModel.sample`
 
     The sample is lazily instantiated on first access of either
     the resulting sample or the HMC tuning parameters, i.e., the
-    step size and metric.  The sample can viewed either as a 2D array
-    of draws from all chains by sampler and model variables, or as a
-    3D array of draws by chains by variables.
+    step size and metric.
     """
 
     # pylint: disable=too-many-public-methods
@@ -593,6 +601,8 @@ class CmdStanMCMC:
         however a model with variables ``real alpha`` and ``simplex[3] beta``
         has 4 constrained and 3 unconstrained parameters.
         """
+        if self._is_fixed_param:
+            return 0
         return self._metadata.cmdstan_config[  # type: ignore
             'num_unconstrained_params'
         ]
@@ -658,6 +668,12 @@ class CmdStanMCMC:
 
         :param concat_chains: When ``True`` return a 2D array flattening all
             all draws from all chains.  Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanMCMC.draws_pd
+        CmdStanMCMC.draws_xr
+        CmdStanGQ.draws
         """
         if self._draws.size == 0:
             self._assemble_draws()
@@ -952,6 +968,12 @@ class CmdStanMCMC:
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanMCMC.draws
+        CmdStanMCMC.draws_xr
+        CmdStanGQ.draws_pd
         """
         if params is not None:
             if vars is not None:
@@ -999,10 +1021,18 @@ class CmdStanMCMC:
     ) -> "xr.Dataset":
         """
         Returns the sampler draws as a xarray Dataset.
+
         :param vars: optional list of variable names.
+
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanMCMC.draws
+        CmdStanMCMC.draws_pd
+        CmdStanGQ.draws_xr
         """
         if not XARRAY_INSTALLED:
             raise RuntimeError(
@@ -1092,6 +1122,13 @@ class CmdStanMCMC:
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanMCMC.stan_variables
+        CmdStanMLE.stan_variable
+        CmdStanVB.stan_variable
+        CmdStanGQ.stan_variable
         """
         if name is not None:
             if var is not None:
@@ -1126,6 +1163,13 @@ class CmdStanMCMC:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
+
+        See Also
+        --------
+        CmdStanMCMC.stan_variable
+        CmdStanMLE.stan_variables
+        CmdStanVB.stan_variables
+        CmdStanGQ.stan_variables
         """
         result = {}
         for name in self._metadata.stan_vars_dims.keys():
@@ -1175,6 +1219,11 @@ class CmdStanMCMC:
         'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
+
+        See Also
+        --------
+        stanfit.RunSet.save_csvfiles
+        cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
 
@@ -1182,6 +1231,7 @@ class CmdStanMCMC:
 class CmdStanMLE:
     """
     Container for outputs from CmdStan optimization.
+    Created by :meth:`CmdStanModel.optimize`.
     """
 
     def __init__(self, runset: RunSet) -> None:
@@ -1253,6 +1303,13 @@ class CmdStanMLE:
         numpy.ndarray match the shape of the Stan program variable.
 
         :param var: variable name
+
+        See Also
+        --------
+        CmdStanMLE.stan_variables
+        CmdStanMCMC.stan_variable
+        CmdStanVB.stan_variable
+        CmdStanGQ.stan_variable
         """
         if name is not None:
             if var is not None:
@@ -1279,6 +1336,13 @@ class CmdStanMLE:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
+
+        See Also
+        --------
+        CmdStanMLE.stan_variable
+        CmdStanMCMC.stan_variables
+        CmdStanVB.stan_variables
+        CmdStanGQ.stan_variables
         """
         result = {}
         for name in self._metadata.stan_vars_dims.keys():
@@ -1293,6 +1357,11 @@ class CmdStanMLE:
         'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
+
+        See Also
+        --------
+        stanfit.RunSet.save_csvfiles
+        cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
 
@@ -1300,6 +1369,7 @@ class CmdStanMLE:
 class CmdStanGQ:
     """
     Container for outputs from CmdStan generate_quantities run.
+    Created by :meth:`CmdStanModel.generate_quantities`.
     """
 
     def __init__(
@@ -1470,6 +1540,12 @@ class CmdStanGQ:
         :param inc_sample: When ``True`` include all columns in the mcmc_sample
             draws array as well, excepting columns for variables already present
             in the generated quantities drawset. Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanGQ.draws_pd
+        CmdStanGQ.draws_xr
+        CmdStanMCMC.draws
         """
         if self._draws.size == 0:
             self._assemble_generated_quantities()
@@ -1538,6 +1614,12 @@ class CmdStanGQ:
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the output, i.e., the sampler was run with ``save_warmup=True``,
             then the warmup draws are included.  Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanGQ.draws
+        CmdStanGQ.draws_xr
+        CmdStanMCMC.draws_pd
         """
         if vars is not None:
             if isinstance(vars, str):
@@ -1631,10 +1713,18 @@ class CmdStanGQ:
     ) -> "xr.Dataset":
         """
         Returns the generated quantities draws as a xarray Dataset.
+
         :param vars: optional list of variable names.
+
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the MCMC sample, then the warmup draws are included.
             Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanGQ.draws
+        CmdStanGQ.draws_pd
+        CmdStanMCMC.draws_xr
         """
         if not XARRAY_INSTALLED:
             raise RuntimeError(
@@ -1748,6 +1838,13 @@ class CmdStanGQ:
         :param inc_warmup: When ``True`` and the warmup draws are present in
             the MCMC sample, then the warmup draws are included.
             Default value is ``False``.
+
+        See Also
+        --------
+        CmdStanGQ.stan_variables
+        CmdStanMCMC.stan_variable
+        CmdStanMLE.stan_variable
+        CmdStanVB.stan_variable
         """
         if name is not None:
             if var is not None:
@@ -1783,6 +1880,17 @@ class CmdStanGQ:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
+
+        :param inc_warmup: When ``True`` and the warmup draws are present in
+            the MCMC sample, then the warmup draws are included.
+            Default value is ``False``
+
+        See Also
+        --------
+        CmdStanGQ.stan_variable
+        CmdStanMCMC.stan_variables
+        CmdStanMLE.stan_variables
+        CmdStanVB.stan_variables
         """
         result = {}
         sample_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
@@ -1819,6 +1927,11 @@ class CmdStanGQ:
         'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
+
+        See Also
+        --------
+        stanfit.RunSet.save_csvfiles
+        cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
 
@@ -1826,6 +1939,7 @@ class CmdStanGQ:
 class CmdStanVB:
     """
     Container for outputs from CmdStan variational run.
+    Created by :meth:`CmdStanModel.variational`.
     """
 
     def __init__(self, runset: RunSet) -> None:
@@ -1913,6 +2027,13 @@ class CmdStanVB:
         numpy.ndarray match the shape of the Stan program variable.
 
         :param var: variable name
+
+        See Also
+        --------
+        CmdStanVB.stan_variables
+        CmdStanMCMC.stan_variable
+        CmdStanMLE.stan_variable
+        CmdStanGQ.stan_variable
         """
         if name is not None:
             if var is not None:
@@ -1939,6 +2060,13 @@ class CmdStanVB:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
+
+        See Also
+        --------
+        CmdStanVB.stan_variable
+        CmdStanMCMC.stan_variables
+        CmdStanMLE.stan_variables
+        CmdStanGQ.stan_variables
         """
         result = {}
         for name in self._metadata.stan_vars_dims.keys():
@@ -1958,6 +2086,11 @@ class CmdStanVB:
         'bernoulli-201912081451-1.csv'.
 
         :param dir: directory path
+
+        See Also
+        --------
+        stanfit.RunSet.save_csvfiles
+        cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
 
@@ -2049,6 +2182,37 @@ def from_csv(
                 thin=config_dict['thin'],
                 save_warmup=config_dict['save_warmup'],
             )
+            # bugfix 425, check for fixed_params output
+            try:
+                check_sampler_csv(
+                    csvfiles[0],
+                    iter_sampling=config_dict['num_samples'],
+                    iter_warmup=config_dict['num_warmup'],
+                    thin=config_dict['thin'],
+                    save_warmup=config_dict['save_warmup'],
+                )
+            except ValueError:
+                try:
+                    check_sampler_csv(
+                        csvfiles[0],
+                        is_fixed_param=True,
+                        iter_sampling=config_dict['num_samples'],
+                        iter_warmup=config_dict['num_warmup'],
+                        thin=config_dict['thin'],
+                        save_warmup=config_dict['save_warmup'],
+                    )
+                    sampler_args = SamplerArgs(
+                        iter_sampling=config_dict['num_samples'],
+                        iter_warmup=config_dict['num_warmup'],
+                        thin=config_dict['thin'],
+                        save_warmup=config_dict['save_warmup'],
+                        fixed_param=True,
+                    )
+                except (ValueError) as e:
+                    raise ValueError(
+                        'Invalid or corrupt Stan CSV output file, '
+                    ) from e
+
             cmdstan_args = CmdStanArgs(
                 model_name=config_dict['model'],
                 model_exe=config_dict['model'],
