@@ -490,7 +490,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 INFO:cmdstanpy:found newer exe file, not recompiling
-INFO:cmdstanpy:compiled model file: /home/nick/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli
+INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli
 INFO:cmdstanpy:start chain 1
 INFO:cmdstanpy:finish chain 1
 </pre></div></div>
@@ -527,7 +527,7 @@ INFO:cmdstanpy:finish chain 1
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.23554
+0.229226
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -563,9 +563,9 @@ INFO:cmdstanpy:finish chain 1
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /tmp/cmdstanpy/docsrc/examples/eta_should_fail
-INFO:cmdstanpy:compiler options: stanc_options=None, cpp_options=None
-INFO:cmdstanpy:compiled model file: /tmp/cmdstanpy/docsrc/examples/eta_should_fail
+INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail
+INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
+INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail
 INFO:cmdstanpy:start chain 1
 INFO:cmdstanpy:finish chain 1
 </pre></div></div>
@@ -577,18 +577,19 @@ INFO:cmdstanpy:finish chain 1
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">RuntimeError</span>                              Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_5038/3690698302.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">/tmp/ipykernel_3772/3690698302.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
 <span class="ansi-green-intense-fg ansi-bold">      1</span> fail_model <span class="ansi-blue-fg">=</span> CmdStanModel<span class="ansi-blue-fg">(</span>stan_file<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;eta_should_fail.stan&#39;</span><span class="ansi-blue-fg">)</span>
 <span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>vi <span class="ansi-blue-fg">=</span> fail_model<span class="ansi-blue-fg">.</span>variational<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
 
-<span class="ansi-green-fg">~/.local/lib/python3.8/site-packages/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_diagnostics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, output_samples, require_converged, refresh)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1142</span>                 valid <span class="ansi-blue-fg">=</span> <span class="ansi-green-fg">False</span>
-<span class="ansi-green-intense-fg ansi-bold">   1143</span>         <span class="ansi-green-fg">if</span> require_converged <span class="ansi-green-fg">and</span> <span class="ansi-green-fg">not</span> valid<span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">-&gt; 1144</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">raise</span> RuntimeError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;The algorithm may not have converged.&#39;</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1145</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> runset<span class="ansi-blue-fg">.</span>_check_retcodes<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">   1146</span>             msg = &#39;Error during variational inference:\n{}&#39;.format(
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_diagnostics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, output_samples, require_converged, refresh)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1166</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> valid<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1167</span>             <span class="ansi-green-fg">if</span> require_converged<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1168</span><span class="ansi-red-fg">                 raise RuntimeError(
+</span><span class="ansi-green-intense-fg ansi-bold">   1169</span>                     <span class="ansi-blue-fg">&#39;The algorithm may not have converged.\n&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1170</span>                     <span class="ansi-blue-fg">&#39;If you would like to inspect the output, &#39;</span>
 
 <span class="ansi-red-fg">RuntimeError</span>: The algorithm may not have converged.
+If you would like to inspect the output, re-call with require_converged=False
 </pre></div></div>
 </div>
 <p>Unless you set <code class="docutils literal notranslate"><span class="pre">require_converged=False</span></code>:</p>
@@ -608,6 +609,8 @@ INFO:cmdstanpy:finish chain 1
 <div class="highlight"><pre>
 INFO:cmdstanpy:start chain 1
 INFO:cmdstanpy:finish chain 1
+WARNING:cmdstanpy:The algorithm may not have converged.
+Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
 <p>This lets you inspect the output to try to diagnose the issue with the model</p>
@@ -629,8 +632,8 @@ INFO:cmdstanpy:finish chain 1
 OrderedDict([(&#39;lp__&#39;, 0.0),
              (&#39;log_p__&#39;, 0.0),
              (&#39;log_g__&#39;, 0.0),
-             (&#39;mu[1]&#39;, 0.0763767),
-             (&#39;mu[2]&#39;, -0.00697992)])
+             (&#39;mu[1]&#39;, 0.0507734),
+             (&#39;mu[2]&#39;, -0.1228)])
 </pre></div></div>
 </div>
 <p>See the <a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html">api docs</a>, section <code class="docutils literal notranslate"><span class="pre">`CmdStanModel.variational</span></code> &lt;<a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational">https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational</a>&gt;`__ for a full description of all arguments.</p>

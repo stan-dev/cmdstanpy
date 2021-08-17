@@ -292,13 +292,13 @@ The function <a class="reference internal" href="api.html#cmdstanpy.cmdstan_path
 <span class="go"># instantiate the model; compiles the Stan program as needed.</span>
 <span class="gp">In [4]: </span><span class="n">bernoulli_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">bernoulli_stan</span><span class="p">)</span>
 <span class="go">INFO:cmdstanpy:found newer exe file, not recompiling</span>
-<span class="go">INFO:cmdstanpy:compiled model file: /home/nick/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli</span>
+<span class="go">INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli</span>
 
 <span class="go"># inspect model object</span>
 <span class="gp">In [5]: </span><span class="nb">print</span><span class="p">(</span><span class="n">bernoulli_model</span><span class="p">)</span>
 <span class="go">CmdStanModel: name=bernoulli</span>
-<span class="go">	 stan_file=/home/nick/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli.stan</span>
-<span class="go">	 exe_file=/home/nick/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli</span>
+<span class="go">	 stan_file=/home/runner/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli.stan</span>
+<span class="go">	 exe_file=/home/runner/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli</span>
 <span class="go">	 compiler_options=stanc_options={}, cpp_options={}</span>
 </pre></div>
 </div>
@@ -337,26 +337,26 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="gp">In [7]: </span><span class="n">bernoulli_fit</span> <span class="o">=</span> <span class="n">bernoulli_model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bernoulli_data</span><span class="p">)</span>
 <span class="go">INFO:cmdstanpy:start chain 1</span>
 <span class="go">INFO:cmdstanpy:start chain 2</span>
+<span class="go">INFO:cmdstanpy:finish chain 1</span>
+<span class="go">INFO:cmdstanpy:finish chain 2</span>
 <span class="go">INFO:cmdstanpy:start chain 3</span>
 <span class="go">INFO:cmdstanpy:start chain 4</span>
-<span class="go">INFO:cmdstanpy:finish chain 1</span>
-<span class="go">INFO:cmdstanpy:finish chain 4</span>
-<span class="go">INFO:cmdstanpy:finish chain 2</span>
 <span class="go">INFO:cmdstanpy:finish chain 3</span>
+<span class="go">INFO:cmdstanpy:finish chain 4</span>
 
 <span class="go"># printing the object reports sampler commands, output files</span>
 <span class="gp">In [8]: </span><span class="nb">print</span><span class="p">(</span><span class="n">bernoulli_fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-1-fhbn9lxy.csv</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-2-rh6f6ur7.csv</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-3-wmv3i4u3.csv</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-4-qpz6j3y6.csv</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-1-5wg39txg.csv</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-2-g1jpzvux.csv</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-3-kityssb1.csv</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-4-v02of4yf.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-1-fhbn9lxy-stdout.txt</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-2-rh6f6ur7-stdout.txt</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-3-wmv3i4u3-stdout.txt</span>
-<span class="go">	/tmp/tmpf7x0v2h8/bernoulli-202108180014-4-qpz6j3y6-stdout.txt</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-1-5wg39txg-stdout.txt</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-2-g1jpzvux-stdout.txt</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-3-kityssb1-stdout.txt</span>
+<span class="go">	/tmp/tmp0pgeofw1/bernoulli-202108172256-4-v02of4yf-stdout.txt</span>
 </pre></div>
 </div>
 </div>
@@ -406,10 +406,10 @@ summaries of the total joint log-probability density <strong>lp__</strong> plus
 all model parameters and quantities of interest in a pandas.DataFrame:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="n">bernoulli_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 <span class="gh">Out[13]: </span><span class="go"></span>
-<span class="go">       Mean   MCSE  StdDev     5%   50%   95%   N_Eff  N_Eff/s  R_hat</span>
-<span class="go">name                                                                 </span>
-<span class="go">lp__  -7.30  0.019    0.74 -8.700 -7.00 -6.80  1600.0  32000.0    1.0</span>
-<span class="go">theta  0.25  0.003    0.12  0.077  0.24  0.47  1600.0  31000.0    1.0</span>
+<span class="go">       Mean    MCSE  StdDev     5%   50%   95%   N_Eff  N_Eff/s  R_hat</span>
+<span class="go">name                                                                  </span>
+<span class="go">lp__  -7.30  0.0200    0.75 -8.800 -7.00 -6.80  1400.0  27000.0    1.0</span>
+<span class="go">theta  0.25  0.0033    0.12  0.082  0.24  0.48  1400.0  28000.0    1.0</span>
 </pre></div>
 </div>
 <p>CmdStan is distributed with a second posterior analysis utility
@@ -419,7 +419,7 @@ looking for potential problems which indicate that the sample
 isn’t a representative sample from the posterior.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose" title="cmdstanpy.CmdStanMCMC.diagnose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnose()</span></code></a> method runs this utility and prints the output to the console.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="nb">print</span><span class="p">(</span><span class="n">bernoulli_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
-<span class="go">INFO:cmdstanpy:Processing csv files: /tmp/tmpf7x0v2h8/bernoulli-202108180014-1-fhbn9lxy.csv, /tmp/tmpf7x0v2h8/bernoulli-202108180014-2-rh6f6ur7.csv, /tmp/tmpf7x0v2h8/bernoulli-202108180014-3-wmv3i4u3.csv, /tmp/tmpf7x0v2h8/bernoulli-202108180014-4-qpz6j3y6.csv</span>
+<span class="go">INFO:cmdstanpy:Processing csv files: /tmp/tmp0pgeofw1/bernoulli-202108172256-1-5wg39txg.csv, /tmp/tmp0pgeofw1/bernoulli-202108172256-2-g1jpzvux.csv, /tmp/tmp0pgeofw1/bernoulli-202108172256-3-kityssb1.csv, /tmp/tmp0pgeofw1/bernoulli-202108172256-4-v02of4yf.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>
@@ -435,7 +435,7 @@ The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose"
 <span class="go">Split R-hat values satisfactory all parameters.</span>
 
 <span class="go">Processing complete, no problems detected.</span>
-<span class="go">Processing csv files: /tmp/tmpf7x0v2h8/bernoulli-202108180014-1-fhbn9lxy.csv, /tmp/tmpf7x0v2h8/bernoulli-202108180014-2-rh6f6ur7.csv, /tmp/tmpf7x0v2h8/bernoulli-202108180014-3-wmv3i4u3.csv, /tmp/tmpf7x0v2h8/bernoulli-202108180014-4-qpz6j3y6.csv</span>
+<span class="go">Processing csv files: /tmp/tmp0pgeofw1/bernoulli-202108172256-1-5wg39txg.csv, /tmp/tmp0pgeofw1/bernoulli-202108172256-2-g1jpzvux.csv, /tmp/tmp0pgeofw1/bernoulli-202108172256-3-kityssb1.csv, /tmp/tmp0pgeofw1/bernoulli-202108172256-4-v02of4yf.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>

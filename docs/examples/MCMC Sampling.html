@@ -494,7 +494,7 @@ div.rendered_html tbody tr:hover {
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 INFO:cmdstanpy:found newer exe file, not recompiling
-INFO:cmdstanpy:compiled model file: /home/nick/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli
+INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli
 </pre></div></div>
 </div>
 <p>By default, the model is compiled during instantiation. The compiled executable is created in the same directory as the program file. If the directory already contains an executable file with a newer timestamp, the model is not recompiled.</p>
@@ -516,10 +516,10 @@ INFO:cmdstanpy:compiled model file: /home/nick/.cmdstan/cmdstan-2.27.0/examples/
 <div class="highlight"><pre>
 INFO:cmdstanpy:start chain 1
 INFO:cmdstanpy:start chain 2
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:start chain 4
 INFO:cmdstanpy:finish chain 1
+INFO:cmdstanpy:start chain 3
 INFO:cmdstanpy:finish chain 2
+INFO:cmdstanpy:start chain 4
 INFO:cmdstanpy:finish chain 3
 INFO:cmdstanpy:finish chain 4
 </pre></div></div>
@@ -540,13 +540,10 @@ INFO:cmdstanpy:finish chain 4
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_4533/3109363875.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>print<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;sampler diagnostic variables:\n{}&#39;</span><span class="ansi-blue-fg">.</span>format<span class="ansi-blue-fg">(</span>bern_fit<span class="ansi-blue-fg">.</span>metadata<span class="ansi-blue-fg">.</span>method_vars_cols<span class="ansi-blue-fg">.</span>keys<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      2</span> print<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;stan model variables:\n{}&#39;</span><span class="ansi-blue-fg">.</span>format<span class="ansi-blue-fg">(</span>bern_fit<span class="ansi-blue-fg">.</span>metadata<span class="ansi-blue-fg">.</span>stan_vars_cols<span class="ansi-blue-fg">.</span>keys<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-red-fg">AttributeError</span>: &#39;CmdStanMCMC&#39; object has no attribute &#39;metadata&#39;
+sampler diagnostic variables:
+dict_keys([&#39;lp__&#39;, &#39;accept_stat__&#39;, &#39;stepsize__&#39;, &#39;treedepth__&#39;, &#39;n_leapfrog__&#39;, &#39;divergent__&#39;, &#39;energy__&#39;])
+stan model variables:
+dict_keys([&#39;theta&#39;])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -608,25 +605,25 @@ INFO:cmdstanpy:finish chain 4
     <tr>
       <th>lp__</th>
       <td>-7.30</td>
-      <td>0.0170</td>
-      <td>0.71</td>
+      <td>0.0190</td>
+      <td>0.72</td>
       <td>-8.700</td>
       <td>-7.00</td>
       <td>-6.70</td>
-      <td>1800.0</td>
-      <td>38000.0</td>
+      <td>1500.0</td>
+      <td>32000.0</td>
       <td>1.0</td>
     </tr>
     <tr>
       <th>theta</th>
       <td>0.25</td>
-      <td>0.0031</td>
+      <td>0.0033</td>
       <td>0.12</td>
-      <td>0.084</td>
+      <td>0.079</td>
       <td>0.24</td>
-      <td>0.47</td>
+      <td>0.48</td>
       <td>1400.0</td>
-      <td>31000.0</td>
+      <td>29000.0</td>
       <td>1.0</td>
     </tr>
   </tbody>
@@ -688,58 +685,58 @@ INFO:cmdstanpy:finish chain 4
   <tbody>
     <tr>
       <th>0</th>
-      <td>-7.30958</td>
+      <td>-7.30808</td>
       <td>1.000000</td>
-      <td>0.818618</td>
+      <td>0.687548</td>
       <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>7.47728</td>
-      <td>0.135262</td>
+      <td>7.89423</td>
+      <td>0.394825</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-7.18147</td>
-      <td>1.000000</td>
-      <td>0.818618</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>-7.02729</td>
+      <td>0.994977</td>
+      <td>0.687548</td>
+      <td>2.0</td>
+      <td>7.0</td>
       <td>0.0</td>
-      <td>7.32383</td>
-      <td>0.147149</td>
+      <td>7.37965</td>
+      <td>0.165142</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-7.20904</td>
-      <td>0.998767</td>
-      <td>0.818618</td>
-      <td>2.0</td>
-      <td>3.0</td>
+      <td>-6.92010</td>
+      <td>1.000000</td>
+      <td>0.687548</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>7.26793</td>
-      <td>0.144403</td>
+      <td>7.01582</td>
+      <td>0.181850</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>-7.13410</td>
-      <td>1.000000</td>
-      <td>0.818618</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>-7.23080</td>
+      <td>0.966634</td>
+      <td>0.687548</td>
+      <td>2.0</td>
+      <td>3.0</td>
       <td>0.0</td>
-      <td>7.23735</td>
-      <td>0.152153</td>
+      <td>7.36075</td>
+      <td>0.142315</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>-7.04006</td>
-      <td>1.000000</td>
-      <td>0.818618</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>-8.03395</td>
+      <td>0.842877</td>
+      <td>0.687548</td>
+      <td>2.0</td>
+      <td>3.0</td>
       <td>0.0</td>
-      <td>7.14271</td>
-      <td>0.163438</td>
+      <td>9.26210</td>
+      <td>0.091673</td>
     </tr>
   </tbody>
 </table>
@@ -761,11 +758,18 @@ INFO:cmdstanpy:finish chain 4
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_4533/910655845.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-red-fg">RuntimeError</span>                              Traceback (most recent call last)
+<span class="ansi-green-fg">/tmp/ipykernel_3409/910655845.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
 <span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>bern_fit<span class="ansi-blue-fg">.</span>draws_xr<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
 
-<span class="ansi-red-fg">AttributeError</span>: &#39;CmdStanMCMC&#39; object has no attribute &#39;draws_xr&#39;
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/stanfit.py</span> in <span class="ansi-cyan-fg">draws_xr</span><span class="ansi-blue-fg">(self, vars, inc_warmup)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1036</span>         &#34;&#34;&#34;
+<span class="ansi-green-intense-fg ansi-bold">   1037</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> XARRAY_INSTALLED<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1038</span><span class="ansi-red-fg">             raise RuntimeError(
+</span><span class="ansi-green-intense-fg ansi-bold">   1039</span>                 <span class="ansi-blue-fg">&#39;Package &#34;xarray&#34; is not installed, cannot produce draws array.&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1040</span>             )
+
+<span class="ansi-red-fg">RuntimeError</span>: Package &#34;xarray&#34; is not installed, cannot produce draws array.
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">bern_fit</span></code> object records the command, the return code, and the paths to the sampler output csv and console files. The string representation of this object displays the CmdStan commands and the location of the output files.</p>
@@ -787,15 +791,15 @@ INFO:cmdstanpy:finish chain 4
 <div class="highlight"><pre>
 CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
  csv_files:
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-1-dpnk5zrb.csv
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-2-a7c4ao8b.csv
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-3-teqxq9de.csv
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-4-xc7dwot5.csv
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-1-r42ln4np.csv
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-2-9tzt7ung.csv
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-3-n307b26q.csv
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-4-35xtqqeg.csv
  output_files:
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-1-dpnk5zrb-stdout.txt
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-2-a7c4ao8b-stdout.txt
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-3-teqxq9de-stdout.txt
-        /tmp/tmpsp8xtmhp/bernoulli-202108180013-4-xc7dwot5-stdout.txt
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-1-r42ln4np-stdout.txt
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-2-9tzt7ung-stdout.txt
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-3-n307b26q-stdout.txt
+        /tmp/tmpyj5z79qq/bernoulli-202108172255-4-35xtqqeg-stdout.txt
 </pre></div></div>
 </div>
 <p>The sampler output files are written to a temporary directory which is deleted upon session exit unless the <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is specified. The <code class="docutils literal notranslate"><span class="pre">save_csvfiles</span></code> function moves the CmdStan CSV output files to a specified directory without having to re-run the sampler. The console output files are not saved. These files are treated as ephemeral; if the sample is valid, all relevant information is recorded in the CSV files.</p>
@@ -820,9 +824,9 @@ CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hm
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /tmp/cmdstanpy/docsrc/examples/bernoulli_datagen
-INFO:cmdstanpy:compiler options: stanc_options=None, cpp_options=None
-INFO:cmdstanpy:compiled model file: /tmp/cmdstanpy/docsrc/examples/bernoulli_datagen
+INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
+INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
+INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
 INFO:cmdstanpy:start chain 1
 INFO:cmdstanpy:finish chain 1
 </pre></div></div>
@@ -878,7 +882,7 @@ INFO:cmdstanpy:finish chain 1
       <th>lp__</th>
       <td>0</td>
       <td>NaN</td>
-      <td>0</td>
+      <td>0.0</td>
       <td>0</td>
       <td>0</td>
       <td>0.0</td>
@@ -889,13 +893,13 @@ INFO:cmdstanpy:finish chain 1
     <tr>
       <th>theta_rep</th>
       <td>90</td>
-      <td>0.25</td>
-      <td>8</td>
-      <td>77</td>
+      <td>0.3</td>
+      <td>8.2</td>
+      <td>76</td>
       <td>90</td>
       <td>100.0</td>
-      <td>1000.0</td>
-      <td>170000.0</td>
+      <td>760.0</td>
+      <td>110000.0</td>
       <td>1.0</td>
     </tr>
   </tbody>
@@ -921,6 +925,15 @@ INFO:cmdstanpy:finish chain 1
 </div>
 </div>
 <div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:matplotlib.font_manager:Failed to extract font properties from /usr/share/fonts/truetype/noto/NotoColorEmoji.ttf: In FT2Font: Can not load face.  Unknown file format.
+INFO:matplotlib.font_manager:generated new fontManager
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
@@ -933,7 +946,7 @@ INFO:cmdstanpy:finish chain 1
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/examples_MCMC_Sampling_18_1.png" src="../_images/examples_MCMC_Sampling_18_1.png" />
+<img alt="../_images/examples_MCMC_Sampling_18_2.png" src="../_images/examples_MCMC_Sampling_18_2.png" />
 </div>
 </div>
 </div>

@@ -497,7 +497,7 @@ div.rendered_html tbody tr:hover {
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 INFO:cmdstanpy:found newer exe file, not recompiling
-INFO:cmdstanpy:compiled model file: /home/nick/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli
+INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -562,10 +562,10 @@ mean of y: 0.2
 <div class="highlight"><pre>
 INFO:cmdstanpy:start chain 1
 INFO:cmdstanpy:start chain 2
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:start chain 4
 INFO:cmdstanpy:finish chain 1
+INFO:cmdstanpy:start chain 3
 INFO:cmdstanpy:finish chain 2
+INFO:cmdstanpy:start chain 4
 INFO:cmdstanpy:finish chain 3
 INFO:cmdstanpy:finish chain 4
 </pre></div></div>
@@ -630,25 +630,25 @@ INFO:cmdstanpy:finish chain 4
     <tr>
       <th>lp__</th>
       <td>-7.30</td>
-      <td>0.0240</td>
-      <td>0.84</td>
-      <td>-9.000</td>
+      <td>0.0180</td>
+      <td>0.72</td>
+      <td>-8.700</td>
       <td>-7.00</td>
-      <td>-6.80</td>
-      <td>1300.0</td>
-      <td>27000.0</td>
+      <td>-6.70</td>
+      <td>1600.0</td>
+      <td>35000.0</td>
       <td>1.0</td>
     </tr>
     <tr>
       <th>theta</th>
       <td>0.25</td>
-      <td>0.0033</td>
+      <td>0.0032</td>
       <td>0.12</td>
-      <td>0.075</td>
-      <td>0.23</td>
-      <td>0.48</td>
-      <td>1300.0</td>
-      <td>29000.0</td>
+      <td>0.079</td>
+      <td>0.24</td>
+      <td>0.47</td>
+      <td>1400.0</td>
+      <td>31000.0</td>
       <td>1.0</td>
     </tr>
   </tbody>
@@ -671,9 +671,9 @@ INFO:cmdstanpy:finish chain 4
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /tmp/cmdstanpy/docsrc/examples/bernoulli_ppc
-INFO:cmdstanpy:compiler options: stanc_options=None, cpp_options=None
-INFO:cmdstanpy:compiled model file: /tmp/cmdstanpy/docsrc/examples/bernoulli_ppc
+INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc
+INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
+INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -717,12 +717,12 @@ generated quantities {
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 INFO:cmdstanpy:start chain 1
-INFO:cmdstanpy:start chain 2
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:start chain 4
 INFO:cmdstanpy:finish chain 1
+INFO:cmdstanpy:start chain 2
 INFO:cmdstanpy:finish chain 2
+INFO:cmdstanpy:start chain 3
 INFO:cmdstanpy:finish chain 3
+INFO:cmdstanpy:start chain 4
 INFO:cmdstanpy:finish chain 4
 </pre></div></div>
 </div>
@@ -744,14 +744,19 @@ INFO:cmdstanpy:finish chain 4
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_4830/1194319963.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>print<span class="ansi-blue-fg">(</span>new_quantities<span class="ansi-blue-fg">.</span>draws<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">.</span>shape<span class="ansi-blue-fg">,</span> new_quantities<span class="ansi-blue-fg">.</span>column_names<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      2</span> <span class="ansi-green-fg">for</span> i <span class="ansi-green-fg">in</span> range<span class="ansi-blue-fg">(</span><span class="ansi-cyan-fg">3</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span>     print <span class="ansi-blue-fg">(</span>new_quantities<span class="ansi-blue-fg">.</span>draws<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">[</span>i<span class="ansi-blue-fg">,</span><span class="ansi-blue-fg">:</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-
-<span class="ansi-red-fg">AttributeError</span>: &#39;CmdStanGQ&#39; object has no attribute &#39;draws&#39;
+(1000, 4, 10) (&#39;y_rep[1]&#39;, &#39;y_rep[2]&#39;, &#39;y_rep[3]&#39;, &#39;y_rep[4]&#39;, &#39;y_rep[5]&#39;, &#39;y_rep[6]&#39;, &#39;y_rep[7]&#39;, &#39;y_rep[8]&#39;, &#39;y_rep[9]&#39;, &#39;y_rep[10]&#39;)
+[[0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 0. 0.]]
+[[0. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 1. 1. 0. 0. 1. 0. 1. 0. 0.]
+ [0. 1. 1. 0. 0. 1. 1. 1. 1. 1.]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]]
+[[0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
+ [0. 0. 0. 0. 1. 1. 0. 1. 0. 0.]
+ [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
+ [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]]
 </pre></div></div>
 </div>
 <p>We can also use <code class="docutils literal notranslate"><span class="pre">draws_pd(inc_sample=True)</span></code> to get a pandas DataFrame which combines the input drawset with the generated quantities.</p>
@@ -767,21 +772,124 @@ INFO:cmdstanpy:finish chain 4
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_4830/2409108920.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>sample_plus <span class="ansi-blue-fg">=</span> new_quantities<span class="ansi-blue-fg">.</span>draws_pd<span class="ansi-blue-fg">(</span>inc_sample<span class="ansi-blue-fg">=</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      2</span> print<span class="ansi-blue-fg">(</span>type<span class="ansi-blue-fg">(</span>sample_plus<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">,</span>sample_plus<span class="ansi-blue-fg">.</span>shape<span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span> names <span class="ansi-blue-fg">=</span> list<span class="ansi-blue-fg">(</span>sample_plus<span class="ansi-blue-fg">.</span>columns<span class="ansi-blue-fg">.</span>values<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">7</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">18</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">      4</span> sample_plus<span class="ansi-blue-fg">.</span>iloc<span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">3</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">:</span><span class="ansi-blue-fg">]</span>
-
-<span class="ansi-red-fg">AttributeError</span>: &#39;CmdStanGQ&#39; object has no attribute &#39;draws_pd&#39;
+&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt; (4000, 18)
 </pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>4</th>
+      <th>5</th>
+      <th>6</th>
+      <th>7</th>
+      <th>8</th>
+      <th>9</th>
+      <th>10</th>
+      <th>11</th>
+      <th>12</th>
+      <th>13</th>
+      <th>14</th>
+      <th>15</th>
+      <th>16</th>
+      <th>17</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>-6.75021</td>
+      <td>1.000000</td>
+      <td>0.986196</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>6.75779</td>
+      <td>0.241797</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-6.83046</td>
+      <td>0.979471</td>
+      <td>0.986196</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>6.83185</td>
+      <td>0.201672</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-6.77974</td>
+      <td>1.000000</td>
+      <td>0.986196</td>
+      <td>2.0</td>
+      <td>3.0</td>
+      <td>0.0</td>
+      <td>6.81909</td>
+      <td>0.219432</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
 </div>
 <p>For models as simple as the bernoulli models here, it would be trivial to re-run the sampler and generate a new sample which contains both the estimate of the parameters <code class="docutils literal notranslate"><span class="pre">theta</span></code> as well as <code class="docutils literal notranslate"><span class="pre">y_rep</span></code> values. For models which are difficult to fit, i.e., when producing a sample is computationally expensive, the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method is preferred.</p>
 </div>
