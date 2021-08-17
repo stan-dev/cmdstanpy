@@ -55,7 +55,8 @@ jobs:
           make github
           cd ..
           
-          git commit -m "release/v${{ github.event.inputs.new_version }}: updating version numbers" -a
+          git add .
+          git commit -m "release/v${{ github.event.inputs.new_version }}: updating version numbers"
           git push -u origin release/v${{ github.event.inputs.new_version }}
           
       - name: Merge into develop
