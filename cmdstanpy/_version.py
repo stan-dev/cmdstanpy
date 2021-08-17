@@ -1,3 +1,3 @@
 """PyPi Version"""
 
-__version__ = 'v0.9.77'
+__version__ = '0.9.77'
