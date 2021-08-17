@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies (python)
         run: |
-          pip install --upgrade pip wheel twine codecov sphinx nbsphinx ipython pydata-sphinx-theme requests sphinx-copybutton matplotlib
+          pip install --upgrade pip wheel twine codecov sphinx nbsphinx ipython ipykernel pydata-sphinx-theme requests sphinx-copybutton matplotlib
           pip install -r requirements.txt
           pip install -e .
 
