@@ -10,7 +10,6 @@ travis.yml
 .pytest_cache
 dist
 htmlcov
-*.png
 docsrc/_build
 .idea
 .DS_Store
