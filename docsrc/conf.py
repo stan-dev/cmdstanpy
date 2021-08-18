@@ -439,3 +439,7 @@ intersphinx_mapping = {
 #     'reference_url': {
 #         'skltemplate': None}
 # }
+
+#  Makes the copying behavior on code examples cleaner by removing things like In [10]: from the text to be copied
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
