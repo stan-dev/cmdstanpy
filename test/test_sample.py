@@ -909,7 +909,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             if os.path.exists(bern_fit.runset.stderr_files[i]):
                 os.remove(bern_fit.runset.stderr_files[i])
 
-        with self.assertRaisesRegex(ValueError, 'Cannot access csv file'):
+        with self.assertRaisesRegex(ValueError, 'Cannot access CSV file'):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
         if platform.system() != 'Windows':
@@ -1524,7 +1524,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.metadata.stan_vars_dims['beta'], tuple([2]))
         self.assertEqual(fit.metadata.stan_vars_cols['beta'], tuple([7, 8]))
 
-    def test_save_diagnostics(self):
+    def test_save_latent_dynamics(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
@@ -1534,7 +1534,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_diagnostics=True,
+            save_latent_dynamics=True,
         )
         for i in range(bern_fit.runset.chains):
             diagnostics_file = bern_fit.runset.diagnostic_files[i]
@@ -1559,7 +1559,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_diagnostics=True,
+            save_latent_dynamics=True,
             save_profile=True,
         )
 

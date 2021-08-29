@@ -134,7 +134,7 @@ class RunSet:
             )
             self._stderr_files[i] = stderr_file
             # optional output files:  diagnostics, profiling
-            if args.save_diagnostics:
+            if args.save_latent_dynamics:
                 if args.output_dir is None:
                     diag_file = create_named_text_file(
                         dir=_TMPDIR,
@@ -168,7 +168,7 @@ class RunSet:
                         ),
                     )
                 self._profile_files[i] = profile_file
-            if args.save_diagnostics and args.save_profile:
+            if args.save_latent_dynamics and args.save_profile:
                 self._cmds.append(
                     args.compose_command(
                         i,
@@ -177,7 +177,7 @@ class RunSet:
                         profile_file=self._profile_files[i],
                     )
                 )
-            elif args.save_diagnostics:
+            elif args.save_latent_dynamics:
                 self._cmds.append(
                     args.compose_command(
                         i,
@@ -204,7 +204,7 @@ class RunSet:
             repr = '{}\n csv_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._csv_files)
             )
-        if self._args.save_diagnostics and os.path.exists(
+        if self._args.save_latent_dynamics and os.path.exists(
             self._diagnostic_files[0]
         ):
             repr = '{}\n diagnostics_files:\n\t{}'.format(
@@ -324,7 +324,7 @@ class RunSet:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Moves csvfiles to specified directory.
+        Moves CSV files to specified directory.
 
         :param dir: directory path
 
@@ -346,7 +346,7 @@ class RunSet:
         for i in range(self.chains):
             if not os.path.exists(self._csv_files[i]):
                 raise ValueError(
-                    'Cannot access csv file {}'.format(self._csv_files[i])
+                    'Cannot access CSV file {}'.format(self._csv_files[i])
                 )
 
             path, filename = os.path.split(self._csv_files[i])
@@ -846,7 +846,7 @@ class CmdStanMCMC:
         sig_figs: Optional[int] = None,
     ) -> pd.DataFrame:
         """
-        Run cmdstan/bin/stansummary over all output csv files, assemble
+        Run cmdstan/bin/stansummary over all output CSV files, assemble
         summary into DataFrame object; first row contains summary statistics
         for total joint log probability `lp__`, remaining rows contain summary
         statistics for all parameters, transformed parameters, and generated
@@ -930,7 +930,7 @@ class CmdStanMCMC:
 
     def diagnose(self) -> Optional[str]:
         """
-        Run cmdstan/bin/diagnose over all output csv files.
+        Run cmdstan/bin/diagnose over all output CSV files.
         Returns output of diagnose (stdout/stderr).
 
         The diagnose utility reads the outputs of all chains
@@ -1213,7 +1213,7 @@ class CmdStanMCMC:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.
@@ -1351,7 +1351,7 @@ class CmdStanMLE:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.
@@ -1921,7 +1921,7 @@ class CmdStanGQ:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.
@@ -2080,7 +2080,7 @@ class CmdStanVB:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.
