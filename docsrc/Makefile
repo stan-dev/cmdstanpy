@@ -22,8 +22,6 @@ github:
 	@make html
 	@rm -rf ../docs/*
 	@cp -r _build/html/* ../docs
-	@rm -rf ../docs/_modules
-	@rm -rf ../docs/_sources
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
