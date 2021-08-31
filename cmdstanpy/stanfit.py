@@ -608,8 +608,8 @@ class CmdStanMCMC:
             get_logger().info(
                 'Unit diagnonal metric, inverse mass matrix size unknown.'
             )
-            return self._metric  # return empty array or None?
-        if self._metric.shape == (0,):
+            return None
+        if self._draws.shape == (0,):
             self._assemble_draws()
         return self._metric
 
@@ -769,36 +769,33 @@ class CmdStanMCMC:
             dtype=float,
             order='F',
         )
+        self._step_size = np.empty(self.chains, dtype=float)
         for chain in range(self.chains):
             with open(self.runset.csv_files[chain], 'r') as fd:
-                # skip initial comments, up to columns header
                 line = fd.readline().strip()
+                # read initial comments, CSV header row
                 while len(line) > 0 and line.startswith('#'):
                     line = fd.readline().strip()
-                # warmup draws, hmc stepsize, mass matrix (depending on config)
                 if not self._is_fixed_param:
+                    # handle warmup draws, if any
                     if self._save_warmup:
                         for i in range(self.num_draws_warmup):
                             line = fd.readline().strip()
                             xs = line.split(',')
                             self._draws[i, chain, :] = [float(x) for x in xs]
                     line = fd.readline().strip()
-                    if line != '# Adaptation terminated':
+                    if line != '# Adaptation terminated':  # shouldn't happen?
                         while line != '# Adaptation terminated':
-                            line = fd.readline().strip()  # shouldn't happen?
-                    # at step_size
-                    if chain == 0:
-                        self._step_size = np.empty(self.chains, dtype=float)
+                            line = fd.readline().strip()
+                    # step_size, metric (diag_e and dense_e only)
                     line = fd.readline().strip()
                     _, step_size = line.split('=')
                     self._step_size[chain] = float(step_size.strip())
-                    # metric (diag_e and dense_e only)
                     if self._metadata.cmdstan_config['metric'] != 'unit_e':
-                        # if metric is 'unit_e', not output, otherwise, get metric
-                        line = fd.readline().strip()  # metric header
+                        line = fd.readline().strip()  # metric type
                         line = fd.readline().lstrip(' #\t')
                         num_unconstrained_params = len(line.split(','))
-                        if chain == 0:
+                        if chain == 0:   # can't allocate w/o num params
                             if self.metric_type == 'diag_e':
                                 self._metric = np.empty(
                                     (self.chains, num_unconstrained_params),
@@ -825,7 +822,6 @@ class CmdStanMCMC:
                                 self._metric[chain, i, :] = [
                                     float(x) for x in xs
                                 ]
-
                 # process draws
                 for i in range(sampling_iter_start, num_draws):
                     line = fd.readline().strip()
