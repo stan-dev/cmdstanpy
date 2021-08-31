@@ -919,7 +919,7 @@ def do_command(
         if proc.returncode != 0:  # problem, throw RuntimeError with msg
             try:
                 serror = os.strerror(proc.returncode)
-            except ValueError as e:
+            except ValueError:
                 pass
             if proc.returncode < 0:
                 msg = 'Command: {}\nterminated by signal'.format(cmd)
