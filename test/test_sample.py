@@ -509,7 +509,6 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(
             datagen_fit.draws().shape, (100, 4, len(datagen_fit.column_names))
         )  # ran 4 chains, set fixed_param=True afterwards
-        self.assertEqual(datagen_fit.num_unconstrained_params, 0)
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
@@ -763,7 +762,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         csv_path = os.path.join(DATAFILES_PATH, 'fixed_param_sample.csv')
         fixed_param_sample = from_csv(path=csv_path)
         self.assertEqual(fixed_param_sample.draws_pd().shape, (100, 85))
-        self.assertEqual(fixed_param_sample.num_unconstrained_params, 0)
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -1506,7 +1504,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.num_draws_warmup, 1000)
         self.assertEqual(fit.num_draws_sampling, 100)
         self.assertEqual(fit.column_names, col_names)
-        self.assertEqual(fit.num_unconstrained_params, 2)
         self.assertEqual(fit.metric_type, 'diag_e')
 
         self.assertEqual(fit.metadata.cmdstan_config['num_samples'], 100)

@@ -159,6 +159,8 @@ class SamplerArgs:
                     self.metric = 'diag_e'
                 elif self.metric in ['dense', 'dense_e']:
                     self.metric = 'dense_e'
+                elif self.metric in ['unit', 'unit_e']:
+                    self.metric = 'unit_e'
                 else:
                     if not os.path.exists(self.metric):
                         raise ValueError('no such file {}'.format(self.metric))

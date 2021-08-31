@@ -1242,11 +1242,16 @@ class CmdStanModel:
                     msg = 'Chain {} terminated by signal {}'.format(
                         idx + 1, proc.returncode
                     )
-                else:
+                elif proc.returncode < 125:
                     msg = 'Chain {} processing error'.format(idx + 1)
-                    msg = '{}, non-zero return code {}'.format(
-                        msg, proc.returncode
+                    msg = '{}, return code {}'.format(msg, proc.returncode)
+                elif proc.returncode > 128:
+                    msg = 'Chain {} system error'.format(idx + 1)
+                    msg = '{}, terminated by signal {}'.format(
+                        msg, proc.returncode - 128
                     )
+                else:
+                    msg = 'Chain {} unknown error'.format(idx + 1)
                 if len(console_error) > 0:
                     msg = '{}\n error message:\n\t{}'.format(msg, console_error)
                 get_logger().error(msg)
