@@ -188,6 +188,34 @@ class SampleTest(unittest.TestCase):
         )
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
 
+    def test_bernoulli_unit_e(self, stanfile='bernoulli.stan'):
+        stan = os.path.join(DATAFILES_PATH, stanfile)
+        bern_model = CmdStanModel(stan_file=stan)
+
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_warmup=1000,
+            iter_sampling=100,
+            metric='unit_e',
+        )
+        self.assertEqual(bern_fit.metric_type, 'unit_e')
+        self.assertEqual(bern_fit.step_size.shape, (2,))
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertEqual(bern_fit.metric, None)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'INFO',
+                'Unit diagnonal metric, inverse mass matrix size unknown.',
+            )
+        )
+        self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
+
     def test_init_types(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
