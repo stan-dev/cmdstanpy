@@ -1173,6 +1173,7 @@ class MaybeDictToFilePath:
         self._unlink = [False] * len(objs)
         self._paths: List[Any] = [''] * len(objs)
         i = 0
+        # pylint: disable=isinstance-second-argument-not-valid-type
         for obj in objs:
             if isinstance(obj, Mapping):
                 data_file = create_named_text_file(
