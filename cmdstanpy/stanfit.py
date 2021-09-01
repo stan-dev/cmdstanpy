@@ -70,6 +70,7 @@ class RunSet:
         chains: int = 4,
         chain_ids: Optional[List[int]] = None,
         logger: Optional[logging.Logger] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> None:
         """Initialize object."""
         self._args = args
@@ -100,7 +101,7 @@ class RunSet:
         # prefix: ``<model_name>-<YYYYMMDDHHMM>-<chain_id>``
         # suffixes: ``-stdout.txt``, ``-stderr.txt``
         now = datetime.now()
-        now_str = now.strftime('%Y%m%d%H%M')
+        now_str = now.strftime(time_fmt)
         file_basename = '-'.join([args.model_name, now_str])
         if args.output_dir is not None:
             output_dir = args.output_dir
@@ -794,7 +795,7 @@ class CmdStanMCMC:
                         line = fd.readline().strip()  # metric type
                         line = fd.readline().lstrip(' #\t')
                         num_unconstrained_params = len(line.split(','))
-                        if chain == 0:   # can't allocate w/o num params
+                        if chain == 0:  # can't allocate w/o num params
                             if self.metric_type == 'diag_e':
                                 self._metric = np.empty(
                                     (self.chains, num_unconstrained_params),
