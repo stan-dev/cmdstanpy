@@ -188,6 +188,34 @@ class SampleTest(unittest.TestCase):
         )
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
 
+    def test_bernoulli_unit_e(self, stanfile='bernoulli.stan'):
+        stan = os.path.join(DATAFILES_PATH, stanfile)
+        bern_model = CmdStanModel(stan_file=stan)
+
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            parallel_chains=2,
+            seed=12345,
+            iter_warmup=1000,
+            iter_sampling=100,
+            metric='unit_e',
+        )
+        self.assertEqual(bern_fit.metric_type, 'unit_e')
+        self.assertEqual(bern_fit.step_size.shape, (2,))
+        with LogCapture() as log:
+            logging.getLogger()
+            self.assertEqual(bern_fit.metric, None)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'INFO',
+                'Unit diagnonal metric, inverse mass matrix size unknown.',
+            )
+        )
+        self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
+
     def test_init_types(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
@@ -509,7 +537,6 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(
             datagen_fit.draws().shape, (100, 4, len(datagen_fit.column_names))
         )  # ran 4 chains, set fixed_param=True afterwards
-        self.assertEqual(datagen_fit.num_unconstrained_params, 0)
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
@@ -763,7 +790,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         csv_path = os.path.join(DATAFILES_PATH, 'fixed_param_sample.csv')
         fixed_param_sample = from_csv(path=csv_path)
         self.assertEqual(fixed_param_sample.draws_pd().shape, (100, 85))
-        self.assertEqual(fixed_param_sample.num_unconstrained_params, 0)
 
     # pylint: disable=no-self-use
     def test_custom_metric(self):
@@ -909,7 +935,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             if os.path.exists(bern_fit.runset.stderr_files[i]):
                 os.remove(bern_fit.runset.stderr_files[i])
 
-        with self.assertRaisesRegex(ValueError, 'Cannot access csv file'):
+        with self.assertRaisesRegex(ValueError, 'Cannot access CSV file'):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
         if platform.system() != 'Windows':
@@ -1506,7 +1532,6 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.num_draws_warmup, 1000)
         self.assertEqual(fit.num_draws_sampling, 100)
         self.assertEqual(fit.column_names, col_names)
-        self.assertEqual(fit.num_unconstrained_params, 2)
         self.assertEqual(fit.metric_type, 'diag_e')
 
         self.assertEqual(fit.metadata.cmdstan_config['num_samples'], 100)
@@ -1524,7 +1549,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(fit.metadata.stan_vars_dims['beta'], tuple([2]))
         self.assertEqual(fit.metadata.stan_vars_cols['beta'], tuple([7, 8]))
 
-    def test_save_diagnostics(self):
+    def test_save_latent_dynamics(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         bern_model = CmdStanModel(stan_file=stan)
@@ -1534,7 +1559,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_diagnostics=True,
+            save_latent_dynamics=True,
         )
         for i in range(bern_fit.runset.chains):
             diagnostics_file = bern_fit.runset.diagnostic_files[i]
@@ -1559,7 +1584,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             parallel_chains=2,
             seed=12345,
             iter_sampling=200,
-            save_diagnostics=True,
+            save_latent_dynamics=True,
             save_profile=True,
         )
 

@@ -134,7 +134,7 @@ class RunSet:
             )
             self._stderr_files[i] = stderr_file
             # optional output files:  diagnostics, profiling
-            if args.save_diagnostics:
+            if args.save_latent_dynamics:
                 if args.output_dir is None:
                     diag_file = create_named_text_file(
                         dir=_TMPDIR,
@@ -168,7 +168,7 @@ class RunSet:
                         ),
                     )
                 self._profile_files[i] = profile_file
-            if args.save_diagnostics and args.save_profile:
+            if args.save_latent_dynamics and args.save_profile:
                 self._cmds.append(
                     args.compose_command(
                         i,
@@ -177,7 +177,7 @@ class RunSet:
                         profile_file=self._profile_files[i],
                     )
                 )
-            elif args.save_diagnostics:
+            elif args.save_latent_dynamics:
                 self._cmds.append(
                     args.compose_command(
                         i,
@@ -204,7 +204,7 @@ class RunSet:
             repr = '{}\n csv_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._csv_files)
             )
-        if self._args.save_diagnostics and os.path.exists(
+        if self._args.save_latent_dynamics and os.path.exists(
             self._diagnostic_files[0]
         ):
             repr = '{}\n diagnostics_files:\n\t{}'.format(
@@ -324,7 +324,7 @@ class RunSet:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Moves csvfiles to specified directory.
+        Moves CSV files to specified directory.
 
         :param dir: directory path
 
@@ -346,7 +346,7 @@ class RunSet:
         for i in range(self.chains):
             if not os.path.exists(self._csv_files[i]):
                 raise ValueError(
-                    'Cannot access csv file {}'.format(self._csv_files[i])
+                    'Cannot access CSV file {}'.format(self._csv_files[i])
                 )
 
             path, filename = os.path.split(self._csv_files[i])
@@ -586,28 +586,6 @@ class CmdStanMCMC:
         return self._metadata.cmdstan_config['column_names']  # type: ignore
 
     @property
-    def num_unconstrained_params(self) -> int:
-        """
-        Count of _unconstrained_ model parameters. This is the metric size;
-        for metric `diag_e`, the length of the diagonal vector, for metric
-        `dense_e` this is the size of the full covariance matrix.
-
-        If the parameter variables in a model are
-        constrained parameter types, the number of constrained and
-        unconstrained parameters may differ.  The sampler reports the
-        constrained parameters and computes with the unconstrained parameters.
-        E.g. a model with 2 parameter variables, ``real alpha`` and
-        ``vector[3] beta`` has 4 constrained and 4 unconstrained parameters,
-        however a model with variables ``real alpha`` and ``simplex[3] beta``
-        has 4 constrained and 3 unconstrained parameters.
-        """
-        if self._is_fixed_param:
-            return 0
-        return self._metadata.cmdstan_config[  # type: ignore
-            'num_unconstrained_params'
-        ]
-
-    @property
     def metric_type(self) -> Optional[str]:
         """
         Metric type used for adaptation, either 'diag_e' or 'dense_e'.
@@ -626,7 +604,12 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if self._metric.shape == (0,):
+        if self._metadata.cmdstan_config['metric'] == 'unit_e':
+            get_logger().info(
+                'Unit diagnonal metric, inverse mass matrix size unknown.'
+            )
+            return None
+        if self._draws.shape == (0,):
             self._assemble_draws()
         return self._metric
 
@@ -741,7 +724,6 @@ class CmdStanMCMC:
                     save_warmup=self._save_warmup,
                     thin=self._thin,
                 )
-                # pylint: disable=consider-using-dict-items
                 for key in dzero:
                     if (
                         key
@@ -786,53 +768,59 @@ class CmdStanMCMC:
             dtype=float,
             order='F',
         )
-        if not self._is_fixed_param:
-            self._step_size = np.empty(self.chains, dtype=float)
-            if self.metric_type == 'diag_e':
-                self._metric = np.empty(
-                    (self.chains, self.num_unconstrained_params), dtype=float
-                )
-            else:
-                self._metric = np.empty(
-                    (
-                        self.chains,
-                        self.num_unconstrained_params,
-                        self.num_unconstrained_params,
-                    ),
-                    dtype=float,
-                )
+        self._step_size = np.empty(self.chains, dtype=float)
         for chain in range(self.chains):
             with open(self.runset.csv_files[chain], 'r') as fd:
-                # skip initial comments, up to columns header
                 line = fd.readline().strip()
+                # read initial comments, CSV header row
                 while len(line) > 0 and line.startswith('#'):
                     line = fd.readline().strip()
-                # at columns header
                 if not self._is_fixed_param:
+                    # handle warmup draws, if any
                     if self._save_warmup:
                         for i in range(self.num_draws_warmup):
                             line = fd.readline().strip()
                             xs = line.split(',')
                             self._draws[i, chain, :] = [float(x) for x in xs]
-                    # read to adaptation msg
                     line = fd.readline().strip()
-                    if line != '# Adaptation terminated':
+                    if line != '# Adaptation terminated':  # shouldn't happen?
                         while line != '# Adaptation terminated':
                             line = fd.readline().strip()
-                    line = fd.readline().strip()  # step_size
+                    # step_size, metric (diag_e and dense_e only)
+                    line = fd.readline().strip()
                     _, step_size = line.split('=')
                     self._step_size[chain] = float(step_size.strip())
-                    line = fd.readline().strip()  # metric header
-                    # process metric
-                    if self.metric_type == 'diag_e':
-                        line = fd.readline().lstrip(' #\t').strip()
-                        xs = line.split(',')
-                        self._metric[chain, :] = [float(x) for x in xs]
-                    else:
-                        for i in range(self.num_unconstrained_params):
-                            line = fd.readline().lstrip(' #\t').strip()
+                    if self._metadata.cmdstan_config['metric'] != 'unit_e':
+                        line = fd.readline().strip()  # metric type
+                        line = fd.readline().lstrip(' #\t')
+                        num_unconstrained_params = len(line.split(','))
+                        if chain == 0:   # can't allocate w/o num params
+                            if self.metric_type == 'diag_e':
+                                self._metric = np.empty(
+                                    (self.chains, num_unconstrained_params),
+                                    dtype=float,
+                                )
+                            else:
+                                self._metric = np.empty(
+                                    (
+                                        self.chains,
+                                        num_unconstrained_params,
+                                        num_unconstrained_params,
+                                    ),
+                                    dtype=float,
+                                )
+                        if self.metric_type == 'diag_e':
                             xs = line.split(',')
-                            self._metric[chain, i, :] = [float(x) for x in xs]
+                            self._metric[chain, :] = [float(x) for x in xs]
+                        else:
+                            xs = line.split(',')
+                            self._metric[chain, 0, :] = [float(x) for x in xs]
+                            for i in range(1, num_unconstrained_params):
+                                line = fd.readline().lstrip(' #\t').strip()
+                                xs = line.split(',')
+                                self._metric[chain, i, :] = [
+                                    float(x) for x in xs
+                                ]
                 # process draws
                 for i in range(sampling_iter_start, num_draws):
                     line = fd.readline().strip()
@@ -846,7 +834,7 @@ class CmdStanMCMC:
         sig_figs: Optional[int] = None,
     ) -> pd.DataFrame:
         """
-        Run cmdstan/bin/stansummary over all output csv files, assemble
+        Run cmdstan/bin/stansummary over all output CSV files, assemble
         summary into DataFrame object; first row contains summary statistics
         for total joint log probability `lp__`, remaining rows contain summary
         statistics for all parameters, transformed parameters, and generated
@@ -930,7 +918,7 @@ class CmdStanMCMC:
 
     def diagnose(self) -> Optional[str]:
         """
-        Run cmdstan/bin/diagnose over all output csv files.
+        Run cmdstan/bin/diagnose over all output CSV files.
         Returns output of diagnose (stdout/stderr).
 
         The diagnose utility reads the outputs of all chains
@@ -1058,7 +1046,6 @@ class CmdStanMCMC:
             "stan_version": f"{meta['stan_version_major']}."
             f"{meta['stan_version_minor']}.{meta['stan_version_patch']}",
             "model": meta["model"],
-            "num_unconstrained_params": self.num_unconstrained_params,
             "num_draws_sampling": num_draws,
         }
         if inc_warmup and self._save_warmup:
@@ -1213,7 +1200,7 @@ class CmdStanMCMC:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.
@@ -1351,7 +1338,7 @@ class CmdStanMLE:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.
@@ -1419,7 +1406,6 @@ class CmdStanGQ:
                 drest = scan_generated_quantities_csv(
                     path=self.runset.csv_files[i],
                 )
-                # pylint: disable=consider-using-dict-items
                 for key in dzero:
                     if (
                         key
@@ -1762,9 +1748,6 @@ class CmdStanGQ:
             f"{sample_config['stan_version_minor']}."
             f"{sample_config['stan_version_patch']}",
             "model": sample_config["model"],
-            "num_unconstrained_params": (
-                self.mcmc_sample.num_unconstrained_params
-            ),
             "num_draws_sampling": num_draws,
         }
         if inc_warmup and sample_config['save_warmup']:
@@ -1921,7 +1904,7 @@ class CmdStanGQ:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.
@@ -2080,7 +2063,7 @@ class CmdStanVB:
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
-        Move output csvfiles to specified directory.  If files were
+        Move output CSV files to specified directory.  If files were
         written to the temporary session directory, clean filename.
         E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
         'bernoulli-201912081451-1.csv'.

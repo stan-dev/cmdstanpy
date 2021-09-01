@@ -123,7 +123,7 @@ class RunSetTest(unittest.TestCase):
         self.assertIn('id=1', runset._cmds[0])
         self.assertIn('id=4', runset._cmds[3])
 
-    def test_save_diagnostics(self):
+    def test_save_latent_dynamics(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         sampler_args = SamplerArgs()
@@ -134,7 +134,7 @@ class RunSetTest(unittest.TestCase):
             chain_ids=chain_ids,
             data=jdata,
             method_args=sampler_args,
-            save_diagnostics=True,
+            save_latent_dynamics=True,
         )
         runset = RunSet(args=cmdstan_args)
         self.assertIn(_TMPDIR, runset.diagnostic_files[0])
@@ -145,7 +145,7 @@ class RunSetTest(unittest.TestCase):
             chain_ids=chain_ids,
             data=jdata,
             method_args=sampler_args,
-            save_diagnostics=True,
+            save_latent_dynamics=True,
             output_dir=os.path.abspath('.'),
         )
         runset = RunSet(args=cmdstan_args)

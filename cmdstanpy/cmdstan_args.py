@@ -159,6 +159,8 @@ class SamplerArgs:
                     self.metric = 'diag_e'
                 elif self.metric in ['dense', 'dense_e']:
                     self.metric = 'dense_e'
+                elif self.metric in ['unit', 'unit_e']:
+                    self.metric = 'unit_e'
                 else:
                     if not os.path.exists(self.metric):
                         raise ValueError('no such file {}'.format(self.metric))
@@ -638,7 +640,7 @@ class CmdStanArgs:
         inits: Union[int, float, str, List[str], None] = None,
         output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
-        save_diagnostics: bool = False,
+        save_latent_dynamics: bool = False,
         save_profile: bool = False,
         refresh: Optional[int] = None,
         logger: Optional[logging.Logger] = None,
@@ -652,7 +654,7 @@ class CmdStanArgs:
         self.inits = inits
         self.output_dir = output_dir
         self.sig_figs = sig_figs
-        self.save_diagnostics = save_diagnostics
+        self.save_latent_dynamics = save_latent_dynamics
         self.save_profile = save_profile
         self.refresh = refresh
         self.method_args = method_args
