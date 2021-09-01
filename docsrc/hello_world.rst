@@ -26,7 +26,7 @@ The model ``bernoulli.stan``  is a simple model for binary data:
 given a set of N observations of i.i.d. binary data
 `y[1] ... y[N]`, it calculates the Bernoulli chance-of-success `theta`.
 
-.. code::
+.. code:: stan
 
    data { 
       int<lower=0> N; 
@@ -53,13 +53,13 @@ The function :func:`~cmdstan_path` returns the value of this environment variabl
     from cmdstanpy import cmdstan_path, CmdStanModel
 
     # specify Stan program file 
-    bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
+    stan_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
 
     # instantiate the model; compiles the Stan program as needed.
-    bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
+    model = CmdStanModel(stan_file=stan_file)
 
     # inspect model object 
-    print(bernoulli_model)
+    print(model)
 
             
 Data inputs
@@ -101,13 +101,13 @@ to a temporary directory which is deleted when the current Python session is ter
 .. ipython:: python
 
     # specify data file
-    bernoulli_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
+    data_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
 
     # fit the model 
-    bernoulli_fit = bernoulli_model.sample(data=bernoulli_data) 
+    fit = model.sample(data=data_file) 
 
     # printing the object reports sampler commands, output files
-    print(bernoulli_fit)
+    print(fit)
 
 
 Accessing the sample
@@ -137,10 +137,10 @@ The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all St
 
 .. ipython:: python
 
-    bernoulli_fit.draws().shape 
-    bernoulli_fit.draws(concat_chains=True).shape 
+    fit.draws().shape 
+    fit.draws(concat_chains=True).shape 
 
-    draws_theta = bernoulli_fit.stan_variable(name='theta') 
+    draws_theta = fit.stan_variable(name='theta') 
     draws_theta.shape 
 
                         
@@ -157,7 +157,7 @@ all model parameters and quantities of interest in a pandas.DataFrame:
 
 .. ipython:: python
 
-    bernoulli_fit.summary()
+    fit.summary()
 
 CmdStan is distributed with a second posterior analysis utility
 `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__
@@ -168,7 +168,7 @@ The :meth:`~CmdStanMCMC.diagnose` method runs this utility and prints the output
 
 .. ipython:: python
 
-    print(bernoulli_fit.diagnose())
+    print(fit.diagnose())
 
 Managing Stan CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -181,7 +181,7 @@ to a specified directory.
 .. ipython:: python
     :verbatim:
 
-    bernoulli_fit.save_csvfiles(dir='some/path')
+    fit.save_csvfiles(dir='some/path')
 
 
 .. comment
@@ -193,14 +193,14 @@ to a specified directory.
   
   .. code-block:: python
   
-      bernoulli_fit = bernoulli_model.sample(data=bernoulli_data, show_progress=True)
+      fit = model.sample(data=data_file, show_progress=True)
   
   On Jupyter Notebook environment user should use notebook version
   by using ``show_progress='notebook'``.
   
   .. code-block:: python
   
-      bernoulli_fit = bernoulli_model.sample(data=bernoulli_data, show_progress='notebook')
+      fit = model.sample(data=data_file, show_progress='notebook')
   
   To enable javascript progress bar on Jupyter Lab Notebook user needs to install
   nodejs and ipywidgets. Following the instructions in

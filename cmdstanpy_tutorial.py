@@ -13,46 +13,46 @@ from cmdstanpy import CmdStanModel, cmdstan_path
 # ### Instantiate & compile the model
 
 bernoulli_dir = os.path.join(cmdstan_path(), 'examples', 'bernoulli')
-bernoulli_stan = os.path.join(bernoulli_dir, 'bernoulli.stan')
-with open(bernoulli_stan, 'r') as f:
+stan_file = os.path.join(bernoulli_dir, 'bernoulli.stan')
+with open(stan_file, 'r') as f:
     print(f.read())
 
-bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
-print(bernoulli_model)
+model = CmdStanModel(stan_file=stan_file)
+print(model)
 
 # ### Assemble the data
 
-bern_data = {"N": 10, "y": [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
+data = {"N": 10, "y": [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
 
 # In the CmdStan `examples/bernoulli` directory, there are data files in both `JSON` and `rdump` formats.
 # bern_json = os.path.join(bernoulli_dir, 'bernoulli.data.json')
 
 # ### Do Inference
 
-bern_fit = bernoulli_model.sample(data=bern_data)
-print(bern_fit)
+fit = model.sample(data=data)
+print(fit)
 
 # ### Access the sample: the `CmdStanMCMC` object attributes and methods
 
-bern_fit.draws().shape
+fit.draws().shape
 
-vars = bern_fit.stan_variables()
+vars = fit.stan_variables()
 for (k, v) in vars.items():
     print(k, v.shape)
 
-thetas = bern_fit.stan_variable(name='theta')
+thetas = fit.stan_variable(name='theta')
 pd.DataFrame(data=thetas).plot.density()
 
 # #### Get HMC sampler tuning parameters
 
-bern_fit.step_size
-bern_fit.metric_type
-bern_fit.metric
+fit.step_size
+fit.metric_type
+fit.metric
 
 # #### Summarize the results
 
-bern_fit.summary()
+fit.summary()
 
 # #### Run sampler diagnostics
 
-bern_fit.diagnose()
+fit.diagnose()

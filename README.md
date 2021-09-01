@@ -37,20 +37,20 @@ The CmdStanPy, CmdStan, and the core Stan C++ code are licensed under new BSD.
 
 ### Example
 
-::
+```python
+import os
+from cmdstanpy import cmdstan_path, CmdStanModel
 
-    import os
-    from cmdstanpy import cmdstan_path, CmdStanModel
+# specify locations of Stan program file and data
+stan_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
+data_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
 
-    # specify locations of Stan program file and data
-    bernoulli_stan = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
-    bernoulli_data = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
+# instantiate a model; compiles the Stan program by default
+model = CmdStanModel(stan_file=stan_file)
 
-    # instantiate a model; compiles the Stan program by default
-    bernoulli_model = CmdStanModel(stan_file=bernoulli_stan)
+# obtain a posterior sample from the model conditioned on the data
+fit = model.sample(chains=4, data=data_file)
 
-    # obtain a posterior sample from the model conditioned on the data
-    bernoulli_fit = bernoulli_model.sample(chains=4, data=bernoulli_data)
-
-    # summarize the results (wraps CmdStan `bin/stansummary`):
-    bernoulli_fit.summary()
+# summarize the results (wraps CmdStan `bin/stansummary`):
+fit.summary()
+```
