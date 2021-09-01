@@ -578,14 +578,24 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
     return dict
 
 
-def scan_optimize_csv(path: str) -> Dict[str, Any]:
+def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
     """Process optimizer stan_csv output file line by line."""
     dict: Dict[str, Any] = {}
     lineno = 0
+    # scan to find config, header, num saved iters
     with open(path, 'r') as fd:
         lineno = scan_config(fd, dict, lineno)
         lineno = scan_column_names(fd, dict, lineno)
-        line = fd.readline().lstrip(' #\t').rstrip()
+        iters = 0
+        for line in fd:
+            iters += 1
+    # rescan to capture estimates
+    with open(path, 'r') as fd:
+        for i in range(lineno):
+            fd.readline()
+        line = fd.readline()
+        # allocate numpy ndarray for 
+        print(line)
         xs = line.split(',')
         dict['mle'] = [float(x) for x in xs]
     return dict

@@ -315,6 +315,7 @@ class OptimizeArgs:
         algorithm: Optional[str] = None,
         init_alpha: Optional[float] = None,
         iter: Optional[int] = None,
+        save_iterations: bool = False,
         tol_obj: Optional[float] = None,
         tol_rel_obj: Optional[float] = None,
         tol_grad: Optional[float] = None,
@@ -326,6 +327,7 @@ class OptimizeArgs:
         self.algorithm = algorithm
         self.init_alpha = init_alpha
         self.iter = iter
+        self.save_iterations = save_iterations
         self.tol_obj = tol_obj
         self.tol_rel_obj = tol_rel_obj
         self.tol_grad = tol_grad
@@ -457,6 +459,8 @@ class OptimizeArgs:
             cmd.append('history_size={}'.format(self.history_size))
         if self.iter is not None:
             cmd.append('iter={}'.format(self.iter))
+        if self.save_iterations:
+            cmd.append('save_iterations=1')
 
         return cmd
 

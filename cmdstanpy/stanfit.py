@@ -303,23 +303,29 @@ class RunSet:
                             self._chain_ids[i], fd.read()
                         )
                     )
-            # pre 2.27, all msgs sent to stdout, including errors
-            if (
-                not cmdstan_version_at(2, 27)
-                and os.path.exists(self._stdout_files[i])
-                and os.stat(self._stdout_files[i]).st_size > 0
-            ):
-                with open(self._stdout_files[i], 'r') as fd:
-                    contents = fd.read()
-                    # pattern matches initial "Exception" or "Error" msg
-                    pat = re.compile(r'^E[rx].*$', re.M)
-                errors = re.findall(pat, contents)
-                if len(errors) > 0:
-                    msgs.append(
-                        'chain_id {}:\n\t{}\n'.format(
-                            self._chain_ids[i], '\n\t'.join(errors)
-                        )
-                    )
+            # pre 2.27, all sampler msgs go to stdout, including errors
+            if self._args.method == Method.SAMPLE:
+                if (
+                    not cmdstan_version_at(2, 27)
+                    and os.path.exists(self._stdout_files[i])
+                    and os.stat(self._stdout_files[i]).st_size > 0
+                ):
+                    with open(self._stdout_files[i], 'r') as fd:
+                        contents = fd.read()
+                        # pattern matches initial "Exception" or "Error" msg
+                        pat = re.compile(r'^E[rx].*$', re.M)
+                        errors = re.findall(pat, contents)
+                        if len(errors) > 0:
+                            msgs.append(
+                                'chain_id {}:\n\t{}\n'.format(
+                                    self._chain_ids[i], '\n\t'.join(errors)
+                                    )
+                                )
+            elif self._args.method == Method.OPTIMIZE:
+                msgs.append('console log output:\n')
+                with open(self._stdout_files[0], 'r') as fd:
+                    msgs.append(fd.read())
+
         return '\n'.join(msgs)
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
@@ -1240,7 +1246,9 @@ class CmdStanMLE:
             '\n\t'.join(self.runset.csv_files),
             '\n\t'.join(self.runset.stdout_files),
         )
-        # TODO - profiling files
+        if not self.runset._check_retcodes():
+            repr = '{}\n Warning: invalid estimate, '.format(repr)
+            repr = '{} optimization failed to converge.'.format(repr)
         return repr
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
@@ -1269,20 +1277,33 @@ class CmdStanMLE:
     @property
     def optimized_params_np(self) -> np.ndarray:
         """Returns optimized params as numpy array."""
+        if not self.runset._check_retcodes():
+            get_logger().warning(
+                'invalid estimate, optimization failed to converge'
+            )
         return np.asarray(self._mle)
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
         """Returns optimized params as pandas DataFrame."""
+        if not self.runset._check_retcodes():
+            get_logger().warning(
+                'invalid estimate, optimization failed to converge'
+            )
         return pd.DataFrame([self._mle], columns=self.column_names)
 
     @property
     def optimized_params_dict(self) -> Dict[str, float]:
         """Returns optimized params as Dict."""
+        if not self.runset._check_retcodes():
+            get_logger().warning(
+                'invalid estimate, optimization failed to converge'
+            )
         return OrderedDict(zip(self.column_names, self._mle))
 
     def stan_variable(
-        self, var: Optional[str] = None, *, name: Optional[str] = None
+        self, var: Optional[str] = None,
+        check_convergence:bool = True, *, name: Optional[str] = None
     ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
@@ -1290,6 +1311,11 @@ class CmdStanMLE:
         numpy.ndarray match the shape of the Stan program variable.
 
         :param var: variable name
+
+        :param check_convergence: Checks for failure to converge and
+            prints warning.failed to converge.  ``False`` will supress
+            check and warning, default is ``True``.
+
 
         See Also
         --------
@@ -1311,6 +1337,11 @@ class CmdStanMLE:
             raise ValueError('no variable name specified.')
         if var not in self._metadata.stan_vars_dims:
             raise ValueError('unknown variable name: {}'.format(var))
+        if check_convergence and not self.runset._check_retcodes():
+            get_logger().warning(
+                'invalid estimate, optimization failed to converge'
+            )
+
         col_idxs = list(self._metadata.stan_vars_cols[var])
         vals = list(self._mle)
         xs = [vals[x] for x in col_idxs]
@@ -1319,10 +1350,14 @@ class CmdStanMLE:
             shape = self._metadata.stan_vars_dims[var]
         return np.array(xs).reshape(shape)
 
-    def stan_variables(self) -> Dict[str, np.ndarray]:
+    def stan_variables(self, check_convergence:bool = True) -> Dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
+
+        :param check_convergence: Checks for failure to converge and
+            prints warning.failed to converge.  ``False`` will supress
+            check and warning, default is ``True``.
 
         See Also
         --------
@@ -1331,9 +1366,13 @@ class CmdStanMLE:
         CmdStanVB.stan_variables
         CmdStanGQ.stan_variables
         """
+        if check_convergence and not self.runset._check_retcodes():
+            get_logger().warning(
+                'invalid estimate, optimization failed to converge'
+            )
         result = {}
         for name in self._metadata.stan_vars_dims.keys():
-            result[name] = self.stan_variable(name)
+            result[name] = self.stan_variable(name, False)  # don't warn twice
         return result
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:

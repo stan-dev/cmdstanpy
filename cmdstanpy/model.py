@@ -397,6 +397,7 @@ class CmdStanModel:
         tol_param: Optional[float] = None,
         history_size: Optional[int] = None,
         iter: Optional[int] = None,
+        save_iterations: bool = False,
         refresh: Optional[int] = None,
     ) -> CmdStanMLE:
         """
@@ -481,6 +482,9 @@ class CmdStanModel:
 
         :param iter: Total number of iterations
 
+        :param save_iterations: When ``True``, save intermediate approximations
+            to the output CSV file.  Default is ``False``.
+
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
@@ -496,6 +500,7 @@ class CmdStanModel:
             tol_param=tol_param,
             history_size=history_size,
             iter=iter,
+            save_iterations=save_iterations,
         )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
@@ -518,11 +523,8 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
-            msg = 'Error during optimization:\n{}'.format(runset.get_err_msgs())
-            msg = '{}Command and output files:\n{}'.format(
-                msg, runset.__repr__()
-            )
-            raise RuntimeError(msg)
+            msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
+            get_logger().warn(msg)  # https://github.com/stan-dev/cmdstanr/issues/314
         mle = CmdStanMLE(runset)
         return mle
 
