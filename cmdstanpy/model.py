@@ -481,7 +481,7 @@ class CmdStanModel:
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
-            :func:`datetime.strftime` to decide the file names for
+            :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
         :return: CmdStanMLE object
@@ -720,7 +720,7 @@ class CmdStanModel:
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
-            :func:`datetime.strftime` to decide the file names for
+            :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
         :return: CmdStanMCMC object
@@ -959,7 +959,7 @@ class CmdStanModel:
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
-            :func:`datetime.strftime` to decide the file names for
+            :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
         :return: CmdStanGQ object
@@ -1139,7 +1139,7 @@ class CmdStanModel:
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
-            :func:`datetime.strftime` to decide the file names for
+            :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
         :return: CmdStanVB object
