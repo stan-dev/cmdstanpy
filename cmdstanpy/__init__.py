@@ -46,7 +46,13 @@ from .stanfit import (  # noqa
     from_csv,
 )
 from .utils import set_cmdstan_path  # noqa
-from .utils import cmdstan_path, install_cmdstan, set_make_env, write_stan_json
+from .utils import (
+    cmdstan_path,
+    install_cmdstan,
+    set_make_env,
+    show_versions,
+    write_stan_json,
+)
 
 __all__ = [
     'set_cmdstan_path',
@@ -61,4 +67,5 @@ __all__ = [
     'InferenceMetadata',
     'from_csv',
     'write_stan_json',
+    'show_versions',
 ]
