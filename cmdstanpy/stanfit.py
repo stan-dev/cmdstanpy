@@ -1255,7 +1255,7 @@ class CmdStanMLE:
         meta = scan_optimize_csv(sample_csv_0)
         self._metadata = InferenceMetadata(meta)
         self._column_names: Tuple[str, ...] = meta['column_names']
-        self._mle: List[float] = meta['mle']
+        self._mle = meta['mle'] 
 
     @property
     def column_names(self) -> Tuple[str, ...]:
@@ -1281,7 +1281,8 @@ class CmdStanMLE:
             get_logger().warning(
                 'invalid estimate, optimization failed to converge'
             )
-        return np.asarray(self._mle)
+        # TODO: squeeze?
+        return self._mle
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
@@ -1290,7 +1291,7 @@ class CmdStanMLE:
             get_logger().warning(
                 'invalid estimate, optimization failed to converge'
             )
-        return pd.DataFrame([self._mle], columns=self.column_names)
+        return pd.DataFrame(self._mle, columns=self.column_names)
 
     @property
     def optimized_params_dict(self) -> Dict[str, float]:
@@ -1299,6 +1300,7 @@ class CmdStanMLE:
             get_logger().warning(
                 'invalid estimate, optimization failed to converge'
             )
+        # TODO: return final estimate only
         return OrderedDict(zip(self.column_names, self._mle))
 
     def stan_variable(
@@ -1343,6 +1345,7 @@ class CmdStanMLE:
             )
 
         col_idxs = list(self._metadata.stan_vars_cols[var])
+        # TODO: return final estimate only
         vals = list(self._mle)
         xs = [vals[x] for x in col_idxs]
         shape: Tuple[int, ...] = ()

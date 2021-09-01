@@ -590,14 +590,23 @@ def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
         for line in fd:
             iters += 1
     # rescan to capture estimates
+    mle = np.empty(
+        (iters, len(dict['column_names'])), dtype=float, order='F'
+    )
     with open(path, 'r') as fd:
         for i in range(lineno):
             fd.readline()
-        line = fd.readline()
-        # allocate numpy ndarray for 
-        print(line)
-        xs = line.split(',')
-        dict['mle'] = [float(x) for x in xs]
+        for i in range(iters):
+            line = fd.readline().strip()
+            if len(line) < 1:
+                raise ValueError(
+                    'cannot parse CSV file {}, error at line {}'.format(
+                        path, lineno + i
+                    )
+                )
+            xs = line.split(',')
+            mle[i, :] = [float(x) for x in xs]
+    dict['mle'] = mle
     return dict
 
 
