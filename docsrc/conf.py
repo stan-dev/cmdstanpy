@@ -323,8 +323,8 @@ latex_elements = {
 latex_documents = [
     (
         'index',
-        'project-template.tex',
-        u'project-template Documentation',
+        'cmdstanpy.tex',
+        u'CmdStanPy Documentation',
         u'Stan Development Team',
         'manual',
     )
@@ -358,8 +358,8 @@ latex_documents = [
 man_pages = [
     (
         'index',
-        'project-template',
-        u'project-template Documentation',
+        'cmdstanpy',
+        u'CmdStanPy Documentation',
         [u'Stan Development Team'],
         1,
     )
