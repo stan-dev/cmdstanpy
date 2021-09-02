@@ -127,12 +127,19 @@ class CmdStanPathTest(unittest.TestCase):
             self.assertEqual(install_version, os.environ['CMDSTAN'])
 
     def test_validate_path(self):
-        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-        if not os.path.exists(cmdstan_dir):
-            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        install_version = os.path.join(
-            cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
-        )
+        if 'CMDSTAN' in os.environ:
+            install_version = os.environ.get('CMDSTAN')
+        else:
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+            if not os.path.exists(cmdstan_dir):
+                cmdstan_dir = os.path.expanduser(
+                    os.path.join('~', _DOT_CMDSTANPY)
+                )
+
+            install_version = os.path.join(
+                cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+            )
+
         set_cmdstan_path(install_version)
         validate_cmdstan_path(install_version)
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))

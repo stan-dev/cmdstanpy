@@ -344,17 +344,12 @@ class CmdStanModel:
                         )
                         if 'PCH file' in str(e):
                             get_logger().warning(
-                                "%s, %s",
-                                "CmdStan's precompiled header (PCH) files ",
-                                "may need to be rebuilt.",
-                            )
-                            get_logger().warning(
-                                "%s %s",
-                                "If your model failed to compile please run ",
-                                "install_cmdstan(overwrite=True).",
-                            )
-                            get_logger().warning(
-                                "If the issue persists please open a bug report"
+                                "%s",
+                                "CmdStan's precompiled header (PCH) files "
+                                "may need to be rebuilt."
+                                "If your model failed to compile please run "
+                                "install_cmdstan(overwrite=True).\nIf the "
+                                "issue persists please open a bug report",
                             )
 
                         compilation_failed = True
@@ -398,6 +393,7 @@ class CmdStanModel:
         history_size: Optional[int] = None,
         iter: Optional[int] = None,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -484,6 +480,10 @@ class CmdStanModel:
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
+
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
@@ -514,7 +514,7 @@ class CmdStanModel:
             )
 
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1)
+            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
@@ -555,6 +555,7 @@ class CmdStanModel:
         save_profile: bool = False,
         show_progress: Union[bool, str] = False,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS-HMC sampler to produce a set of draws
@@ -718,6 +719,10 @@ class CmdStanModel:
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
+
         :return: CmdStanMCMC object
         """
         if chains is None:
@@ -829,7 +834,9 @@ class CmdStanModel:
                 method_args=sampler_args,
                 refresh=refresh,
             )
-            runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
+            runset = RunSet(
+                args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
+            )
             pbar = None
             all_pbars = []
 
@@ -899,6 +906,7 @@ class CmdStanModel:
         gq_output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanGQ:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -950,6 +958,10 @@ class CmdStanModel:
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
+
         :return: CmdStanGQ object
         """
         if isinstance(mcmc_sample, CmdStanMCMC):
@@ -999,7 +1011,9 @@ class CmdStanModel:
                 method_args=generate_quantities_args,
                 refresh=refresh,
             )
-            runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
+            runset = RunSet(
+                args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
+            )
 
             parallel_chains_avail = cpu_count()
             parallel_chains = max(min(parallel_chains_avail - 2, chains), 1)
@@ -1039,6 +1053,7 @@ class CmdStanModel:
         output_samples: Optional[int] = None,
         require_converged: bool = True,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1123,6 +1138,10 @@ class CmdStanModel:
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
@@ -1155,7 +1174,7 @@ class CmdStanModel:
             )
 
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1)
+            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
             self._run_cmdstan(runset, dummy_chain_id)
 
         # treat failure to converge as failure
