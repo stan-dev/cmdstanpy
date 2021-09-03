@@ -1241,7 +1241,7 @@ class CmdStanMLE:
         assert isinstance(
             optimize_args, OptimizeArgs
         )  # make the typechecker happy
-        self.save_iterations = optimize_args.save_iterations
+        self._save_iterations = optimize_args.save_iterations
         self._set_mle_attrs(runset.csv_files[0])
 
     def __repr__(self) -> str:
@@ -1259,11 +1259,11 @@ class CmdStanMLE:
         return repr
 
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
-        meta = scan_optimize_csv(sample_csv_0, self.save_iterations)
+        meta = scan_optimize_csv(sample_csv_0, self._save_iterations)
         self._metadata = InferenceMetadata(meta)
         self._column_names: Tuple[str, ...] = meta['column_names']
         self._mle = meta['mle']
-        if self.save_iterations:
+        if self._save_iterations:
             self._all_iters = meta['all_iters']
 
     @property
@@ -1304,11 +1304,10 @@ class CmdStanMLE:
         the value for `lp__` as well as all Stan program variables.
 
         """
-        if not self.save_iterations:
+        if not self._save_iterations:
             get_logger().warning(
-                'Intermediate iterations not saved because optimizer argument '
-                '"save_iterations=True" not specified. You must rerun '
-                'the optimize method accordingly.'
+                'Intermediate iterations not saved to CSV output file. '
+                'Rerun the optimize method with "save_iterations=True".'
             )
             return None
         if not self.converged:
@@ -1338,11 +1337,10 @@ class CmdStanMLE:
         the value for `lp__` as well as all Stan program variables.
 
         """
-        if not self.save_iterations:
+        if not self._save_iterations:
             get_logger().warning(
-                'Intermediate iterations not saved because optimizer argument '
-                '"save_iterations=True" not specified. You must rerun '
-                'the optimize method accordingly.'
+                'Intermediate iterations not saved to CSV output file. '
+                'Rerun the optimize method with "save_iterations=True".'
             )
             return None
         if not self.converged:
@@ -1367,6 +1365,7 @@ class CmdStanMLE:
         self,
         var: Optional[str] = None,
         *,
+        inc_iterations: bool = False,
         warn: bool = True,
         name: Optional[str] = None,
     ) -> np.ndarray:
@@ -1376,6 +1375,11 @@ class CmdStanMLE:
         numpy.ndarray match the shape of the Stan program variable.
 
         :param var: variable name
+
+        :param inc_iterations: When ``True`` and the intermediate estimates
+            are included in the output, i.e., the optimizer was run with
+            ``save_iterations=True``, then intermediate estimates are included.
+            Default value is ``False``.
 
         See Also
         --------
@@ -1397,23 +1401,55 @@ class CmdStanMLE:
             raise ValueError('no variable name specified.')
         if var not in self._metadata.stan_vars_dims:
             raise ValueError('unknown variable name: {}'.format(var))
+        if warn and inc_iterations and not self._save_iterations:
+            get_logger().warning(
+                'Intermediate iterations not saved to CSV output file. '
+                'Rerun the optimize method with "save_iterations=True".'
+            )
         if warn and not self.runset._check_retcodes():
             get_logger().warning(
                 'Invalid estimate, optimization failed to converge.'
             )
 
-        col_idxs = list(self._metadata.stan_vars_cols[var])
-        vals = list(self._mle)
-        xs = [vals[x] for x in col_idxs]
-        shape: Tuple[int, ...] = ()
-        if len(col_idxs) > 0:
-            shape = self._metadata.stan_vars_dims[var]
-        return np.array(xs).reshape(shape)
+        col_idxs = self._metadata.stan_vars_cols[var]
+        if inc_iterations and self._save_iterations:
+            num_rows = self._all_iters.shape[0]
+        else:
+            num_rows = 1
 
-    def stan_variables(self) -> Dict[str, np.ndarray]:
+        # extract and reshape, container var
+        if len(col_idxs) > 0:
+            dims = (num_rows,) + self._metadata.stan_vars_dims[var]
+            # pylint: disable=redundant-keyword-arg
+            if num_rows > 1:
+                return self._all_iters[:, col_idxs].reshape(  # type: ignore
+                    dims, order='F'
+                )
+            else:
+                mle = np.expand_dims(self._mle, axis=0)  # hack for col indexing
+                return (
+                    mle[0, col_idxs]
+                    .reshape(dims, order='F')  # type: ignore
+                    .squeeze(axis=0)
+                )
+
+        # extract scalar var
+        if num_rows > 1:
+            return self._all_iters[:, col_idxs]
+        return mle[0, col_idxs]
+
+    def stan_variables(
+        self, inc_iterations: bool = False
+    ) -> Dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
+
+        :param inc_iterations: When ``True`` and the intermediate estimates
+            are included in the output, i.e., the optimizer was run with
+            ``save_iterations=True``, then intermediate estimates are included.
+            Default value is ``False``.
+
 
         See Also
         --------
@@ -1428,7 +1464,9 @@ class CmdStanMLE:
             )
         result = {}
         for name in self._metadata.stan_vars_dims.keys():
-            result[name] = self.stan_variable(name, warn=False)
+            result[name] = self.stan_variable(
+                name, inc_iterations=inc_iterations, warn=False
+            )
         return result
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:

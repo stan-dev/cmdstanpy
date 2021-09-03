@@ -113,9 +113,8 @@ class CmdStanMLETest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Intermediate iterations not saved because optimizer argument '
-                '"save_iterations=True" not specified. You must rerun '
-                'the optimize method accordingly.',
+                'Intermediate iterations not saved to CSV output file. '
+                'Rerun the optimize method with "save_iterations=True".',
             )
         )
         with LogCapture() as log:
@@ -124,9 +123,8 @@ class CmdStanMLETest(unittest.TestCase):
             (
                 'cmdstanpy',
                 'WARNING',
-                'Intermediate iterations not saved because optimizer argument '
-                '"save_iterations=True" not specified. You must rerun '
-                'the optimize method accordingly.',
+                'Intermediate iterations not saved to CSV output file. '
+                'Rerun the optimize method with "save_iterations=True".',
             )
         )
 
@@ -142,6 +140,9 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_pd['x'][0], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
 
+        self.assertEqual(
+            mle.stan_variable('x', inc_iterations=True).shape, (36,)
+        )
         self.assertEqual(mle.optimized_iterations_np.shape, (36, 3))
         self.assertNotEqual(
             mle.optimized_iterations_np[0, 1],
@@ -166,7 +167,7 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertIn('method=optimize', mle.__repr__())
         self.assertFalse(mle.converged)
         with LogCapture() as log:
-            self.assertEqual(mle.optimized_params_pd.shape, (1,11))
+            self.assertEqual(mle.optimized_params_pd.shape, (1, 11))
         log.check_present(
             (
                 'cmdstanpy',
@@ -221,7 +222,6 @@ class CmdStanMLETest(unittest.TestCase):
         )
 
     def test_variables_3d(self):
-        # construct fit using existing sampler output
         stan = os.path.join(DATAFILES_PATH, 'multidim_vars.stan')
         jdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
         multidim_model = CmdStanModel(stan_file=stan)
@@ -257,6 +257,31 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertEqual(vars['beta'].shape, (2,))
         self.assertTrue('frac_60' in vars)
         self.assertEqual(vars['frac_60'].shape, ())
+
+        multidim_mle_iters = multidim_model.optimize(
+            data=jdata,
+            seed=1239812093,
+            algorithm='LBFGS',
+            init_alpha=0.001,
+            iter=100,
+            tol_obj=1e-12,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5,
+            save_iterations=True,
+        )
+        vars_iters = multidim_mle_iters.stan_variables(inc_iterations=True)
+        self.assertEqual(
+            len(vars_iters), len(multidim_mle_iters.metadata.stan_vars_dims)
+        )
+        self.assertTrue('y_rep' in vars_iters)
+        self.assertEqual(vars_iters['y_rep'].shape, (8, 5, 4, 3))
+        self.assertTrue('beta' in vars_iters)
+        self.assertEqual(vars_iters['beta'].shape, (8, 2))
+        self.assertTrue('frac_60' in vars_iters)
+        self.assertEqual(vars_iters['frac_60'].shape, (8,))
 
 
 class OptimizeTest(unittest.TestCase):
