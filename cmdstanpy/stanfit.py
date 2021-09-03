@@ -1262,8 +1262,12 @@ class CmdStanMLE:
         meta = scan_optimize_csv(sample_csv_0, self._save_iterations)
         self._metadata = InferenceMetadata(meta)
         self._column_names: Tuple[str, ...] = meta['column_names']
+        assert isinstance(meta['mle'], np.ndarray)  # make the typechecker happy
         self._mle = meta['mle']
         if self._save_iterations:
+            assert isinstance(
+                meta['all_iters'], np.ndarray
+            )  # make the typechecker happy
             self._all_iters = meta['all_iters']
 
     @property
@@ -1297,7 +1301,7 @@ class CmdStanMLE:
         return self._mle
 
     @property
-    def optimized_iterations_np(self) -> np.ndarray:
+    def optimized_iterations_np(self) -> Optional[np.ndarray]:
         """
         Returns all saved iterations from the optimizer and final estimate
         as a numpy.ndarray which contains all optimizer outputs, i.e.,
@@ -1330,7 +1334,7 @@ class CmdStanMLE:
         return pd.DataFrame([self._mle], columns=self.column_names)
 
     @property
-    def optimized_iterations_pd(self) -> pd.DataFrame:
+    def optimized_iterations_pd(self) -> Optional[pd.DataFrame]:
         """
         Returns all saved iterations from the optimizer and final estimate
         as a pandas.DataFrame which contains all optimizer outputs, i.e.,
@@ -1417,26 +1421,28 @@ class CmdStanMLE:
         else:
             num_rows = 1
 
-        # extract and reshape, container var
-        if len(col_idxs) > 0:
+        if len(col_idxs) > 0:  # container var
             dims = (num_rows,) + self._metadata.stan_vars_dims[var]
             # pylint: disable=redundant-keyword-arg
             if num_rows > 1:
-                return self._all_iters[:, col_idxs].reshape(  # type: ignore
+                result = self._all_iters[:, col_idxs].reshape(  # type: ignore
                     dims, order='F'
                 )
             else:
                 mle = np.expand_dims(self._mle, axis=0)  # hack for col indexing
-                return (
+                result = (
                     mle[0, col_idxs]
                     .reshape(dims, order='F')  # type: ignore
                     .squeeze(axis=0)
                 )
+        else:  # scalar var
+            if num_rows > 1:
+                result = self._all_iters[:, col_idxs]
+            else:
+                result = np.atleast_1d(mle[0, col_idxs])
 
-        # extract scalar var
-        if num_rows > 1:
-            return self._all_iters[:, col_idxs]
-        return mle[0, col_idxs]
+        assert isinstance(result, np.ndarray)  # make the typechecker happy
+        return result
 
     def stan_variables(
         self, inc_iterations: bool = False
