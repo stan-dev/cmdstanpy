@@ -63,6 +63,127 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
 
+    def test_instantiate_from_csvfiles_save_iterations(self):
+        csvfiles_path = os.path.join(
+            DATAFILES_PATH, 'optimize', 'eight_schools_mle_iters.csv'
+        )
+        mle = from_csv(path=csvfiles_path)
+        self.assertIn('CmdStanMLE: model=eight_schools', mle.__repr__())
+        self.assertIn('method=optimize', mle.__repr__())
+        self.assertEqual(
+            mle.column_names,
+            (
+                'lp__',
+                'mu',
+                'theta[1]',
+                'theta[2]',
+                'theta[3]',
+                'theta[4]',
+                'theta[5]',
+                'theta[6]',
+                'theta[7]',
+                'theta[8]',
+                'tau',
+            ),
+        )
+        self.assertAlmostEqual(
+            mle.optimized_params_dict['mu'], 1.06401, places=3
+        )
+        self.assertAlmostEqual(
+            mle.optimized_params_dict['theta[1]'], 1.06401, places=3
+        )
+        self.assertEqual(mle.optimized_iterations_np.shape, (173, 11))
+
+    def test_rosenbrock(self):
+        stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
+        model = CmdStanModel(stan_file=stan)
+        mle = model.optimize(algorithm='LBFGS')
+        self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
+        self.assertIn('method=optimize', mle.__repr__())
+        self.assertTrue(mle.converged)
+        self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
+        self.assertAlmostEqual(mle.stan_variable('x'), 1, places=3)
+        self.assertAlmostEqual(mle.stan_variable('y'), 1, places=3)
+        self.assertAlmostEqual(mle.optimized_params_pd['x'][0], 1, places=3)
+        self.assertAlmostEqual(mle.optimized_params_np[1], 1, places=3)
+        self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
+        with LogCapture() as log:
+            self.assertEqual(mle.optimized_iterations_np, None)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Intermediate iterations not saved because optimizer argument '
+                '"save_iterations=True" not specified. You must rerun '
+                'the optimize method accordingly.',
+            )
+        )
+        with LogCapture() as log:
+            self.assertEqual(mle.optimized_iterations_pd, None)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Intermediate iterations not saved because optimizer argument '
+                '"save_iterations=True" not specified. You must rerun '
+                'the optimize method accordingly.',
+            )
+        )
+
+        mle = model.optimize(
+            algorithm='LBFGS', save_iterations=True, seed=12345
+        )
+        self.assertTrue(mle.converged)
+        self.assertAlmostEqual(mle.stan_variable('x'), 1, places=3)
+        self.assertAlmostEqual(mle.stan_variable('y'), 1, places=3)
+
+        self.assertEqual(mle.optimized_params_np.shape, (3,))
+        self.assertAlmostEqual(mle.optimized_params_np[1], 1, places=3)
+        self.assertAlmostEqual(mle.optimized_params_pd['x'][0], 1, places=3)
+        self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
+
+        self.assertEqual(mle.optimized_iterations_np.shape, (36, 3))
+        self.assertNotEqual(
+            mle.optimized_iterations_np[0, 1],
+            mle.optimized_iterations_np[35, 1],
+        )
+        for i in range(3):
+            self.assertEqual(
+                mle.optimized_params_np[i], mle.optimized_iterations_np[35, i]
+            )
+
+    def test_eight_schools(self):
+        stan = os.path.join(DATAFILES_PATH, 'optimize', 'eight_schools.stan')
+        rdata = os.path.join(DATAFILES_PATH, 'optimize', 'eight_schools.data.R')
+        model = CmdStanModel(stan_file=stan)
+        with self.assertRaises(RuntimeError):
+            model.optimize(data=rdata, algorithm='LBFGS')
+
+        mle = model.optimize(
+            data=rdata, algorithm='LBFGS', require_converged=False
+        )
+        self.assertIn('CmdStanMLE: model=eight_schools', mle.__repr__())
+        self.assertIn('method=optimize', mle.__repr__())
+        self.assertFalse(mle.converged)
+        with LogCapture() as log:
+            self.assertEqual(mle.optimized_params_pd.shape, (1,11))
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Invalid estimate, optimization failed to converge.',
+            )
+        )
+        with LogCapture() as log:
+            mle.stan_variable('tau')
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'Invalid estimate, optimization failed to converge.',
+            )
+        )
+
     def test_variable_bern(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')

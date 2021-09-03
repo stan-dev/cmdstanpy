@@ -398,6 +398,7 @@ class CmdStanModel:
         history_size: Optional[int] = None,
         iter: Optional[int] = None,
         save_iterations: bool = False,
+        require_converged: bool = True,
         refresh: Optional[int] = None,
     ) -> CmdStanMLE:
         """
@@ -485,6 +486,9 @@ class CmdStanModel:
         :param save_iterations: When ``True``, save intermediate approximations
             to the output CSV file.  Default is ``False``.
 
+        :param require_converged: Whether or not to raise an error if Stan
+            reports that "The algorithm may not have converged".
+
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
@@ -524,7 +528,10 @@ class CmdStanModel:
 
         if not runset._check_retcodes():
             msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
-            get_logger().warn(msg)  # https://github.com/stan-dev/cmdstanr/issues/314
+            if 'Line search failed' in msg and not require_converged:
+                get_logger().warning(msg)
+            else:
+                raise RuntimeError(msg)
         mle = CmdStanMLE(runset)
         return mle
 
@@ -1119,7 +1126,7 @@ class CmdStanModel:
         :param output_samples: Number of approximate posterior output draws
             to save.
 
-        :param require_converged: Whether or not to raise an error if stan
+        :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
         :param refresh: Specify the number of iterations cmdstan will take

@@ -589,10 +589,11 @@ def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
         iters = 0
         for line in fd:
             iters += 1
+    if save_iters:
+        all_iters = np.empty(
+            (iters, len(dict['column_names'])), dtype=float, order='F'
+        )
     # rescan to capture estimates
-    mle = np.empty(
-        (iters, len(dict['column_names'])), dtype=float, order='F'
-    )
     with open(path, 'r') as fd:
         for i in range(lineno):
             fd.readline()
@@ -605,8 +606,13 @@ def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
                     )
                 )
             xs = line.split(',')
-            mle[i, :] = [float(x) for x in xs]
+            if save_iters:
+                all_iters[i, :] = [float(x) for x in xs]
+            if i == iters - 1:
+                mle = np.array([float(x) for x in xs], dtype=float)
     dict['mle'] = mle
+    if save_iters:
+        dict['all_iters'] = all_iters
     return dict
 
 
