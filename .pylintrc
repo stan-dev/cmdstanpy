@@ -73,10 +73,9 @@ disable=bad-continuation,
     too-many-branches,
     too-many-locals,
     unsubscriptable-object,
-    consider-using-with
-
-
-
+    consider-using-with,
+    consider-using-dict-items,
+    unspecified-encoding,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

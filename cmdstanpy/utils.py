@@ -573,7 +573,7 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
         lineno = scan_column_names(fd, dict, lineno)
         if not is_fixed_param:
             lineno = scan_warmup_iters(fd, dict, lineno)
-            lineno = scan_metric(fd, dict, lineno)
+            lineno = scan_hmc_params(fd, dict, lineno)
         lineno = scan_sampling_iters(fd, dict, lineno)
     return dict
 
@@ -768,13 +768,12 @@ def parse_stan_vars(
     return (dims_map, cols_map)
 
 
-def scan_metric(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
+def scan_hmc_params(
+    fd: TextIO, config_dict: Dict[str, Any], lineno: int
+) -> int:
     """
-    Scan step size, metric from  stan_csv file comment lines,
-    set config_dict entries 'metric' and 'num_unconstrained_params'
+    Scan step size, metric from  stan_csv file comment lines.
     """
-    if 'metric' not in config_dict:
-        config_dict['metric'] = 'diag_e'
     metric = config_dict['metric']
     line = fd.readline().strip()
     lineno += 1
@@ -796,6 +795,8 @@ def scan_metric(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
         raise ValueError(
             'line {}: invalid step size: {}'.format(lineno, step_size)
         ) from e
+    if metric == 'unit_e':
+        return lineno
     line = fd.readline().strip()
     lineno += 1
     if not (
@@ -814,7 +815,6 @@ def scan_metric(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
     line = fd.readline().lstrip(' #\t')
     lineno += 1
     num_unconstrained_params = len(line.split(','))
-    config_dict['num_unconstrained_params'] = num_unconstrained_params
     if metric == 'diag_e':
         return lineno
     else:
@@ -919,7 +919,7 @@ def do_command(
         if proc.returncode != 0:  # problem, throw RuntimeError with msg
             try:
                 serror = os.strerror(proc.returncode)
-            except ValueError as e:
+            except ValueError:
                 pass
             if proc.returncode < 0:
                 msg = 'Command: {}\nterminated by signal'.format(cmd)
@@ -1025,6 +1025,68 @@ def create_named_text_file(
     path = fd.name
     fd.close()
     return path
+
+
+def show_versions(output: bool = True) -> str:
+    """Prints out system and dependency information for debugging"""
+
+    import importlib
+    import locale
+    import struct
+
+    deps_info = []
+    try:
+        (sysname, _, release, _, machine, processor) = platform.uname()
+        deps_info.extend(
+            [
+                ("python", sys.version),
+                ("python-bits", struct.calcsize("P") * 8),
+                ("OS", f"{sysname}"),
+                ("OS-release", f"{release}"),
+                ("machine", f"{machine}"),
+                ("processor", f"{processor}"),
+                ("byteorder", f"{sys.byteorder}"),
+                ("LC_ALL", f'{os.environ.get("LC_ALL", "None")}'),
+                ("LANG", f'{os.environ.get("LANG", "None")}'),
+                ("LOCALE", f"{locale.getlocale()}"),
+            ]
+        )
+    # pylint: disable=broad-except
+    except Exception:
+        pass
+
+    try:
+        deps_info.append(('cmdstan_folder', cmdstan_path()))
+    # pylint: disable=broad-except
+    except Exception:
+        deps_info.append(('cmdstan', 'NOT FOUND'))
+
+    deps = ['cmdstanpy', 'pandas', 'xarray', 'tdqm', 'numpy', 'ujson']
+    for module in deps:
+        try:
+            if module in sys.modules:
+                mod = sys.modules[module]
+            else:
+                mod = importlib.import_module(module)
+        # pylint: disable=broad-except
+        except Exception:
+            deps_info.append((module, None))
+        else:
+            try:
+                ver = mod.__version__  # type: ignore
+                deps_info.append((module, ver))
+            # pylint: disable=broad-except
+            except Exception:
+                deps_info.append((module, "installed"))
+
+    out = 'INSTALLED VERSIONS\n---------------------\n'
+    for k, info in deps_info:
+        out += f'{k}: {info}\n'
+    if output:
+        print(out)
+        return " "
+    else:
+        return out
 
 
 def install_cmdstan(
@@ -1158,6 +1220,11 @@ def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
     return download_progress_hook
 
 
+def report_signal(sig: int) -> None:
+    """Provide info for processes terminated by a system signal."""
+    print('terminated by signal: {}'.format(sig))
+
+
 class MaybeDictToFilePath:
     """Context manager for json files."""
 
@@ -1168,6 +1235,7 @@ class MaybeDictToFilePath:
         self._unlink = [False] * len(objs)
         self._paths: List[Any] = [''] * len(objs)
         i = 0
+        # pylint: disable=isinstance-second-argument-not-valid-type
         for obj in objs:
             if isinstance(obj, Mapping):
                 data_file = create_named_text_file(

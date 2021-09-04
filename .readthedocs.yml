@@ -3,5 +3,8 @@ version: 2
 build:
     image: stable
 
+formats:
+    - pdf
+
 conda:
     environment: docsrc/env.yml

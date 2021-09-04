@@ -344,17 +344,12 @@ class CmdStanModel:
                         )
                         if 'PCH file' in str(e):
                             get_logger().warning(
-                                "%s, %s",
-                                "CmdStan's precompiled header (PCH) files ",
-                                "may need to be rebuilt.",
-                            )
-                            get_logger().warning(
-                                "%s %s",
-                                "If your model failed to compile please run ",
-                                "install_cmdstan(overwrite=True).",
-                            )
-                            get_logger().warning(
-                                "If the issue persists please open a bug report"
+                                "%s",
+                                "CmdStan's precompiled header (PCH) files "
+                                "may need to be rebuilt."
+                                "If your model failed to compile please run "
+                                "install_cmdstan(overwrite=True).\nIf the "
+                                "issue persists please open a bug report",
                             )
 
                         compilation_failed = True
@@ -398,6 +393,7 @@ class CmdStanModel:
         history_size: Optional[int] = None,
         iter: Optional[int] = None,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -410,7 +406,7 @@ class CmdStanModel:
         those arguments will have CmdStan default values.
 
         The :class:`CmdStanMLE` object records the command, the return code,
-        and the paths to the optimize method output csv and console files.
+        and the paths to the optimize method output CSV and console files.
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
 
@@ -454,7 +450,7 @@ class CmdStanModel:
             Introduced in CmdStan-2.25.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, csv outputs are written to a file
+            labelled blocks of code.  If True, CSV outputs are written to a file
             '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
 
@@ -483,6 +479,10 @@ class CmdStanModel:
 
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
+
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
 
         :return: CmdStanMLE object
         """
@@ -514,7 +514,7 @@ class CmdStanModel:
             )
 
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1)
+            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
@@ -551,10 +551,11 @@ class CmdStanModel:
         fixed_param: bool = False,
         output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
-        save_diagnostics: bool = False,
+        save_latent_dynamics: bool = False,
         save_profile: bool = False,
         show_progress: Union[bool, str] = False,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS-HMC sampler to produce a set of draws
@@ -627,7 +628,7 @@ class CmdStanModel:
             chain.
 
         :param save_warmup: When ``True``, sampler saves warmup draws as part of
-            the Stan csv output file.
+            the Stan CSV output file.
 
         :param thin: Period between recorded iterations.  Default is 1, i.e.,
              all iterations are recorded.
@@ -696,16 +697,20 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param save_diagnostics: Whether or not to output the position and
-            momentum information for each parameter.  If True,
-            csv outputs are written to an output file using filename
+        :param save_latent_dynamics: Whether or not to output the position and
+            momentum information for the model parameters (unconstrained).
+            If True, CSV outputs are written to an output file using filename
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
-            e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
+            e.g. 'bernoulli-201912081451-diagnostic-1.csv', see
+            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            section "Diagnostic CSV output file" for details.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, csv outputs are written to a file
+            labelled blocks of code.  If True, CSV outputs are written to a file
             '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
-            Introduced in CmdStan-2.26.
+            Introduced in CmdStan-2.26, see
+            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            section "Profiling CSV output file" for details.
 
         :param show_progress: Use tqdm progress bar to show sampling progress.
             If show_progress=='notebook' use tqdm_notebook
@@ -713,6 +718,10 @@ class CmdStanModel:
 
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
+
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
 
         :return: CmdStanMCMC object
         """
@@ -820,12 +829,14 @@ class CmdStanModel:
                 inits=_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_diagnostics=save_diagnostics,
+                save_latent_dynamics=save_latent_dynamics,
                 save_profile=save_profile,
                 method_args=sampler_args,
                 refresh=refresh,
             )
-            runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
+            runset = RunSet(
+                args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
+            )
             pbar = None
             all_pbars = []
 
@@ -895,6 +906,7 @@ class CmdStanModel:
         gq_output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanGQ:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -905,7 +917,7 @@ class CmdStanModel:
         method to generate additional quantities of interest.
 
         The :class:`CmdStanGQ` object records the command, the return code,
-        and the paths to the generate method output csv and console files.
+        and the paths to the generate method output CSV and console files.
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
 
@@ -945,6 +957,10 @@ class CmdStanModel:
 
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
+
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
 
         :return: CmdStanGQ object
         """
@@ -995,7 +1011,9 @@ class CmdStanModel:
                 method_args=generate_quantities_args,
                 refresh=refresh,
             )
-            runset = RunSet(args=args, chains=chains, chain_ids=chain_ids)
+            runset = RunSet(
+                args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
+            )
 
             parallel_chains_avail = cpu_count()
             parallel_chains = max(min(parallel_chains_avail - 2, chains), 1)
@@ -1021,7 +1039,7 @@ class CmdStanModel:
         inits: Optional[float] = None,
         output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
-        save_diagnostics: bool = False,
+        save_latent_dynamics: bool = False,
         save_profile: bool = False,
         algorithm: Optional[str] = None,
         iter: Optional[int] = None,
@@ -1035,6 +1053,7 @@ class CmdStanModel:
         output_samples: Optional[int] = None,
         require_converged: bool = True,
         refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1047,7 +1066,7 @@ class CmdStanModel:
         those arguments will have CmdStan default values.
 
         The :class:`CmdStanVB` object records the command, the return code,
-        and the paths to the variational method output csv and console files.
+        and the paths to the variational method output CSV and console files.
         The output files are written either to a specified output directory
         or to a temporary directory which is deleted upon session exit.
 
@@ -1082,13 +1101,13 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param save_diagnostics: Whether or not to save diagnostics. If True,
-            csv outputs are written to an output file using filename
+        :param save_latent_dynamics: Whether or not to save diagnostics.
+            If True, CSV outputs are written to an output file using filename
             template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, csv outputs are written to a file
+            labelled blocks of code.  If True, CSV outputs are written to a file
             '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
 
@@ -1119,6 +1138,10 @@ class CmdStanModel:
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
@@ -1144,14 +1167,14 @@ class CmdStanModel:
                 inits=_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_diagnostics=save_diagnostics,
+                save_latent_dynamics=save_latent_dynamics,
                 save_profile=save_profile,
                 method_args=variational_args,
                 refresh=refresh,
             )
 
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1)
+            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
             self._run_cmdstan(runset, dummy_chain_id)
 
         # treat failure to converge as failure
@@ -1238,11 +1261,16 @@ class CmdStanModel:
                     msg = 'Chain {} terminated by signal {}'.format(
                         idx + 1, proc.returncode
                     )
-                else:
+                elif proc.returncode < 125:
                     msg = 'Chain {} processing error'.format(idx + 1)
-                    msg = '{}, non-zero return code {}'.format(
-                        msg, proc.returncode
+                    msg = '{}, return code {}'.format(msg, proc.returncode)
+                elif proc.returncode > 128:
+                    msg = 'Chain {} system error'.format(idx + 1)
+                    msg = '{}, terminated by signal {}'.format(
+                        msg, proc.returncode - 128
                     )
+                else:
+                    msg = 'Chain {} unknown error'.format(idx + 1)
                 if len(console_error) > 0:
                     msg = '{}\n error message:\n\t{}'.format(msg, console_error)
                 get_logger().error(msg)
