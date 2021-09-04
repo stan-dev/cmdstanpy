@@ -609,7 +609,7 @@ def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
             if save_iters:
                 all_iters[i, :] = [float(x) for x in xs]
             if i == iters - 1:
-                mle = np.array([float(x) for x in xs])
+                mle = np.array(xs, dtype=float)
     dict['mle'] = mle
     if save_iters:
         dict['all_iters'] = all_iters

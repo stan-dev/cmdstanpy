@@ -55,7 +55,9 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
 
     def test_instantiate_from_csvfiles(self):
-        csvfiles_path = os.path.join(DATAFILES_PATH, 'optimize')
+        csvfiles_path = os.path.join(
+            DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv'
+        )
         mle = from_csv(path=csvfiles_path)
         self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
         self.assertIn('method=optimize', mle.__repr__())
