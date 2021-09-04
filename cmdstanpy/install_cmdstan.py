@@ -33,6 +33,7 @@ from typing import Callable, Dict, Optional
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
 
+MAKE = os.getenv("MAKE", "make" if platform.system() != "Windows" else "mingw32-make")
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
@@ -63,6 +64,101 @@ def usage() -> None:
     print(msg)
 
 
+def clear(verbose: bool = False) -> None:
+    cmd = [MAKE, "clean-all"]
+    proc = subprocess.Popen(
+        cmd,
+        cwd=None,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
+    )
+    while proc.poll() is None:
+        if proc.stdout:
+            output = proc.stdout.readline().decode("utf-8").strip()
+            if verbose and output:
+                print(output, flush=True)
+    _, stderr = proc.communicate()
+    if proc.returncode:
+        msgs = ['Command "make clean-all" failed']
+        if stderr:
+            msgs.append(stderr.decode("utf-8").strip())
+        raise CmdStanInstallError("\n".join(msgs))
+
+
+def build(verbose: bool = False) -> None:
+    cmd = [MAKE, "build"]
+    proc = subprocess.Popen(
+        cmd,
+        cwd=None,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
+    )
+    while proc.poll() is None:
+        if proc.stdout:
+
+            output = proc.stdout.readline().decode("utf-8").strip()
+            if verbose and output:
+                print(output, flush=True)
+    _, stderr = proc.communicate()
+    if proc.returncode:
+        msgs = ['Command "make build" failed']
+        if stderr:
+            msgs.append(stderr.decode("utf-8").strip())
+        raise CmdStanInstallError("\n".join(msgs))
+    if not os.path.exists(os.path.join("bin", "stansummary" + EXTENSION)):
+        raise CmdStanInstallError(
+            f"bin/stansummary{EXTENSION} not found"
+            ", please rebuild or report a bug!"
+        )
+    if not os.path.exists(os.path.join("bin", "diagnose" + EXTENSION)):
+        raise CmdStanInstallError(
+            f"bin/stansummary{EXTENSION} not found"
+            ", please rebuild or report a bug!"
+        )
+    if platform.system() == "Windows":
+        # Add tbb to the $PATH on Windows
+        libtbb = os.path.join(
+            os.getcwd(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
+        )
+        os.environ['PATH'] = ';'.join(
+            list(
+                OrderedDict.fromkeys(
+                    [libtbb] + os.environ.get('PATH', '').split(';')
+                )
+            )
+        )
+
+
+def test():
+    cmd = [
+        MAKE,
+        Path(
+            os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
+        ).as_posix(),
+    ]
+    proc = subprocess.Popen(
+        cmd,
+        cwd=None,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
+    )
+    while proc.poll() is None:
+        if proc.stdout:
+            proc.stdout.readline().decode('utf-8')
+    _, stderr = proc.communicate()
+    if proc.returncode:
+        msgs = ['Failed to compile example model bernoulli.stan']
+        if stderr:
+            msgs.append(stderr.decode('utf-8').strip())
+        raise CmdStanInstallError('\n'.join(msgs))
+
+
 def install_version(
     cmdstan_version: str, overwrite: bool = False, verbose: bool = False
 ) -> None:
@@ -76,103 +172,17 @@ def install_version(
     :param verbose: when ``True``, print build msgs to stdout.
     """
     with pushd(cmdstan_version):
-        make = os.getenv(
-            'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
-        )
         print('Building version {}'.format(cmdstan_version))
         if overwrite:
             print(
                 'Overwrite requested, remove existing build of version '
                 '{}'.format(cmdstan_version)
             )
-            cmd = [make, 'clean-all']
-            proc = subprocess.Popen(
-                cmd,
-                cwd=None,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                env=os.environ,
-            )
-            while proc.poll() is None:
-                if proc.stdout:
-                    output = proc.stdout.readline().decode('utf-8').strip()
-                    if verbose and output:
-                        print(output, flush=True)
-            _, stderr = proc.communicate()
-            if proc.returncode:
-                msgs = ['Command "make clean-all" failed']
-                if stderr:
-                    msgs.append(stderr.decode('utf-8').strip())
-                raise CmdStanInstallError('\n'.join(msgs))
+            clear(verbose)
             print('Rebuilding version {}'.format(cmdstan_version))
-        cmd = [make, 'build']
-        proc = subprocess.Popen(
-            cmd,
-            cwd=None,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        while proc.poll() is None:
-            if proc.stdout:
-
-                output = proc.stdout.readline().decode('utf-8').strip()
-                if verbose and output:
-                    print(output, flush=True)
-        _, stderr = proc.communicate()
-        if proc.returncode:
-            msgs = ['Command "make build" failed']
-            if stderr:
-                msgs.append(stderr.decode('utf-8').strip())
-            raise CmdStanInstallError('\n'.join(msgs))
-        if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
-            raise CmdStanInstallError(
-                f"bin/stansummary{EXTENSION} not found"
-                ", please rebuild or report a bug!"
-            )
-        if not os.path.exists(os.path.join('bin', 'diagnose' + EXTENSION)):
-            raise CmdStanInstallError(
-                f"bin/stansummary{EXTENSION} not found"
-                ", please rebuild or report a bug!"
-            )
+        build(verbose)
         print('Test model compilation')
-        cmd = [
-            make,
-            Path(
-                os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
-            ).as_posix(),
-        ]
-        if platform.system() == "Windows":
-            # Add tbb to the $PATH on Windows
-            libtbb = os.path.join(
-                os.getcwd(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
-            )
-            os.environ['PATH'] = ';'.join(
-                list(
-                    OrderedDict.fromkeys(
-                        [libtbb] + os.environ.get('PATH', '').split(';')
-                    )
-                )
-            )
-        proc = subprocess.Popen(
-            cmd,
-            cwd=None,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        while proc.poll() is None:
-            if proc.stdout:
-                proc.stdout.readline().decode('utf-8')
-        _, stderr = proc.communicate()
-        if proc.returncode:
-            msgs = ['Failed to compile example model bernoulli.stan']
-            if stderr:
-                msgs.append(stderr.decode('utf-8').strip())
-            raise CmdStanInstallError('\n'.join(msgs))
+        test()
     print('Installed {}'.format(cmdstan_version))
 
 
