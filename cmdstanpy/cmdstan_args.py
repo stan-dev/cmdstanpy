@@ -165,6 +165,8 @@ class SamplerArgs:
                     if not os.path.exists(self.metric):
                         raise ValueError('no such file {}'.format(self.metric))
                     dims = read_metric(self.metric)
+            elif isinstance(self.metric, Dict):
+                dims = np.asarray(dict['inv_metric']).shape
             elif isinstance(self.metric, (list, tuple)):
                 if len(self.metric) != chains:
                     raise ValueError(
@@ -173,34 +175,57 @@ class SamplerArgs:
                             len(self.metric), chains
                         )
                     )
-                names_set = set(self.metric)
-                if len(names_set) != len(self.metric):
-                    raise ValueError(
-                        'each chain must have its own metric file,'
-                        ' found duplicates in metric files list.'
-                    )
-                for i, metric in enumerate(self.metric):
-                    if not os.path.exists(metric):
-                        raise ValueError('no such file {}'.format(metric))
-                    if i == 0:
-                        dims = read_metric(metric)
-                    else:
-                        dims2 = read_metric(metric)
-                        if len(dims) != len(dims2):
-                            raise ValueError(
-                                'metrics files {}, {},'
-                                ' inconsistent metrics'.format(
-                                    self.metric[0], metric
+                if all(isinstance(elem, Dict) for elem in self.metric):
+                    for i, metric in enumerate(self.metric):
+                        if i == 0:
+                            dims = np.asarray(metric['inv_metric']).shape
+                        else:
+                            dims2 = np.asarray(metric['inv_metric']).shape
+                            if not (dims == dims2):
+                                raise ValueError(
+                                    'Found inconsistent "inv_metric" entry '
+                                    'for item at index {}: item has dims '
+                                    '{}, expected {}.'.format(i, dims, dims2)
                                 )
-                            )
-                        for dim, dim2 in zip(dims, dims2):
-                            if dim != dim2:
+                elif all(isinstance(elem, str) for elem in self.metric):
+                    names_set = set(self.metric)
+                    if len(names_set) != len(self.metric):
+                        raise ValueError(
+                            'each chain must have its own metric file,'
+                            ' found duplicates in metric files list.'
+                        )
+                    for i, metric in enumerate(self.metric):
+                        if not os.path.exists(metric):
+                            raise ValueError('no such file {}'.format(metric))
+                        if i == 0:
+                            dims = read_metric(metric)
+                        else:
+                            dims2 = read_metric(metric)
+                            if len(dims) != len(dims2):
                                 raise ValueError(
                                     'metrics files {}, {},'
                                     ' inconsistent metrics'.format(
                                         self.metric[0], metric
                                     )
                                 )
+                            if not (dims == dims2):
+                                raise ValueError(
+                                    'metrics files {}, {},'
+                                    ' inconsistent metrics'.format(
+                                        self.metric[0], metric
+                                    )
+                                )
+                else:
+                    raise ValueError(
+                        'metric must be a list of pathnames or dicts.'
+                    )
+            else:
+                raise ValueError(
+                    'Invalid metric specified, not a recognized metric type, '
+                    'must be either a metric type name, a filepath, dict, '
+                    'or list of per-chain filepaths or dicts.  Found '
+                    'an object of type {}.'.format(type(self.metric))
+                )
             if any(dims):
                 if len(dims) > 2 or (len(dims) == 2 and dims[0] != dims[1]):
                     raise ValueError('bad metric specifiation')
@@ -209,6 +234,7 @@ class SamplerArgs:
                     self.metric = 'diag_e'
                 elif len(dims) == 2:
                     self.metric = 'dense_e'
+
         if self.adapt_delta is not None:
             if not 0 < self.adapt_delta < 1:
                 raise ValueError(

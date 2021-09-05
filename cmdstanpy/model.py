@@ -541,7 +541,7 @@ class CmdStanModel:
         save_warmup: bool = False,
         thin: Optional[int] = None,
         max_treedepth: Optional[int] = None,
-        metric: Union[str, List[str], None] = None,
+        metric: Union[str, Dict[str, Any], List[str], List[Dict[str, Any]], None] = None,
         step_size: Union[float, List[float], None] = None,
         adapt_engaged: bool = True,
         adapt_delta: Optional[float] = None,
@@ -650,6 +650,15 @@ class CmdStanModel:
             If the value of the metric argument is a list of paths, its
             length must match the number of chains and all paths must be
             unique.
+
+            If the value of the metric argument is a Python dict object, it
+            must contain an entry 'inv_metric' which specifies either the
+            diagnoal or dense matrix.
+
+            If the value of the metric argument is a list of Python dicts,
+            its length must match the number of chains and all dicts must
+            containan entry 'inv_metric' and all 'inv_metric' entries must
+            have the same shape.
 
         :param step_size: Initial step size for HMC sampler.  The value is
             either a single number or a list of numbers which will be used
@@ -1132,7 +1141,7 @@ class CmdStanModel:
         :param output_samples: Number of approximate posterior output draws
             to save.
 
-        :param require_converged: Whether or not to raise an error if stan
+        :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
         :param refresh: Specify the number of iterations cmdstan will take
