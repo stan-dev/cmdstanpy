@@ -320,7 +320,7 @@ class SampleTest(unittest.TestCase):
             dirname2 = 'tmp2' + str(time())
             path = os.path.join(dirname1, dirname2)
             with self.assertRaisesRegex(
-                ValueError, 'invalid path for output files'
+                ValueError, 'Invalid path for output files'
             ):
                 bern_model.sample(data=jdata, chains=1, output_dir=path)
             os.rmdir(dirname1)

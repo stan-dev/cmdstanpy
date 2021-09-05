@@ -263,10 +263,6 @@ class SamplerArgsTest(unittest.TestCase):
         cmd = args.compose(1, cmd=[])
         self.assertIn('bernoulli.metric-2.json', ' '.join(cmd))
 
-        args = SamplerArgs(metric=[jmetric, jmetric])
-        with self.assertRaises(ValueError):
-            args.validate(chains=2)
-
         args = SamplerArgs(metric=[jmetric, jmetric2])
         with self.assertRaises(ValueError):
             args.validate(chains=4)
@@ -452,7 +448,7 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaisesRegex(
-            ValueError, 'seed must be an integer between'
+            ValueError, 'Argument "seed" must be an integer between'
         ):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -463,7 +459,7 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaisesRegex(
-            ValueError, 'number of seeds must match number of chains'
+            ValueError, 'Number of seeds must match number of chains'
         ):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -474,7 +470,7 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaisesRegex(
-            ValueError, 'seed must be an integer between'
+            ValueError, 'Argument "seed" must be an integer between'
         ):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -485,7 +481,7 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaisesRegex(
-            ValueError, 'seed must be an integer between'
+            ValueError, 'Argument "seed" must be an integer between'
         ):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -495,7 +491,9 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaisesRegex(ValueError, 'inits must be > 0'):
+        with self.assertRaisesRegex(
+            ValueError, 'Argument "inits" must be > 0'
+        ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
@@ -509,24 +507,13 @@ class CmdStanArgsTest(unittest.TestCase):
         jinits2 = os.path.join(DATAFILES_PATH, 'bernoulli.init_2.json')
 
         with self.assertRaisesRegex(
-            ValueError, 'number of inits files must match number of chains'
+            ValueError, 'Number of inits files must match number of chains'
         ):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',
                 chain_ids=[1, 2, 3, 4],
                 inits=[jinits, jinits],
-                method_args=sampler_args,
-            )
-
-        with self.assertRaisesRegex(
-            ValueError, 'each chain must have its own init file'
-        ):
-            CmdStanArgs(
-                model_name='bernoulli',
-                model_exe='bernoulli.exe',
-                chain_ids=[1, 2, 3, 4],
-                inits=[jinits, jinits1, jinits2, jinits2],
                 method_args=sampler_args,
             )
 
@@ -543,7 +530,7 @@ class CmdStanArgsTest(unittest.TestCase):
         if os.path.exists(fname):
             os.remove(fname)
         with self.assertRaisesRegex(
-            ValueError, 'specified output_dir not a directory'
+            ValueError, 'Specified output_dir is not a directory'
         ):
             open(fname, 'x').close()
             CmdStanArgs(
@@ -570,7 +557,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 )
 
         with self.assertRaisesRegex(
-            ValueError, 'Argument refresh must be a positive integer value'
+            ValueError, 'Argument "refresh" must be a positive integer value'
         ):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -581,7 +568,7 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         with self.assertRaisesRegex(
-            ValueError, 'Argument refresh must be a positive integer value'
+            ValueError, 'Argument "refresh" must be a positive integer value'
         ):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -605,8 +592,8 @@ class CmdStanArgsTest(unittest.TestCase):
                     method_args=sampler_args,
                 )
             expect = (
-                'arg sig_figs not valid, CmdStan version must be 2.25 '
-                'or higher, using verson {} in directory {}'
+                'Argument "sig_figs" invalid for CmdStan versions < 2.25, '
+                'using verson {} in directory {}'
             ).format(
                 os.path.basename(cmdstan_path()),
                 os.path.dirname(cmdstan_path()),

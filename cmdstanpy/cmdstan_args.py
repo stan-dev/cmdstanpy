@@ -75,7 +75,7 @@ class SamplerArgs:
         """
         if not isinstance(chains, int) or chains < 1:
             raise ValueError(
-                'sampler expects number of chains to be greater than 0'
+                'Sampler expects number of chains to be greater than 0.'
             )
         if not (
             self.adapt_delta is None
@@ -84,7 +84,7 @@ class SamplerArgs:
             and self.adapt_step_size is None
         ):
             if self.adapt_engaged is False:
-                msg = 'conflicting arguments: adapt_engaged: False'
+                msg = 'Conflicting arguments: adapt_engaged: False'
                 if self.adapt_delta is not None:
                     msg = '{}, adapt_delta: {}'.format(msg, self.adapt_delta)
                 if self.adapt_init_phase is not None:
@@ -104,53 +104,54 @@ class SamplerArgs:
         if self.iter_warmup is not None:
             if self.iter_warmup < 0 or not isinstance(self.iter_warmup, int):
                 raise ValueError(
-                    'iter_warmup must be a non-negative integer,'
-                    ' found {}'.format(self.iter_warmup)
+                    'Vaule for iter_warmup must be a non-negative integer,'
+                    ' found {}.'.format(self.iter_warmup)
                 )
             if self.iter_warmup > 0 and not self.adapt_engaged:
                 raise ValueError(
-                    'adapt_engaged is False, cannot specify warmup iterations'
+                    'Argument "adapt_engaged" is False, '
+                    'cannot specify warmup iterations.'
                 )
         if self.iter_sampling is not None:
             if self.iter_sampling < 0 or not isinstance(
                 self.iter_sampling, int
             ):
                 raise ValueError(
-                    'iter_sampling must be a non-negative integer,'
-                    ' found {}'.format(self.iter_sampling)
+                    'Argument "iter_sampling" must be a non-negative integer,'
+                    ' found {}.'.format(self.iter_sampling)
                 )
         if self.thin is not None:
             if self.thin < 1 or not isinstance(self.thin, int):
                 raise ValueError(
-                    'thin must be a positive integer,'
-                    'found {}'.format(self.thin)
+                    'Argument "thin" must be a positive integer,'
+                    'found {}.'.format(self.thin)
                 )
         if self.max_treedepth is not None:
             if self.max_treedepth < 1 or not isinstance(
                 self.max_treedepth, int
             ):
                 raise ValueError(
-                    'max_treedepth must be a positive integer,'
-                    ' found {}'.format(self.max_treedepth)
+                    'Argument "max_treedepth" must be a positive integer,'
+                    ' found {}.'.format(self.max_treedepth)
                 )
         if self.step_size is not None:
             if isinstance(self.step_size, (float, int)):
                 if self.step_size <= 0:
                     raise ValueError(
-                        'step_size must be > 0, found {}'.format(self.step_size)
+                        'Argument "step_size" must be > 0, '
+                        'found {}.'.format(self.step_size)
                     )
             else:
                 if len(self.step_size) != chains:
                     raise ValueError(
-                        'number of step_sizes must match number of chains,'
-                        ' found {} step_sizes for {} chains'.format(
-                            len(self.step_size), chains
-                        )
+                        'Expecting {} per-chain step_size specifications, '
+                        ' found {}.'.format(chains, len(self.step_size))
                     )
-                for step_size in self.step_size:
+                for i, step_size in enumerate(self.step_size):
                     if step_size < 0:
                         raise ValueError(
-                            'step_size must be > 0, found {}'.format(step_size)
+                            'Argument "step_size" must be > 0, '
+                            'found {} at index {}'.format(step_size, i)
                         )
         if self.metric is not None:
             dims = []
@@ -166,17 +167,26 @@ class SamplerArgs:
                         raise ValueError('no such file {}'.format(self.metric))
                     dims = read_metric(self.metric)
             elif isinstance(self.metric, Dict):
+                if 'inv_metric' not in self.metric:
+                    raise ValueError(
+                        'Entry "inv_metric" not found in metric dict.'
+                    )
                 dims = np.asarray(dict['inv_metric']).shape
             elif isinstance(self.metric, (list, tuple)):
                 if len(self.metric) != chains:
                     raise ValueError(
-                        'number of metric files must match number of chains,'
-                        ' found {} metric files for {} chains'.format(
+                        'Number of metric files must match number of chains,'
+                        ' found {} metric files for {} chains.'.format(
                             len(self.metric), chains
                         )
                     )
                 if all(isinstance(elem, Dict) for elem in self.metric):
                     for i, metric in enumerate(self.metric):
+                        if 'inv_metric' not in metric:
+                            raise ValueError(
+                                'Entry "inv_metric" not found in metric dict '
+                                'at index {}.'.format(i)
+                            )
                         if i == 0:
                             dims = np.asarray(metric['inv_metric']).shape
                         else:
@@ -188,12 +198,6 @@ class SamplerArgs:
                                     '{}, expected {}.'.format(i, dims, dims2)
                                 )
                 elif all(isinstance(elem, str) for elem in self.metric):
-                    names_set = set(self.metric)
-                    if len(names_set) != len(self.metric):
-                        raise ValueError(
-                            'each chain must have its own metric file,'
-                            ' found duplicates in metric files list.'
-                        )
                     for i, metric in enumerate(self.metric):
                         if not os.path.exists(metric):
                             raise ValueError('no such file {}'.format(metric))
@@ -203,21 +207,23 @@ class SamplerArgs:
                             dims2 = read_metric(metric)
                             if len(dims) != len(dims2):
                                 raise ValueError(
-                                    'metrics files {}, {},'
+                                    'Metrics files {}, {},'
                                     ' inconsistent metrics'.format(
                                         self.metric[0], metric
                                     )
                                 )
                             if not (dims == dims2):
                                 raise ValueError(
-                                    'metrics files {}, {},'
+                                    'Metrics files {}, {},'
                                     ' inconsistent metrics'.format(
                                         self.metric[0], metric
                                     )
                                 )
                 else:
                     raise ValueError(
-                        'metric must be a list of pathnames or dicts.'
+                        'Argument "metric" must be a list of pathnames or '
+                        'Python dicts, found list of {}.'.format(
+                            type(self.metric[0]))
                     )
             else:
                 raise ValueError(
@@ -238,7 +244,7 @@ class SamplerArgs:
         if self.adapt_delta is not None:
             if not 0 < self.adapt_delta < 1:
                 raise ValueError(
-                    'adapt_delta must be between 0 and 1,'
+                    'Argument "adapt_delta" must be between 0 and 1,'
                     ' found {}'.format(self.adapt_delta)
                 )
         if self.adapt_init_phase is not None:
@@ -246,23 +252,23 @@ class SamplerArgs:
                 self.adapt_init_phase, int
             ):
                 raise ValueError(
-                    'adapt_init_phase must be a non-negative integer,'
-                    'found {}'.format(self.adapt_init_phase)
+                    'Arugment "adapt_init_phase" must be a non-negative '
+                    'integer, found {}'.format(self.adapt_init_phase)
                 )
         if self.adapt_metric_window is not None:
             if self.adapt_metric_window < 0 or not isinstance(
                 self.adapt_metric_window, int
             ):
                 raise ValueError(
-                    'adapt_metric_window must be a non-negative integer,'
-                    'found {}'.format(self.adapt_metric_window)
+                    'Argment "adapt_metric_window" must be a non-negative '
+                    ' integer, found {}'.format(self.adapt_metric_window)
                 )
         if self.adapt_step_size is not None:
             if self.adapt_step_size < 0 or not isinstance(
                 self.adapt_step_size, int
             ):
                 raise ValueError(
-                    'adapt_step_size must be a non-negative integer,'
+                    'Argument "adapt_step_size" must be a non-negative integer,'
                     'found {}'.format(self.adapt_step_size)
                 )
 
@@ -278,7 +284,7 @@ class SamplerArgs:
             )
         ):
             raise ValueError(
-                'when fixed_param=True, cannot specify adaptation parameters.'
+                'When fixed_param=True, cannot specify adaptation parameters.'
             )
 
     def compose(self, idx: int, cmd: List[str]) -> List[str]:
@@ -730,13 +736,13 @@ class CmdStanArgs:
                     )
                 except (RuntimeError, PermissionError) as exc:
                     raise ValueError(
-                        'invalid path for output files, no such dir: {}'.format(
+                        'Invalid path for output files, no such dir: {}.'.format(
                             self.output_dir
                         )
                     ) from exc
             if not os.path.isdir(self.output_dir):
                 raise ValueError(
-                    'specified output_dir not a directory: {}'.format(
+                    'Specified output_dir is not a directory: {}.'.format(
                         self.output_dir
                     )
                 )
@@ -747,13 +753,13 @@ class CmdStanArgs:
                 os.remove(testpath)  # cleanup
             except Exception as exc:
                 raise ValueError(
-                    'invalid path for output files,'
-                    ' cannot write to dir: {}'.format(self.output_dir)
+                    'Invalid path for output files,'
+                    ' cannot write to dir: {}.'.format(self.output_dir)
                 ) from exc
         if self.refresh is not None:
             if not isinstance(self.refresh, int) or self.refresh < 1:
                 raise ValueError(
-                    'Argument refresh must be a positive integer value, '
+                    'Argument "refresh" must be a positive integer value, '
                     'found {}.'.format(self.refresh)
                 )
 
@@ -764,14 +770,14 @@ class CmdStanArgs:
                 or self.sig_figs > 18
             ):
                 raise ValueError(
-                    'sig_figs must be an integer between 1 and 18,'
+                    'Argument "sig_figs" must be an integer between 1 and 18,'
                     ' found {}'.format(self.sig_figs)
                 )
             if not cmdstan_version_at(2, 25):
                 self.sig_figs = None
                 get_logger().warning(
-                    'arg sig_figs not valid, CmdStan version must be 2.25 '
-                    'or higher, using verson %s in directory %s',
+                    'Argument "sig_figs" invalid for CmdStan versions < 2.25, '
+                    'using verson %s in directory %s',
                     os.path.basename(cmdstan_path()),
                     os.path.dirname(cmdstan_path()),
                 )
@@ -782,32 +788,32 @@ class CmdStanArgs:
         else:
             if not isinstance(self.seed, (int, list)):
                 raise ValueError(
-                    'seed must be an integer between 0 and 2**32-1,'
-                    ' found {}'.format(self.seed)
+                    'Argument "seed" must be an integer between '
+                    '0 and 2**32-1, found {}.'.format(self.seed)
                 )
             if isinstance(self.seed, int):
                 if self.seed < 0 or self.seed > 2 ** 32 - 1:
                     raise ValueError(
-                        'seed must be an integer between 0 and 2**32-1,'
-                        ' found {}'.format(self.seed)
+                        'Argument "seed" must be an integer between '
+                        '0 and 2**32-1, found {}.'.format(self.seed)
                     )
             else:
                 if self.chain_ids is None:
                     raise ValueError(
-                        'seed must not be a list when no chains used'
+                        'List of per-chain seeds cannot be evaluated without '
+                        'corresponding list of chain_ids.'
                     )
-
                 if len(self.seed) != len(self.chain_ids):
                     raise ValueError(
-                        'number of seeds must match number of chains,'
-                        ' found {} seed for {} chains '.format(
+                        'Number of seeds must match number of chains,'
+                        ' found {} seed for {} chains.'.format(
                             len(self.seed), len(self.chain_ids)
                         )
                     )
                 for seed in self.seed:
                     if seed < 0 or seed > 2 ** 32 - 1:
                         raise ValueError(
-                            'seed must be an integer value'
+                            'Argument "seed" must be an integer value'
                             ' between 0 and 2**32-1,'
                             ' found {}'.format(seed)
                         )
@@ -816,13 +822,13 @@ class CmdStanArgs:
             if not os.path.exists(self.data):
                 raise ValueError('no such file {}'.format(self.data))
         elif self.data is not None and not isinstance(self.data, (str, dict)):
-            raise ValueError('data must be string or dict')
+            raise ValueError('Arugment "data" must be string or dict')
 
         if self.inits is not None:
             if isinstance(self.inits, (float, int)):
                 if self.inits < 0:
                     raise ValueError(
-                        'inits must be > 0, found {}'.format(self.inits)
+                        'Argument "inits" must be > 0, found {}'.format(self.inits)
                     )
             elif isinstance(self.inits, str):
                 if not os.path.exists(self.inits):
@@ -830,22 +836,18 @@ class CmdStanArgs:
             elif isinstance(self.inits, list):
                 if self.chain_ids is None:
                     raise ValueError(
-                        'inits must not be a list when no chains are used'
+                        'List of inits files cannot be evaluated without '
+                        'corresponding list of chain_ids.'
                     )
 
                 if len(self.inits) != len(self.chain_ids):
                     raise ValueError(
-                        'number of inits files must match number of chains,'
-                        ' found {} inits files for {} chains '.format(
+                        'Number of inits files must match number of chains,'
+                        ' found {} inits files for {} chains.'.format(
                             len(self.inits), len(self.chain_ids)
                         )
                     )
                 names_set = set(self.inits)
-                if len(names_set) != len(self.inits):
-                    raise ValueError(
-                        'each chain must have its own init file,'
-                        ' found duplicates in inits files list.'
-                    )
                 for inits in self.inits:
                     if not os.path.exists(inits):
                         raise ValueError('no such file {}'.format(inits))
