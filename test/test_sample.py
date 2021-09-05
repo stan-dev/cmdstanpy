@@ -835,7 +835,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             iter_sampling=200,
             metric=[metric_dict_1, metric_dict_2]
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, 'Number of metric files must match number of chains,'):
             bern_model.sample(
                 data=jdata,
                 chains=4,
@@ -849,7 +849,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             metric_dict_1 = json.load(fd)
         with open(os.path.join(DATAFILES_PATH, 'metric_dense.data.json')) as fd:
             metric_dict_2 = json.load(fd)
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, 'Found inconsistent "inv_metric" entry'):
             bern_model.sample(
                 data=jdata,
                 chains=2,
@@ -859,7 +859,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         # metric dict, no "inv_metric":
         some_dict = { "foo": [1, 2, 3]}
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, 'Entry "inv_metric" not found in metric dict.'):
             bern_model.sample(
                 data=jdata,
                 chains=2,
@@ -867,9 +867,6 @@ class CmdStanMCMCTest(unittest.TestCase):
                 iter_sampling=200,
                 metric=some_dict
             )
-
-
-
 
     def test_custom_step_size(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
