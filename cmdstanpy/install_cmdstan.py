@@ -67,6 +67,11 @@ def usage() -> None:
 
 
 def clean_all(verbose: bool = False) -> None:
+    """
+    Run `make clean-all` in the current directory (must be a cmdstan library).
+
+    :param verbose: when ``True``, print build msgs to stdout.
+    """
     cmd = [MAKE, 'clean-all']
     proc = subprocess.Popen(
         cmd,
@@ -90,6 +95,11 @@ def clean_all(verbose: bool = False) -> None:
 
 
 def build(verbose: bool = False) -> None:
+    """
+    Run `make build` in the current directory (must be a cmdstan library)
+
+    :param verbose: when ``True``, print build msgs to stdout.
+    """
     cmd = [MAKE, 'build']
     proc = subprocess.Popen(
         cmd,
@@ -135,6 +145,7 @@ def build(verbose: bool = False) -> None:
 
 
 def compile_example():
+    """Compile the example model. The current directory must be a cmdstan library."""
     cmd = [
         MAKE,
         Path(
