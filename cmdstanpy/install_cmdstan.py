@@ -33,7 +33,9 @@ from typing import Callable, Dict, Optional
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
 
-MAKE = os.getenv("MAKE", "make" if platform.system() != "Windows" else "mingw32-make")
+MAKE = os.getenv(
+    'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
+)
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
@@ -64,8 +66,8 @@ def usage() -> None:
     print(msg)
 
 
-def clear(verbose: bool = False) -> None:
-    cmd = [MAKE, "clean-all"]
+def clean_all(verbose: bool = False) -> None:
+    cmd = [MAKE, 'clean-all']
     proc = subprocess.Popen(
         cmd,
         cwd=None,
@@ -76,19 +78,19 @@ def clear(verbose: bool = False) -> None:
     )
     while proc.poll() is None:
         if proc.stdout:
-            output = proc.stdout.readline().decode("utf-8").strip()
+            output = proc.stdout.readline().decode('utf-8').strip()
             if verbose and output:
                 print(output, flush=True)
     _, stderr = proc.communicate()
     if proc.returncode:
         msgs = ['Command "make clean-all" failed']
         if stderr:
-            msgs.append(stderr.decode("utf-8").strip())
-        raise CmdStanInstallError("\n".join(msgs))
+            msgs.append(stderr.decode('utf-8').strip())
+        raise CmdStanInstallError('\n'.join(msgs))
 
 
 def build(verbose: bool = False) -> None:
-    cmd = [MAKE, "build"]
+    cmd = [MAKE, 'build']
     proc = subprocess.Popen(
         cmd,
         cwd=None,
@@ -99,27 +101,26 @@ def build(verbose: bool = False) -> None:
     )
     while proc.poll() is None:
         if proc.stdout:
-
-            output = proc.stdout.readline().decode("utf-8").strip()
+            output = proc.stdout.readline().decode('utf-8').strip()
             if verbose and output:
                 print(output, flush=True)
     _, stderr = proc.communicate()
     if proc.returncode:
         msgs = ['Command "make build" failed']
         if stderr:
-            msgs.append(stderr.decode("utf-8").strip())
-        raise CmdStanInstallError("\n".join(msgs))
-    if not os.path.exists(os.path.join("bin", "stansummary" + EXTENSION)):
+            msgs.append(stderr.decode('utf-8').strip())
+        raise CmdStanInstallError('\n'.join(msgs))
+    if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
         raise CmdStanInstallError(
-            f"bin/stansummary{EXTENSION} not found"
-            ", please rebuild or report a bug!"
+            f'bin/stansummary{EXTENSION} not found'
+            ', please rebuild or report a bug!'
         )
-    if not os.path.exists(os.path.join("bin", "diagnose" + EXTENSION)):
+    if not os.path.exists(os.path.join('bin', 'diagnose' + EXTENSION)):
         raise CmdStanInstallError(
-            f"bin/stansummary{EXTENSION} not found"
-            ", please rebuild or report a bug!"
+            f'bin/stansummary{EXTENSION} not found'
+            ', please rebuild or report a bug!'
         )
-    if platform.system() == "Windows":
+    if platform.system() == 'Windows':
         # Add tbb to the $PATH on Windows
         libtbb = os.path.join(
             os.getcwd(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
@@ -133,7 +134,7 @@ def build(verbose: bool = False) -> None:
         )
 
 
-def test():
+def compile_example():
     cmd = [
         MAKE,
         Path(
@@ -178,11 +179,11 @@ def install_version(
                 'Overwrite requested, remove existing build of version '
                 '{}'.format(cmdstan_version)
             )
-            clear(verbose)
+            clean_all(verbose)
             print('Rebuilding version {}'.format(cmdstan_version))
         build(verbose)
         print('Test model compilation')
-        test()
+        compile_example()
     print('Installed {}'.format(cmdstan_version))
 
 
