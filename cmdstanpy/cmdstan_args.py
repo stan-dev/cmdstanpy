@@ -2,6 +2,7 @@
 CmdStan arguments
 """
 import logging
+import numpy as np
 import os
 from enum import Enum, auto
 from time import time
@@ -12,8 +13,14 @@ from numpy.random import RandomState
 from cmdstanpy.utils import (
     cmdstan_path,
     cmdstan_version_at,
+    create_named_text_file,
     get_logger,
     read_metric,
+    write_stan_json
+)
+
+from cmdstanpy import (
+    _TMPDIR,
 )
 
 
@@ -171,7 +178,12 @@ class SamplerArgs:
                     raise ValueError(
                         'Entry "inv_metric" not found in metric dict.'
                     )
-                dims = np.asarray(dict['inv_metric']).shape
+                dims = np.asarray(self.metric['inv_metric']).shape
+                dict_file = create_named_text_file(
+                    dir=_TMPDIR, prefix="metric", suffix=".json"
+                )
+                write_stan_json(dict_file, self.metric)
+                self.metric = dict_file
             elif isinstance(self.metric, (list, tuple)):
                 if len(self.metric) != chains:
                     raise ValueError(
@@ -181,6 +193,8 @@ class SamplerArgs:
                         )
                     )
                 if all(isinstance(elem, Dict) for elem in self.metric):
+                    # create list of tempfile names
+                    metric_files = []
                     for i, metric in enumerate(self.metric):
                         if 'inv_metric' not in metric:
                             raise ValueError(
@@ -197,6 +211,12 @@ class SamplerArgs:
                                     'for item at index {}: item has dims '
                                     '{}, expected {}.'.format(i, dims, dims2)
                                 )
+                        dict_file = create_named_text_file(
+                            dir=_TMPDIR, prefix="metric", suffix=".json"
+                        )
+                        write_stan_json(dict_file, metric)
+                        metric_files.append(dict_file)
+                    self.metric = metric_files
                 elif all(isinstance(elem, str) for elem in self.metric):
                     for i, metric in enumerate(self.metric):
                         if not os.path.exists(metric):

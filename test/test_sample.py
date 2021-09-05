@@ -806,7 +806,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             iter_sampling=200,
             metric=jmetric,
         )
-
         jmetric2 = os.path.join(DATAFILES_PATH, 'bernoulli.metric-2.json')
         bern_model.sample(
             data=jdata,
@@ -816,6 +815,61 @@ class CmdStanMCMCTest(unittest.TestCase):
             iter_sampling=200,
             metric=[jmetric, jmetric2],
         )
+        # read json in as dict
+        with open(jmetric) as fd:
+            metric_dict_1 = json.load(fd)
+        with open(jmetric2) as fd:
+            metric_dict_2 = json.load(fd)
+        bern_model.sample(
+            data=jdata,
+            chains=4,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            metric=metric_dict_1,
+        )
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_sampling=200,
+            metric=[metric_dict_1, metric_dict_2]
+        )
+        with self.assertRaises(ValueError):
+            bern_model.sample(
+                data=jdata,
+                chains=4,
+                parallel_chains=2,
+                seed=12345,
+                iter_sampling=200,
+                metric=[metric_dict_1, metric_dict_2]
+            )
+        # metric mismatches - (not appropriate for bernoulli)
+        with open(os.path.join(DATAFILES_PATH, 'metric_diag.data.json')) as fd:
+            metric_dict_1 = json.load(fd)
+        with open(os.path.join(DATAFILES_PATH, 'metric_dense.data.json')) as fd:
+            metric_dict_2 = json.load(fd)
+        with self.assertRaises(ValueError):
+            bern_model.sample(
+                data=jdata,
+                chains=2,
+                seed=12345,
+                iter_sampling=200,
+                metric=[metric_dict_1, metric_dict_2]
+            )
+        # metric dict, no "inv_metric":
+        some_dict = { "foo": [1, 2, 3]}
+        with self.assertRaises(ValueError):
+            bern_model.sample(
+                data=jdata,
+                chains=2,
+                seed=12345,
+                iter_sampling=200,
+                metric=some_dict
+            )
+
+
+
 
     def test_custom_step_size(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
