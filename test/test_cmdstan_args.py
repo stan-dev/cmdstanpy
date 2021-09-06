@@ -491,9 +491,7 @@ class CmdStanArgsTest(unittest.TestCase):
                 method_args=sampler_args,
             )
 
-        with self.assertRaisesRegex(
-            ValueError, 'Argument "inits" must be > 0'
-        ):
+        with self.assertRaisesRegex(ValueError, 'Argument "inits" must be > 0'):
             CmdStanArgs(
                 model_name='bernoulli',
                 model_exe='bernoulli.exe',

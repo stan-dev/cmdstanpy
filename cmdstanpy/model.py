@@ -541,7 +541,9 @@ class CmdStanModel:
         save_warmup: bool = False,
         thin: Optional[int] = None,
         max_treedepth: Optional[int] = None,
-        metric: Union[str, Dict[str, Any], List[str], List[Dict[str, Any]], None] = None,
+        metric: Union[
+            str, Dict[str, Any], List[str], List[Dict[str, Any]], None
+        ] = None,
         step_size: Union[float, List[float], None] = None,
         adapt_engaged: bool = True,
         adapt_delta: Optional[float] = None,

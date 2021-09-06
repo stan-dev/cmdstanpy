@@ -16,7 +16,7 @@ from cmdstanpy.utils import (
     create_named_text_file,
     get_logger,
     read_metric,
-    write_stan_json
+    write_stan_json,
 )
 
 from cmdstanpy import (
@@ -46,7 +46,9 @@ class SamplerArgs:
         save_warmup: bool = False,
         thin: Optional[int] = None,
         max_treedepth: Optional[int] = None,
-        metric: Union[str, List[str], None] = None,
+        metric: Union[
+            str, Dict[str, Any], List[str], List[Dict[str, Any]], None
+        ] = None,
         step_size: Union[float, List[float], None] = None,
         adapt_engaged: bool = True,
         adapt_delta: Optional[float] = None,
@@ -62,7 +64,8 @@ class SamplerArgs:
         self.thin = thin
         self.max_treedepth = max_treedepth
         self.metric = metric
-        self.metric_file = None
+        self.metric_type: Optional[str] = None
+        self.metric_file: Union[str, List[str], None] = None
         self.step_size = step_size
         self.adapt_engaged = adapt_engaged
         self.adapt_delta = adapt_delta
@@ -161,29 +164,37 @@ class SamplerArgs:
                             'found {} at index {}'.format(step_size, i)
                         )
         if self.metric is not None:
-            dims = []
             if isinstance(self.metric, str):
                 if self.metric in ['diag', 'diag_e']:
-                    self.metric = 'diag_e'
+                    self.metric_type = 'diag_e'
                 elif self.metric in ['dense', 'dense_e']:
-                    self.metric = 'dense_e'
+                    self.metric_type = 'dense_e'
                 elif self.metric in ['unit', 'unit_e']:
-                    self.metric = 'unit_e'
+                    self.metric_type = 'unit_e'
                 else:
                     if not os.path.exists(self.metric):
                         raise ValueError('no such file {}'.format(self.metric))
                     dims = read_metric(self.metric)
+                    if len(dims) == 1:
+                        self.metric_type = 'diag_e'
+                    else:
+                        self.metric_type = 'dense_e'
+                    self.metric_file = self.metric
             elif isinstance(self.metric, Dict):
                 if 'inv_metric' not in self.metric:
                     raise ValueError(
                         'Entry "inv_metric" not found in metric dict.'
                     )
-                dims = np.asarray(self.metric['inv_metric']).shape
+                dims = list(np.asarray(self.metric['inv_metric']).shape)
+                if len(dims) == 1:
+                    self.metric_type = 'diag_e'
+                else:
+                    self.metric_type = 'dense_e'
                 dict_file = create_named_text_file(
                     dir=_TMPDIR, prefix="metric", suffix=".json"
                 )
                 write_stan_json(dict_file, self.metric)
-                self.metric = dict_file
+                self.metric_file = dict_file
             elif isinstance(self.metric, (list, tuple)):
                 if len(self.metric) != chains:
                     raise ValueError(
@@ -193,18 +204,22 @@ class SamplerArgs:
                         )
                     )
                 if all(isinstance(elem, Dict) for elem in self.metric):
-                    # create list of tempfile names
-                    metric_files = []
+                    metric_files: List[str] = []
                     for i, metric in enumerate(self.metric):
-                        if 'inv_metric' not in metric:
+                        metric_dict: Union[str, Dict[str, Any]] = self.metric[i]
+                        if 'inv_metric' not in metric_dict:
                             raise ValueError(
                                 'Entry "inv_metric" not found in metric dict '
                                 'at index {}.'.format(i)
                             )
                         if i == 0:
-                            dims = np.asarray(metric['inv_metric']).shape
+                            dims = list(
+                                np.asarray(metric_dict['inv_metric']).shape
+                            )
                         else:
-                            dims2 = np.asarray(metric['inv_metric']).shape
+                            dims2 = list(
+                                np.asarray(metric_dict['inv_metric']).shape
+                            )
                             if not (dims == dims2):
                                 raise ValueError(
                                     'Found inconsistent "inv_metric" entry '
@@ -214,11 +229,16 @@ class SamplerArgs:
                         dict_file = create_named_text_file(
                             dir=_TMPDIR, prefix="metric", suffix=".json"
                         )
-                        write_stan_json(dict_file, metric)
+                        write_stan_json(dict_file, metric_dict)
                         metric_files.append(dict_file)
-                    self.metric = metric_files
+                    if len(dims) == 1:
+                        self.metric_type = 'diag_e'
+                    else:
+                        self.metric_type = 'dense_e'
+                    self.metric_file = metric_files
                 elif all(isinstance(elem, str) for elem in self.metric):
                     for i, metric in enumerate(self.metric):
+                        assert isinstance(metric, str)  # typecheck
                         if not os.path.exists(metric):
                             raise ValueError('no such file {}'.format(metric))
                         if i == 0:
@@ -239,11 +259,17 @@ class SamplerArgs:
                                         self.metric[0], metric
                                     )
                                 )
+                    if len(dims) == 1:
+                        self.metric_type = 'diag_e'
+                    else:
+                        self.metric_type = 'dense_e'
+                    self.metric_file = self.metric
                 else:
                     raise ValueError(
                         'Argument "metric" must be a list of pathnames or '
                         'Python dicts, found list of {}.'.format(
-                            type(self.metric[0]))
+                            type(self.metric[0])
+                        )
                     )
             else:
                 raise ValueError(
@@ -252,14 +278,6 @@ class SamplerArgs:
                     'or list of per-chain filepaths or dicts.  Found '
                     'an object of type {}.'.format(type(self.metric))
                 )
-            if any(dims):
-                if len(dims) > 2 or (len(dims) == 2 and dims[0] != dims[1]):
-                    raise ValueError('bad metric specifiation')
-                self.metric_file = self.metric
-                if len(dims) == 1:
-                    self.metric = 'diag_e'
-                elif len(dims) == 2:
-                    self.metric = 'dense_e'
 
         if self.adapt_delta is not None:
             if not 0 < self.adapt_delta < 1:
@@ -334,7 +352,7 @@ class SamplerArgs:
             else:
                 cmd.append('stepsize={}'.format(self.step_size[idx]))
         if self.metric is not None:
-            cmd.append('metric={}'.format(self.metric))
+            cmd.append('metric={}'.format(self.metric_type))
         if self.metric_file is not None:
             if not isinstance(self.metric_file, list):
                 cmd.append('metric_file={}'.format(self.metric_file))
@@ -756,9 +774,8 @@ class CmdStanArgs:
                     )
                 except (RuntimeError, PermissionError) as exc:
                     raise ValueError(
-                        'Invalid path for output files, no such dir: {}.'.format(
-                            self.output_dir
-                        )
+                        'Invalid path for output files, '
+                        'no such dir: {}.'.format(self.output_dir)
                     ) from exc
             if not os.path.isdir(self.output_dir):
                 raise ValueError(
@@ -848,7 +865,9 @@ class CmdStanArgs:
             if isinstance(self.inits, (float, int)):
                 if self.inits < 0:
                     raise ValueError(
-                        'Argument "inits" must be > 0, found {}'.format(self.inits)
+                        'Argument "inits" must be > 0, found {}'.format(
+                            self.inits
+                        )
                     )
             elif isinstance(self.inits, str):
                 if not os.path.exists(self.inits):

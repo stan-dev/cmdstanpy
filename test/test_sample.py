@@ -833,39 +833,45 @@ class CmdStanMCMCTest(unittest.TestCase):
             chains=2,
             seed=12345,
             iter_sampling=200,
-            metric=[metric_dict_1, metric_dict_2]
+            metric=[metric_dict_1, metric_dict_2],
         )
-        with self.assertRaisesRegex(ValueError, 'Number of metric files must match number of chains,'):
+        with self.assertRaisesRegex(
+            ValueError, 'Number of metric files must match number of chains,'
+        ):
             bern_model.sample(
                 data=jdata,
                 chains=4,
                 parallel_chains=2,
                 seed=12345,
                 iter_sampling=200,
-                metric=[metric_dict_1, metric_dict_2]
+                metric=[metric_dict_1, metric_dict_2],
             )
         # metric mismatches - (not appropriate for bernoulli)
         with open(os.path.join(DATAFILES_PATH, 'metric_diag.data.json')) as fd:
             metric_dict_1 = json.load(fd)
         with open(os.path.join(DATAFILES_PATH, 'metric_dense.data.json')) as fd:
             metric_dict_2 = json.load(fd)
-        with self.assertRaisesRegex(ValueError, 'Found inconsistent "inv_metric" entry'):
+        with self.assertRaisesRegex(
+            ValueError, 'Found inconsistent "inv_metric" entry'
+        ):
             bern_model.sample(
                 data=jdata,
                 chains=2,
                 seed=12345,
                 iter_sampling=200,
-                metric=[metric_dict_1, metric_dict_2]
+                metric=[metric_dict_1, metric_dict_2],
             )
         # metric dict, no "inv_metric":
-        some_dict = { "foo": [1, 2, 3]}
-        with self.assertRaisesRegex(ValueError, 'Entry "inv_metric" not found in metric dict.'):
+        some_dict = {"foo": [1, 2, 3]}
+        with self.assertRaisesRegex(
+            ValueError, 'Entry "inv_metric" not found in metric dict.'
+        ):
             bern_model.sample(
                 data=jdata,
                 chains=2,
                 seed=12345,
                 iter_sampling=200,
-                metric=some_dict
+                metric=some_dict,
             )
 
     def test_custom_step_size(self):
