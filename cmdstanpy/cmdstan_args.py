@@ -237,7 +237,7 @@ class SamplerArgs:
                         self.metric_type = 'dense_e'
                     self.metric_file = metric_files
                 elif all(isinstance(elem, str) for elem in self.metric):
-                    metric_files.clear()
+                    metric_files = []
                     for i, metric in enumerate(self.metric):
                         assert isinstance(metric, str)  # typecheck
                         if not os.path.exists(metric):
