@@ -501,9 +501,6 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
         jinits = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
-        jinits1 = os.path.join(DATAFILES_PATH, 'bernoulli.init_1.json')
-        jinits2 = os.path.join(DATAFILES_PATH, 'bernoulli.init_2.json')
-
         with self.assertRaisesRegex(
             ValueError, 'Number of inits files must match number of chains'
         ):

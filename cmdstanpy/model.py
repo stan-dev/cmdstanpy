@@ -411,7 +411,7 @@ class CmdStanModel:
         or to a temporary directory which is deleted upon session exit.
 
         Output files are either written to a temporary directory or to the
-        specified output directory.  Ouput filenames correspond to the template
+        specified output directory.  Output filenames correspond to the template
         '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
         either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. 'bernoulli-201912081451-1.csv'.
@@ -477,7 +477,7 @@ class CmdStanModel:
 
         :param iter: Total number of iterations
 
-        :param refresh: Specify the number of iterations cmdstan will take
+        :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
@@ -727,7 +727,7 @@ class CmdStanModel:
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
-        :param refresh: Specify the number of iterations cmdstan will take
+        :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
@@ -966,7 +966,7 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param refresh: Specify the number of iterations cmdstan will take
+        :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
@@ -1146,7 +1146,7 @@ class CmdStanModel:
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
-        :param refresh: Specify the number of iterations cmdstan will take
+        :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to

@@ -2,14 +2,15 @@
 CmdStan arguments
 """
 import logging
-import numpy as np
 import os
 from enum import Enum, auto
 from time import time
 from typing import Any, Dict, List, Optional, Union
 
+import numpy as np
 from numpy.random import RandomState
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.utils import (
     cmdstan_path,
     cmdstan_version_at,
@@ -17,10 +18,6 @@ from cmdstanpy.utils import (
     get_logger,
     read_metric,
     write_stan_json,
-)
-
-from cmdstanpy import (
-    _TMPDIR,
 )
 
 
@@ -114,7 +111,7 @@ class SamplerArgs:
         if self.iter_warmup is not None:
             if self.iter_warmup < 0 or not isinstance(self.iter_warmup, int):
                 raise ValueError(
-                    'Vaule for iter_warmup must be a non-negative integer,'
+                    'Value for iter_warmup must be a non-negative integer,'
                     ' found {}.'.format(self.iter_warmup)
                 )
             if self.iter_warmup > 0 and not self.adapt_engaged:
@@ -203,10 +200,13 @@ class SamplerArgs:
                             len(self.metric), chains
                         )
                     )
-                if all(isinstance(elem, Dict) for elem in self.metric):
+                if all(isinstance(elem, dict) for elem in self.metric):
                     metric_files: List[str] = []
                     for i, metric in enumerate(self.metric):
-                        metric_dict: Union[str, Dict[str, Any]] = self.metric[i]
+                        assert isinstance(
+                            metric, dict
+                        )  # make the typechecker happy
+                        metric_dict: Dict[str, Any] = metric
                         if 'inv_metric' not in metric_dict:
                             raise ValueError(
                                 'Entry "inv_metric" not found in metric dict '
@@ -220,7 +220,7 @@ class SamplerArgs:
                             dims2 = list(
                                 np.asarray(metric_dict['inv_metric']).shape
                             )
-                            if not (dims == dims2):
+                            if dims != dims2:
                                 raise ValueError(
                                     'Found inconsistent "inv_metric" entry '
                                     'for item at index {}: item has dims '
@@ -237,6 +237,7 @@ class SamplerArgs:
                         self.metric_type = 'dense_e'
                     self.metric_file = metric_files
                 elif all(isinstance(elem, str) for elem in self.metric):
+                    metric_files.clear()
                     for i, metric in enumerate(self.metric):
                         assert isinstance(metric, str)  # typecheck
                         if not os.path.exists(metric):
@@ -252,18 +253,19 @@ class SamplerArgs:
                                         self.metric[0], metric
                                     )
                                 )
-                            if not (dims == dims2):
+                            if dims != dims2:
                                 raise ValueError(
                                     'Metrics files {}, {},'
                                     ' inconsistent metrics'.format(
                                         self.metric[0], metric
                                     )
                                 )
+                        metric_files.append(metric)
                     if len(dims) == 1:
                         self.metric_type = 'diag_e'
                     else:
                         self.metric_type = 'dense_e'
-                    self.metric_file = self.metric
+                    self.metric_file = metric_files
                 else:
                     raise ValueError(
                         'Argument "metric" must be a list of pathnames or '
@@ -290,7 +292,7 @@ class SamplerArgs:
                 self.adapt_init_phase, int
             ):
                 raise ValueError(
-                    'Arugment "adapt_init_phase" must be a non-negative '
+                    'Argument "adapt_init_phase" must be a non-negative '
                     'integer, found {}'.format(self.adapt_init_phase)
                 )
         if self.adapt_metric_window is not None:
@@ -298,7 +300,7 @@ class SamplerArgs:
                 self.adapt_metric_window, int
             ):
                 raise ValueError(
-                    'Argment "adapt_metric_window" must be a non-negative '
+                    'Argument "adapt_metric_window" must be a non-negative '
                     ' integer, found {}'.format(self.adapt_metric_window)
                 )
         if self.adapt_step_size is not None:
@@ -814,7 +816,7 @@ class CmdStanArgs:
                 self.sig_figs = None
                 get_logger().warning(
                     'Argument "sig_figs" invalid for CmdStan versions < 2.25, '
-                    'using verson %s in directory %s',
+                    'using version %s in directory %s',
                     os.path.basename(cmdstan_path()),
                     os.path.dirname(cmdstan_path()),
                 )
@@ -859,7 +861,7 @@ class CmdStanArgs:
             if not os.path.exists(self.data):
                 raise ValueError('no such file {}'.format(self.data))
         elif self.data is not None and not isinstance(self.data, (str, dict)):
-            raise ValueError('Arugment "data" must be string or dict')
+            raise ValueError('Argument "data" must be string or dict')
 
         if self.inits is not None:
             if isinstance(self.inits, (float, int)):
@@ -886,7 +888,6 @@ class CmdStanArgs:
                             len(self.inits), len(self.chain_ids)
                         )
                     )
-                names_set = set(self.inits)
                 for inits in self.inits:
                     if not os.path.exists(inits):
                         raise ValueError('no such file {}'.format(inits))
