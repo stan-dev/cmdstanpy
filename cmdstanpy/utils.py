@@ -925,6 +925,59 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
+) -> None:
+    """
+    Spawn process, print stdout/stderr to console.
+    Throws RuntimeError on non-zero returncode.
+    """
+    get_logger().debug('cmd: %s', cmd)
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            bufsize=-1, # buffer i/o, system default bufsize
+            cwd=cwd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=os.environ,
+        )
+        while proc.poll() is None and not (proc.stdout is None and proc.stderr is None):
+            if proc.stdout is not None:
+                sys.stdout.write(proc.stdout.readline().decode('utf-8').strip())
+            if proc.stderr is not None:
+                sys.stderr.write(proc.stderr.readline().decode('utf-8').strip())
+
+        stdout, stderr = proc.communicate()
+        if proc.stdout is not None:
+            sys.stdout.write(stdout.decode('utf-8').strip())
+        if proc.stderr is not None:
+            sys.stderr.write(stderr.decode('utf-8').strip())
+
+        if proc.returncode != 0:  # problem, throw RuntimeError with msg
+            try:
+                serror = os.strerror(proc.returncode)
+            except ValueError:
+                pass
+            if proc.returncode < 0:
+                msg = 'Command: {}\nterminated by signal'.format(cmd)
+            elif proc.returncode <= 125:
+                msg = 'Command: {}\nfailed'.format(cmd)
+            elif proc.returncode == 127:
+                msg = 'Command: {}\nfailed, program not found'.format(cmd)
+            else:
+                msg = 'Command: {}\nmost likely crashed'.format(cmd)
+            msg = '{}, returncode: {}'.format(msg, proc.returncode)
+            if serror:
+                msg = '{}, error: {}'.format(msg, serror)
+            raise RuntimeError(msg)
+    except OSError as e:
+        msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
+        raise RuntimeError(msg) from e
+    return None  # success
+
+def do_command_block(
+    cmd: List[str],
+    cwd: Optional[str] = None,
 ) -> Optional[str]:
     """
     Spawn process, print stdout/stderr to console.
