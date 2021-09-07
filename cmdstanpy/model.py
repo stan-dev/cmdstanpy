@@ -392,6 +392,8 @@ class CmdStanModel:
         tol_param: Optional[float] = None,
         history_size: Optional[int] = None,
         iter: Optional[int] = None,
+        save_iterations: bool = False,
+        require_converged: bool = True,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMLE:
@@ -477,7 +479,13 @@ class CmdStanModel:
 
         :param iter: Total number of iterations
 
-        :param refresh: Specify the number of iterations CmdStan will take
+        :param save_iterations: When ``True``, save intermediate approximations
+            to the output CSV file.  Default is ``False``.
+
+        :param require_converged: Whether or not to raise an error if Stan
+            reports that "The algorithm may not have converged".
+
+        :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
@@ -496,6 +504,7 @@ class CmdStanModel:
             tol_param=tol_param,
             history_size=history_size,
             iter=iter,
+            save_iterations=save_iterations,
         )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
@@ -518,11 +527,11 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id)
 
         if not runset._check_retcodes():
-            msg = 'Error during optimization:\n{}'.format(runset.get_err_msgs())
-            msg = '{}Command and output files:\n{}'.format(
-                msg, runset.__repr__()
-            )
-            raise RuntimeError(msg)
+            msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
+            if 'Line search failed' in msg and not require_converged:
+                get_logger().warning(msg)
+            else:
+                raise RuntimeError(msg)
         mle = CmdStanMLE(runset)
         return mle
 
