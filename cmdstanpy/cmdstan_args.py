@@ -158,7 +158,7 @@ class SamplerArgs:
                     if step_size < 0:
                         raise ValueError(
                             'Argument "step_size" must be > 0, '
-                            'chain {}, found {}.'.format(i+1, step_size)
+                            'chain {}, found {}.'.format(i + 1, step_size)
                         )
         if self.metric is not None:
             if isinstance(self.metric, str):
@@ -210,7 +210,7 @@ class SamplerArgs:
                         if 'inv_metric' not in metric_dict:
                             raise ValueError(
                                 'Entry "inv_metric" not found in metric dict '
-                                'for chain {}.'.format(i+1)
+                                'for chain {}.'.format(i + 1)
                             )
                         if i == 0:
                             dims = list(
@@ -224,7 +224,9 @@ class SamplerArgs:
                                 raise ValueError(
                                     'Found inconsistent "inv_metric" entry '
                                     'for chain {}: entry has dims '
-                                    '{}, expected {}.'.format(i+1, dims, dims2)
+                                    '{}, expected {}.'.format(
+                                        i + 1, dims, dims2
+                                    )
                                 )
                         dict_file = create_named_text_file(
                             dir=_TMPDIR, prefix="metric", suffix=".json"
