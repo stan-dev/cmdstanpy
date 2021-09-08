@@ -1,7 +1,9 @@
 """utils test"""
 
 import collections.abc
+import contextlib
 import json
+import io
 import os
 import platform
 import random
@@ -756,13 +758,17 @@ class ParseVarsTest(unittest.TestCase):
 
 class DoCommandTest(unittest.TestCase):
     def test_good(self):
-        retstr = do_command('ls', HERE)
-        self.assertIsNotNone(retstr)
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            do_command(['ls', '-l'], HERE)
+        self.assertTrue('test_utils.py' in f.getvalue())
 
     def test_exit(self):
-        args = ['bash', '/bin/junk']
-        with self.assertRaises(Exception):
-            do_command(args, HERE)
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            args = ['bash', '/bin/junk']
+            with self.assertRaises(Exception):
+                do_command(args, HERE)
 
 
 class FlattenTest(unittest.TestCase):

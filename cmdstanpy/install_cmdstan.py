@@ -27,11 +27,11 @@ import urllib.error
 import urllib.request
 from collections import OrderedDict
 from pathlib import Path
-from time import sleep
+from time import ctime, sleep
 from typing import Callable, Dict, Optional
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
+from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook, do_command
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -85,48 +85,16 @@ def install_version(
                 'Overwrite requested, remove existing build of version '
                 '{}'.format(cmdstan_version)
             )
-            cmd = [make, 'clean-all']
-            proc = subprocess.Popen(
-                cmd,
-                cwd=None,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                env=os.environ,
-            )
-            while proc.poll() is None:
-                if proc.stdout:
-                    output = proc.stdout.readline().decode('utf-8').strip()
-                    if verbose and output:
-                        print(output, flush=True)
-            _, stderr = proc.communicate()
-            if proc.returncode:
-                msgs = ['Command "make clean-all" failed']
-                if stderr:
-                    msgs.append(stderr.decode('utf-8').strip())
-                raise CmdStanInstallError('\n'.join(msgs))
+            try:
+                do_command([make, 'clean-all'])
+            except RuntimeError as e:
+                raise CmdStanInstallError(e)
             print('Rebuilding version {}'.format(cmdstan_version))
-        cmd = [make, 'build']
-        proc = subprocess.Popen(
-            cmd,
-            cwd=None,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        while proc.poll() is None:
-            if proc.stdout:
+        try:
+            do_command([make, 'build'])
+        except RuntimeError as e:
+            raise CmdStanInstallError(e)
 
-                output = proc.stdout.readline().decode('utf-8').strip()
-                if verbose and output:
-                    print(output, flush=True)
-        _, stderr = proc.communicate()
-        if proc.returncode:
-            msgs = ['Command "make build" failed']
-            if stderr:
-                msgs.append(stderr.decode('utf-8').strip())
-            raise CmdStanInstallError('\n'.join(msgs))
         if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
             raise CmdStanInstallError(
                 f"bin/stansummary{EXTENSION} not found"
@@ -156,20 +124,9 @@ def install_version(
                     )
                 )
             )
-        proc = subprocess.Popen(
-            cmd,
-            cwd=None,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-        )
-        while proc.poll() is None:
-            if proc.stdout:
-                proc.stdout.readline().decode('utf-8')
-        _, stderr = proc.communicate()
-        if proc.returncode:
-            msgs = ['Failed to compile example model bernoulli.stan']
+        try:
+            do_command(cmd)
+        except RuntimeError as e:
             if stderr:
                 msgs.append(stderr.decode('utf-8').strip())
             raise CmdStanInstallError('\n'.join(msgs))

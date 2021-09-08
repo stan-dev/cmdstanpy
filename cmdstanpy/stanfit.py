@@ -939,7 +939,7 @@ class CmdStanMCMC:
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         cmd = [cmd_path] + self.runset.csv_files
-        result = do_command(cmd=cmd)
+        result = do_command_block(cmd=cmd)
         if result:
             get_logger().info(result)
         return result

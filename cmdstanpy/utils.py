@@ -14,6 +14,7 @@ import sys
 import tempfile
 from collections import OrderedDict
 from collections.abc import Collection
+from time import ctime, sleep
 from typing import (
     Any,
     Callable,
@@ -930,7 +931,7 @@ def do_command(
     Spawn process, print stdout/stderr to console.
     Throws RuntimeError on non-zero returncode.
     """
-    get_logger().debug('cmd: %s', cmd)
+    get_logger().info('cmd: %s', cmd)
     try:
         proc = subprocess.Popen(
             cmd,
@@ -940,18 +941,15 @@ def do_command(
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
+            encoding=sys.getdefaultencoding()
         )
-        while proc.poll() is None and not (proc.stdout is None and proc.stderr is None):
-            if proc.stdout is not None:
-                sys.stdout.write(proc.stdout.readline().decode('utf-8').strip())
-            if proc.stderr is not None:
-                sys.stderr.write(proc.stderr.readline().decode('utf-8').strip())
+        while proc.poll() is None and proc.stdout is not None:
+                print('... {}'.format(ctime()))
+                sys.stdout.write(proc.stdout.readline())
 
-        stdout, stderr = proc.communicate()
-        if proc.stdout is not None:
-            sys.stdout.write(stdout.decode('utf-8').strip())
+        _, stderr = proc.communicate()
         if proc.stderr is not None:
-            sys.stderr.write(stderr.decode('utf-8').strip())
+            sys.stderr.write(stderr)
 
         if proc.returncode != 0:  # problem, throw RuntimeError with msg
             try:
@@ -1018,7 +1016,7 @@ def do_command_block(
         if stdout or stderr:  # success, return stdout, stderr, if any
             msg = ''
             if stdout:
-                msg = '{}'.format(stdout.decode('utf-8').strip())
+                msg = '{}'.format(stdout)
             if stderr:
                 msg = '{}\nWarning or error:\t{}'.format(
                     msg, stderr.decode('utf-8').strip()
@@ -1216,22 +1214,7 @@ def install_cmdstan(
         cmd.append('--verbose')
     if compiler:
         cmd.append('--compiler')
-    proc = subprocess.Popen(
-        cmd,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None and proc.stdout:
-        print(proc.stdout.readline().decode('utf-8').strip())
-
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        logger.warning('CmdStan installation failed.')
-        if stderr:
-            logger.warning(stderr.decode('utf-8').strip())
-        return False
+    do_command(cmd)
     if dir is not None:
         if version is not None:
             set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
