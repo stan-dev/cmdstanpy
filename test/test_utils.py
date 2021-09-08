@@ -760,8 +760,11 @@ class DoCommandTest(unittest.TestCase):
     def test_good(self):
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            do_command(['ls', '-l'], HERE)
-        self.assertTrue('test_utils.py' in f.getvalue())
+            do_command(cmd=['ls'], cwd=HERE)
+        foo = f.getvalue().replace('\n', ' ', 100)
+        print(foo)
+        print(foo.find('init'))
+        self.assertEqual('test_utils.py',f.getvalue())
 
     def test_exit(self):
         f = io.StringIO()
