@@ -348,7 +348,7 @@ class CmdStanModel:
                                 "CmdStan's precompiled header (PCH) files "
                                 "may need to be rebuilt."
                                 "If your model failed to compile please run "
-                                "install_cmdstan(overwrite=True).\nIf the "
+                                "cmdstanpy.rebuild_cmdstan().\nIf the "
                                 "issue persists please open a bug report",
                             )
 

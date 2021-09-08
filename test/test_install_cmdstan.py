@@ -1,11 +1,14 @@
 """install_cmdstan test"""
 
+import os
 import unittest
 
 from cmdstanpy.install_cmdstan import (
+    CmdStanInstallError,
     CmdStanRetrieveError,
     is_version_available,
     latest_version,
+    rebuild_cmdstan,
     retrieve_version,
 )
 
@@ -33,6 +36,13 @@ class InstallCmdStanTest(unittest.TestCase):
             retrieve_version(None)
         with self.assertRaises(ValueError):
             retrieve_version('')
+
+    @unittest.mock.patch.dict(os.environ, {"CMDSTAN": "~/some/fake/path"})
+    def test_rebuild_bad_path(self):
+        with self.assertRaisesRegex(
+            CmdStanInstallError, "you sure it is installed"
+        ):
+            rebuild_cmdstan()
 
 
 if __name__ == '__main__':

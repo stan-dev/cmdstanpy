@@ -31,7 +31,13 @@ from time import sleep
 from typing import Callable, Dict, Optional
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
+from cmdstanpy.utils import (
+    cmdstan_path,
+    get_logger,
+    pushd,
+    validate_dir,
+    wrap_progress_hook,
+)
 
 MAKE = os.getenv(
     'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
@@ -172,6 +178,27 @@ def compile_example() -> None:
         if stderr:
             msgs.append(stderr.decode('utf-8').strip())
         raise CmdStanInstallError('\n'.join(msgs))
+
+
+def rebuild_cmdstan(verbose: bool = True) -> None:
+    """
+    Rebuilds the existing CmdStan installation.
+    This assumes CmdStan has already been installed,
+    though it need not be installed via CmdStanPy for
+    this function to work.
+
+    :param verbose:  Boolean value; when ``True``, output from CmdStan build
+        processes will be streamed to the console.  Default is ``False``.
+    """
+    try:
+        with pushd(cmdstan_path()):
+            clean_all(verbose)
+            build(verbose)
+            compile_example()
+    except ValueError as e:
+        raise CmdStanInstallError(
+            "Failed to rebuild CmdStan. Are you sure it is installed?"
+        ) from e
 
 
 def install_version(
