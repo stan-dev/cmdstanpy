@@ -182,7 +182,13 @@ def compile_example() -> None:
 
 def rebuild_cmdstan(verbose: bool = True) -> None:
     """
-    Rebuilds the existing cmdstan installation
+    Rebuilds the existing CmdStan installation.
+    This assumes CmdStan has already been installed,
+    though it need not be installed via CmdStanPy for
+    this function to work.
+
+    :param verbose:  Boolean value; when ``True``, output from CmdStan build
+        processes will be streamed to the console.  Default is ``False``.
     """
     try:
         with pushd(cmdstan_path()):
