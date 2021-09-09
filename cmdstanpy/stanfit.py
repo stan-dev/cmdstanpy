@@ -1442,7 +1442,7 @@ class CmdStanMLE:
 
     def stan_variables(
         self, inc_iterations: bool = False
-    ) -> Dict[str, np.ndarray]:
+    ) -> Dict[str, Union[np.ndarray, float]]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
@@ -2178,7 +2178,7 @@ class CmdStanVB:
         assert isinstance(result, (np.ndarray, float))
         return result
 
-    def stan_variables(self) -> Dict[str, np.ndarray]:
+    def stan_variables(self) -> Dict[str, Union[np.ndarray, float]]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
