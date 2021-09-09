@@ -126,7 +126,7 @@ class CmdStanVBTest(unittest.TestCase):
         var_beta = multidim_variational.stan_variable(var='beta')
         self.assertEqual(var_beta.shape, (2,))  # 1-element tuple
         var_frac_60 = multidim_variational.stan_variable(var='frac_60')
-        self.assertEqual(var_frac_60.shape, ())
+        self.assertTrue(isinstance(var_frac_60, float))
         vars = multidim_variational.stan_variables()
         self.assertEqual(
             len(vars), len(multidim_variational.metadata.stan_vars_dims)
@@ -136,7 +136,7 @@ class CmdStanVBTest(unittest.TestCase):
         self.assertTrue('beta' in vars)
         self.assertEqual(vars['beta'].shape, (2,))
         self.assertTrue('frac_60' in vars)
-        self.assertEqual(vars['frac_60'].shape, ())
+        self.assertTrue(isinstance(vars['frac_60'], float))
         with self.assertRaises(ValueError):
             multidim_variational.stan_variable(var='beta', name='yrep')
         with LogCapture() as log:
