@@ -287,6 +287,36 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertTrue('frac_60' in vars_iters)
         self.assertEqual(vars_iters['frac_60'].shape, (8,))
 
+    def test_variables_shape(self):
+        stan = os.path.join(DATAFILES_PATH, 'shape.stan')
+        model = CmdStanModel(stan_file=stan)
+        no_data = {}
+        mle = model.optimize(
+            seed=1239812093,
+            algorithm='LBFGS',
+            init_alpha=0.001,
+            iter=100,
+            tol_obj=1e-12,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5,
+        )
+        for var, shape in {
+            "x": float,
+            "a": float,
+            "b": (2,),
+            "c": (2,3),
+            "d": (2,),
+            "e":(2,3),
+            "f": (4,2,3),
+            "g":(4,5,2,3),
+        }.items():
+            if isinstance(shape, tuple):
+                assert mle.stan_variable(var).shape == shape
+            else:
+                assert isinstance(mle.stan_variable(var), shape)
 
 class OptimizeTest(unittest.TestCase):
     def test_optimize_good(self):
