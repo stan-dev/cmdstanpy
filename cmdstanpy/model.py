@@ -413,7 +413,7 @@ class CmdStanModel:
         or to a temporary directory which is deleted upon session exit.
 
         Output files are either written to a temporary directory or to the
-        specified output directory.  Ouput filenames correspond to the template
+        specified output directory.  Output filenames correspond to the template
         '<model_name>-<YYYYMMDDHHMM>-<chain_id>' plus the file suffix which is
         either '.csv' for the CmdStan output or '.txt' for
         the console messages, e.g. 'bernoulli-201912081451-1.csv'.
@@ -550,7 +550,9 @@ class CmdStanModel:
         save_warmup: bool = False,
         thin: Optional[int] = None,
         max_treedepth: Optional[int] = None,
-        metric: Union[str, List[str], None] = None,
+        metric: Union[
+            str, Dict[str, Any], List[str], List[Dict[str, Any]], None
+        ] = None,
         step_size: Union[float, List[float], None] = None,
         adapt_engaged: bool = True,
         adapt_delta: Optional[float] = None,
@@ -660,6 +662,15 @@ class CmdStanModel:
             length must match the number of chains and all paths must be
             unique.
 
+            If the value of the metric argument is a Python dict object, it
+            must contain an entry 'inv_metric' which specifies either the
+            diagnoal or dense matrix.
+
+            If the value of the metric argument is a list of Python dicts,
+            its length must match the number of chains and all dicts must
+            containan entry 'inv_metric' and all 'inv_metric' entries must
+            have the same shape.
+
         :param step_size: Initial step size for HMC sampler.  The value is
             either a single number or a list of numbers which will be used
             as the global or per-chain initial step size, respectively.
@@ -725,7 +736,7 @@ class CmdStanModel:
             If show_progress=='notebook' use tqdm_notebook
             (needs nodejs for jupyter).
 
-        :param refresh: Specify the number of iterations cmdstan will take
+        :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
@@ -964,7 +975,7 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param refresh: Specify the number of iterations cmdstan will take
+        :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
@@ -1144,7 +1155,7 @@ class CmdStanModel:
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
-        :param refresh: Specify the number of iterations cmdstan will take
+        :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
         :param time_fmt: A format string passed to
