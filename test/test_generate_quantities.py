@@ -426,7 +426,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 bern_gqs.draws_xr()
 
-    def test_bug_455(self):
+    def test_single_row_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')

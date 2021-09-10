@@ -253,7 +253,7 @@ class VariationalTest(unittest.TestCase):
             )
         )
 
-    def test_bug_455(self):
+    def test_single_row_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
         model = CmdStanModel(stan_file=stan)
         vb_fit = model.variational()

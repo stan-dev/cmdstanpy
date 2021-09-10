@@ -581,7 +581,7 @@ class OptimizeTest(unittest.TestCase):
                 data=no_data, seed=1239812093, inits=None, algorithm='BFGS'
             )
 
-    def test_bug_455(self):
+    def test_single_row_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
         model = CmdStanModel(stan_file=stan)
         mle = model.optimize()
