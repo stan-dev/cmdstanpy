@@ -253,6 +253,17 @@ class VariationalTest(unittest.TestCase):
             )
         )
 
+    def test_bug_455(self):
+        stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        vb_fit = model.variational()
+        self.assertTrue(isinstance(vb_fit.stan_variable('theta'), float))
+        z_as_ndarray = vb_fit.stan_variable(var="z")
+        self.assertEqual(z_as_ndarray.shape, (4, 3))
+        for i in range(4):
+            for j in range(3):
+                self.assertEqual(int(z_as_ndarray[i, j]), i + 1)
+
 
 if __name__ == '__main__':
     unittest.main()

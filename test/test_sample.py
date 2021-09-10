@@ -1668,6 +1668,19 @@ class CmdStanMCMCTest(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 bern_fit.draws_xr()
 
+    def test_bug_455(self):
+        stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
+        bug_455_model = CmdStanModel(stan_file=stan)
+        bug_455_fit = bug_455_model.sample(iter_sampling=1, chains=1)
+        z_as_ndarray = bug_455_fit.stan_variable(var="z")
+        self.assertEqual(z_as_ndarray.shape, (1, 4, 3))  # flattens chains
+        z_as_xr = bug_455_fit.draws_xr(vars="z")
+        self.assertEqual(z_as_xr.z.data.shape, (1, 1, 4, 3))  # keeps chains
+        for i in range(4):
+            for j in range(3):
+                self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
+                self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1983,16 +1983,26 @@ class CmdStanGQ:
             return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable
             self._assemble_generated_quantities()
-            col_idxs = self._metadata.stan_vars_cols[var]
+            draw1 = 0
             if (
                 not inc_warmup
                 and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
             ):
-                draw1 = self.mcmc_sample.num_draws_warmup * self.chains
-                return flatten_chains(self._draws)[  # type: ignore
-                    draw1:, col_idxs
-                ]
-            return flatten_chains(self._draws)[:, col_idxs]  # type: ignore
+                draw1 = self.mcmc_sample.num_draws_warmup
+            num_draws = self.mcmc_sample.num_draws_sampling
+            if (
+                inc_warmup
+                and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+            ):
+                num_draws += self.mcmc_sample.num_draws_warmup
+            dims = [num_draws * self.chains]
+            col_idxs = self._metadata.stan_vars_cols[var]
+            if len(col_idxs) > 0:
+                dims.extend(self._metadata.stan_vars_dims[var])
+            # pylint: disable=redundant-keyword-arg
+            return self._draws[draw1:, :, col_idxs].reshape(  # type: ignore
+                dims, order='F'
+            )
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
