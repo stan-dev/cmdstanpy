@@ -1074,7 +1074,6 @@ class CmdStanMCMC:
                 0,
                 self.draws(inc_warmup=inc_warmup),
             )
-
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
         )
@@ -1373,7 +1372,7 @@ class CmdStanMLE:
         inc_iterations: bool = False,
         warn: bool = True,
         name: Optional[str] = None,
-    ) -> np.ndarray:
+    ) -> Union[np.ndarray, float]:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -1416,13 +1415,12 @@ class CmdStanMLE:
                 'Invalid estimate, optimization failed to converge.'
             )
 
-        col_idxs = self._metadata.stan_vars_cols[var]
+        col_idxs = list(self._metadata.stan_vars_cols[var])
         if inc_iterations and self._save_iterations:
             num_rows = self._all_iters.shape[0]
         else:
             num_rows = 1
-
-        if len(col_idxs) > 0:  # container var
+        if len(col_idxs) > 1:  # container var
             dims = (num_rows,) + self._metadata.stan_vars_dims[var]
             # pylint: disable=redundant-keyword-arg
             if num_rows > 1:
@@ -1430,24 +1428,21 @@ class CmdStanMLE:
                     dims, order='F'
                 )
             else:
-                mle = np.expand_dims(self._mle, axis=0)  # hack for col indexing
-                result = (
-                    mle[0, col_idxs]
-                    .reshape(dims, order='F')  # type: ignore
-                    .squeeze(axis=0)
-                )
+                result = self._mle[col_idxs].reshape(dims[1:], order="F")
         else:  # scalar var
+            col_idx = col_idxs[0]
             if num_rows > 1:
-                result = self._all_iters[:, col_idxs]
+                result = self._all_iters[:, col_idx]
             else:
-                result = np.atleast_1d(mle[0, col_idxs])
-
-        assert isinstance(result, np.ndarray)  # make the typechecker happy
+                result = float(self._mle[col_idx])
+        assert isinstance(
+            result, (np.ndarray, float)
+        )  # make the typechecker happy
         return result
 
     def stan_variables(
         self, inc_iterations: bool = False
-    ) -> Dict[str, np.ndarray]:
+    ) -> Dict[str, Union[np.ndarray, float]]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
@@ -1988,16 +1983,26 @@ class CmdStanGQ:
             return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable
             self._assemble_generated_quantities()
-            col_idxs = self._metadata.stan_vars_cols[var]
+            draw1 = 0
             if (
                 not inc_warmup
                 and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
             ):
-                draw1 = self.mcmc_sample.num_draws_warmup * self.chains
-                return flatten_chains(self._draws)[  # type: ignore
-                    draw1:, col_idxs
-                ]
-            return flatten_chains(self._draws)[:, col_idxs]  # type: ignore
+                draw1 = self.mcmc_sample.num_draws_warmup
+            num_draws = self.mcmc_sample.num_draws_sampling
+            if (
+                inc_warmup
+                and self.mcmc_sample.metadata.cmdstan_config['save_warmup']
+            ):
+                num_draws += self.mcmc_sample.num_draws_warmup
+            dims = [num_draws * self.chains]
+            col_idxs = self._metadata.stan_vars_cols[var]
+            if len(col_idxs) > 0:
+                dims.extend(self._metadata.stan_vars_dims[var])
+            # pylint: disable=redundant-keyword-arg
+            return self._draws[draw1:, :, col_idxs].reshape(  # type: ignore
+                dims, order='F'
+            )
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
@@ -2143,7 +2148,7 @@ class CmdStanVB:
 
     def stan_variable(
         self, var: Optional[str] = None, *, name: Optional[str] = None
-    ) -> np.ndarray:
+    ) -> Union[np.ndarray, float]:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -2172,14 +2177,18 @@ class CmdStanVB:
         if var not in self._metadata.stan_vars_dims:
             raise ValueError('Unknown variable name: {}'.format(var))
         col_idxs = list(self._metadata.stan_vars_cols[var])
-        vals = list(self._variational_mean)
-        xs = [vals[x] for x in col_idxs]
         shape: Tuple[int, ...] = ()
-        if len(col_idxs) > 0:
+        if len(col_idxs) > 1:
             shape = self._metadata.stan_vars_dims[var]
-        return np.array(xs).reshape(shape)
+            result = np.asarray(self._variational_mean)[col_idxs].reshape(
+                shape, order="F"
+            )
+        else:
+            result = float(self._variational_mean[col_idxs[0]])
+        assert isinstance(result, (np.ndarray, float))
+        return result
 
-    def stan_variables(self) -> Dict[str, np.ndarray]:
+    def stan_variables(self) -> Dict[str, Union[np.ndarray, float]]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
@@ -2424,7 +2433,12 @@ def build_xarray_data(
     var_dims: Tuple[str, ...] = ('draw', 'chain')
     if dims:
         var_dims += tuple(f"{var_name}_dim_{i}" for i in range(len(dims)))
-        data[var_name] = (var_dims, drawset[start_row:, :, col_idxs])
+        data[var_name] = (
+            var_dims,
+            drawset[start_row:, :, col_idxs].reshape(
+                *drawset.shape[:2], *dims, order="F"
+            ),
+        )
     else:
         data[var_name] = (
             var_dims,
