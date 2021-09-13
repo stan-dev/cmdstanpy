@@ -208,13 +208,15 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertTrue('theta' in bern_mle.metadata.stan_vars_dims)
         self.assertEqual(bern_mle.metadata.stan_vars_dims['theta'], ())
         theta = bern_mle.stan_variable(var='theta')
-        self.assertEqual(theta.shape, ())
+        self.assertTrue(isinstance(theta, float))
         with self.assertRaises(ValueError):
             bern_mle.stan_variable(var='eta')
         with self.assertRaises(ValueError):
             bern_mle.stan_variable(var='lp__')
         with LogCapture() as log:
-            self.assertEqual(bern_mle.stan_variable(name='theta').shape, ())
+            self.assertTrue(
+                isinstance(bern_mle.stan_variable(name='theta'), float)
+            )
         log.check_present(
             (
                 'cmdstanpy',
@@ -250,7 +252,7 @@ class CmdStanMLETest(unittest.TestCase):
         var_beta = multidim_mle.stan_variable(var='beta')
         self.assertEqual(var_beta.shape, (2,))  # 1-element tuple
         var_frac_60 = multidim_mle.stan_variable(var='frac_60')
-        self.assertEqual(var_frac_60.shape, ())
+        self.assertTrue(isinstance(var_frac_60, float))
         vars = multidim_mle.stan_variables()
         self.assertEqual(len(vars), len(multidim_mle.metadata.stan_vars_dims))
         self.assertTrue('y_rep' in vars)
@@ -258,7 +260,7 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertTrue('beta' in vars)
         self.assertEqual(vars['beta'].shape, (2,))
         self.assertTrue('frac_60' in vars)
-        self.assertEqual(vars['frac_60'].shape, ())
+        self.assertTrue(isinstance(vars['frac_60'], float))
 
         multidim_mle_iters = multidim_model.optimize(
             data=jdata,
@@ -578,6 +580,17 @@ class OptimizeTest(unittest.TestCase):
             exp_bound_model.optimize(
                 data=no_data, seed=1239812093, inits=None, algorithm='BFGS'
             )
+
+    def test_single_row_csv(self):
+        stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        mle = model.optimize()
+        self.assertTrue(isinstance(mle.stan_variable('theta'), float))
+        z_as_ndarray = mle.stan_variable(var="z")
+        self.assertEqual(z_as_ndarray.shape, (4, 3))
+        for i in range(4):
+            for j in range(3):
+                self.assertEqual(int(z_as_ndarray[i, j]), i + 1)
 
 
 if __name__ == '__main__':

@@ -426,6 +426,28 @@ class GenerateQuantitiesTest(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 bern_gqs.draws_xr()
 
+    def test_single_row_csv(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=1,
+            seed=12345,
+            iter_sampling=1,
+        )
+        stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        gqs = model.generate_quantities(mcmc_sample=bern_fit)
+        z_as_ndarray = gqs.stan_variable(var="z")
+        self.assertEqual(z_as_ndarray.shape, (1, 4, 3))  # flattens chains
+        z_as_xr = gqs.draws_xr(vars="z")
+        self.assertEqual(z_as_xr.z.data.shape, (1, 1, 4, 3))  # keeps chains
+        for i in range(4):
+            for j in range(3):
+                self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
+                self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
+
 
 if __name__ == '__main__':
     unittest.main()
