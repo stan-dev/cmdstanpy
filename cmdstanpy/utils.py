@@ -14,7 +14,6 @@ import sys
 import tempfile
 from collections import OrderedDict
 from collections.abc import Collection
-from time import ctime, sleep
 from typing import (
     Any,
     Callable,
@@ -926,55 +925,6 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
-) -> None:
-    """
-    Spawn process, print stdout/stderr to console.
-    Throws RuntimeError on non-zero returncode.
-    """
-    get_logger().info('cmd: %s', cmd)
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            bufsize=1, # buffer lines
-            cwd=cwd,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=os.environ,
-            universal_newlines=True,
-        )
-        while proc.poll() is None and proc.stdout is not None:
-                sys.stdout.write(proc.stdout.readline())
-
-        _, stderr = proc.communicate()
-        if proc.stderr is not None:
-            sys.stderr.write(stderr)
-
-        if proc.returncode != 0:  # problem, throw RuntimeError with msg
-            try:
-                serror = os.strerror(proc.returncode)
-            except ValueError:
-                pass
-            if proc.returncode < 0:
-                msg = 'Command: {}\nterminated by signal'.format(cmd)
-            elif proc.returncode <= 125:
-                msg = 'Command: {}\nfailed'.format(cmd)
-            elif proc.returncode == 127:
-                msg = 'Command: {}\nfailed, program not found'.format(cmd)
-            else:
-                msg = 'Command: {}\nmost likely crashed'.format(cmd)
-            msg = '{}, returncode: {}'.format(msg, proc.returncode)
-            if serror:
-                msg = '{}, error: {}'.format(msg, serror)
-            raise RuntimeError(msg)
-    except OSError as e:
-        msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
-        raise RuntimeError(msg) from e
-    return None  # success
-
-def do_command_block(
-    cmd: List[str],
-    cwd: Optional[str] = None,
 ) -> Optional[str]:
     """
     Spawn process, print stdout/stderr to console.
@@ -985,12 +935,22 @@ def do_command_block(
         proc = subprocess.Popen(
             cmd,
             cwd=cwd,
+            bufsize=1,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # avoid buffer overflow
             env=os.environ,
+            universal_newlines=True,
         )
-        stdout, stderr = proc.communicate()
+        while proc.poll() is None and proc.stdout is not None:
+            output = proc.stdout.readline()
+            if len(output) > 0:
+                sys.stdout.write(output)
+        stdout, _ = proc.communicate()
+        if stdout:
+            if len(stdout) > 0:
+                sys.stdout.write(stdout)
+
         if proc.returncode != 0:  # problem, throw RuntimeError with msg
             try:
                 serror = os.strerror(proc.returncode)
@@ -1007,20 +967,7 @@ def do_command_block(
             msg = '{}, returncode: {}'.format(msg, proc.returncode)
             if serror:
                 msg = '{}, error: {}'.format(msg, serror)
-            if stderr:
-                msg = '{}, stderr: {} '.format(
-                    msg, stderr.decode('utf-8').strip()
-                )
             raise RuntimeError(msg)
-        if stdout or stderr:  # success, return stdout, stderr, if any
-            msg = ''
-            if stdout:
-                msg = '{}'.format(stdout)
-            if stderr:
-                msg = '{}\nWarning or error:\t{}'.format(
-                    msg, stderr.decode('utf-8').strip()
-                )
-            return msg
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
@@ -1213,7 +1160,22 @@ def install_cmdstan(
         cmd.append('--verbose')
     if compiler:
         cmd.append('--compiler')
-    do_command(cmd)
+    proc = subprocess.Popen(
+        cmd,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=os.environ,
+    )
+    while proc.poll() is None and proc.stdout:
+        print(proc.stdout.readline().decode('utf-8').strip())
+
+    _, stderr = proc.communicate()
+    if proc.returncode:
+        logger.warning('CmdStan installation failed.')
+        if stderr:
+            logger.warning(stderr.decode('utf-8').strip())
+        return False
     if dir is not None:
         if version is not None:
             set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
