@@ -295,22 +295,10 @@ class RunSet:
         msgs = []
         for i in range(self._chains):
             if (
-                os.path.exists(self._stderr_files[i])
-                and os.stat(self._stderr_files[i]).st_size > 0
+                os.path.exists(self._stdout_files[i])
+                and os.stat(self._stdout_files[i]).st_size > 0
             ):
-                with open(self._stderr_files[i], 'r') as fd:
-                    msgs.append(
-                        'chain_id {}:\n{}\n'.format(
-                            self._chain_ids[i], fd.read()
-                        )
-                    )
-            # pre 2.27, all sampler msgs go to stdout, including errors
-            if self._args.method == Method.SAMPLE:
-                if (
-                    not cmdstan_version_at(2, 27)
-                    and os.path.exists(self._stdout_files[i])
-                    and os.stat(self._stdout_files[i]).st_size > 0
-                ):
+                if self._args.method == Method.SAMPLE:
                     with open(self._stdout_files[i], 'r') as fd:
                         contents = fd.read()
                         # pattern matches initial "Exception" or "Error" msg
@@ -322,10 +310,10 @@ class RunSet:
                                     self._chain_ids[i], '\n\t'.join(errors)
                                 )
                             )
-            elif self._args.method == Method.OPTIMIZE:
-                msgs.append('console log output:\n')
-                with open(self._stdout_files[0], 'r') as fd:
-                    msgs.append(fd.read())
+                elif self._args.method == Method.OPTIMIZE:
+                    msgs.append('console log output:\n')
+                    with open(self._stdout_files[0], 'r') as fd:
+                        msgs.append(fd.read())
 
         return '\n'.join(msgs)
 

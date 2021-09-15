@@ -846,56 +846,58 @@ class CmdStanModel:
             runset = RunSet(
                 args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
             )
-            pbar = None
-            all_pbars = []
+            # pbar = None
+            # all_pbars = []
 
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
-                    if show_progress:
-                        if (
-                            isinstance(show_progress, str)
-                            and show_progress.lower() == 'notebook'
-                        ):
-                            try:
-                                tqdm_pbar = tqdm.tqdm_notebook
-                            except ImportError:
-                                msg = (
-                                    'Cannot import tqdm.tqdm_notebook.\n'
-                                    'Functionality is only supported on the '
-                                    'Jupyter Notebook and compatible platforms'
-                                    '.\nPlease follow the instructions in '
-                                    'https://github.com/tqdm/tqdm/issues/394#'
-                                    'issuecomment-384743637 and remember to '
-                                    'stop & start your jupyter server.'
-                                )
-                                get_logger().warning(msg)
-                                tqdm_pbar = tqdm.tqdm
-                        else:
-                            tqdm_pbar = tqdm.tqdm
-                        # enable dynamic_ncols for advanced users
-                        # currently hidden feature
-                        dynamic_ncols_raw = os.environ.get(
-                            'TQDM_DYNAMIC_NCOLS', 'False'
-                        )
-                        if dynamic_ncols_raw.lower() in ['0', 'false']:
-                            dynamic_ncols = False
-                        else:
-                            dynamic_ncols = True
-                        pbar = tqdm_pbar(
-                            desc='Chain {} - warmup'.format(i + 1),
-                            position=i,
-                            total=1,  # Will set total from Stan's output
-                            dynamic_ncols=dynamic_ncols,
-                        )
-                        all_pbars.append(pbar)
-                    executor.submit(self._run_cmdstan, runset, i, pbar)
+                    # if show_progress:
+                    #     if (
+                    #         isinstance(show_progress, str)
+                    #         and show_progress.lower() == 'notebook'
+                    #     ):
+                    #         try:
+                    #             tqdm_pbar = tqdm.tqdm_notebook
+                    #         except ImportError:
+                    #             msg = (
+                    #                 'Cannot import tqdm.tqdm_notebook.\n'
+                    #                 'Functionality is only supported on the '
+                    #                 'Jupyter Notebook and compatible platforms'
+                    #                 '.\nPlease follow the instructions in '
+                    #                 'https://github.com/tqdm/tqdm/issues/394#'
+                    #                 'issuecomment-384743637 and remember to '
+                    #                 'stop & start your jupyter server.'
+                    #             )
+                    #             get_logger().warning(msg)
+                    #             tqdm_pbar = tqdm.tqdm
+                    #     else:
+                    #         tqdm_pbar = tqdm.tqdm
+                    #     # enable dynamic_ncols for advanced users
+                    #     # currently hidden feature
+                    #     dynamic_ncols_raw = os.environ.get(
+                    #         'TQDM_DYNAMIC_NCOLS', 'False'
+                    #     )
+                    #     if dynamic_ncols_raw.lower() in ['0', 'false']:
+                    #         dynamic_ncols = False
+                    #     else:
+                    #         dynamic_ncols = True
+                    #     pbar = tqdm_pbar(
+                    #         desc='Chain {} - warmup'.format(i + 1),
+                    #         position=i,
+                    #         total=1,  # Will set total from Stan's output
+                    #         dynamic_ncols=dynamic_ncols,
+                    #     )
+                    #     all_pbars.append(pbar)
+                    # executor.submit(self._run_cmdstan, runset, i, pbar)
+                    print('892: {}'.format(i))
+                    executor.submit(self._run_cmdstan, runset, i)
 
             # Closing all progress bars
-            for pbar in all_pbars:
-                pbar.close()
-            if show_progress:
-                # re-enable logger for console
-                get_logger().propagate = True
+            # for pbar in all_pbars:
+            #     pbar.close()
+            # if show_progress:
+            #     # re-enable logger for console
+            #     get_logger().propagate = True
 
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
@@ -1232,38 +1234,39 @@ class CmdStanModel:
         get_logger().debug(
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
-        get_logger().debug('sampling: %s', cmd)
+        get_logger().info('sampling: %s', cmd)
         try:
             proc = subprocess.Popen(
                 cmd,
+                bufsize=1,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # avoid buffer overflow
                 env=os.environ,
+                universal_newlines=True,
             )
-            if pbar:
-                stdout_pbar = self._read_progress(proc, pbar, idx)
-            stdout, stderr = proc.communicate()
-            if pbar:
-                stdout = stdout_pbar + stdout
+            # if pbar:
+            #     stdout_pbar = self._read_progress(proc, pbar, idx)
+            # initialize pbar object
+            
+            with open(runset.stdout_files[idx], 'w') as fd_out:
+                while proc.poll() is None and proc.stdout is not None:
+                    output = proc.stdout.readline()
+                    if len(output) > 0:
+                        fd_out.write(output)
+                        if len(output) > 2:
+                            output = output.strip()
+                            print('chain {}: {}\n'.format(idx+1, output), end='')
+                        # send output to pbar
+
+                stdout, _ = proc.communicate()
+                if stdout:
+                    fd_out.write(stdout)
+                    
+            # close pbar object
 
             get_logger().info('finish chain %u', idx + 1)
             runset._set_retcode(idx, proc.returncode)
-            if stdout:
-                with open(runset.stdout_files[idx], 'w+') as fd:
-                    contents = stdout.decode('utf-8')  # bugfix 425
-                    if 'running fixed_param sampler' in contents:
-                        sampler_args = runset._args.method_args
-                        assert isinstance(
-                            sampler_args, SamplerArgs
-                        )  # make the typechecker happy
-                        sampler_args.fixed_param = True
-                    fd.write(contents)
-            console_error = ''
-            if stderr:
-                console_error = stderr.decode('utf-8')
-                with open(runset.stderr_files[idx], 'w+') as fd:
-                    fd.write(console_error)
 
             if proc.returncode != 0:
                 if proc.returncode < 0:
@@ -1273,6 +1276,7 @@ class CmdStanModel:
                 elif proc.returncode < 125:
                     msg = 'Chain {} processing error'.format(idx + 1)
                     msg = '{}, return code {}'.format(msg, proc.returncode)
+                    # msg = '{} Console output\n {}'.format(msg, console)
                 elif proc.returncode > 128:
                     msg = 'Chain {} system error'.format(idx + 1)
                     msg = '{}, terminated by signal {}'.format(
@@ -1280,9 +1284,18 @@ class CmdStanModel:
                     )
                 else:
                     msg = 'Chain {} unknown error'.format(idx + 1)
-                if len(console_error) > 0:
-                    msg = '{}\n error message:\n\t{}'.format(msg, console_error)
                 get_logger().error(msg)
+            else:
+                with open(runset.stdout_files[idx], 'r') as fd:
+                    console = fd.read()
+                    if 'running fixed_param sampler' in console:
+                        sampler_args = runset._args.method_args
+                        assert isinstance(
+                            sampler_args, SamplerArgs
+                        )  # make the typechecker happy
+                        sampler_args.fixed_param = True
+
+
 
         except OSError as e:
             msg = 'Chain {} encounted error: {}\n'.format(idx + 1, str(e))

@@ -935,16 +935,15 @@ def do_command(
     try:
         proc = subprocess.Popen(
             cmd,
-            bufsize=-1, # buffer i/o, system default bufsize
+            bufsize=1, # buffer lines
             cwd=cwd,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=os.environ,
-            encoding=sys.getdefaultencoding()
+            universal_newlines=True,
         )
         while proc.poll() is None and proc.stdout is not None:
-                print('... {}'.format(ctime()))
                 sys.stdout.write(proc.stdout.readline())
 
         _, stderr = proc.communicate()
