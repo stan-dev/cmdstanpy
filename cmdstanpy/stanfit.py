@@ -7,8 +7,10 @@ import math
 import os
 import re
 import shutil
+import sys
 from collections import Counter, OrderedDict
 from datetime import datetime
+from io import StringIO
 from time import time
 from typing import (
     Any,
@@ -97,9 +99,8 @@ class RunSet:
         self._chain_ids = chain_ids
         self._retcodes = [-1 for _ in range(chains)]
 
-        # stdout, stderr are written to text files
+        # console output written to text file
         # prefix: ``<model_name>-<YYYYMMDDHHMM>-<chain_id>``
-        # suffixes: ``-stdout.txt``, ``-stderr.txt``
         now = datetime.now()
         now_str = now.strftime(time_fmt)
         file_basename = '-'.join([args.model_name, now_str])
@@ -111,7 +112,6 @@ class RunSet:
         self._diagnostic_files = ['' for _ in range(chains)]
         self._profile_files = ['' for _ in range(chains)]
         self._stdout_files = ['' for _ in range(chains)]
-        self._stderr_files = ['' for _ in range(chains)]
         self._cmds = []
         for i in range(chains):
             if args.output_dir is None:
@@ -130,10 +130,6 @@ class RunSet:
                 [os.path.splitext(csv_file)[0], '-stdout.txt']
             )
             self._stdout_files[i] = stdout_file
-            stderr_file = ''.join(
-                [os.path.splitext(csv_file)[0], '-stderr.txt']
-            )
-            self._stderr_files[i] = stderr_file
             # optional output files:  diagnostics, profiling
             if args.save_latent_dynamics:
                 if args.output_dir is None:
@@ -219,10 +215,6 @@ class RunSet:
             repr = '{}\n console_msgs:\n\t{}'.format(
                 repr, '\n\t'.join(self._stdout_files)
             )
-        if os.path.exists(self._stderr_files[0]):
-            repr = '{}\n error_msgs:\n\t{}'.format(
-                repr, '\n\t'.join(self._stderr_files)
-            )
         return repr
 
     @property
@@ -263,7 +255,11 @@ class RunSet:
     @property
     def stderr_files(self) -> List[str]:
         """List of paths to CmdStan stderr transcripts."""
-        return self._stderr_files
+        get_logger().warning(
+            "Property 'stderr_files' is deprecated, "
+            "use 'stdout_files' instead."
+        )
+        return self._stdout_files
 
     def _check_retcodes(self) -> bool:
         """Returns ``True`` when all chains have retcode 0."""
@@ -304,6 +300,7 @@ class RunSet:
                         # pattern matches initial "Exception" or "Error" msg
                         pat = re.compile(r'^E[rx].*$', re.M)
                         errors = re.findall(pat, contents)
+                        print(errors)
                         if len(errors) > 0:
                             msgs.append(
                                 'chain_id {}:\n\t{}\n'.format(
@@ -913,8 +910,8 @@ class CmdStanMCMC:
 
     def diagnose(self) -> Optional[str]:
         """
-        Run cmdstan/bin/diagnose over all output CSV files.
-        Returns output of diagnose (stdout/stderr).
+        Run cmdstan/bin/diagnose over all output CSV files,
+        return console output.
 
         The diagnose utility reads the outputs of all chains
         and checks for the following potential problems:
@@ -927,10 +924,17 @@ class CmdStanMCMC:
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         cmd = [cmd_path] + self.runset.csv_files
-        result = do_command_block(cmd=cmd)
-        if result:
-            get_logger().info(result)
-        return result
+        try:
+            sys_stdout = sys.stdout
+            result = StringIO()
+            sys.stdout = result
+            do_command(cmd=cmd)
+            report = result.getvalue()
+            if report:
+                get_logger().info(report)
+            return report
+        finally:
+            sys.stdout = sys_stdout
 
     def draws_pd(
         self,

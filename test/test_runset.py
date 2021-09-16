@@ -86,7 +86,7 @@ class RunSetTest(unittest.TestCase):
                 runset._set_retcode(i, 1)
                 stderr_file = 'chain-' + str(i + 1) + '-missing-data-stderr.txt'
                 path = os.path.join(DATAFILES_PATH, stderr_file)
-                runset._stderr_files[i] = path
+                runset._stdout_files[i] = path
             errs = runset.get_err_msgs()
             self.assertIn('Exception: variable does not exist', errs)
 

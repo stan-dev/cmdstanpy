@@ -3,8 +3,10 @@
 import logging
 import os
 import shutil
+import sys
 import tempfile
 import unittest
+from io import StringIO
 from unittest.mock import Mock
 
 import numpy as np
@@ -85,8 +87,10 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(None, model.exe_file)
 
     def test_model_pedantic(self):
-        with LogCapture() as log:
-            logging.getLogger()
+        try:
+            sys_stdout = sys.stdout
+            result = StringIO()
+            sys.stdout = result
             CmdStanModel(
                 model_name='bern',
                 stan_file=os.path.join(
@@ -94,11 +98,10 @@ class CmdStanModelTest(unittest.TestCase):
                 ),
                 stanc_options={'warn-pedantic': True},
             )
-            expect = (
-                'stanc3 has produced warnings:\n'
-                + 'Warning: The parameter theta has no priors.'
-            )
-            log.check_present(('cmdstanpy', 'WARNING', expect))
+            msgs = result.getvalue()
+            self.assertTrue('The parameter theta has no priors' in msgs)
+        finally:
+            sys.stdout = sys_stdout
 
     def test_model_bad(self):
         with self.assertRaises(ValueError):
@@ -210,16 +213,16 @@ class CmdStanModelTest(unittest.TestCase):
 
     def test_model_syntax_error(self):
         stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
-        with LogCapture() as log:
+        try:
+            sys_stdout = sys.stdout
+            result = StringIO()
+            sys.stdout = result
             with self.assertRaises(Exception):
                 CmdStanModel(stan_file=stan)
-
-            # Join all the log messages into one string
-            error_message = '@( * O * )@'.join(np.array(log.actual())[:, -1])
-
-            # Ensure the new line character in error message is not escaped
-            # so the error message is readable
-            self.assertRegex(error_message, r'parsing error:(\r\n|\r|\n)')
+            msgs = result.getvalue()
+            self.assertTrue('parsing error:' in msgs)
+        finally:
+            sys.stdout = sys_stdout
 
     def test_repr(self):
         model = CmdStanModel(stan_file=BERN_STAN)

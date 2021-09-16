@@ -155,8 +155,6 @@ class SampleTest(unittest.TestCase):
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
                 os.remove(bern_fit.runset.stdout_files[i])
-            if os.path.exists(bern_fit.runset.stderr_files[i]):
-                os.remove(bern_fit.runset.stderr_files[i])
         rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
             data=rdata,
@@ -912,8 +910,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
                 os.remove(bern_fit.runset.stdout_files[i])
-            if os.path.exists(bern_fit.runset.stderr_files[i]):
-                os.remove(bern_fit.runset.stderr_files[i])
         shutil.rmtree(tmp2_dir, ignore_errors=True)
 
         # regenerate to tmpdir, save to good dir
@@ -932,8 +928,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
                 os.remove(bern_fit.runset.stdout_files[i])
-            if os.path.exists(bern_fit.runset.stderr_files[i]):
-                os.remove(bern_fit.runset.stderr_files[i])
 
         with self.assertRaisesRegex(ValueError, 'Cannot access CSV file'):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
@@ -995,7 +989,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(runset._check_retcodes())
 
         # errors reported
-        runset._stderr_files = [
+        runset._stdout_files = [
             os.path.join(
                 DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-1.txt'
             ),
