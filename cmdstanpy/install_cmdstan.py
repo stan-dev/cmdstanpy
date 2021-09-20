@@ -30,10 +30,9 @@ from pathlib import Path
 from time import sleep
 from typing import Callable, Dict, Optional
 
-from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+from cmdstanpy import _DOT_CMDSTAN
 from cmdstanpy.utils import (
     cmdstan_path,
-    get_logger,
     pushd,
     validate_dir,
     wrap_progress_hook,
@@ -401,15 +400,6 @@ def main() -> None:
         )
 
     cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-    if not os.path.exists(cmdstan_dir):
-        cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        if os.path.exists(cmdstanpy_dir):
-            cmdstan_dir = cmdstanpy_dir
-            get_logger().warning(
-                "Using ~/.cmdstanpy is deprecated and"
-                " will not be automatically detected in version 1.0!\n"
-                " Please rename to ~/.cmdstan"
-            )
 
     install_dir = cmdstan_dir
     if vars(args)['dir']:

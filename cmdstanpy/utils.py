@@ -37,7 +37,6 @@ from cmdstanpy import (
     _CMDSTAN_THIN,
     _CMDSTAN_WARMUP,
     _DOT_CMDSTAN,
-    _DOT_CMDSTANPY,
     _TMPDIR,
 )
 
@@ -154,16 +153,9 @@ def cmdstan_path() -> str:
     else:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
-            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-            if not os.path.exists(cmdstan_dir):
-                raise ValueError(
-                    'no CmdStan installation found, '
-                    'run command line script "install_cmdstan"'
-                )
-            get_logger().warning(
-                "Using ~/.cmdstanpy is deprecated and"
-                " will not be automatically detected in version 1.0!\n"
-                " Please rename to ~/.cmdstan"
+            raise ValueError(
+                'no CmdStan installation found, '
+                'run command line script "install_cmdstan"'
             )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
@@ -287,7 +279,6 @@ def cxx_toolchain_path(
     else:
         rtools40_home = os.environ.get('RTOOLS40_HOME')
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-        cmdstan_dir_old = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
         for toolchain_root in (
             ([rtools40_home] if rtools40_home is not None else [])
             + (
@@ -302,13 +293,10 @@ def cxx_toolchain_path(
             )
             + [
                 os.path.join(cmdstan_dir, 'RTools40'),
-                os.path.join(cmdstan_dir_old, 'RTools40'),
                 os.path.join(os.path.abspath("/"), "RTools40"),
                 os.path.join(cmdstan_dir, 'RTools35'),
-                os.path.join(cmdstan_dir_old, 'RTools35'),
                 os.path.join(os.path.abspath("/"), "RTools35"),
                 os.path.join(cmdstan_dir, 'RTools'),
-                os.path.join(cmdstan_dir_old, 'RTools'),
                 os.path.join(os.path.abspath("/"), "RTools"),
                 os.path.join(os.path.abspath("/"), "RBuildTools"),
             ]

@@ -1,7 +1,6 @@
 """
 CmdStan arguments
 """
-import logging
 import os
 from enum import Enum, auto
 from time import time
@@ -721,7 +720,6 @@ class CmdStanArgs:
         save_latent_dynamics: bool = False,
         save_profile: bool = False,
         refresh: Optional[int] = None,
-        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         self.model_name = model_name
@@ -745,11 +743,6 @@ class CmdStanArgs:
         elif isinstance(method_args, VariationalArgs):
             self.method = Method.VARIATIONAL
         self.method_args.validate(len(chain_ids) if chain_ids else None)
-        if logger is not None:
-            get_logger().warning(
-                "Parameter 'logger' is deprecated."
-                " Control logging behavior via logging.getLogger('cmdstanpy')"
-            )
         self.validate()
 
     def validate(self) -> None:

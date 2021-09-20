@@ -2,7 +2,6 @@
 
 import copy
 import glob
-import logging
 import math
 import os
 import re
@@ -69,17 +68,11 @@ class RunSet:
         args: CmdStanArgs,
         chains: int = 4,
         chain_ids: Optional[List[int]] = None,
-        logger: Optional[logging.Logger] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> None:
         """Initialize object."""
         self._args = args
         self._chains = chains
-        if logger is not None:
-            get_logger().warning(
-                "Parameter 'logger' is deprecated."
-                " Control logging behavior via logging.getLogger('cmdstanpy)'"
-            )
         if chains < 1:
             raise ValueError(
                 'Chains must be positive integer value, '
@@ -458,7 +451,6 @@ class CmdStanMCMC:
     def __init__(
         self,
         runset: RunSet,
-        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         if not runset.method == Method.SAMPLE:
@@ -467,11 +459,7 @@ class CmdStanMCMC:
                 'found method {}'.format(runset.method)
             )
         self.runset = runset
-        if logger is not None:
-            get_logger().warning(
-                "Parameter 'logger' is deprecated."
-                " Control logging behavior via logging.getLogger('cmdstanpy')"
-            )
+
         # info from runset to be exposed
         sampler_args = self.runset._args.method_args
         assert isinstance(
@@ -548,39 +536,6 @@ class CmdStanMCMC:
         and model output variables.
         """
         return self._metadata
-
-    @property
-    def sampler_vars_cols(self) -> Dict[str, Tuple[int, ...]]:
-        """
-        Deprecated - use "metadata.method_vars_cols" instead
-        """
-        get_logger().warning(
-            'Property "sampler_vars_cols" has been deprecated, '
-            'use "metadata.method_vars_cols" instead.'
-        )
-        return self.metadata.method_vars_cols
-
-    @property
-    def stan_vars_cols(self) -> Dict[str, Tuple[int, ...]]:
-        """
-        Deprecated - use "metadata.stan_vars_cols" instead
-        """
-        get_logger().warning(
-            'Property "stan_vars_cols" has been deprecated, '
-            'use "metadata.stan_vars_cols" instead.'
-        )
-        return self.metadata.stan_vars_cols
-
-    @property
-    def stan_vars_dims(self) -> Dict[str, Tuple[int, ...]]:
-        """
-        Deprecated - use "metadata.stan_vars_dims" instead
-        """
-        get_logger().warning(
-            'Property "stan_vars_dims" has been deprecated, '
-            'use "metadata.stan_vars_dims" instead.'
-        )
-        return self.metadata.stan_vars_dims
 
     @property
     def column_names(self) -> Tuple[str, ...]:
@@ -681,28 +636,6 @@ class CmdStanMCMC:
         if concat_chains:
             return flatten_chains(self._draws[start_idx:, :, :])
         return self._draws[start_idx:, :, :]  # type: ignore
-
-    @property
-    def sample(self) -> np.ndarray:
-        """
-        Deprecated - use method "draws()" instead.
-        """
-        get_logger().warning(
-            'Method "sample" has been deprecated, use method "draws" instead.'
-        )
-        return self.draws()
-
-    @property
-    def warmup(self) -> np.ndarray:
-        """
-        Deprecated - use "draws(inc_warmup=True)"
-        """
-        get_logger().warning(
-            'Method "warmup" has been deprecated, instead use method'
-            ' "draws(inc_warmup=True)", returning draws from both'
-            ' warmup and sampling iterations.'
-        )
-        return self.draws(inc_warmup=True)
 
     def _validate_csv_files(self) -> Dict[str, Any]:
         """
@@ -948,8 +881,6 @@ class CmdStanMCMC:
         self,
         vars: Union[List[str], str, None] = None,
         inc_warmup: bool = False,
-        *,
-        params: Union[List[str], str, None] = None,
     ) -> pd.DataFrame:
         """
         Returns the sample draws as a pandas DataFrame.
@@ -970,13 +901,6 @@ class CmdStanMCMC:
         CmdStanMCMC.draws_xr
         CmdStanGQ.draws_pd
         """
-        if params is not None:
-            if vars is not None:
-                raise ValueError("Cannot use both vars and (deprecated) params")
-            get_logger().warning(
-                'Keyword "params" is deprecated, use "vars" instead.'
-            )
-            vars = params
         if vars is not None:
             if isinstance(vars, str):
                 vars_list = [vars]
@@ -1082,8 +1006,6 @@ class CmdStanMCMC:
         self,
         var: Optional[str] = None,
         inc_warmup: bool = False,
-        *,
-        name: Optional[str] = None,
     ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
@@ -1123,15 +1045,6 @@ class CmdStanMCMC:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if name is not None:
-            if var is not None:
-                raise ValueError(
-                    'Cannot use both "var" and (deprecated) "name"'
-                )
-            get_logger().warning(
-                'Keyword "name" is deprecated, use "var" instead.'
-            )
-            var = name
         if var is None:
             raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:
@@ -1183,26 +1096,6 @@ class CmdStanMCMC:
             for idx in idxs:
                 result[self.column_names[idx]] = self._draws[:, :, idx]
         return result
-
-    def sampler_variables(self) -> Dict[str, np.ndarray]:
-        """
-        Deprecated, use "method_variables" instead
-        """
-        get_logger().warning(
-            'Method "sampler_variables" has been deprecated, '
-            'use method "method_variables" instead.'
-        )
-        return self.method_variables()
-
-    def sampler_diagnostics(self) -> Dict[str, np.ndarray]:
-        """
-        Deprecated, use "method_variables" instead
-        """
-        get_logger().warning(
-            'Method "sampler_diagnostics" has been deprecated, '
-            'use method "method_variables" instead.'
-        )
-        return self.method_variables()
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
@@ -1371,7 +1264,6 @@ class CmdStanMLE:
         *,
         inc_iterations: bool = False,
         warn: bool = True,
-        name: Optional[str] = None,
     ) -> Union[np.ndarray, float]:
         """
         Return a numpy.ndarray which contains the estimates for the
@@ -1392,15 +1284,6 @@ class CmdStanMLE:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if name is not None:
-            if var is not None:
-                raise ValueError(
-                    'Cannot use both "var" and (deprecated) "name".'
-                )
-            get_logger().warning(
-                'Keyword "name" is deprecated, use "var" instead.'
-            )
-            var = name
         if var is None:
             raise ValueError('no variable name specified.')
         if var not in self._metadata.stan_vars_dims:
@@ -1592,46 +1475,6 @@ class CmdStanGQ:
         and model output variables.
         """
         return self._metadata
-
-    @property
-    def generated_quantities(self) -> np.ndarray:
-        """
-        Deprecated - use method ``draws`` instead.
-        """
-        get_logger().warning(
-            'Property "generated_quantities" has been deprecated, '
-            'use method "draws" instead.'
-        )
-        if self._draws.size == 0:
-            self._assemble_generated_quantities()
-        return flatten_chains(self._draws)
-
-    @property
-    def generated_quantities_pd(self) -> pd.DataFrame:
-        """
-        Deprecated - use method ``draws_pd`` instead.
-        """
-        get_logger().warning(
-            'Property "generated_quantities_pd" has been deprecated, '
-            'use method "draws_pd" instead.'
-        )
-        if self._draws.size == 0:
-            self._assemble_generated_quantities()
-        return pd.DataFrame(
-            data=flatten_chains(self._draws),
-            columns=self.column_names,
-        )
-
-    @property
-    def sample_plus_quantities(self) -> pd.DataFrame:
-        """
-        Deprecated - use method "draws_pd(inc_sample=True)" instead.
-        """
-        get_logger().warning(
-            'Property "sample_plus_quantities" has been deprecated, '
-            'use method "draws_pd(inc_sample=True)" instead.'
-        )
-        return self.draws_pd(inc_sample=True)
 
     def draws(
         self,
@@ -1860,7 +1703,9 @@ class CmdStanGQ:
                 vars_list = vars
             for var in vars_list:
                 if var not in self.metadata.stan_vars_cols:
-                    if inc_sample and var in self.mcmc_sample.stan_vars_cols:
+                    if inc_sample and (
+                        var in self.mcmc_sample.metadata.stan_vars_cols
+                    ):
                         mcmc_vars_list.append(var)
                         dup_vars.append(var)
                     else:
@@ -1923,8 +1768,6 @@ class CmdStanGQ:
         self,
         var: Optional[str] = None,
         inc_warmup: bool = False,
-        *,
-        name: Optional[str] = None,
     ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
@@ -1964,15 +1807,6 @@ class CmdStanGQ:
         CmdStanMLE.stan_variable
         CmdStanVB.stan_variable
         """
-        if name is not None:
-            if var is not None:
-                raise ValueError(
-                    'Cannot use both "var" and (deprecated) "name"'
-                )
-            get_logger().warning(
-                'Keyword "name" is deprecated, use "var" instead.'
-            )
-            var = name
         if var is None:
             raise ValueError('No variable name specified.')
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
@@ -2147,7 +1981,7 @@ class CmdStanVB:
         return self._metadata
 
     def stan_variable(
-        self, var: Optional[str] = None, *, name: Optional[str] = None
+        self, var: Optional[str] = None
     ) -> Union[np.ndarray, float]:
         """
         Return a numpy.ndarray which contains the estimates for the
@@ -2163,15 +1997,6 @@ class CmdStanVB:
         CmdStanMLE.stan_variable
         CmdStanGQ.stan_variable
         """
-        if name is not None:
-            if var is not None:
-                raise ValueError(
-                    'Cannot use both "var" and (deprecated) "name"'
-                )
-            get_logger().warning(
-                'Keyword "name" is deprecated, use "var" instead.'
-            )
-            var = name
         if var is None:
             raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:

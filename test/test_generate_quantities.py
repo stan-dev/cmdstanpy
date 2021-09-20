@@ -218,18 +218,6 @@ class GenerateQuantitiesTest(unittest.TestCase):
             bern_gqs.stan_variable(var='eta')
         with self.assertRaises(ValueError):
             bern_gqs.stan_variable(var='lp__')
-        with self.assertRaises(ValueError):
-            bern_gqs.stan_variable(var='lp__', name='theta')
-
-        with LogCapture() as log:
-            self.assertEqual(bern_gqs.stan_variable(name='theta').shape, (400,))
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Keyword "name" is deprecated, use "var" instead.',
-            )
-        )
 
         vars_dict = bern_gqs.stan_variables()
         var_names = list(
@@ -366,39 +354,6 @@ class GenerateQuantitiesTest(unittest.TestCase):
         y_rep = bern_gqs.stan_variable(var='y_rep')
         for i in range(10):
             self.assertEqual(y_rep[0, i], bern_data['y'][i])
-
-    def test_deprecated(self):
-        goodfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', 'bern')
-        csv_files = []
-        for i in range(4):
-            csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
-
-        # gq_model
-        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
-        model = CmdStanModel(stan_file=stan)
-        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=csv_files)
-        with LogCapture() as log:
-            self.assertEqual(bern_gqs.generated_quantities.shape, (400, 10))
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Property "generated_quantities" has been deprecated, '
-                'use method "draws" instead.',
-            )
-        )
-        with LogCapture() as log:
-            self.assertEqual(bern_gqs.generated_quantities_pd.shape, (400, 10))
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Property "generated_quantities_pd" has been deprecated, '
-                'use method "draws_pd" instead.',
-            )
-        )
 
     def test_no_xarray(self):
         with without_import('xarray', cmdstanpy.stanfit):

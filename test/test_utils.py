@@ -14,7 +14,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY, _TMPDIR
+from cmdstanpy import _DOT_CMDSTAN, _TMPDIR
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import (
     MaybeDictToFilePath,
@@ -59,10 +59,6 @@ class CmdStanPathTest(unittest.TestCase):
                 cmdstan_dir = os.path.expanduser(
                     os.path.join('~', _DOT_CMDSTAN)
                 )
-                if not os.path.exists(cmdstan_dir):
-                    cmdstan_dir = os.path.expanduser(
-                        os.path.join('~', _DOT_CMDSTANPY)
-                    )
                 install_version = os.path.join(
                     cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
                 )
@@ -115,10 +111,6 @@ class CmdStanPathTest(unittest.TestCase):
             self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
         else:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-            if not os.path.exists(cmdstan_dir):
-                cmdstan_dir = os.path.expanduser(
-                    os.path.join('~', _DOT_CMDSTANPY)
-                )
             install_version = os.path.join(
                 cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
             )
@@ -131,10 +123,6 @@ class CmdStanPathTest(unittest.TestCase):
             install_version = os.environ.get('CMDSTAN')
         else:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-            if not os.path.exists(cmdstan_dir):
-                cmdstan_dir = os.path.expanduser(
-                    os.path.join('~', _DOT_CMDSTANPY)
-                )
 
             install_version = os.path.join(
                 cmdstan_dir, get_latest_cmdstan(cmdstan_dir)

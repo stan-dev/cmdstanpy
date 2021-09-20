@@ -1,6 +1,5 @@
 """CmdStanModel"""
 
-import logging
 import os
 import platform
 import re
@@ -78,7 +77,6 @@ class CmdStanModel:
         compile: bool = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
-        logger: Optional[logging.Logger] = None,
     ) -> None:
         """
         Initialize object given constructor args.
@@ -96,11 +94,6 @@ class CmdStanModel:
         self._compiler_options = CompilerOptions(
             stanc_options=stanc_options, cpp_options=cpp_options
         )
-        if logger is not None:
-            get_logger().warning(
-                "Parameter 'logger' is deprecated."
-                " Control logging behavior via logging.getLogger('cmdstanpy')"
-            )
 
         if model_name is not None:
             if not model_name.strip():

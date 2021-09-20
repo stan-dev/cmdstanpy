@@ -140,7 +140,7 @@ The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all St
     fit.draws().shape 
     fit.draws(concat_chains=True).shape 
 
-    draws_theta = fit.stan_variable(name='theta') 
+    draws_theta = fit.stan_variable(var='theta') 
     draws_theta.shape 
 
                         
