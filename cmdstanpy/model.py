@@ -10,7 +10,7 @@ from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, TextIO, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -35,6 +35,12 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
+)
+
+from cmdstanpy import (
+    _CMDSTAN_SAMPLING,
+    _CMDSTAN_WARMUP,
+    _CMDSTAN_REFRESH,
 )
 
 
@@ -562,7 +568,8 @@ class CmdStanModel:
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
         save_profile: bool = False,
-        show_progress: Union[bool, str] = False,
+        show_progress: bool = False,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMCMC:
@@ -721,9 +728,12 @@ class CmdStanModel:
             https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
             section "Profiling CSV output file" for details.
 
-        :param show_progress: Use tqdm progress bar to show sampling progress.
-            If show_progress=='notebook' use tqdm_notebook
-            (needs nodejs for jupyter).
+        :param show_progress: If True, display progress bar to track
+            progress for warmup and sampling iterations.  If no progress bar
+            package available, will stream all CmdStan messages to the console.
+
+        :param show_console: If True, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is False.
 
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
@@ -796,23 +806,7 @@ class CmdStanModel:
         )
         os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
 
-        if show_progress:
-            try:
-                import tqdm
-
-                get_logger().propagate = False
-            except ImportError:
-                get_logger().warning(
-                    (
-                        'Package tqdm not installed, cannot show progress '
-                        'information. Please install tqdm with '
-                        "'pip install tqdm'"
-                    )
-                )
-                show_progress = False
-
         # TODO:  issue 49: inits can be initialization function
-
         sampler_args = SamplerArgs(
             iter_warmup=iter_warmup,
             iter_sampling=iter_sampling,
@@ -845,59 +839,32 @@ class CmdStanModel:
             )
             runset = RunSet(
                 args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
-            )
-            # pbar = None
-            # all_pbars = []
+            )  # bookkeeping object for command, result, filepaths
+
+            # progress reporting
+            if show_progress:
+                try:
+                    from tqdm.autonotebook import tqdm
+                except ImportError:
+                    get_logger().warning(
+                        (
+                            'Package tqdm not installed, cannot show progress '
+                            'information. Please install tqdm with '
+                            "'pip install tqdm'"
+                        )
+                    )
+                    show_progress = False
+                    show_console = True
 
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
-                    # if show_progress:
-                    #     if (
-                    #         isinstance(show_progress, str)
-                    #         and show_progress.lower() == 'notebook'
-                    #     ):
-                    #         try:
-                    #             tqdm_pbar = tqdm.tqdm_notebook
-                    #         except ImportError:
-                    #             msg = (
-                    #                 'Cannot import tqdm.tqdm_notebook.\n'
-                    #                 'Functionality is only supported on the '
-                    #                 'Jupyter Notebook and compatible platforms'
-                    #                 '.\nPlease follow the instructions in '
-                    #                 'https://github.com/tqdm/tqdm/issues/394#'
-                    #                 'issuecomment-384743637 and remember to '
-                    #                 'stop & start your jupyter server.'
-                    #             )
-                    #             get_logger().warning(msg)
-                    #             tqdm_pbar = tqdm.tqdm
-                    #     else:
-                    #         tqdm_pbar = tqdm.tqdm
-                    #     # enable dynamic_ncols for advanced users
-                    #     # currently hidden feature
-                    #     dynamic_ncols_raw = os.environ.get(
-                    #         'TQDM_DYNAMIC_NCOLS', 'False'
-                    #     )
-                    #     if dynamic_ncols_raw.lower() in ['0', 'false']:
-                    #         dynamic_ncols = False
-                    #     else:
-                    #         dynamic_ncols = True
-                    #     pbar = tqdm_pbar(
-                    #         desc='Chain {} - warmup'.format(i + 1),
-                    #         position=i,
-                    #         total=1,  # Will set total from Stan's output
-                    #         dynamic_ncols=dynamic_ncols,
-                    #     )
-                    #     all_pbars.append(pbar)
-                    # executor.submit(self._run_cmdstan, runset, i, pbar)
-                    print('892: {}'.format(i))
-                    executor.submit(self._run_cmdstan, runset, i)
-
-            # Closing all progress bars
-            # for pbar in all_pbars:
-            #     pbar.close()
-            # if show_progress:
-            #     # re-enable logger for console
-            #     get_logger().propagate = True
+                    executor.submit(
+                        self._run_cmdstan,
+                        runset,
+                        i,
+                        show_progress,
+                        show_console,
+                    )
 
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
@@ -1223,12 +1190,20 @@ class CmdStanModel:
         return vb
 
     def _run_cmdstan(
-        self, runset: RunSet, idx: int = 0, pbar: Any = None
+        self,
+        runset: RunSet,
+        idx: int = 0,
+        show_progress: bool = False,
+        show_console: bool = False,
     ) -> None:
         """
-        Encapsulates call to CmdStan.
-        Spawn process, capture console output to file, record returncode.
+        Helper function which encapsulates call to CmdStan.
+        Uses subprocess POpen object to run the process.
+        Records stdout, stderr messages, and process returncode.
+        Args 'show_progress' and 'show_console' allow use of progress bar,
+        streaming output to console, respectively.
         """
+
         cmd = runset.cmds[idx]
         get_logger().info('start chain %u', idx + 1)
         get_logger().debug(
@@ -1236,6 +1211,7 @@ class CmdStanModel:
         )
         get_logger().info('sampling: %s', cmd)
         try:
+            fd_out = open(runset.stdout_files[idx], 'w')
             proc = subprocess.Popen(
                 cmd,
                 bufsize=1,
@@ -1245,120 +1221,120 @@ class CmdStanModel:
                 env=os.environ,
                 universal_newlines=True,
             )
-            # if pbar:
-            #     stdout_pbar = self._read_progress(proc, pbar, idx)
-            # initialize pbar object
-            
-            with open(runset.stdout_files[idx], 'w') as fd_out:
-                while proc.poll() is None and proc.stdout is not None:
-                    output = proc.stdout.readline()
-                    if len(output) > 0:
-                        fd_out.write(output)
-                        if len(output) > 2:
-                            output = output.strip()
-                            print('chain {}: {}\n'.format(idx+1, output), end='')
-                        # send output to pbar
-
-                stdout, _ = proc.communicate()
-                if stdout:
-                    fd_out.write(stdout)
-                    
-            # close pbar object
-
-            get_logger().info('finish chain %u', idx + 1)
-            runset._set_retcode(idx, proc.returncode)
-
-            if proc.returncode != 0:
-                if proc.returncode < 0:
-                    msg = 'Chain {} terminated by signal {}'.format(
-                        idx + 1, proc.returncode
-                    )
-                elif proc.returncode < 125:
-                    msg = 'Chain {} processing error'.format(idx + 1)
-                    msg = '{}, return code {}'.format(msg, proc.returncode)
-                    # msg = '{} Console output\n {}'.format(msg, console)
-                elif proc.returncode > 128:
-                    msg = 'Chain {} system error'.format(idx + 1)
-                    msg = '{}, terminated by signal {}'.format(
-                        msg, proc.returncode - 128
-                    )
-                else:
-                    msg = 'Chain {} unknown error'.format(idx + 1)
-                get_logger().error(msg)
+            prog_report = ProgressReporter(
+                proc=proc,
+                fd=fd_out,
+                show_pbar=show_progress,
+                show_console=show_console,
+            )
+            if show_progress:
+                try:
+                    from tqdm.autonotebook import tqdm  # checked by caller
+                    get_logger().propagate = False
+                    desc = 'chain {}'.format(idx + 1)
+                    pbar = tqdm(iter(prog_report), desc=desc, dynamic_ncols=True, leave=True)
+                    for j in pbar:
+                        pass
+                except StopIteration:
+                    pass
+                finally:
+                    pbar.close()
+                    get_logger().propagate = True
             else:
-                with open(runset.stdout_files[idx], 'r') as fd:
-                    console = fd.read()
-                    if 'running fixed_param sampler' in console:
-                        sampler_args = runset._args.method_args
-                        assert isinstance(
-                            sampler_args, SamplerArgs
-                        )  # make the typechecker happy
-                        sampler_args.fixed_param = True
+                try:
+                    for i in (iter(prog_report)):
+                        pass
+                except StopIteration:
+                    pass
 
-
+            stdout, _ = proc.communicate()
+            if stdout:
+                fd_out.write(stdout)
+            fd_out.close()
 
         except OSError as e:
-            msg = 'Chain {} encounted error: {}\n'.format(idx + 1, str(e))
+            msg = 'Failed with error {}\n'.format(str(e))
             raise RuntimeError(msg) from e
+        finally:
+            fd_out.close()
 
-    # pylint: disable=no-self-use
-    def _read_progress(
+        get_logger().info('finish chain %u', idx + 1)
+        runset._set_retcode(idx, proc.returncode)
+
+        if proc.returncode != 0:
+            if proc.returncode < 0:
+                msg = 'Chain {} terminated by signal {}'.format(
+                    idx + 1, proc.returncode
+                )
+            elif proc.returncode < 125:
+                msg = 'Chain {} processing error'.format(idx + 1)
+                msg = '{}, return code {}'.format(msg, proc.returncode)
+                # msg = '{} Console output\n {}'.format(msg, console)
+            elif proc.returncode > 128:
+                msg = 'Chain {} system error'.format(idx + 1)
+                msg = '{}, terminated by signal {}'.format(
+                    msg, proc.returncode - 128
+                )
+            else:
+                msg = 'Chain {} unknown error'.format(idx + 1)
+                get_logger().error(msg)
+        else:
+            with open(runset.stdout_files[idx], 'r') as fd:
+                console = fd.read()
+                if 'running fixed_param sampler' in console:
+                    sampler_args = runset._args.method_args
+                    assert isinstance(
+                        sampler_args, SamplerArgs
+                    )  # make the typechecker happy
+                    sampler_args.fixed_param = True
+
+
+class ProgressReporter:
+    """
+    Generator which processes CmdStan sampler stdout, stderr.
+    Tracks pct of iterations completed, sampler phase (warmup, sampling).
+    """
+
+    def __init__(
         self,
-        proc: subprocess.Popen,  # [] - Popoen is only generic in 3.9
-        pbar: Any,
-        idx: int,
-    ) -> bytes:
-        """
-        Update tqdm progress bars according to CmdStan console progress msgs.
-        Poll process to get CmdStan console outputs,
-        check for output lines that start with 'Iteration: '.
-        NOTE: if CmdStan output messages change, this will break.
-        """
-        pattern = (
-            r'^Iteration\:\s*(\d+)\s*/\s*(\d+)\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
-        )
-        pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
-        previous_count = 0
-        stdout = b''
-        changed_description = False  # Changed from 'warmup' to 'sample'
-        pbar.set_description(desc=f'Chain {idx + 1} - warmup', refresh=True)
+        proc: Any,
+        fd: TextIO,
+        show_pbar: bool = False,
+        show_console: bool = False,
+    ):
+        self.proc = proc
+        self.fd = fd
+        self.show_pbar = show_pbar
+        self.show_console = show_console
+        self._iters_done = 0
+        self._phase = 'Warmup'
+        pat = r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
+        self.pattern = re.compile(pat, flags=re.IGNORECASE)
 
-        try:
-            # iterate while process is sampling
-            while proc.poll() is None and proc.stdout is not None:
-                output = proc.stdout.readline()
-                stdout += output
-                output = output.decode('utf-8').strip()
-                if output.startswith('Iteration'):
-                    match = re.search(pattern_compiled, output)
-                    if match:
-                        current_count = int(match.group(1))
-                        total_count = int(match.group(2))
+    def __iter__(self):
+        while self.proc.poll() is None:
+            if self.proc.stdout is not None:
+                line = self.proc.stdout.readline()
+                self.fd.write(line)
+                line = line.strip()
+                if self.show_console and len(line) > 1:
+                    print(line)
+                if self.show_pbar:
+                    if line.startswith("Elapsed"):
+                        self._phase = 'Done'
+                        return self._iters_done
+                    if line.startswith("Iteration"):
+                        match = re.search(self.pattern, line)
+                        if match:
+                            self._iters_done = int(match.group(1))
+                            self._phase = str(match.group(2))
+                            yield self._iters_done
+                        else:  # shouldn't happen
+                            raise StopIteration
 
-                        if pbar.total != total_count:
-                            pbar.reset(total=total_count)
+    def __len__(self) -> int:
+        return 1
 
-                        if (
-                            match.group(3).lower() == 'sampling'
-                            and not changed_description
-                        ):
-                            pbar.set_description(f'Chain {idx + 1} - sample')
-                            changed_description = True
-
-                        pbar.update(current_count - previous_count)
-                        previous_count = current_count
-
-            pbar.set_description(f'Chain {idx + 1} -   done', refresh=True)
-
-            if 'notebook' in type(pbar).__name__:
-                # In Jupyter make the bar green by closing it
-                pbar.close()
-
-        except Exception as e:  # pylint: disable=broad-except
-            get_logger().warning(
-                'Chain %s: Failed to read the progress on the fly. Error: %s',
-                idx,
-                repr(e),
-            )
-
-        return stdout
+    @property
+    def phase(self) -> str:
+        return self._phase
