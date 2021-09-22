@@ -842,6 +842,18 @@ class CmdStanModel:
             )  # bookkeeping object for command, result, filepaths
 
             # progress reporting
+            iter_total = 0
+            if iter_warmup is None:
+                iter_total += _CMDSTAN_WARMUP
+            else:
+                iter_total += iter_warmup
+            if iter_sampling is None:
+                iter_total += _CMDSTAN_SAMPLING
+            else:
+                iter_total += iter_sampling
+            if refresh is None:
+                refresh = _CMDSTAN_REFRESH
+                
             if show_progress:
                 try:
                     from tqdm.autonotebook import tqdm
@@ -864,6 +876,8 @@ class CmdStanModel:
                         i,
                         show_progress,
                         show_console,
+                        iter_total,
+                        refresh
                     )
 
             if not runset._check_retcodes():
@@ -1195,6 +1209,8 @@ class CmdStanModel:
         idx: int = 0,
         show_progress: bool = False,
         show_console: bool = False,
+        iter_total: int = 2000,  # CMDSTAN defaults
+        refresh: int = 100
     ) -> None:
         """
         Helper function which encapsulates call to CmdStan.
@@ -1226,17 +1242,28 @@ class CmdStanModel:
                 fd=fd_out,
                 show_pbar=show_progress,
                 show_console=show_console,
+                iter_total = iter_total
             )
             if show_progress:
                 try:
                     from tqdm.autonotebook import tqdm  # checked by caller
                     get_logger().propagate = False
-                    desc = 'chain {}'.format(idx + 1)
-                    pbar = tqdm(iter(prog_report), desc=desc, dynamic_ncols=True, leave=True)
+                    pbar = tqdm(
+                        iter(prog_report),
+                        total=iter_total, colour='yellow',
+                        bar_format="{desc} |{bar}| {postfix[0][value]}",
+                        postfix = [dict(value="Status")],
+                        desc = 'chain {}'.format(idx + 1)
+                    )
                     for j in pbar:
-                        pass
+                        if prog_report.phase == 'Sampling':
+                            pbar.colour = 'blue'
+                        pbar.postfix[0]["value"] = prog_report.progress
+                        pbar.update(refresh)
                 except StopIteration:
-                    pass
+                    print("stop!")
+                except BaseException as e:
+                    print("an error occurred: %s" % e)
                 finally:
                     pbar.close()
                     get_logger().propagate = True
@@ -1251,15 +1278,15 @@ class CmdStanModel:
             if stdout:
                 fd_out.write(stdout)
             fd_out.close()
-
         except OSError as e:
             msg = 'Failed with error {}\n'.format(str(e))
             raise RuntimeError(msg) from e
         finally:
             fd_out.close()
 
-        get_logger().info('finish chain %u', idx + 1)
         runset._set_retcode(idx, proc.returncode)
+        if not show_progress:
+            get_logger().info('finish chain %u', idx + 1)
 
         if proc.returncode != 0:
             if proc.returncode < 0:
@@ -1291,8 +1318,10 @@ class CmdStanModel:
 
 class ProgressReporter:
     """
-    Generator which processes CmdStan sampler stdout, stderr.
-    Tracks pct of iterations completed, sampler phase (warmup, sampling).
+    Iterator which processes CmdStan sampler stdout, stderr.
+    Tracks iterations, sampler phase (warmup, sampling).
+    Can be used as generator for progress bars or on its own in order
+    to prevent stdout and stderr from blocking.
     """
 
     def __init__(
@@ -1301,13 +1330,15 @@ class ProgressReporter:
         fd: TextIO,
         show_pbar: bool = False,
         show_console: bool = False,
+        iter_total: int = 0
     ):
         self.proc = proc
         self.fd = fd
         self.show_pbar = show_pbar
         self.show_console = show_console
-        self._iters_done = 0
-        self._phase = 'Warmup'
+        self._iter = 0
+        self._total = iter_total
+        self._progress = 'Not started'
         pat = r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
         self.pattern = re.compile(pat, flags=re.IGNORECASE)
 
@@ -1321,20 +1352,22 @@ class ProgressReporter:
                     print(line)
                 if self.show_pbar:
                     if line.startswith("Elapsed"):
-                        self._phase = 'Done'
-                        return self._iters_done
+                        return self._iter
                     if line.startswith("Iteration"):
+                        self._progress = line
                         match = re.search(self.pattern, line)
                         if match:
-                            self._iters_done = int(match.group(1))
-                            self._phase = str(match.group(2))
-                            yield self._iters_done
-                        else:  # shouldn't happen
-                            raise StopIteration
+                            self._iter = int(match.group(1))
+                            self._phase = match.group(2)
+                        yield self._iter
 
-    def __len__(self) -> int:
-        return 1
+    def __len__(self):
+        return self.iter_total
 
     @property
     def phase(self) -> str:
         return self._phase
+
+    @property
+    def progress(self) -> str:
+        return self._progress
