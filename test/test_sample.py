@@ -318,7 +318,7 @@ class SampleTest(unittest.TestCase):
             dirname2 = 'tmp2' + str(time())
             path = os.path.join(dirname1, dirname2)
             with self.assertRaisesRegex(
-                ValueError, 'invalid path for output files'
+                ValueError, 'Invalid path for output files'
             ):
                 bern_model.sample(data=jdata, chains=1, output_dir=path)
             os.rmdir(dirname1)
@@ -804,7 +804,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             iter_sampling=200,
             metric=jmetric,
         )
-
         jmetric2 = os.path.join(DATAFILES_PATH, 'bernoulli.metric-2.json')
         bern_model.sample(
             data=jdata,
@@ -814,6 +813,64 @@ class CmdStanMCMCTest(unittest.TestCase):
             iter_sampling=200,
             metric=[jmetric, jmetric2],
         )
+        # read json in as dict
+        with open(jmetric) as fd:
+            metric_dict_1 = json.load(fd)
+        with open(jmetric2) as fd:
+            metric_dict_2 = json.load(fd)
+        bern_model.sample(
+            data=jdata,
+            chains=4,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=200,
+            metric=metric_dict_1,
+        )
+        bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            iter_sampling=200,
+            metric=[metric_dict_1, metric_dict_2],
+        )
+        with self.assertRaisesRegex(
+            ValueError, 'Number of metric files must match number of chains,'
+        ):
+            bern_model.sample(
+                data=jdata,
+                chains=4,
+                parallel_chains=2,
+                seed=12345,
+                iter_sampling=200,
+                metric=[metric_dict_1, metric_dict_2],
+            )
+        # metric mismatches - (not appropriate for bernoulli)
+        with open(os.path.join(DATAFILES_PATH, 'metric_diag.data.json')) as fd:
+            metric_dict_1 = json.load(fd)
+        with open(os.path.join(DATAFILES_PATH, 'metric_dense.data.json')) as fd:
+            metric_dict_2 = json.load(fd)
+        with self.assertRaisesRegex(
+            ValueError, 'Found inconsistent "inv_metric" entry'
+        ):
+            bern_model.sample(
+                data=jdata,
+                chains=2,
+                seed=12345,
+                iter_sampling=200,
+                metric=[metric_dict_1, metric_dict_2],
+            )
+        # metric dict, no "inv_metric":
+        some_dict = {"foo": [1, 2, 3]}
+        with self.assertRaisesRegex(
+            ValueError, 'Entry "inv_metric" not found in metric dict.'
+        ):
+            bern_model.sample(
+                data=jdata,
+                chains=2,
+                seed=12345,
+                iter_sampling=200,
+                metric=some_dict,
+            )
 
     def test_custom_step_size(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -1661,6 +1718,19 @@ class CmdStanMCMCTest(unittest.TestCase):
 
             with self.assertRaises(RuntimeError):
                 bern_fit.draws_xr()
+
+    def test_single_row_csv(self):
+        stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.sample(iter_sampling=1, chains=1)
+        z_as_ndarray = fit.stan_variable(var="z")
+        self.assertEqual(z_as_ndarray.shape, (1, 4, 3))  # flattens chains
+        z_as_xr = fit.draws_xr(vars="z")
+        self.assertEqual(z_as_xr.z.data.shape, (1, 1, 4, 3))  # keeps chains
+        for i in range(4):
+            for j in range(3):
+                self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
+                self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
 
 
 if __name__ == '__main__':

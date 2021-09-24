@@ -37,6 +37,7 @@ atexit.register(_cleanup_tmpdir)
 
 
 from ._version import __version__  # noqa
+from .install_cmdstan import rebuild_cmdstan
 from .model import CmdStanModel  # noqa
 from .stanfit import (  # noqa
     CmdStanGQ,
@@ -69,4 +70,5 @@ __all__ = [
     'from_csv',
     'write_stan_json',
     'show_versions',
+    'rebuild_cmdstan',
 ]
