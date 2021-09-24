@@ -33,7 +33,7 @@ from cmdstanpy.utils import (
     get_logger,
     pushd,
     validate_dir,
-    wrap_progress_hook,
+    wrap_url_progress_hook,
     do_command,
 )
 
@@ -55,9 +55,9 @@ def usage() -> None:
     Arguments:
         -v (--version) : CmdStan version
         -d (--dir) : install directory
-        --verbose : show CmdStan build messages
-        --progress : show progress bar for CmdStan download
         --overwrite : replace installed version
+        --progress : show progress bar for CmdStan download
+        --verbose : show CmdStan build messages
         """
 
     if platform.system() == "Windows":
@@ -69,51 +69,76 @@ def usage() -> None:
 
 
 def install_version(
-        cmdstan_version: str,
-        verbose: bool = False,
-        progress: bool = False,
-        overwrite: bool = False,
-        ) -> None:
+    cmdstan_version: str,
+    overwrite: bool = False,
+    progress: bool = False,
+    verbose: bool = False,
+) -> None:
     """
     Build specified CmdStan version by spawning subprocesses to
     run the Make utility on the downloaded CmdStan release src files.
     Assumes that current working directory is parent of release dir.
 
     :param cmdstan_version: CmdStan release, corresponds to release dirname.
-    :param verbose: when ``True``, print all console msgs to stdout.
     :param overwrite: when ``True``, run ``make clean-all`` before building.
+    :param oprogress: when ``True``, display progress bar.
+    :param verbose: when ``True``, print all console msgs to stdout.
     """
+
+    pbar = None
     if progress:
-        try:
-            from tqdm.autonotebook import tqdm  # noqa: F401
-            tqdm(i for i in range(2))  # TODO: make this fly
-        except ImportError:
-            get_logger().warning(
-                'Package tqdm not installed, cannot show progress '
-                'information. Please install tqdm with '
-                "'pip install tqdm'"
-            )
-            progress = False
+        from tqdm.autonotebook import tqdm
 
     with pushd(cmdstan_version):
         make = os.getenv(
             'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
         )
-        print('Building version {}'.format(cmdstan_version))
         if overwrite:
             print(
                 'Overwrite requested, remove existing build of version '
                 '{}'.format(cmdstan_version)
             )
             try:
-                do_command(cmd=[make, 'clean-all'], show_console=verbose)
+                if progress:
+                    pbar = tqdm(
+                        ncols=20,
+                        position=0,
+                        leave=False,
+                        desc=f'{make} clean-all',
+                        colour='magenta',
+                    )
+                else:
+                    pbar = None
+                do_command(
+                    cmd=[make, 'clean-all'], show_console=verbose, pbar=pbar
+                )
             except RuntimeError as e:
                 raise CmdStanInstallError(e)
-            print('Rebuilding version {}'.format(cmdstan_version))
+            finally:
+                if pbar is not None:
+                    pbar.close()
+
+        print(
+            'Building version {}. (Now might be a good time '
+            'for a cup of tea.)'.format(cmdstan_version)
+        )
         try:
-            do_command(cmd=[make, 'build'], show_console=verbose)
+            if progress:
+                pbar = tqdm(
+                    ncols=80,
+                    position=0,
+                    leave=False,
+                    desc=f'{make} build',
+                    colour='blue',
+                )
+            else:
+                pbar = None
+            do_command(cmd=[make, 'build'], show_console=verbose, pbar=pbar)
         except RuntimeError as e:
             raise CmdStanInstallError(e)
+        finally:
+            if pbar is not None:
+                pbar.close()
 
         if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
             raise CmdStanInstallError(
@@ -125,7 +150,8 @@ def install_version(
                 f"bin/stansummary{EXTENSION} not found"
                 ", please rebuild or report a bug!"
             )
-        print('Test model compilation')
+
+        print('Testing model compilation: Stan to C++ to executable')
         cmd = [
             make,
             Path(
@@ -145,11 +171,22 @@ def install_version(
                 )
             )
         try:
-            do_command(cmd, show_console=verbose)
+            if progress:
+                pbar = tqdm(
+                    ncols=80,
+                    position=0,
+                    leave=False,
+                    desc=f'{cmd}',
+                    colour='green',
+                )
+            do_command(cmd, show_console=verbose, pbar=pbar)
         except RuntimeError as e:
             msgs = 'Error while running command "{}: {}".'.format(cmd, str(e))
             raise CmdStanInstallError('\n'.join(msgs))
-    print('Installed {}'.format(cmdstan_version))
+        finally:
+            if pbar is not None:
+                pbar.close()
+        print('Installed {}'.format(cmdstan_version))
 
 
 def is_version_available(version: str) -> bool:
@@ -216,10 +253,12 @@ def latest_version() -> str:
     return tag  # type: ignore
 
 
-def retrieve_version(version: str, progress: bool = True) -> None:
+def retrieve_version(version: str, progress: bool = False) -> None:
     """Download specified CmdStan version."""
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
+    if progress:
+        from tqdm.autonotebook import tqdm
     print('Downloading CmdStan version {}'.format(version))
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
@@ -230,7 +269,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             if progress:
                 progress_hook: Optional[
                     Callable[[int, int, int], None]
-                ] = wrap_progress_hook()
+                ] = wrap_url_progress_hook()
             else:
                 progress_hook = None
             file_tmp, _ = urllib.request.urlretrieve(
@@ -261,12 +300,23 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             ) from e
     print('Download successful, file: {}'.format(file_tmp))
     try:
+        print('Extracting distribution')
         tar = tarfile.open(file_tmp)
         target = os.getcwd()
         if platform.system() == 'Windows':
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
-        tar.extractall(target)
+
+        if progress:
+            for member in tqdm(
+                iterable=tar.getmembers(),
+                total=len(tar.getmembers()),
+                colour='blue',
+                leave=False,
+            ):
+                tar.extract(member=member)
+        else:
+            tar.extractall()
     except Exception as e:  # pylint: disable=broad-except
         raise CmdStanInstallError(
             'Failed to unpack file {}'.format(file_tmp)
@@ -294,6 +344,11 @@ def main() -> None:
         '--progress',
         action='store_true',
         help="flag, when specified show progress bar for CmdStan download",
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="flag, when specified stream all messages to console",
     )
     if platform.system() == 'Windows':
         # use compiler installed with install_cxx_toolchain
@@ -337,15 +392,19 @@ def main() -> None:
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    # if vars(args)['progress']:
-    #     progress = vars(args)['progress']
-    #     try:
-    #         # pylint: disable=unused-import
-    #         from tqdm import tqdm  # noqa: F401
-    #     except (ImportError, ModuleNotFoundError):
-    #         progress = False
-    # else:
-    #     progress = False
+    progress = False
+    if vars(args)['progress']:
+        progress = vars(args)['progress']
+        try:
+            # pylint: disable=unused-import
+            from tqdm.autonotebook import tqdm  # noqa: F401
+        except ImportError:
+            get_logger().warning(
+                'Package tqdm not installed, cannot show progress '
+                'information. Please install tqdm with '
+                "'pip install tqdm'"
+            )
+        vars(args)['progress'] = False
 
     if platform.system() == 'Windows' and vars(args)['compiler']:
         from .install_cxx_toolchain import is_installed as _is_installed_cxx
@@ -397,11 +456,11 @@ def main() -> None:
             )
         ):
             try:
-                #  retrieve_version(version, progress)
-                retrieve_version(version)
+                retrieve_version(version, progress)
                 install_version(
                     cmdstan_version=cmdstan_version,
                     overwrite=vars(args)['overwrite'],
+                    progress=progress,
                     verbose=vars(args)['verbose'],
                 )
             except RuntimeError as e:

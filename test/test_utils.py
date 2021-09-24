@@ -766,7 +766,7 @@ class DoCommandTest(unittest.TestCase):
     def test_good(self):
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            retcode = do_command(cmd=['ls'], cwd=HERE)
+            retcode = do_command(cmd=['ls'], cwd=HERE, show_console=True)
         console = sys_stdout.getvalue()
         self.assertTrue('test_utils.py' in console)
         self.assertEqual(retcode, 0)
@@ -811,6 +811,7 @@ class FlattenTest(unittest.TestCase):
         array_2d = np.empty((200, 4))
         with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
             flatten_chains(array_2d)
+
 
 class SamplerProgressTest(unittest.TestCase):
     def test_progress_reporter(self):

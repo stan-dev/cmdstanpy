@@ -340,7 +340,12 @@ class CmdStanModel:
                     cmd.append(Path(exe_file).as_posix())
                     try:
                         sink = io.StringIO()
-                        do_command(cmd=cmd, cwd=cmdstan_path(), sink=sink)
+                        do_command(
+                            cmd=cmd,
+                            cwd=cmdstan_path(),
+                            show_console=True,
+                            sink=sink,
+                        )
                         msgs = sink.getvalue()
                         if 'Warning or error:' in msgs:
                             msg = msgs.split("Warning or error:", 1)[1].strip()
@@ -865,11 +870,9 @@ class CmdStanModel:
                     from tqdm.autonotebook import tqdm  # noqa: F401
                 except ImportError:
                     get_logger().warning(
-                        (
-                            'Package tqdm not installed, cannot show progress '
-                            'information. Please install tqdm with '
-                            "'pip install tqdm'"
-                        )
+                        'Package tqdm not installed, cannot show progress '
+                        'information. Please install tqdm with '
+                        "'pip install tqdm'"
                     )
                     show_progress = False
                     show_console = True
@@ -1244,7 +1247,7 @@ class CmdStanModel:
                 env=os.environ,
                 universal_newlines=True,
             )
-            prog_report = SamplerProgress(
+            reporter = SamplerProgress(
                 proc=proc,
                 fd=fd_out,
                 show_pbar=show_progress,
@@ -1259,18 +1262,18 @@ class CmdStanModel:
                     from tqdm.autonotebook import tqdm  # checked by caller
 
                     pbar = tqdm(
-                        iter(prog_report),
+                        iter(reporter),
                         total=iter_total,
                         bar_format="{desc} |{bar}| {postfix[0][value]}",
                         postfix=[dict(value="Status")],
                         desc='chain {}'.format(idx + 1),
-                        colour='magenta',
+                        colour='orange',
                         leave=False,  # cleans terminal, leaves on notebook
                     )
                     for i in pbar:
-                        if prog_report.phase == 'Sampling':
+                        if reporter.phase == 'Sampling':
                             pbar.colour = 'blue'
-                        pbar.postfix[0]["value"] = prog_report.progress
+                        pbar.postfix[0]["value"] = reporter.progress
                 except StopIteration:
                     pass
                 finally:
@@ -1278,7 +1281,7 @@ class CmdStanModel:
                     get_logger().propagate = True
             else:
                 try:
-                    for i in iter(prog_report):
+                    for i in iter(reporter):
                         pass
                 except StopIteration:
                     pass

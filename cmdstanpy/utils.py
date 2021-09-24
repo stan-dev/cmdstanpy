@@ -925,8 +925,10 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
-    show_console: bool = True,
-    sink: Optional[TextIO] = None
+    *,
+    show_console: bool = False,
+    sink: Optional[TextIO] = None,
+    pbar: Any = None,
 ) -> int:
     """
     Run command as subprocess
@@ -938,10 +940,12 @@ def do_command(
     :param show_console: when ``True``, streams stdout to sys.stdout.
         Default is ``True``.
     :param sink: when specified, sends stdout to this stream as well.
+    :param pbar: must be tqdm progress bar, updates by lines read from stdout.
+        Default is ``None``.
 
     :return: 0 on success
     """
-    get_logger().debug('cmd: %s', cmd)
+    get_logger().debug('cmd: %s', ' '.join(cmd))
     try:
         proc = subprocess.Popen(
             cmd,
@@ -953,13 +957,17 @@ def do_command(
             env=os.environ,
             universal_newlines=True,
         )
-        while proc.poll() is None and proc.stdout is not None:
-            output = proc.stdout.readline()
-            if len(output) > 0:
-                if show_console:
-                    sys.stdout.write(output)
+        while proc.poll() is None:
+            if proc.stdout is not None:
+                line = proc.stdout.readline()
                 if sink is not None:
-                    sink.write(output)
+                    sink.write(line)
+                line = line.strip()
+                if len(line) > 1:
+                    if show_console:
+                        print(line)
+                    if pbar is not None:
+                        pbar.update()
 
         stdout, _ = proc.communicate()
         if stdout:
@@ -1134,6 +1142,7 @@ def install_cmdstan(
     dir: Optional[str] = None,
     overwrite: bool = False,
     verbose: bool = False,
+    progress: bool = False,
     compiler: bool = False,
 ) -> bool:
     """
@@ -1174,6 +1183,8 @@ def install_cmdstan(
         cmd.extend(['--dir', dir])
     if overwrite:
         cmd.append('--overwrite')
+    if progress:
+        cmd.append('--progress')
     if verbose:
         cmd.append('--verbose')
     if compiler:
@@ -1232,14 +1243,17 @@ def pushd(new_dir: str) -> Iterator[None]:
     os.chdir(previous_dir)
 
 
-def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
+def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
+    """Sets up tqdm callback for url downloads."""
     try:
-        from tqdm import tqdm
+        from tqdm.autonotebook import tqdm
 
         pbar = tqdm(
             unit='B',
             unit_scale=True,
             unit_divisor=1024,
+            colour='blue',
+            leave=False,
         )
 
         def download_progress_hook(
@@ -1426,30 +1440,3 @@ class SamplerProgress:
     @property
     def progress(self) -> str:
         return self._progress
-
-
-class ComandProgress:
-    """
-    Iterator which track messages sent to process stdout.
-    """
-
-    def __init__(
-        self,
-        proc: Any,
-        show_console: bool = False,
-    ):
-        self.proc = proc
-        self.show_console = show_console
-        self._iter = 0
-        self._progress = 'Not started'
-
-    def __iter__(self):
-        while self.proc.poll() is None:
-            if self.proc.stdout is not None:
-                line = self.proc.stdout.readline()
-                line = line.strip()
-                if self.show_console and len(line) > 1:
-                    print(line)
-                self._iter += 1
-                yield self._iter
-        return self._iter

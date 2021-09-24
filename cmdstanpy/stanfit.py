@@ -924,7 +924,7 @@ class CmdStanMCMC:
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         cmd = [cmd_path] + self.runset.csv_files
         result = StringIO()
-        do_command(cmd=cmd, sink=result)
+        do_command(cmd=cmd, show_console=True, sink=result)
         return result.getvalue()
 
     def draws_pd(
