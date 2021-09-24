@@ -7,7 +7,6 @@ import math
 import os
 import re
 import shutil
-import sys
 from collections import Counter, OrderedDict
 from datetime import datetime
 from io import StringIO
@@ -895,7 +894,7 @@ class CmdStanMCMC:
             sig_figs_str,
             csv_str,
         ] + self.runset.csv_files
-        do_command(cmd)
+        do_command(cmd, show_console=False)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
                 fd,
@@ -924,17 +923,9 @@ class CmdStanMCMC:
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         cmd = [cmd_path] + self.runset.csv_files
-        try:
-            sys_stdout = sys.stdout
-            result = StringIO()
-            sys.stdout = result
-            do_command(cmd=cmd)
-            report = result.getvalue()
-            if report:
-                get_logger().info(report)
-            return report
-        finally:
-            sys.stdout = sys_stdout
+        result = StringIO()
+        do_command(cmd=cmd, sink=result)
+        return result.getvalue()
 
     def draws_pd(
         self,

@@ -10,9 +10,8 @@ Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
-   --verbose: flag, when specified prints output from CmdStan build process
+   --verbose : show CmdStan build messages
    --progress: flag, when specified show progress bar for CmdStan download
-
    -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse
@@ -20,22 +19,28 @@ import json
 import os
 import platform
 import re
-import subprocess
 import sys
 import tarfile
 import urllib.error
 import urllib.request
 from collections import OrderedDict
 from pathlib import Path
-from time import ctime, sleep
+from time import sleep
 from typing import Callable, Dict, Optional
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook, do_command
+from cmdstanpy.utils import (
+    get_logger,
+    pushd,
+    validate_dir,
+    wrap_progress_hook,
+    do_command,
+)
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
+# pylint: disable=raise-missing-from
 class CmdStanRetrieveError(RuntimeError):
     pass
 
@@ -50,9 +55,9 @@ def usage() -> None:
     Arguments:
         -v (--version) : CmdStan version
         -d (--dir) : install directory
-        --overwrite : replace installed version
         --verbose : show CmdStan build messages
         --progress : show progress bar for CmdStan download
+        --overwrite : replace installed version
         """
 
     if platform.system() == "Windows":
@@ -64,17 +69,32 @@ def usage() -> None:
 
 
 def install_version(
-    cmdstan_version: str, overwrite: bool = False, verbose: bool = False
-) -> None:
+        cmdstan_version: str,
+        verbose: bool = False,
+        progress: bool = False,
+        overwrite: bool = False,
+        ) -> None:
     """
     Build specified CmdStan version by spawning subprocesses to
     run the Make utility on the downloaded CmdStan release src files.
     Assumes that current working directory is parent of release dir.
 
     :param cmdstan_version: CmdStan release, corresponds to release dirname.
+    :param verbose: when ``True``, print all console msgs to stdout.
     :param overwrite: when ``True``, run ``make clean-all`` before building.
-    :param verbose: when ``True``, print build msgs to stdout.
     """
+    if progress:
+        try:
+            from tqdm.autonotebook import tqdm  # noqa: F401
+            tqdm(i for i in range(2))  # TODO: make this fly
+        except ImportError:
+            get_logger().warning(
+                'Package tqdm not installed, cannot show progress '
+                'information. Please install tqdm with '
+                "'pip install tqdm'"
+            )
+            progress = False
+
     with pushd(cmdstan_version):
         make = os.getenv(
             'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
@@ -86,12 +106,12 @@ def install_version(
                 '{}'.format(cmdstan_version)
             )
             try:
-                do_command([make, 'clean-all'])
+                do_command(cmd=[make, 'clean-all'], show_console=verbose)
             except RuntimeError as e:
                 raise CmdStanInstallError(e)
             print('Rebuilding version {}'.format(cmdstan_version))
         try:
-            do_command([make, 'build'])
+            do_command(cmd=[make, 'build'], show_console=verbose)
         except RuntimeError as e:
             raise CmdStanInstallError(e)
 
@@ -125,10 +145,9 @@ def install_version(
                 )
             )
         try:
-            do_command(cmd)
+            do_command(cmd, show_console=verbose)
         except RuntimeError as e:
-            if stderr:
-                msgs.append(stderr.decode('utf-8').strip())
+            msgs = 'Error while running command "{}: {}".'.format(cmd, str(e))
             raise CmdStanInstallError('\n'.join(msgs))
     print('Installed {}'.format(cmdstan_version))
 
@@ -272,11 +291,6 @@ def main() -> None:
         help="flag, when specified re-installs existing version",
     )
     parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help="flag, when specified prints output from CmdStan build process",
-    )
-    parser.add_argument(
         '--progress',
         action='store_true',
         help="flag, when specified show progress bar for CmdStan download",
@@ -323,15 +337,15 @@ def main() -> None:
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    if vars(args)['progress']:
-        progress = vars(args)['progress']
-        try:
-            # pylint: disable=unused-import
-            from tqdm import tqdm  # noqa: F401
-        except (ImportError, ModuleNotFoundError):
-            progress = False
-    else:
-        progress = False
+    # if vars(args)['progress']:
+    #     progress = vars(args)['progress']
+    #     try:
+    #         # pylint: disable=unused-import
+    #         from tqdm import tqdm  # noqa: F401
+    #     except (ImportError, ModuleNotFoundError):
+    #         progress = False
+    # else:
+    #     progress = False
 
     if platform.system() == 'Windows' and vars(args)['compiler']:
         from .install_cxx_toolchain import is_installed as _is_installed_cxx
@@ -383,7 +397,8 @@ def main() -> None:
             )
         ):
             try:
-                retrieve_version(version, progress)
+                #  retrieve_version(version, progress)
+                retrieve_version(version)
                 install_version(
                     cmdstan_version=cmdstan_version,
                     overwrite=vars(args)['overwrite'],

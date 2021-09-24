@@ -925,10 +925,21 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
-) -> Optional[str]:
+    show_console: bool = True,
+    sink: Optional[TextIO] = None
+) -> int:
     """
-    Spawn process, print stdout/stderr to console.
-    Throws RuntimeError on non-zero returncode.
+    Run command as subprocess
+    Raises ``RuntimeError`` on non-zero return code or execption ``OSError``.
+
+    :param cmd: command and args.
+    :param cwd: directory in which to run command, if unspecified,
+        run command in the current working directory.
+    :param show_console: when ``True``, streams stdout to sys.stdout.
+        Default is ``True``.
+    :param sink: when specified, sends stdout to this stream as well.
+
+    :return: 0 on success
     """
     get_logger().debug('cmd: %s', cmd)
     try:
@@ -945,11 +956,18 @@ def do_command(
         while proc.poll() is None and proc.stdout is not None:
             output = proc.stdout.readline()
             if len(output) > 0:
-                sys.stdout.write(output)
+                if show_console:
+                    sys.stdout.write(output)
+                if sink is not None:
+                    sink.write(output)
+
         stdout, _ = proc.communicate()
         if stdout:
             if len(stdout) > 0:
-                sys.stdout.write(stdout)
+                if show_console:
+                    sys.stdout.write(stdout)
+                if sink is not None:
+                    sink.write(stdout)
 
         if proc.returncode != 0:  # problem, throw RuntimeError with msg
             try:
@@ -971,7 +989,7 @@ def do_command(
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
-    return None  # success
+    return proc.returncode
 
 
 def windows_short_path(path: str) -> str:
@@ -1348,3 +1366,90 @@ class TemporaryCopiedFile:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+
+class SamplerProgress:
+    """
+    Iterator which processes CmdStan sampler stdout, stderr.
+    Tracks iterations, sampler phase (warmup, sampling).
+    Can be used as generator for progress bars or on its own in order
+    to prevent stdout and stderr from blocking.
+    """
+
+    def __init__(
+        self,
+        proc: Any,
+        fd: TextIO,
+        show_pbar: bool = False,
+        show_console: bool = False,
+        iter_total: int = 0,
+        chain: int = 0,
+    ):
+        self.proc = proc
+        self.fd = fd
+        self.show_pbar = show_pbar
+        self.show_console = show_console
+        self.chain = chain
+        self._total = iter_total
+        self._iter = 0
+        self._progress = 'Not started'
+        self._phase = 'Not started'
+        pat = r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
+        self.pattern = re.compile(pat, flags=re.IGNORECASE)
+
+    def __iter__(self):
+        while self.proc.poll() is None:
+            if self.proc.stdout is not None:
+                line = self.proc.stdout.readline()
+                self.fd.write(line)
+                line = line.strip()
+                if self.show_console and len(line) > 1:
+                    print(f'chain {self.chain}: {line}')
+                if self.show_pbar:
+                    if line.startswith("Elapsed"):
+                        return self._iter
+                    if line.startswith("Iteration"):
+                        self._progress = line
+                        match = re.search(self.pattern, line)
+                        if match:
+                            self._iter = int(match.group(1))
+                            self._phase = match.group(2)
+                        yield self._iter
+
+    def __len__(self):
+        return self._total
+
+    @property
+    def phase(self) -> str:
+        return self._phase
+
+    @property
+    def progress(self) -> str:
+        return self._progress
+
+
+class ComandProgress:
+    """
+    Iterator which track messages sent to process stdout.
+    """
+
+    def __init__(
+        self,
+        proc: Any,
+        show_console: bool = False,
+    ):
+        self.proc = proc
+        self.show_console = show_console
+        self._iter = 0
+        self._progress = 'Not started'
+
+    def __iter__(self):
+        while self.proc.poll() is None:
+            if self.proc.stdout is not None:
+                line = self.proc.stdout.readline()
+                line = line.strip()
+                if self.show_console and len(line) > 1:
+                    print(line)
+                self._iter += 1
+                yield self._iter
+        return self._iter

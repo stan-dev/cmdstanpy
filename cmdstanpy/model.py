@@ -1,5 +1,6 @@
 """CmdStanModel"""
 
+import io
 import logging
 import os
 import platform
@@ -10,7 +11,7 @@ from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, TextIO, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -31,6 +32,7 @@ from cmdstanpy.stanfit import (
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
+    SamplerProgress,
     TemporaryCopiedFile,
     cmdstan_path,
     do_command,
@@ -337,9 +339,11 @@ class CmdStanModel:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
                     try:
-                        msg = do_command(cmd, cmdstan_path())
-                        if msg is not None and 'Warning or error:' in msg:
-                            msg = msg.split("Warning or error:", 1)[1].strip()
+                        sink = io.StringIO()
+                        do_command(cmd=cmd, cwd=cmdstan_path(), sink=sink)
+                        msgs = sink.getvalue()
+                        if 'Warning or error:' in msgs:
+                            msg = msgs.split("Warning or error:", 1)[1].strip()
                             get_logger().warning(
                                 "stanc3 has produced warnings:\n%s", msg
                             )
@@ -853,10 +857,12 @@ class CmdStanModel:
                 iter_total += iter_sampling
             if refresh is None:
                 refresh = _CMDSTAN_REFRESH
-                
+            iter_total = iter_total / refresh + 3
+
+            # pylint: disable=unused-import
             if show_progress:
                 try:
-                    from tqdm.autonotebook import tqdm
+                    from tqdm.autonotebook import tqdm  # noqa: F401
                 except ImportError:
                     get_logger().warning(
                         (
@@ -868,6 +874,7 @@ class CmdStanModel:
                     show_progress = False
                     show_console = True
 
+            get_logger().info('sampling: %s', runset.cmds[0])
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
                     executor.submit(
@@ -877,9 +884,9 @@ class CmdStanModel:
                         show_progress,
                         show_console,
                         iter_total,
-                        refresh
                     )
 
+            get_logger().info('sampling completed')
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
                 msg = '{}Command and output files:\n{}'.format(
@@ -1203,14 +1210,14 @@ class CmdStanModel:
         vb = CmdStanVB(runset)
         return vb
 
+    # pylint: disable=no-self-use
     def _run_cmdstan(
         self,
         runset: RunSet,
         idx: int = 0,
         show_progress: bool = False,
         show_console: bool = False,
-        iter_total: int = 2000,  # CMDSTAN defaults
-        refresh: int = 100
+        iter_total: int = 0,
     ) -> None:
         """
         Helper function which encapsulates call to CmdStan.
@@ -1221,11 +1228,11 @@ class CmdStanModel:
         """
 
         cmd = runset.cmds[idx]
-        get_logger().info('start chain %u', idx + 1)
         get_logger().debug(
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
-        get_logger().info('sampling: %s', cmd)
+        if not show_progress:
+            get_logger().info('start chain %d', idx + 1)
         try:
             fd_out = open(runset.stdout_files[idx], 'w')
             proc = subprocess.Popen(
@@ -1237,39 +1244,41 @@ class CmdStanModel:
                 env=os.environ,
                 universal_newlines=True,
             )
-            prog_report = ProgressReporter(
+            prog_report = SamplerProgress(
                 proc=proc,
                 fd=fd_out,
                 show_pbar=show_progress,
                 show_console=show_console,
-                iter_total = iter_total
+                iter_total=iter_total,
+                chain=idx + 1,
             )
             if show_progress:
+                # pylint: disable=unused-variable
+                get_logger().propagate = False
                 try:
                     from tqdm.autonotebook import tqdm  # checked by caller
-                    get_logger().propagate = False
+
                     pbar = tqdm(
                         iter(prog_report),
-                        total=iter_total, colour='yellow',
+                        total=iter_total,
                         bar_format="{desc} |{bar}| {postfix[0][value]}",
-                        postfix = [dict(value="Status")],
-                        desc = 'chain {}'.format(idx + 1)
+                        postfix=[dict(value="Status")],
+                        desc='chain {}'.format(idx + 1),
+                        colour='magenta',
+                        leave=False,  # cleans terminal, leaves on notebook
                     )
-                    for j in pbar:
+                    for i in pbar:
                         if prog_report.phase == 'Sampling':
                             pbar.colour = 'blue'
                         pbar.postfix[0]["value"] = prog_report.progress
-                        pbar.update(refresh)
                 except StopIteration:
-                    print("stop!")
-                except BaseException as e:
-                    print("an error occurred: %s" % e)
+                    pass
                 finally:
                     pbar.close()
                     get_logger().propagate = True
             else:
                 try:
-                    for i in (iter(prog_report)):
+                    for i in iter(prog_report):
                         pass
                 except StopIteration:
                     pass
@@ -1284,10 +1293,9 @@ class CmdStanModel:
         finally:
             fd_out.close()
 
-        runset._set_retcode(idx, proc.returncode)
         if not show_progress:
-            get_logger().info('finish chain %u', idx + 1)
-
+            get_logger().info('finish chain %d', idx + 1)
+        runset._set_retcode(idx, proc.returncode)
         if proc.returncode != 0:
             if proc.returncode < 0:
                 msg = 'Chain {} terminated by signal {}'.format(
@@ -1314,60 +1322,3 @@ class CmdStanModel:
                         sampler_args, SamplerArgs
                     )  # make the typechecker happy
                     sampler_args.fixed_param = True
-
-
-class ProgressReporter:
-    """
-    Iterator which processes CmdStan sampler stdout, stderr.
-    Tracks iterations, sampler phase (warmup, sampling).
-    Can be used as generator for progress bars or on its own in order
-    to prevent stdout and stderr from blocking.
-    """
-
-    def __init__(
-        self,
-        proc: Any,
-        fd: TextIO,
-        show_pbar: bool = False,
-        show_console: bool = False,
-        iter_total: int = 0
-    ):
-        self.proc = proc
-        self.fd = fd
-        self.show_pbar = show_pbar
-        self.show_console = show_console
-        self._iter = 0
-        self._total = iter_total
-        self._progress = 'Not started'
-        pat = r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
-        self.pattern = re.compile(pat, flags=re.IGNORECASE)
-
-    def __iter__(self):
-        while self.proc.poll() is None:
-            if self.proc.stdout is not None:
-                line = self.proc.stdout.readline()
-                self.fd.write(line)
-                line = line.strip()
-                if self.show_console and len(line) > 1:
-                    print(line)
-                if self.show_pbar:
-                    if line.startswith("Elapsed"):
-                        return self._iter
-                    if line.startswith("Iteration"):
-                        self._progress = line
-                        match = re.search(self.pattern, line)
-                        if match:
-                            self._iter = int(match.group(1))
-                            self._phase = match.group(2)
-                        yield self._iter
-
-    def __len__(self):
-        return self.iter_total
-
-    @property
-    def phase(self) -> str:
-        return self._phase
-
-    @property
-    def progress(self) -> str:
-        return self._progress

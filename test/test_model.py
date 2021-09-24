@@ -1,18 +1,13 @@
 """CmdStanModel tests"""
 
-import logging
+import io
 import os
 import shutil
 import sys
 import tempfile
 import unittest
-from io import StringIO
-from unittest.mock import Mock
 
-import numpy as np
 import pytest
-import tqdm
-from testfixtures import LogCapture
 
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import EXTENSION, cmdstan_path
@@ -34,6 +29,7 @@ model {
 """
 
 BERN_STAN = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+BERN_DATA = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
@@ -89,7 +85,7 @@ class CmdStanModelTest(unittest.TestCase):
     def test_model_pedantic(self):
         try:
             sys_stdout = sys.stdout
-            result = StringIO()
+            result = io.StringIO()
             sys.stdout = result
             CmdStanModel(
                 model_name='bern',
@@ -215,7 +211,7 @@ class CmdStanModelTest(unittest.TestCase):
         stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
         try:
             sys_stdout = sys.stdout
-            result = StringIO()
+            result = io.StringIO()
             sys.stdout = result
             with self.assertRaises(Exception):
                 CmdStanModel(stan_file=stan)
@@ -292,37 +288,6 @@ class CmdStanModelTest(unittest.TestCase):
             os.remove(exe)
         model2 = CmdStanModel(stan_file=stan)
         self.assertTrue(model2.exe_file.endswith(exe.replace('\\', '/')))
-
-    def test_read_progress(self):
-        model = CmdStanModel(stan_file=BERN_STAN, compile=False)
-
-        proc_mock = Mock()
-        proc_mock.poll.side_effect = [None, None, 'finish']
-        stan_output1 = 'Iteration: 12100 / 31000 [ 39%]  (Warmup)'
-        stan_output2 = 'Iteration: 14000 / 31000 [ 45%]  (Warmup)'
-        pbar = tqdm.tqdm(desc='Chain 1 - warmup', position=1, total=1)
-
-        proc_mock.stdout.readline.side_effect = [
-            stan_output1.encode('utf-8'),
-            stan_output2.encode('utf-8'),
-        ]
-
-        with LogCapture() as log:
-            result = model._read_progress(proc=proc_mock, pbar=pbar, idx=0)
-            self.assertEqual([], log.actual())
-            self.assertEqual(31000, pbar.total)
-
-            # Expect progress bar output to be something like this:
-            # 'Chain 1 -   done:  45%|████▌     | 14000/31000'
-            # --------
-
-            self.assertIn('Chain 1 -   done:  45%', str(pbar))
-            self.assertIn('14000/31000', str(pbar))
-
-            # Check Stan's output is returned
-            output = result.decode('utf-8')
-            self.assertIn(stan_output1, output)
-            self.assertIn(stan_output2, output)
 
 
 if __name__ == '__main__':
