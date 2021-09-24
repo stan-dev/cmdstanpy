@@ -419,9 +419,11 @@ def main() -> None:
         progress = False
 
     if platform.system() == 'Windows' and vars(args)['compiler']:
-        from .install_cxx_toolchain import is_installed as _is_installed_cxx
-        from .install_cxx_toolchain import main as _main_cxx
-        from .utils import cxx_toolchain_path
+        from cmdstanpy.install_cxx_toolchain import (
+            is_installed as _is_installed_cxx,
+        )
+        from cmdstanpy.install_cxx_toolchain import main as _main_cxx
+        from cmdstanpy.utils import cxx_toolchain_path
 
         cxx_loc = cmdstan_dir
         compiler_found = False
