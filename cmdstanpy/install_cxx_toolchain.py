@@ -28,7 +28,7 @@ from cmdstanpy.utils import (
     get_logger,
     pushd,
     validate_dir,
-    wrap_url_progress_hook
+    wrap_url_progress_hook,
 )
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''

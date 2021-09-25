@@ -771,10 +771,10 @@ class DoCommandTest(unittest.TestCase):
         self.assertTrue('test_utils.py' in console)
         self.assertEqual(retcode, 0)
 
-        sink = io.StringIO()
-        retcode = do_command(cmd=['ls'], cwd=HERE, sink=sink)
-        sunk = sink.getvalue()
-        self.assertTrue('test_utils.py' in sunk)
+        tmp = io.StringIO()
+        retcode = do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
+        console_out = tmp.getvalue()
+        self.assertTrue('test_utils.py' in console_out)
         self.assertEqual(retcode, 0)
 
         nout = io.StringIO()

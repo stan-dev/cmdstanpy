@@ -10,8 +10,9 @@ Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
-   --verbose : show CmdStan build messages
+   --verbose: flag, when specified prints output from CmdStan build process
    --progress: flag, when specified show progress bar for CmdStan download
+
    -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse
@@ -30,8 +31,9 @@ from typing import Callable, Dict, Optional
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import (
-    get_logger,
+    cmdstan_path,
     do_command,
+    get_logger,
     pushd,
     validate_dir,
     wrap_url_progress_hook,
@@ -40,11 +42,9 @@ from cmdstanpy.utils import (
 MAKE = os.getenv(
     'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
 )
-
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
-# pylint: disable=raise-missing-from
 class CmdStanRetrieveError(RuntimeError):
     pass
 
@@ -60,8 +60,8 @@ def usage() -> None:
         -v (--version) : CmdStan version
         -d (--dir) : install directory
         --overwrite : replace installed version
-        --progress : show progress bar for CmdStan download
         --verbose : show CmdStan build messages
+        --progress : show progress bar for CmdStan download
         """
 
     if platform.system() == "Windows":
@@ -79,25 +79,12 @@ def clean_all(verbose: bool = False) -> None:
     :param verbose: when ``True``, print build msgs to stdout.
     """
     cmd = [MAKE, 'clean-all']
-    proc = subprocess.Popen(
-        cmd,
-        cwd=None,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None:
-        if proc.stdout:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if verbose and output:
-                print(output, flush=True)
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        msgs = ['Command "make clean-all" failed']
-        if stderr:
-            msgs.append(stderr.decode('utf-8').strip())
-        raise CmdStanInstallError('\n'.join(msgs))
+    try:
+        do_command(cmd=cmd, show_console=verbose)
+    except RuntimeError as e:
+        raise CmdStanInstallError(
+            'Command "make clean-all" failed\n%s' % str(e)
+        ) from None
 
 
 def build(verbose: bool = False) -> None:
@@ -107,25 +94,12 @@ def build(verbose: bool = False) -> None:
     :param verbose: when ``True``, print build msgs to stdout.
     """
     cmd = [MAKE, 'build']
-    proc = subprocess.Popen(
-        cmd,
-        cwd=None,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None:
-        if proc.stdout:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if verbose and output:
-                print(output, flush=True)
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        msgs = ['Command "make build" failed']
-        if stderr:
-            msgs.append(stderr.decode('utf-8').strip())
-        raise CmdStanInstallError('\n'.join(msgs))
+    try:
+        do_command(cmd=cmd, show_console=verbose)
+    except RuntimeError as e:
+        raise CmdStanInstallError(
+            'Command "make build" failed\n%s' % str(e)
+        ) from None
     if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
         raise CmdStanInstallError(
             f'bin/stansummary{EXTENSION} not found'
@@ -150,7 +124,7 @@ def build(verbose: bool = False) -> None:
         )
 
 
-def compile_example() -> None:
+def compile_example(verbose: bool = False) -> None:
     """
     Compile the example model.
     The current directory must be a cmdstan library.
@@ -161,23 +135,12 @@ def compile_example() -> None:
             os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
         ).as_posix(),
     ]
-    proc = subprocess.Popen(
-        cmd,
-        cwd=None,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None:
-        if proc.stdout:
-            proc.stdout.readline().decode('utf-8')
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        msgs = ['Failed to compile example model bernoulli.stan']
-        if stderr:
-            msgs.append(stderr.decode('utf-8').strip())
-        raise CmdStanInstallError('\n'.join(msgs))
+    try:
+        do_command(cmd=cmd, show_console=verbose)
+    except RuntimeError as e:
+        raise CmdStanInstallError(
+            'Command "make clean-all" failed\n%s' % str(e)
+        ) from None
 
 
 def rebuild_cmdstan(verbose: bool = True) -> None:
@@ -202,10 +165,7 @@ def rebuild_cmdstan(verbose: bool = True) -> None:
 
 
 def install_version(
-    cmdstan_version: str,
-    overwrite: bool = False,
-    progress: bool = False,
-    verbose: bool = False,
+    cmdstan_version: str, overwrite: bool = False, verbose: bool = False
 ) -> None:
     """
     Build specified CmdStan version by spawning subprocesses to
@@ -214,125 +174,24 @@ def install_version(
 
     :param cmdstan_version: CmdStan release, corresponds to release dirname.
     :param overwrite: when ``True``, run ``make clean-all`` before building.
-    :param oprogress: when ``True``, display progress bar.
-    :param verbose: when ``True``, print all console msgs to stdout.
+    :param verbose: when ``True``, print build msgs to stdout.
     """
-
-    pbar = None
-    if progress:
-        from tqdm.autonotebook import tqdm
-
     with pushd(cmdstan_version):
-<<<<<<< HEAD
-        make = os.getenv(
-            'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
+        print(
+            'Building version {}, may take several minutes, '
+            'depending on your system.'.format(cmdstan_version)
         )
-=======
-        print('Building version {}'.format(cmdstan_version))
->>>>>>> 84f97454020f633a63843a634e0508e88d837ce2
         if overwrite:
             print(
                 'Overwrite requested, remove existing build of version '
                 '{}'.format(cmdstan_version)
             )
-<<<<<<< HEAD
-            try:
-                if progress:
-                    pbar = tqdm(
-                        ncols=20,
-                        position=0,
-                        leave=False,
-                        desc=f'{make} clean-all',
-                        colour='magenta',
-                    )
-                else:
-                    pbar = None
-                do_command(
-                    cmd=[make, 'clean-all'], show_console=verbose, pbar=pbar
-                )
-            except RuntimeError as e:
-                raise CmdStanInstallError(e)
-            finally:
-                if pbar is not None:
-                    pbar.close()
-
-        print(
-            'Building version {}. (Now might be a good time '
-            'for a cup of tea.)'.format(cmdstan_version)
-        )
-        try:
-            if progress:
-                pbar = tqdm(
-                    ncols=80,
-                    position=0,
-                    leave=False,
-                    desc=f'{make} build',
-                    colour='blue',
-                )
-            else:
-                pbar = None
-            do_command(cmd=[make, 'build'], show_console=verbose, pbar=pbar)
-        except RuntimeError as e:
-            raise CmdStanInstallError(e)
-        finally:
-            if pbar is not None:
-                pbar.close()
-
-        if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
-            raise CmdStanInstallError(
-                f"bin/stansummary{EXTENSION} not found"
-                ", please rebuild or report a bug!"
-            )
-        if not os.path.exists(os.path.join('bin', 'diagnose' + EXTENSION)):
-            raise CmdStanInstallError(
-                f"bin/stansummary{EXTENSION} not found"
-                ", please rebuild or report a bug!"
-            )
-
-        print('Testing model compilation: Stan to C++ to executable')
-        cmd = [
-            make,
-            Path(
-                os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
-            ).as_posix(),
-        ]
-        if platform.system() == "Windows":
-            # Add tbb to the $PATH on Windows
-            libtbb = os.path.join(
-                os.getcwd(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
-            )
-            os.environ['PATH'] = ';'.join(
-                list(
-                    OrderedDict.fromkeys(
-                        [libtbb] + os.environ.get('PATH', '').split(';')
-                    )
-                )
-            )
-        try:
-            if progress:
-                pbar = tqdm(
-                    ncols=80,
-                    position=0,
-                    leave=False,
-                    desc=f'{cmd}',
-                    colour='green',
-                )
-            do_command(cmd, show_console=verbose, pbar=pbar)
-        except RuntimeError as e:
-            msgs = 'Error while running command "{}: {}".'.format(cmd, str(e))
-            raise CmdStanInstallError('\n'.join(msgs))
-        finally:
-            if pbar is not None:
-                pbar.close()
-        print('Installed {}'.format(cmdstan_version))
-=======
             clean_all(verbose)
             print('Rebuilding version {}'.format(cmdstan_version))
         build(verbose)
         print('Test model compilation')
         compile_example()
     print('Installed {}'.format(cmdstan_version))
->>>>>>> 84f97454020f633a63843a634e0508e88d837ce2
 
 
 def is_version_available(version: str) -> bool:
@@ -399,12 +258,10 @@ def latest_version() -> str:
     return tag  # type: ignore
 
 
-def retrieve_version(version: str, progress: bool = False) -> None:
+def retrieve_version(version: str, progress: bool = True) -> None:
     """Download specified CmdStan version."""
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
-    if progress:
-        from tqdm.autonotebook import tqdm
     print('Downloading CmdStan version {}'.format(version))
     url = (
         'https://github.com/stan-dev/cmdstan/releases/download/'
@@ -454,6 +311,8 @@ def retrieve_version(version: str, progress: bool = False) -> None:
             target = r'\\?\{}'.format(target)
 
         if progress:
+            from tqdm.autonotebook import tqdm
+
             for member in tqdm(
                 iterable=tar.getmembers(),
                 total=len(tar.getmembers()),
@@ -487,14 +346,14 @@ def main() -> None:
         help="flag, when specified re-installs existing version",
     )
     parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="flag, when specified prints output from CmdStan build process",
+    )
+    parser.add_argument(
         '--progress',
         action='store_true',
         help="flag, when specified show progress bar for CmdStan download",
-    )
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help="flag, when specified stream all messages to console",
     )
     if platform.system() == 'Windows':
         # use compiler installed with install_cxx_toolchain
@@ -538,19 +397,15 @@ def main() -> None:
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    progress = False
     if vars(args)['progress']:
         progress = vars(args)['progress']
         try:
             # pylint: disable=unused-import
-            from tqdm.autonotebook import tqdm  # noqa: F401
-        except ImportError:
-            get_logger().warning(
-                'Package tqdm not installed, cannot show progress '
-                'information. Please install tqdm with '
-                "'pip install tqdm'"
-            )
-        vars(args)['progress'] = False
+            from tqdm import tqdm  # noqa: F401
+        except (ImportError, ModuleNotFoundError):
+            progress = False
+    else:
+        progress = False
 
     if platform.system() == 'Windows' and vars(args)['compiler']:
         from .install_cxx_toolchain import is_installed as _is_installed_cxx
@@ -606,7 +461,6 @@ def main() -> None:
                 install_version(
                     cmdstan_version=cmdstan_version,
                     overwrite=vars(args)['overwrite'],
-                    progress=progress,
                     verbose=vars(args)['verbose'],
                 )
             except RuntimeError as e:
@@ -617,4 +471,5 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+
     main()

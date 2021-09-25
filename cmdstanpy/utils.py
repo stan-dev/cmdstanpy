@@ -927,8 +927,7 @@ def do_command(
     cwd: Optional[str] = None,
     *,
     show_console: bool = False,
-    sink: Optional[TextIO] = None,
-    pbar: Any = None,
+    fd_out: Optional[TextIO] = None,
 ) -> int:
     """
     Run command as subprocess
@@ -939,9 +938,7 @@ def do_command(
         run command in the current working directory.
     :param show_console: when ``True``, streams stdout to sys.stdout.
         Default is ``True``.
-    :param sink: when specified, sends stdout to this stream as well.
-    :param pbar: must be tqdm progress bar, updates by lines read from stdout.
-        Default is ``None``.
+    :param fd_out: when specified, sends stdout to this stream as well.
 
     :return: 0 on success
     """
@@ -960,22 +957,20 @@ def do_command(
         while proc.poll() is None:
             if proc.stdout is not None:
                 line = proc.stdout.readline()
-                if sink is not None:
-                    sink.write(line)
+                if fd_out is not None:
+                    fd_out.write(line)
                 line = line.strip()
                 if len(line) > 1:
                     if show_console:
                         print(line)
-                    if pbar is not None:
-                        pbar.update()
 
         stdout, _ = proc.communicate()
         if stdout:
             if len(stdout) > 0:
                 if show_console:
                     sys.stdout.write(stdout)
-                if sink is not None:
-                    sink.write(stdout)
+                if fd_out is not None:
+                    fd_out.write(stdout)
 
         if proc.returncode != 0:  # problem, throw RuntimeError with msg
             try:

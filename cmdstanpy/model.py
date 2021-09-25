@@ -339,14 +339,14 @@ class CmdStanModel:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
                     try:
-                        sink = io.StringIO()
+                        tmp = io.StringIO()
                         do_command(
                             cmd=cmd,
                             cwd=cmdstan_path(),
                             show_console=True,
-                            sink=sink,
+                            fd_out=tmp,
                         )
-                        msgs = sink.getvalue()
+                        msgs = tmp.getvalue()
                         if 'Warning or error:' in msgs:
                             msg = msgs.split("Warning or error:", 1)[1].strip()
                             get_logger().warning(
