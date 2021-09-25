@@ -873,12 +873,12 @@ class CmdStanModel:
                 iter_total += iter_sampling
             if refresh is None:
                 refresh = _CMDSTAN_REFRESH
-            iter_total = iter_total / refresh + 3
+            iter_total = (iter_total // refresh) + 3
 
-            # pylint: disable=unused-import
             if show_progress:
                 try:
-                    from tqdm.autonotebook import tqdm  # noqa: F401
+                    # pylint: disable=unused-import
+                    from tqdm.autonotebook import tqdm  # type: ignore # noqa
                 except ImportError:
                     get_logger().warning(
                         'Package tqdm not installed, cannot show progress '
@@ -1270,9 +1270,9 @@ class CmdStanModel:
                 # pylint: disable=unused-variable
                 get_logger().propagate = False
                 try:
-                    from tqdm.autonotebook import tqdm  # checked by caller
+                    from tqdm.autonotebook import tqdm  # type:ignore
 
-                    pbar = tqdm(
+                    pbar: Any = tqdm(
                         iter(reporter),
                         total=iter_total,
                         bar_format="{desc} |{bar}| {postfix[0][value]}",

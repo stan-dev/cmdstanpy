@@ -1241,9 +1241,9 @@ def pushd(new_dir: str) -> Iterator[None]:
 def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
     """Sets up tqdm callback for url downloads."""
     try:
-        from tqdm.autonotebook import tqdm
+        from tqdm.autonotebook import tqdm  # type:ignore
 
-        pbar = tqdm(
+        pbar: Any = tqdm(
             unit='B',
             unit_scale=True,
             unit_divisor=1024,
@@ -1400,13 +1400,13 @@ class SamplerProgress:
         self.show_console = show_console
         self.chain = chain
         self._total = iter_total
-        self._iter = 0
+        self._iter: int = 0
         self._progress = 'Not started'
         self._phase = 'Not started'
         pat = r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
         self.pattern = re.compile(pat, flags=re.IGNORECASE)
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         while self.proc.poll() is None:
             if self.proc.stdout is not None:
                 line = self.proc.stdout.readline()
@@ -1425,7 +1425,7 @@ class SamplerProgress:
                             self._phase = match.group(2)
                         yield self._iter
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._total
 
     @property
