@@ -973,6 +973,7 @@ def do_command(
                     fd_out.write(stdout)
 
         if proc.returncode != 0:  # problem, throw RuntimeError with msg
+            serror = ''
             try:
                 serror = os.strerror(proc.returncode)
             except (ArithmeticError, ValueError):
@@ -986,7 +987,7 @@ def do_command(
             else:
                 msg = 'Command: {}\nmost likely crashed'.format(cmd)
             msg = '{}, returncode: {}'.format(msg, proc.returncode)
-            if serror:
+            if len(serror) > 0:
                 msg = '{}, error: {}'.format(msg, serror)
             raise RuntimeError(msg)
     except OSError as e:
