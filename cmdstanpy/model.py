@@ -900,7 +900,7 @@ class CmdStanModel:
                         iter_total,
                     )
             if show_progress:
-                print()   # needed for trailing whitespace from progressbar
+                print()  # needed for trailing whitespace from progressbar
             get_logger().info('sampling completed')
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
@@ -1327,7 +1327,7 @@ class CmdStanModel:
             def sampler_progress_hook(line: str) -> None:
                 if line.startswith("Iteration"):
                     if 'Sampling' in line:
-                            pbar.colour = 'blue'
+                        pbar.colour = 'blue'
                     pbar.update(1)
                     pbar.postfix[0]["value"] = line
                 elif line.startswith("Elapsed"):

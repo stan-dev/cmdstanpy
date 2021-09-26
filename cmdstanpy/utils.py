@@ -957,10 +957,8 @@ def do_command(
                 line = proc.stdout.readline()
                 if fd_out is not None:
                     fd_out.write(line)
-                line = line.strip()
-                if len(line) > 1:
-                    if show_console:
-                        print(line)
+                if show_console:
+                    sys.stdout.write(line)
 
         stdout, _ = proc.communicate()
         if stdout:

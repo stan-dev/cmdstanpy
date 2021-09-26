@@ -7,7 +7,6 @@ import io
 import os
 import platform
 import random
-import subprocess
 import shutil
 import stat
 import string
