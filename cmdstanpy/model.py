@@ -11,7 +11,7 @@ from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -32,11 +32,11 @@ from cmdstanpy.stanfit import (
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
-    SamplerProgress,
     TemporaryCopiedFile,
     cmdstan_path,
     do_command,
     get_logger,
+    returncode_msg,
 )
 
 from cmdstanpy import (
@@ -873,7 +873,7 @@ class CmdStanModel:
                 iter_total += iter_sampling
             if refresh is None:
                 refresh = _CMDSTAN_REFRESH
-            iter_total = (iter_total // refresh) + 3
+            iter_total = iter_total // refresh + 2
 
             if show_progress:
                 try:
@@ -899,7 +899,8 @@ class CmdStanModel:
                         show_console,
                         iter_total,
                     )
-
+            if show_progress:
+                print()   # needed for trailing whitespace from progressbar
             get_logger().info('sampling completed')
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
@@ -1245,8 +1246,13 @@ class CmdStanModel:
         get_logger().debug(
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
-        if not show_progress:
+        if show_progress:
+            progress_hook: Optional[
+                Callable[[str], None]
+            ] = self._wrap_sampler_progress_hook(idx + 1, iter_total)
+        else:
             get_logger().info('start chain %d', idx + 1)
+            progress_hook = None
         try:
             fd_out = open(runset.stdout_files[idx], 'w')
             proc = subprocess.Popen(
@@ -1258,44 +1264,15 @@ class CmdStanModel:
                 env=os.environ,
                 universal_newlines=True,
             )
-            reporter = SamplerProgress(
-                proc=proc,
-                fd=fd_out,
-                show_pbar=show_progress,
-                show_console=show_console,
-                iter_total=iter_total,
-                chain=idx + 1,
-            )
-            if show_progress:
-                # pylint: disable=unused-variable
-                get_logger().propagate = False
-                try:
-                    from tqdm.autonotebook import tqdm  # type:ignore
-
-                    pbar: Any = tqdm(
-                        iter(reporter),
-                        total=iter_total,
-                        bar_format="{desc} |{bar}| {postfix[0][value]}",
-                        postfix=[dict(value="Status")],
-                        desc='chain {}'.format(idx + 1),
-                        colour='orange',
-                        leave=False,  # cleans terminal, leaves on notebook
-                    )
-                    for i in pbar:
-                        if reporter.phase == 'Sampling':
-                            pbar.colour = 'blue'
-                        pbar.postfix[0]["value"] = reporter.progress
-                except StopIteration:
-                    pass
-                finally:
-                    pbar.close()
-                    get_logger().propagate = True
-            else:
-                try:
-                    for i in iter(reporter):
-                        pass
-                except StopIteration:
-                    pass
+            while proc.poll() is None:
+                if proc.stdout is not None:
+                    line = proc.stdout.readline()
+                    fd_out.write(line)
+                    line = line.strip()
+                    if show_console and len(line) > 1:
+                        print('chain {}: {}'.format(idx + 1, line))
+                    if show_progress and progress_hook is not None:
+                        progress_hook(line)
 
             stdout, _ = proc.communicate()
             if stdout:
@@ -1311,22 +1288,15 @@ class CmdStanModel:
             get_logger().info('finish chain %d', idx + 1)
         runset._set_retcode(idx, proc.returncode)
         if proc.returncode != 0:
-            if proc.returncode < 0:
-                msg = 'Chain {} terminated by signal {}'.format(
-                    idx + 1, proc.returncode
-                )
-            elif proc.returncode < 125:
-                msg = 'Chain {} processing error'.format(idx + 1)
-                msg = '{}, return code {}'.format(msg, proc.returncode)
-                # msg = '{} Console output\n {}'.format(msg, console)
-            elif proc.returncode > 128:
-                msg = 'Chain {} system error'.format(idx + 1)
-                msg = '{}, terminated by signal {}'.format(
-                    msg, proc.returncode - 128
-                )
-            else:
-                msg = 'Chain {} unknown error'.format(idx + 1)
-                get_logger().error(msg)
+            retcode_summary = returncode_msg(proc.returncode)
+            serror = ''
+            try:
+                serror = os.strerror(proc.returncode)
+            except (ArithmeticError, ValueError):
+                pass
+            get_logger().error(
+                'Chain %d error: %s %s', idx + 1, retcode_summary, serror
+            )
         else:
             with open(runset.stdout_files[idx], 'r') as fd:
                 console = fd.read()
@@ -1336,3 +1306,34 @@ class CmdStanModel:
                         sampler_args, SamplerArgs
                     )  # make the typechecker happy
                     sampler_args.fixed_param = True
+
+    # pylint: disable=no-self-use
+    def _wrap_sampler_progress_hook(
+        self, chain_id: int, total: int
+    ) -> Optional[Callable[[str], None]]:
+        """Sets up tqdm callback for CmdStan sampler console msgs."""
+        try:
+            from tqdm.autonotebook import tqdm  # type:ignore
+
+            pbar: Any = tqdm(
+                total=total,
+                bar_format="{desc} |{bar}| {postfix[0][value]}",
+                postfix=[dict(value="Status")],
+                desc=f'chain {chain_id}',
+                colour='yellow',
+                leave=False,  # cleans terminal
+            )
+
+            def sampler_progress_hook(line: str) -> None:
+                if line.startswith("Iteration"):
+                    if 'Sampling' in line:
+                            pbar.colour = 'blue'
+                    pbar.update(1)
+                    pbar.postfix[0]["value"] = line
+                elif line.startswith("Elapsed"):
+                    pbar.close()
+
+        except (ImportError, ModuleNotFoundError):
+            print("tqdm was not downloaded, progressbar not shown")
+            return None
+        return sampler_progress_hook

@@ -928,7 +928,7 @@ def do_command(
     *,
     show_console: bool = False,
     fd_out: Optional[TextIO] = None,
-) -> int:
+) -> None:
     """
     Run command as subprocess
     Raises ``RuntimeError`` on non-zero return code or execption ``OSError``.
@@ -939,8 +939,6 @@ def do_command(
     :param show_console: when ``True``, streams stdout to sys.stdout.
         Default is ``True``.
     :param fd_out: when specified, sends stdout to this stream as well.
-
-    :return: 0 on success
     """
     get_logger().debug('cmd: %s', ' '.join(cmd))
     try:
@@ -972,28 +970,34 @@ def do_command(
                 if fd_out is not None:
                     fd_out.write(stdout)
 
-        if proc.returncode != 0:  # problem, throw RuntimeError with msg
+        if proc.returncode != 0:  # throw RuntimeError + msg
             serror = ''
             try:
                 serror = os.strerror(proc.returncode)
             except (ArithmeticError, ValueError):
                 pass
-            if proc.returncode < 0:
-                msg = 'Command: {}\nterminated by signal'.format(cmd)
-            elif proc.returncode <= 125:
-                msg = 'Command: {}\nfailed'.format(cmd)
-            elif proc.returncode == 127:
-                msg = 'Command: {}\nfailed, program not found'.format(cmd)
-            else:
-                msg = 'Command: {}\nmost likely crashed'.format(cmd)
-            msg = '{}, returncode: {}'.format(msg, proc.returncode)
-            if len(serror) > 0:
-                msg = '{}, error: {}'.format(msg, serror)
+            msg = 'Command {}\n\t{} {}'.format(
+                cmd, returncode_msg(proc.returncode), serror
+            )
             raise RuntimeError(msg)
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
-    return proc.returncode
+
+
+def returncode_msg(retcode: int) -> str:
+    """ interpret retcode"""
+    if retcode < 0:
+        sig = -1 * retcode
+        return f'terminated by signal {sig}'
+    if retcode <= 125:
+        return 'error during processing'
+    if retcode == 126:  # shouldn't happen
+        return ''
+    if retcode == 127:
+        return 'program not found'
+    sig = retcode - 128
+    return f'terminated by signal {sig}'
 
 
 def windows_short_path(path: str) -> str:
@@ -1376,63 +1380,3 @@ class TemporaryCopiedFile:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
-
-
-class SamplerProgress:
-    """
-    Iterator which processes CmdStan sampler stdout, stderr.
-    Tracks iterations, sampler phase (warmup, sampling).
-    Can be used as generator for progress bars or on its own in order
-    to prevent stdout and stderr from blocking.
-    """
-
-    def __init__(
-        self,
-        proc: Any,
-        fd: TextIO,
-        show_pbar: bool = False,
-        show_console: bool = False,
-        iter_total: int = 0,
-        chain: int = 0,
-    ):
-        self.proc = proc
-        self.fd = fd
-        self.show_pbar = show_pbar
-        self.show_console = show_console
-        self.chain = chain
-        self._total = iter_total
-        self._iter: int = 0
-        self._progress = 'Not started'
-        self._phase = 'Not started'
-        pat = r'^Iteration\:\s*(\d+)\s*/\s*\d+\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
-        self.pattern = re.compile(pat, flags=re.IGNORECASE)
-
-    def __iter__(self) -> Any:
-        while self.proc.poll() is None:
-            if self.proc.stdout is not None:
-                line = self.proc.stdout.readline()
-                self.fd.write(line)
-                line = line.strip()
-                if self.show_console and len(line) > 1:
-                    print(f'chain {self.chain}: {line}')
-                if self.show_pbar:
-                    if line.startswith("Elapsed"):
-                        return self._iter
-                    if line.startswith("Iteration"):
-                        self._progress = line
-                        match = re.search(self.pattern, line)
-                        if match:
-                            self._iter = int(match.group(1))
-                            self._phase = match.group(2)
-                        yield self._iter
-
-    def __len__(self) -> int:
-        return self._total
-
-    @property
-    def phase(self) -> str:
-        return self._phase
-
-    @property
-    def progress(self) -> str:
-        return self._progress

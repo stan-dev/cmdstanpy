@@ -22,7 +22,6 @@ from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
-    SamplerProgress,
     TemporaryCopiedFile,
     check_sampler_csv,
     cmdstan_path,
@@ -766,23 +765,20 @@ class DoCommandTest(unittest.TestCase):
     def test_good(self):
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            retcode = do_command(cmd=['ls'], cwd=HERE, show_console=True)
+            do_command(cmd=['ls'], cwd=HERE, show_console=True)
         console = sys_stdout.getvalue()
         self.assertTrue('test_utils.py' in console)
-        self.assertEqual(retcode, 0)
 
         tmp = io.StringIO()
-        retcode = do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
+        do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
         console_out = tmp.getvalue()
         self.assertTrue('test_utils.py' in console_out)
-        self.assertEqual(retcode, 0)
 
         nout = io.StringIO()
         with contextlib.redirect_stdout(nout):
-            retcode = do_command(cmd=['ls'], cwd=HERE, show_console=False)
+            do_command(cmd=['ls'], cwd=HERE, show_console=False)
         console = nout.getvalue()
         self.assertEqual(len(console), 0)
-        self.assertEqual(retcode, 0)
 
     def test_exit(self):
         sys_stdout = io.StringIO()
@@ -811,71 +807,6 @@ class FlattenTest(unittest.TestCase):
         array_2d = np.empty((200, 4))
         with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
             flatten_chains(array_2d)
-
-
-class SamplerProgressTest(unittest.TestCase):
-    def test_progress_reporter(self):
-        CmdStanModel(model_name='bern', stan_file=BERN_STAN)
-        cmd = [
-            BERN_EXE,
-            'data',
-            f'file={BERN_DATA}',
-            'method=sample',
-            'num_warmup=10000',
-            'num_samples=10000',
-            'output',
-            'refresh=2000',
-        ]
-        fd_stdout = io.StringIO()
-        proc = subprocess.Popen(
-            cmd,
-            bufsize=1,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,  # avoid buffer overflow
-            env=os.environ,
-            universal_newlines=True,
-        )
-        prog_rprt = SamplerProgress(
-            proc=proc,
-            fd=fd_stdout,
-            show_pbar=True,
-            show_console=False,
-            iter_total=20000,
-            chain=1,
-        )
-        self.assertEqual(prog_rprt.progress, 'Not started')
-        self.assertEqual(prog_rprt.phase, 'Not started')
-        iters = 0
-        for j in iter(prog_rprt):
-            iters += 1
-            if iters == 1:
-                self.assertEqual(j, 1)
-                self.assertEqual(prog_rprt.phase, 'Warmup')
-                self.assertEqual(
-                    prog_rprt.progress,
-                    'Iteration:     1 / 20000 [  0%]  (Warmup)',
-                )
-            elif iters == 6:
-                self.assertEqual(j, 10000)
-                self.assertEqual(prog_rprt.phase, 'Warmup')
-                self.assertEqual(
-                    prog_rprt.progress,
-                    'Iteration: 10000 / 20000 [ 50%]  (Warmup)',
-                )
-            elif iters == 7:
-                self.assertEqual(j, 10001)
-                self.assertEqual(prog_rprt.phase, 'Sampling')
-                self.assertEqual(
-                    prog_rprt.progress,
-                    'Iteration: 10001 / 20000 [ 50%]  (Sampling)',
-                )
-        self.assertEqual(prog_rprt._iter, 20000)
-        self.assertEqual(
-            prog_rprt.progress, 'Iteration: 20000 / 20000 [100%]  (Sampling)'
-        )
-        proc.communicate()
-        self.assertEqual(proc.returncode, 0)
 
 
 if __name__ == '__main__':
