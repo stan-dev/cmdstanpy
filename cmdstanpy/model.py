@@ -1271,7 +1271,6 @@ class CmdStanModel:
                         print('chain {}: {}'.format(idx + 1, line))
                     if show_progress and progress_hook is not None:
                         progress_hook(line)
-
             if show_progress and progress_hook is not None:
                 progress_hook("Done")
 
@@ -1321,9 +1320,8 @@ class CmdStanModel:
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
                 postfix=[dict(value="Status")],
                 desc=f'chain {chain_id}',
-                colour='yellow',
+                colour='cyan',
             )
-
             def sampler_progress_hook(line: str) -> None:
                 if line == "Done":
                     pbar.postfix[0]["value"] = 'Sampling completed'
@@ -1333,7 +1331,6 @@ class CmdStanModel:
                         pbar.colour = 'blue'
                     pbar.update(1)
                     pbar.postfix[0]["value"] = line
-
 
         except (ImportError, ModuleNotFoundError):
             print("tqdm was not downloaded, progressbar not shown")
