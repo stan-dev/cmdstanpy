@@ -901,7 +901,9 @@ class CmdStanModel:
                         iter_total,
                     )
             if show_progress:
-                term_size: os.terminal_size = shutil.get_terminal_size(fallback=(80,24))
+                term_size: os.terminal_size = shutil.get_terminal_size(
+                    fallback=(80,24)
+                )
                 if term_size is not None and term_size[0] > 0:
                     for i in range(chains):
                         sys.stdout.write(' ' * term_size[0])
