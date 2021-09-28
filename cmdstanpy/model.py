@@ -1322,14 +1322,14 @@ class CmdStanModel:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
         try:
             from tqdm.autonotebook import tqdm  # type:ignore
-
             pbar: Any = tqdm(
                 total=total,
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
                 postfix=[dict(value="Status")],
                 desc=f'chain {chain_id}',
-                colour='cyan',
+                colour='cyan'
             )
+
             def sampler_progress_hook(line: str) -> None:
                 if line == "Done":
                     pbar.postfix[0]["value"] = 'Sampling completed'
