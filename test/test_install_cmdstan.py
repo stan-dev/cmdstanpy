@@ -37,6 +37,8 @@ class InstallCmdStanTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             retrieve_version('')
 
+    from unittest import mock
+
     @unittest.mock.patch.dict(os.environ, {"CMDSTAN": "~/some/fake/path"})
     def test_rebuild_bad_path(self):
         with self.assertRaisesRegex(

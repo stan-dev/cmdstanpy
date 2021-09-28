@@ -248,16 +248,10 @@ class RunSet:
 
     @property
     def stdout_files(self) -> List[str]:
-        """List of paths to CmdStan stdout transcripts."""
-        return self._stdout_files
-
-    @property
-    def stderr_files(self) -> List[str]:
-        """List of paths to CmdStan stderr transcripts."""
-        get_logger().warning(
-            "Property 'stderr_files' is deprecated, "
-            "use 'stdout_files' instead."
-        )
+        """
+        List of paths to transcript of CmdStan messages sent to the console.
+        Transcripts include config information, progress, and error messages.
+        """
         return self._stdout_files
 
     def _check_retcodes(self) -> bool:

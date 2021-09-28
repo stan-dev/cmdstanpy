@@ -73,22 +73,13 @@ class RunSetTest(unittest.TestCase):
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=3, chain_ids=chain_ids)
-        if not cmdstan_version_at(2, 27):
-            for i in range(3):
-                runset._set_retcode(i, 70)
-                stdout_file = 'chain-' + str(i + 1) + '-missing-data-stdout.txt'
-                path = os.path.join(DATAFILES_PATH, stdout_file)
-                runset._stdout_files[i] = path
-            errs = runset.get_err_msgs()
-            self.assertIn('Exception: variable does not exist', errs)
-        else:
-            for i in range(3):
-                runset._set_retcode(i, 1)
-                stderr_file = 'chain-' + str(i + 1) + '-missing-data-stderr.txt'
-                path = os.path.join(DATAFILES_PATH, stderr_file)
-                runset._stdout_files[i] = path
-            errs = runset.get_err_msgs()
-            self.assertIn('Exception: variable does not exist', errs)
+        for i in range(3):
+            runset._set_retcode(i, 70)
+            stdout_file = 'chain-' + str(i + 1) + '-missing-data-stdout.txt'
+            path = os.path.join(DATAFILES_PATH, stdout_file)
+            runset._stdout_files[i] = path
+        errs = runset.get_err_msgs()
+        self.assertIn('Exception: variable does not exist', errs)
 
     def test_output_filenames(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
