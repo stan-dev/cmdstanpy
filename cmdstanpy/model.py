@@ -879,7 +879,7 @@ class CmdStanModel:
             if show_progress:
                 try:
                     # pylint: disable=unused-import
-                    from tqdm.autonotebook import tqdm  # type: ignore # noqa
+                    from tqdm.auto import tqdm  # type: ignore # noqa
                 except ImportError:
                     get_logger().warning(
                         'Package tqdm not installed, cannot show progress '
@@ -901,10 +901,10 @@ class CmdStanModel:
                         iter_total,
                     )
             if show_progress:
-                term_width = os.get_terminal_size()[0]
-                if term_width > 0:
+                term_size: os.terminal_size = shutil.get_terminal_size(fallback=(80,24))
+                if term_size is not None and term_size[0] > 0:
                     for i in range(chains):
-                        sys.stdout.write(' ' * term_width)
+                        sys.stdout.write(' ' * term_size[0])
                         sys.stdout.flush()
                 sys.stdout.write('\n')
             get_logger().info('sampling completed')
@@ -1321,7 +1321,7 @@ class CmdStanModel:
     ) -> Optional[Callable[[str], None]]:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
         try:
-            from tqdm.autonotebook import tqdm  # type:ignore
+            from tqdm.auto import tqdm  # type:ignore
             pbar: Any = tqdm(
                 total=total,
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
