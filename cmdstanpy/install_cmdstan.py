@@ -80,7 +80,7 @@ def clean_all(verbose: bool = False) -> None:
     """
     cmd = [MAKE, 'clean-all']
     try:
-        do_command(cmd=cmd, show_console=verbose)
+        do_command(cmd=cmd)
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
         raise CmdStanInstallError(
@@ -96,7 +96,7 @@ def build(verbose: bool = False) -> None:
     """
     cmd = [MAKE, 'build']
     try:
-        do_command(cmd=cmd, show_console=verbose)
+        do_command(cmd=cmd)
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
         raise CmdStanInstallError('Command "make build" failed\n%s' % str(e))
@@ -136,7 +136,7 @@ def compile_example(verbose: bool = False) -> None:
         ).as_posix(),
     ]
     try:
-        do_command(cmd=cmd, show_console=verbose)
+        do_command(cmd=cmd)
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
