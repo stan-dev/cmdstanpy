@@ -1,6 +1,7 @@
 """CmdStan method sample tests"""
 
 import contextlib
+import io
 import logging
 import os
 import platform
@@ -550,6 +551,25 @@ class SampleTest(unittest.TestCase):
             oob_model = CmdStanModel(stan_file=oob_stan)
             with self.assertRaises(RuntimeError):
                 oob_model.sample()
+
+    def test_show_console(self, stanfile='bernoulli.stan'):
+        stan = os.path.join(DATAFILES_PATH, stanfile)
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            bern_fit = bern_model.sample(
+                data=jdata,
+                chains=2,
+                parallel_chains=2,
+                seed=12345,
+                iter_sampling=100,
+                show_console=True,
+            )
+            console = sys_stdout.getvalue()
+        self.assertTrue('chain 1: method = sample' in console)
+        self.assertTrue('chain 2: method = sample' in console)
 
 
 class CmdStanMCMCTest(unittest.TestCase):

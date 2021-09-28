@@ -311,7 +311,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             target = r'\\?\{}'.format(target)
 
         if progress:
-            from tqdm.autonotebook import tqdm  # type:ignore
+            from tqdm.auto import tqdm  # type:ignore
 
             for member in tqdm(
                 iterable=tar.getmembers(),

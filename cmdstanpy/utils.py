@@ -1244,7 +1244,7 @@ def pushd(new_dir: str) -> Iterator[None]:
 def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
     """Sets up tqdm callback for url downloads."""
     try:
-        from tqdm.autonotebook import tqdm  # type:ignore
+        from tqdm.auto import tqdm  # type:ignore
 
         pbar: Any = tqdm(
             unit='B',

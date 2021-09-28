@@ -1,5 +1,7 @@
 """CmdStan method variational tests"""
 
+import contextlib
+import io
 import os
 import unittest
 from math import fabs
@@ -263,6 +265,20 @@ class VariationalTest(unittest.TestCase):
         for i in range(4):
             for j in range(3):
                 self.assertEqual(int(z_as_ndarray[i, j]), i + 1)
+
+    def test_show_console(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            bern_fit = bern_model.variational(
+                data=jdata,
+                show_console=True,
+            )
+            console = sys_stdout.getvalue()
+        self.assertTrue('chain 1: method = variational' in console)
 
 
 if __name__ == '__main__':

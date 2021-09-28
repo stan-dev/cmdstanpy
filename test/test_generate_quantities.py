@@ -1,6 +1,7 @@
 """CmdStan method generate_quantities tests"""
 
 import contextlib
+import io
 import json
 import logging
 import os
@@ -447,6 +448,33 @@ class GenerateQuantitiesTest(unittest.TestCase):
             for j in range(3):
                 self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
                 self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
+
+    def test_show_console(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=4,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
+        )
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            bern_gqs = model.generate_quantities(
+                data=jdata,
+                mcmc_sample=bern_fit,
+                show_console=True,
+            )
+            console = sys_stdout.getvalue()
+        self.assertTrue('chain 1: method = generate' in console)
+        self.assertTrue('chain 2: method = generate' in console)
+        self.assertTrue('chain 3: method = generate' in console)
+        self.assertTrue('chain 4: method = generate' in console)
 
 
 if __name__ == '__main__':

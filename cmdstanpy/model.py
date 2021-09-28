@@ -410,6 +410,7 @@ class CmdStanModel:
         iter: Optional[int] = None,
         save_iterations: bool = False,
         require_converged: bool = True,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMLE:
@@ -501,6 +502,9 @@ class CmdStanModel:
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
+        :param show_console: If True, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is False.
+
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
 
@@ -537,10 +541,9 @@ class CmdStanModel:
                 method_args=optimize_args,
                 refresh=refresh,
             )
-
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id)
+            self._run_cmdstan(runset, dummy_chain_id, False, show_console)
 
         if not runset._check_retcodes():
             msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
@@ -927,6 +930,7 @@ class CmdStanModel:
         seed: Optional[int] = None,
         gq_output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanGQ:
@@ -976,6 +980,9 @@ class CmdStanModel:
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
+
+        :param show_console: If True, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is False.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -1041,7 +1048,9 @@ class CmdStanModel:
             parallel_chains = max(min(parallel_chains_avail - 2, chains), 1)
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
-                    executor.submit(self._run_cmdstan, runset, i)
+                    executor.submit(
+                        self._run_cmdstan, runset, i, False, show_console
+                    )
 
             if not runset._check_retcodes():
                 msg = 'Error during generate_quantities:\n{}'.format(
@@ -1074,6 +1083,7 @@ class CmdStanModel:
         eval_elbo: Optional[int] = None,
         output_samples: Optional[int] = None,
         require_converged: bool = True,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanVB:
@@ -1157,6 +1167,9 @@ class CmdStanModel:
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
+        :param show_console: If True, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is False.
+
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
 
@@ -1197,7 +1210,7 @@ class CmdStanModel:
 
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id)
+            self._run_cmdstan(runset, dummy_chain_id, False, show_console)
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
