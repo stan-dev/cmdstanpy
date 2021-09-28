@@ -7,6 +7,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -899,6 +900,13 @@ class CmdStanModel:
                         show_console,
                         iter_total,
                     )
+            if show_progress:
+                term_width = os.get_terminal_size()[0]
+                if term_width > 0:
+                    for i in range(chains):
+                        sys.stdout.write(' ' * term_width)
+                        sys.stdout.flush()
+                sys.stdout.write('\n')
             get_logger().info('sampling completed')
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
