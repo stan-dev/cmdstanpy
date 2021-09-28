@@ -273,7 +273,7 @@ class VariationalTest(unittest.TestCase):
 
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            bern_fit = bern_model.variational(
+            bern_model.variational(
                 data=jdata,
                 show_console=True,
             )

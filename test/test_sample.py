@@ -559,7 +559,7 @@ class SampleTest(unittest.TestCase):
 
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            bern_fit = bern_model.sample(
+            bern_model.sample(
                 data=jdata,
                 chains=2,
                 parallel_chains=2,

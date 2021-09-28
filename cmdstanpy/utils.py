@@ -926,18 +926,15 @@ def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
     *,
-    show_console: bool = False,
     fd_out: Optional[TextIO] = None,
 ) -> None:
     """
-    Run command as subprocess
+    Run command as subprocess, streams output to console or designated stream.
     Raises ``RuntimeError`` on non-zero return code or execption ``OSError``.
 
     :param cmd: command and args.
     :param cwd: directory in which to run command, if unspecified,
         run command in the current working directory.
-    :param show_console: when ``True``, streams stdout to sys.stdout.
-        Default is ``True``.
     :param fd_out: when specified, sends stdout to this stream as well.
     """
     get_logger().debug('cmd: %s', ' '.join(cmd))
@@ -957,16 +954,16 @@ def do_command(
                 line = proc.stdout.readline()
                 if fd_out is not None:
                     fd_out.write(line)
-                if show_console:
+                else:
                     sys.stdout.write(line)
 
         stdout, _ = proc.communicate()
         if stdout:
             if len(stdout) > 0:
-                if show_console:
-                    sys.stdout.write(stdout)
                 if fd_out is not None:
                     fd_out.write(stdout)
+                else:
+                    sys.stdout.write(stdout)
 
         if proc.returncode != 0:  # throw RuntimeError + msg
             serror = ''
@@ -1140,7 +1137,6 @@ def install_cmdstan(
     dir: Optional[str] = None,
     overwrite: bool = False,
     verbose: bool = False,
-    progress: bool = False,
     compiler: bool = False,
 ) -> bool:
     """
@@ -1181,8 +1177,6 @@ def install_cmdstan(
         cmd.extend(['--dir', dir])
     if overwrite:
         cmd.append('--overwrite')
-    if progress:
-        cmd.append('--progress')
     if verbose:
         cmd.append('--verbose')
     if compiler:

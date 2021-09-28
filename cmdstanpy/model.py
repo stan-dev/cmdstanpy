@@ -1,5 +1,6 @@
 """CmdStanModel"""
 
+import contextlib
 import io
 import logging
 import os
@@ -339,36 +340,37 @@ class CmdStanModel:
                     if self._compiler_options is not None:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
-                    try:
-                        tmp = io.StringIO()
-                        do_command(
-                            cmd=cmd,
-                            cwd=cmdstan_path(),
-                            show_console=True,
-                            fd_out=tmp,
-                        )
-                        msgs = tmp.getvalue()
-                        if 'Warning or error:' in msgs:
-                            msg = msgs.split("Warning or error:", 1)[1].strip()
-                            get_logger().warning(
-                                "stanc3 has produced warnings:\n%s", msg
-                            )
 
-                    except RuntimeError as e:
+                    sys_stdout = io.StringIO()
+                    with contextlib.redirect_stdout(sys_stdout):
+                        try:
+                            do_command(cmd=cmd, cwd=cmdstan_path())
+                        except RuntimeError as e:
+                            runtime_error = str(e)
+                            compilation_failed = True
+                        finally:
+                            console = sys_stdout.getvalue()
+
+                    if '--warn-pedantic' in console:  # warn, don't fail
+                        lines = console.split('\n')
+                        warnings = [x for x in lines if x.startswith('Warning')]
+                        get_logger().warning('\n'.join(warnings))
+
+                    if 'Syntax error' in console:
+                        get_logger().warning(console)
+                    elif 'PCH file' in console:
+                        get_logger().warning(
+                            "%s",
+                            "CmdStan's precompiled header (PCH) files "
+                            "may need to be rebuilt."
+                            "If your model failed to compile please run "
+                            "cmdstanpy.rebuild_cmdstan().\nIf the "
+                            "issue persists please open a bug report",
+                        )
+                    elif compilation_failed:
                         get_logger().error(
-                            'file %s, exception %s', stan_file, str(e)
+                            'file %s, exception %s', stan_file, runtime_error
                         )
-                        if 'PCH file' in str(e):
-                            get_logger().warning(
-                                "%s",
-                                "CmdStan's precompiled header (PCH) files "
-                                "may need to be rebuilt."
-                                "If your model failed to compile please run "
-                                "cmdstanpy.rebuild_cmdstan().\nIf the "
-                                "issue persists please open a bug report",
-                            )
-
-                        compilation_failed = True
 
                 if not compilation_failed:
                     if is_copied:
@@ -905,7 +907,7 @@ class CmdStanModel:
                     )
             if show_progress:
                 term_size: os.terminal_size = shutil.get_terminal_size(
-                    fallback=(80,24)
+                    fallback=(80, 24)
                 )
                 if term_size is not None and term_size[0] > 0:
                     for i in range(chains):
@@ -1337,12 +1339,13 @@ class CmdStanModel:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
         try:
             from tqdm.auto import tqdm  # type:ignore
+
             pbar: Any = tqdm(
                 total=total,
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
                 postfix=[dict(value="Status")],
                 desc=f'chain {chain_id}',
-                colour='cyan'
+                colour='cyan',
             )
 
             def sampler_progress_hook(line: str) -> None:
@@ -1356,6 +1359,6 @@ class CmdStanModel:
                     pbar.postfix[0]["value"] = line
 
         except (ImportError, ModuleNotFoundError):
-            print("tqdm was not downloaded, progressbar not shown")
+            print("module tqdm not installed, progressbar not shown")
             return None
         return sampler_progress_hook

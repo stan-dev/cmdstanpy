@@ -1,13 +1,13 @@
 """CmdStanModel tests"""
 
-import io
+import logging
 import os
 import shutil
-import sys
 import tempfile
 import unittest
 
 import pytest
+from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import EXTENSION, cmdstan_path
@@ -83,10 +83,8 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(None, model.exe_file)
 
     def test_model_pedantic(self):
-        try:
-            sys_stdout = sys.stdout
-            result = io.StringIO()
-            sys.stdout = result
+        with LogCapture(level=logging.WARNING) as log:
+            logging.getLogger()
             CmdStanModel(
                 model_name='bern',
                 stan_file=os.path.join(
@@ -94,10 +92,13 @@ class CmdStanModelTest(unittest.TestCase):
                 ),
                 stanc_options={'warn-pedantic': True},
             )
-            msgs = result.getvalue()
-            self.assertTrue('The parameter theta has no priors' in msgs)
-        finally:
-            sys.stdout = sys_stdout
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                StringComparison(r'(?s).*The parameter theta has no priors.*'),
+            )
+        )
 
     def test_model_bad(self):
         with self.assertRaises(ValueError):
@@ -209,16 +210,13 @@ class CmdStanModelTest(unittest.TestCase):
 
     def test_model_syntax_error(self):
         stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
-        try:
-            sys_stdout = sys.stdout
-            result = io.StringIO()
-            sys.stdout = result
-            with self.assertRaises(Exception):
+        with LogCapture(level=logging.WARNING) as log:
+            logging.getLogger()
+            with self.assertRaises(ValueError):
                 CmdStanModel(stan_file=stan)
-            msgs = result.getvalue()
-            self.assertTrue('parsing error:' in msgs)
-        finally:
-            sys.stdout = sys_stdout
+        log.check_present(
+            ('cmdstanpy', 'WARNING', StringComparison(r'(?s).*Syntax error.*'))
+        )
 
     def test_repr(self):
         model = CmdStanModel(stan_file=BERN_STAN)

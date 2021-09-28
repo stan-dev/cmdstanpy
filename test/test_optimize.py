@@ -601,7 +601,7 @@ class OptimizeTest(unittest.TestCase):
 
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            bern_fit = bern_model.optimize(
+            bern_model.optimize(
                 data=jdata,
                 show_console=True,
             )

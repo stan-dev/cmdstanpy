@@ -82,9 +82,10 @@ def clean_all(verbose: bool = False) -> None:
     try:
         do_command(cmd=cmd, show_console=verbose)
     except RuntimeError as e:
+        # pylint: disable=raise-missing-from
         raise CmdStanInstallError(
             'Command "make clean-all" failed\n%s' % str(e)
-        ) from None
+        )
 
 
 def build(verbose: bool = False) -> None:
@@ -97,9 +98,8 @@ def build(verbose: bool = False) -> None:
     try:
         do_command(cmd=cmd, show_console=verbose)
     except RuntimeError as e:
-        raise CmdStanInstallError(
-            'Command "make build" failed\n%s' % str(e)
-        ) from None
+        # pylint: disable=raise-missing-from
+        raise CmdStanInstallError('Command "make build" failed\n%s' % str(e))
     if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
         raise CmdStanInstallError(
             f'bin/stansummary{EXTENSION} not found'
@@ -138,9 +138,8 @@ def compile_example(verbose: bool = False) -> None:
     try:
         do_command(cmd=cmd, show_console=verbose)
     except RuntimeError as e:
-        raise CmdStanInstallError(
-            'Command "make clean-all" failed\n%s' % str(e)
-        ) from None
+        # pylint: disable=raise-missing-from
+        raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
 
 
 def rebuild_cmdstan(verbose: bool = True) -> None:

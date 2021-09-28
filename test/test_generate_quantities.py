@@ -465,7 +465,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
 
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            bern_gqs = model.generate_quantities(
+            model.generate_quantities(
                 data=jdata,
                 mcmc_sample=bern_fit,
                 show_console=True,
