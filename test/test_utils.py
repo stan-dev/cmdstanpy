@@ -764,7 +764,7 @@ class DoCommandTest(unittest.TestCase):
     def test_good(self):
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            do_command(cmd=['ls'], cwd=HERE, show_console=True)
+            do_command(cmd=['ls'], cwd=HERE)
         console = sys_stdout.getvalue()
         self.assertTrue('test_utils.py' in console)
 
@@ -772,12 +772,6 @@ class DoCommandTest(unittest.TestCase):
         do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
         console_out = tmp.getvalue()
         self.assertTrue('test_utils.py' in console_out)
-
-        nout = io.StringIO()
-        with contextlib.redirect_stdout(nout):
-            do_command(cmd=['ls'], cwd=HERE, show_console=False)
-        console = nout.getvalue()
-        self.assertEqual(len(console), 0)
 
     def test_exit(self):
         sys_stdout = io.StringIO()
