@@ -21,7 +21,7 @@ import sys
 import urllib.request
 from collections import OrderedDict
 from time import sleep
-from typing import List
+from typing import Any, Dict, List
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
@@ -258,15 +258,95 @@ def get_toolchain_version(name: str, version: str) -> str:
     return toolchain_folder
 
 
-def main() -> None:
+def main(args: Dict[str, Any]) -> None:
     """Main."""
     if platform.system() not in {'Windows'}:
-        msg = (
-            'Download for the C++ toolchain'
-            ' on the current platform has not been implemented: %s'
+        raise NotImplementedError(
+            'Download for the C++ toolchain '
+            'on the current platform has not '
+            f'been implemented: {platform.system()}'
         )
-        raise NotImplementedError(msg % platform.system())
+    toolchain = get_toolchain_name()
+    version = args['version']
+    if version is None:
+        version = latest_version()
+    version = normalize_version(version)
+    print("C++ toolchain '{}' version: {}".format(toolchain, version))
 
+    url = get_url(version)
+
+    if 'verbose' in args:
+        verbose = args['verbose']
+
+    install_dir = args['dir']
+    if install_dir is None:
+        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+        if not os.path.exists(cmdstan_dir):
+            cmdstanpy_dir = os.path.expanduser(
+                os.path.join('~', _DOT_CMDSTANPY)
+            )
+            if os.path.exists(cmdstanpy_dir):
+                cmdstan_dir = cmdstanpy_dir
+                get_logger().warning(
+                    "Using ~/.cmdstanpy is deprecated and"
+                    " will not be automatically detected in version 1.0!\n"
+                    " Please rename to ~/.cmdstan"
+                )
+        install_dir = cmdstan_dir
+    validate_dir(install_dir)
+    print('Install directory: {}'.format(install_dir))
+
+    if 'progress' in args:
+        progress = args['progress']
+        try:
+            # pylint: disable=unused-import
+            from tqdm import tqdm  # noqa: F401
+        except (ImportError, ModuleNotFoundError):
+            progress = False
+    else:
+        progress = False
+
+    if platform.system() == 'Windows':
+        silent = 'silent' in args
+        # force silent == False for 4.0 version
+        if 'silent' not in args and version in ('4.0', '4', '40'):
+            silent = False
+    else:
+        silent = False
+
+    toolchain_folder = get_toolchain_version(toolchain, version)
+    with pushd(install_dir):
+        if is_installed(toolchain_folder, version):
+            print('C++ toolchain {} already installed'.format(toolchain_folder))
+        else:
+            if os.path.exists(toolchain_folder):
+                shutil.rmtree(toolchain_folder, ignore_errors=False)
+            retrieve_toolchain(
+                toolchain_folder + EXTENSION, url, progress=progress
+            )
+            install_version(
+                toolchain_folder,
+                toolchain_folder + EXTENSION,
+                version,
+                silent,
+                verbose,
+            )
+        if (
+            'no-make' not in args
+            and (platform.system() == 'Windows')
+            and (version in ('4.0', '4', '40'))
+        ):
+            if os.path.exists(
+                os.path.join(
+                    toolchain_folder, 'mingw64', 'bin', 'mingw32-make.exe'
+                )
+            ):
+                print('mingw32-make.exe already installed')
+            else:
+                install_mingw32_make(toolchain_folder, verbose)
+
+
+def parse_cmdline_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v', help="version, defaults to latest")
     parser.add_argument(
@@ -294,87 +374,8 @@ def main() -> None:
         action='store_true',
         help="flag, when specified show progress bar for CmdStan download",
     )
-    args = parser.parse_args(sys.argv[1:])
-
-    toolchain = get_toolchain_name()
-    version = vars(args)['version']
-    if version is None:
-        version = latest_version()
-    version = normalize_version(version)
-    print("C++ toolchain '{}' version: {}".format(toolchain, version))
-
-    url = get_url(version)
-
-    if 'verbose' in vars(args):
-        verbose = vars(args)['verbose']
-
-    install_dir = vars(args)['dir']
-    if install_dir is None:
-        cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-        if not os.path.exists(cmdstan_dir):
-            cmdstanpy_dir = os.path.expanduser(
-                os.path.join('~', _DOT_CMDSTANPY)
-            )
-            if os.path.exists(cmdstanpy_dir):
-                cmdstan_dir = cmdstanpy_dir
-                get_logger().warning(
-                    "Using ~/.cmdstanpy is deprecated and"
-                    " will not be automatically detected in version 1.0!\n"
-                    " Please rename to ~/.cmdstan"
-                )
-        install_dir = cmdstan_dir
-    validate_dir(install_dir)
-    print('Install directory: {}'.format(install_dir))
-
-    if 'progress' in vars(args):
-        progress = vars(args)['progress']
-        try:
-            # pylint: disable=unused-import
-            from tqdm import tqdm  # noqa: F401
-        except (ImportError, ModuleNotFoundError):
-            progress = False
-    else:
-        progress = False
-
-    if platform.system() == 'Windows':
-        silent = 'silent' in vars(args)
-        # force silent == False for 4.0 version
-        if 'silent' not in vars(args) and version in ('4.0', '4', '40'):
-            silent = False
-    else:
-        silent = False
-
-    toolchain_folder = get_toolchain_version(toolchain, version)
-    with pushd(install_dir):
-        if is_installed(toolchain_folder, version):
-            print('C++ toolchain {} already installed'.format(toolchain_folder))
-        else:
-            if os.path.exists(toolchain_folder):
-                shutil.rmtree(toolchain_folder, ignore_errors=False)
-            retrieve_toolchain(
-                toolchain_folder + EXTENSION, url, progress=progress
-            )
-            install_version(
-                toolchain_folder,
-                toolchain_folder + EXTENSION,
-                version,
-                silent,
-                verbose,
-            )
-        if (
-            'no-make' not in vars(args)
-            and (platform.system() == 'Windows')
-            and (version in ('4.0', '4', '40'))
-        ):
-            if os.path.exists(
-                os.path.join(
-                    toolchain_folder, 'mingw64', 'bin', 'mingw32-make.exe'
-                )
-            ):
-                print('mingw32-make.exe already installed')
-            else:
-                install_mingw32_make(toolchain_folder, verbose)
+    return vars(parser.parse_args(sys.argv[1:]))
 
 
 if __name__ == '__main__':
-    main()
+    main(parse_cmdline_args())
