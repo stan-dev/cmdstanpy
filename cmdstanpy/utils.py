@@ -1120,10 +1120,10 @@ def install_cmdstan(
     overwrite: bool = False,
     verbose: bool = False,
     compiler: bool = False,
+    progress: bool = False,
 ) -> bool:
     """
-    Download and install a CmdStan release from GitHub by running
-    script ``install_cmdstan`` as a subprocess.  Downloads the release
+    Download and install a CmdStan release from GitHub. Downloads the release
     tar.gz file to temporary storage.  Retries GitHub requests in order
     to allow for transient network outages. Builds CmdStan executables
     and tests the compiler by building example model ``bernoulli.stan``.
@@ -1146,39 +1146,31 @@ def install_cmdstan(
         C++ compiler from the ``install_cxx_toolchain`` command or install
         one if none is found.
 
+    :param progress: Boolean value; when ``True``, show a progress bar for
+        downloading and unpacking CmdStan.
+
     :return: Boolean value; ``True`` for success.
     """
     logger = get_logger()
-    python = sys.executable
-    here = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(here, 'install_cmdstan.py')
-    cmd = [python, '-u', path]
-    if version is not None:
-        cmd.extend(['--version', version])
-    if dir is not None:
-        cmd.extend(['--dir', dir])
-    if overwrite:
-        cmd.append('--overwrite')
-    if verbose:
-        cmd.append('--verbose')
-    if compiler:
-        cmd.append('--compiler')
-    proc = subprocess.Popen(
-        cmd,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None and proc.stdout:
-        print(proc.stdout.readline().decode('utf-8').strip())
+    args = {
+        "version": version,
+        "overwrite": overwrite,
+        "verbose": verbose,
+        "compiler": compiler,
+        "progress": progress,
+        "dir": dir,
+    }
 
-    _, stderr = proc.communicate()
-    if proc.returncode:
+    try:
+        from .install_cmdstan import main
+
+        main(args)
+    # pylint: disable=broad-except
+    except Exception as e:
         logger.warning('CmdStan installation failed.')
-        if stderr:
-            logger.warning(stderr.decode('utf-8').strip())
+        logger.warning(str(e))
         return False
+
     if dir is not None:
         if version is not None:
             set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
