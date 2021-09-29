@@ -140,7 +140,7 @@ The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all St
     fit.draws().shape 
     fit.draws(concat_chains=True).shape 
 
-    draws_theta = fit.stan_variable(name='theta') 
+    draws_theta = fit.stan_variable(var='theta') 
     draws_theta.shape 
 
                         
@@ -184,44 +184,36 @@ to a specified directory.
     fit.save_csvfiles(dir='some/path')
 
 
-.. comment
-  Progress bar
-  ^^^^^^^^^^^^
+Progress bar
+^^^^^^^^^^^^
   
-  User can enable progress bar for the sampling if ``tqdm`` package
-  has been installed.
-  
-  .. code-block:: python
-  
-      fit = model.sample(data=data_file, show_progress=True)
-  
-  On Jupyter Notebook environment user should use notebook version
-  by using ``show_progress='notebook'``.
-  
-  .. code-block:: python
-  
-      fit = model.sample(data=data_file, show_progress='notebook')
-  
-  To enable javascript progress bar on Jupyter Lab Notebook user needs to install
-  nodejs and ipywidgets. Following the instructions in
-  `tqdm issue #394 <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`
-  For ``conda`` users installing nodejs can be done with ``conda``.
-  
-  .. code-block:: bash
-  
-      conda install nodejs
-  
-  After nodejs has been installed, user needs to install ipywidgets and enable it.
-  
-  .. code-block:: bash
-  
-      pip install ipywidgets
-      jupyter nbextension enable --py widgetsnbextension
-  
-  Jupyter Lab still needs widgets manager.
-  
-  .. code-block:: bash
-  
-      jupyter labextension install @jupyter-widgets/jupyterlab-manager
+Users can enable progress bar for the sampling if the ``tqdm`` package
+has been installed.
+ 
+.. code-block:: python
 
-      
+    fit = model.sample(data=data_file, show_progress=True)
+ 
+To enable javascript progress bar on Jupyter Lab Notebook user needs to install
+nodejs and ipywidgets. Following the instructions in
+[tqdm issue #394](https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637),
+nodejs can be installed with ``conda``.
+ 
+.. code-block:: bash
+
+     conda install nodejs
+ 
+After nodejs has been installed, user needs to install ipywidgets and enable it.
+ 
+.. code-block:: bash
+
+    pip install ipywidgets
+    jupyter nbextension enable --py widgetsnbextension
+
+Jupyter Lab still needs widgets manager.
+
+.. code-block:: bash
+
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
+     
