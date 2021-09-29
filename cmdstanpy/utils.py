@@ -1136,7 +1136,6 @@ def install_cmdstan(
     version: Optional[str] = None,
     dir: Optional[str] = None,
     overwrite: bool = False,
-    verbose: bool = False,
     compiler: bool = False,
 ) -> bool:
     """
@@ -1157,9 +1156,6 @@ def install_cmdstan(
     :param overwrite:  Boolean value; when ``True``, will overwrite and
         rebuild an existing CmdStan installation.  Default is ``False``.
 
-    :param verbose:  Boolean value; when ``True``, output from CmdStan build
-        processes will be streamed to the console.  Default is ``False``.
-
     :param compiler: Boolean value; when ``True`` on WINDOWS ONLY, use the
         C++ compiler from the ``install_cxx_toolchain`` command or install
         one if none is found.
@@ -1177,8 +1173,6 @@ def install_cmdstan(
         cmd.extend(['--dir', dir])
     if overwrite:
         cmd.append('--overwrite')
-    if verbose:
-        cmd.append('--verbose')
     if compiler:
         cmd.append('--compiler')
     proc = subprocess.Popen(

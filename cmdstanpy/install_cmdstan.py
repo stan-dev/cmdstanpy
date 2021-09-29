@@ -10,7 +10,6 @@ Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
-   --verbose: flag, when specified prints output from CmdStan build process
    --progress: flag, when specified show progress bar for CmdStan download
 
    -c, --compiler : flag, add C++ compiler to path (Windows only)
@@ -60,7 +59,6 @@ def usage() -> None:
         -v (--version) : CmdStan version
         -d (--dir) : install directory
         --overwrite : replace installed version
-        --verbose : show CmdStan build messages
         --progress : show progress bar for CmdStan download
         """
 
@@ -72,11 +70,9 @@ def usage() -> None:
     print(msg)
 
 
-def clean_all(verbose: bool = False) -> None:
+def clean_all() -> None:
     """
     Run `make clean-all` in the current directory (must be a cmdstan library).
-
-    :param verbose: when ``True``, print build msgs to stdout.
     """
     cmd = [MAKE, 'clean-all']
     try:
@@ -88,11 +84,9 @@ def clean_all(verbose: bool = False) -> None:
         )
 
 
-def build(verbose: bool = False) -> None:
+def build() -> None:
     """
     Run `make build` in the current directory (must be a cmdstan library)
-
-    :param verbose: when ``True``, print build msgs to stdout.
     """
     cmd = [MAKE, 'build']
     try:
@@ -124,7 +118,7 @@ def build(verbose: bool = False) -> None:
         )
 
 
-def compile_example(verbose: bool = False) -> None:
+def compile_example() -> None:
     """
     Compile the example model.
     The current directory must be a cmdstan library.
@@ -142,20 +136,17 @@ def compile_example(verbose: bool = False) -> None:
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
 
 
-def rebuild_cmdstan(verbose: bool = True) -> None:
+def rebuild_cmdstan() -> None:
     """
     Rebuilds the existing CmdStan installation.
     This assumes CmdStan has already been installed,
     though it need not be installed via CmdStanPy for
     this function to work.
-
-    :param verbose:  Boolean value; when ``True``, output from CmdStan build
-        processes will be streamed to the console.  Default is ``False``.
     """
     try:
         with pushd(cmdstan_path()):
-            clean_all(verbose)
-            build(verbose)
+            clean_all()
+            build()
             compile_example()
     except ValueError as e:
         raise CmdStanInstallError(
@@ -163,9 +154,7 @@ def rebuild_cmdstan(verbose: bool = True) -> None:
         ) from e
 
 
-def install_version(
-    cmdstan_version: str, overwrite: bool = False, verbose: bool = False
-) -> None:
+def install_version(cmdstan_version: str, overwrite: bool = False) -> None:
     """
     Build specified CmdStan version by spawning subprocesses to
     run the Make utility on the downloaded CmdStan release src files.
@@ -173,7 +162,6 @@ def install_version(
 
     :param cmdstan_version: CmdStan release, corresponds to release dirname.
     :param overwrite: when ``True``, run ``make clean-all`` before building.
-    :param verbose: when ``True``, print build msgs to stdout.
     """
     with pushd(cmdstan_version):
         print(
@@ -185,9 +173,9 @@ def install_version(
                 'Overwrite requested, remove existing build of version '
                 '{}'.format(cmdstan_version)
             )
-            clean_all(verbose)
+            clean_all()
             print('Rebuilding version {}'.format(cmdstan_version))
-        build(verbose)
+        build()
         print('Test model compilation')
         compile_example()
     print('Installed {}'.format(cmdstan_version))
@@ -345,11 +333,6 @@ def main() -> None:
         help="flag, when specified re-installs existing version",
     )
     parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help="flag, when specified prints output from CmdStan build process",
-    )
-    parser.add_argument(
         '--progress',
         action='store_true',
         help="flag, when specified show progress bar for CmdStan download",
@@ -460,7 +443,6 @@ def main() -> None:
                 install_version(
                     cmdstan_version=cmdstan_version,
                     overwrite=vars(args)['overwrite'],
-                    verbose=vars(args)['verbose'],
                 )
             except RuntimeError as e:
                 print(e)
