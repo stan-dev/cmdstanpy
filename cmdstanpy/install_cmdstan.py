@@ -26,7 +26,7 @@ import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 from time import sleep
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import (
@@ -318,41 +318,12 @@ def retrieve_version(version: str, progress: bool = True) -> None:
     print('Unpacked download as cmdstan-{}'.format(version))
 
 
-def main() -> None:
+def main(args: Dict[str, Any]) -> None:
     """Main."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--version', '-v', help="version, defaults to latest release version"
-    )
-    parser.add_argument(
-        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan"
-    )
-    parser.add_argument(
-        '--overwrite',
-        action='store_true',
-        help="flag, when specified re-installs existing version",
-    )
-    parser.add_argument(
-        '--progress',
-        action='store_true',
-        help="flag, when specified show progress bar for CmdStan download",
-    )
-    if platform.system() == 'Windows':
-        # use compiler installed with install_cxx_toolchain
-        # Install a new compiler if compiler not found
-        # Search order is RTools40, RTools35
-        parser.add_argument(
-            '--compiler',
-            '-c',
-            dest='compiler',
-            action='store_true',
-            help="flag, add C++ compiler to path (Windows only)",
-        )
-    args = parser.parse_args(sys.argv[1:])
 
     version = latest_version()
-    if vars(args)['version']:
-        version = vars(args)['version']
+    if args['version']:
+        version = args['version']
 
     if is_version_available(version):
         print('Installing CmdStan version: {}'.format(version))
@@ -373,14 +344,14 @@ def main() -> None:
             )
 
     install_dir = cmdstan_dir
-    if vars(args)['dir']:
-        install_dir = vars(args)['dir']
+    if args['dir']:
+        install_dir = args['dir']
 
     validate_dir(install_dir)
     print('Install directory: {}'.format(install_dir))
 
-    if vars(args)['progress']:
-        progress = vars(args)['progress']
+    if args['progress']:
+        progress = args['progress']
         try:
             # pylint: disable=unused-import
             from tqdm import tqdm  # noqa: F401
@@ -389,7 +360,7 @@ def main() -> None:
     else:
         progress = False
 
-    if platform.system() == 'Windows' and vars(args)['compiler']:
+    if platform.system() == 'Windows' and args['compiler']:
         from .install_cxx_toolchain import is_installed as _is_installed_cxx
         from .install_cxx_toolchain import main as _main_cxx
         from .utils import cxx_toolchain_path
@@ -415,19 +386,15 @@ def main() -> None:
         if not compiler_found:
             print('Installing RTools40')
             # copy argv and clear sys.argv
-            original_argv = sys.argv[:]
-            sys.argv = [
-                item for item in sys.argv if item not in ("--compiler", "-c")
-            ]
-            _main_cxx()
-            sys.argv = original_argv
+            cxx_args = {k: v for k, v in args.items() if k != 'compiler'}
+            _main_cxx(cxx_args)
             cxx_version = '40'
         # Add toolchain to $PATH
-        cxx_toolchain_path(cxx_version, vars(args)['dir'])
+        cxx_toolchain_path(cxx_version, args['dir'])
 
     cmdstan_version = 'cmdstan-{}'.format(version)
     with pushd(install_dir):
-        if vars(args)['overwrite'] or not (
+        if args['overwrite'] or not (
             os.path.exists(cmdstan_version)
             and os.path.exists(
                 os.path.join(
@@ -442,7 +409,8 @@ def main() -> None:
                 retrieve_version(version, progress)
                 install_version(
                     cmdstan_version=cmdstan_version,
-                    overwrite=vars(args)['overwrite'],
+                    overwrite=args['overwrite'],
+                    verbose=args['verbose'],
                 )
             except RuntimeError as e:
                 print(e)
@@ -451,6 +419,42 @@ def main() -> None:
             print('CmdStan version {} already installed'.format(version))
 
 
-if __name__ == '__main__':
+def parse_cmdline_args() -> Dict[str, Any]:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--version', '-v', help="version, defaults to latest release version"
+    )
+    parser.add_argument(
+        '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan"
+    )
+    parser.add_argument(
+        '--overwrite',
+        action='store_true',
+        help="flag, when specified re-installs existing version",
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="flag, when specified prints output from CmdStan build process",
+    )
+    parser.add_argument(
+        '--progress',
+        action='store_true',
+        help="flag, when specified show progress bar for CmdStan download",
+    )
+    if platform.system() == 'Windows':
+        # use compiler installed with install_cxx_toolchain
+        # Install a new compiler if compiler not found
+        # Search order is RTools40, RTools35
+        parser.add_argument(
+            '--compiler',
+            '-c',
+            dest='compiler',
+            action='store_true',
+            help="flag, add C++ compiler to path (Windows only)",
+        )
+    return vars(parser.parse_args(sys.argv[1:]))
 
-    main()
+
+if __name__ == '__main__':
+    main(parse_cmdline_args())
