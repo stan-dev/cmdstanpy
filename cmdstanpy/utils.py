@@ -81,7 +81,7 @@ def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script `install_cmdstan`.
+    Assumes directory populated via `install_cmdstan`.
     """
     versions = [
         ''.join(name.split('-')[1:])  # name may contain '-rc'
@@ -121,11 +121,14 @@ def validate_cmdstan_path(path: str) -> None:
     Throws exception if specified path is invalid.
     """
     if not os.path.isdir(path):
-        raise ValueError('no such CmdStan directory {}'.format(path))
+        raise ValueError(
+            'No CmdStan directory, '
+            'path {} does not exist.'.format(path)
+        )
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'no CmdStan binaries found, '
-            'run command line script "install_cmdstan"'
+            'CmdStan installataion missing binaries, '
+            'run "install_cmdstan"'
         )
 
 
@@ -157,8 +160,8 @@ def cmdstan_path() -> str:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
             if not os.path.exists(cmdstan_dir):
                 raise ValueError(
-                    'no CmdStan installation found, '
-                    'run command line script "install_cmdstan"'
+                    'No CmdStan installation found, '
+                    'run "install_cmdstan".'
                 )
             get_logger().warning(
                 "Using ~/.cmdstanpy is deprecated and"
@@ -168,8 +171,8 @@ def cmdstan_path() -> str:
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                'no CmdStan installation found, '
-                'run command line script "install_cmdstan"'
+                'No CmdStan installation found, '
+                'run "install_cmdstan".'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan

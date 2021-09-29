@@ -149,7 +149,7 @@ class CmdStanPathTest(unittest.TestCase):
         set_cmdstan_path(install_version)
         validate_cmdstan_path(install_version)
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
-        with self.assertRaisesRegex(ValueError, 'no such CmdStan directory'):
+        with self.assertRaisesRegex(ValueError, 'No CmdStan directory'):
             validate_cmdstan_path(path_foo)
         folder_name = ''.join(
             random.choice(string.ascii_letters) for _ in range(10)
@@ -160,7 +160,7 @@ class CmdStanPathTest(unittest.TestCase):
             )
         os.makedirs(folder_name)
         path_test = os.path.abspath(folder_name)
-        with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
+        with self.assertRaisesRegex(ValueError, 'missing binaries'):
             validate_cmdstan_path(path_test)
         shutil.rmtree(folder_name)
 
