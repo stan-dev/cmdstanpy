@@ -1345,7 +1345,7 @@ class CmdStanModel:
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
                 postfix=[dict(value="Status")],
                 desc=f'chain {chain_id}',
-                colour='cyan',
+                colour='yellow',
             )
 
             def sampler_progress_hook(line: str) -> None:
