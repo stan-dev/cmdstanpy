@@ -37,7 +37,7 @@ class InstallCxxScriptTest(unittest.TestCase):
             r'Download for the C\+\+ toolchain on the current platform has not '
             r'been implemented:\s*\S+',
         ):
-            install_cxx_toolchain.main()
+            install_cxx_toolchain.main({})
 
     def test_normalize_version(self):
         """Test supported versions."""
