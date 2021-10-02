@@ -1,6 +1,5 @@
 """CmdStanModel"""
 
-import contextlib
 import io
 import logging
 import os
@@ -15,6 +14,9 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
+from tqdm.auto import tqdm  # type: ignore
+
+from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
@@ -39,12 +41,6 @@ from cmdstanpy.utils import (
     do_command,
     get_logger,
     returncode_msg,
-)
-
-from cmdstanpy import (
-    _CMDSTAN_SAMPLING,
-    _CMDSTAN_WARMUP,
-    _CMDSTAN_REFRESH,
 )
 
 
@@ -172,8 +168,9 @@ class CmdStanModel:
         self._compiler_options.validate()
 
         if platform.system() == 'Windows':
+            sink = io.StringIO()
             try:
-                do_command(['where.exe', 'tbb.dll'])
+                do_command(['where.exe', 'tbb.dll'], fd_out=sink)
             except RuntimeError:
                 # Add tbb to the $PATH on Windows
                 libtbb = os.environ.get('STAN_TBB')
@@ -341,36 +338,52 @@ class CmdStanModel:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
 
-                    sys_stdout = io.StringIO()
-                    with contextlib.redirect_stdout(sys_stdout):
-                        try:
-                            do_command(cmd=cmd, cwd=cmdstan_path())
-                        except RuntimeError as e:
-                            runtime_error = str(e)
-                            compilation_failed = True
-                        finally:
-                            console = sys_stdout.getvalue()
+                    sink = io.StringIO()
+                    try:
+                        do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sink)
+                    except RuntimeError as e:
+                        sink.write(f'\n{str(e)}\n')
+                        compilation_failed = True
+                    finally:
+                        console = sink.getvalue()
 
-                    if '--warn-pedantic' in console:  # warn, don't fail
+                    if compilation_failed or 'Warning:' in console:
                         lines = console.split('\n')
                         warnings = [x for x in lines if x.startswith('Warning')]
-                        get_logger().warning('\n'.join(warnings))
+                        syntax_errors = [
+                            x for x in lines if x.startswith('Syntax error')
+                        ]
+                        semantic_errors = [
+                            x for x in lines if x.startswith('Semantic error')
+                        ]
+                        exceptions = [
+                            x
+                            for x in lines
+                            if x.startswith('Uncauth exception')
+                        ]
+                        if (
+                            len(syntax_errors) > 0
+                            or len(semantic_errors) > 0
+                            or len(exceptions) > 0
+                        ):
+                            get_logger().warning(
+                                'Stan program failed to compile:'
+                            )
+                            get_logger().warning(console)
+                        elif len(warnings) > 0:
+                            get_logger().warning(
+                                '%d from Stan compiler:', len(warnings)
+                            )
+                            get_logger().warning(console)
 
-                    if 'Syntax error' in console:
-                        get_logger().warning(console)
-                    elif 'PCH file' in console:
-                        get_logger().warning(
-                            "%s",
-                            "CmdStan's precompiled header (PCH) files "
-                            "may need to be rebuilt."
-                            "If your model failed to compile please run "
-                            "cmdstanpy.rebuild_cmdstan().\nIf the "
-                            "issue persists please open a bug report",
-                        )
-                    elif compilation_failed:
-                        get_logger().error(
-                            'file %s, exception %s', stan_file, runtime_error
-                        )
+                        if 'PCH file' in console:
+                            get_logger().warning(
+                                "CmdStan's precompiled header (PCH) files "
+                                "may need to be rebuilt."
+                                "If your model failed to compile please run "
+                                "cmdstanpy.rebuild_cmdstan().\nIf the "
+                                "issue persists please open a bug report"
+                            )
 
                 if not compilation_failed:
                     if is_copied:
@@ -585,7 +598,7 @@ class CmdStanModel:
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
         save_profile: bool = False,
-        show_progress: bool = False,
+        show_progress: bool = True,
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
@@ -755,8 +768,7 @@ class CmdStanModel:
             section "Profiling CSV output file" for details.
 
         :param show_progress: If True, display progress bar to track
-            progress for warmup and sampling iterations.  If no progress bar
-            package available, will stream all CmdStan messages to the console.
+            progress for warmup and sampling iterations.  Default is ``True``.
 
         :param show_console: If True, stream CmdStan messages sent to stdout
             and stderr to the console.  Default is False.
@@ -881,18 +893,8 @@ class CmdStanModel:
                 refresh = _CMDSTAN_REFRESH
             iter_total = iter_total // refresh + 2
 
-            if show_progress:
-                try:
-                    # pylint: disable=unused-import
-                    from tqdm.auto import tqdm  # type: ignore # noqa
-                except ImportError:
-                    get_logger().warning(
-                        'Package tqdm not installed, cannot show progress '
-                        'information. Please install tqdm with '
-                        "'pip install tqdm'"
-                    )
-                    show_progress = False
-                    show_console = True
+            if show_console:
+                show_progress = False
 
             get_logger().info('sampling: %s', runset.cmds[0])
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
@@ -906,6 +908,7 @@ class CmdStanModel:
                         iter_total,
                     )
             if show_progress:
+                # advance terminal window cursor past progress bars
                 term_size: os.terminal_size = shutil.get_terminal_size(
                     fallback=(80, 24)
                 )
@@ -1337,28 +1340,22 @@ class CmdStanModel:
         self, chain_id: int, total: int
     ) -> Optional[Callable[[str], None]]:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
-        try:
-            from tqdm.auto import tqdm  # type:ignore
+        pbar: Any = tqdm(
+            total=total,
+            bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
+            postfix=[dict(value="Status")],
+            desc=f'chain {chain_id}',
+            colour='yellow',
+        )
 
-            pbar: Any = tqdm(
-                total=total,
-                bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
-                postfix=[dict(value="Status")],
-                desc=f'chain {chain_id}',
-                colour='yellow',
-            )
+        def sampler_progress_hook(line: str) -> None:
+            if line == "Done":
+                pbar.postfix[0]["value"] = 'Sampling completed'
+                pbar.close()
+            elif line.startswith("Iteration"):
+                if 'Sampling' in line:
+                    pbar.colour = 'blue'
+                pbar.update(1)
+                pbar.postfix[0]["value"] = line
 
-            def sampler_progress_hook(line: str) -> None:
-                if line == "Done":
-                    pbar.postfix[0]["value"] = 'Sampling completed'
-                    pbar.close()
-                elif line.startswith("Iteration"):
-                    if 'Sampling' in line:
-                        pbar.colour = 'blue'
-                    pbar.update(1)
-                    pbar.postfix[0]["value"] = line
-
-        except (ImportError, ModuleNotFoundError):
-            print("module tqdm not installed, progressbar not shown")
-            return None
         return sampler_progress_hook

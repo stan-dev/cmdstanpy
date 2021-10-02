@@ -31,6 +31,7 @@ from typing import (
 import numpy as np
 import pandas as pd
 import ujson as json
+from tqdm.auto import tqdm  # type: ignore
 
 from cmdstanpy import (
     _CMDSTAN_SAMPLING,
@@ -122,13 +123,11 @@ def validate_cmdstan_path(path: str) -> None:
     """
     if not os.path.isdir(path):
         raise ValueError(
-            'No CmdStan directory, '
-            'path {} does not exist.'.format(path)
+            'No CmdStan directory, ' 'path {} does not exist.'.format(path)
         )
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'CmdStan installataion missing binaries, '
-            'run "install_cmdstan"'
+            'CmdStan installataion missing binaries, ' 'run "install_cmdstan"'
         )
 
 
@@ -160,8 +159,7 @@ def cmdstan_path() -> str:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
             if not os.path.exists(cmdstan_dir):
                 raise ValueError(
-                    'No CmdStan installation found, '
-                    'run "install_cmdstan".'
+                    'No CmdStan installation found, ' 'run "install_cmdstan".'
                 )
             get_logger().warning(
                 "Using ~/.cmdstanpy is deprecated and"
@@ -171,8 +169,7 @@ def cmdstan_path() -> str:
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                'No CmdStan installation found, '
-                'run "install_cmdstan".'
+                'No CmdStan installation found, ' 'run "install_cmdstan".'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
@@ -930,6 +927,7 @@ def do_command(
     cwd: Optional[str] = None,
     *,
     fd_out: Optional[TextIO] = None,
+    pbar: Optional[Callable[[str], None]] = None,
 ) -> None:
     """
     Run command as subprocess, streams output to console or designated stream.
@@ -938,7 +936,13 @@ def do_command(
     :param cmd: command and args.
     :param cwd: directory in which to run command, if unspecified,
         run command in the current working directory.
-    :param fd_out: when specified, sends stdout to this stream as well.
+    :param fd_out: when specified, sends stdout to this stream
+        instead of writing to sys.stdout.
+    :param pbar: optional callback hook to tqdm.
+       see: https://github.com/tqdm/tqdm#hooks-and-callbacks
+       callback hook takes single string argument, will recieve
+       final callback '__DONE__' when proc completes.
+
     """
     get_logger().debug('cmd: %s', ' '.join(cmd))
     try:
@@ -957,8 +961,13 @@ def do_command(
                 line = proc.stdout.readline()
                 if fd_out is not None:
                     fd_out.write(line)
+                elif pbar is not None:
+                    pbar(line.strip())
                 else:
                     sys.stdout.write(line)
+
+        if pbar is not None:
+            pbar("__DONE__")
 
         stdout, _ = proc.communicate()
         if stdout:
@@ -1141,6 +1150,7 @@ def install_cmdstan(
     overwrite: bool = False,
     compiler: bool = False,
     progress: bool = False,
+    verbose: bool = False,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub. Downloads the release
@@ -1164,7 +1174,11 @@ def install_cmdstan(
         one if none is found.
 
     :param progress: Boolean value; when ``True``, show a progress bar for
-        downloading and unpacking CmdStan.
+        downloading and unpacking CmdStan.  Default is ``False``.
+
+    :param verbose: Boolean value; when ``True``, show console output from all
+        intallation steps, i.e., download, build, and test CmdStan release.
+        Default is ``False``.
 
     :return: Boolean value; ``True`` for success.
     """
@@ -1198,6 +1212,30 @@ def install_cmdstan(
     return True
 
 
+def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
+    """Sets up tqdm callback for url downloads."""
+    pbar: Any = tqdm(
+        unit='B',
+        unit_scale=True,
+        unit_divisor=1024,
+        colour='blue',
+        leave=False,
+    )  # type: ignore
+
+    def download_progress_hook(
+        count: int, block_size: int, total_size: int
+    ) -> None:
+        if pbar.total is None:
+            pbar.total = total_size
+            pbar.reset()
+        downloaded_size = count * block_size
+        pbar.update(downloaded_size - pbar.n)
+        if pbar.n >= total_size:
+            pbar.close()
+
+    return download_progress_hook
+
+
 def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
     """
     Flatten a 3D array of draws X chains X variable into 2D array
@@ -1224,37 +1262,6 @@ def pushd(new_dir: str) -> Iterator[None]:
     os.chdir(new_dir)
     yield
     os.chdir(previous_dir)
-
-
-def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
-    """Sets up tqdm callback for url downloads."""
-    try:
-        from tqdm.auto import tqdm  # type:ignore
-
-        pbar: Any = tqdm(
-            unit='B',
-            unit_scale=True,
-            unit_divisor=1024,
-            colour='blue',
-            leave=False,
-        )
-
-        def download_progress_hook(
-            count: int, block_size: int, total_size: int
-        ) -> None:
-            if pbar.total is None:
-                pbar.total = total_size
-                pbar.reset()
-            downloaded_size = count * block_size
-            pbar.update(downloaded_size - pbar.n)
-            if pbar.n >= total_size:
-                pbar.close()
-
-    except (ImportError, ModuleNotFoundError):
-        print("tqdm was not downloaded, progressbar not shown")
-        return None
-
-    return download_progress_hook
 
 
 def report_signal(sig: int) -> None:

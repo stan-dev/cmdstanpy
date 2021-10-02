@@ -295,7 +295,6 @@ class RunSet:
                         # pattern matches initial "Exception" or "Error" msg
                         pat = re.compile(r'^E[rx].*$', re.M)
                         errors = re.findall(pat, contents)
-                        print(errors)
                         if len(errors) > 0:
                             msgs.append(
                                 'chain_id {}:\n\t{}\n'.format(

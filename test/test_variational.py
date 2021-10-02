@@ -180,32 +180,20 @@ class VariationalTest(unittest.TestCase):
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
         )
-
+        # not testing values, just shapes
         self.assertAlmostEqual(
-            variational.variational_params_np[3], 31.0418, places=2
-        )
-        self.assertAlmostEqual(
-            variational.variational_params_np[4], 27.4463, places=2
-        )
-
-        self.assertAlmostEqual(
-            variational.variational_params_dict['mu[1]'], 31.0418, places=2
-        )
-        self.assertAlmostEqual(
-            variational.variational_params_dict['mu[2]'], 27.4463, places=2
-        )
-
-        self.assertEqual(
             variational.variational_params_np[0],
             variational.variational_params_pd['lp__'][0],
         )
+
         self.assertEqual(
             variational.variational_params_np[3],
-            variational.variational_params_pd['mu[1]'][0],
+            variational.variational_params_dict['mu[1]'],
         )
-        self.assertEqual(
+
+        self.assertAlmostEqual(
             variational.variational_params_np[4],
-            variational.variational_params_pd['mu[2]'][0],
+            variational.variational_params_dict['mu[2]'],
         )
 
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
