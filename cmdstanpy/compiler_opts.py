@@ -48,6 +48,7 @@ class CompilerOptions:
     Attributes:
         stanc_options - stanc compiler flags, options
         cpp_options - makefile options (NAME=value)
+        user_header - path to a user .hpp file to include during compilation
     """
 
     def __init__(
@@ -55,11 +56,13 @@ class CompilerOptions:
         *,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
+        user_header: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initialize object."""
         self._stanc_options = stanc_options if stanc_options is not None else {}
         self._cpp_options = cpp_options if cpp_options is not None else {}
+        self._user_header = user_header if user_header is not None else ''
         if logger is not None:
             get_logger().warning(
                 "Parameter 'logger' is deprecated."
@@ -67,8 +70,8 @@ class CompilerOptions:
             )
 
     def __repr__(self) -> str:
-        return 'stanc_options={}, cpp_options={}'.format(
-            self._stanc_options, self._cpp_options
+        return 'stanc_options={}, cpp_options={}, user_header={}'.format(
+            self._stanc_options, self._cpp_options, self._user_header
         )
 
     @property
@@ -81,6 +84,11 @@ class CompilerOptions:
         """C++ compiler options."""
         return self._cpp_options
 
+    @property
+    def user_header(self) -> str:
+        """The user header file if it exists, otherwise empty"""
+        return self._user_header
+
     def validate(self) -> None:
         """
         Check compiler args.
@@ -88,6 +96,7 @@ class CompilerOptions:
         """
         self.validate_stanc_opts()
         self.validate_cpp_opts()
+        self.validate_user_header()
 
     def validate_stanc_opts(self) -> None:
         """
@@ -104,9 +113,7 @@ class CompilerOptions:
                 get_logger().info('ignoring compiler option: %s', key)
                 ignore.append(key)
             elif key not in STANC_OPTS:
-                raise ValueError(
-                    'unknown stanc compiler option: {}'.format(key)
-                )
+                raise ValueError(f'unknown stanc compiler option: {key}')
             elif key == 'include_paths':
                 paths = val
                 if isinstance(val, str):
@@ -114,7 +121,7 @@ class CompilerOptions:
                 elif not isinstance(val, list):
                     raise ValueError(
                         'Invalid include_paths, expecting list or '
-                        'string, found type: {}.'.format(type(val))
+                        f'string, found type: {type(val)}.'
                     )
             elif key == 'use-opencl':
                 if self._cpp_options is None:
@@ -149,9 +156,36 @@ class CompilerOptions:
                 val = self._cpp_options[key]
                 if not isinstance(val, int) or val < 0:
                     raise ValueError(
-                        '{} must be a non-negative integer value,'
-                        ' found {}.'.format(key, val)
+                        f'{key} must be a non-negative integer value,'
+                        f' found {val}.'
                     )
+
+    def validate_user_header(self) -> None:
+        """
+        User header exists.
+        Raise ValueError if bad config is found.
+        """
+        if self._user_header != "":
+            if not (
+                os.path.exists(self._user_header)
+                and os.path.isfile(self._user_header)
+            ):
+                raise ValueError(
+                    f"User header file {self._user_header} cannot be found"
+                )
+            if self._user_header[-4:] != '.hpp':
+                raise ValueError(
+                    f"Header file must end in .hpp, got {self._user_header}"
+                )
+            if "allow_undefined" not in self._stanc_options:
+                self._stanc_options["allow_undefined"] = True
+            # set full path
+            self._user_header = os.path.abspath(self._user_header)
+
+            if ' ' in self._user_header:
+                raise ValueError(
+                    "User header must be in a folder with no spaces in path!"
+                )
 
     def add(self, new_opts: "CompilerOptions") -> None:  # noqa: disable=Q000
         """Adds options to existing set of compiler options."""
@@ -167,6 +201,8 @@ class CompilerOptions:
         if new_opts.cpp_options is not None:
             for key, val in new_opts.cpp_options.items():
                 self._cpp_options[key] = val
+        if new_opts.user_header != '' and self._user_header == '':
+            self._user_header = new_opts.user_header
 
     def add_include_path(self, path: str) -> None:
         """Adds include path to existing set of compiler options."""
@@ -191,10 +227,12 @@ class CompilerOptions:
                         )
                     )
                 elif key == 'name':
-                    opts.append('STANCFLAGS+=--{}={}'.format(key, val))
+                    opts.append(f'STANCFLAGS+=--name={val}')
                 else:
-                    opts.append('STANCFLAGS+=--{}'.format(key))
+                    opts.append(f'STANCFLAGS+=--{key}')
         if self._cpp_options is not None and len(self._cpp_options) > 0:
             for key, val in self._cpp_options.items():
-                opts.append('{}={}'.format(key, val))
+                opts.append(f'{key}={val}')
+        if self._user_header:
+            opts.append(f'USER_HEADER={self._user_header}')
         return opts

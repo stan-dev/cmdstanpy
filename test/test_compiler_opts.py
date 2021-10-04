@@ -14,7 +14,9 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions()
         opts.validate()
         self.assertEqual(opts.compose(), [])
-        self.assertEqual(opts.__repr__(), 'stanc_options={}, cpp_options={}')
+        self.assertEqual(
+            opts.__repr__(), 'stanc_options={}, cpp_options={}, user_header='
+        )
 
         stanc_opts = {}
         opts = CompilerOptions(stanc_options=stanc_opts)
@@ -29,7 +31,9 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions(stanc_options=stanc_opts, cpp_options=cpp_opts)
         opts.validate()
         self.assertEqual(opts.compose(), [])
-        self.assertEqual(opts.__repr__(), 'stanc_options={}, cpp_options={}')
+        self.assertEqual(
+            opts.__repr__(), 'stanc_options={}, cpp_options={}, user_header='
+        )
 
     def test_opts_stanc(self):
         stanc_opts = {}
@@ -149,6 +153,27 @@ class CompilerOptsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             opts.validate()
 
+    def test_user_header(self):
+        header_file = os.path.join(DATAFILES_PATH, 'return_one.hpp')
+        opts = CompilerOptions(user_header=header_file)
+        opts.validate()
+        self.assertTrue(opts.stanc_options['allow_undefined'])
+
+        bad = os.path.join(DATAFILES_PATH, 'nonexistant.hpp')
+        opts = CompilerOptions(user_header=bad)
+        with self.assertRaisesRegex(ValueError, "cannot be found"):
+            opts.validate()
+
+        bad_dir = os.path.join(DATAFILES_PATH, 'optimize')
+        opts = CompilerOptions(user_header=bad_dir)
+        with self.assertRaisesRegex(ValueError, "cannot be found"):
+            opts.validate()
+
+        non_header = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        opts = CompilerOptions(user_header=non_header)
+        with self.assertRaisesRegex(ValueError, "must end in .hpp"):
+            opts.validate()
+
     def test_opts_add(self):
         stanc_opts = {'warn-uninitialized': True}
         cpp_opts = {'STAN_OPENCL': 'TRUE', 'OPENCL_DEVICE_ID': 1}
@@ -183,6 +208,12 @@ class CompilerOptsTest(unittest.TestCase):
         opts.add(new_opts3)
         opts_list = opts.compose()
         self.assertTrue(expect in opts_list)
+
+        header_file = os.path.join(DATAFILES_PATH, 'return_one.hpp')
+        opts = CompilerOptions()
+        opts.add(CompilerOptions(user_header=header_file))
+        opts_list = opts.compose()
+        self.assertTrue(len(opts_list) == 1)
 
 
 if __name__ == '__main__':

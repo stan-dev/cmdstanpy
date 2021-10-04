@@ -25,8 +25,10 @@ class CmdStanVBTest(unittest.TestCase):
         ):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
+                if (
+                    ext.lower() in ('.o', '.d', '.hpp', '.exe', '')
+                    and filename != ".gitignore"
+                    and filename != "return_one.hpp"
                 ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
@@ -162,8 +164,10 @@ class VariationalTest(unittest.TestCase):
         ):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
+                if (
+                    ext.lower() in ('.o', '.d', '.hpp', '.exe', '')
+                    and filename != ".gitignore"
+                    and filename != "return_one.hpp"
                 ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)

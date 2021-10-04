@@ -44,11 +44,15 @@ class CmdStanModelTest(unittest.TestCase):
         for root, _, files in os.walk(DATAFILES_PATH):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
+                if (
+                    ext.lower() in ('.o', '.d', '.hpp', '.exe', '')
+                    and filename != ".gitignore"
+                    and filename != "return_one.hpp"
                 ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
+                    # we should really make this module-level
+                    # and use something like git clean -Xf data/
 
     def show_cmdstan_version(self):
         print('\n\nCmdStan version: {}\n\n'.format(cmdstan_path()))
@@ -60,6 +64,12 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
         self.assertEqual('bern', model.name)
+
+        # compile with external header
+        model = CmdStanModel(
+            stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
+            user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
+        )
 
         # default model name
         model = CmdStanModel(stan_file=BERN_STAN)
@@ -109,6 +119,10 @@ class CmdStanModelTest(unittest.TestCase):
             CmdStanModel(model_name='', stan_file=BERN_STAN)
         with self.assertRaises(ValueError):
             CmdStanModel(model_name='   ', stan_file=BERN_STAN)
+        with self.assertRaises(ValueError):
+            CmdStanModel(
+                stan_file=os.path.join(DATAFILES_PATH, "external.stan")
+            )
 
     def test_stanc_options(self):
         opts = {

@@ -63,8 +63,10 @@ class SampleTest(unittest.TestCase):
         for root, _, files in os.walk(DATAFILES_PATH):
             for filename in files:
                 _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
+                if (
+                    ext.lower() in ('.o', '.d', '.hpp', '.exe', '')
+                    and filename != ".gitignore"
+                    and filename != "return_one.hpp"
                 ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
