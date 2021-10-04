@@ -8,7 +8,6 @@ import unittest
 from unittest.mock import Mock
 
 import numpy as np
-import pytest
 import tqdm
 from testfixtures import LogCapture
 
@@ -37,23 +36,6 @@ BERN_BASENAME = 'bernoulli'
 
 
 class CmdStanModelTest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(DATAFILES_PATH):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if (
-                    ext.lower() in ('.o', '.d', '.hpp', '.exe', '')
-                    and filename != ".gitignore"
-                    and filename != "return_one.hpp"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-                    # we should really make this module-level
-                    # and use something like git clean -Xf data/
-
     def show_cmdstan_version(self):
         print('\n\nCmdStan version: {}\n\n'.format(cmdstan_path()))
         self.assertTrue(True)
@@ -94,6 +76,7 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
 
+    # pylint: disable=no-self-use
     def test_model_pedantic(self):
         with LogCapture() as log:
             logging.getLogger()

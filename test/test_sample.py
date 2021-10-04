@@ -13,7 +13,6 @@ from multiprocessing import cpu_count
 from time import time
 
 import numpy as np
-import pytest
 from testfixtures import LogCapture
 
 try:
@@ -56,21 +55,6 @@ def without_import(library, module):
 
 
 class SampleTest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(DATAFILES_PATH):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if (
-                    ext.lower() in ('.o', '.d', '.hpp', '.exe', '')
-                    and filename != ".gitignore"
-                    and filename != "return_one.hpp"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-
     def test_bernoulli_good(self, stanfile='bernoulli.stan'):
         stan = os.path.join(DATAFILES_PATH, stanfile)
         bern_model = CmdStanModel(stan_file=stan)
