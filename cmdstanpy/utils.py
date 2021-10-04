@@ -157,7 +157,7 @@ def cmdstan_path() -> str:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
             if not os.path.exists(cmdstan_dir):
                 raise ValueError(
-                    'No CmdStan installation found, ' 'run "install_cmdstan".'
+                    'No CmdStan installation found, run "install_cmdstan".'
                 )
             get_logger().warning(
                 "Using ~/.cmdstanpy is deprecated and"
@@ -167,7 +167,7 @@ def cmdstan_path() -> str:
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                'No CmdStan installation found, ' 'run "install_cmdstan".'
+                'No CmdStan installation found, run "install_cmdstan".'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
