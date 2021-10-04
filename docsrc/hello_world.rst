@@ -187,33 +187,43 @@ to a specified directory.
 Progress bar
 ^^^^^^^^^^^^
   
-Users can enable progress bar for the sampling if the ``tqdm`` package
-has been installed.
+By default, CmdStanPy displays a progress bar during sampling.
  
 .. code-block:: python
 
-    fit = model.sample(data=data_file, show_progress=True)
+    fit = model.sample(data=data_file)
+
+To suppress the progress bar, specify argument ``show_progress=False``.
+
+.. code-block:: python
+
+    fit = model.sample(data=data_file, show_progress=False)
+
+To see the CmdStan console outputs instead, specify argumen ``show_console=True``.
+
  
-To enable javascript progress bar on Jupyter Lab Notebook user needs to install
-nodejs and ipywidgets. Following the instructions in
-[tqdm issue #394](https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637),
-nodejs can be installed with ``conda``.
- 
-.. code-block:: bash
+.. code-block:: python
 
-     conda install nodejs
- 
-After nodejs has been installed, user needs to install ipywidgets and enable it.
- 
-.. code-block:: bash
+    fit = model.sample(data=data_file, show_console=True)
 
-    pip install ipywidgets
-    jupyter nbextension enable --py widgetsnbextension
 
-Jupyter Lab still needs widgets manager.
+.. has this issue been resolved?    
 
-.. code-block:: bash
-
-    jupyter labextension install @jupyter-widgets/jupyterlab-manager
-
-     
+  Jupyter Lab Notebook requirements
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+  To enable a javascript progress bar on Jupyter Lab Notebook, both nodejs and ipywidgets
+  must be installed. Following the instructions in
+  [tqdm issue #394](https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637),
+  nodejs can be installed with ``conda``.
+   
+  .. code-block:: bash
+  
+       conda install nodejs
+   
+  After nodejs has been installed, then install ipywidgets and enable it.
+   
+  .. code-block:: bash
+  
+      pip install ipywidgets
+      jupyter nbextension enable --py widgetsnbextension

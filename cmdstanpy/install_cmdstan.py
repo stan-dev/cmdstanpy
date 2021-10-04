@@ -11,7 +11,7 @@ Optional command line arguments:
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
    --progress: flag, when specified show progress bar for CmdStan download
-
+   --verbose: flag, when specified prints output from CmdStan build process
    -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse
@@ -92,26 +92,26 @@ def clean_all(verbose: bool = False) -> None:
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{str(e)}')
 
 
-def build(
-    cmdstan_version: str,
-    verbose: bool = False,
-    progress: bool = True,
-) -> None:
+def build(verbose: bool = False, progress: bool = True) -> None:
     """
-    Run `make build` in the current directory (must be a cmdstan library)
-    Default is minimal progress report.  Argument "verbose" streams all command
-    outputs to the console.  Argument "progress" displays a tqdm progress bar.
-    If both are specified, will show console outputs but not progress bar.
+    Run command ``make build`` in the current directory, which must be
+    the home directory of a CmdStan version (or GitHub repo).
+    By default, displays a progress bar which tracks make command outputs.
+    If argument ``verbose=True``, instead of a progress bar, streams
+    make command outputs to sys.stdout.  When both ``verbose`` and ``progress``
+    are ``False``, runs silently.
 
     :param verbose: Boolean value; when ``True``, show output from make command.
+        Default is ``False``.
     :param progress: Boolean value; when ``True`` display progress progress bar.
+        Default is ``True``.
     """
     cmd = [MAKE, 'build']
     try:
         if verbose:
             do_command(cmd)
         elif progress:
-            progress_hook: Any = _wrap_build_progress_hook(cmdstan_version)
+            progress_hook: Any = _wrap_build_progress_hook()
             do_command(cmd, pbar=progress_hook)
         else:
             do_command(cmd, fd_out=io.StringIO(), pbar=None)
@@ -144,26 +144,23 @@ def build(
 
 
 # pylint: disable=no-self-use
-def _wrap_build_progress_hook(
-    cmdstan_version: str,
-) -> Optional[Callable[[str], None]]:
+def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
     """Sets up tqdm callback for CmdStan sampler console msgs."""
     pad = ' ' * 20
     pbar: Any = tqdm(
-        total=200,
+        total=150,
         bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
-        postfix=[dict(value=f'Building {cmdstan_version} {pad}')],
+        postfix=[dict(value=f'Building CmdStan {pad}')],
         colour='blue',
         desc='',
         position=0,
     )
-    success = f'--- CmdStan {cmdstan_version} built ---'
 
     def build_progress_hook(line: str) -> None:
-        if line == '__DONE__' or line == success:
+        if line.startswith('--- CmdStan'):
             pbar.set_description('Done')
-            pbar.postfix[0]["value"] = success
-            pbar.update(100)
+            pbar.postfix[0]["value"] = line
+            pbar.update(10)
             pbar.close()
         else:
             if line.startswith('--'):
@@ -200,7 +197,7 @@ def compile_example(verbose: bool = False) -> None:
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
 
 
-def rebuild_cmdstan(cmdstan_version: str, verbose: bool = False) -> None:
+def rebuild_cmdstan(verbose: bool = False, progress: bool = True) -> None:
     """
     Rebuilds the existing CmdStan installation.
     This assumes CmdStan has already been installed,
@@ -212,7 +209,7 @@ def rebuild_cmdstan(cmdstan_version: str, verbose: bool = False) -> None:
     try:
         with pushd(cmdstan_path()):
             clean_all(verbose)
-            build(cmdstan_version, verbose)
+            build(verbose, progress)
             compile_example(verbose)
     except ValueError as e:
         raise CmdStanInstallError(
@@ -244,7 +241,7 @@ def install_version(
             )
             clean_all(verbose)
             print('Rebuilding version {}'.format(cmdstan_version))
-        build(cmdstan_version, verbose)
+        build(verbose)
         print('Test model compilation')
         compile_example(verbose)
     print('Installed {}'.format(cmdstan_version))
@@ -426,7 +423,6 @@ def main(args: Dict[str, Any]) -> None:
     """Main."""
 
     version = latest_version()
-    print(version)
     if args['version']:
         version = args['version']
 

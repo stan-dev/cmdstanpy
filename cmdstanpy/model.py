@@ -359,20 +359,21 @@ class CmdStanModel:
                         exceptions = [
                             x
                             for x in lines
-                            if x.startswith('Uncauth exception')
+                            if x.startswith('Uncaught exception')
                         ]
                         if (
                             len(syntax_errors) > 0
                             or len(semantic_errors) > 0
                             or len(exceptions) > 0
                         ):
-                            get_logger().warning(
+                            get_logger().error(
                                 'Stan program failed to compile:'
                             )
                             get_logger().warning(console)
                         elif len(warnings) > 0:
                             get_logger().warning(
-                                '%d from Stan compiler:', len(warnings)
+                                'Stan compiler has produced %d warnings:',
+                                len(warnings),
                             )
                             get_logger().warning(console)
 

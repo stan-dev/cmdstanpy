@@ -122,12 +122,10 @@ def validate_cmdstan_path(path: str) -> None:
     Throws exception if specified path is invalid.
     """
     if not os.path.isdir(path):
-        raise ValueError(
-            'No CmdStan directory, ' 'path {} does not exist.'.format(path)
-        )
+        raise ValueError(f'No CmdStan directory, path {path} does not exist.')
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'CmdStan installataion missing binaries, ' 'run "install_cmdstan"'
+            'CmdStan installataion missing binaries, run "install_cmdstan"'
         )
 
 
@@ -966,14 +964,13 @@ def do_command(
                 else:
                     sys.stdout.write(line)
 
-        if pbar is not None:
-            pbar("__DONE__")
-
         stdout, _ = proc.communicate()
         if stdout:
             if len(stdout) > 0:
                 if fd_out is not None:
                     fd_out.write(stdout)
+                elif pbar is not None:
+                    pbar(stdout.strip())
                 else:
                     sys.stdout.write(stdout)
 
