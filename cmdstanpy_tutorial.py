@@ -29,7 +29,7 @@ data = {"N": 10, "y": [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
 
 # ### Do Inference
 
-fit = model.optimize(data=data, show_console=True)
+fit = model.sample(data=data, show_console=True)
 print(fit)
 
 # ### Access the sample: the `CmdStanMCMC` object attributes and methods
