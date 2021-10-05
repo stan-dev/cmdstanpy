@@ -53,13 +53,3 @@ print(fit.summary())
 # #### Run sampler diagnostics
 
 print(fit.diagnose())
-
-# #### Visualize posterior density of parameter "theta"
-if sys.version[0:3] != '3.8':  # https://github.com/conda/conda/issues/9589
-    vars = fit.stan_variables()
-    for (k, v) in vars.items():
-        print(k, v.shape)
-    
-    thetas = fit.stan_variable(var='theta')
-    pd.DataFrame(data=thetas).plot.density()
-    plt.show()

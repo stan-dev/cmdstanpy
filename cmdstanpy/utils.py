@@ -39,24 +39,11 @@ from cmdstanpy import (
     _CMDSTAN_WARMUP,
     _DOT_CMDSTAN,
     _DOT_CMDSTANPY,
-    _SHOW_PROGRESS,
     _TMPDIR,
+    _disable_progress
 )
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
-
-
-def disable_progress(e: Exception) -> None:
-    # pylint: disable=global-statement
-    global _SHOW_PROGRESS
-    if _SHOW_PROGRESS:
-        _SHOW_PROGRESS = False
-        get_logger().error(
-            'Error in progress bar initialization:\n'
-            '\t%s\n'
-            'Disabling progress bars for this session',
-            str(e),
-        )
 
 
 @functools.lru_cache(maxsize=None)
@@ -1235,7 +1222,7 @@ def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
         )  # type: ignore
     # pylint: disable=broad-except
     except Exception as e:
-        disable_progress(e)
+        _disable_progress(e)
 
         def download_progress_hook(
             # pylint: disable=unused-argument
@@ -1258,7 +1245,7 @@ def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
                     pbar.close()
             # pylint: disable=broad-except
             except Exception as e:
-                disable_progress(e)
+                _disable_progress(e)
 
     return download_progress_hook
 

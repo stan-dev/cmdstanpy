@@ -22,6 +22,7 @@ from cmdstanpy import (
     _CMDSTAN_SAMPLING,
     _CMDSTAN_WARMUP,
     _SHOW_PROGRESS,
+    _disable_progress,
 )
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -44,7 +45,6 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     cmdstan_path,
-    disable_progress,
     do_command,
     get_logger,
     returncode_msg,
@@ -780,7 +780,7 @@ class CmdStanModel:
             unless package tqdm progress bar encounter errors.
 
         :param show_console: If ``True``, stream CmdStan messages sent to stdout
-            and stderr to the console.  Default is False.  When
+            and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -902,14 +902,10 @@ class CmdStanModel:
                 refresh = _CMDSTAN_REFRESH
             iter_total = iter_total // refresh + 2
 
-            if show_progress:
-                assert isinstance(
-                    _SHOW_PROGRESS, bool
-                )  # make the typechecker happy
-                show_progress = _SHOW_PROGRESS
-
             if show_console:
                 show_progress = False
+            else:
+                show_progress = show_progress and _SHOW_PROGRESS
 
             get_logger().info('sampling: %s', runset.cmds[0])
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
@@ -1188,7 +1184,7 @@ class CmdStanModel:
             reports that "The algorithm may not have converged".
 
         :param show_console: If ``True``, stream CmdStan messages sent to
-            stdout and stderr to the console.  Default is False.
+            stdout and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -1365,7 +1361,7 @@ class CmdStanModel:
             )
         # pylint: disable=broad-except
         except Exception as e:
-            disable_progress(e)
+            _disable_progress(e)
 
             # pylint: disable=unused-argument
             def sampler_progress_hook(line: str) -> None:
@@ -1382,10 +1378,10 @@ class CmdStanModel:
                     elif line.startswith("Iteration"):
                         if 'Sampling' in line:
                             pbar.colour = 'blue'
-                            pbar.update(1)
-                            pbar.postfix[0]["value"] = line
+                        pbar.update(1)
+                        pbar.postfix[0]["value"] = line
                 # pylint: disable=broad-except
                 except Exception as e:
-                    disable_progress(e)
+                    _disable_progress(e)
 
         return sampler_progress_hook

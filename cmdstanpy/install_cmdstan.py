@@ -31,10 +31,9 @@ from typing import Any, Callable, Dict, Optional
 
 from tqdm.auto import tqdm  # type: ignore
 
-from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY, _disable_progress
 from cmdstanpy.utils import (
     cmdstan_path,
-    disable_progress,
     do_command,
     get_logger,
     pushd,
@@ -161,7 +160,7 @@ def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
         )
     # pylint: disable=broad-except
     except Exception as e:
-        disable_progress(e)
+        _disable_progress(e)
 
         # pylint: disable=unused-argument
         def build_progress_hook(line: str) -> None:
@@ -188,7 +187,7 @@ def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
 
         # pylint: disable=broad-except
         except Exception as e:
-            disable_progress(e)
+            _disable_progress(e)
 
     return build_progress_hook
 
