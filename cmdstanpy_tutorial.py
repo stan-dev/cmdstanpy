@@ -3,9 +3,12 @@
 
 # ### Import CmdStanPy classes and methods
 
-import os
+import sys
+import os.path
 
 import matplotlib
+import matplotlib.pyplot as plt
+
 import pandas as pd
 
 from cmdstanpy import CmdStanModel, cmdstan_path
@@ -29,32 +32,34 @@ data = {"N": 10, "y": [0, 1, 0, 0, 0, 0, 0, 0, 0, 1]}
 
 # ### Do Inference
 
-fit = model.sample(data=data, show_console=True)
+fit = model.sample(data=data)
 print(fit)
 
 # ### Access the sample: the `CmdStanMCMC` object attributes and methods
 
-fit.draws().shape
+print(fit.draws().shape)
 
-vars = fit.stan_variables()
-for (k, v) in vars.items():
-    print(k, v.shape)
-
-thetas = fit.stan_variable(var='theta')
-pd.DataFrame(data=thetas).plot.density()
 
 # #### Get HMC sampler tuning parameters
 
-fit.step_size
-fit.metric_type
-fit.metric
+print(fit.step_size)
+print(fit.metric_type)
+print(fit.metric)
 
 # #### Summarize the results
 
-fit.summary()
+print(fit.summary())
 
 # #### Run sampler diagnostics
 
-fit.diagnose()
+print(fit.diagnose())
 
-
+# #### Visualize posterior density of parameter "theta"
+if sys.version[0:3] != '3.8':  # https://github.com/conda/conda/issues/9589
+    vars = fit.stan_variables()
+    for (k, v) in vars.items():
+        print(k, v.shape)
+    
+    thetas = fit.stan_variable(var='theta')
+    pd.DataFrame(data=thetas).plot.density()
+    plt.show()

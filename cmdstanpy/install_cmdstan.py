@@ -34,6 +34,7 @@ from tqdm.auto import tqdm  # type: ignore
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 from cmdstanpy.utils import (
     cmdstan_path,
+    disable_progress,
     do_command,
     get_logger,
     pushd,
@@ -129,6 +130,7 @@ def build(verbose: bool = False, progress: bool = True) -> None:
             f'bin/stansummary{EXTENSION} not found'
             ', please rebuild or report a bug!'
         )
+
     if platform.system() == 'Windows':
         # Add tbb to the $PATH on Windows
         libtbb = os.path.join(
@@ -147,28 +149,46 @@ def build(verbose: bool = False, progress: bool = True) -> None:
 def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
     """Sets up tqdm callback for CmdStan sampler console msgs."""
     pad = ' ' * 20
-    pbar: Any = tqdm(
-        total=150,
-        bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
-        postfix=[dict(value=f'Building CmdStan {pad}')],
-        colour='blue',
-        desc='',
-        position=0,
-    )
+    msgs_expected = 150  # hack: 2.27 make build send ~140 msgs to console
+    try:
+        pbar: Any = tqdm(
+            total=msgs_expected,
+            bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
+            postfix=[dict(value=f'Building CmdStan {pad}')],
+            colour='blue',
+            desc='',
+            position=0,
+        )
+    # pylint: disable=broad-except
+    except Exception as e:
+        disable_progress(e)
 
-    def build_progress_hook(line: str) -> None:
-        if line.startswith('--- CmdStan'):
-            pbar.set_description('Done')
-            pbar.postfix[0]["value"] = line
-            pbar.update(10)
-            pbar.close()
-        else:
-            if line.startswith('--'):
-                pbar.postfix[0]["value"] = line
-            else:
-                pbar.postfix[0]["value"] = f'{line[:8]} ... {line[-20:]}'
-            pbar.set_description('Compiling')
-            pbar.update(1)
+        # pylint: disable=unused-argument
+        def build_progress_hook(line: str) -> None:
+            return
+
+    else:
+        try:
+
+            def build_progress_hook(line: str) -> None:
+                if line.startswith('--- CmdStan'):
+                    pbar.set_description('Done')
+                    pbar.postfix[0]["value"] = line
+                    pbar.update(msgs_expected - pbar.n)
+                    pbar.close()
+                else:
+                    if line.startswith('--'):
+                        pbar.postfix[0]["value"] = line
+                    else:
+                        pbar.postfix[0][
+                            "value"
+                        ] = f'{line[:8]} ... {line[-20:]}'
+                        pbar.set_description('Compiling')
+                        pbar.update(1)
+
+        # pylint: disable=broad-except
+        except Exception as e:
+            disable_progress(e)
 
     return build_progress_hook
 

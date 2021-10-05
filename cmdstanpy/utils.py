@@ -39,10 +39,24 @@ from cmdstanpy import (
     _CMDSTAN_WARMUP,
     _DOT_CMDSTAN,
     _DOT_CMDSTANPY,
+    _SHOW_PROGRESS,
     _TMPDIR,
 )
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
+
+
+def disable_progress(e: Exception) -> None:
+    # pylint: disable=global-statement
+    global _SHOW_PROGRESS
+    if _SHOW_PROGRESS:
+        _SHOW_PROGRESS = False
+        get_logger().error(
+            'Error in progress bar initialization:\n'
+            '\t%s\n'
+            'Disabling progress bars for this session',
+            str(e),
+        )
 
 
 @functools.lru_cache(maxsize=None)
@@ -1211,24 +1225,40 @@ def install_cmdstan(
 
 def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
     """Sets up tqdm callback for url downloads."""
-    pbar: Any = tqdm(
-        unit='B',
-        unit_scale=True,
-        unit_divisor=1024,
-        colour='blue',
-        leave=False,
-    )  # type: ignore
+    try:
+        pbar: Any = tqdm(
+            unit='B',
+            unit_scale=True,
+            unit_divisor=1024,
+            colour='blue',
+            leave=False,
+        )  # type: ignore
+    # pylint: disable=broad-except
+    except Exception as e:
+        disable_progress(e)
 
-    def download_progress_hook(
-        count: int, block_size: int, total_size: int
-    ) -> None:
-        if pbar.total is None:
-            pbar.total = total_size
-            pbar.reset()
-        downloaded_size = count * block_size
-        pbar.update(downloaded_size - pbar.n)
-        if pbar.n >= total_size:
-            pbar.close()
+        def download_progress_hook(
+            # pylint: disable=unused-argument
+            count: int, block_size: int, total_size: int
+        ) -> None:
+            return
+
+    else:
+
+        def download_progress_hook(
+            count: int, block_size: int, total_size: int
+        ) -> None:
+            try:
+                if pbar.total is None:
+                    pbar.total = total_size
+                    pbar.reset()
+                downloaded_size = count * block_size
+                pbar.update(downloaded_size - pbar.n)
+                if pbar.n >= total_size:
+                    pbar.close()
+            # pylint: disable=broad-except
+            except Exception as e:
+                disable_progress(e)
 
     return download_progress_hook
 

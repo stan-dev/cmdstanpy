@@ -16,7 +16,13 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
 from tqdm.auto import tqdm  # type: ignore
 
-from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
+
+from cmdstanpy import (
+    _CMDSTAN_REFRESH,
+    _CMDSTAN_SAMPLING,
+    _CMDSTAN_WARMUP,
+    _SHOW_PROGRESS,
+)
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
@@ -38,6 +44,7 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     cmdstan_path,
+    disable_progress,
     do_command,
     get_logger,
     returncode_msg,
@@ -485,8 +492,8 @@ class CmdStanModel:
             Introduced in CmdStan-2.25.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, CSV outputs are written to a file
-            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
 
         :param algorithm: Algorithm to use. One of: 'BFGS', 'LBFGS', 'Newton'
@@ -518,8 +525,8 @@ class CmdStanModel:
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
-        :param show_console: If True, stream CmdStan messages sent to stdout
-            and stderr to the console.  Default is False.
+        :param show_console: If ``True``, stream CmdStan messages sent to
+            stdout and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
@@ -713,7 +720,7 @@ class CmdStanModel:
             The length of the list of step sizes must match the number of
             chains.
 
-        :param adapt_engaged: When True, adapt step size and metric.
+        :param adapt_engaged: When ``True``, adapt step size and metric.
 
         :param adapt_delta: Adaptation target Metropolis acceptance rate.
             The default value is 0.8.  Increasing this value, which must be
@@ -755,24 +762,25 @@ class CmdStanModel:
 
         :param save_latent_dynamics: Whether or not to output the position and
             momentum information for the model parameters (unconstrained).
-            If True, CSV outputs are written to an output file using filename
-            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
+            If ``True``, CSV outputs are written to an output file
+            '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv', see
             https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
             section "Diagnostic CSV output file" for details.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, CSV outputs are written to a file
-            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26, see
             https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
             section "Profiling CSV output file" for details.
 
-        :param show_progress: If True, display progress bar to track
-            progress for warmup and sampling iterations.  Default is ``True``.
+        :param show_progress: If ``True``, display progress bar to track
+            progress for warmup and sampling iterations.  Default is ``True``,
+            unless package tqdm progress bar encounter errors.
 
-        :param show_console: If True, stream CmdStan messages sent to stdout
-            and stderr to the console.  Default is False.
+        :param show_console: If ``True``, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is False.  When
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -894,6 +902,12 @@ class CmdStanModel:
                 refresh = _CMDSTAN_REFRESH
             iter_total = iter_total // refresh + 2
 
+            if show_progress:
+                assert isinstance(
+                    _SHOW_PROGRESS, bool
+                )  # make the typechecker happy
+                show_progress = _SHOW_PROGRESS
+
             if show_console:
                 show_progress = False
 
@@ -987,8 +1001,8 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param show_console: If True, stream CmdStan messages sent to stdout
-            and stderr to the console.  Default is False.
+        :param show_console: If ``True``, stream CmdStan messages sent to
+            stdout and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -1140,13 +1154,13 @@ class CmdStanModel:
             Introduced in CmdStan-2.25.
 
         :param save_latent_dynamics: Whether or not to save diagnostics.
-            If True, CSV outputs are written to an output file using filename
-            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
+            If ``True``, CSV outputs are written to output file
+            '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, CSV outputs are written to a file
-            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
 
         :param algorithm: Algorithm to use. One of: 'meanfield', 'fullrank'.
@@ -1173,8 +1187,8 @@ class CmdStanModel:
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
 
-        :param show_console: If True, stream CmdStan messages sent to stdout
-            and stderr to the console.  Default is False.
+        :param show_console: If ``True``, stream CmdStan messages sent to
+            stdout and stderr to the console.  Default is False.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -1341,22 +1355,37 @@ class CmdStanModel:
         self, chain_id: int, total: int
     ) -> Optional[Callable[[str], None]]:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
-        pbar: Any = tqdm(
-            total=total,
-            bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
-            postfix=[dict(value="Status")],
-            desc=f'chain {chain_id}',
-            colour='yellow',
-        )
+        try:
+            pbar: Any = tqdm(
+                total=total,
+                bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
+                postfix=[dict(value="Status")],
+                desc=f'chain {chain_id}',
+                colour='yellow',
+            )
+        # pylint: disable=broad-except
+        except Exception as e:
+            disable_progress(e)
 
-        def sampler_progress_hook(line: str) -> None:
-            if line == "Done":
-                pbar.postfix[0]["value"] = 'Sampling completed'
-                pbar.close()
-            elif line.startswith("Iteration"):
-                if 'Sampling' in line:
-                    pbar.colour = 'blue'
-                pbar.update(1)
-                pbar.postfix[0]["value"] = line
+            # pylint: disable=unused-argument
+            def sampler_progress_hook(line: str) -> None:
+                return
+
+        else:
+
+            def sampler_progress_hook(line: str) -> None:
+                try:
+                    if line == "Done":
+                        pbar.postfix[0]["value"] = 'Sampling completed'
+                        pbar.update(total - pbar.n)
+                        pbar.close()
+                    elif line.startswith("Iteration"):
+                        if 'Sampling' in line:
+                            pbar.colour = 'blue'
+                            pbar.update(1)
+                            pbar.postfix[0]["value"] = line
+                # pylint: disable=broad-except
+                except Exception as e:
+                    disable_progress(e)
 
         return sampler_progress_hook

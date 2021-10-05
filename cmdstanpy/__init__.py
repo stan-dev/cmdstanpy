@@ -24,6 +24,7 @@ _CMDSTAN_THIN = 1
 _CMDSTAN_REFRESH = 100
 _DOT_CMDSTANPY = '.cmdstanpy'
 _DOT_CMDSTAN = '.cmdstan'
+_SHOW_PROGRESS = True
 
 
 def _cleanup_tmpdir() -> None:
