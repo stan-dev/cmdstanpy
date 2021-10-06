@@ -40,7 +40,7 @@ from cmdstanpy import (
     _DOT_CMDSTAN,
     _DOT_CMDSTANPY,
     _TMPDIR,
-    _disable_progress
+    _disable_progress,
 )
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
@@ -925,22 +925,24 @@ def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
     *,
-    fd_out: Optional[TextIO] = None,
+    fd_out: Optional[TextIO] = sys.stdout,
     pbar: Optional[Callable[[str], None]] = None,
 ) -> None:
     """
-    Run command as subprocess, streams output to console or designated stream.
+    Run command as subprocess, polls process output pipes and
+    either streams outputs to supplied output stream or sends
+    each line (stripped) to the supplied progress bar callback hook.
+
     Raises ``RuntimeError`` on non-zero return code or execption ``OSError``.
 
     :param cmd: command and args.
     :param cwd: directory in which to run command, if unspecified,
         run command in the current working directory.
-    :param fd_out: when specified, sends stdout to this stream
-        instead of writing to sys.stdout.
-    :param pbar: optional callback hook to tqdm.
-       see: https://github.com/tqdm/tqdm#hooks-and-callbacks
-       callback hook takes single string argument, will recieve
-       final callback '__DONE__' when proc completes.
+    :param fd_out: when supplied, streams to this output stream,
+        else writes to sys.stdout.
+    :param pbar: optional callback hook to tqdm, which takes
+       single ``str`` arguent, see:
+       https://github.com/tqdm/tqdm#hooks-and-callbacks.
 
     """
     get_logger().debug('cmd: %s', ' '.join(cmd))
@@ -957,23 +959,20 @@ def do_command(
         )
         while proc.poll() is None:
             if proc.stdout is not None:
-                line = proc.stdout.readline()
-                if fd_out is not None:
-                    fd_out.write(line)
-                elif pbar is not None:
-                    pbar(line.strip())
-                else:
-                    sys.stdout.write(line)
+                lines = proc.stdout.readlines()
+                for line in lines:
+                    if fd_out is not None:
+                        fd_out.write(line)
+                    if pbar is not None:
+                        pbar(line.strip())
 
         stdout, _ = proc.communicate()
         if stdout:
             if len(stdout) > 0:
                 if fd_out is not None:
                     fd_out.write(stdout)
-                elif pbar is not None:
+                if pbar is not None:
                     pbar(stdout.strip())
-                else:
-                    sys.stdout.write(stdout)
 
         if proc.returncode != 0:  # throw RuntimeError + msg
             serror = ''
@@ -1226,7 +1225,9 @@ def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
 
         def download_progress_hook(
             # pylint: disable=unused-argument
-            count: int, block_size: int, total_size: int
+            count: int,
+            block_size: int,
+            total_size: int,
         ) -> None:
             return
 
@@ -1235,17 +1236,13 @@ def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
         def download_progress_hook(
             count: int, block_size: int, total_size: int
         ) -> None:
-            try:
-                if pbar.total is None:
-                    pbar.total = total_size
-                    pbar.reset()
-                downloaded_size = count * block_size
-                pbar.update(downloaded_size - pbar.n)
-                if pbar.n >= total_size:
-                    pbar.close()
-            # pylint: disable=broad-except
-            except Exception as e:
-                _disable_progress(e)
+            if pbar.total is None:
+                pbar.total = total_size
+                pbar.reset()
+            downloaded_size = count * block_size
+            pbar.update(downloaded_size - pbar.n)
+            if pbar.n >= total_size:
+                pbar.close()
 
     return download_progress_hook
 

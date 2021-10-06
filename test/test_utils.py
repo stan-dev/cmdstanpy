@@ -761,17 +761,11 @@ class ParseVarsTest(unittest.TestCase):
 
 
 class DoCommandTest(unittest.TestCase):
-    def test_good(self):
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            do_command(cmd=['ls'], cwd=HERE)
-        console = sys_stdout.getvalue()
-        self.assertTrue('test_utils.py' in console)
 
+    def test_capture_console(self):
         tmp = io.StringIO()
         do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
-        console_out = tmp.getvalue()
-        self.assertTrue('test_utils.py' in console_out)
+        self.assertTrue('test_utils.py' in tmp.getvalue())
 
     def test_exit(self):
         sys_stdout = io.StringIO()

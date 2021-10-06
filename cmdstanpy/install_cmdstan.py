@@ -15,7 +15,6 @@ Optional command line arguments:
    -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse
-import io
 import json
 import os
 import platform
@@ -85,7 +84,7 @@ def clean_all(verbose: bool = False) -> None:
         if verbose:
             do_command(cmd)
         else:
-            do_command(cmd, fd_out=io.StringIO())
+            do_command(cmd, fd_out=None)
 
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
@@ -112,9 +111,9 @@ def build(verbose: bool = False, progress: bool = True) -> None:
             do_command(cmd)
         elif progress:
             progress_hook: Any = _wrap_build_progress_hook()
-            do_command(cmd, pbar=progress_hook)
+            do_command(cmd, fd_out=None, pbar=progress_hook)
         else:
-            do_command(cmd, fd_out=io.StringIO(), pbar=None)
+            do_command(cmd, fd_out=None)
 
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
@@ -167,27 +166,20 @@ def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
             return
 
     else:
-        try:
 
-            def build_progress_hook(line: str) -> None:
-                if line.startswith('--- CmdStan'):
-                    pbar.set_description('Done')
+        def build_progress_hook(line: str) -> None:
+            if line.startswith('--- CmdStan'):
+                pbar.set_description('Done')
+                pbar.postfix[0]["value"] = line
+                pbar.update(msgs_expected - pbar.n)
+                pbar.close()
+            else:
+                if line.startswith('--'):
                     pbar.postfix[0]["value"] = line
-                    pbar.update(msgs_expected - pbar.n)
-                    pbar.close()
                 else:
-                    if line.startswith('--'):
-                        pbar.postfix[0]["value"] = line
-                    else:
-                        pbar.postfix[0][
-                            "value"
-                        ] = f'{line[:8]} ... {line[-20:]}'
-                        pbar.set_description('Compiling')
-                        pbar.update(1)
-
-        # pylint: disable=broad-except
-        except Exception as e:
-            _disable_progress(e)
+                    pbar.postfix[0]["value"] = f'{line[:8]} ... {line[-20:]}'
+                    pbar.set_description('Compiling')
+                    pbar.update(1)
 
     return build_progress_hook
 
@@ -210,7 +202,7 @@ def compile_example(verbose: bool = False) -> None:
         if verbose:
             do_command(cmd)
         else:
-            do_command(cmd, fd_out=io.StringIO())
+            do_command(cmd, fd_out=None)
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
@@ -384,9 +376,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
         if top_dir != cmdstan_dir:
             raise CmdStanInstallError(
                 'tarfile should contain top-level dir {},'
-                'but found dir {} instead.'.format(
-                    cmdstan_dir, top_dir
-                )
+                'but found dir {} instead.'.format(cmdstan_dir, top_dir)
             )
         target = os.getcwd()
         if platform.system() == 'Windows':

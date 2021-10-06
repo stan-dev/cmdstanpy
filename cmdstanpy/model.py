@@ -175,9 +175,8 @@ class CmdStanModel:
         self._compiler_options.validate()
 
         if platform.system() == 'Windows':
-            sink = io.StringIO()
             try:
-                do_command(['where.exe', 'tbb.dll'], fd_out=sink)
+                do_command(['where.exe', 'tbb.dll'], fd_out=None)
             except RuntimeError:
                 # Add tbb to the $PATH on Windows
                 libtbb = os.environ.get('STAN_TBB')
@@ -345,14 +344,14 @@ class CmdStanModel:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
 
-                    sink = io.StringIO()
+                    sout = io.StringIO()
                     try:
-                        do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sink)
+                        do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
                     except RuntimeError as e:
-                        sink.write(f'\n{str(e)}\n')
+                        sout.write(f'\n{str(e)}\n')
                         compilation_failed = True
                     finally:
-                        console = sink.getvalue()
+                        console = sout.getvalue()
 
                     if compilation_failed or 'Warning:' in console:
                         lines = console.split('\n')
@@ -1303,19 +1302,23 @@ class CmdStanModel:
             )
             while proc.poll() is None:
                 if proc.stdout is not None:
-                    line = proc.stdout.readline()
-                    fd_out.write(line)
-                    line = line.strip()
-                    if show_console and len(line) > 1:
-                        print('chain {}: {}'.format(idx + 1, line))
-                    if show_progress and progress_hook is not None:
-                        progress_hook(line)
+                    lines = proc.stdout.readlines()
+                    for line in lines:
+                        fd_out.write(line)
+                        line = line.strip()
+                        if show_console and len(line) > 1:
+                            print('chain {}: {}'.format(idx + 1, line))
+                        if show_progress and progress_hook is not None:
+                            progress_hook(line)
             if show_progress and progress_hook is not None:
                 progress_hook("Done")
 
             stdout, _ = proc.communicate()
             if stdout:
                 fd_out.write(stdout)
+                if show_console:
+                    print('chain {}: {}'.format(idx + 1, stdout))
+
             fd_out.close()
         except OSError as e:
             msg = 'Failed with error {}\n'.format(str(e))
@@ -1370,18 +1373,14 @@ class CmdStanModel:
         else:
 
             def sampler_progress_hook(line: str) -> None:
-                try:
-                    if line == "Done":
-                        pbar.postfix[0]["value"] = 'Sampling completed'
-                        pbar.update(total - pbar.n)
-                        pbar.close()
-                    elif line.startswith("Iteration"):
-                        if 'Sampling' in line:
-                            pbar.colour = 'blue'
-                        pbar.update(1)
-                        pbar.postfix[0]["value"] = line
-                # pylint: disable=broad-except
-                except Exception as e:
-                    _disable_progress(e)
+                if line == "Done":
+                    pbar.postfix[0]["value"] = 'Sampling completed'
+                    pbar.update(total - pbar.n)
+                    pbar.close()
+                elif line.startswith("Iteration"):
+                    if 'Sampling' in line:
+                        pbar.colour = 'blue'
+                    pbar.update(1)
+                    pbar.postfix[0]["value"] = line
 
         return sampler_progress_hook

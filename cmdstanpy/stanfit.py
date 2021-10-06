@@ -2,7 +2,6 @@
 
 import copy
 import glob
-import io
 import logging
 import math
 import os
@@ -19,7 +18,6 @@ from typing import (
     List,
     MutableMapping,
     Optional,
-    TextIO,
     Tuple,
     Union,
 )
@@ -889,8 +887,7 @@ class CmdStanMCMC:
             sig_figs_str,
             csv_str,
         ] + self.runset.csv_files
-        tmp: TextIO = io.StringIO()
-        do_command(cmd, fd_out=tmp)
+        do_command(cmd, fd_out=None)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
                 fd,
