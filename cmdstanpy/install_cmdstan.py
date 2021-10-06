@@ -30,7 +30,10 @@ from typing import Any, Callable, Dict, Optional
 
 from tqdm.auto import tqdm  # type: ignore
 
-from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY, _disable_progress
+from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+
+from cmdstanpy.progress import allow_show_progress, disable_progress
+
 from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
@@ -109,7 +112,7 @@ def build(verbose: bool = False, progress: bool = True) -> None:
     try:
         if verbose:
             do_command(cmd)
-        elif progress:
+        elif progress and allow_show_progress():
             progress_hook: Any = _wrap_build_progress_hook()
             do_command(cmd, fd_out=None, pbar=progress_hook)
         else:
@@ -159,7 +162,7 @@ def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
         )
     # pylint: disable=broad-except
     except Exception as e:
-        _disable_progress(e)
+        disable_progress(e)
 
         # pylint: disable=unused-argument
         def build_progress_hook(line: str) -> None:
@@ -333,7 +336,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
     )
     for i in range(6):  # always retry to allow for transient URLErrors
         try:
-            if progress:
+            if progress and allow_show_progress():
                 progress_hook: Optional[
                     Callable[[int, int, int], None]
                 ] = wrap_url_progress_hook()
@@ -383,7 +386,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
 
-        if progress:
+        if progress and allow_show_progress():
             for member in tqdm(
                 iterable=tar.getmembers(),
                 total=len(tar.getmembers()),

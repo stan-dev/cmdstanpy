@@ -40,8 +40,10 @@ from cmdstanpy import (
     _DOT_CMDSTAN,
     _DOT_CMDSTANPY,
     _TMPDIR,
-    _disable_progress,
 )
+
+from cmdstanpy.progress import disable_progress
+
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -1221,7 +1223,7 @@ def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
         )  # type: ignore
     # pylint: disable=broad-except
     except Exception as e:
-        _disable_progress(e)
+        disable_progress(e)
 
         def download_progress_hook(
             # pylint: disable=unused-argument

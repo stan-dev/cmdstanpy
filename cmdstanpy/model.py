@@ -21,9 +21,10 @@ from cmdstanpy import (
     _CMDSTAN_REFRESH,
     _CMDSTAN_SAMPLING,
     _CMDSTAN_WARMUP,
-    _SHOW_PROGRESS,
-    _disable_progress,
 )
+
+from cmdstanpy.progress import allow_show_progress, disable_progress
+
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
@@ -904,7 +905,7 @@ class CmdStanModel:
             if show_console:
                 show_progress = False
             else:
-                show_progress = show_progress and _SHOW_PROGRESS
+                show_progress = show_progress and allow_show_progress()
 
             get_logger().info('sampling: %s', runset.cmds[0])
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
@@ -917,7 +918,7 @@ class CmdStanModel:
                         show_console,
                         iter_total,
                     )
-            if show_progress:
+            if show_progress and allow_show_progress():
                 # advance terminal window cursor past progress bars
                 term_size: os.terminal_size = shutil.get_terminal_size(
                     fallback=(80, 24)
@@ -1282,7 +1283,7 @@ class CmdStanModel:
         get_logger().debug(
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
-        if show_progress:
+        if show_progress and allow_show_progress():
             progress_hook: Optional[
                 Callable[[str], None]
             ] = self._wrap_sampler_progress_hook(idx + 1, iter_total)
@@ -1364,7 +1365,7 @@ class CmdStanModel:
             )
         # pylint: disable=broad-except
         except Exception as e:
-            _disable_progress(e)
+            disable_progress(e)
 
             # pylint: disable=unused-argument
             def sampler_progress_hook(line: str) -> None:
