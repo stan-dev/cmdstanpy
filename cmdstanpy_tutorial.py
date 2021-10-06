@@ -6,11 +6,6 @@
 import sys
 import os.path
 
-import matplotlib
-import matplotlib.pyplot as plt
-
-import pandas as pd
-
 from cmdstanpy import CmdStanModel, cmdstan_path
 
 # ### Instantiate & compile the model
