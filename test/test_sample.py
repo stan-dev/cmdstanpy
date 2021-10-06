@@ -596,7 +596,7 @@ class SampleTest(unittest.TestCase):
         self.assertTrue('Sampling completed' in console)
 
     # run this after we test tqdm progress bars
-    def test_progress_fns(self):
+    def test_zhow_progress_fns(self):
         self.assertTrue(allow_show_progress())
         with LogCapture() as log:
             logging.getLogger()
