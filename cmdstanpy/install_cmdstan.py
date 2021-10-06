@@ -150,7 +150,7 @@ def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
     pad = ' ' * 20
     msgs_expected = 150  # hack: 2.27 make build send ~140 msgs to console
     try:
-        pbar: Any = tqdm(
+        pbar: tqdm = tqdm(
             total=msgs_expected,
             bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
             postfix=[dict(value=f'Building CmdStan {pad}')],

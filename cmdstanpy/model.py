@@ -1352,7 +1352,7 @@ class CmdStanModel:
     ) -> Optional[Callable[[str], None]]:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
         try:
-            pbar: Any = tqdm(
+            pbar: tqdm = tqdm(
                 total=total,
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
                 postfix=[dict(value="Status")],

@@ -1213,7 +1213,7 @@ def install_cmdstan(
 def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
     """Sets up tqdm callback for url downloads."""
     try:
-        pbar: Any = tqdm(
+        pbar: tqdm = tqdm(
             unit='B',
             unit_scale=True,
             unit_divisor=1024,
