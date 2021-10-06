@@ -377,6 +377,17 @@ def retrieve_version(version: str, progress: bool = True) -> None:
     try:
         print('Extracting distribution')
         tar = tarfile.open(file_tmp)
+        first = tar.next()
+        if first is not None:
+            top_dir = first.name
+        cmdstan_dir = f'cmdstan-{version}'
+        if top_dir != cmdstan_dir:
+            raise CmdStanInstallError(
+                'tarfile should contain top-level dir {},'
+                'but found dir {} instead.'.format(
+                    cmdstan_dir, top_dir
+                )
+            )
         target = os.getcwd()
         if platform.system() == 'Windows':
             # fixes long-path limitation on Windows
@@ -394,11 +405,11 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             tar.extractall()
     except Exception as e:  # pylint: disable=broad-except
         raise CmdStanInstallError(
-            'Failed to unpack file {}'.format(file_tmp)
+            f'Failed to unpack file {file_tmp}, error:\n\t{str(e)}'
         ) from e
     finally:
         tar.close()
-    print('Unpacked download as cmdstan-{}'.format(version))
+    print(f'Unpacked download as {cmdstan_dir}')
 
 
 def parse_cmdline_args() -> Dict[str, Any]:
@@ -507,7 +518,7 @@ def main(args: Dict[str, Any]) -> None:
         # Add toolchain to $PATH
         cxx_toolchain_path(cxx_version, args['dir'])
 
-    cmdstan_version = 'cmdstan-{}'.format(version)
+    cmdstan_version = f'cmdstan-{version}'
     with pushd(install_dir):
         if args['overwrite'] or not (
             os.path.exists(cmdstan_version)
