@@ -377,7 +377,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
 
-        if progress:
+        if progress and progbar.allow_show_progress():
             for member in tqdm(
                 iterable=tar.getmembers(),
                 total=len(tar.getmembers()),
