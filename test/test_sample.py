@@ -332,8 +332,10 @@ class SampleTest(unittest.TestCase):
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
-                data=logistic_data, chains=4, parallel_chains=1,
-                show_progress=False
+                data=logistic_data,
+                chains=4,
+                parallel_chains=1,
+                show_progress=False,
             )
         log.check_present(
             ('cmdstanpy', 'INFO', 'finish chain 1'),
@@ -342,8 +344,10 @@ class SampleTest(unittest.TestCase):
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
-                data=logistic_data, chains=4, parallel_chains=2,
-                show_progress=False
+                data=logistic_data,
+                chains=4,
+                parallel_chains=2,
+                show_progress=False,
             )
         if cpu_count() >= 4:
             # finish chains 1, 2 before starting chains 3, 4
@@ -355,8 +359,10 @@ class SampleTest(unittest.TestCase):
             with LogCapture() as log:
                 logging.getLogger()
                 logistic_model.sample(
-                    data=logistic_data, chains=4, parallel_chains=4,
-                    show_progress=False
+                    data=logistic_data,
+                    chains=4,
+                    parallel_chains=4,
+                    show_progress=False,
                 )
                 log.check_present(
                     ('cmdstanpy', 'INFO', 'start chain 4'),
@@ -370,7 +376,7 @@ class SampleTest(unittest.TestCase):
                 chains=1,
                 parallel_chains=1,
                 threads_per_chain=7,
-                show_progress=False
+                show_progress=False,
             )
         log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 7'))
         with LogCapture() as log:
@@ -380,7 +386,7 @@ class SampleTest(unittest.TestCase):
                 chains=7,
                 parallel_chains=1,
                 threads_per_chain=5,
-                show_progress=False
+                show_progress=False,
             )
         log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 5'))
         with LogCapture() as log:
@@ -581,13 +587,10 @@ class SampleTest(unittest.TestCase):
         bern_model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
-        sys_stderr = io.StringIO()   # tqdm prints to stderr
+        sys_stderr = io.StringIO()  # tqdm prints to stderr
         with contextlib.redirect_stderr(sys_stderr):
             bern_model.sample(
-                data=jdata,
-                chains=2,
-                parallel_chains=2,
-                show_progress=True
+                data=jdata, chains=2, parallel_chains=2, show_progress=True
             )
             console = sys_stderr.getvalue()
         self.assertTrue('chain 1' in console)

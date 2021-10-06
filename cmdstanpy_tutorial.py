@@ -3,12 +3,11 @@
 
 # ### Import CmdStanPy classes and methods
 
-import sys
 import os.path
+import sys
 
 import matplotlib
 import matplotlib.pyplot as plt
-
 import pandas as pd
 
 from cmdstanpy import CmdStanModel, cmdstan_path

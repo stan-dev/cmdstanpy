@@ -4,7 +4,6 @@
 import atexit
 import shutil
 import tempfile
-import logging
 
 _STANSUMMARY_STATS = [
     'Mean',
@@ -25,20 +24,6 @@ _CMDSTAN_THIN = 1
 _CMDSTAN_REFRESH = 100
 _DOT_CMDSTANPY = '.cmdstanpy'
 _DOT_CMDSTAN = '.cmdstan'
-_SHOW_PROGRESS: bool = True
-
-
-def _disable_progress(e: Exception) -> None:
-    # pylint: disable=global-statement
-    global _SHOW_PROGRESS
-    if _SHOW_PROGRESS:
-        _SHOW_PROGRESS = False
-        logging.getLogger('cmdstanpy').error(
-            'Error in progress bar initialization:\n'
-            '\t%s\n'
-            'Disabling progress bars for this session',
-            str(e),
-        )
 
 
 def _cleanup_tmpdir() -> None:

@@ -2,8 +2,8 @@
 
 import collections.abc
 import contextlib
-import json
 import io
+import json
 import os
 import platform
 import random
@@ -761,7 +761,6 @@ class ParseVarsTest(unittest.TestCase):
 
 
 class DoCommandTest(unittest.TestCase):
-
     def test_capture_console(self):
         tmp = io.StringIO()
         do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)

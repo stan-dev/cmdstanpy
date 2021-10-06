@@ -16,14 +16,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
 from tqdm.auto import tqdm  # type: ignore
 
-
-from cmdstanpy import (
-    _CMDSTAN_REFRESH,
-    _CMDSTAN_SAMPLING,
-    _CMDSTAN_WARMUP,
-    _SHOW_PROGRESS,
-    _disable_progress,
-)
+from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
@@ -49,6 +42,8 @@ from cmdstanpy.utils import (
     get_logger,
     returncode_msg,
 )
+
+from . import progress
 
 
 class CmdStanModel:
@@ -904,7 +899,7 @@ class CmdStanModel:
             if show_console:
                 show_progress = False
             else:
-                show_progress = show_progress and _SHOW_PROGRESS
+                show_progress = show_progress and progress.allow_show_progress()
 
             get_logger().info('sampling: %s', runset.cmds[0])
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
@@ -1350,37 +1345,28 @@ class CmdStanModel:
                     sampler_args.fixed_param = True
 
     # pylint: disable=no-self-use
+    @progress.wrap_callback
     def _wrap_sampler_progress_hook(
         self, chain_id: int, total: int
     ) -> Optional[Callable[[str], None]]:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
-        try:
-            pbar: tqdm = tqdm(
-                total=total,
-                bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
-                postfix=[dict(value="Status")],
-                desc=f'chain {chain_id}',
-                colour='yellow',
-            )
-        # pylint: disable=broad-except
-        except Exception as e:
-            _disable_progress(e)
+        pbar: tqdm = tqdm(
+            total=total,
+            bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
+            postfix=[dict(value="Status")],
+            desc=f'chain {chain_id}',
+            colour='yellow',
+        )
 
-            # pylint: disable=unused-argument
-            def sampler_progress_hook(line: str) -> None:
-                return
-
-        else:
-
-            def sampler_progress_hook(line: str) -> None:
-                if line == "Done":
-                    pbar.postfix[0]["value"] = 'Sampling completed'
-                    pbar.update(total - pbar.n)
-                    pbar.close()
-                elif line.startswith("Iteration"):
-                    if 'Sampling' in line:
-                        pbar.colour = 'blue'
-                    pbar.update(1)
-                    pbar.postfix[0]["value"] = line
+        def sampler_progress_hook(line: str) -> None:
+            if line == "Done":
+                pbar.postfix[0]["value"] = 'Sampling completed'
+                pbar.update(total - pbar.n)
+                pbar.close()
+            elif line.startswith("Iteration"):
+                if 'Sampling' in line:
+                    pbar.colour = 'blue'
+                pbar.update(1)
+                pbar.postfix[0]["value"] = line
 
         return sampler_progress_hook
