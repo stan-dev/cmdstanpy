@@ -969,11 +969,10 @@ def do_command(
 
         stdout, _ = proc.communicate()
         if stdout:
-            if len(stdout) > 0:
-                if fd_out is not None:
-                    fd_out.write(stdout)
-                if pbar is not None:
-                    pbar(stdout.strip())
+            if fd_out is not None:
+                fd_out.write(stdout)
+            if pbar is not None:
+                pbar(stdout.strip())
 
         if proc.returncode != 0:  # throw RuntimeError + msg
             serror = ''
