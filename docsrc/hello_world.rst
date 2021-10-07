@@ -219,13 +219,6 @@ Jupyter Lab Notebook requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   
 In a Jupyter notebook, this package requires the `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package.
-You must enable the ipywidgets notebook extension via command:
-
-.. code-block:: bash
-
-    jupyter nbextension enable --py widgetsnbextension
-
-
-For more information, see the
+For help on installation and configuration, see
 `ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
 and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.

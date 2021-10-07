@@ -79,22 +79,14 @@ to do so is via the ``install_cmdstan`` function
   virtual environment.
 
 
-Jupyter notebook users
-----------------------
-
-CmdStanPy can display progress bars during sampling and during the CmdStan build process
-which have been implemented using `tqdm <https://github.com/tqdm/tqdm>`_.
-In a Jupyter notebook, this package requires the `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package.
-You must enable the ipywidgets notebook extension via command:
-
-.. code-block:: bash
-
-    jupyter nbextension enable --py widgetsnbextension
-
-
-For more information, see the
-`ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
-and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.
+  **Jupyter notebook users:**  CmdStanPy can display progress bars during sampling
+  as well as during the CmdStan build process; these are implemented using the
+  `tqdm <https://github.com/tqdm/tqdm>`_ package,  which uses the
+  `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package
+  in order to update the browser display.  For further help on installation
+  and configuration, see
+  `ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
+  and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.
 
     
 
