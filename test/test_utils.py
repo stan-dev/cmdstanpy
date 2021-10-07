@@ -2,8 +2,9 @@
 
 import collections.abc
 import contextlib
-import json
 import io
+import json
+import logging
 import os
 import platform
 import random
@@ -15,9 +16,12 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import pytest
+from testfixtures import LogCapture
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY, _TMPDIR
 from cmdstanpy.model import CmdStanModel
+from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
@@ -794,6 +798,43 @@ class FlattenTest(unittest.TestCase):
         array_2d = np.empty((200, 4))
         with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
             flatten_chains(array_2d)
+
+@pytest.mark.order(-1)
+class ShowProgressTest(unittest.TestCase):
+    # this test must run after any tests that check tqdm progress bars
+    def test_show_progress_fns(self):
+        self.assertTrue(allow_show_progress())
+        with LogCapture() as log:
+            logging.getLogger()
+            try:
+                raise ValueError("error")
+            except ValueError as e:
+                _disable_progress(e)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'ERROR',
+                'Error in progress bar initialization:\n'
+                '\terror\n'
+                'Disabling progress bars for this session'
+            )
+        )
+        self.assertFalse(allow_show_progress())
+        try:
+            raise ValueError("error")
+        except ValueError as e:
+            with LogCapture() as log:
+                logging.getLogger()
+                _disable_progress(e)
+        msgs = ' '.join(log.actual())
+        # msg should only be printed once per session - check not found
+        self.assertEqual(
+            -1, msgs.find('Disabling progress bars for this session')
+        )
+        self.assertFalse(allow_show_progress())
+
+
+
 
 
 if __name__ == '__main__':

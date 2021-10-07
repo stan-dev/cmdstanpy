@@ -16,7 +16,7 @@ This example allows the user to verify that CmdStanPy, CmdStan,
 the StanC compiler, and the C++ toolchain have all been properly installed.
 For substantive example models and
 guidance on coding statistical models in Stan, see
-the `CmdStan User's Guide <https://mc-stan.org/docs/2_27/stan-users-guide/index.html>`_.
+the `CmdStan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`_.
 
 
 The Stan model
@@ -189,41 +189,43 @@ Progress bar
   
 By default, CmdStanPy displays a progress bar during sampling.
  
-.. code-block:: python
+.. ipython:: python
+    :verbatim:
 
     fit = model.sample(data=data_file)
 
 To suppress the progress bar, specify argument ``show_progress=False``.
 
-.. code-block:: python
+.. ipython:: python
+    :verbatim:
 
     fit = model.sample(data=data_file, show_progress=False)
 
-To see the CmdStan console outputs instead, specify argumen ``show_console=True``.
+To see the CmdStan console outputs instead, specify ``show_console=True``.
 
  
-.. code-block:: python
+.. ipython:: python
+    :verbatim:
 
     fit = model.sample(data=data_file, show_console=True)
 
+This will stream all sampler messages to the console.
+It provides an alternative way of monitoring progress.
+In conjunction with Stan programs which contain `print` statments,
+this provides a way to inspect and debug model behavoir.
 
-.. has this issue been resolved?    
 
-  Jupyter Lab Notebook requirements
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jupyter Lab Notebook requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   
-  To enable a javascript progress bar on Jupyter Lab Notebook, both nodejs and ipywidgets
-  must be installed. Following the instructions in
-  [tqdm issue #394](https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637),
-  nodejs can be installed with ``conda``.
-   
-  .. code-block:: bash
-  
-       conda install nodejs
-   
-  After nodejs has been installed, then install ipywidgets and enable it.
-   
-  .. code-block:: bash
-  
-      pip install ipywidgets
-      jupyter nbextension enable --py widgetsnbextension
+In a Jupyter notebook, this package requires the `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package.
+You must enable the ipywidgets notebook extension via command:
+
+.. code-block:: bash
+
+    jupyter nbextension enable --py widgetsnbextension
+
+
+For more information, see the
+`ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
+and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.

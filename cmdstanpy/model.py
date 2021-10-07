@@ -16,14 +16,11 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
 from tqdm.auto import tqdm  # type: ignore
 
-
 from cmdstanpy import (
     _CMDSTAN_REFRESH,
     _CMDSTAN_SAMPLING,
     _CMDSTAN_WARMUP,
 )
-
-from cmdstanpy.progress import allow_show_progress, disable_progress
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
@@ -32,7 +29,9 @@ from cmdstanpy.cmdstan_args import (
     SamplerArgs,
     VariationalArgs,
 )
+
 from cmdstanpy.compiler_opts import CompilerOptions
+
 from cmdstanpy.stanfit import (
     CmdStanGQ,
     CmdStanMCMC,
@@ -41,6 +40,7 @@ from cmdstanpy.stanfit import (
     RunSet,
     from_csv,
 )
+
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
@@ -50,6 +50,8 @@ from cmdstanpy.utils import (
     get_logger,
     returncode_msg,
 )
+
+from . import progress as progbar
 
 
 class CmdStanModel:
@@ -905,7 +907,7 @@ class CmdStanModel:
             if show_console:
                 show_progress = False
             else:
-                show_progress = show_progress and allow_show_progress()
+                show_progress = show_progress and progbar.allow_show_progress()
 
             get_logger().info('sampling: %s', runset.cmds[0])
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
@@ -918,7 +920,7 @@ class CmdStanModel:
                         show_console,
                         iter_total,
                     )
-            if show_progress and allow_show_progress():
+            if show_progress and progbar.allow_show_progress():
                 # advance terminal window cursor past progress bars
                 term_size: os.terminal_size = shutil.get_terminal_size(
                     fallback=(80, 24)
@@ -1283,7 +1285,7 @@ class CmdStanModel:
         get_logger().debug(
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
-        if show_progress and allow_show_progress():
+        if show_progress and progbar.allow_show_progress():
             progress_hook: Optional[
                 Callable[[str], None]
             ] = self._wrap_sampler_progress_hook(idx + 1, iter_total)
@@ -1352,37 +1354,28 @@ class CmdStanModel:
                     sampler_args.fixed_param = True
 
     # pylint: disable=no-self-use
+    @progbar.wrap_callback
     def _wrap_sampler_progress_hook(
         self, chain_id: int, total: int
     ) -> Optional[Callable[[str], None]]:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
-        try:
-            pbar: tqdm = tqdm(
-                total=total,
-                bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
-                postfix=[dict(value="Status")],
-                desc=f'chain {chain_id}',
-                colour='yellow',
-            )
-        # pylint: disable=broad-except
-        except Exception as e:
-            disable_progress(e)
+        pbar: tqdm = tqdm(
+            total=total,
+            bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
+            postfix=[dict(value="Status")],
+            desc=f'chain {chain_id}',
+            colour='yellow',
+        )
 
-            # pylint: disable=unused-argument
-            def sampler_progress_hook(line: str) -> None:
-                return
-
-        else:
-
-            def sampler_progress_hook(line: str) -> None:
-                if line == "Done":
-                    pbar.postfix[0]["value"] = 'Sampling completed'
-                    pbar.update(total - pbar.n)
-                    pbar.close()
-                elif line.startswith("Iteration"):
-                    if 'Sampling' in line:
-                        pbar.colour = 'blue'
-                    pbar.update(1)
-                    pbar.postfix[0]["value"] = line
+        def sampler_progress_hook(line: str) -> None:
+            if line == "Done":
+                pbar.postfix[0]["value"] = 'Sampling completed'
+                pbar.update(total - pbar.n)
+                pbar.close()
+            elif line.startswith("Iteration"):
+                if 'Sampling' in line:
+                    pbar.colour = 'blue'
+                pbar.update(1)
+                pbar.postfix[0]["value"] = line
 
         return sampler_progress_hook

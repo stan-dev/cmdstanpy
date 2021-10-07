@@ -42,8 +42,7 @@ from cmdstanpy import (
     _TMPDIR,
 )
 
-from cmdstanpy.progress import disable_progress
-
+from . import progress as progbar
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -1210,40 +1209,27 @@ def install_cmdstan(
     return True
 
 
+@progbar.wrap_callback
 def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
     """Sets up tqdm callback for url downloads."""
-    try:
-        pbar: tqdm = tqdm(
-            unit='B',
-            unit_scale=True,
-            unit_divisor=1024,
-            colour='blue',
-            leave=False,
-        )  # type: ignore
-    # pylint: disable=broad-except
-    except Exception as e:
-        disable_progress(e)
+    pbar: tqdm = tqdm(
+        unit='B',
+        unit_scale=True,
+        unit_divisor=1024,
+        colour='blue',
+        leave=False,
+    )
 
-        def download_progress_hook(
-            # pylint: disable=unused-argument
-            count: int,
-            block_size: int,
-            total_size: int,
-        ) -> None:
-            return
-
-    else:
-
-        def download_progress_hook(
-            count: int, block_size: int, total_size: int
-        ) -> None:
-            if pbar.total is None:
-                pbar.total = total_size
-                pbar.reset()
-            downloaded_size = count * block_size
-            pbar.update(downloaded_size - pbar.n)
-            if pbar.n >= total_size:
-                pbar.close()
+    def download_progress_hook(
+        count: int, block_size: int, total_size: int
+    ) -> None:
+        if pbar.total is None:
+            pbar.total = total_size
+            pbar.reset()
+        downloaded_size = count * block_size
+        pbar.update(downloaded_size - pbar.n)
+        if pbar.n >= total_size:
+            pbar.close()
 
     return download_progress_hook
 

@@ -26,7 +26,6 @@ import cmdstanpy.stanfit
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.progress import allow_show_progress, disable_progress
 from cmdstanpy.stanfit import CmdStanMCMC, RunSet, from_csv
 from cmdstanpy.utils import EXTENSION, cmdstan_version_at
 
@@ -594,37 +593,6 @@ class SampleTest(unittest.TestCase):
         self.assertTrue('chain 1' in console)
         self.assertTrue('chain 2' in console)
         self.assertTrue('Sampling completed' in console)
-
-    # run this after we test tqdm progress bars
-    def test_zhow_progress_fns(self):
-        self.assertTrue(allow_show_progress())
-        with LogCapture() as log:
-            logging.getLogger()
-            try:
-                raise ValueError("error")
-            except ValueError as e:
-                disable_progress(e)
-        log.check_present(
-            (
-                'cmdstanpy',
-                'ERROR',
-                'Error in progress bar initialization:\n'
-                '\terror\n'
-                'Disabling progress bars for this session'
-            )
-        )
-        self.assertFalse(allow_show_progress())
-        try:
-            raise ValueError("error")
-        except ValueError as e:
-            with LogCapture() as log:
-                logging.getLogger()
-                disable_progress(e)
-        msgs = ' '.join(log.actual())
-        self.assertEqual(
-            -1, msgs.find('Disabling progress bars for this session')
-        )
-        self.assertFalse(allow_show_progress())
 
 
 class CmdStanMCMCTest(unittest.TestCase):

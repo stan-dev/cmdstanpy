@@ -32,8 +32,6 @@ from tqdm.auto import tqdm  # type: ignore
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
 
-from cmdstanpy.progress import allow_show_progress, disable_progress
-
 from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
@@ -42,6 +40,8 @@ from cmdstanpy.utils import (
     validate_dir,
     wrap_url_progress_hook,
 )
+
+from . import progress as progbar
 
 MAKE = os.getenv(
     'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
@@ -112,7 +112,7 @@ def build(verbose: bool = False, progress: bool = True) -> None:
     try:
         if verbose:
             do_command(cmd)
-        elif progress and allow_show_progress():
+        elif progress and progbar.allow_show_progress():
             progress_hook: Any = _wrap_build_progress_hook()
             do_command(cmd, fd_out=None, pbar=progress_hook)
         else:
@@ -146,43 +146,33 @@ def build(verbose: bool = False, progress: bool = True) -> None:
         )
 
 
-# pylint: disable=no-self-use
+@progbar.wrap_callback
 def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
     """Sets up tqdm callback for CmdStan sampler console msgs."""
     pad = ' ' * 20
     msgs_expected = 150  # hack: 2.27 make build send ~140 msgs to console
-    try:
-        pbar: tqdm = tqdm(
-            total=msgs_expected,
-            bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
-            postfix=[dict(value=f'Building CmdStan {pad}')],
-            colour='blue',
-            desc='',
-            position=0,
-        )
-    # pylint: disable=broad-except
-    except Exception as e:
-        disable_progress(e)
+    pbar: tqdm = tqdm(
+        total=msgs_expected,
+        bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
+        postfix=[dict(value=f'Building CmdStan {pad}')],
+        colour='blue',
+        desc='',
+        position=0,
+    )
 
-        # pylint: disable=unused-argument
-        def build_progress_hook(line: str) -> None:
-            return
-
-    else:
-
-        def build_progress_hook(line: str) -> None:
-            if line.startswith('--- CmdStan'):
-                pbar.set_description('Done')
+    def build_progress_hook(line: str) -> None:
+        if line.startswith('--- CmdStan'):
+            pbar.set_description('Done')
+            pbar.postfix[0]["value"] = line
+            pbar.update(msgs_expected - pbar.n)
+            pbar.close()
+        else:
+            if line.startswith('--'):
                 pbar.postfix[0]["value"] = line
-                pbar.update(msgs_expected - pbar.n)
-                pbar.close()
             else:
-                if line.startswith('--'):
-                    pbar.postfix[0]["value"] = line
-                else:
-                    pbar.postfix[0]["value"] = f'{line[:8]} ... {line[-20:]}'
-                    pbar.set_description('Compiling')
-                    pbar.update(1)
+                pbar.postfix[0]["value"] = f'{line[:8]} ... {line[-20:]}'
+                pbar.set_description('Compiling')
+                pbar.update(1)
 
     return build_progress_hook
 
@@ -336,7 +326,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
     )
     for i in range(6):  # always retry to allow for transient URLErrors
         try:
-            if progress and allow_show_progress():
+            if progress and progbar.allow_show_progress():
                 progress_hook: Optional[
                     Callable[[int, int, int], None]
                 ] = wrap_url_progress_hook()
@@ -386,7 +376,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
 
-        if progress and allow_show_progress():
+        if progress and progbar.allow_show_progress():
             for member in tqdm(
                 iterable=tar.getmembers(),
                 total=len(tar.getmembers()),
