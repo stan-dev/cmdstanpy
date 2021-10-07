@@ -765,7 +765,6 @@ class ParseVarsTest(unittest.TestCase):
 
 
 class DoCommandTest(unittest.TestCase):
-
     def test_capture_console(self):
         tmp = io.StringIO()
         do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
@@ -799,6 +798,7 @@ class FlattenTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
             flatten_chains(array_2d)
 
+
 @pytest.mark.order(-1)
 class ShowProgressTest(unittest.TestCase):
     # this test must run after any tests that check tqdm progress bars
@@ -816,7 +816,7 @@ class ShowProgressTest(unittest.TestCase):
                 'ERROR',
                 'Error in progress bar initialization:\n'
                 '\terror\n'
-                'Disabling progress bars for this session'
+                'Disabling progress bars for this session',
             )
         )
         self.assertFalse(allow_show_progress())
@@ -832,9 +832,6 @@ class ShowProgressTest(unittest.TestCase):
             -1, msgs.find('Disabling progress bars for this session')
         )
         self.assertFalse(allow_show_progress())
-
-
-
 
 
 if __name__ == '__main__':

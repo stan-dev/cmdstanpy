@@ -1320,6 +1320,7 @@ class CmdStanModel:
                 fd_out.write(stdout)
                 if show_console:
                     lines = stdout.split('\n')
+                    print(f' ****** lines to process: {len(lines)}')
                     for line in lines:
                         print('chain {}: {}'.format(idx + 1, stdout))
 
