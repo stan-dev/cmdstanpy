@@ -1306,9 +1306,9 @@ class CmdStanModel:
                     line = proc.stdout.readline()
                     fd_out.write(line)
                     line = line.strip()
-                    if show_console and len(line) > 1:
+                    if show_console:
                         print('chain {}: {}'.format(idx + 1, line))
-                    if show_progress and progress_hook is not None:
+                    elif show_progress and progress_hook is not None:
                         progress_hook(line)
             if show_progress and progress_hook is not None:
                 progress_hook("Done")
@@ -1317,7 +1317,9 @@ class CmdStanModel:
             if stdout:
                 fd_out.write(stdout)
                 if show_console:
-                    print('chain {}: {}'.format(idx + 1, stdout))
+                    lines = stdout.split('\n')
+                    for line in lines:
+                        print('chain {}: {}'.format(idx + 1, stdout))
 
             fd_out.close()
         except OSError as e:
