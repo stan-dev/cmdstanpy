@@ -961,12 +961,11 @@ def do_command(
         )
         while proc.poll() is None:
             if proc.stdout is not None:
-                lines = proc.stdout.readlines()
-                for line in lines:
-                    if fd_out is not None:
-                        fd_out.write(line)
-                    if pbar is not None:
-                        pbar(line.strip())
+                line = proc.stdout.readline()
+                if fd_out is not None:
+                    fd_out.write(line)
+                if pbar is not None:
+                    pbar(line.strip())
 
         stdout, _ = proc.communicate()
         if stdout:

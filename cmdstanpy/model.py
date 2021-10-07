@@ -1303,14 +1303,13 @@ class CmdStanModel:
             )
             while proc.poll() is None:
                 if proc.stdout is not None:
-                    lines = proc.stdout.readlines()
-                    for line in lines:
-                        fd_out.write(line)
-                        line = line.strip()
-                        if show_console and len(line) > 1:
-                            print('chain {}: {}'.format(idx + 1, line))
-                        if show_progress and progress_hook is not None:
-                            progress_hook(line)
+                    line = proc.stdout.readline()
+                    fd_out.write(line)
+                    line = line.strip()
+                    if show_console and len(line) > 1:
+                        print('chain {}: {}'.format(idx + 1, line))
+                    if show_progress and progress_hook is not None:
+                        progress_hook(line)
             if show_progress and progress_hook is not None:
                 progress_hook("Done")
 
