@@ -578,7 +578,7 @@ class SampleTest(unittest.TestCase):
                 iter_sampling=100,
                 show_console=True,
             )
-            console = sys_stdout.getvalue()
+        console = sys_stdout.getvalue()
         self.assertTrue('chain 1: method = sample' in console)
         self.assertTrue('chain 2: method = sample' in console)
 
@@ -592,7 +592,7 @@ class SampleTest(unittest.TestCase):
             bern_model.sample(
                 data=jdata, chains=2, parallel_chains=2, show_progress=True
             )
-            console = sys_stderr.getvalue()
+        console = sys_stderr.getvalue()
         self.assertTrue('chain 1' in console)
         self.assertTrue('chain 2' in console)
         self.assertTrue('Sampling completed' in console)

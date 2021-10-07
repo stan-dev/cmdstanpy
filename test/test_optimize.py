@@ -603,7 +603,7 @@ class OptimizeTest(unittest.TestCase):
                 data=jdata,
                 show_console=True,
             )
-            console = sys_stdout.getvalue()
+        console = sys_stdout.getvalue()
         self.assertTrue('chain 1: method = optimize' in console)
 
 

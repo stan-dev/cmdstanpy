@@ -246,7 +246,8 @@ class VariationalTest(unittest.TestCase):
     def test_single_row_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
         model = CmdStanModel(stan_file=stan)
-        vb_fit = model.variational()
+        # testing data parsing, allow non-convergence
+        vb_fit = model.variational(require_converged=False, seed=12345)
         self.assertTrue(isinstance(vb_fit.stan_variable('theta'), float))
         z_as_ndarray = vb_fit.stan_variable(var="z")
         self.assertEqual(z_as_ndarray.shape, (4, 3))
@@ -261,11 +262,14 @@ class VariationalTest(unittest.TestCase):
 
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
+            # testing data parsing, allow non-convergence
             bern_model.variational(
                 data=jdata,
                 show_console=True,
+                require_converged=False,
+                seed=12345,
             )
-            console = sys_stdout.getvalue()
+        console = sys_stdout.getvalue()
         self.assertTrue('chain 1: method = variational' in console)
 
 

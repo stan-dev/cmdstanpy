@@ -470,7 +470,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
                 mcmc_sample=bern_fit,
                 show_console=True,
             )
-            console = sys_stdout.getvalue()
+        console = sys_stdout.getvalue()
         self.assertTrue('chain 1: method = generate' in console)
         self.assertTrue('chain 2: method = generate' in console)
         self.assertTrue('chain 3: method = generate' in console)
