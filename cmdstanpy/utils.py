@@ -1177,6 +1177,8 @@ def install_cmdstan(
     :param verbose: Boolean value; when ``True``, show console output from all
         intallation steps, i.e., download, build, and test CmdStan release.
         Default is ``False``.
+    :param cores: Integer, number of cores to use in the ``make`` command.
+        Default is 1 core.
 
     :return: Boolean value; ``True`` for success.
     """

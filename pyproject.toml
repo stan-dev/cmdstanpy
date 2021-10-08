@@ -20,8 +20,6 @@ warn_return_any = true
 
 [[tool.mypy.overrides]]
 module = [
-        'tqdm.auto',
-
     'tqdm.auto',
     'pandas',
     'ujson',
