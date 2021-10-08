@@ -645,7 +645,6 @@ class GenerateQuantitesTest(unittest.TestCase):
 class VariationalTest(unittest.TestCase):
     def test_args_variational(self):
         args = VariationalArgs()
-        self.assertTrue(True)
 
         args = VariationalArgs(output_samples=1)
         args.validate(chains=1)

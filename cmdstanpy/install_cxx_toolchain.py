@@ -303,11 +303,6 @@ def main(args: Dict[str, Any]) -> None:
 
     if 'progress' in args:
         progress = args['progress']
-        try:
-            # pylint: disable=unused-import
-            from tqdm import tqdm  # noqa: F401
-        except (ImportError, ModuleNotFoundError):
-            progress = False
     else:
         progress = False
 

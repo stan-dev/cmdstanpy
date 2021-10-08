@@ -10,7 +10,7 @@ import pytest
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, cmdstan_path
+from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -47,10 +47,6 @@ class CmdStanModelTest(unittest.TestCase):
                 ):
                     filepath = os.path.join(root, filename)
                     os.remove(filepath)
-
-    def show_cmdstan_version(self):
-        print('\n\nCmdStan version: {}\n\n'.format(cmdstan_path()))
-        self.assertTrue(True)
 
     def test_model_good(self):
         # compile on instantiation, override model name

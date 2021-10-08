@@ -31,7 +31,7 @@ from typing import (
 import numpy as np
 import pandas as pd
 import ujson as json
-from tqdm.auto import tqdm  # type: ignore
+from tqdm.auto import tqdm
 
 from cmdstanpy import (
     _CMDSTAN_SAMPLING,
@@ -990,7 +990,7 @@ def do_command(
 
 
 def returncode_msg(retcode: int) -> str:
-    """ interpret retcode"""
+    """interpret retcode"""
     if retcode < 0:
         sig = -1 * retcode
         return f'terminated by signal {sig}'
@@ -1148,6 +1148,7 @@ def install_cmdstan(
     compiler: bool = False,
     progress: bool = False,
     verbose: bool = False,
+    cores: int = 1,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub. Downloads the release
@@ -1176,6 +1177,8 @@ def install_cmdstan(
     :param verbose: Boolean value; when ``True``, show console output from all
         intallation steps, i.e., download, build, and test CmdStan release.
         Default is ``False``.
+    :param cores: Integer, number of cores to use in the ``make`` command.
+        Default is 1 core.
 
     :return: Boolean value; ``True`` for success.
     """
@@ -1187,6 +1190,7 @@ def install_cmdstan(
         "compiler": compiler,
         "progress": progress,
         "dir": dir,
+        "cores": cores,
     }
 
     try:
