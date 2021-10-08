@@ -14,7 +14,7 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
-from tqdm.auto import tqdm  # type: ignore
+from tqdm.auto import tqdm
 
 from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
 from cmdstanpy.cmdstan_args import (
@@ -1368,10 +1368,10 @@ class CmdStanModel:
                     )  # make the typechecker happy
                     sampler_args.fixed_param = True
 
-    # pylint: disable=no-self-use
+    @staticmethod
     @progbar.wrap_callback
     def _wrap_sampler_progress_hook(
-        self, chain_id: int, total: int
+        chain_id: int, total: int
     ) -> Optional[Callable[[str], None]]:
         """Sets up tqdm callback for CmdStan sampler console msgs."""
         pbar: tqdm = tqdm(

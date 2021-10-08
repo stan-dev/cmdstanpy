@@ -167,9 +167,6 @@ class VariationalTest(unittest.TestCase):
 
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
 
-    def test_variational_missing_args(self):
-        self.assertTrue(True)
-
     def test_variational_eta_small(self):
         stan = os.path.join(
             DATAFILES_PATH, 'variational', 'eta_should_be_small.stan'
@@ -186,7 +183,6 @@ class VariationalTest(unittest.TestCase):
         self.assertAlmostEqual(
             fabs(variational.variational_params_dict['mu[2]']), 0.09, places=1
         )
-        self.assertTrue(True)
 
     def test_variational_eta_fail(self):
         stan = os.path.join(

@@ -28,10 +28,9 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Callable, Dict, Optional
 
-from tqdm.auto import tqdm  # type: ignore
+from tqdm.auto import tqdm
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-
 from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
@@ -94,7 +93,7 @@ def clean_all(verbose: bool = False) -> None:
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{str(e)}')
 
 
-def build(verbose: bool = False, progress: bool = True) -> None:
+def build(verbose: bool = False, progress: bool = True, cores: int = 1) -> None:
     """
     Run command ``make build`` in the current directory, which must be
     the home directory of a CmdStan version (or GitHub repo).
@@ -107,8 +106,10 @@ def build(verbose: bool = False, progress: bool = True) -> None:
         Default is ``False``.
     :param progress: Boolean value; when ``True`` display progress progress bar.
         Default is ``True``.
+    :param cores: Integer, number of cores to use in the ``make`` command.
+        Default is 1 core.
     """
-    cmd = [MAKE, 'build']
+    cmd = [MAKE, 'build', f'-j{cores}']
     try:
         if verbose:
             do_command(cmd)
@@ -201,7 +202,9 @@ def compile_example(verbose: bool = False) -> None:
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
 
 
-def rebuild_cmdstan(verbose: bool = False, progress: bool = True) -> None:
+def rebuild_cmdstan(
+    verbose: bool = False, progress: bool = True, cores: int = 1
+) -> None:
     """
     Rebuilds the existing CmdStan installation.
     This assumes CmdStan has already been installed,
@@ -209,11 +212,16 @@ def rebuild_cmdstan(verbose: bool = False, progress: bool = True) -> None:
     this function to work.
 
     :param verbose: Boolean value; when ``True``, show output from make command.
+        Default is ``False``.
+    :param progress: Boolean value; when ``True`` display progress progress bar.
+        Default is ``True``.
+    :param cores: Integer, number of cores to use in the ``make`` command.
+        Default is 1 core.
     """
     try:
         with pushd(cmdstan_path()):
             clean_all(verbose)
-            build(verbose, progress)
+            build(verbose, progress, cores)
             compile_example(verbose)
     except ValueError as e:
         raise CmdStanInstallError(
@@ -222,7 +230,11 @@ def rebuild_cmdstan(verbose: bool = False, progress: bool = True) -> None:
 
 
 def install_version(
-    cmdstan_version: str, overwrite: bool = False, verbose: bool = False
+    cmdstan_version: str,
+    overwrite: bool = False,
+    verbose: bool = False,
+    progress: bool = True,
+    cores: int = 1,
 ) -> None:
     """
     Build specified CmdStan version by spawning subprocesses to
@@ -245,7 +257,7 @@ def install_version(
             )
             clean_all(verbose)
             print('Rebuilding version {}'.format(cmdstan_version))
-        build(verbose)
+        build(verbose, progress=progress, cores=cores)
         print('Test model compilation')
         compile_example(verbose)
     print('Installed {}'.format(cmdstan_version))
@@ -418,6 +430,12 @@ def parse_cmdline_args() -> Dict[str, Any]:
         action='store_true',
         help="flag, when specified show progress bar for CmdStan download",
     )
+    parser.add_argument(
+        "--cores",
+        default=1,
+        type=int,
+        help="number of cores to use while building",
+    )
     if platform.system() == 'Windows':
         # use compiler installed with install_cxx_toolchain
         # Install a new compiler if compiler not found
@@ -520,6 +538,8 @@ def main(args: Dict[str, Any]) -> None:
                     cmdstan_version=cmdstan_version,
                     overwrite=args['overwrite'],
                     verbose=args['verbose'],
+                    progress=progress,
+                    cores=args['cores'],
                 )
             except RuntimeError as e:
                 print(e)

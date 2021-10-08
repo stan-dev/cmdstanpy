@@ -9,7 +9,7 @@ import unittest
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, cmdstan_path
+from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -34,10 +34,6 @@ BERN_BASENAME = 'bernoulli'
 
 
 class CmdStanModelTest(unittest.TestCase):
-    def show_cmdstan_version(self):
-        print('\n\nCmdStan version: {}\n\n'.format(cmdstan_path()))
-        self.assertTrue(True)
-
     def test_model_good(self):
         # compile on instantiation, override model name
         model = CmdStanModel(model_name='bern', stan_file=BERN_STAN)
