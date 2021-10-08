@@ -10,9 +10,8 @@ Optional command line arguments:
    -v, --version <release> : version, defaults to latest release version
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
-   --verbose: flag, when specified prints output from CmdStan build process
    --progress: flag, when specified show progress bar for CmdStan download
-
+   --verbose: flag, when specified prints output from CmdStan build process
    -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse
@@ -20,7 +19,6 @@ import json
 import os
 import platform
 import re
-import subprocess
 import sys
 import tarfile
 import urllib.error
@@ -30,14 +28,20 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Callable, Dict, Optional
 
+from tqdm.auto import tqdm  # type: ignore
+
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+
 from cmdstanpy.utils import (
     cmdstan_path,
+    do_command,
     get_logger,
     pushd,
     validate_dir,
-    wrap_progress_hook,
+    wrap_url_progress_hook,
 )
+
+from . import progress as progbar
 
 MAKE = os.getenv(
     'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
@@ -60,8 +64,8 @@ def usage() -> None:
         -v (--version) : CmdStan version
         -d (--dir) : install directory
         --overwrite : replace installed version
-        --verbose : show CmdStan build messages
         --progress : show progress bar for CmdStan download
+        --verbose : show outputs from installation processes
         """
 
     if platform.system() == "Windows":
@@ -76,56 +80,47 @@ def clean_all(verbose: bool = False) -> None:
     """
     Run `make clean-all` in the current directory (must be a cmdstan library).
 
-    :param verbose: when ``True``, print build msgs to stdout.
+    :param verbose: Boolean value; when ``True``, show output from make command.
     """
     cmd = [MAKE, 'clean-all']
-    proc = subprocess.Popen(
-        cmd,
-        cwd=None,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None:
-        if proc.stdout:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if verbose and output:
-                print(output, flush=True)
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        msgs = ['Command "make clean-all" failed']
-        if stderr:
-            msgs.append(stderr.decode('utf-8').strip())
-        raise CmdStanInstallError('\n'.join(msgs))
+    try:
+        if verbose:
+            do_command(cmd)
+        else:
+            do_command(cmd, fd_out=None)
+
+    except RuntimeError as e:
+        # pylint: disable=raise-missing-from
+        raise CmdStanInstallError(f'Command "make clean-all" failed\n{str(e)}')
 
 
-def build(verbose: bool = False) -> None:
+def build(verbose: bool = False, progress: bool = True) -> None:
     """
-    Run `make build` in the current directory (must be a cmdstan library)
+    Run command ``make build`` in the current directory, which must be
+    the home directory of a CmdStan version (or GitHub repo).
+    By default, displays a progress bar which tracks make command outputs.
+    If argument ``verbose=True``, instead of a progress bar, streams
+    make command outputs to sys.stdout.  When both ``verbose`` and ``progress``
+    are ``False``, runs silently.
 
-    :param verbose: when ``True``, print build msgs to stdout.
+    :param verbose: Boolean value; when ``True``, show output from make command.
+        Default is ``False``.
+    :param progress: Boolean value; when ``True`` display progress progress bar.
+        Default is ``True``.
     """
     cmd = [MAKE, 'build']
-    proc = subprocess.Popen(
-        cmd,
-        cwd=None,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None:
-        if proc.stdout:
-            output = proc.stdout.readline().decode('utf-8').strip()
-            if verbose and output:
-                print(output, flush=True)
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        msgs = ['Command "make build" failed']
-        if stderr:
-            msgs.append(stderr.decode('utf-8').strip())
-        raise CmdStanInstallError('\n'.join(msgs))
+    try:
+        if verbose:
+            do_command(cmd)
+        elif progress and progbar.allow_show_progress():
+            progress_hook: Any = _wrap_build_progress_hook()
+            do_command(cmd, fd_out=None, pbar=progress_hook)
+        else:
+            do_command(cmd, fd_out=None)
+
+    except RuntimeError as e:
+        # pylint: disable=raise-missing-from
+        raise CmdStanInstallError(f'Command "make build" failed\n{str(e)}')
     if not os.path.exists(os.path.join('bin', 'stansummary' + EXTENSION)):
         raise CmdStanInstallError(
             f'bin/stansummary{EXTENSION} not found'
@@ -136,6 +131,7 @@ def build(verbose: bool = False) -> None:
             f'bin/stansummary{EXTENSION} not found'
             ', please rebuild or report a bug!'
         )
+
     if platform.system() == 'Windows':
         # Add tbb to the $PATH on Windows
         libtbb = os.path.join(
@@ -150,10 +146,44 @@ def build(verbose: bool = False) -> None:
         )
 
 
-def compile_example() -> None:
+@progbar.wrap_callback
+def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
+    """Sets up tqdm callback for CmdStan sampler console msgs."""
+    pad = ' ' * 20
+    msgs_expected = 150  # hack: 2.27 make build send ~140 msgs to console
+    pbar: tqdm = tqdm(
+        total=msgs_expected,
+        bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
+        postfix=[dict(value=f'Building CmdStan {pad}')],
+        colour='blue',
+        desc='',
+        position=0,
+    )
+
+    def build_progress_hook(line: str) -> None:
+        if line.startswith('--- CmdStan'):
+            pbar.set_description('Done')
+            pbar.postfix[0]["value"] = line
+            pbar.update(msgs_expected - pbar.n)
+            pbar.close()
+        else:
+            if line.startswith('--'):
+                pbar.postfix[0]["value"] = line
+            else:
+                pbar.postfix[0]["value"] = f'{line[:8]} ... {line[-20:]}'
+                pbar.set_description('Compiling')
+                pbar.update(1)
+
+    return build_progress_hook
+
+
+def compile_example(verbose: bool = False) -> None:
     """
     Compile the example model.
-    The current directory must be a cmdstan library.
+    The current directory must be a cmdstan installation, i.e.,
+    contains the makefile, Stanc compiler, and all libraries.
+
+    :param verbose: Boolean value; when ``True``, show output from make command.
     """
     cmd = [
         MAKE,
@@ -161,40 +191,30 @@ def compile_example() -> None:
             os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
         ).as_posix(),
     ]
-    proc = subprocess.Popen(
-        cmd,
-        cwd=None,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=os.environ,
-    )
-    while proc.poll() is None:
-        if proc.stdout:
-            proc.stdout.readline().decode('utf-8')
-    _, stderr = proc.communicate()
-    if proc.returncode:
-        msgs = ['Failed to compile example model bernoulli.stan']
-        if stderr:
-            msgs.append(stderr.decode('utf-8').strip())
-        raise CmdStanInstallError('\n'.join(msgs))
+    try:
+        if verbose:
+            do_command(cmd)
+        else:
+            do_command(cmd, fd_out=None)
+    except RuntimeError as e:
+        # pylint: disable=raise-missing-from
+        raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
 
 
-def rebuild_cmdstan(verbose: bool = True) -> None:
+def rebuild_cmdstan(verbose: bool = False, progress: bool = True) -> None:
     """
     Rebuilds the existing CmdStan installation.
     This assumes CmdStan has already been installed,
     though it need not be installed via CmdStanPy for
     this function to work.
 
-    :param verbose:  Boolean value; when ``True``, output from CmdStan build
-        processes will be streamed to the console.  Default is ``False``.
+    :param verbose: Boolean value; when ``True``, show output from make command.
     """
     try:
         with pushd(cmdstan_path()):
             clean_all(verbose)
-            build(verbose)
-            compile_example()
+            build(verbose, progress)
+            compile_example(verbose)
     except ValueError as e:
         raise CmdStanInstallError(
             "Failed to rebuild CmdStan. Are you sure it is installed?"
@@ -211,10 +231,13 @@ def install_version(
 
     :param cmdstan_version: CmdStan release, corresponds to release dirname.
     :param overwrite: when ``True``, run ``make clean-all`` before building.
-    :param verbose: when ``True``, print build msgs to stdout.
+    :param verbose: Boolean value; when ``True``, show output from make command.
     """
     with pushd(cmdstan_version):
-        print('Building version {}'.format(cmdstan_version))
+        print(
+            'Building version {}, may take several minutes, '
+            'depending on your system.'.format(cmdstan_version)
+        )
         if overwrite:
             print(
                 'Overwrite requested, remove existing build of version '
@@ -224,7 +247,7 @@ def install_version(
             print('Rebuilding version {}'.format(cmdstan_version))
         build(verbose)
         print('Test model compilation')
-        compile_example()
+        compile_example(verbose)
     print('Installed {}'.format(cmdstan_version))
 
 
@@ -238,8 +261,8 @@ def is_version_available(version: str) -> bool:
         try:
             urllib.request.urlopen(url)
         except urllib.error.HTTPError as err:
-            print('Release {} is unavailable from URL {}'.format(version, url))
-            print('HTTPError: {}'.format(err.code))
+            print(f'Release {version} is unavailable from URL {url}')
+            print(f'HTTPError: {err.code}')
             is_available = False
             break
         except urllib.error.URLError as e:
@@ -303,10 +326,10 @@ def retrieve_version(version: str, progress: bool = True) -> None:
     )
     for i in range(6):  # always retry to allow for transient URLErrors
         try:
-            if progress:
+            if progress and progbar.allow_show_progress():
                 progress_hook: Optional[
                     Callable[[int, int, int], None]
-                ] = wrap_progress_hook()
+                ] = wrap_url_progress_hook()
             else:
                 progress_hook = None
             file_tmp, _ = urllib.request.urlretrieve(
@@ -337,120 +360,39 @@ def retrieve_version(version: str, progress: bool = True) -> None:
             ) from e
     print('Download successful, file: {}'.format(file_tmp))
     try:
+        print('Extracting distribution')
         tar = tarfile.open(file_tmp)
+        first = tar.next()
+        if first is not None:
+            top_dir = first.name
+        cmdstan_dir = f'cmdstan-{version}'
+        if top_dir != cmdstan_dir:
+            raise CmdStanInstallError(
+                'tarfile should contain top-level dir {},'
+                'but found dir {} instead.'.format(cmdstan_dir, top_dir)
+            )
         target = os.getcwd()
         if platform.system() == 'Windows':
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
-        tar.extractall(target)
+
+        if progress and progbar.allow_show_progress():
+            for member in tqdm(
+                iterable=tar.getmembers(),
+                total=len(tar.getmembers()),
+                colour='blue',
+                leave=False,
+            ):
+                tar.extract(member=member)
+        else:
+            tar.extractall()
     except Exception as e:  # pylint: disable=broad-except
         raise CmdStanInstallError(
-            'Failed to unpack file {}'.format(file_tmp)
+            f'Failed to unpack file {file_tmp}, error:\n\t{str(e)}'
         ) from e
     finally:
         tar.close()
-    print('Unpacked download as cmdstan-{}'.format(version))
-
-
-def main(args: Dict[str, Any]) -> None:
-    """Main."""
-
-    version = latest_version()
-    if args['version']:
-        version = args['version']
-
-    if is_version_available(version):
-        print('Installing CmdStan version: {}'.format(version))
-    else:
-        raise ValueError(
-            'Invalid version requested: {}, cannot install.'.format(version)
-        )
-
-    cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-    if not os.path.exists(cmdstan_dir):
-        cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        if os.path.exists(cmdstanpy_dir):
-            cmdstan_dir = cmdstanpy_dir
-            get_logger().warning(
-                "Using ~/.cmdstanpy is deprecated and"
-                " will not be automatically detected in version 1.0!\n"
-                " Please rename to ~/.cmdstan"
-            )
-
-    install_dir = cmdstan_dir
-    if args['dir']:
-        install_dir = args['dir']
-
-    validate_dir(install_dir)
-    print('Install directory: {}'.format(install_dir))
-
-    if args['progress']:
-        progress = args['progress']
-        try:
-            # pylint: disable=unused-import
-            from tqdm import tqdm  # noqa: F401
-        except (ImportError, ModuleNotFoundError):
-            progress = False
-    else:
-        progress = False
-
-    if platform.system() == 'Windows' and args['compiler']:
-        from .install_cxx_toolchain import is_installed as _is_installed_cxx
-        from .install_cxx_toolchain import main as _main_cxx
-        from .utils import cxx_toolchain_path
-
-        cxx_loc = cmdstan_dir
-        compiler_found = False
-        rtools40_home = os.environ.get('RTOOLS40_HOME')
-        for cxx_loc in (
-            [rtools40_home] if rtools40_home is not None else []
-        ) + [
-            cmdstan_dir,
-            os.path.join(os.path.abspath("/"), "RTools40"),
-            os.path.join(os.path.abspath("/"), "RTools"),
-            os.path.join(os.path.abspath("/"), "RTools35"),
-            os.path.join(os.path.abspath("/"), "RBuildTools"),
-        ]:
-            for cxx_version in ['40', '35']:
-                if _is_installed_cxx(cxx_loc, cxx_version):
-                    compiler_found = True
-                    break
-            if compiler_found:
-                break
-        if not compiler_found:
-            print('Installing RTools40')
-            # copy argv and clear sys.argv
-            cxx_args = {k: v for k, v in args.items() if k != 'compiler'}
-            _main_cxx(cxx_args)
-            cxx_version = '40'
-        # Add toolchain to $PATH
-        cxx_toolchain_path(cxx_version, args['dir'])
-
-    cmdstan_version = 'cmdstan-{}'.format(version)
-    with pushd(install_dir):
-        if args['overwrite'] or not (
-            os.path.exists(cmdstan_version)
-            and os.path.exists(
-                os.path.join(
-                    cmdstan_version,
-                    'examples',
-                    'bernoulli',
-                    'bernoulli' + EXTENSION,
-                )
-            )
-        ):
-            try:
-                retrieve_version(version, progress)
-                install_version(
-                    cmdstan_version=cmdstan_version,
-                    overwrite=args['overwrite'],
-                    verbose=args['verbose'],
-                )
-            except RuntimeError as e:
-                print(e)
-                sys.exit(3)
-        else:
-            print('CmdStan version {} already installed'.format(version))
+    print(f'Unpacked download as {cmdstan_dir}')
 
 
 def parse_cmdline_args() -> Dict[str, Any]:
@@ -488,6 +430,102 @@ def parse_cmdline_args() -> Dict[str, Any]:
             help="flag, add C++ compiler to path (Windows only)",
         )
     return vars(parser.parse_args(sys.argv[1:]))
+
+
+def main(args: Dict[str, Any]) -> None:
+    """Main."""
+
+    version = latest_version()
+    if args['version']:
+        version = args['version']
+
+    if is_version_available(version):
+        print('Installing CmdStan version: {}'.format(version))
+    else:
+        raise ValueError(
+            'Invalid version requested: {}, cannot install.'.format(version)
+        )
+
+    cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+    if not os.path.exists(cmdstan_dir):
+        cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
+        if os.path.exists(cmdstanpy_dir):
+            cmdstan_dir = cmdstanpy_dir
+            get_logger().warning(
+                "Using ~/.cmdstanpy is deprecated and"
+                " will not be automatically detected in version 1.0!\n"
+                " Please rename to ~/.cmdstan"
+            )
+
+    install_dir = cmdstan_dir
+    if args['dir']:
+        install_dir = args['dir']
+
+    validate_dir(install_dir)
+    print('Install directory: {}'.format(install_dir))
+
+    if args['progress']:
+        progress = args['progress']
+    else:
+        progress = False
+
+    if platform.system() == 'Windows' and args['compiler']:
+        from .install_cxx_toolchain import is_installed as _is_installed_cxx
+        from .install_cxx_toolchain import main as _main_cxx
+        from .utils import cxx_toolchain_path
+
+        cxx_loc = cmdstan_dir
+        compiler_found = False
+        rtools40_home = os.environ.get('RTOOLS40_HOME')
+        for cxx_loc in (
+            [rtools40_home] if rtools40_home is not None else []
+        ) + [
+            cmdstan_dir,
+            os.path.join(os.path.abspath("/"), "RTools40"),
+            os.path.join(os.path.abspath("/"), "RTools"),
+            os.path.join(os.path.abspath("/"), "RTools35"),
+            os.path.join(os.path.abspath("/"), "RBuildTools"),
+        ]:
+            for cxx_version in ['40', '35']:
+                if _is_installed_cxx(cxx_loc, cxx_version):
+                    compiler_found = True
+                    break
+            if compiler_found:
+                break
+        if not compiler_found:
+            print('Installing RTools40')
+            # copy argv and clear sys.argv
+            cxx_args = {k: v for k, v in args.items() if k != 'compiler'}
+            _main_cxx(cxx_args)
+            cxx_version = '40'
+        # Add toolchain to $PATH
+        cxx_toolchain_path(cxx_version, args['dir'])
+
+    cmdstan_version = f'cmdstan-{version}'
+    with pushd(install_dir):
+        if args['overwrite'] or not (
+            os.path.exists(cmdstan_version)
+            and os.path.exists(
+                os.path.join(
+                    cmdstan_version,
+                    'examples',
+                    'bernoulli',
+                    'bernoulli' + EXTENSION,
+                )
+            )
+        ):
+            try:
+                retrieve_version(version, progress)
+                install_version(
+                    cmdstan_version=cmdstan_version,
+                    overwrite=args['overwrite'],
+                    verbose=args['verbose'],
+                )
+            except RuntimeError as e:
+                print(e)
+                sys.exit(3)
+        else:
+            print('CmdStan version {} already installed'.format(version))
 
 
 if __name__ == '__main__':

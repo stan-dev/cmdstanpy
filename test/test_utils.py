@@ -1,7 +1,10 @@
 """utils test"""
 
 import collections.abc
+import contextlib
+import io
 import json
+import logging
 import os
 import platform
 import random
@@ -13,10 +16,14 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import pytest
+from testfixtures import LogCapture
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY, _TMPDIR
 from cmdstanpy.model import CmdStanModel
+from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
+    EXTENSION,
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     check_sampler_csv,
@@ -39,6 +46,9 @@ from cmdstanpy.utils import (
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
+BERN_STAN = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+BERN_DATA = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 
 
 class CmdStanPathTest(unittest.TestCase):
@@ -143,7 +153,7 @@ class CmdStanPathTest(unittest.TestCase):
         set_cmdstan_path(install_version)
         validate_cmdstan_path(install_version)
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
-        with self.assertRaisesRegex(ValueError, 'no such CmdStan directory'):
+        with self.assertRaisesRegex(ValueError, 'No CmdStan directory'):
             validate_cmdstan_path(path_foo)
         folder_name = ''.join(
             random.choice(string.ascii_letters) for _ in range(10)
@@ -154,7 +164,7 @@ class CmdStanPathTest(unittest.TestCase):
             )
         os.makedirs(folder_name)
         path_test = os.path.abspath(folder_name)
-        with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
+        with self.assertRaisesRegex(ValueError, 'missing binaries'):
             validate_cmdstan_path(path_test)
         shutil.rmtree(folder_name)
 
@@ -755,14 +765,17 @@ class ParseVarsTest(unittest.TestCase):
 
 
 class DoCommandTest(unittest.TestCase):
-    def test_good(self):
-        retstr = do_command('ls', HERE)
-        self.assertIsNotNone(retstr)
+    def test_capture_console(self):
+        tmp = io.StringIO()
+        do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
+        self.assertTrue('test_utils.py' in tmp.getvalue())
 
     def test_exit(self):
-        args = ['bash', '/bin/junk']
-        with self.assertRaises(Exception):
-            do_command(args, HERE)
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            args = ['bash', '/bin/junk']
+            with self.assertRaises(RuntimeError):
+                do_command(args, HERE)
 
 
 class FlattenTest(unittest.TestCase):
@@ -784,6 +797,41 @@ class FlattenTest(unittest.TestCase):
         array_2d = np.empty((200, 4))
         with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
             flatten_chains(array_2d)
+
+
+@pytest.mark.order(-1)
+class ShowProgressTest(unittest.TestCase):
+    # this test must run after any tests that check tqdm progress bars
+    def test_show_progress_fns(self):
+        self.assertTrue(allow_show_progress())
+        with LogCapture() as log:
+            logging.getLogger()
+            try:
+                raise ValueError("error")
+            except ValueError as e:
+                _disable_progress(e)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'ERROR',
+                'Error in progress bar initialization:\n'
+                '\terror\n'
+                'Disabling progress bars for this session',
+            )
+        )
+        self.assertFalse(allow_show_progress())
+        try:
+            raise ValueError("error")
+        except ValueError as e:
+            with LogCapture() as log:
+                logging.getLogger()
+                _disable_progress(e)
+        msgs = ' '.join(log.actual())
+        # msg should only be printed once per session - check not found
+        self.assertEqual(
+            -1, msgs.find('Disabling progress bars for this session')
+        )
+        self.assertFalse(allow_show_progress())
 
 
 if __name__ == '__main__':

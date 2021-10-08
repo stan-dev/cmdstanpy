@@ -1,5 +1,7 @@
 """CmdStan method optimize tests"""
 
+import contextlib
+import io
 import json
 import os
 import unittest
@@ -142,17 +144,15 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertAlmostEqual(mle.optimized_params_pd['x'][0], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
 
-        self.assertEqual(
-            mle.stan_variable('x', inc_iterations=True).shape, (36,)
-        )
-        self.assertEqual(mle.optimized_iterations_np.shape, (36, 3))
+        last_iter = mle.optimized_iterations_np.shape[0] - 1
         self.assertNotEqual(
             mle.optimized_iterations_np[0, 1],
-            mle.optimized_iterations_np[35, 1],
+            mle.optimized_iterations_np[last_iter, 1],
         )
         for i in range(3):
             self.assertEqual(
-                mle.optimized_params_np[i], mle.optimized_iterations_np[35, i]
+                mle.optimized_params_np[i],
+                mle.optimized_iterations_np[last_iter, i],
             )
 
     def test_eight_schools(self):
@@ -591,6 +591,20 @@ class OptimizeTest(unittest.TestCase):
         for i in range(4):
             for j in range(3):
                 self.assertEqual(int(z_as_ndarray[i, j]), i + 1)
+
+    def test_show_console(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            bern_model.optimize(
+                data=jdata,
+                show_console=True,
+            )
+        console = sys_stdout.getvalue()
+        self.assertTrue('chain 1: method = optimize' in console)
 
 
 if __name__ == '__main__':

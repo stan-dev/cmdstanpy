@@ -16,7 +16,7 @@ This example allows the user to verify that CmdStanPy, CmdStan,
 the StanC compiler, and the C++ toolchain have all been properly installed.
 For substantive example models and
 guidance on coding statistical models in Stan, see
-the `CmdStan User's Guide <https://mc-stan.org/docs/2_27/stan-users-guide/index.html>`_.
+the `CmdStan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`_.
 
 
 The Stan model
@@ -140,7 +140,7 @@ The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all St
     fit.draws().shape 
     fit.draws(concat_chains=True).shape 
 
-    draws_theta = fit.stan_variable(name='theta') 
+    draws_theta = fit.stan_variable(var='theta') 
     draws_theta.shape 
 
                         
@@ -184,44 +184,41 @@ to a specified directory.
     fit.save_csvfiles(dir='some/path')
 
 
-.. comment
-  Progress bar
-  ^^^^^^^^^^^^
+Progress bar
+^^^^^^^^^^^^
   
-  User can enable progress bar for the sampling if ``tqdm`` package
-  has been installed.
-  
-  .. code-block:: python
-  
-      fit = model.sample(data=data_file, show_progress=True)
-  
-  On Jupyter Notebook environment user should use notebook version
-  by using ``show_progress='notebook'``.
-  
-  .. code-block:: python
-  
-      fit = model.sample(data=data_file, show_progress='notebook')
-  
-  To enable javascript progress bar on Jupyter Lab Notebook user needs to install
-  nodejs and ipywidgets. Following the instructions in
-  `tqdm issue #394 <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`
-  For ``conda`` users installing nodejs can be done with ``conda``.
-  
-  .. code-block:: bash
-  
-      conda install nodejs
-  
-  After nodejs has been installed, user needs to install ipywidgets and enable it.
-  
-  .. code-block:: bash
-  
-      pip install ipywidgets
-      jupyter nbextension enable --py widgetsnbextension
-  
-  Jupyter Lab still needs widgets manager.
-  
-  .. code-block:: bash
-  
-      jupyter labextension install @jupyter-widgets/jupyterlab-manager
+By default, CmdStanPy displays a progress bar during sampling.
+ 
+.. ipython:: python
+    :verbatim:
 
-      
+    fit = model.sample(data=data_file)
+
+To suppress the progress bar, specify argument ``show_progress=False``.
+
+.. ipython:: python
+    :verbatim:
+
+    fit = model.sample(data=data_file, show_progress=False)
+
+To see the CmdStan console outputs instead, specify ``show_console=True``.
+
+ 
+.. ipython:: python
+    :verbatim:
+
+    fit = model.sample(data=data_file, show_console=True)
+
+This will stream all sampler messages to the console.
+It provides an alternative way of monitoring progress.
+In conjunction with Stan programs which contain `print` statments,
+this provides a way to inspect and debug model behavoir.
+
+
+Jupyter Lab Notebook requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+In a Jupyter notebook, this package requires the `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package.
+For help on installation and configuration, see
+`ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
+and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.

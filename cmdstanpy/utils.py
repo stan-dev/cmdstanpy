@@ -31,6 +31,7 @@ from typing import (
 import numpy as np
 import pandas as pd
 import ujson as json
+from tqdm.auto import tqdm  # type: ignore
 
 from cmdstanpy import (
     _CMDSTAN_SAMPLING,
@@ -40,6 +41,8 @@ from cmdstanpy import (
     _DOT_CMDSTANPY,
     _TMPDIR,
 )
+
+from . import progress as progbar
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -81,7 +84,7 @@ def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script `install_cmdstan`.
+    Assumes directory populated via `install_cmdstan`.
     """
     versions = [
         ''.join(name.split('-')[1:])  # name may contain '-rc'
@@ -121,11 +124,10 @@ def validate_cmdstan_path(path: str) -> None:
     Throws exception if specified path is invalid.
     """
     if not os.path.isdir(path):
-        raise ValueError('no such CmdStan directory {}'.format(path))
+        raise ValueError(f'No CmdStan directory, path {path} does not exist.')
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'no CmdStan binaries found, '
-            'run command line script "install_cmdstan"'
+            'CmdStan installataion missing binaries, run "install_cmdstan"'
         )
 
 
@@ -157,8 +159,7 @@ def cmdstan_path() -> str:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
             if not os.path.exists(cmdstan_dir):
                 raise ValueError(
-                    'no CmdStan installation found, '
-                    'run command line script "install_cmdstan"'
+                    'No CmdStan installation found, run "install_cmdstan".'
                 )
             get_logger().warning(
                 "Using ~/.cmdstanpy is deprecated and"
@@ -168,8 +169,7 @@ def cmdstan_path() -> str:
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                'no CmdStan installation found, '
-                'run command line script "install_cmdstan"'
+                'No CmdStan installation found, run "install_cmdstan".'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
@@ -925,56 +925,83 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
-) -> Optional[str]:
+    *,
+    fd_out: Optional[TextIO] = sys.stdout,
+    pbar: Optional[Callable[[str], None]] = None,
+) -> None:
     """
-    Spawn process, print stdout/stderr to console.
-    Throws RuntimeError on non-zero returncode.
+    Run command as subprocess, polls process output pipes and
+    either streams outputs to supplied output stream or sends
+    each line (stripped) to the supplied progress bar callback hook.
+
+    Raises ``RuntimeError`` on non-zero return code or execption ``OSError``.
+
+    :param cmd: command and args.
+    :param cwd: directory in which to run command, if unspecified,
+        run command in the current working directory.
+    :param fd_out: when supplied, streams to this output stream,
+        else writes to sys.stdout.
+    :param pbar: optional callback hook to tqdm, which takes
+       single ``str`` arguent, see:
+       https://github.com/tqdm/tqdm#hooks-and-callbacks.
+
     """
-    get_logger().debug('cmd: %s', cmd)
+    get_logger().debug('cmd: %s', ' '.join(cmd))
     try:
         proc = subprocess.Popen(
             cmd,
             cwd=cwd,
+            bufsize=1,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # avoid buffer overflow
             env=os.environ,
+            universal_newlines=True,
         )
-        stdout, stderr = proc.communicate()
-        if proc.returncode != 0:  # problem, throw RuntimeError with msg
+        while proc.poll() is None:
+            if proc.stdout is not None:
+                line = proc.stdout.readline()
+                if fd_out is not None:
+                    fd_out.write(line)
+                if pbar is not None:
+                    pbar(line.strip())
+
+        stdout, _ = proc.communicate()
+        if stdout:
+            if len(stdout) > 0:
+                if fd_out is not None:
+                    fd_out.write(stdout)
+                if pbar is not None:
+                    pbar(stdout.strip())
+
+        if proc.returncode != 0:  # throw RuntimeError + msg
+            serror = ''
             try:
                 serror = os.strerror(proc.returncode)
-            except ValueError:
+            except (ArithmeticError, ValueError):
                 pass
-            if proc.returncode < 0:
-                msg = 'Command: {}\nterminated by signal'.format(cmd)
-            elif proc.returncode <= 125:
-                msg = 'Command: {}\nfailed'.format(cmd)
-            elif proc.returncode == 127:
-                msg = 'Command: {}\nfailed, program not found'.format(cmd)
-            else:
-                msg = 'Command: {}\nmost likely crashed'.format(cmd)
-            msg = '{}, returncode: {}'.format(msg, proc.returncode)
-            if serror:
-                msg = '{}, error: {}'.format(msg, serror)
-            if stderr:
-                msg = '{}, stderr: {} '.format(
-                    msg, stderr.decode('utf-8').strip()
-                )
+            msg = 'Command {}\n\t{} {}'.format(
+                cmd, returncode_msg(proc.returncode), serror
+            )
             raise RuntimeError(msg)
-        if stdout or stderr:  # success, return stdout, stderr, if any
-            msg = ''
-            if stdout:
-                msg = '{}'.format(stdout.decode('utf-8').strip())
-            if stderr:
-                msg = '{}\nWarning or error:\t{}'.format(
-                    msg, stderr.decode('utf-8').strip()
-                )
-            return msg
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
-    return None  # success
+
+
+def returncode_msg(retcode: int) -> str:
+    """ interpret retcode"""
+    if retcode < 0:
+        sig = -1 * retcode
+        return f'terminated by signal {sig}'
+    if retcode <= 125:
+        return 'error during processing'
+    if retcode == 126:  # shouldn't happen
+        return ''
+    if retcode == 127:
+        return 'program not found'
+    sig = retcode - 128
+    return f'terminated by signal {sig}'
 
 
 def windows_short_path(path: str) -> str:
@@ -1118,9 +1145,9 @@ def install_cmdstan(
     version: Optional[str] = None,
     dir: Optional[str] = None,
     overwrite: bool = False,
-    verbose: bool = False,
     compiler: bool = False,
     progress: bool = False,
+    verbose: bool = False,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub. Downloads the release
@@ -1139,15 +1166,16 @@ def install_cmdstan(
     :param overwrite:  Boolean value; when ``True``, will overwrite and
         rebuild an existing CmdStan installation.  Default is ``False``.
 
-    :param verbose:  Boolean value; when ``True``, output from CmdStan build
-        processes will be streamed to the console.  Default is ``False``.
-
     :param compiler: Boolean value; when ``True`` on WINDOWS ONLY, use the
         C++ compiler from the ``install_cxx_toolchain`` command or install
         one if none is found.
 
     :param progress: Boolean value; when ``True``, show a progress bar for
-        downloading and unpacking CmdStan.
+        downloading and unpacking CmdStan.  Default is ``False``.
+
+    :param verbose: Boolean value; when ``True``, show console output from all
+        intallation steps, i.e., download, build, and test CmdStan release.
+        Default is ``False``.
 
     :return: Boolean value; ``True`` for success.
     """
@@ -1181,6 +1209,31 @@ def install_cmdstan(
     return True
 
 
+@progbar.wrap_callback
+def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
+    """Sets up tqdm callback for url downloads."""
+    pbar: tqdm = tqdm(
+        unit='B',
+        unit_scale=True,
+        unit_divisor=1024,
+        colour='blue',
+        leave=False,
+    )
+
+    def download_progress_hook(
+        count: int, block_size: int, total_size: int
+    ) -> None:
+        if pbar.total is None:
+            pbar.total = total_size
+            pbar.reset()
+        downloaded_size = count * block_size
+        pbar.update(downloaded_size - pbar.n)
+        if pbar.n >= total_size:
+            pbar.close()
+
+    return download_progress_hook
+
+
 def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
     """
     Flatten a 3D array of draws X chains X variable into 2D array
@@ -1207,34 +1260,6 @@ def pushd(new_dir: str) -> Iterator[None]:
     os.chdir(new_dir)
     yield
     os.chdir(previous_dir)
-
-
-def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
-    try:
-        from tqdm import tqdm
-
-        pbar = tqdm(
-            unit='B',
-            unit_scale=True,
-            unit_divisor=1024,
-        )
-
-        def download_progress_hook(
-            count: int, block_size: int, total_size: int
-        ) -> None:
-            if pbar.total is None:
-                pbar.total = total_size
-                pbar.reset()
-            downloaded_size = count * block_size
-            pbar.update(downloaded_size - pbar.n)
-            if pbar.n >= total_size:
-                pbar.close()
-
-    except (ImportError, ModuleNotFoundError):
-        print("tqdm was not downloaded, progressbar not shown")
-        return None
-
-    return download_progress_hook
 
 
 def report_signal(sig: int) -> None:

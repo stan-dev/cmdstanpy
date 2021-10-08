@@ -21,6 +21,7 @@ _TMPDIR = tempfile.mkdtemp()
 _CMDSTAN_WARMUP = 1000
 _CMDSTAN_SAMPLING = 1000
 _CMDSTAN_THIN = 1
+_CMDSTAN_REFRESH = 100
 _DOT_CMDSTANPY = '.cmdstanpy'
 _DOT_CMDSTAN = '.cmdstan'
 
