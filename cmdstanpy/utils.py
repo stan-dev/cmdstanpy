@@ -31,7 +31,7 @@ from typing import (
 import numpy as np
 import pandas as pd
 import ujson as json
-from tqdm.auto import tqdm  # type: ignore
+from tqdm.auto import tqdm
 
 from cmdstanpy import (
     _CMDSTAN_SAMPLING,
@@ -990,7 +990,7 @@ def do_command(
 
 
 def returncode_msg(retcode: int) -> str:
-    """ interpret retcode"""
+    """interpret retcode"""
     if retcode < 0:
         sig = -1 * retcode
         return f'terminated by signal {sig}'

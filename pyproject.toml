@@ -20,7 +20,9 @@ warn_return_any = true
 
 [[tool.mypy.overrides]]
 module = [
-    'tqdm',
+        'tqdm.auto',
+
+    'tqdm.auto',
     'pandas',
     'ujson',
     'numpy', # these two are required for py36, which numpy 1.21 doesn't support

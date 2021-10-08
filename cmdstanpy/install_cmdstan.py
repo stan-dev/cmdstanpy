@@ -28,10 +28,9 @@ from pathlib import Path
 from time import sleep
 from typing import Any, Callable, Dict, Optional
 
-from tqdm.auto import tqdm  # type: ignore
+from tqdm.auto import tqdm
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-
 from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
