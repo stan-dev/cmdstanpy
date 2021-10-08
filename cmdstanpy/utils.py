@@ -1148,6 +1148,7 @@ def install_cmdstan(
     compiler: bool = False,
     progress: bool = False,
     verbose: bool = False,
+    cores: int = 1,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub. Downloads the release
@@ -1187,6 +1188,7 @@ def install_cmdstan(
         "compiler": compiler,
         "progress": progress,
         "dir": dir,
+        "cores": cores,
     }
 
     try:
