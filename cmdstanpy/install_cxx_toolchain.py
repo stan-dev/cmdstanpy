@@ -24,7 +24,12 @@ from time import sleep
 from typing import Any, Dict, List
 
 from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
-from cmdstanpy.utils import get_logger, pushd, validate_dir, wrap_progress_hook
+from cmdstanpy.utils import (
+    get_logger,
+    pushd,
+    validate_dir,
+    wrap_url_progress_hook,
+)
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32
@@ -200,7 +205,7 @@ def retrieve_toolchain(filename: str, url: str, progress: bool = True) -> None:
     for i in range(6):
         try:
             if progress:
-                progress_hook = wrap_progress_hook()
+                progress_hook = wrap_url_progress_hook()
             else:
                 progress_hook = None
             _ = urllib.request.urlretrieve(
