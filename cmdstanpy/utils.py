@@ -200,7 +200,7 @@ def cmdstan_version_at(major: int, minor: int) -> bool:
     try:
         makefile = os.path.join(cmdstan_path(), 'makefile')
     except ValueError:
-        get_logger.warning(
+        get_logger().warning(
             'No CmdStan installation found, '
             'cannot check that Cmdstan version is at or above %d.%d.',
             major,
@@ -209,7 +209,7 @@ def cmdstan_version_at(major: int, minor: int) -> bool:
         return False
 
     if not os.path.exists(makefile):
-        get_logger.warning(
+        get_logger().warning(
             'CmdStan installation %s missing makefile, '
             'cannot check that Cmdstan version is at or above %d.%d.',
             cmdstan_path(),
@@ -223,7 +223,7 @@ def cmdstan_version_at(major: int, minor: int) -> bool:
 
     start_idx = contents.find('CMDSTAN_VERSION := ')
     if start_idx < 0:
-        get_logger.warmning(
+        get_logger().warning(
             'Cannot parse version from makefile: %s,'
             'cannot check that Cmdstan version is at or above %d.%d.',
             makefile,
@@ -237,7 +237,7 @@ def cmdstan_version_at(major: int, minor: int) -> bool:
 
     version = contents[start_idx:end_idx]
     if version is None or len(version) < 3 or len(version.split('.')) < 2:
-        get_logger.warmning(
+        get_logger().warning(
             'Cannot parse version from makefile: %s,'
             'cannot check that Cmdstan version is at or above %d.%d.',
             makefile,
