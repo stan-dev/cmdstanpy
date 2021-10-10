@@ -17,7 +17,7 @@ from cmdstanpy.cmdstan_args import (
     SamplerArgs,
     VariationalArgs,
 )
-from cmdstanpy.utils import cmdstan_version_at
+from cmdstanpy.utils import cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -576,7 +576,7 @@ class CmdStanArgsTest(unittest.TestCase):
     def test_args_sig_figs(self):
         sampler_args = SamplerArgs()
         cmdstan_path()  # sets os.environ['CMDSTAN']
-        if not cmdstan_version_at(2, 25):
+        if cmdstan_version_before(2, 25):
             with LogCapture() as log:
                 logging.getLogger()
                 CmdStanArgs(

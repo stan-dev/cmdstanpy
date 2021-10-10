@@ -28,7 +28,7 @@ from cmdstanpy.utils import (
     TemporaryCopiedFile,
     check_sampler_csv,
     cmdstan_path,
-    cmdstan_version_at,
+    cmdstan_version_before,
     do_command,
     flatten_chains,
     get_latest_cmdstan,
@@ -202,9 +202,30 @@ class CmdStanPathTest(unittest.TestCase):
             os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0'))
             self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
 
-    def test_cmdstan_version_at(self):
+    def test_cmdstan_version_before(self):
         cmdstan_path()  # sets os.environ['CMDSTAN']
-        self.assertFalse(cmdstan_version_at(99, 99))
+        self.assertTrue(cmdstan_version_before(99, 99))
+
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            tdir = os.path.join(tmpdir, 'tmpdir_xxx')
+            os.makedirs(tdir)
+            os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0'))
+            os.environ['CMDSTAN'] = os.path.join(tdir, 'cmdstan-2.22.0')
+            with LogCapture() as log:
+                logging.getLogger()
+                self.assertFalse(cmdstan_version_before(99, 99))
+                del os.environ['CMDSTAN']
+                cmdstan_path()
+            log.check_present(
+                (
+                    'cmdstanpy',
+                    'INFO',
+                    'No CmdStan installation found, '
+                    'cannot assert version is less than 99.99.',
+                )
+            )
 
 
 class DataFilesTest(unittest.TestCase):
