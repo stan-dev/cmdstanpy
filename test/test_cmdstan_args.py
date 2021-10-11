@@ -593,7 +593,6 @@ class CmdStanArgsTest(unittest.TestCase):
                 os.path.basename(cmdstan_path()),
                 os.path.dirname(cmdstan_path()),
             )
-            print(log)
             log.check_present(('cmdstanpy', 'WARNING', expect))
         else:
             cmdstan_args = CmdStanArgs(
