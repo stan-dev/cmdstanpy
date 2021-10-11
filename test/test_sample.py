@@ -27,7 +27,7 @@ from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanMCMC, RunSet, from_csv
-from cmdstanpy.utils import EXTENSION, cmdstan_version_at
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -557,7 +557,7 @@ class SampleTest(unittest.TestCase):
         )
 
     def test_index_bounds_error(self):
-        if cmdstan_version_at(2, 25) or cmdstan_version_at(2, 26):
+        if not cmdstan_version_before(2, 27):
             oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
             oob_model = CmdStanModel(stan_file=oob_stan)
             with self.assertRaises(RuntimeError):
@@ -1496,7 +1496,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(bern_fit.metric_type, 'diag_e')
 
     def test_validate_sample_sig_figs(self, stanfile='bernoulli.stan'):
-        if cmdstan_version_at(2, 25):
+        if not cmdstan_version_before(2, 25):
             stan = os.path.join(DATAFILES_PATH, stanfile)
             bern_model = CmdStanModel(stan_file=stan)
 
@@ -1568,7 +1568,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         beta1_default = format(sum_default.iloc[1, 0], '.18g')
         self.assertTrue(beta1_default.startswith('1.3'))
 
-        if cmdstan_version_at(2, 25):
+        if not cmdstan_version_before(2, 25):
             sum_17 = fit.summary(sig_figs=17)
             beta1_17 = format(sum_17.iloc[1, 0], '.18g')
             self.assertTrue(beta1_17.startswith('1.345767078273'))

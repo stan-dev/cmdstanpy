@@ -13,6 +13,7 @@ import stat
 import string
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -28,7 +29,8 @@ from cmdstanpy.utils import (
     TemporaryCopiedFile,
     check_sampler_csv,
     cmdstan_path,
-    cmdstan_version_at,
+    cmdstan_version,
+    cmdstan_version_before,
     do_command,
     flatten_chains,
     get_latest_cmdstan,
@@ -202,9 +204,46 @@ class CmdStanPathTest(unittest.TestCase):
             os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0'))
             self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
 
-    def test_cmdstan_version_at(self):
+    def test_cmdstan_version_before(self):
         cmdstan_path()  # sets os.environ['CMDSTAN']
-        self.assertFalse(cmdstan_version_at(99, 99))
+        self.assertTrue(cmdstan_version_before(99, 99))
+        self.assertFalse(cmdstan_version_before(1, 1))
+
+    def test_cmdstan_version(self):
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            tdir = os.path.join(tmpdir, 'tmpdir_xxx')
+            os.makedirs(tdir)
+            fake_path = os.path.join(tdir, 'cmdstan-2.22.0')
+            os.makedirs(os.path.join(fake_path))
+            fake_bin = os.path.join(fake_path, 'bin')
+            os.makedirs(fake_bin)
+            Path(os.path.join(fake_bin, 'stanc' + EXTENSION)).touch()
+            os.environ['CMDSTAN'] = fake_path
+            self.assertTrue(fake_path == cmdstan_path())
+            expect = (
+                'CmdStan installation {} missing makefile, '
+                'cannot get version.'.format(fake_path)
+            )
+            with LogCapture() as log:
+                logging.getLogger()
+                cmdstan_version()
+            log.check_present(('cmdstanpy', 'INFO', expect))
+            fake_makefile = os.path.join(fake_path, 'makefile')
+            with open(fake_makefile, 'w') as fd:
+                fd.write('...  CMDSTAN_VERSION := dont_need_no_mmp\n\n')
+            expect = (
+                'Cannot parse version, expected "<major>.<minor>.<patch>", '
+                'found: "dont_need_no_mmp".'
+            )
+            with LogCapture() as log:
+                logging.getLogger()
+                cmdstan_version()
+            log.check_present(('cmdstanpy', 'INFO', expect))
+        # cleanup
+        del os.environ['CMDSTAN']
+        cmdstan_path()
 
 
 class DataFilesTest(unittest.TestCase):

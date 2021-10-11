@@ -84,38 +84,43 @@ def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via `install_cmdstan`.
+
+    Assumes directory consists of CmdStan releases, created by
+    function `install_cmdstan`, and therefore dirnames have format
+    "cmdstan-<maj>.<min>.<patch>" or "cmdstan-<maj>.<min>.<patch>-rc<num>",
+    which is CmdStan release practice as of v 2.24.
     """
     versions = [
-        ''.join(name.split('-')[1:])  # name may contain '-rc'
+        name[8:]
         for name in os.listdir(cmdstan_dir)
         if os.path.isdir(os.path.join(cmdstan_dir, name))
         and name.startswith('cmdstan-')
         and name[8].isdigit()
+        and len(name[8:].split('.')) == 3
     ]
-    # munge rc for sort, e.g. 2.25.0-rc1 -> 2.25.0.-99
-    for i in range(len(versions)):  # # pylint: disable=C0200
-        tmp = versions[i].split('rc')
-        if len(tmp) == 1:
-            versions[i] = '.'.join([tmp[0], '0'])
-        else:
-            rc_sortable = str(int(tmp[1]) - 100)
-            versions[i] = '.'.join([tmp[0], rc_sortable])
-
-    versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
-    latest = 'cmdstan-{}'.format(versions[len(versions) - 1])
+    # munge rc for sort, e.g. 2.25.0-rc1 -> 2.25.-99
+    for i in range(len(versions)):  # # pylint: disable=C0200
+        if '-rc' in versions[i]:
+            comps = versions[i].split('-rc')
+            mmp = comps[0].split('.')
+            rc_num = comps[1]
+            patch = str(int(rc_num) - 100)
+            versions[i] = '.'.join([mmp[0], mmp[1], patch])
 
-    # unmunge
-    tmp = latest.split('.')
-    prefix = '.'.join(tmp[0:3])
-    if int(tmp[3]) == 0:
-        latest = prefix
-    else:
-        tmp[3] = 'rc' + str(int(tmp[3]) + 100)
-        latest = '-'.join([prefix, tmp[3]])
-    return latest
+    versions.sort(key=lambda s: list(map(int, s.split('.'))))
+    latest = versions[len(versions) - 1]
+
+    # unmunge as needed
+    mmp = latest.split('.')
+    if int(mmp[2]) < 0:
+        print("here")
+        rc_num = str(int(mmp[2]) + 100)
+        mmp[2] = "0-rc" + rc_num
+        latest = '.'.join(mmp)
+
+    return 'cmdstan-' + latest
 
 
 def validate_cmdstan_path(path: str) -> None:
@@ -177,48 +182,75 @@ def cmdstan_path() -> str:
     return cmdstan
 
 
-def cmdstan_version_at(maj: int, min: int) -> bool:
+def cmdstan_version() -> Optional[Tuple[int, ...]]:
     """
-    Check that CmdStan version is at or above Maj.min version.
-    Parses version string out of CmdStan makefile in CmdStan path dir.
+    Parses version string out of CmdStan makefile variable CMDSTAN_VERSION,
+    returns Tuple(Major, minor).
 
-    :param maj: Major version number
-    :param min: Minor version number
-
-    :return: True if version at or above, else False
+    If CmdStan installation is not found or cannot parse version from makefile
+    logs warning and returns None.  Lenient behavoir required for CI tests,
+    per comment:
+    https://github.com/stan-dev/cmdstanpy/pull/321#issuecomment-733817554
     """
-    # pylint:disable=bare-except
     try:
-        path = cmdstan_path()
-        makefile = os.path.join(path, 'makefile')
-        if not os.path.exists(makefile):
-            raise ValueError(
-                'CmdStan installation {}: missing makefile'.format(path)
-            )
-        version = None
-        with open(makefile, 'r') as fd:
-            contents = fd.read()
-            start_idx = contents.find('CMDSTAN_VERSION := ') + len(
-                'CMDSTAN_VERSION := '
-            )
-            end_idx = contents.find('\n', start_idx)
-            version = contents[start_idx:end_idx]
-        if version is None:
-            raise ValueError(
-                'Cannot parse version from makefile: {}'.format(makefile)
-            )
-        splits = version.split('.')
-        if len(splits) < 2:
-            raise ValueError(
-                'Cannot parse version from makefile: {}'.format(makefile)
-            )
-        cur_maj = int(splits[0])
-        cur_min = int(splits[1])
+        makefile = os.path.join(cmdstan_path(), 'makefile')
+    except ValueError:
+        get_logger().info('No CmdStan installation found.')
+        return None
 
-        if cur_maj > maj or (cur_maj == maj and cur_min >= min):
-            return True
-    except:  # noqa
-        pass
+    if not os.path.exists(makefile):
+        get_logger().info(
+            'CmdStan installation %s missing makefile, cannot get version.',
+            cmdstan_path(),
+        )
+        return None
+
+    with open(makefile, 'r') as fd:
+        contents = fd.read()
+
+    start_idx = contents.find('CMDSTAN_VERSION := ')
+    if start_idx < 0:
+        get_logger().info(
+            'Cannot parse version from makefile: %s.',
+            makefile,
+        )
+        return None
+
+    start_idx += len('CMDSTAN_VERSION := ')
+    end_idx = contents.find('\n', start_idx)
+
+    version = contents[start_idx:end_idx]
+    splits = version.split('.')
+    if len(splits) != 3:
+        get_logger().info(
+            'Cannot parse version, expected "<major>.<minor>.<patch>", '
+            'found: "%s".',
+            version,
+        )
+        return None
+    return tuple(int(x) for x in splits[0:2])
+
+
+def cmdstan_version_before(major: int, minor: int) -> bool:
+    """
+    Check that CmdStan version is less than Major.minor version.
+
+    :param major: Major version number
+    :param minor: Minor version number
+
+
+    :return: True if version at or above major.minor, else False.
+    """
+    cur_version = cmdstan_version()
+    if cur_version is None:
+        get_logger().info(
+            'Cannot determine whether version is before %d.%d.', major, minor
+        )
+        return False
+    if cur_version[0] < major or (
+        cur_version[0] == major and cur_version[1] < minor
+    ):
+        return True
     return False
 
 
