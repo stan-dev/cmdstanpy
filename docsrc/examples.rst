@@ -8,3 +8,4 @@ __________________
     examples/Maximum Likelihood Estimation.ipynb
     examples/Variational Inference.ipynb
     examples/Run Generated Quantities.ipynb
+    examples/Using External C++.ipynb

@@ -6,7 +6,6 @@ import shutil
 import tempfile
 import unittest
 
-import pytest
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
@@ -35,25 +34,18 @@ BERN_BASENAME = 'bernoulli'
 
 
 class CmdStanModelTest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(DATAFILES_PATH):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-
     def test_model_good(self):
         # compile on instantiation, override model name
         model = CmdStanModel(model_name='bern', stan_file=BERN_STAN)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
         self.assertEqual('bern', model.name)
+
+        # compile with external header
+        model = CmdStanModel(
+            stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
+            user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
+        )
 
         # default model name
         model = CmdStanModel(stan_file=BERN_STAN)
@@ -78,6 +70,7 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
 
+    # pylint: disable=no-self-use
     def test_model_pedantic(self):
         with LogCapture(level=logging.WARNING) as log:
             logging.getLogger()
@@ -105,6 +98,10 @@ class CmdStanModelTest(unittest.TestCase):
             CmdStanModel(model_name='', stan_file=BERN_STAN)
         with self.assertRaises(ValueError):
             CmdStanModel(model_name='   ', stan_file=BERN_STAN)
+        with self.assertRaises(ValueError):
+            CmdStanModel(
+                stan_file=os.path.join(DATAFILES_PATH, "external.stan")
+            )
 
     def test_stanc_options(self):
         opts = {

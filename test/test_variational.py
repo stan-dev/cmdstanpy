@@ -6,7 +6,6 @@ import os
 import unittest
 from math import fabs
 
-import pytest
 from testfixtures import LogCapture
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
@@ -18,21 +17,6 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class CmdStanVBTest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(
-            os.path.join(DATAFILES_PATH, 'variational')
-        ):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-
     def test_instantiate(self):
         stan = os.path.join(
             DATAFILES_PATH, 'variational', 'eta_should_be_big.stan'
@@ -155,21 +139,6 @@ class CmdStanVBTest(unittest.TestCase):
 
 
 class VariationalTest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(
-            os.path.join(DATAFILES_PATH, 'variational')
-        ):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-
     def test_variational_good(self):
         stan = os.path.join(
             DATAFILES_PATH, 'variational', 'eta_should_be_big.stan'
