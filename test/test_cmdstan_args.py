@@ -588,11 +588,12 @@ class CmdStanArgsTest(unittest.TestCase):
                 )
             expect = (
                 'Argument "sig_figs" invalid for CmdStan versions < 2.25, '
-                'using verson {} in directory {}'
+                'using version {} in directory {}'
             ).format(
                 os.path.basename(cmdstan_path()),
                 os.path.dirname(cmdstan_path()),
             )
+            print(log)
             log.check_present(('cmdstanpy', 'WARNING', expect))
         else:
             cmdstan_args = CmdStanArgs(

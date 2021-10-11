@@ -182,41 +182,28 @@ def cmdstan_path() -> str:
     return cmdstan
 
 
-def cmdstan_version_before(major: int, minor: int) -> bool:
+def cmdstan_version() -> Optional[Tuple[int, ...]]:
     """
-    Check that CmdStan version is less than Major.minor version.
-    Parses version string out of CmdStan makefile variable CMDSTAN_VERSION.
+    Parses version string out of CmdStan makefile variable CMDSTAN_VERSION,
+    returns Tuple(Major, minor).
 
-    If CmdStan installation is found but cannot parse version from makefile
-    logs warning and returns False.  Lenient behavoir required for CI tests,
-    per comment here:
+    If CmdStan installation is not found or cannot parse version from makefile
+    logs warning and returns None.  Lenient behavoir required for CI tests,
+    per comment:
     https://github.com/stan-dev/cmdstanpy/pull/321#issuecomment-733817554
-
-    :param major: Major version number
-    :param minor: Minor version number
-
-    :return: True if version at or above major.minor, else False.
     """
     try:
         makefile = os.path.join(cmdstan_path(), 'makefile')
     except ValueError:
-        get_logger().info(
-            'No CmdStan installation found, '
-            'cannot assert version is less than %d.%d.',
-            major,
-            minor,
-        )
-        return False
+        get_logger().info('No CmdStan installation found.')
+        return None
 
     if not os.path.exists(makefile):
         get_logger().info(
-            'CmdStan installation %s missing makefile, '
-            'cannot assert version is less than %d.%d.',
+            'CmdStan installation %s missing makefile, cannot get version.',
             cmdstan_path(),
-            major,
-            minor,
         )
-        return False
+        return None
 
     with open(makefile, 'r') as fd:
         contents = fd.read()
@@ -224,32 +211,45 @@ def cmdstan_version_before(major: int, minor: int) -> bool:
     start_idx = contents.find('CMDSTAN_VERSION := ')
     if start_idx < 0:
         get_logger().info(
-            'Cannot parse version from makefile: %s,'
-            'cannot assert version is less than %d.%d.',
+            'Cannot parse version from makefile: %s.',
             makefile,
-            major,
-            minor,
         )
-        return False
+        return None
 
     start_idx += len('CMDSTAN_VERSION := ')
     end_idx = contents.find('\n', start_idx)
 
     version = contents[start_idx:end_idx]
-    if version is None or len(version) < 3 or len(version.split('.')) < 2:
+    splits = version.split('.')
+    if len(splits) != 3:
         get_logger().info(
-            'Cannot parse version from makefile: %s,'
-            'cannot assert version is less than %d.%d.',
-            makefile,
-            major,
-            minor,
+            'Cannot parse version, expected "<major>.<minor>.<patch>", '
+            'found: "%s".',
+            version,
+        )
+        return None
+    return tuple(int(x) for x in splits[0:2])
+
+
+def cmdstan_version_before(major: int, minor: int) -> bool:
+    """
+    Check that CmdStan version is less than Major.minor version.
+
+    :param major: Major version number
+    :param minor: Minor version number
+
+
+    :return: True if version at or above major.minor, else False.
+    """
+    cur_version = cmdstan_version()
+    if cur_version is None:
+        get_logger().info(
+            'Cannot determine whether version is before %d.%d.', major, minor
         )
         return False
-
-    splits = version.split('.')
-    cur_major = int(splits[0])
-    cur_minor = int(splits[1])
-    if cur_major < major or (cur_major == major and cur_minor < minor):
+    if cur_version[0] < major or (
+        cur_version[0] == major and cur_version[1] < minor
+    ):
         return True
     return False
 
