@@ -70,8 +70,8 @@ class CompilerOptions:
             )
 
     def __repr__(self) -> str:
-        return 'stanc_options={}, cpp_options={}, user_header={}'.format(
-            self._stanc_options, self._cpp_options, self._user_header
+        return 'stanc_options={}, cpp_options={}'.format(
+            self._stanc_options, self._cpp_options
         )
 
     @property
@@ -83,11 +83,6 @@ class CompilerOptions:
     def cpp_options(self) -> Dict[str, Union[bool, int]]:
         """C++ compiler options."""
         return self._cpp_options
-
-    @property
-    def user_header(self) -> str:
-        """The user header file if it exists, otherwise empty"""
-        return self._user_header
 
     def validate(self) -> None:
         """
@@ -184,8 +179,19 @@ class CompilerOptions:
 
             if ' ' in self._user_header:
                 raise ValueError(
-                    "User header must be in a folder with no spaces in path!"
+                    "User header must be in a location with no spaces in path!"
                 )
+
+            if (
+                'USER_HEADER' in self._cpp_options
+                and self._user_header != self._cpp_options['USER_HEADER']
+            ):
+                raise ValueError(
+                    "Disagreement in user_header C++ options found!\n"
+                    f"{self._user_header}, {self._cpp_options['USER_HEADER']}"
+                )
+
+            self._cpp_options['USER_HEADER'] = self._user_header
 
     def add(self, new_opts: "CompilerOptions") -> None:  # noqa: disable=Q000
         """Adds options to existing set of compiler options."""
@@ -201,8 +207,8 @@ class CompilerOptions:
         if new_opts.cpp_options is not None:
             for key, val in new_opts.cpp_options.items():
                 self._cpp_options[key] = val
-        if new_opts.user_header != '' and self._user_header == '':
-            self._user_header = new_opts.user_header
+        if new_opts._user_header != '' and self._user_header == '':
+            self._user_header = new_opts._user_header
 
     def add_include_path(self, path: str) -> None:
         """Adds include path to existing set of compiler options."""
@@ -233,6 +239,4 @@ class CompilerOptions:
         if self._cpp_options is not None and len(self._cpp_options) > 0:
             for key, val in self._cpp_options.items():
                 opts.append(f'{key}={val}')
-        if self._user_header:
-            opts.append(f'USER_HEADER={self._user_header}')
         return opts

@@ -14,9 +14,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions()
         opts.validate()
         self.assertEqual(opts.compose(), [])
-        self.assertEqual(
-            opts.__repr__(), 'stanc_options={}, cpp_options={}, user_header='
-        )
+        self.assertEqual(opts.__repr__(), 'stanc_options={}, cpp_options={}')
 
         stanc_opts = {}
         opts = CompilerOptions(stanc_options=stanc_opts)
@@ -31,9 +29,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions(stanc_options=stanc_opts, cpp_options=cpp_opts)
         opts.validate()
         self.assertEqual(opts.compose(), [])
-        self.assertEqual(
-            opts.__repr__(), 'stanc_options={}, cpp_options={}, user_header='
-        )
+        self.assertEqual(opts.__repr__(), 'stanc_options={}, cpp_options={}')
 
     def test_opts_stanc(self):
         stanc_opts = {}
@@ -174,6 +170,13 @@ class CompilerOptsTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must end in .hpp"):
             opts.validate()
 
+        header_file = os.path.join(DATAFILES_PATH, 'return_one.hpp')
+        opts = CompilerOptions(
+            user_header=header_file, cpp_options={'USER_HEADER': 'foo'}
+        )
+        with self.assertRaisesRegex(ValueError, "Disagreement"):
+            opts.validate()
+
     def test_opts_add(self):
         stanc_opts = {'warn-uninitialized': True}
         cpp_opts = {'STAN_OPENCL': 'TRUE', 'OPENCL_DEVICE_ID': 1}
@@ -213,7 +216,10 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions()
         opts.add(CompilerOptions(user_header=header_file))
         opts_list = opts.compose()
-        self.assertTrue(len(opts_list) == 1)
+        self.assertEqual(len(opts_list), 0)
+        opts.validate()
+        opts_list = opts.compose()
+        self.assertEqual(len(opts_list), 2)
 
 
 if __name__ == '__main__':
