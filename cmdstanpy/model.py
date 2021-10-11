@@ -76,6 +76,10 @@ class CmdStanModel:
     :param cpp_options: Options for C++ compiler, specified as a Python
         dictionary containing C++ compiler option name, value pairs.
         Optional.
+
+    :param user_header: A path to a header file to include during C++
+        compilation.
+        Optional.
     """
 
     def __init__(
@@ -86,6 +90,7 @@ class CmdStanModel:
         compile: bool = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
+        user_header: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         """
@@ -97,12 +102,16 @@ class CmdStanModel:
         :param compile: Whether or not to compile the model.
         :param stanc_options: Options for stanc compiler.
         :param cpp_options: Options for C++ compiler.
+        :param user_header: A path to a header file to include during C++
+            compilation.
         """
         self._name = ''
         self._stan_file = None
         self._exe_file = None
         self._compiler_options = CompilerOptions(
-            stanc_options=stanc_options, cpp_options=cpp_options
+            stanc_options=stanc_options,
+            cpp_options=cpp_options,
+            user_header=user_header,
         )
         if logger is not None:
             get_logger().warning(
@@ -235,6 +244,11 @@ class CmdStanModel:
         """Options to C++ compilers."""
         return self._compiler_options._cpp_options
 
+    @property
+    def user_header(self) -> str:
+        """The user header file if it exists, otherwise empty"""
+        return self._compiler_options._user_header
+
     def code(self) -> Optional[str]:
         """Return Stan program as a string."""
         if not self._stan_file:
@@ -255,6 +269,7 @@ class CmdStanModel:
         force: bool = False,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
+        user_header: Optional[str] = None,
         override_options: bool = False,
     ) -> None:
         """
@@ -272,6 +287,8 @@ class CmdStanModel:
 
         :param stanc_options: Options for stanc compiler.
         :param cpp_options: Options for C++ compiler.
+        :param user_header: A path to a header file to include during C++
+            compilation.
 
         :param override_options: When ``True``, override existing option.
             When ``False``, add/replace existing options.  Default is ``False``.
@@ -280,9 +297,15 @@ class CmdStanModel:
             raise RuntimeError('Please specify source file')
 
         compiler_options = None
-        if not (stanc_options is None and cpp_options is None):
+        if not (
+            stanc_options is None
+            and cpp_options is None
+            and user_header is None
+        ):
             compiler_options = CompilerOptions(
-                stanc_options=stanc_options, cpp_options=cpp_options
+                stanc_options=stanc_options,
+                cpp_options=cpp_options,
+                user_header=user_header,
             )
             compiler_options.validate()
             if self._compiler_options is None:

@@ -7,7 +7,6 @@ import os
 import unittest
 
 import numpy as np
-import pytest
 from testfixtures import LogCapture
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
@@ -20,19 +19,6 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class CmdStanMLETest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(DATAFILES_PATH):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-
     def test_instantiate(self):
         stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
         model = CmdStanModel(stan_file=stan)
