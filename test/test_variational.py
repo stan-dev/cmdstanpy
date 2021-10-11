@@ -1,5 +1,7 @@
 """CmdStan method variational tests"""
 
+import contextlib
+import io
 import os
 import unittest
 from math import fabs
@@ -178,38 +180,23 @@ class VariationalTest(unittest.TestCase):
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
         )
-
+        # not testing values, just shapes
         self.assertAlmostEqual(
-            variational.variational_params_np[3], 31.0418, places=2
-        )
-        self.assertAlmostEqual(
-            variational.variational_params_np[4], 27.4463, places=2
-        )
-
-        self.assertAlmostEqual(
-            variational.variational_params_dict['mu[1]'], 31.0418, places=2
-        )
-        self.assertAlmostEqual(
-            variational.variational_params_dict['mu[2]'], 27.4463, places=2
-        )
-
-        self.assertEqual(
             variational.variational_params_np[0],
             variational.variational_params_pd['lp__'][0],
         )
+
         self.assertEqual(
             variational.variational_params_np[3],
-            variational.variational_params_pd['mu[1]'][0],
+            variational.variational_params_dict['mu[1]'],
         )
-        self.assertEqual(
+
+        self.assertAlmostEqual(
             variational.variational_params_np[4],
-            variational.variational_params_pd['mu[2]'][0],
+            variational.variational_params_dict['mu[2]'],
         )
 
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
-
-    def test_variational_missing_args(self):
-        self.assertTrue(True)
 
     def test_variational_eta_small(self):
         stan = os.path.join(
@@ -227,7 +214,6 @@ class VariationalTest(unittest.TestCase):
         self.assertAlmostEqual(
             fabs(variational.variational_params_dict['mu[2]']), 0.09, places=1
         )
-        self.assertTrue(True)
 
     def test_variational_eta_fail(self):
         stan = os.path.join(
@@ -256,13 +242,31 @@ class VariationalTest(unittest.TestCase):
     def test_single_row_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
         model = CmdStanModel(stan_file=stan)
-        vb_fit = model.variational()
+        # testing data parsing, allow non-convergence
+        vb_fit = model.variational(require_converged=False, seed=12345)
         self.assertTrue(isinstance(vb_fit.stan_variable('theta'), float))
         z_as_ndarray = vb_fit.stan_variable(var="z")
         self.assertEqual(z_as_ndarray.shape, (4, 3))
         for i in range(4):
             for j in range(3):
                 self.assertEqual(int(z_as_ndarray[i, j]), i + 1)
+
+    def test_show_console(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            # testing data parsing, allow non-convergence
+            bern_model.variational(
+                data=jdata,
+                show_console=True,
+                require_converged=False,
+                seed=12345,
+            )
+        console = sys_stdout.getvalue()
+        self.assertTrue('chain 1: method = variational' in console)
 
 
 if __name__ == '__main__':

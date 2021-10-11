@@ -51,7 +51,6 @@ command line using ``pip``:
 
 The optional packages are
 
-* ``tqdm`` which allows for progress bar display during sampling
 * ``xarray``, an n-dimension labeled dataset package which can be used for outputs
 
 To install CmdStanPy with all the optional packages:
@@ -72,10 +71,24 @@ If you install CmdStanPy from GitHub,
 to do so is via the ``install_cmdstan`` function 
 :ref:`described below<install-cmdstan-fun>`
 
-*Note for PyStan & RTools users:*  PyStan and CmdStanPy should be installed in 
-separate environments if you are using the RTools toolchain (primarily Windows users).
-If you already have PyStan installed, you should take care to install CmdStanPy in its own
-virtual environment.
+.. note::     
+
+  **Note for PyStan & RTools users:**  PyStan and CmdStanPy should be installed in 
+  separate environments if you are using the RTools toolchain (primarily Windows users).
+  If you already have PyStan installed, you should take care to install CmdStanPy in its own
+  virtual environment.
+
+
+  **Jupyter notebook users:**  CmdStanPy can display progress bars during sampling
+  as well as during the CmdStan build process; these are implemented using the
+  `tqdm <https://github.com/tqdm/tqdm>`_ package,  which uses the
+  `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package
+  in order to update the browser display.  For further help on installation
+  and configuration, see
+  `ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
+  and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.
+
+    
 
 Installing CmdStan
 ------------------

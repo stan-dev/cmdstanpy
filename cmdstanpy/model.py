@@ -1,17 +1,22 @@
 """CmdStanModel"""
 
+import io
 import logging
 import os
 import platform
 import re
 import shutil
 import subprocess
+import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
+from tqdm.auto import tqdm
+
+from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
@@ -35,7 +40,10 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
+    returncode_msg,
 )
+
+from . import progress as progbar
 
 
 class CmdStanModel:
@@ -163,7 +171,7 @@ class CmdStanModel:
 
         if platform.system() == 'Windows':
             try:
-                do_command(['where.exe', 'tbb.dll'])
+                do_command(['where.exe', 'tbb.dll'], fd_out=None)
             except RuntimeError:
                 # Add tbb to the $PATH on Windows
                 libtbb = os.environ.get('STAN_TBB')
@@ -330,29 +338,54 @@ class CmdStanModel:
                     if self._compiler_options is not None:
                         cmd.extend(self._compiler_options.compose())
                     cmd.append(Path(exe_file).as_posix())
-                    try:
-                        msg = do_command(cmd, cmdstan_path())
-                        if msg is not None and 'Warning or error:' in msg:
-                            msg = msg.split("Warning or error:", 1)[1].strip()
-                            get_logger().warning(
-                                "stanc3 has produced warnings:\n%s", msg
-                            )
 
+                    sout = io.StringIO()
+                    try:
+                        do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
                     except RuntimeError as e:
-                        get_logger().error(
-                            'file %s, exception %s', stan_file, str(e)
-                        )
-                        if 'PCH file' in str(e):
+                        sout.write(f'\n{str(e)}\n')
+                        compilation_failed = True
+                    finally:
+                        console = sout.getvalue()
+
+                    if compilation_failed or 'Warning:' in console:
+                        lines = console.split('\n')
+                        warnings = [x for x in lines if x.startswith('Warning')]
+                        syntax_errors = [
+                            x for x in lines if x.startswith('Syntax error')
+                        ]
+                        semantic_errors = [
+                            x for x in lines if x.startswith('Semantic error')
+                        ]
+                        exceptions = [
+                            x
+                            for x in lines
+                            if x.startswith('Uncaught exception')
+                        ]
+                        if (
+                            len(syntax_errors) > 0
+                            or len(semantic_errors) > 0
+                            or len(exceptions) > 0
+                        ):
+                            get_logger().error(
+                                'Stan program failed to compile:'
+                            )
+                            get_logger().warning(console)
+                        elif len(warnings) > 0:
                             get_logger().warning(
-                                "%s",
+                                'Stan compiler has produced %d warnings:',
+                                len(warnings),
+                            )
+                            get_logger().warning(console)
+
+                        if 'PCH file' in console:
+                            get_logger().warning(
                                 "CmdStan's precompiled header (PCH) files "
                                 "may need to be rebuilt."
                                 "If your model failed to compile please run "
                                 "cmdstanpy.rebuild_cmdstan().\nIf the "
-                                "issue persists please open a bug report",
+                                "issue persists please open a bug report"
                             )
-
-                        compilation_failed = True
 
                 if not compilation_failed:
                     if is_copied:
@@ -394,6 +427,7 @@ class CmdStanModel:
         iter: Optional[int] = None,
         save_iterations: bool = False,
         require_converged: bool = True,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMLE:
@@ -452,8 +486,8 @@ class CmdStanModel:
             Introduced in CmdStan-2.25.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, CSV outputs are written to a file
-            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
 
         :param algorithm: Algorithm to use. One of: 'BFGS', 'LBFGS', 'Newton'
@@ -484,6 +518,9 @@ class CmdStanModel:
 
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
+
+        :param show_console: If ``True``, stream CmdStan messages sent to
+            stdout and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations cmdstan will take
             between progress messages. Default value is 100.
@@ -521,10 +558,9 @@ class CmdStanModel:
                 method_args=optimize_args,
                 refresh=refresh,
             )
-
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id)
+            self._run_cmdstan(runset, dummy_chain_id, False, show_console)
 
         if not runset._check_retcodes():
             msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
@@ -564,7 +600,8 @@ class CmdStanModel:
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
         save_profile: bool = False,
-        show_progress: Union[bool, str] = False,
+        show_progress: bool = True,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanMCMC:
@@ -677,7 +714,7 @@ class CmdStanModel:
             The length of the list of step sizes must match the number of
             chains.
 
-        :param adapt_engaged: When True, adapt step size and metric.
+        :param adapt_engaged: When ``True``, adapt step size and metric.
 
         :param adapt_delta: Adaptation target Metropolis acceptance rate.
             The default value is 0.8.  Increasing this value, which must be
@@ -719,22 +756,25 @@ class CmdStanModel:
 
         :param save_latent_dynamics: Whether or not to output the position and
             momentum information for the model parameters (unconstrained).
-            If True, CSV outputs are written to an output file using filename
-            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
+            If ``True``, CSV outputs are written to an output file
+            '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv', see
             https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
             section "Diagnostic CSV output file" for details.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, CSV outputs are written to a file
-            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26, see
             https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
             section "Profiling CSV output file" for details.
 
-        :param show_progress: Use tqdm progress bar to show sampling progress.
-            If show_progress=='notebook' use tqdm_notebook
-            (needs nodejs for jupyter).
+        :param show_progress: If ``True``, display progress bar to track
+            progress for warmup and sampling iterations.  Default is ``True``,
+            unless package tqdm progress bar encounter errors.
+
+        :param show_console: If ``True``, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -807,23 +847,7 @@ class CmdStanModel:
         )
         os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
 
-        if show_progress:
-            try:
-                import tqdm
-
-                get_logger().propagate = False
-            except ImportError:
-                get_logger().warning(
-                    (
-                        'Package tqdm not installed, cannot show progress '
-                        'information. Please install tqdm with '
-                        "'pip install tqdm'"
-                    )
-                )
-                show_progress = False
-
         # TODO:  issue 49: inits can be initialization function
-
         sampler_args = SamplerArgs(
             iter_warmup=iter_warmup,
             iter_sampling=iter_sampling,
@@ -856,58 +880,49 @@ class CmdStanModel:
             )
             runset = RunSet(
                 args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
-            )
-            pbar = None
-            all_pbars = []
+            )  # bookkeeping object for command, result, filepaths
 
+            # progress reporting
+            iter_total = 0
+            if iter_warmup is None:
+                iter_total += _CMDSTAN_WARMUP
+            else:
+                iter_total += iter_warmup
+            if iter_sampling is None:
+                iter_total += _CMDSTAN_SAMPLING
+            else:
+                iter_total += iter_sampling
+            if refresh is None:
+                refresh = _CMDSTAN_REFRESH
+            iter_total = iter_total // refresh + 2
+
+            if show_console:
+                show_progress = False
+            else:
+                show_progress = show_progress and progbar.allow_show_progress()
+
+            get_logger().info('sampling: %s', runset.cmds[0])
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
-                    if show_progress:
-                        if (
-                            isinstance(show_progress, str)
-                            and show_progress.lower() == 'notebook'
-                        ):
-                            try:
-                                tqdm_pbar = tqdm.tqdm_notebook
-                            except ImportError:
-                                msg = (
-                                    'Cannot import tqdm.tqdm_notebook.\n'
-                                    'Functionality is only supported on the '
-                                    'Jupyter Notebook and compatible platforms'
-                                    '.\nPlease follow the instructions in '
-                                    'https://github.com/tqdm/tqdm/issues/394#'
-                                    'issuecomment-384743637 and remember to '
-                                    'stop & start your jupyter server.'
-                                )
-                                get_logger().warning(msg)
-                                tqdm_pbar = tqdm.tqdm
-                        else:
-                            tqdm_pbar = tqdm.tqdm
-                        # enable dynamic_ncols for advanced users
-                        # currently hidden feature
-                        dynamic_ncols_raw = os.environ.get(
-                            'TQDM_DYNAMIC_NCOLS', 'False'
-                        )
-                        if dynamic_ncols_raw.lower() in ['0', 'false']:
-                            dynamic_ncols = False
-                        else:
-                            dynamic_ncols = True
-                        pbar = tqdm_pbar(
-                            desc='Chain {} - warmup'.format(i + 1),
-                            position=i,
-                            total=1,  # Will set total from Stan's output
-                            dynamic_ncols=dynamic_ncols,
-                        )
-                        all_pbars.append(pbar)
-                    executor.submit(self._run_cmdstan, runset, i, pbar)
-
-            # Closing all progress bars
-            for pbar in all_pbars:
-                pbar.close()
-            if show_progress:
-                # re-enable logger for console
-                get_logger().propagate = True
-
+                    executor.submit(
+                        self._run_cmdstan,
+                        runset,
+                        i,
+                        show_progress,
+                        show_console,
+                        iter_total,
+                    )
+            if show_progress and progbar.allow_show_progress():
+                # advance terminal window cursor past progress bars
+                term_size: os.terminal_size = shutil.get_terminal_size(
+                    fallback=(80, 24)
+                )
+                if term_size is not None and term_size[0] > 0:
+                    for i in range(chains):
+                        sys.stdout.write(' ' * term_size[0])
+                        sys.stdout.flush()
+                sys.stdout.write('\n')
+            get_logger().info('sampling completed')
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
                 msg = '{}Command and output files:\n{}'.format(
@@ -925,6 +940,7 @@ class CmdStanModel:
         seed: Optional[int] = None,
         gq_output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanGQ:
@@ -974,6 +990,9 @@ class CmdStanModel:
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
+
+        :param show_console: If ``True``, stream CmdStan messages sent to
+            stdout and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -1039,7 +1058,9 @@ class CmdStanModel:
             parallel_chains = max(min(parallel_chains_avail - 2, chains), 1)
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
-                    executor.submit(self._run_cmdstan, runset, i)
+                    executor.submit(
+                        self._run_cmdstan, runset, i, False, show_console
+                    )
 
             if not runset._check_retcodes():
                 msg = 'Error during generate_quantities:\n{}'.format(
@@ -1072,6 +1093,7 @@ class CmdStanModel:
         eval_elbo: Optional[int] = None,
         output_samples: Optional[int] = None,
         require_converged: bool = True,
+        show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
     ) -> CmdStanVB:
@@ -1122,13 +1144,13 @@ class CmdStanModel:
             Introduced in CmdStan-2.25.
 
         :param save_latent_dynamics: Whether or not to save diagnostics.
-            If True, CSV outputs are written to an output file using filename
-            template '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
+            If ``True``, CSV outputs are written to output file
+            '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
 
         :param save_profile: Whether or not to profile auto-diff operations in
-            labelled blocks of code.  If True, CSV outputs are written to a file
-            '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26.
 
         :param algorithm: Algorithm to use. One of: 'meanfield', 'fullrank'.
@@ -1154,6 +1176,9 @@ class CmdStanModel:
 
         :param require_converged: Whether or not to raise an error if Stan
             reports that "The algorithm may not have converged".
+
+        :param show_console: If ``True``, stream CmdStan messages sent to
+            stdout and stderr to the console.  Default is ``False``.
 
         :param refresh: Specify the number of iterations CmdStan will take
             between progress messages. Default value is 100.
@@ -1195,7 +1220,7 @@ class CmdStanModel:
 
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id)
+            self._run_cmdstan(runset, dummy_chain_id, False, show_console)
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
@@ -1231,132 +1256,118 @@ class CmdStanModel:
         vb = CmdStanVB(runset)
         return vb
 
+    # pylint: disable=no-self-use
     def _run_cmdstan(
-        self, runset: RunSet, idx: int = 0, pbar: Any = None
+        self,
+        runset: RunSet,
+        idx: int = 0,
+        show_progress: bool = False,
+        show_console: bool = False,
+        iter_total: int = 0,
     ) -> None:
         """
-        Encapsulates call to CmdStan.
-        Spawn process, capture console output to file, record returncode.
+        Helper function which encapsulates call to CmdStan.
+        Uses subprocess POpen object to run the process.
+        Records stdout, stderr messages, and process returncode.
+        Args 'show_progress' and 'show_console' allow use of progress bar,
+        streaming output to console, respectively.
         """
+
         cmd = runset.cmds[idx]
-        get_logger().info('start chain %u', idx + 1)
         get_logger().debug(
             'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
-        get_logger().debug('sampling: %s', cmd)
+        if show_progress and progbar.allow_show_progress():
+            progress_hook: Optional[
+                Callable[[str], None]
+            ] = self._wrap_sampler_progress_hook(idx + 1, iter_total)
+        else:
+            get_logger().info('start chain %d', idx + 1)
+            progress_hook = None
         try:
+            fd_out = open(runset.stdout_files[idx], 'w')
             proc = subprocess.Popen(
                 cmd,
+                bufsize=1,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # avoid buffer overflow
                 env=os.environ,
+                universal_newlines=True,
             )
-            if pbar:
-                stdout_pbar = self._read_progress(proc, pbar, idx)
-            stdout, stderr = proc.communicate()
-            if pbar:
-                stdout = stdout_pbar + stdout
+            while proc.poll() is None:
+                if proc.stdout is not None:
+                    line = proc.stdout.readline()
+                    fd_out.write(line)
+                    line = line.strip()
+                    if show_console:
+                        print('chain {}: {}'.format(idx + 1, line))
+                    elif show_progress and progress_hook is not None:
+                        progress_hook(line)
+            if show_progress and progress_hook is not None:
+                progress_hook("Done")
 
-            get_logger().info('finish chain %u', idx + 1)
-            runset._set_retcode(idx, proc.returncode)
+            stdout, _ = proc.communicate()
             if stdout:
-                with open(runset.stdout_files[idx], 'w+') as fd:
-                    contents = stdout.decode('utf-8')  # bugfix 425
-                    if 'running fixed_param sampler' in contents:
-                        sampler_args = runset._args.method_args
-                        assert isinstance(
-                            sampler_args, SamplerArgs
-                        )  # make the typechecker happy
-                        sampler_args.fixed_param = True
-                    fd.write(contents)
-            console_error = ''
-            if stderr:
-                console_error = stderr.decode('utf-8')
-                with open(runset.stderr_files[idx], 'w+') as fd:
-                    fd.write(console_error)
+                fd_out.write(stdout)
+                if show_console:
+                    lines = stdout.split('\n')
+                    for line in lines:
+                        print('chain {}: {}'.format(idx + 1, line))
 
-            if proc.returncode != 0:
-                if proc.returncode < 0:
-                    msg = 'Chain {} terminated by signal {}'.format(
-                        idx + 1, proc.returncode
-                    )
-                elif proc.returncode < 125:
-                    msg = 'Chain {} processing error'.format(idx + 1)
-                    msg = '{}, return code {}'.format(msg, proc.returncode)
-                elif proc.returncode > 128:
-                    msg = 'Chain {} system error'.format(idx + 1)
-                    msg = '{}, terminated by signal {}'.format(
-                        msg, proc.returncode - 128
-                    )
-                else:
-                    msg = 'Chain {} unknown error'.format(idx + 1)
-                if len(console_error) > 0:
-                    msg = '{}\n error message:\n\t{}'.format(msg, console_error)
-                get_logger().error(msg)
-
+            fd_out.close()
         except OSError as e:
-            msg = 'Chain {} encounted error: {}\n'.format(idx + 1, str(e))
+            msg = 'Failed with error {}\n'.format(str(e))
             raise RuntimeError(msg) from e
+        finally:
+            fd_out.close()
 
-    # pylint: disable=no-self-use
-    def _read_progress(
-        self,
-        proc: subprocess.Popen,  # [] - Popoen is only generic in 3.9
-        pbar: Any,
-        idx: int,
-    ) -> bytes:
-        """
-        Update tqdm progress bars according to CmdStan console progress msgs.
-        Poll process to get CmdStan console outputs,
-        check for output lines that start with 'Iteration: '.
-        NOTE: if CmdStan output messages change, this will break.
-        """
-        pattern = (
-            r'^Iteration\:\s*(\d+)\s*/\s*(\d+)\s*\[\s*\d+%\s*\]\s*\((\S*)\)$'
-        )
-        pattern_compiled = re.compile(pattern, flags=re.IGNORECASE)
-        previous_count = 0
-        stdout = b''
-        changed_description = False  # Changed from 'warmup' to 'sample'
-        pbar.set_description(desc=f'Chain {idx + 1} - warmup', refresh=True)
-
-        try:
-            # iterate while process is sampling
-            while proc.poll() is None and proc.stdout is not None:
-                output = proc.stdout.readline()
-                stdout += output
-                output = output.decode('utf-8').strip()
-                if output.startswith('Iteration'):
-                    match = re.search(pattern_compiled, output)
-                    if match:
-                        current_count = int(match.group(1))
-                        total_count = int(match.group(2))
-
-                        if pbar.total != total_count:
-                            pbar.reset(total=total_count)
-
-                        if (
-                            match.group(3).lower() == 'sampling'
-                            and not changed_description
-                        ):
-                            pbar.set_description(f'Chain {idx + 1} - sample')
-                            changed_description = True
-
-                        pbar.update(current_count - previous_count)
-                        previous_count = current_count
-
-            pbar.set_description(f'Chain {idx + 1} -   done', refresh=True)
-
-            if 'notebook' in type(pbar).__name__:
-                # In Jupyter make the bar green by closing it
-                pbar.close()
-
-        except Exception as e:  # pylint: disable=broad-except
-            get_logger().warning(
-                'Chain %s: Failed to read the progress on the fly. Error: %s',
-                idx,
-                repr(e),
+        if not show_progress:
+            get_logger().info('finish chain %d', idx + 1)
+        runset._set_retcode(idx, proc.returncode)
+        if proc.returncode != 0:
+            retcode_summary = returncode_msg(proc.returncode)
+            serror = ''
+            try:
+                serror = os.strerror(proc.returncode)
+            except (ArithmeticError, ValueError):
+                pass
+            get_logger().error(
+                'Chain %d error: %s %s', idx + 1, retcode_summary, serror
             )
+        else:
+            with open(runset.stdout_files[idx], 'r') as fd:
+                console = fd.read()
+                if 'running fixed_param sampler' in console:
+                    sampler_args = runset._args.method_args
+                    assert isinstance(
+                        sampler_args, SamplerArgs
+                    )  # make the typechecker happy
+                    sampler_args.fixed_param = True
 
-        return stdout
+    @staticmethod
+    @progbar.wrap_callback
+    def _wrap_sampler_progress_hook(
+        chain_id: int, total: int
+    ) -> Optional[Callable[[str], None]]:
+        """Sets up tqdm callback for CmdStan sampler console msgs."""
+        pbar: tqdm = tqdm(
+            total=total,
+            bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
+            postfix=[dict(value="Status")],
+            desc=f'chain {chain_id}',
+            colour='yellow',
+        )
+
+        def sampler_progress_hook(line: str) -> None:
+            if line == "Done":
+                pbar.postfix[0]["value"] = 'Sampling completed'
+                pbar.update(total - pbar.n)
+                pbar.close()
+            elif line.startswith("Iteration"):
+                if 'Sampling' in line:
+                    pbar.colour = 'blue'
+                pbar.update(1)
+                pbar.postfix[0]["value"] = line
+
+        return sampler_progress_hook
