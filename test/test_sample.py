@@ -1,6 +1,7 @@
 """CmdStan method sample tests"""
 
 import contextlib
+import io
 import logging
 import os
 import platform
@@ -13,7 +14,6 @@ from multiprocessing import cpu_count
 from time import time
 
 import numpy as np
-import pytest
 from testfixtures import LogCapture
 
 try:
@@ -26,7 +26,7 @@ from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanMCMC, RunSet, from_csv
-from cmdstanpy.utils import EXTENSION, cmdstan_version_at
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -56,19 +56,6 @@ def without_import(library, module):
 
 
 class SampleTest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(DATAFILES_PATH):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-
     def test_bernoulli_good(self, stanfile='bernoulli.stan'):
         stan = os.path.join(DATAFILES_PATH, stanfile)
         bern_model = CmdStanModel(stan_file=stan)
@@ -155,8 +142,6 @@ class SampleTest(unittest.TestCase):
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
                 os.remove(bern_fit.runset.stdout_files[i])
-            if os.path.exists(bern_fit.runset.stderr_files[i]):
-                os.remove(bern_fit.runset.stderr_files[i])
         rdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.R')
         bern_fit = bern_model.sample(
             data=rdata,
@@ -333,7 +318,10 @@ class SampleTest(unittest.TestCase):
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
-                data=logistic_data, chains=4, parallel_chains=1
+                data=logistic_data,
+                chains=4,
+                parallel_chains=1,
+                show_progress=False,
             )
         log.check_present(
             ('cmdstanpy', 'INFO', 'finish chain 1'),
@@ -342,7 +330,10 @@ class SampleTest(unittest.TestCase):
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
-                data=logistic_data, chains=4, parallel_chains=2
+                data=logistic_data,
+                chains=4,
+                parallel_chains=2,
+                show_progress=False,
             )
         if cpu_count() >= 4:
             # finish chains 1, 2 before starting chains 3, 4
@@ -354,7 +345,10 @@ class SampleTest(unittest.TestCase):
             with LogCapture() as log:
                 logging.getLogger()
                 logistic_model.sample(
-                    data=logistic_data, chains=4, parallel_chains=4
+                    data=logistic_data,
+                    chains=4,
+                    parallel_chains=4,
+                    show_progress=False,
                 )
                 log.check_present(
                     ('cmdstanpy', 'INFO', 'start chain 4'),
@@ -368,6 +362,7 @@ class SampleTest(unittest.TestCase):
                 chains=1,
                 parallel_chains=1,
                 threads_per_chain=7,
+                show_progress=False,
             )
         log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 7'))
         with LogCapture() as log:
@@ -377,6 +372,7 @@ class SampleTest(unittest.TestCase):
                 chains=7,
                 parallel_chains=1,
                 threads_per_chain=5,
+                show_progress=False,
             )
         log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 5'))
         with LogCapture() as log:
@@ -547,11 +543,45 @@ class SampleTest(unittest.TestCase):
         )
 
     def test_index_bounds_error(self):
-        if cmdstan_version_at(2, 25) or cmdstan_version_at(2, 26):
+        if not cmdstan_version_before(2, 27):
             oob_stan = os.path.join(DATAFILES_PATH, 'out_of_bounds.stan')
             oob_model = CmdStanModel(stan_file=oob_stan)
             with self.assertRaises(RuntimeError):
                 oob_model.sample()
+
+    def test_show_console(self, stanfile='bernoulli.stan'):
+        stan = os.path.join(DATAFILES_PATH, stanfile)
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            bern_model.sample(
+                data=jdata,
+                chains=2,
+                parallel_chains=2,
+                seed=12345,
+                iter_sampling=100,
+                show_console=True,
+            )
+        console = sys_stdout.getvalue()
+        self.assertTrue('chain 1: method = sample' in console)
+        self.assertTrue('chain 2: method = sample' in console)
+
+    def test_show_progress(self, stanfile='bernoulli.stan'):
+        stan = os.path.join(DATAFILES_PATH, stanfile)
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+        sys_stderr = io.StringIO()  # tqdm prints to stderr
+        with contextlib.redirect_stderr(sys_stderr):
+            bern_model.sample(
+                data=jdata, chains=2, parallel_chains=2, show_progress=True
+            )
+        console = sys_stderr.getvalue()
+        self.assertTrue('chain 1' in console)
+        self.assertTrue('chain 2' in console)
+        self.assertTrue('Sampling completed' in console)
 
 
 class CmdStanMCMCTest(unittest.TestCase):
@@ -960,8 +990,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
                 os.remove(bern_fit.runset.stdout_files[i])
-            if os.path.exists(bern_fit.runset.stderr_files[i]):
-                os.remove(bern_fit.runset.stderr_files[i])
         shutil.rmtree(tmp2_dir, ignore_errors=True)
 
         # regenerate to tmpdir, save to good dir
@@ -980,8 +1008,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.remove(bern_fit.runset.csv_files[i])
             if os.path.exists(bern_fit.runset.stdout_files[i]):
                 os.remove(bern_fit.runset.stdout_files[i])
-            if os.path.exists(bern_fit.runset.stderr_files[i]):
-                os.remove(bern_fit.runset.stderr_files[i])
 
         with self.assertRaisesRegex(ValueError, 'Cannot access CSV file'):
             bern_fit.save_csvfiles(dir=DATAFILES_PATH)
@@ -1043,7 +1069,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertTrue(runset._check_retcodes())
 
         # errors reported
-        runset._stderr_files = [
+        runset._stdout_files = [
             os.path.join(
                 DATAFILES_PATH, 'runset-bad', 'bad-transcript-bern-1.txt'
             ),
@@ -1328,7 +1354,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(bern_fit.metric_type, 'diag_e')
 
     def test_validate_sample_sig_figs(self, stanfile='bernoulli.stan'):
-        if cmdstan_version_at(2, 25):
+        if not cmdstan_version_before(2, 25):
             stan = os.path.join(DATAFILES_PATH, stanfile)
             bern_model = CmdStanModel(stan_file=stan)
 
@@ -1400,7 +1426,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         beta1_default = format(sum_default.iloc[1, 0], '.18g')
         self.assertTrue(beta1_default.startswith('1.3'))
 
-        if cmdstan_version_at(2, 25):
+        if not cmdstan_version_before(2, 25):
             sum_17 = fit.summary(sig_figs=17)
             beta1_17 = format(sum_17.iloc[1, 0], '.18g')
             self.assertTrue(beta1_17.startswith('1.345767078273'))

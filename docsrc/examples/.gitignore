@@ -8,3 +8,4 @@
 *.exe
 *.csv
 .ipynb_checkpoints
+!make_odds.hpp

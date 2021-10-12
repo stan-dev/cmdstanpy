@@ -12,7 +12,7 @@ from numpy.random import RandomState
 from cmdstanpy import _TMPDIR
 from cmdstanpy.utils import (
     cmdstan_path,
-    cmdstan_version_at,
+    cmdstan_version_before,
     create_named_text_file,
     get_logger,
     read_metric,
@@ -811,7 +811,7 @@ class CmdStanArgs:
                     'Argument "sig_figs" must be an integer between 1 and 18,'
                     ' found {}'.format(self.sig_figs)
                 )
-            if not cmdstan_version_at(2, 25):
+            if cmdstan_version_before(2, 25):
                 self.sig_figs = None
                 get_logger().warning(
                     'Argument "sig_figs" invalid for CmdStan versions < 2.25, '

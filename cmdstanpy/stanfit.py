@@ -8,6 +8,7 @@ import re
 import shutil
 from collections import Counter, OrderedDict
 from datetime import datetime
+from io import StringIO
 from time import time
 from typing import (
     Any,
@@ -42,7 +43,7 @@ from cmdstanpy.utils import (
     EXTENSION,
     check_sampler_csv,
     cmdstan_path,
-    cmdstan_version_at,
+    cmdstan_version_before,
     create_named_text_file,
     do_command,
     flatten_chains,
@@ -90,9 +91,8 @@ class RunSet:
         self._chain_ids = chain_ids
         self._retcodes = [-1 for _ in range(chains)]
 
-        # stdout, stderr are written to text files
+        # console output written to text file
         # prefix: ``<model_name>-<YYYYMMDDHHMM>-<chain_id>``
-        # suffixes: ``-stdout.txt``, ``-stderr.txt``
         now = datetime.now()
         now_str = now.strftime(time_fmt)
         file_basename = '-'.join([args.model_name, now_str])
@@ -104,7 +104,6 @@ class RunSet:
         self._diagnostic_files = ['' for _ in range(chains)]
         self._profile_files = ['' for _ in range(chains)]
         self._stdout_files = ['' for _ in range(chains)]
-        self._stderr_files = ['' for _ in range(chains)]
         self._cmds = []
         for i in range(chains):
             if args.output_dir is None:
@@ -123,10 +122,6 @@ class RunSet:
                 [os.path.splitext(csv_file)[0], '-stdout.txt']
             )
             self._stdout_files[i] = stdout_file
-            stderr_file = ''.join(
-                [os.path.splitext(csv_file)[0], '-stderr.txt']
-            )
-            self._stderr_files[i] = stderr_file
             # optional output files:  diagnostics, profiling
             if args.save_latent_dynamics:
                 if args.output_dir is None:
@@ -212,10 +207,6 @@ class RunSet:
             repr = '{}\n console_msgs:\n\t{}'.format(
                 repr, '\n\t'.join(self._stdout_files)
             )
-        if os.path.exists(self._stderr_files[0]):
-            repr = '{}\n error_msgs:\n\t{}'.format(
-                repr, '\n\t'.join(self._stderr_files)
-            )
         return repr
 
     @property
@@ -250,13 +241,11 @@ class RunSet:
 
     @property
     def stdout_files(self) -> List[str]:
-        """List of paths to CmdStan stdout transcripts."""
+        """
+        List of paths to transcript of CmdStan messages sent to the console.
+        Transcripts include config information, progress, and error messages.
+        """
         return self._stdout_files
-
-    @property
-    def stderr_files(self) -> List[str]:
-        """List of paths to CmdStan stderr transcripts."""
-        return self._stderr_files
 
     def _check_retcodes(self) -> bool:
         """Returns ``True`` when all chains have retcode 0."""
@@ -288,22 +277,10 @@ class RunSet:
         msgs = []
         for i in range(self._chains):
             if (
-                os.path.exists(self._stderr_files[i])
-                and os.stat(self._stderr_files[i]).st_size > 0
+                os.path.exists(self._stdout_files[i])
+                and os.stat(self._stdout_files[i]).st_size > 0
             ):
-                with open(self._stderr_files[i], 'r') as fd:
-                    msgs.append(
-                        'chain_id {}:\n{}\n'.format(
-                            self._chain_ids[i], fd.read()
-                        )
-                    )
-            # pre 2.27, all sampler msgs go to stdout, including errors
-            if self._args.method == Method.SAMPLE:
-                if (
-                    not cmdstan_version_at(2, 27)
-                    and os.path.exists(self._stdout_files[i])
-                    and os.stat(self._stdout_files[i]).st_size > 0
-                ):
+                if self._args.method == Method.SAMPLE:
                     with open(self._stdout_files[i], 'r') as fd:
                         contents = fd.read()
                         # pattern matches initial "Exception" or "Error" msg
@@ -315,10 +292,10 @@ class RunSet:
                                     self._chain_ids[i], '\n\t'.join(errors)
                                 )
                             )
-            elif self._args.method == Method.OPTIMIZE:
-                msgs.append('console log output:\n')
-                with open(self._stdout_files[0], 'r') as fd:
-                    msgs.append(fd.read())
+                elif self._args.method == Method.OPTIMIZE:
+                    msgs.append('console log output:\n')
+                    with open(self._stdout_files[0], 'r') as fd:
+                        msgs.append(fd.read())
 
         return '\n'.join(msgs)
 
@@ -835,7 +812,7 @@ class CmdStanMCMC:
             dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv', name_only=True
         )
         csv_str = '--csv_filename={}'.format(tmp_csv_path)
-        if not cmdstan_version_at(2, 24):
+        if cmdstan_version_before(2, 24):
             csv_str = '--csv_file={}'.format(tmp_csv_path)
         cmd = [
             cmd_path,
@@ -843,7 +820,7 @@ class CmdStanMCMC:
             sig_figs_str,
             csv_str,
         ] + self.runset.csv_files
-        do_command(cmd)
+        do_command(cmd, fd_out=None)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
                 fd,
@@ -858,8 +835,8 @@ class CmdStanMCMC:
 
     def diagnose(self) -> Optional[str]:
         """
-        Run cmdstan/bin/diagnose over all output CSV files.
-        Returns output of diagnose (stdout/stderr).
+        Run cmdstan/bin/diagnose over all output CSV files,
+        return console output.
 
         The diagnose utility reads the outputs of all chains
         and checks for the following potential problems:
@@ -872,10 +849,9 @@ class CmdStanMCMC:
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
         cmd = [cmd_path] + self.runset.csv_files
-        result = do_command(cmd=cmd)
-        if result:
-            get_logger().info(result)
-        return result
+        result = StringIO()
+        do_command(cmd=cmd, fd_out=result)
+        return result.getvalue()
 
     def draws_pd(
         self,

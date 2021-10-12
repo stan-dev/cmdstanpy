@@ -31,6 +31,7 @@ from typing import (
 import numpy as np
 import pandas as pd
 import ujson as json
+from tqdm.auto import tqdm
 
 from cmdstanpy import (
     _CMDSTAN_SAMPLING,
@@ -39,6 +40,8 @@ from cmdstanpy import (
     _DOT_CMDSTAN,
     _TMPDIR,
 )
+
+from . import progress as progbar
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
@@ -80,38 +83,43 @@ def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     """
     Given a valid directory path, find all installed CmdStan versions
     and return highest (i.e., latest) version number.
-    Assumes directory populated via script `install_cmdstan`.
+
+    Assumes directory consists of CmdStan releases, created by
+    function `install_cmdstan`, and therefore dirnames have format
+    "cmdstan-<maj>.<min>.<patch>" or "cmdstan-<maj>.<min>.<patch>-rc<num>",
+    which is CmdStan release practice as of v 2.24.
     """
     versions = [
-        ''.join(name.split('-')[1:])  # name may contain '-rc'
+        name[8:]
         for name in os.listdir(cmdstan_dir)
         if os.path.isdir(os.path.join(cmdstan_dir, name))
         and name.startswith('cmdstan-')
         and name[8].isdigit()
+        and len(name[8:].split('.')) == 3
     ]
-    # munge rc for sort, e.g. 2.25.0-rc1 -> 2.25.0.-99
-    for i in range(len(versions)):  # # pylint: disable=C0200
-        tmp = versions[i].split('rc')
-        if len(tmp) == 1:
-            versions[i] = '.'.join([tmp[0], '0'])
-        else:
-            rc_sortable = str(int(tmp[1]) - 100)
-            versions[i] = '.'.join([tmp[0], rc_sortable])
-
-    versions.sort(key=lambda s: list(map(int, s.split('.'))))
     if len(versions) == 0:
         return None
-    latest = 'cmdstan-{}'.format(versions[len(versions) - 1])
+    # munge rc for sort, e.g. 2.25.0-rc1 -> 2.25.-99
+    for i in range(len(versions)):  # # pylint: disable=C0200
+        if '-rc' in versions[i]:
+            comps = versions[i].split('-rc')
+            mmp = comps[0].split('.')
+            rc_num = comps[1]
+            patch = str(int(rc_num) - 100)
+            versions[i] = '.'.join([mmp[0], mmp[1], patch])
 
-    # unmunge
-    tmp = latest.split('.')
-    prefix = '.'.join(tmp[0:3])
-    if int(tmp[3]) == 0:
-        latest = prefix
-    else:
-        tmp[3] = 'rc' + str(int(tmp[3]) + 100)
-        latest = '-'.join([prefix, tmp[3]])
-    return latest
+    versions.sort(key=lambda s: list(map(int, s.split('.'))))
+    latest = versions[len(versions) - 1]
+
+    # unmunge as needed
+    mmp = latest.split('.')
+    if int(mmp[2]) < 0:
+        print("here")
+        rc_num = str(int(mmp[2]) + 100)
+        mmp[2] = "0-rc" + rc_num
+        latest = '.'.join(mmp)
+
+    return 'cmdstan-' + latest
 
 
 def validate_cmdstan_path(path: str) -> None:
@@ -120,11 +128,10 @@ def validate_cmdstan_path(path: str) -> None:
     Throws exception if specified path is invalid.
     """
     if not os.path.isdir(path):
-        raise ValueError('no such CmdStan directory {}'.format(path))
+        raise ValueError(f'No CmdStan directory, path {path} does not exist.')
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'no CmdStan binaries found, '
-            'run command line script "install_cmdstan"'
+            'CmdStan installataion missing binaries, run "install_cmdstan"'
         )
 
 
@@ -154,14 +161,12 @@ def cmdstan_path() -> str:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
             raise ValueError(
-                'no CmdStan installation found, '
-                'run command line script "install_cmdstan"'
+                'No CmdStan installation found, run "install_cmdstan".'
             )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                'no CmdStan installation found, '
-                'run command line script "install_cmdstan"'
+                'No CmdStan installation found, run "install_cmdstan".'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
@@ -169,48 +174,75 @@ def cmdstan_path() -> str:
     return cmdstan
 
 
-def cmdstan_version_at(maj: int, min: int) -> bool:
+def cmdstan_version() -> Optional[Tuple[int, ...]]:
     """
-    Check that CmdStan version is at or above Maj.min version.
-    Parses version string out of CmdStan makefile in CmdStan path dir.
+    Parses version string out of CmdStan makefile variable CMDSTAN_VERSION,
+    returns Tuple(Major, minor).
 
-    :param maj: Major version number
-    :param min: Minor version number
-
-    :return: True if version at or above, else False
+    If CmdStan installation is not found or cannot parse version from makefile
+    logs warning and returns None.  Lenient behavoir required for CI tests,
+    per comment:
+    https://github.com/stan-dev/cmdstanpy/pull/321#issuecomment-733817554
     """
-    # pylint:disable=bare-except
     try:
-        path = cmdstan_path()
-        makefile = os.path.join(path, 'makefile')
-        if not os.path.exists(makefile):
-            raise ValueError(
-                'CmdStan installation {}: missing makefile'.format(path)
-            )
-        version = None
-        with open(makefile, 'r') as fd:
-            contents = fd.read()
-            start_idx = contents.find('CMDSTAN_VERSION := ') + len(
-                'CMDSTAN_VERSION := '
-            )
-            end_idx = contents.find('\n', start_idx)
-            version = contents[start_idx:end_idx]
-        if version is None:
-            raise ValueError(
-                'Cannot parse version from makefile: {}'.format(makefile)
-            )
-        splits = version.split('.')
-        if len(splits) < 2:
-            raise ValueError(
-                'Cannot parse version from makefile: {}'.format(makefile)
-            )
-        cur_maj = int(splits[0])
-        cur_min = int(splits[1])
+        makefile = os.path.join(cmdstan_path(), 'makefile')
+    except ValueError:
+        get_logger().info('No CmdStan installation found.')
+        return None
 
-        if cur_maj > maj or (cur_maj == maj and cur_min >= min):
-            return True
-    except:  # noqa
-        pass
+    if not os.path.exists(makefile):
+        get_logger().info(
+            'CmdStan installation %s missing makefile, cannot get version.',
+            cmdstan_path(),
+        )
+        return None
+
+    with open(makefile, 'r') as fd:
+        contents = fd.read()
+
+    start_idx = contents.find('CMDSTAN_VERSION := ')
+    if start_idx < 0:
+        get_logger().info(
+            'Cannot parse version from makefile: %s.',
+            makefile,
+        )
+        return None
+
+    start_idx += len('CMDSTAN_VERSION := ')
+    end_idx = contents.find('\n', start_idx)
+
+    version = contents[start_idx:end_idx]
+    splits = version.split('.')
+    if len(splits) != 3:
+        get_logger().info(
+            'Cannot parse version, expected "<major>.<minor>.<patch>", '
+            'found: "%s".',
+            version,
+        )
+        return None
+    return tuple(int(x) for x in splits[0:2])
+
+
+def cmdstan_version_before(major: int, minor: int) -> bool:
+    """
+    Check that CmdStan version is less than Major.minor version.
+
+    :param major: Major version number
+    :param minor: Minor version number
+
+
+    :return: True if version at or above major.minor, else False.
+    """
+    cur_version = cmdstan_version()
+    if cur_version is None:
+        get_logger().info(
+            'Cannot determine whether version is before %d.%d.', major, minor
+        )
+        return False
+    if cur_version[0] < major or (
+        cur_version[0] == major and cur_version[1] < minor
+    ):
+        return True
     return False
 
 
@@ -913,56 +945,83 @@ def read_rdump_metric(path: str) -> List[int]:
 def do_command(
     cmd: List[str],
     cwd: Optional[str] = None,
-) -> Optional[str]:
+    *,
+    fd_out: Optional[TextIO] = sys.stdout,
+    pbar: Optional[Callable[[str], None]] = None,
+) -> None:
     """
-    Spawn process, print stdout/stderr to console.
-    Throws RuntimeError on non-zero returncode.
+    Run command as subprocess, polls process output pipes and
+    either streams outputs to supplied output stream or sends
+    each line (stripped) to the supplied progress bar callback hook.
+
+    Raises ``RuntimeError`` on non-zero return code or execption ``OSError``.
+
+    :param cmd: command and args.
+    :param cwd: directory in which to run command, if unspecified,
+        run command in the current working directory.
+    :param fd_out: when supplied, streams to this output stream,
+        else writes to sys.stdout.
+    :param pbar: optional callback hook to tqdm, which takes
+       single ``str`` arguent, see:
+       https://github.com/tqdm/tqdm#hooks-and-callbacks.
+
     """
-    get_logger().debug('cmd: %s', cmd)
+    get_logger().debug('cmd: %s', ' '.join(cmd))
     try:
         proc = subprocess.Popen(
             cmd,
             cwd=cwd,
+            bufsize=1,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # avoid buffer overflow
             env=os.environ,
+            universal_newlines=True,
         )
-        stdout, stderr = proc.communicate()
-        if proc.returncode != 0:  # problem, throw RuntimeError with msg
+        while proc.poll() is None:
+            if proc.stdout is not None:
+                line = proc.stdout.readline()
+                if fd_out is not None:
+                    fd_out.write(line)
+                if pbar is not None:
+                    pbar(line.strip())
+
+        stdout, _ = proc.communicate()
+        if stdout:
+            if len(stdout) > 0:
+                if fd_out is not None:
+                    fd_out.write(stdout)
+                if pbar is not None:
+                    pbar(stdout.strip())
+
+        if proc.returncode != 0:  # throw RuntimeError + msg
+            serror = ''
             try:
                 serror = os.strerror(proc.returncode)
-            except ValueError:
+            except (ArithmeticError, ValueError):
                 pass
-            if proc.returncode < 0:
-                msg = 'Command: {}\nterminated by signal'.format(cmd)
-            elif proc.returncode <= 125:
-                msg = 'Command: {}\nfailed'.format(cmd)
-            elif proc.returncode == 127:
-                msg = 'Command: {}\nfailed, program not found'.format(cmd)
-            else:
-                msg = 'Command: {}\nmost likely crashed'.format(cmd)
-            msg = '{}, returncode: {}'.format(msg, proc.returncode)
-            if serror:
-                msg = '{}, error: {}'.format(msg, serror)
-            if stderr:
-                msg = '{}, stderr: {} '.format(
-                    msg, stderr.decode('utf-8').strip()
-                )
+            msg = 'Command {}\n\t{} {}'.format(
+                cmd, returncode_msg(proc.returncode), serror
+            )
             raise RuntimeError(msg)
-        if stdout or stderr:  # success, return stdout, stderr, if any
-            msg = ''
-            if stdout:
-                msg = '{}'.format(stdout.decode('utf-8').strip())
-            if stderr:
-                msg = '{}\nWarning or error:\t{}'.format(
-                    msg, stderr.decode('utf-8').strip()
-                )
-            return msg
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
-    return None  # success
+
+
+def returncode_msg(retcode: int) -> str:
+    """interpret retcode"""
+    if retcode < 0:
+        sig = -1 * retcode
+        return f'terminated by signal {sig}'
+    if retcode <= 125:
+        return 'error during processing'
+    if retcode == 126:  # shouldn't happen
+        return ''
+    if retcode == 127:
+        return 'program not found'
+    sig = retcode - 128
+    return f'terminated by signal {sig}'
 
 
 def windows_short_path(path: str) -> str:
@@ -1106,9 +1165,10 @@ def install_cmdstan(
     version: Optional[str] = None,
     dir: Optional[str] = None,
     overwrite: bool = False,
-    verbose: bool = False,
     compiler: bool = False,
     progress: bool = False,
+    verbose: bool = False,
+    cores: int = 1,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub. Downloads the release
@@ -1127,15 +1187,18 @@ def install_cmdstan(
     :param overwrite:  Boolean value; when ``True``, will overwrite and
         rebuild an existing CmdStan installation.  Default is ``False``.
 
-    :param verbose:  Boolean value; when ``True``, output from CmdStan build
-        processes will be streamed to the console.  Default is ``False``.
-
     :param compiler: Boolean value; when ``True`` on WINDOWS ONLY, use the
         C++ compiler from the ``install_cxx_toolchain`` command or install
         one if none is found.
 
     :param progress: Boolean value; when ``True``, show a progress bar for
-        downloading and unpacking CmdStan.
+        downloading and unpacking CmdStan.  Default is ``False``.
+
+    :param verbose: Boolean value; when ``True``, show console output from all
+        intallation steps, i.e., download, build, and test CmdStan release.
+        Default is ``False``.
+    :param cores: Integer, number of cores to use in the ``make`` command.
+        Default is 1 core.
 
     :return: Boolean value; ``True`` for success.
     """
@@ -1147,6 +1210,7 @@ def install_cmdstan(
         "compiler": compiler,
         "progress": progress,
         "dir": dir,
+        "cores": cores,
     }
 
     try:
@@ -1167,6 +1231,31 @@ def install_cmdstan(
                 os.path.join(dir, get_latest_cmdstan(dir))  # type: ignore
             )
     return True
+
+
+@progbar.wrap_callback
+def wrap_url_progress_hook() -> Optional[Callable[[int, int, int], None]]:
+    """Sets up tqdm callback for url downloads."""
+    pbar: tqdm = tqdm(
+        unit='B',
+        unit_scale=True,
+        unit_divisor=1024,
+        colour='blue',
+        leave=False,
+    )
+
+    def download_progress_hook(
+        count: int, block_size: int, total_size: int
+    ) -> None:
+        if pbar.total is None:
+            pbar.total = total_size
+            pbar.reset()
+        downloaded_size = count * block_size
+        pbar.update(downloaded_size - pbar.n)
+        if pbar.n >= total_size:
+            pbar.close()
+
+    return download_progress_hook
 
 
 def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
@@ -1195,34 +1284,6 @@ def pushd(new_dir: str) -> Iterator[None]:
     os.chdir(new_dir)
     yield
     os.chdir(previous_dir)
-
-
-def wrap_progress_hook() -> Optional[Callable[[int, int, int], None]]:
-    try:
-        from tqdm import tqdm
-
-        pbar = tqdm(
-            unit='B',
-            unit_scale=True,
-            unit_divisor=1024,
-        )
-
-        def download_progress_hook(
-            count: int, block_size: int, total_size: int
-        ) -> None:
-            if pbar.total is None:
-                pbar.total = total_size
-                pbar.reset()
-            downloaded_size = count * block_size
-            pbar.update(downloaded_size - pbar.n)
-            if pbar.n >= total_size:
-                pbar.close()
-
-    except (ImportError, ModuleNotFoundError):
-        print("tqdm was not downloaded, progressbar not shown")
-        return None
-
-    return download_progress_hook
 
 
 def report_signal(sig: int) -> None:

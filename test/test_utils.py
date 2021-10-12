@@ -1,7 +1,10 @@
 """utils test"""
 
 import collections.abc
+import contextlib
+import io
 import json
+import logging
 import os
 import platform
 import random
@@ -10,18 +13,24 @@ import stat
 import string
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
+from testfixtures import LogCapture
 
 from cmdstanpy import _DOT_CMDSTAN, _TMPDIR
 from cmdstanpy.model import CmdStanModel
+from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
+    EXTENSION,
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     check_sampler_csv,
     cmdstan_path,
-    cmdstan_version_at,
+    cmdstan_version,
+    cmdstan_version_before,
     do_command,
     flatten_chains,
     get_latest_cmdstan,
@@ -39,6 +48,9 @@ from cmdstanpy.utils import (
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
+BERN_STAN = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+BERN_DATA = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 
 
 class CmdStanPathTest(unittest.TestCase):
@@ -131,7 +143,7 @@ class CmdStanPathTest(unittest.TestCase):
         set_cmdstan_path(install_version)
         validate_cmdstan_path(install_version)
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
-        with self.assertRaisesRegex(ValueError, 'no such CmdStan directory'):
+        with self.assertRaisesRegex(ValueError, 'No CmdStan directory'):
             validate_cmdstan_path(path_foo)
         folder_name = ''.join(
             random.choice(string.ascii_letters) for _ in range(10)
@@ -142,7 +154,7 @@ class CmdStanPathTest(unittest.TestCase):
             )
         os.makedirs(folder_name)
         path_test = os.path.abspath(folder_name)
-        with self.assertRaisesRegex(ValueError, 'no CmdStan binaries'):
+        with self.assertRaisesRegex(ValueError, 'missing binaries'):
             validate_cmdstan_path(path_test)
         shutil.rmtree(folder_name)
 
@@ -180,9 +192,46 @@ class CmdStanPathTest(unittest.TestCase):
             os.makedirs(os.path.join(tdir, 'cmdstan-2.22.0'))
             self.assertEqual(get_latest_cmdstan(tdir), 'cmdstan-2.22.0')
 
-    def test_cmdstan_version_at(self):
+    def test_cmdstan_version_before(self):
         cmdstan_path()  # sets os.environ['CMDSTAN']
-        self.assertFalse(cmdstan_version_at(99, 99))
+        self.assertTrue(cmdstan_version_before(99, 99))
+        self.assertFalse(cmdstan_version_before(1, 1))
+
+    def test_cmdstan_version(self):
+        with tempfile.TemporaryDirectory(
+            prefix="cmdstan_tests", dir=_TMPDIR
+        ) as tmpdir:
+            tdir = os.path.join(tmpdir, 'tmpdir_xxx')
+            os.makedirs(tdir)
+            fake_path = os.path.join(tdir, 'cmdstan-2.22.0')
+            os.makedirs(os.path.join(fake_path))
+            fake_bin = os.path.join(fake_path, 'bin')
+            os.makedirs(fake_bin)
+            Path(os.path.join(fake_bin, 'stanc' + EXTENSION)).touch()
+            os.environ['CMDSTAN'] = fake_path
+            self.assertTrue(fake_path == cmdstan_path())
+            expect = (
+                'CmdStan installation {} missing makefile, '
+                'cannot get version.'.format(fake_path)
+            )
+            with LogCapture() as log:
+                logging.getLogger()
+                cmdstan_version()
+            log.check_present(('cmdstanpy', 'INFO', expect))
+            fake_makefile = os.path.join(fake_path, 'makefile')
+            with open(fake_makefile, 'w') as fd:
+                fd.write('...  CMDSTAN_VERSION := dont_need_no_mmp\n\n')
+            expect = (
+                'Cannot parse version, expected "<major>.<minor>.<patch>", '
+                'found: "dont_need_no_mmp".'
+            )
+            with LogCapture() as log:
+                logging.getLogger()
+                cmdstan_version()
+            log.check_present(('cmdstanpy', 'INFO', expect))
+        # cleanup
+        del os.environ['CMDSTAN']
+        cmdstan_path()
 
 
 class DataFilesTest(unittest.TestCase):
@@ -743,14 +792,17 @@ class ParseVarsTest(unittest.TestCase):
 
 
 class DoCommandTest(unittest.TestCase):
-    def test_good(self):
-        retstr = do_command('ls', HERE)
-        self.assertIsNotNone(retstr)
+    def test_capture_console(self):
+        tmp = io.StringIO()
+        do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
+        self.assertTrue('test_utils.py' in tmp.getvalue())
 
     def test_exit(self):
-        args = ['bash', '/bin/junk']
-        with self.assertRaises(Exception):
-            do_command(args, HERE)
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            args = ['bash', '/bin/junk']
+            with self.assertRaises(RuntimeError):
+                do_command(args, HERE)
 
 
 class FlattenTest(unittest.TestCase):
@@ -772,6 +824,41 @@ class FlattenTest(unittest.TestCase):
         array_2d = np.empty((200, 4))
         with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
             flatten_chains(array_2d)
+
+
+@pytest.mark.order(-1)
+class ShowProgressTest(unittest.TestCase):
+    # this test must run after any tests that check tqdm progress bars
+    def test_show_progress_fns(self):
+        self.assertTrue(allow_show_progress())
+        with LogCapture() as log:
+            logging.getLogger()
+            try:
+                raise ValueError("error")
+            except ValueError as e:
+                _disable_progress(e)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'ERROR',
+                'Error in progress bar initialization:\n'
+                '\terror\n'
+                'Disabling progress bars for this session',
+            )
+        )
+        self.assertFalse(allow_show_progress())
+        try:
+            raise ValueError("error")
+        except ValueError as e:
+            with LogCapture() as log:
+                logging.getLogger()
+                _disable_progress(e)
+        msgs = ' '.join(log.actual())
+        # msg should only be printed once per session - check not found
+        self.assertEqual(
+            -1, msgs.find('Disabling progress bars for this session')
+        )
+        self.assertFalse(allow_show_progress())
 
 
 if __name__ == '__main__':

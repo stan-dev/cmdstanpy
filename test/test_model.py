@@ -5,15 +5,11 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import Mock
 
-import numpy as np
-import pytest
-import tqdm
-from testfixtures import LogCapture
+from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, cmdstan_path
+from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -32,34 +28,24 @@ model {
 """
 
 BERN_STAN = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+BERN_DATA = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
 class CmdStanModelTest(unittest.TestCase):
-
-    # pylint: disable=no-self-use
-    @pytest.fixture(scope='class', autouse=True)
-    def do_clean_up(self):
-        for root, _, files in os.walk(DATAFILES_PATH):
-            for filename in files:
-                _, ext = os.path.splitext(filename)
-                if ext.lower() in ('.o', '.d', '.hpp', '.exe', '') and (
-                    filename != ".gitignore"
-                ):
-                    filepath = os.path.join(root, filename)
-                    os.remove(filepath)
-
-    def show_cmdstan_version(self):
-        print('\n\nCmdStan version: {}\n\n'.format(cmdstan_path()))
-        self.assertTrue(True)
-
     def test_model_good(self):
         # compile on instantiation, override model name
         model = CmdStanModel(model_name='bern', stan_file=BERN_STAN)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
         self.assertEqual('bern', model.name)
+
+        # compile with external header
+        model = CmdStanModel(
+            stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
+            user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
+        )
 
         # default model name
         model = CmdStanModel(stan_file=BERN_STAN)
@@ -84,8 +70,9 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
 
+    # pylint: disable=no-self-use
     def test_model_pedantic(self):
-        with LogCapture() as log:
+        with LogCapture(level=logging.WARNING) as log:
             logging.getLogger()
             CmdStanModel(
                 model_name='bern',
@@ -94,11 +81,13 @@ class CmdStanModelTest(unittest.TestCase):
                 ),
                 stanc_options={'warn-pedantic': True},
             )
-            expect = (
-                'stanc3 has produced warnings:\n'
-                + 'Warning: The parameter theta has no priors.'
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                StringComparison(r'(?s).*The parameter theta has no priors.*'),
             )
-            log.check_present(('cmdstanpy', 'WARNING', expect))
+        )
 
     def test_model_bad(self):
         with self.assertRaises(ValueError):
@@ -109,6 +98,10 @@ class CmdStanModelTest(unittest.TestCase):
             CmdStanModel(model_name='', stan_file=BERN_STAN)
         with self.assertRaises(ValueError):
             CmdStanModel(model_name='   ', stan_file=BERN_STAN)
+        with self.assertRaises(ValueError):
+            CmdStanModel(
+                stan_file=os.path.join(DATAFILES_PATH, "external.stan")
+            )
 
     def test_stanc_options(self):
         opts = {
@@ -210,16 +203,13 @@ class CmdStanModelTest(unittest.TestCase):
 
     def test_model_syntax_error(self):
         stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
-        with LogCapture() as log:
-            with self.assertRaises(Exception):
+        with LogCapture(level=logging.WARNING) as log:
+            logging.getLogger()
+            with self.assertRaises(ValueError):
                 CmdStanModel(stan_file=stan)
-
-            # Join all the log messages into one string
-            error_message = '@( * O * )@'.join(np.array(log.actual())[:, -1])
-
-            # Ensure the new line character in error message is not escaped
-            # so the error message is readable
-            self.assertRegex(error_message, r'parsing error:(\r\n|\r|\n)')
+        log.check_present(
+            ('cmdstanpy', 'WARNING', StringComparison(r'(?s).*Syntax error.*'))
+        )
 
     def test_repr(self):
         model = CmdStanModel(stan_file=BERN_STAN)
@@ -289,37 +279,6 @@ class CmdStanModelTest(unittest.TestCase):
             os.remove(exe)
         model2 = CmdStanModel(stan_file=stan)
         self.assertTrue(model2.exe_file.endswith(exe.replace('\\', '/')))
-
-    def test_read_progress(self):
-        model = CmdStanModel(stan_file=BERN_STAN, compile=False)
-
-        proc_mock = Mock()
-        proc_mock.poll.side_effect = [None, None, 'finish']
-        stan_output1 = 'Iteration: 12100 / 31000 [ 39%]  (Warmup)'
-        stan_output2 = 'Iteration: 14000 / 31000 [ 45%]  (Warmup)'
-        pbar = tqdm.tqdm(desc='Chain 1 - warmup', position=1, total=1)
-
-        proc_mock.stdout.readline.side_effect = [
-            stan_output1.encode('utf-8'),
-            stan_output2.encode('utf-8'),
-        ]
-
-        with LogCapture() as log:
-            result = model._read_progress(proc=proc_mock, pbar=pbar, idx=0)
-            self.assertEqual([], log.actual())
-            self.assertEqual(31000, pbar.total)
-
-            # Expect progress bar output to be something like this:
-            # 'Chain 1 -   done:  45%|████▌     | 14000/31000'
-            # --------
-
-            self.assertIn('Chain 1 -   done:  45%', str(pbar))
-            self.assertIn('14000/31000', str(pbar))
-
-            # Check Stan's output is returned
-            output = result.decode('utf-8')
-            self.assertIn(stan_output1, output)
-            self.assertIn(stan_output2, output)
 
 
 if __name__ == '__main__':
