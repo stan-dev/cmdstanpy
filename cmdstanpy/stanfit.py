@@ -2098,7 +2098,7 @@ class CmdStanVB:
     @property
     def eta(self) -> float:
         """
-        Adapted value of step size 'eta'
+        Step size scaling parameter 'eta'
         """
         return self._eta
 
