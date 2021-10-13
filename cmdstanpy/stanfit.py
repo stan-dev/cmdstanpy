@@ -2073,6 +2073,7 @@ class CmdStanVB:
         self._metadata = InferenceMetadata(meta)
         # these three assignments don't grant type information
         self._column_names: Tuple[str, ...] = meta['column_names']
+        self._eta: float = meta['eta']
         self._variational_mean: np.ndarray = meta['variational_mean']
         self._variational_sample: np.ndarray = meta['variational_sample']
 
@@ -2093,6 +2094,13 @@ class CmdStanVB:
         and computed quantities.
         """
         return self._column_names
+
+    @property
+    def eta(self) -> float:
+        """
+        Adapted value of step size 'eta'
+        """
+        return self._eta
 
     @property
     def variational_params_np(self) -> np.ndarray:

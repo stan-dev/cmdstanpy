@@ -678,6 +678,8 @@ def scan_variational_csv(path: str) -> Dict[str, Any]:
                         lineno, line
                     )
                 )
+            _, eta = line.split('=')
+            dict['eta'] = float(eta)
             line = fd.readline().lstrip(' #\t\n')
             lineno += 1
         xs = line.split(',')

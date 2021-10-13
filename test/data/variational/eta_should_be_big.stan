@@ -1,3 +1,6 @@
+/* this model gives unstable results
+ * unless run with fixed seed, id
+ */
 transformed data {
     vector[2]   y[2];
     vector[2]   mu0;
