@@ -1268,7 +1268,9 @@ class CmdStanModel:
             transcript_file = runset.stdout_files[dummy_chain_id]
             with open(transcript_file, 'r') as transcript:
                 contents = transcript.read()
-            pat = re.compile(r'stan::variational::normal_meanfield::calc_grad:', re.M)
+            pat = re.compile(
+                r'stan::variational::normal_meanfield::calc_grad:', re.M
+            )
             if len(re.findall(pat, contents)) > 0:
                 if grad_samples is None:
                     grad_samples = 10
@@ -1281,7 +1283,7 @@ class CmdStanModel:
                 msg = (
                     'Variational algorithm failed.\n '
                     'Console output:\n{}'.format(contents)
-                    )
+                )
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
