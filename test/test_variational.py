@@ -44,11 +44,13 @@ class CmdStanVBTest(unittest.TestCase):
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
         )
+        self.assertEqual(variational.eta, 100)
+
         self.assertAlmostEqual(
-            variational.variational_params_dict['mu[1]'], 31.0299, places=2
+            variational.variational_params_dict['mu[1]'], 311.545, places=2
         )
         self.assertAlmostEqual(
-            variational.variational_params_dict['mu[2]'], 28.8141, places=2
+            variational.variational_params_dict['mu[2]'], 532.801, places=2
         )
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
 
@@ -63,11 +65,13 @@ class CmdStanVBTest(unittest.TestCase):
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
         )
+        self.assertEqual(variational.eta, 100)
+
         self.assertAlmostEqual(
-            variational.variational_params_dict['mu[1]'], 31.0299, places=2
+            variational.variational_params_dict['mu[1]'], 311.545, places=2
         )
         self.assertAlmostEqual(
-            variational.variational_params_dict['mu[2]'], 28.8141, places=2
+            variational.variational_params_dict['mu[2]'], 532.801, places=2
         )
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
 
@@ -77,7 +81,7 @@ class CmdStanVBTest(unittest.TestCase):
             DATAFILES_PATH, 'variational', 'eta_should_be_big.stan'
         )
         model = CmdStanModel(stan_file=stan)
-        variational = model.variational(algorithm='meanfield', seed=12345)
+        variational = model.variational(algorithm='meanfield', seed=999999)
         self.assertEqual(
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
@@ -144,27 +148,31 @@ class VariationalTest(unittest.TestCase):
             DATAFILES_PATH, 'variational', 'eta_should_be_big.stan'
         )
         model = CmdStanModel(stan_file=stan)
-        variational = model.variational(algorithm='meanfield', seed=12345)
+        variational = model.variational(algorithm='meanfield', seed=999999)
         self.assertEqual(
             variational.column_names,
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
         )
-        # not testing values, just shapes
+        # fixed seed, id=1 by default will give known output values
+        self.assertEqual(variational.eta, 100)
+        self.assertAlmostEqual(
+            variational.variational_params_dict['mu[1]'], 311.545, places=2
+        )
+        self.assertAlmostEqual(
+            variational.variational_params_dict['mu[2]'], 532.801, places=2
+        )
         self.assertAlmostEqual(
             variational.variational_params_np[0],
             variational.variational_params_pd['lp__'][0],
         )
-
         self.assertEqual(
             variational.variational_params_np[3],
             variational.variational_params_dict['mu[1]'],
         )
-
         self.assertAlmostEqual(
             variational.variational_params_np[4],
             variational.variational_params_dict['mu[2]'],
         )
-
         self.assertEqual(variational.variational_sample.shape, (1000, 5))
 
     def test_variational_eta_small(self):

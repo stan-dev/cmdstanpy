@@ -1181,6 +1181,7 @@ class CmdStanModel:
         :param iter: Maximum number of ADVI iterations.
 
         :param grad_samples: Number of MC draws for computing the gradient.
+            Default is 10.  If problems arise, try doubling current value.
 
         :param elbo_samples: Number of MC draws for estimate of ELBO.
 
@@ -1247,14 +1248,10 @@ class CmdStanModel:
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
-        valid = True
         pat = re.compile(r'The algorithm may not have converged.', re.M)
         with open(transcript_file, 'r') as transcript:
             contents = transcript.read()
-            errors = re.findall(pat, contents)
-            if len(errors) > 0:
-                valid = False
-        if not valid:
+        if len(re.findall(pat, contents)) > 0:
             if require_converged:
                 raise RuntimeError(
                     'The algorithm may not have converged.\n'
@@ -1268,12 +1265,25 @@ class CmdStanModel:
                 'Proceeding because require_converged is set to False',
             )
         if not runset._check_retcodes():
-            msg = 'Error during variational inference:\n{}'.format(
-                runset.get_err_msgs()
+            transcript_file = runset.stdout_files[dummy_chain_id]
+            with open(transcript_file, 'r') as transcript:
+                contents = transcript.read()
+            pat = re.compile(
+                r'stan::variational::normal_meanfield::calc_grad:', re.M
             )
-            msg = '{}Command and output files:\n{}'.format(
-                msg, runset.__repr__()
-            )
+            if len(re.findall(pat, contents)) > 0:
+                if grad_samples is None:
+                    grad_samples = 10
+                msg = (
+                    'Variational algorithm gradient calculation failed. '
+                    'Double the value of argument "grad_samples", '
+                    'current value is {}.'.format(grad_samples)
+                )
+            else:
+                msg = (
+                    'Variational algorithm failed.\n '
+                    'Console output:\n{}'.format(contents)
+                )
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
