@@ -7,6 +7,8 @@ CmdStanPy is a lightweight pure-Python interface to CmdStan which provides acces
 
 CmdStanPy is distributed via PyPi: https://pypi.org/project/cmdstanpy/
 
+or Conda Forge: https://anaconda.org/conda-forge/cmdstanpy
+
 ### Goals
 
 - Clean interface to Stan services so that CmdStanPy can keep up with Stan releases.
