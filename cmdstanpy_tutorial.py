@@ -3,8 +3,8 @@
 
 # ### Import CmdStanPy classes and methods
 
-import sys
 import os.path
+import sys
 
 from cmdstanpy import CmdStanModel, cmdstan_path
 
@@ -33,7 +33,6 @@ print(fit)
 # ### Access the sample: the `CmdStanMCMC` object attributes and methods
 
 print(fit.draws().shape)
-
 
 # #### Get HMC sampler tuning parameters
 

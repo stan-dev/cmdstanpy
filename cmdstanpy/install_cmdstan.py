@@ -30,11 +30,10 @@ from typing import Any, Callable, Dict, Optional
 
 from tqdm.auto import tqdm
 
-from cmdstanpy import _DOT_CMDSTAN, _DOT_CMDSTANPY
+from cmdstanpy import _DOT_CMDSTAN
 from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
-    get_logger,
     pushd,
     validate_dir,
     wrap_url_progress_hook,
@@ -465,15 +464,6 @@ def main(args: Dict[str, Any]) -> None:
         )
 
     cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-    if not os.path.exists(cmdstan_dir):
-        cmdstanpy_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTANPY))
-        if os.path.exists(cmdstanpy_dir):
-            cmdstan_dir = cmdstanpy_dir
-            get_logger().warning(
-                "Using ~/.cmdstanpy is deprecated and"
-                " will not be automatically detected in version 1.0!\n"
-                " Please rename to ~/.cmdstan"
-            )
 
     install_dir = cmdstan_dir
     if args['dir']:
