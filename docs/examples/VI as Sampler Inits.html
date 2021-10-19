@@ -1,0 +1,955 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Generating new quantities of interest." href="Run%20Generated%20Quantities.html" />
+    <link rel="prev" title="Variational Inference in Stan" href="Variational%20Inference.html" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<link rel="stylesheet" href="_static/basic.css" type="text/css" />
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+<nav id="navbar-main" class="navbar navbar-dark navbar-expand-lg fixed-top bd-navbar"
+    style="background-color: #222222;"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    <!-- This will display the version of the docs -->
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../overview.html">
+  Overview
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../hello_world.html">
+  “Hello, World”
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../workflow.html">
+  CmdStanPy Workflow
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../examples.html">
+  CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../api.html">
+  API Reference
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums">
+            <span><i class="fas fa-users"></i></span>
+            <label class="sr-only">Forums</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+</nav>
+
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <div class="col-12 col-md-1 col-xl-2 bd-sidebar no-sidebar"></div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                <form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form>
+              </div>
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Model-and-data">
+   Model and data
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates">
+   Run Stan’s variational inference algorithm, obtain fitted estimates
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/examples/VI as Sampler Inits.ipynb">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-11 col-xl-8 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<section id="Using-Variational-Estimates-to-Initialize-the-NUTS-HMC-Sampler">
+<h1>Using Variational Estimates to Initialize the NUTS-HMC Sampler<a class="headerlink" href="#Using-Variational-Estimates-to-Initialize-the-NUTS-HMC-Sampler" title="Permalink to this headline">¶</a></h1>
+<p>In this example we show how to use the parameter estimates return by Stan’s variational inference algorithm as the initial parameter values for Stan’s NUTS-HMC sampler, using a the <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/models/stan/logearn_height.stan">earnings-logearn_height model</a> and data from the <a class="reference external" href="https://github.com/stan-dev/posteriordb">posteriordb package</a>.</p>
+<p>The experiments reported in the paper <a class="reference external" href="https://arxiv.org/abs/2108.03782">Pathfinder: Parallel quasi-Newton variational inference</a> by Zhang et al. show that mean-field ADVI provides a better estimate of the posterior, as measured by the 1-Wasserstein distance to the reference posterior, than 75 iterations of the warmup Phase I algorithm used by the NUTS-HMC sampler, furthermore, ADVI is more computationally efficient, requiring fewer evaluations of the log density and gradient functions.
+Therefore, using the estimates from ADVI to initialize the parameter values for the NUTS-HMC sampler will allow the sampler to do a better job of adapting the stepsize and metric during warmup, resulting in better performance and estimation.</p>
+<section id="Model-and-data">
+<h2>Model and data<a class="headerlink" href="#Model-and-data" title="Permalink to this headline">¶</a></h2>
+<p>For conveince, we have copied the posteriordb model and data to this directory, in files <a class="reference external" href="logearn_height.stan">logearn_height.stan</a> and <a class="reference external" href="earnings.json">earnings.json</a>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
+
+<span class="n">stan_file</span> <span class="o">=</span> <span class="s1">&#39;logearn_height.stan&#39;</span>
+<span class="n">data_file</span> <span class="o">=</span> <span class="s1">&#39;earnings.json&#39;</span>
+
+<span class="c1"># instantiate, compile bernoulli model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height
+INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
+INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height
+</pre></div></div>
+</div>
+<p>The earnings dataset is a set of 1192 observations of annual earnings in USD, height in inches, and indicator for sex==male.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+    <span class="n">data_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;earn&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+dict_keys([&#39;N&#39;, &#39;earn&#39;, &#39;height&#39;, &#39;male&#39;])
+1192
+50000 74
+60000 66
+30000 64
+50000 63
+51000 63
+</pre></div></div>
+</div>
+<p>The “logearn_height” model regresses the log earnings on height.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">code</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+data {
+  int&lt;lower=0&gt; N;
+  vector[N] earn;
+  vector[N] height;
+}
+transformed data {           // log transformation
+  vector[N] log_earn;
+  log_earn = log(earn);
+}
+parameters {
+  vector[2] beta;
+  real&lt;lower=0&gt; sigma;
+}
+model {
+  log_earn ~ normal(beta[1] + beta[2] * height, sigma);
+}
+
+</pre></div></div>
+</div>
+</section>
+<section id="Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates">
+<h2>Run Stan’s variational inference algorithm, obtain fitted estimates<a class="headerlink" href="#Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> method <code class="docutils literal notranslate"><span class="pre">variational</span></code> runs CmdStan’s ADVI algorithm. Conditioning the model on the data results in a posterior geometry which is difficult to navigate. Because the ADVI algorithm is unstable and may fail to converge, we run it with argument <code class="docutils literal notranslate"><span class="pre">require_converged</span></code> set to <code class="docutils literal notranslate"><span class="pre">False</span></code>. We also specify a seed, to avoid instabilities as well as for reproducibility.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vb_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">require_converged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:start chain 1
+INFO:cmdstanpy:finish chain 1
+WARNING:cmdstanpy:The algorithm may not have converged.
+Proceeding because require_converged is set to False
+</pre></div></div>
+</div>
+<p>The ADVI algorithm provides estimates of all model parameters as well as the step size scaling factor <code class="docutils literal notranslate"><span class="pre">eta</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">variational</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanVB</span></code> object, with methods <code class="docutils literal notranslate"><span class="pre">eta</span></code> and <code class="docutils literal notranslate"><span class="pre">stan_variables</span></code>, which return the step size scaling factor and estimates of all model parameters as a Python dictionary respectively.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">vb_fit</span><span class="o">.</span><span class="n">eta</span><span class="p">,</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+10.0 {&#39;beta&#39;: array([2.74011 , 0.104137]), &#39;sigma&#39;: 3.83589}
+</pre></div></div>
+</div>
+<p>Posteriordb provides reference posteriors for all models. For the logearn_height model, conditioned on the dataset <code class="docutils literal notranslate"><span class="pre">earnings.json</span></code>, the posterior variables are:</p>
+<ul class="simple">
+<li><p>beta[1]: 5.782</p></li>
+<li><p>beta[2]: 0.059</p></li>
+<li><p>sigma: 0.894</p></li>
+</ul>
+<p>By default, the sampler algorithm randomly initializes all model parameters in the range uniform[-2, 2]. The ADVI estimates will provide a better starting point, especially w/r/t to parameter <code class="docutils literal notranslate"><span class="pre">beta[1]</span></code>, than the defaults. In addition, we can use the step size scaling factor to scale the initial step size, which allows us to skip the first phase of warmup (default 75 iterations).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">vb_vars</span> <span class="o">=</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">()</span>
+<span class="n">vb_stepsize</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">eta</span>
+<span class="n">mcmc_vb_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">inits</span><span class="o">=</span><span class="n">vb_vars</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="n">vb_stepsize</span><span class="p">,</span>
+    <span class="n">adapt_init_phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:sampling: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=123&#39;, &#39;data&#39;, &#39;file=earnings.json&#39;, &#39;init=/tmp/tmp1zpxl682/531tv4uq.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp1zpxl682/logearn_height-20211019133712-1-n2ti0eb0.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;stepsize=0.1&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;, &#39;init_buffer=0&#39;]
+ERROR:cmdstanpy:Error in progress bar initialization:
+        IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+Disabling progress bars for this session
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f6020b7f1f0&gt;
+Traceback (most recent call last):
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f6020b7f1f0&gt;
+Traceback (most recent call last):
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
+    self.close()
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
+        self.close()
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
+self.disp(bar_style=&#39;danger&#39;, check_delay=False)
+AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+    self.disp(bar_style=&#39;danger&#39;, check_delay=False)
+AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+INFO:cmdstanpy:start chain 3
+INFO:cmdstanpy:start chain 4
+INFO:cmdstanpy:sampling completed
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mcmc_vb_inits_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Mean</th>
+      <th>MCSE</th>
+      <th>StdDev</th>
+      <th>5%</th>
+      <th>50%</th>
+      <th>95%</th>
+      <th>N_Eff</th>
+      <th>N_Eff/s</th>
+      <th>R_hat</th>
+    </tr>
+    <tr>
+      <th>name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>lp__</th>
+      <td>-460.000</td>
+      <td>0.0360</td>
+      <td>1.200</td>
+      <td>-460.000</td>
+      <td>-460.000</td>
+      <td>-460.00</td>
+      <td>1200.0</td>
+      <td>120.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>beta[1]</th>
+      <td>5.800</td>
+      <td>0.0140</td>
+      <td>0.470</td>
+      <td>5.000</td>
+      <td>5.800</td>
+      <td>6.60</td>
+      <td>1178.0</td>
+      <td>124.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>beta[2]</th>
+      <td>0.059</td>
+      <td>0.0002</td>
+      <td>0.007</td>
+      <td>0.047</td>
+      <td>0.059</td>
+      <td>0.07</td>
+      <td>1160.0</td>
+      <td>122.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>sigma</th>
+      <td>0.900</td>
+      <td>0.0000</td>
+      <td>0.000</td>
+      <td>0.900</td>
+      <td>0.900</td>
+      <td>0.90</td>
+      <td>1905.9</td>
+      <td>200.6</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>The sampler results match the reference posterior, (taking into account MCSE).</p>
+<ul class="simple">
+<li><p>beta[1]: 5.782</p></li>
+<li><p>beta[2]: 0.059</p></li>
+<li><p>sigma: 0.894</p></li>
+</ul>
+<p>To see how this is useful, we run the sampler with default initializations, step size, and warmup.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mcmc_random_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:sampling: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=123&#39;, &#39;data&#39;, &#39;file=earnings.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp1zpxl682/logearn_height-20211019133721-1-rr1sno4g.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
+INFO:cmdstanpy:start chain 1
+INFO:cmdstanpy:start chain 2
+INFO:cmdstanpy:finish chain 2
+INFO:cmdstanpy:start chain 3
+INFO:cmdstanpy:finish chain 1
+INFO:cmdstanpy:start chain 4
+INFO:cmdstanpy:finish chain 4
+INFO:cmdstanpy:finish chain 3
+INFO:cmdstanpy:sampling completed
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mcmc_random_inits_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Mean</th>
+      <th>MCSE</th>
+      <th>StdDev</th>
+      <th>5%</th>
+      <th>50%</th>
+      <th>95%</th>
+      <th>N_Eff</th>
+      <th>N_Eff/s</th>
+      <th>R_hat</th>
+    </tr>
+    <tr>
+      <th>name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>lp__</th>
+      <td>-460.000</td>
+      <td>0.0360</td>
+      <td>1.2000</td>
+      <td>-460.000</td>
+      <td>-460.000</td>
+      <td>-460.00</td>
+      <td>1200.0</td>
+      <td>130.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>beta[1]</th>
+      <td>5.800</td>
+      <td>0.0130</td>
+      <td>0.4500</td>
+      <td>5.100</td>
+      <td>5.800</td>
+      <td>6.50</td>
+      <td>1142.0</td>
+      <td>123.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>beta[2]</th>
+      <td>0.059</td>
+      <td>0.0002</td>
+      <td>0.0068</td>
+      <td>0.047</td>
+      <td>0.059</td>
+      <td>0.07</td>
+      <td>1144.0</td>
+      <td>124.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>sigma</th>
+      <td>0.900</td>
+      <td>0.0000</td>
+      <td>0.0000</td>
+      <td>0.900</td>
+      <td>0.900</td>
+      <td>0.90</td>
+      <td>1532.8</td>
+      <td>165.7</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<p>Using the variational estimates to skip warmup phase I shows improved N_Eff/s (number of effective sampler per second) values for all parameters. This is a simple model run on a small dataset. For complex models where the initial parameter values are far from the default initializations, this procedure may allow for faster and better adaptation during warmup.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="Variational%20Inference.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Variational Inference in Stan</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="Run%20Generated%20Quantities.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Generating new quantities of interest.</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Stan Development Team.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

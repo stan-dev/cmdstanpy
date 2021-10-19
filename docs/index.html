@@ -4,11 +4,12 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 0.9.77 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.0.0rc1 documentation</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet" />
-  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="_static/css/theme.css" rel="stylesheet">
+  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -26,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -40,7 +41,10 @@
     <link rel="next" title="Overview" href="overview.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
@@ -56,7 +60,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 0.9.77</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
     
   </div>
 
@@ -197,7 +201,7 @@
               
               <div>
                 
-  <div class="section" id="module-cmdstanpy">
+  <section id="module-cmdstanpy">
 <span id="cmdstanpy-python-interface-to-cmdstan"></span><h1><a class="reference internal" href="#module-cmdstanpy" title="cmdstanpy: A lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms."><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmdstanpy</span></code></a> – Python interface to CmdStan<a class="headerlink" href="#module-cmdstanpy" title="Permalink to this headline">¶</a></h1>
 <p>CmdStanPy is a lightweight interface to Stan for Python users which
 provides the necessary objects and functions to do Bayesian inference
@@ -230,6 +234,8 @@ set of model, data, and posterior estimates.</p>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#accessing-the-sample">Accessing the sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#cmdstan-utilities-stansummary-diagnose">CmdStan utilities:  <cite>stansummary</cite>, <cite>diagnose</cite></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#managing-stan-csv-files">Managing Stan CSV files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#progress-bar">Progress bar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#jupyter-lab-notebook-requirements">Jupyter Lab Notebook requirements</a></li>
 </ul>
 </li>
 </ul>
@@ -247,8 +253,12 @@ set of model, data, and posterior estimates.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">CmdStanPy Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/MCMC%20Sampling.html">MCMC Sampling</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="examples/MCMC%20Sampling.html#Fitting-a-model-to-data">Fitting a model to data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="examples/MCMC%20Sampling.html#Running-a-data-generating-model-using-fixed_param=True">Running a data-generating model using <code class="docutils literal notranslate"><span class="pre">fixed_param=True</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/MCMC%20Sampling.html#Prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/MCMC%20Sampling.html#Fitting-a-model-to-data">Fitting a model to data</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="examples/MCMC%20Sampling.html#Sampler-Progress">Sampler Progress</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="examples/MCMC%20Sampling.html#Running-a-data-generating-model">Running a data-generating model</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="examples/Maximum%20Likelihood%20Estimation.html">Maximum Likelihood Estimation</a></li>
@@ -256,10 +266,16 @@ set of model, data, and posterior estimates.</p>
 <li class="toctree-l3"><a class="reference internal" href="examples/Variational%20Inference.html#Example:-variational-inference-for-model-bernoulli.stan">Example: variational inference for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html">Using Variational Estimates to Initialize the NUTS-HMC Sampler</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html#Model-and-data">Model and data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html#Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates">Run Stan’s variational inference algorithm, obtain fitted estimates</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="examples/Run%20Generated%20Quantities.html">Generating new quantities of interest.</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="examples/Run%20Generated%20Quantities.html#Example:-add-posterior-predictive-checks-to-bernoulli.stan">Example: add posterior predictive checks to <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Using%20External%20C%2B%2B.html">Advanced Topic: Using External C++ Functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
@@ -287,17 +303,22 @@ set of model, data, and posterior estimates.</p>
 </ul>
 </div>
 <p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='right-next' id="next-link" href="overview.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Overview</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
-
-
-              </div>
-              
-              
-              <div class='prev-next-bottom'>
-                
-    <a class='right-next' id="next-link" href="overview.html" title="next page">Overview</a>
-
-              </div>
               
           </main>
           
@@ -305,20 +326,19 @@ set of model, data, and posterior estimates.</p>
       </div>
     </div>
   
-  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, Stan Development Team.<br/>
+    &copy; Copyright 2021, Stan Development Team.<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
 </p>
     </div>
     

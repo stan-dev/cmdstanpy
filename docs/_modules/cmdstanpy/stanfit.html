@@ -5,10 +5,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit &#8212; CmdStanPy 0.9.77 documentation</title>
+    <title>cmdstanpy.stanfit &#8212; CmdStanPy 1.0.0rc1 documentation</title>
     
-  <link href="../../_static/css/theme.css" rel="stylesheet" />
-  <link href="../../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../../_static/css/theme.css" rel="stylesheet">
+  <link href="../../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -26,7 +26,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     
-  <link rel="preload" as="script" href="../../_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../../_static/js/index.be7d3bbb2ef33a8344ce.js">
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
@@ -39,7 +39,10 @@
     <link rel="search" title="Search" href="../../search.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
@@ -55,7 +58,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 0.9.77</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
     
   </div>
 
@@ -169,13 +172,13 @@
 
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">glob</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
@@ -210,7 +213,7 @@
     <span class="n">EXTENSION</span><span class="p">,</span>
     <span class="n">check_sampler_csv</span><span class="p">,</span>
     <span class="n">cmdstan_path</span><span class="p">,</span>
-    <span class="n">cmdstan_version_at</span><span class="p">,</span>
+    <span class="n">cmdstan_version_before</span><span class="p">,</span>
     <span class="n">create_named_text_file</span><span class="p">,</span>
     <span class="n">do_command</span><span class="p">,</span>
     <span class="n">flatten_chains</span><span class="p">,</span>
@@ -236,16 +239,11 @@
         <span class="n">args</span><span class="p">:</span> <span class="n">CmdStanArgs</span><span class="p">,</span>
         <span class="n">chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
         <span class="n">chain_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">logger</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="n">args</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_chains</span> <span class="o">=</span> <span class="n">chains</span>
-        <span class="k">if</span> <span class="n">logger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Parameter &#39;logger&#39; is deprecated.&quot;</span>
-                <span class="s2">&quot; Control logging behavior via logging.getLogger(&#39;cmdstanpy)&#39;&quot;</span>
-            <span class="p">)</span>
         <span class="k">if</span> <span class="n">chains</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s1">&#39;Chains must be positive integer value, &#39;</span>
@@ -263,11 +261,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span> <span class="o">=</span> <span class="n">chain_ids</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
 
-        <span class="c1"># stdout, stderr are written to text files</span>
+        <span class="c1"># console output written to text file</span>
         <span class="c1"># prefix: ``&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-&lt;chain_id&gt;``</span>
-        <span class="c1"># suffixes: ``-stdout.txt``, ``-stderr.txt``</span>
         <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-        <span class="n">now_str</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">%H%M&#39;</span><span class="p">)</span>
+        <span class="n">now_str</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">time_fmt</span><span class="p">)</span>
         <span class="n">file_basename</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">args</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">now_str</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">output_dir</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span>
@@ -277,7 +274,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -296,12 +292,8 @@
                 <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;-stdout.txt&#39;</span><span class="p">]</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stdout_file</span>
-            <span class="n">stderr_file</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;-stderr.txt&#39;</span><span class="p">]</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stderr_file</span>
             <span class="c1"># optional output files:  diagnostics, profiling</span>
-            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_diagnostics</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">diag_file</span> <span class="o">=</span> <span class="n">create_named_text_file</span><span class="p">(</span>
                         <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">,</span>
@@ -335,7 +327,7 @@
                         <span class="p">),</span>
                     <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile_file</span>
-            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_diagnostics</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
                         <span class="n">i</span><span class="p">,</span>
@@ -344,7 +336,7 @@
                         <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">save_diagnostics</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
                         <span class="n">i</span><span class="p">,</span>
@@ -371,7 +363,7 @@
             <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> csv_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_diagnostics</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_latent_dynamics</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="p">):</span>
             <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> diagnostics_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -384,10 +376,6 @@
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> console_msgs:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> error_msgs:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="nb">repr</span>
 
@@ -423,13 +411,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stdout_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan stdout transcripts.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List of paths to transcript of CmdStan messages sent to the console.</span>
+<span class="sd">        Transcripts include config information, progress, and error messages.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">stderr_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan stderr transcripts.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span>
 
     <span class="k">def</span> <span class="nf">_check_retcodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns ``True`` when all chains have retcode 0.&quot;&quot;&quot;</span>
@@ -461,37 +447,31 @@
         <span class="n">msgs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="p">):</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stderr_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="s1">&#39;chain_id </span><span class="si">{}</span><span class="s1">:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-            <span class="c1"># pre 2.27, all msgs sent to stdout, including errors</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="ow">not</span> <span class="n">cmdstan_version_at</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">27</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span>
             <span class="p">):</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                    <span class="n">contents</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-                    <span class="c1"># pattern matches initial &quot;Exception&quot; or &quot;Error&quot; msg</span>
-                    <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^E[rx].*$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
-                <span class="n">errors</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">contents</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="s1">&#39;chain_id </span><span class="si">{}</span><span class="s1">:</span><span class="se">\n\t</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">SAMPLE</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                        <span class="n">contents</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                        <span class="c1"># pattern matches initial &quot;Exception&quot; or &quot;Error&quot; msg</span>
+                        <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^E[rx].*$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+                        <span class="n">errors</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">contents</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                <span class="s1">&#39;chain_id </span><span class="si">{}</span><span class="s1">:</span><span class="se">\n\t</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">OPTIMIZE</span><span class="p">:</span>
+                    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;console log output:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                        <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
         <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msgs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RunSet.save_csvfiles"><a class="viewcode-back" href="../../api.html#cmdstanpy.RunSet.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Moves csvfiles to specified directory.</span>
+<span class="sd">        Moves CSV files to specified directory.</span>
 
 <span class="sd">        :param dir: directory path</span>
 
@@ -513,7 +493,7 @@
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Cannot access csv file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="s1">&#39;Cannot access CSV file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="p">)</span>
 
             <span class="n">path</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
@@ -618,7 +598,6 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">,</span>
-        <span class="n">logger</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">SAMPLE</span><span class="p">:</span>
@@ -627,11 +606,7 @@
                 <span class="s1">&#39;found method </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">runset</span> <span class="o">=</span> <span class="n">runset</span>
-        <span class="k">if</span> <span class="n">logger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Parameter &#39;logger&#39; is deprecated.&quot;</span>
-                <span class="s2">&quot; Control logging behavior via logging.getLogger(&#39;cmdstanpy&#39;)&quot;</span>
-            <span class="p">)</span>
+
         <span class="c1"># info from runset to be exposed</span>
         <span class="n">sampler_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method_args</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
@@ -710,39 +685,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">sampler_vars_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use &quot;metadata.method_vars_cols&quot; instead</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Property &quot;sampler_vars_cols&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use &quot;metadata.method_vars_cols&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">method_vars_cols</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">stan_vars_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use &quot;metadata.stan_vars_cols&quot; instead</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Property &quot;stan_vars_cols&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use &quot;metadata.stan_vars_cols&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">stan_vars_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use &quot;metadata.stan_vars_dims&quot; instead</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Property &quot;stan_vars_dims&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use &quot;metadata.stan_vars_dims&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span>
-
-    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Names of all outputs from the sampler, comprising sampler parameters</span>
@@ -751,28 +693,6 @@
 <span class="sd">        with names munged to array notation, e.g. `beta[1]` not `beta.1`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;column_names&#39;</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_unconstrained_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Count of _unconstrained_ model parameters. This is the metric size;</span>
-<span class="sd">        for metric `diag_e`, the length of the diagonal vector, for metric</span>
-<span class="sd">        `dense_e` this is the size of the full covariance matrix.</span>
-
-<span class="sd">        If the parameter variables in a model are</span>
-<span class="sd">        constrained parameter types, the number of constrained and</span>
-<span class="sd">        unconstrained parameters may differ.  The sampler reports the</span>
-<span class="sd">        constrained parameters and computes with the unconstrained parameters.</span>
-<span class="sd">        E.g. a model with 2 parameter variables, ``real alpha`` and</span>
-<span class="sd">        ``vector[3] beta`` has 4 constrained and 4 unconstrained parameters,</span>
-<span class="sd">        however a model with variables ``real alpha`` and ``simplex[3] beta``</span>
-<span class="sd">        has 4 constrained and 3 unconstrained parameters.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span>  <span class="c1"># type: ignore</span>
-            <span class="s1">&#39;num_unconstrained_params&#39;</span>
-        <span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">metric_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -793,7 +713,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unit_e&#39;</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s1">&#39;Unit diagnonal metric, inverse mass matrix size unknown.&#39;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span>
 
@@ -859,28 +784,6 @@
             <span class="k">return</span> <span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:])</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>  <span class="c1"># type: ignore</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use method &quot;draws()&quot; instead.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Method &quot;sample&quot; has been deprecated, use method &quot;draws&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use &quot;draws(inc_warmup=True)&quot;</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Method &quot;warmup&quot; has been deprecated, instead use method&#39;</span>
-            <span class="s1">&#39; &quot;draws(inc_warmup=True)&quot;, returning draws from both&#39;</span>
-            <span class="s1">&#39; warmup and sampling iterations.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
     <span class="k">def</span> <span class="nf">_validate_csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks that Stan CSV output files for all chains are consistent</span>
@@ -908,7 +811,6 @@
                     <span class="n">save_warmup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">,</span>
                     <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">,</span>
                 <span class="p">)</span>
-                <span class="c1"># pylint: disable=consider-using-dict-items</span>
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dzero</span><span class="p">:</span>
                     <span class="k">if</span> <span class="p">(</span>
                         <span class="n">key</span>
@@ -953,53 +855,59 @@
             <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
             <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">==</span> <span class="s1">&#39;diag_e&#39;</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
-                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_unconstrained_params</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
-                    <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">num_unconstrained_params</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">num_unconstrained_params</span><span class="p">,</span>
-                    <span class="p">),</span>
-                    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">chain</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                <span class="c1"># skip initial comments, up to columns header</span>
                 <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="c1"># read initial comments, CSV header row</span>
                 <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                <span class="c1"># at columns header</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
+                    <span class="c1"># handle warmup draws, if any</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_draws_warmup</span><span class="p">):</span>
                             <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
                             <span class="n">xs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]</span>
-                    <span class="c1"># read to adaptation msg</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;# Adaptation terminated&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;# Adaptation terminated&#39;</span><span class="p">:</span>  <span class="c1"># shouldn&#39;t happen?</span>
                         <span class="k">while</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;# Adaptation terminated&#39;</span><span class="p">:</span>
                             <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  <span class="c1"># step_size</span>
+                    <span class="c1"># step_size, metric (diag_e and dense_e only)</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
                     <span class="n">_</span><span class="p">,</span> <span class="n">step_size</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span><span class="p">[</span><span class="n">chain</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">step_size</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  <span class="c1"># metric header</span>
-                    <span class="c1"># process metric</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">==</span> <span class="s1">&#39;diag_e&#39;</span><span class="p">:</span>
-                        <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39; #</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                        <span class="n">xs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_unconstrained_params</span><span class="p">):</span>
-                            <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39; #</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;unit_e&#39;</span><span class="p">:</span>
+                        <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  <span class="c1"># metric type</span>
+                        <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39; #</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="n">num_unconstrained_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="n">chain</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># can&#39;t allocate w/o num params</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">==</span> <span class="s1">&#39;diag_e&#39;</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">num_unconstrained_params</span><span class="p">),</span>
+                                    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                                    <span class="p">(</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span>
+                                        <span class="n">num_unconstrained_params</span><span class="p">,</span>
+                                        <span class="n">num_unconstrained_params</span><span class="p">,</span>
+                                    <span class="p">),</span>
+                                    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+                                <span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">==</span> <span class="s1">&#39;diag_e&#39;</span><span class="p">:</span>
                             <span class="n">xs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">xs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]</span>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_unconstrained_params</span><span class="p">):</span>
+                                <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39; #</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                                <span class="n">xs</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span>
+                                    <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span>
+                                <span class="p">]</span>
                 <span class="c1"># process draws</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sampling_iter_start</span><span class="p">,</span> <span class="n">num_draws</span><span class="p">):</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -1013,7 +921,7 @@
         <span class="n">sig_figs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Run cmdstan/bin/stansummary over all output csv files, assemble</span>
+<span class="sd">        Run cmdstan/bin/stansummary over all output CSV files, assemble</span>
 <span class="sd">        summary into DataFrame object; first row contains summary statistics</span>
 <span class="sd">        for total joint log probability `lp__`, remaining rows contain summary</span>
 <span class="sd">        statistics for all parameters, transformed parameters, and generated</span>
@@ -1074,7 +982,7 @@
             <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">tmp_csv_file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="n">name_only</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         <span class="n">csv_str</span> <span class="o">=</span> <span class="s1">&#39;--csv_filename=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">cmdstan_version_at</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">24</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">24</span><span class="p">):</span>
             <span class="n">csv_str</span> <span class="o">=</span> <span class="s1">&#39;--csv_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">cmd_path</span><span class="p">,</span>
@@ -1082,7 +990,7 @@
             <span class="n">sig_figs_str</span><span class="p">,</span>
             <span class="n">csv_str</span><span class="p">,</span>
         <span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span>
-        <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">fd_out</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
             <span class="n">summary_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
                 <span class="n">fd</span><span class="p">,</span>
@@ -1097,8 +1005,8 @@
 
 <div class="viewcode-block" id="CmdStanMCMC.diagnose"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.diagnose">[docs]</a>    <span class="k">def</span> <span class="nf">diagnose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Run cmdstan/bin/diagnose over all output csv files.</span>
-<span class="sd">        Returns output of diagnose (stdout/stderr).</span>
+<span class="sd">        Run cmdstan/bin/diagnose over all output CSV files,</span>
+<span class="sd">        return console output.</span>
 
 <span class="sd">        The diagnose utility reads the outputs of all chains</span>
 <span class="sd">        and checks for the following potential problems:</span>
@@ -1111,17 +1019,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;diagnose&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd_path</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">fd_out</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="CmdStanMCMC.draws_pd"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.draws_pd">[docs]</a>    <span class="k">def</span> <span class="nf">draws_pd</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="nb">vars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the sample draws as a pandas DataFrame.</span>
@@ -1142,13 +1047,6 @@
 <span class="sd">        CmdStanMCMC.draws_xr</span>
 <span class="sd">        CmdStanGQ.draws_pd</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot use both vars and (deprecated) params&quot;</span><span class="p">)</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s1">&#39;Keyword &quot;params&quot; is deprecated, use &quot;vars&quot; instead.&#39;</span>
-            <span class="p">)</span>
-            <span class="nb">vars</span> <span class="o">=</span> <span class="n">params</span>
         <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">vars_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">vars</span><span class="p">]</span>
@@ -1225,7 +1123,6 @@
             <span class="s2">&quot;stan_version&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;stan_version_major&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;stan_version_minor&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;stan_version_patch&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;num_unconstrained_params&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_unconstrained_params</span><span class="p">,</span>
             <span class="s2">&quot;num_draws_sampling&quot;</span><span class="p">:</span> <span class="n">num_draws</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
@@ -1247,7 +1144,6 @@
                 <span class="mi">0</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">),</span>
             <span class="p">)</span>
-
         <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
             <span class="s1">&#39;chain&#39;</span><span class="p">,</span> <span class="s1">&#39;draw&#39;</span><span class="p">,</span> <span class="o">...</span>
         <span class="p">)</span></div>
@@ -1256,8 +1152,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a numpy.ndarray which contains the set of draws</span>
@@ -1297,15 +1191,6 @@
 <span class="sd">        CmdStanVB.stan_variable</span>
 <span class="sd">        CmdStanGQ.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Cannot use both &quot;var&quot; and (deprecated) &quot;name&quot;&#39;</span>
-                <span class="p">)</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s1">&#39;Keyword &quot;name&quot; is deprecated, use &quot;var&quot; instead.&#39;</span>
-            <span class="p">)</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="n">name</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No variable name specified.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">:</span>
@@ -1358,29 +1243,9 @@
                 <span class="n">result</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">idx</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="CmdStanMCMC.sampler_variables"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.sampler_variables">[docs]</a>    <span class="k">def</span> <span class="nf">sampler_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated, use &quot;method_variables&quot; instead</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Method &quot;sampler_variables&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use method &quot;method_variables&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_variables</span><span class="p">()</span></div>
-
-<div class="viewcode-block" id="CmdStanMCMC.sampler_diagnostics"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.sampler_diagnostics">[docs]</a>    <span class="k">def</span> <span class="nf">sampler_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated, use &quot;method_variables&quot; instead</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Method &quot;sampler_diagnostics&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use method &quot;method_variables&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_variables</span><span class="p">()</span></div>
-
 <div class="viewcode-block" id="CmdStanMCMC.save_csvfiles"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMCMC.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Move output csvfiles to specified directory.  If files were</span>
+<span class="sd">        Move output CSV files to specified directory.  If files were</span>
 <span class="sd">        written to the temporary session directory, clean filename.</span>
 <span class="sd">        E.g., save &#39;bernoulli-201912081451-1-5nm6as7u.csv&#39; as</span>
 <span class="sd">        &#39;bernoulli-201912081451-1.csv&#39;.</span>
@@ -1409,6 +1274,13 @@
                 <span class="s1">&#39;found method </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">runset</span> <span class="o">=</span> <span class="n">runset</span>
+        <span class="c1"># info from runset to be exposed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">()</span>
+        <span class="n">optimize_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method_args</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">optimize_args</span><span class="p">,</span> <span class="n">OptimizeArgs</span>
+        <span class="p">)</span>  <span class="c1"># make the typechecker happy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span> <span class="o">=</span> <span class="n">optimize_args</span><span class="o">.</span><span class="n">save_iterations</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_mle_attrs</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1420,14 +1292,22 @@
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">),</span>
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="c1"># TODO - profiling files</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> Warning: invalid estimate, &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">)</span>
+            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> optimization failed to converge.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="k">def</span> <span class="nf">_set_mle_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_csv_0</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="n">scan_optimize_csv</span><span class="p">(</span><span class="n">sample_csv_0</span><span class="p">)</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">scan_optimize_csv</span><span class="p">(</span><span class="n">sample_csv_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="n">InferenceMetadata</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;column_names&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;mle&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;mle&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>  <span class="c1"># make the typechecker happy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;mle&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;all_iters&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+            <span class="p">)</span>  <span class="c1"># make the typechecker happy</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;all_iters&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -1448,28 +1328,100 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">optimized_params_np</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns optimized params as numpy array.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all final estimates from the optimizer as a numpy.ndarray</span>
+<span class="sd">        which contains all optimizer outputs, i.e., the value for `lp__`</span>
+<span class="sd">        as well as all Stan program variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">optimized_iterations_np</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all saved iterations from the optimizer and final estimate</span>
+<span class="sd">        as a numpy.ndarray which contains all optimizer outputs, i.e.,</span>
+<span class="sd">        the value for `lp__` as well as all Stan program variables.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Intermediate iterations not saved to CSV output file. &#39;</span>
+                <span class="s1">&#39;Rerun the optimize method with &quot;save_iterations=True&quot;.&#39;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">optimized_params_pd</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns optimized params as pandas DataFrame.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all final estimates from the optimizer as a pandas.DataFrame</span>
+<span class="sd">        which contains all optimizer outputs, i.e., the value for `lp__`</span>
+<span class="sd">        as well as all Stan program variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">optimized_iterations_pd</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all saved iterations from the optimizer and final estimate</span>
+<span class="sd">        as a pandas.DataFrame which contains all optimizer outputs, i.e.,</span>
+<span class="sd">        the value for `lp__` as well as all Stan program variables.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Intermediate iterations not saved to CSV output file. &#39;</span>
+                <span class="s1">&#39;Rerun the optimize method with &quot;save_iterations=True&quot;.&#39;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">optimized_params_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Returns optimized params as Dict.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all estimates from the optimizer, including `lp__` as a</span>
+<span class="sd">        Python Dict.  Only returns estimate from final iteration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">))</span>
 
 <div class="viewcode-block" id="CmdStanMLE.stan_variable"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMLE.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">inc_iterations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">warn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a numpy.ndarray which contains the estimates for the</span>
 <span class="sd">        for the named Stan program variable where the dimensions of the</span>
 <span class="sd">        numpy.ndarray match the shape of the Stan program variable.</span>
 
 <span class="sd">        :param var: variable name</span>
+
+<span class="sd">        :param inc_iterations: When ``True`` and the intermediate estimates</span>
+<span class="sd">            are included in the output, i.e., the optimizer was run with</span>
+<span class="sd">            ``save_iterations=True``, then intermediate estimates are included.</span>
+<span class="sd">            Default value is ``False``.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -1478,31 +1430,57 @@
 <span class="sd">        CmdStanVB.stan_variable</span>
 <span class="sd">        CmdStanGQ.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Cannot use both &quot;var&quot; and (deprecated) &quot;name&quot;.&#39;</span>
-                <span class="p">)</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s1">&#39;Keyword &quot;name&quot; is deprecated, use &quot;var&quot; instead.&#39;</span>
-            <span class="p">)</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="n">name</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no variable name specified.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;unknown variable name: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
-        <span class="n">col_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
-        <span class="n">vals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">)</span>
-        <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">vals</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">col_idxs</span><span class="p">]</span>
-        <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">warn</span> <span class="ow">and</span> <span class="n">inc_iterations</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Intermediate iterations not saved to CSV output file. &#39;</span>
+                <span class="s1">&#39;Rerun the optimize method with &quot;save_iterations=True&quot;.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">warn</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
+            <span class="p">)</span>
 
-<div class="viewcode-block" id="CmdStanMLE.stan_variables"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMLE.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="n">col_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">inc_iterations</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+            <span class="n">num_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_rows</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># container var</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_rows</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+            <span class="c1"># pylint: disable=redundant-keyword-arg</span>
+            <span class="k">if</span> <span class="n">num_rows</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span><span class="p">[:,</span> <span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">[</span><span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># scalar var</span>
+            <span class="n">col_idx</span> <span class="o">=</span> <span class="n">col_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">num_rows</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span><span class="p">[:,</span> <span class="n">col_idx</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">[</span><span class="n">col_idx</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># make the typechecker happy</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="CmdStanMLE.stan_variables"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMLE.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inc_iterations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a dictionary mapping Stan program variables names</span>
 <span class="sd">        to the corresponding numpy.ndarray containing the inferred values.</span>
+
+<span class="sd">        :param inc_iterations: When ``True`` and the intermediate estimates</span>
+<span class="sd">            are included in the output, i.e., the optimizer was run with</span>
+<span class="sd">            ``save_iterations=True``, then intermediate estimates are included.</span>
+<span class="sd">            Default value is ``False``.</span>
+
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -1511,14 +1489,20 @@
 <span class="sd">        CmdStanVB.stan_variables</span>
 <span class="sd">        CmdStanGQ.stan_variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
+            <span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span>
+                <span class="n">name</span><span class="p">,</span> <span class="n">inc_iterations</span><span class="o">=</span><span class="n">inc_iterations</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="CmdStanMLE.save_csvfiles"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanMLE.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Move output csvfiles to specified directory.  If files were</span>
+<span class="sd">        Move output CSV files to specified directory.  If files were</span>
 <span class="sd">        written to the temporary session directory, clean filename.</span>
 <span class="sd">        E.g., save &#39;bernoulli-201912081451-1-5nm6as7u.csv&#39; as</span>
 <span class="sd">        &#39;bernoulli-201912081451-1.csv&#39;.</span>
@@ -1586,7 +1570,6 @@
                 <span class="n">drest</span> <span class="o">=</span> <span class="n">scan_generated_quantities_csv</span><span class="p">(</span>
                     <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                 <span class="p">)</span>
-                <span class="c1"># pylint: disable=consider-using-dict-items</span>
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dzero</span><span class="p">:</span>
                     <span class="k">if</span> <span class="p">(</span>
                         <span class="n">key</span>
@@ -1638,46 +1621,6 @@
 <span class="sd">        and model output variables.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">generated_quantities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use method ``draws`` instead.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Property &quot;generated_quantities&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use method &quot;draws&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">generated_quantities_pd</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use method ``draws_pd`` instead.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Property &quot;generated_quantities_pd&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use method &quot;draws_pd&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">),</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">sample_plus_quantities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Deprecated - use method &quot;draws_pd(inc_sample=True)&quot; instead.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;Property &quot;sample_plus_quantities&quot; has been deprecated, &#39;</span>
-            <span class="s1">&#39;use method &quot;draws_pd(inc_sample=True)&quot; instead.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span><span class="n">inc_sample</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <div class="viewcode-block" id="CmdStanGQ.draws"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanGQ.draws">[docs]</a>    <span class="k">def</span> <span class="nf">draws</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1906,7 +1849,9 @@
                 <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">vars</span>
             <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_list</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="p">(</span>
+                        <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
+                    <span class="p">):</span>
                         <span class="n">mcmc_vars_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
                         <span class="n">dup_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
@@ -1929,9 +1874,6 @@
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;stan_version_minor&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;stan_version_patch&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">sample_config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">],</span>
-            <span class="s2">&quot;num_unconstrained_params&quot;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_unconstrained_params</span>
-            <span class="p">),</span>
             <span class="s2">&quot;num_draws_sampling&quot;</span><span class="p">:</span> <span class="n">num_draws</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]:</span>
@@ -1972,8 +1914,6 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="o">*</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a numpy.ndarray which contains the set of draws</span>
@@ -2013,15 +1953,6 @@
 <span class="sd">        CmdStanMLE.stan_variable</span>
 <span class="sd">        CmdStanVB.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Cannot use both &quot;var&quot; and (deprecated) &quot;name&quot;&#39;</span>
-                <span class="p">)</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s1">&#39;Keyword &quot;name&quot; is deprecated, use &quot;var&quot; instead.&#39;</span>
-            <span class="p">)</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="n">name</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No variable name specified.&#39;</span><span class="p">)</span>
         <span class="n">model_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -2032,16 +1963,26 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># is gq variable</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
-            <span class="n">col_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+            <span class="n">draw1</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="ow">not</span> <span class="n">inc_warmup</span>
                 <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
             <span class="p">):</span>
-                <span class="n">draw1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span>
-                <span class="k">return</span> <span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">)[</span>  <span class="c1"># type: ignore</span>
-                    <span class="n">draw1</span><span class="p">:,</span> <span class="n">col_idxs</span>
-                <span class="p">]</span>
-            <span class="k">return</span> <span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">)[:,</span> <span class="n">col_idxs</span><span class="p">]</span>  <span class="c1"># type: ignore</span></div>
+                <span class="n">draw1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span>
+            <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_sampling</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">inc_warmup</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">num_draws</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_draws</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">]</span>
+            <span class="n">col_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">dims</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+            <span class="c1"># pylint: disable=redundant-keyword-arg</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span>
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="CmdStanGQ.stan_variables"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanGQ.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -2088,7 +2029,7 @@
 
 <div class="viewcode-block" id="CmdStanGQ.save_csvfiles"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanGQ.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Move output csvfiles to specified directory.  If files were</span>
+<span class="sd">        Move output CSV files to specified directory.  If files were</span>
 <span class="sd">        written to the temporary session directory, clean filename.</span>
 <span class="sd">        E.g., save &#39;bernoulli-201912081451-1-5nm6as7u.csv&#39; as</span>
 <span class="sd">        &#39;bernoulli-201912081451-1.csv&#39;.</span>
@@ -2136,6 +2077,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="n">InferenceMetadata</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
         <span class="c1"># these three assignments don&#39;t grant type information</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;column_names&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;eta&#39;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;variational_mean&#39;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_variational_sample</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;variational_sample&#39;</span><span class="p">]</span>
 
@@ -2156,6 +2098,13 @@
 <span class="sd">        and computed quantities.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Step size scaling parameter &#39;eta&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eta</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">variational_params_np</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -2186,8 +2135,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span>
 
 <div class="viewcode-block" id="CmdStanVB.stan_variable"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanVB.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a numpy.ndarray which contains the estimates for the</span>
 <span class="sd">        for the named Stan program variable where the dimensions of the</span>
@@ -2202,28 +2151,23 @@
 <span class="sd">        CmdStanMLE.stan_variable</span>
 <span class="sd">        CmdStanGQ.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Cannot use both &quot;var&quot; and (deprecated) &quot;name&quot;&#39;</span>
-                <span class="p">)</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s1">&#39;Keyword &quot;name&quot; is deprecated, use &quot;var&quot; instead.&#39;</span>
-            <span class="p">)</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="n">name</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No variable name specified.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
         <span class="n">col_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
-        <span class="n">vals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span><span class="p">)</span>
-        <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">vals</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">col_idxs</span><span class="p">]</span>
         <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span><span class="p">)[</span><span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span><span class="p">[</span><span class="n">col_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="CmdStanVB.stan_variables"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanVB.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<div class="viewcode-block" id="CmdStanVB.stan_variables"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanVB.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a dictionary mapping Stan program variables names</span>
 <span class="sd">        to the corresponding numpy.ndarray containing the inferred values.</span>
@@ -2247,7 +2191,7 @@
 
 <div class="viewcode-block" id="CmdStanVB.save_csvfiles"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanVB.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Move output csvfiles to specified directory.  If files were</span>
+<span class="sd">        Move output CSV files to specified directory.  If files were</span>
 <span class="sd">        written to the temporary session directory, clean filename.</span>
 <span class="sd">        E.g., save &#39;bernoulli-201912081451-1-5nm6as7u.csv&#39; as</span>
 <span class="sd">        &#39;bernoulli-201912081451-1.csv&#39;.</span>
@@ -2401,6 +2345,7 @@
                 <span class="p">)</span>
             <span class="n">optimize_args</span> <span class="o">=</span> <span class="n">OptimizeArgs</span><span class="p">(</span>
                 <span class="n">algorithm</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;algorithm&#39;</span><span class="p">],</span>
+                <span class="n">save_iterations</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;save_iterations&#39;</span><span class="p">],</span>
             <span class="p">)</span>
             <span class="n">cmdstan_args</span> <span class="o">=</span> <span class="n">CmdStanArgs</span><span class="p">(</span>
                 <span class="n">model_name</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">],</span>
@@ -2467,7 +2412,12 @@
     <span class="n">var_dims</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;draw&#39;</span><span class="p">,</span> <span class="s1">&#39;chain&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">dims</span><span class="p">:</span>
         <span class="n">var_dims</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">_dim_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dims</span><span class="p">)))</span>
-        <span class="n">data</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">var_dims</span><span class="p">,</span> <span class="n">drawset</span><span class="p">[</span><span class="n">start_row</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">var_dims</span><span class="p">,</span>
+            <span class="n">drawset</span><span class="p">[</span><span class="n">start_row</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="o">*</span><span class="n">drawset</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="o">*</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">data</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">var_dims</span><span class="p">,</span>
@@ -2478,10 +2428,9 @@
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
               
           </main>
           
@@ -2489,20 +2438,19 @@
       </div>
     </div>
   
-  <script src="../../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="../../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, Stan Development Team.<br/>
+    &copy; Copyright 2021, Stan Development Team.<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
 </p>
     </div>
     
