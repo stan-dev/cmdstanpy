@@ -199,17 +199,6 @@ class CmdStanMLETest(unittest.TestCase):
             bern_mle.stan_variable(var='eta')
         with self.assertRaises(ValueError):
             bern_mle.stan_variable(var='lp__')
-        with LogCapture() as log:
-            self.assertTrue(
-                isinstance(bern_mle.stan_variable(name='theta'), float)
-            )
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Keyword "name" is deprecated, use "var" instead.',
-            )
-        )
 
     def test_variables_3d(self):
         stan = os.path.join(DATAFILES_PATH, 'multidim_vars.stan')

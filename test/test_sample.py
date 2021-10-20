@@ -118,7 +118,7 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(bern_fit.num_draws_sampling, 100)
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
 
-        bern_sample = bern_fit.sample
+        bern_sample = bern_fit.draws()
         self.assertEqual(bern_sample.shape, (100, 2, len(BERNOULLI_COLS)))
         self.assertEqual(bern_fit.metric_type, 'dense_e')
         self.assertEqual(bern_fit.step_size.shape, (2,))
@@ -626,15 +626,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             draws_pd.shape,
             (fit.runset.chains * fit.num_draws_sampling, len(fit.column_names)),
         )
-        with LogCapture() as log:
-            self.assertEqual(fit.draws_pd(params=['theta']).shape, (400, 1))
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Keyword "params" is deprecated, use "vars" instead.',
-            )
-        )
         self.assertEqual(fit.draws_pd(vars=['theta']).shape, (400, 1))
         self.assertEqual(fit.draws_pd(vars=['lp__', 'theta']).shape, (400, 2))
         self.assertEqual(fit.draws_pd(vars=['theta', 'lp__']).shape, (400, 2))
@@ -697,7 +688,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         phis = fit.draws_pd(vars=['phi'])
         self.assertEqual((2000, 2095), phis.shape)
         with self.assertRaisesRegex(ValueError, r'Unknown variable: gamma'):
-            fit.draws_pd(params=['gamma'])
+            fit.draws_pd(vars=['gamma'])
 
     def test_instantiate_from_csvfiles(self):
         csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
@@ -1247,102 +1238,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             )
         )
 
-    # pylint: disable=pointless-statement
-    def test_deprecated(self):
-        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
-        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-
-        with LogCapture() as log:
-            bern_model = CmdStanModel(stan_file=stan, logger="Not None")
-        log.check_present(
-            (
-                "cmdstanpy",
-                "WARNING",
-                "Parameter 'logger' is deprecated."
-                " Control logging behavior via logging.getLogger('cmdstanpy')",
-            )
-        )
-
-        bern_fit = bern_model.sample(
-            data=jdata,
-            chains=2,
-            seed=12345,
-            iter_warmup=200,
-            iter_sampling=100,
-            save_warmup=True,
-        )
-        with LogCapture() as log:
-            bern_fit.sample
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Method "sample" has been deprecated,'
-                ' use method "draws" instead.',
-            )
-        )
-        with LogCapture() as log:
-            bern_fit.warmup
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Method "warmup" has been deprecated, instead use method'
-                ' "draws(inc_warmup=True)", returning draws from both'
-                ' warmup and sampling iterations.',
-            )
-        )
-        with LogCapture() as log:
-            self.assertTrue('lp__' in bern_fit.sampler_diagnostics())
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Method "sampler_diagnostics" has been deprecated, '
-                'use method "method_variables" instead.',
-            )
-        )
-        with LogCapture() as log:
-            self.assertTrue('lp__' in bern_fit.sampler_variables())
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Method "sampler_variables" has been deprecated, '
-                'use method "method_variables" instead.',
-            )
-        )
-        with LogCapture() as log:
-            self.assertTrue('lp__' in bern_fit.sampler_vars_cols)
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Property "sampler_vars_cols" has been deprecated, '
-                'use "metadata.method_vars_cols" instead.',
-            )
-        )
-        with LogCapture() as log:
-            self.assertTrue('theta' in bern_fit.stan_vars_cols)
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Property "stan_vars_cols" has been deprecated, '
-                'use "metadata.stan_vars_cols" instead.',
-            )
-        )
-        with LogCapture() as log:
-            self.assertTrue('theta' in bern_fit.stan_vars_dims)
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Property "stan_vars_dims" has been deprecated, '
-                'use "metadata.stan_vars_dims" instead.',
-            )
-        )
-
     def test_sampler_diags(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -1355,22 +1250,11 @@ class CmdStanMCMCTest(unittest.TestCase):
         for diag in diags.values():
             self.assertEqual(diag.shape, (100, 2))
 
-        with LogCapture() as log:
-            diags = bern_fit.sampler_diagnostics()
-            self.assertEqual(SAMPLER_STATE, list(diags))
-            for diag in diags.values():
-                self.assertEqual(diag.shape, (100, 2))
-            self.assertEqual(
-                bern_fit.sample.shape, (100, 2, len(BERNOULLI_COLS))
-            )
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Method "sample" has been deprecated,'
-                ' use method "draws" instead.',
-            )
-        )
+        diags = bern_fit.method_variables()
+        self.assertEqual(SAMPLER_STATE, list(diags))
+        for diag in diags.values():
+            self.assertEqual(diag.shape, (100, 2))
+        self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
 
     def test_variable_bern(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -1387,18 +1271,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             bern_fit.stan_variable(var='eta')
         with self.assertRaises(ValueError):
             bern_fit.stan_variable(var='lp__')
-        with self.assertRaises(ValueError):
-            bern_fit.stan_variable(var='lp__', name='theta')
-
-        with LogCapture() as log:
-            self.assertEqual(bern_fit.stan_variable(name='theta').shape, (200,))
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                'Keyword "name" is deprecated, use "var" instead.',
-            )
-        )
 
     def test_variables_2d(self):
         csvfiles_path = os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')

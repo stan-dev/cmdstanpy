@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Maximum Likelihood Estimation &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.0rc1 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -38,8 +38,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Variational Inference in Stan" href="Variational%20Inference.html" />
-    <link rel="prev" title="MCMC Sampling" href="MCMC%20Sampling.html" />
+    <link rel="next" title="API Reference" href="../api.html" />
+    <link rel="prev" title="Generating new quantities of interest." href="Run%20Generated%20Quantities.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -179,7 +179,7 @@
                 
 
 <div class="tocsection editthispage">
-    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/examples/Maximum Likelihood Estimation.ipynb">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/examples/Using External C++.ipynb">
         <i class="fas fa-pencil-alt"></i> Edit this page
     </a>
 </div>
@@ -446,38 +446,137 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<section id="Maximum-Likelihood-Estimation">
-<h1>Maximum Likelihood Estimation<a class="headerlink" href="#Maximum-Likelihood-Estimation" title="Permalink to this headline">¶</a></h1>
-<p>Stan provides optimization algorithms which find modes of the density specified by a Stan program. Three different algorithms are available: a Newton optimizer, and two related quasi-Newton algorithms, BFGS and L-BFGS. The L-BFGS algorithm is the default optimizer. Newton’s method is the least efficient of the three, but has the advantage of setting its own stepsize.</p>
-<p>In this example we use the CmdStan example model <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan">bernoulli.stan</a> and data file <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json%3E">bernoulli.data.json</a></p>
-<p>The <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> class method <code class="docutils literal notranslate"><span class="pre">optimize</span></code> returns a <code class="docutils literal notranslate"><span class="pre">CmdStanMLE</span></code> object which provides properties to retrieve the estimate of the penalized maximum likelihood estimate of all model parameters:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">optimized_params_dict</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">optimized_params_np</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">optimized_params_pd</span></code></p></li>
-</ul>
-<p>In the following example, we instantiate a model and do optimization using the default CmdStan settings:</p>
+<section id="Advanced-Topic:-Using-External-C++-Functions">
+<h1>Advanced Topic: Using External C++ Functions<a class="headerlink" href="#Advanced-Topic:-Using-External-C++-Functions" title="Permalink to this headline">¶</a></h1>
+<p>This is based on the relevant portion of the CmdStan documentation <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/using-external-cpp-code.html">here</a></p>
+<p>Consider the following Stan model, based on the bernoulli example.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span><span class="p">,</span> <span class="n">cmdstan_path</span>
+<span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
+<span class="n">model_external</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_external.stan&#39;</span><span class="p">,</span> <span class="nb">compile</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_external</span><span class="o">.</span><span class="n">code</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+functions {
+  real make_odds(real theta);
+}
+data {
+  int&lt;lower=0&gt; N;
+  array[N] int&lt;lower=0, upper=1&gt; y;
+}
+parameters {
+  real&lt;lower=0, upper=1&gt; theta;
+}
+model {
+  theta ~ beta(1, 1); // uniform prior on interval 0, 1
+  y ~ bernoulli(theta);
+}
+generated quantities {
+  real odds;
+  odds = make_odds(theta);
+}
+</pre></div></div>
+</div>
+<p>As you can see, it features a function declaration for <code class="docutils literal notranslate"><span class="pre">make_odds</span></code>, but no definition. If we try to compile this, we will get an error.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">model_external</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
+ERROR:cmdstanpy:Stan program failed to compile:
+WARNING:cmdstanpy:make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.28.0&#39;
 
-<span class="n">bernoulli_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">)</span>
-<span class="n">stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
-<span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
+--- Translating Stan model to C++ code ---
+bin/stanc  --o=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan
+Semantic error in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan&#39;, line 2, column 2 to column 29:
+   -------------------------------------------------
+     1:  functions {
+     2:    real make_odds(real theta);
+           ^
+     3:  }
+     4:  data {
+   -------------------------------------------------
 
-<span class="c1"># instantiate, compile bernoulli model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
+Some function is declared without specifying a definition.
+make[2]: *** [make/program:50: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp] Error 1
+make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.28.0&#39;
 
-<span class="c1"># run CmdStan&#39;s otpimize method, returns object `CmdStanMLE`</span>
-<span class="n">mle</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">optimize</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mle</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mle</span><span class="o">.</span><span class="n">optimized_params_dict</span><span class="p">)</span>
-<span class="n">mle</span><span class="o">.</span><span class="n">optimized_params_pd</span>
+Command [&#39;make&#39;, &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external&#39;]
+        error during processing No such file or directory
+
+ERROR:cmdstanpy:model compilation failed
+</pre></div></div>
+</div>
+<p>Even enabling the <code class="docutils literal notranslate"><span class="pre">--allow_undefined</span></code> flag to stanc3 will not allow this model to be compiled quite yet.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">model_external</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">stanc_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;allow_undefined&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+INFO:cmdstanpy:compiler options: stanc_options={&#39;allow_undefined&#39;: True}, cpp_options={}
+ERROR:cmdstanpy:model compilation failed
+</pre></div></div>
+</div>
+<p>To resolve this, we need to both tell the Stan compiler an undefined function is okay <strong>and</strong> let C++ know what it should be.</p>
+<p>We can provide a definition in a C++ header file by using the <code class="docutils literal notranslate"><span class="pre">user_header</span></code> argument to either the CmdStanModel constructor or the <code class="docutils literal notranslate"><span class="pre">compile</span></code> method.</p>
+<p>This will enables the <code class="docutils literal notranslate"><span class="pre">allow_undefined</span></code> flag automatically.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">model_external</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">user_header</span><span class="o">=</span><span class="s1">&#39;make_odds.hpp&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+INFO:cmdstanpy:compiler options: stanc_options={&#39;allow_undefined&#39;: True}, cpp_options={&#39;USER_HEADER&#39;: &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/make_odds.hpp&#39;}
+INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+</pre></div></div>
+</div>
+<p>We can then run this model and inspect the output</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">model_external</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;N&#39;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]})</span>
+<span class="n">fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="s1">&#39;odds&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -486,57 +585,50 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:found newer exe file, not recompiling
-INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli
-INFO:cmdstanpy:start chain 1
-INFO:cmdstanpy:finish chain 1
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(&#39;lp__&#39;, &#39;theta&#39;)
-OrderedDict([(&#39;lp__&#39;, -5.00402), (&#39;theta&#39;, 0.2)])
+INFO:cmdstanpy:sampling: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=91806&#39;, &#39;data&#39;, &#39;file=/tmp/tmp3drp3pza/e1asorac.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp3drp3pza/bernoulli_external-20211019133658-1-fu4u0t73.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
+ERROR:cmdstanpy:Error in progress bar initialization:
+        IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+Disabling progress bars for this session
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f01dc3a8310&gt;
+Traceback (most recent call last):
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f01dc3a8310&gt;
+Traceback (most recent call last):
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
+        self.close()
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
+self.close()
+  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
+        self.disp(bar_style=&#39;danger&#39;, check_delay=False)
+AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+self.disp(bar_style=&#39;danger&#39;, check_delay=False)
+AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+INFO:cmdstanpy:start chain 3
+INFO:cmdstanpy:start chain 4
+INFO:cmdstanpy:sampling completed
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="output_area rendered_html docutils container">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([0.090568, 0.263977, 0.362605, ..., 0.298994, 0.423499, 0.292286])
+</pre></div></div>
+</div>
+<p>The contents of this header file are a bit complicated unless you are familiar with the C++ internals of Stan, so they are presented without comment:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/math/tools/promotion.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ostream&gt;</span><span class="cp"></span>
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>lp__</th>
-      <th>theta</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>-5.00402</td>
-      <td>0.2</td>
-    </tr>
-  </tbody>
-</table>
-</div></div>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">bernoulli_model_namespace</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T0__</span><span class="o">&gt;</span><span class="w">  </span><span class="kr">inline</span><span class="w">  </span><span class="k">typename</span>
+          <span class="nc">boost</span><span class="o">::</span><span class="n">math</span><span class="o">::</span><span class="n">tools</span><span class="o">::</span><span class="n">promote_args</span><span class="o">&lt;</span><span class="n">T0__</span><span class="o">&gt;::</span><span class="n">type</span><span class="w"></span>
+<span class="w">          </span><span class="n">make_odds</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T0__</span><span class="o">&amp;</span><span class="w"> </span><span class="n">theta</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">*</span><span class="w"> </span><span class="n">pstream__</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">theta</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">theta</span><span class="p">);</span><span class="w"></span>
+<span class="w">       </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
 </div>
 </section>
 
@@ -546,17 +638,17 @@ OrderedDict([(&#39;lp__&#39;, -5.00402), (&#39;theta&#39;, 0.2)])
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'> 
-    <a class='left-prev' id="prev-link" href="MCMC%20Sampling.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="Run%20Generated%20Quantities.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">MCMC Sampling</p>
+            <p class="prev-next-title">Generating new quantities of interest.</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="Variational%20Inference.html" title="next page">
+    <a class='right-next' id="next-link" href="../api.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Variational Inference in Stan</p>
+        <p class="prev-next-title">API Reference</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

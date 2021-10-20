@@ -189,7 +189,6 @@ To use custom ``make``-tool use ``set_make_env`` function.
 
 .. rubric:: Footnotes
 
-.. [1]  In earlier versions, the hidden directory was named ``.cmdstanpy``;
-   use of this directory has been deprecated.
+.. [1]  In very early versions, this hidden directory was named ``.cmdstanpy``
 
     

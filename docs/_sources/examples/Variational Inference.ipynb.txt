@@ -48,12 +48,12 @@
     "from cmdstanpy.utils import cmdstan_path\n",
     "\n",
     "bernoulli_dir = os.path.join(cmdstan_path(), 'examples', 'bernoulli')\n",
-    "bernoulli_path = os.path.join(bernoulli_dir, 'bernoulli.stan')\n",
-    "bernoulli_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')\n",
+    "stan_file = os.path.join(bernoulli_dir, 'bernoulli.stan')\n",
+    "data_file = os.path.join(bernoulli_dir, 'bernoulli.data.json')\n",
     "# instantiate, compile bernoulli model\n",
-    "bernoulli_model = CmdStanModel(stan_file=bernoulli_path)\n",
+    "model = CmdStanModel(stan_file=stan_file)\n",
     "# run CmdStan's variational inference method, returns object `CmdStanVB`\n",
-    "vi = bernoulli_model.variational(data=bernoulli_data)"
+    "vi = model.variational(data=data_file)"
    ]
   },
   {
@@ -112,8 +112,8 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "fail_model = CmdStanModel(stan_file='eta_should_fail.stan')\n",
-    "vi = fail_model.variational()"
+    "model_fail = CmdStanModel(stan_file='eta_should_fail.stan')\n",
+    "vi_fail = model_fail.variational()"
    ]
   },
   {
@@ -129,7 +129,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "vi = fail_model.variational(require_converged=False)"
+    "vi_fail = model_fail.variational(require_converged=False)"
    ]
   },
   {
@@ -145,7 +145,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "vi.variational_params_dict"
+    "vi_fail.variational_params_dict"
    ]
   },
   {
@@ -172,7 +172,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.9.5"
+   "version": "3.8.5"
   }
  },
  "nbformat": 4,

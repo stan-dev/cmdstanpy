@@ -4,11 +4,12 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Variational Inference in Stan &#8212; CmdStanPy 0.9.77 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Variational Inference in Stan &#8212; CmdStanPy 1.0.0rc1 documentation</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet" />
-  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../_static/css/theme.css" rel="stylesheet">
+  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -26,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
@@ -37,11 +38,14 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Generating new quantities of interest." href="Run%20Generated%20Quantities.html" />
+    <link rel="next" title="Using Variational Estimates to Initialize the NUTS-HMC Sampler" href="VI%20as%20Sampler%20Inits.html" />
     <link rel="prev" title="Maximum Likelihood Estimation" href="Maximum%20Likelihood%20Estimation.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
@@ -57,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 0.9.77</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
     
   </div>
 
@@ -457,12 +461,12 @@ div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
-<div class="section" id="Variational-Inference-in-Stan">
+<section id="Variational-Inference-in-Stan">
 <h1>Variational Inference in Stan<a class="headerlink" href="#Variational-Inference-in-Stan" title="Permalink to this headline">¶</a></h1>
 <p>Variational inference is a scalable technique for approximate Bayesian inference. Stan implements an automatic variational inference algorithm, called Automatic Differentiation Variational Inference (ADVI) which searches over a family of simple densities to find the best approximate posterior density. ADVI produces an estimate of the parameter means together with a sample from the approximate posterior density.</p>
 <p>ADVI approximates the variational objective function, the evidence lower bound or ELBO, using stochastic gradient ascent. The algorithm ascends these gradients using an adaptive stepsize sequence that has one parameter <code class="docutils literal notranslate"><span class="pre">eta</span></code> which is adjusted during warmup. The number of draws used to approximate the ELBO is denoted by <code class="docutils literal notranslate"><span class="pre">elbo_samples</span></code>. ADVI heuristically determines a rolling window over which it computes the average and the median change of the ELBO. When this change falls below a threshold,
 denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_obj</span></code>, the algorithm is considered to have converged.</p>
-<div class="section" id="Example:-variational-inference-for-model-bernoulli.stan">
+<section id="Example:-variational-inference-for-model-bernoulli.stan">
 <h2>Example: variational inference for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-variational-inference-for-model-bernoulli.stan" title="Permalink to this headline">¶</a></h2>
 <p>In CmdStanPy, the <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> class method <code class="docutils literal notranslate"><span class="pre">variational</span></code> invokes CmdStan with <code class="docutils literal notranslate"><span class="pre">method=variational</span></code> and returns an estimate of the approximate posterior mean of all model parameters as well as a set of draws from this approximate posterior.</p>
 <div class="nbinput docutils container">
@@ -475,12 +479,12 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 <span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">cmdstan_path</span>
 
 <span class="n">bernoulli_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">)</span>
-<span class="n">bernoulli_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
-<span class="n">bernoulli_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
+<span class="n">stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
+<span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
 <span class="c1"># instantiate, compile bernoulli model</span>
-<span class="n">bernoulli_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">bernoulli_path</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
 <span class="c1"># run CmdStan&#39;s variational inference method, returns object `CmdStanVB`</span>
-<span class="n">vi</span> <span class="o">=</span> <span class="n">bernoulli_model</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bernoulli_data</span><span class="p">)</span>
+<span class="n">vi</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -490,7 +494,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 INFO:cmdstanpy:found newer exe file, not recompiling
-INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.27.0/examples/bernoulli/bernoulli
+INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli
 INFO:cmdstanpy:start chain 1
 INFO:cmdstanpy:finish chain 1
 </pre></div></div>
@@ -527,7 +531,7 @@ INFO:cmdstanpy:finish chain 1
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.217613
+0.263926
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -553,8 +557,8 @@ INFO:cmdstanpy:finish chain 1
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">fail_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;eta_should_fail.stan&#39;</span><span class="p">)</span>
-<span class="n">vi</span> <span class="o">=</span> <span class="n">fail_model</span><span class="o">.</span><span class="n">variational</span><span class="p">()</span>
+<span></span><span class="n">model_fail</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;eta_should_fail.stan&#39;</span><span class="p">)</span>
+<span class="n">vi_fail</span> <span class="o">=</span> <span class="n">model_fail</span><span class="o">.</span><span class="n">variational</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -577,16 +581,16 @@ INFO:cmdstanpy:finish chain 1
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">RuntimeError</span>                              Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_3749/3690698302.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> fail_model <span class="ansi-blue-fg">=</span> CmdStanModel<span class="ansi-blue-fg">(</span>stan_file<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;eta_should_fail.stan&#39;</span><span class="ansi-blue-fg">)</span>
-<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>vi <span class="ansi-blue-fg">=</span> fail_model<span class="ansi-blue-fg">.</span>variational<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">/tmp/ipykernel_4768/1235282617.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">      1</span> model_fail <span class="ansi-blue-fg">=</span> CmdStanModel<span class="ansi-blue-fg">(</span>stan_file<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;eta_should_fail.stan&#39;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>vi_fail <span class="ansi-blue-fg">=</span> model_fail<span class="ansi-blue-fg">.</span>variational<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
 
-<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_diagnostics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, output_samples, require_converged, refresh)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1166</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> valid<span class="ansi-blue-fg">:</span>
-<span class="ansi-green-intense-fg ansi-bold">   1167</span>             <span class="ansi-green-fg">if</span> require_converged<span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">-&gt; 1168</span><span class="ansi-red-fg">                 raise RuntimeError(
-</span><span class="ansi-green-intense-fg ansi-bold">   1169</span>                     <span class="ansi-blue-fg">&#39;The algorithm may not have converged.\n&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1170</span>                     <span class="ansi-blue-fg">&#39;If you would like to inspect the output, &#39;</span>
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_latent_dynamics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, output_samples, require_converged, show_console, refresh, time_fmt)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1247</span>         <span class="ansi-green-fg">if</span> len<span class="ansi-blue-fg">(</span>re<span class="ansi-blue-fg">.</span>findall<span class="ansi-blue-fg">(</span>pat<span class="ansi-blue-fg">,</span> contents<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">&gt;</span> <span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1248</span>             <span class="ansi-green-fg">if</span> require_converged<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">-&gt; 1249</span><span class="ansi-red-fg">                 raise RuntimeError(
+</span><span class="ansi-green-intense-fg ansi-bold">   1250</span>                     <span class="ansi-blue-fg">&#39;The algorithm may not have converged.\n&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1251</span>                     <span class="ansi-blue-fg">&#39;If you would like to inspect the output, &#39;</span>
 
 <span class="ansi-red-fg">RuntimeError</span>: The algorithm may not have converged.
 If you would like to inspect the output, re-call with require_converged=False
@@ -598,7 +602,7 @@ If you would like to inspect the output, re-call with require_converged=False
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vi</span> <span class="o">=</span> <span class="n">fail_model</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">require_converged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span></span><span class="n">vi_fail</span> <span class="o">=</span> <span class="n">model_fail</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">require_converged</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -619,7 +623,7 @@ Proceeding because require_converged is set to False
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vi</span><span class="o">.</span><span class="n">variational_params_dict</span>
+<span></span><span class="n">vi_fail</span><span class="o">.</span><span class="n">variational_params_dict</span>
 </pre></div>
 </div>
 </div>
@@ -632,24 +636,35 @@ Proceeding because require_converged is set to False
 OrderedDict([(&#39;lp__&#39;, 0.0),
              (&#39;log_p__&#39;, 0.0),
              (&#39;log_g__&#39;, 0.0),
-             (&#39;mu[1]&#39;, -0.0231706),
-             (&#39;mu[2]&#39;, -0.027029)])
+             (&#39;mu[1]&#39;, 0.0374025),
+             (&#39;mu[2]&#39;, -0.0652137)])
 </pre></div></div>
 </div>
 <p>See the <a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html">api docs</a>, section <code class="docutils literal notranslate"><span class="pre">`CmdStanModel.variational</span></code> &lt;<a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational">https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational</a>&gt;`__ for a full description of all arguments.</p>
-</div>
-</div>
+</section>
+</section>
 
 
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="Maximum%20Likelihood%20Estimation.html" title="previous page">Maximum Likelihood Estimation</a>
-    <a class='right-next' id="next-link" href="Run%20Generated%20Quantities.html" title="next page">Generating new quantities of interest.</a>
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="Maximum%20Likelihood%20Estimation.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Maximum Likelihood Estimation</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="VI%20as%20Sampler%20Inits.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Using Variational Estimates to Initialize the NUTS-HMC Sampler</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
               
           </main>
           
@@ -657,20 +672,19 @@ OrderedDict([(&#39;lp__&#39;, 0.0),
       </div>
     </div>
   
-  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, Stan Development Team.<br/>
+    &copy; Copyright 2021, Stan Development Team.<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
 </p>
     </div>
     

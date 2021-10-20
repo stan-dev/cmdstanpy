@@ -4,11 +4,12 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Installation &#8212; CmdStanPy 0.9.77 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Installation &#8212; CmdStanPy 1.0.0rc1 documentation</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet" />
-  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="_static/css/theme.css" rel="stylesheet">
+  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -26,7 +27,7 @@
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -41,7 +42,10 @@
     <link rel="prev" title="Overview" href="overview.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
@@ -57,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 0.9.77</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
     
   </div>
 
@@ -241,12 +245,12 @@
               
               <div>
                 
-  <div class="section" id="installation">
+  <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>CmdStanPy is a pure-Python3 package, but it relies on CmdStan for all
 of its functionality. There are several ways to install CmdStan and CmdStanPy,
 which depend on the kind of user you are.</p>
-<div class="section" id="conda-users-recommended">
+<section id="conda-users-recommended">
 <h2>Conda users (Recommended)<a class="headerlink" href="#conda-users-recommended" title="Permalink to this headline">¶</a></h2>
 <p>If you use <a class="reference external" href="https://docs.conda.io/en/latest/">conda</a>,
 installation of both can be done very simply. CmdStanPy
@@ -271,8 +275,8 @@ one of the following methods to install it. If you require a
 version of CmdStan <em>newer</em> than 2.27.0, but not the latest,
 you can install it in the standard conda way by specifying
 <code class="docutils literal notranslate"><span class="pre">cmdstan==VERSION</span></code> in the install command.</p>
-</div>
-<div class="section" id="pip-non-conda-users">
+</section>
+<section id="pip-non-conda-users">
 <h2>Pip (non-Conda) users<a class="headerlink" href="#pip-non-conda-users" title="Permalink to this headline">¶</a></h2>
 <p>CmdStan can also be installed from PyPI via URL: <a class="reference external" href="https://pypi.org/project/cmdstanpy/">https://pypi.org/project/cmdstanpy/</a> or from the
 command line using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
@@ -281,7 +285,6 @@ command line using <code class="docutils literal notranslate"><span class="pre">
 </div>
 <p>The optional packages are</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">tqdm</span></code> which allows for progress bar display during sampling</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">xarray</span></code>, an n-dimension labeled dataset package which can be used for outputs</p></li>
 </ul>
 <p>To install CmdStanPy with all the optional packages:</p>
@@ -296,14 +299,25 @@ command line using <code class="docutils literal notranslate"><span class="pre">
 <strong>you must install CmdStan</strong>. The recommended way for Pip users
 to do so is via the <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code> function
 <a class="reference internal" href="#install-cmdstan-fun"><span class="std std-ref">described below</span></a></p>
-<p><em>Note for PyStan &amp; RTools users:</em>  PyStan and CmdStanPy should be installed in
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Note for PyStan &amp; RTools users:</strong>  PyStan and CmdStanPy should be installed in
 separate environments if you are using the RTools toolchain (primarily Windows users).
 If you already have PyStan installed, you should take care to install CmdStanPy in its own
 virtual environment.</p>
+<p><strong>Jupyter notebook users:</strong>  CmdStanPy can display progress bars during sampling
+as well as during the CmdStan build process; these are implemented using the
+<a class="reference external" href="https://github.com/tqdm/tqdm">tqdm</a> package,  which uses the
+<a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/index.html">ipywidgets</a> package
+in order to update the browser display.  For further help on installation
+and configuration, see
+<a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/user_install.html#">ipywidgets installation instructions</a>
+and <a class="reference external" href="https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637">this tqdm GitHub issue</a>.</p>
 </div>
-<div class="section" id="installing-cmdstan">
+</section>
+<section id="installing-cmdstan">
 <h2>Installing CmdStan<a class="headerlink" href="#installing-cmdstan" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="prerequisites">
+<section id="prerequisites">
 <h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
 <p>CmdStanPy requires an installed C++ toolchain
 consisting of a modern C++ compiler and the GNU-Make utility.</p>
@@ -312,8 +326,8 @@ consisting of a modern C++ compiler and the GNU-Make utility.</p>
 <li><p>Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default <code class="docutils literal notranslate"><span class="pre">make</span></code> utility)</p></li>
 <li><p>maxOS:  install XCode and Xcode command line tools via command: <cite>xcode-select –install</cite>.</p></li>
 </ul>
-</div>
-<div class="section" id="function-install-cmdstan">
+</section>
+<section id="function-install-cmdstan">
 <span id="install-cmdstan-fun"></span><h3>Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code><a class="headerlink" href="#function-install-cmdstan" title="Permalink to this headline">¶</a></h3>
 <p>CmdStanPy provides the function <a class="reference internal" href="api.html#cmdstanpy.install_cmdstan" title="cmdstanpy.install_cmdstan"><code class="xref py py-func docutils literal notranslate"><span class="pre">install_cmdstan()</span></code></a> which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
@@ -347,13 +361,13 @@ can be used to override these defaults:</p>
 ls -F my_local_cmdstan
 </pre></div>
 </div>
-</div>
-<div class="section" id="diy-installation">
+</section>
+<section id="diy-installation">
 <h3>DIY Installation<a class="headerlink" href="#diy-installation" title="Permalink to this headline">¶</a></h3>
 <p>If you with to install CmdStan yourself, follow the instructions
 in the <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan User’s Guide</a>.</p>
-</div>
-<div class="section" id="post-installation-setting-environment-variables">
+</section>
+<section id="post-installation-setting-environment-variables">
 <h3>Post Installation: Setting Environment Variables<a class="headerlink" href="#post-installation-setting-environment-variables" title="Permalink to this headline">¶</a></h3>
 <p>The default for the CmdStan installation location
 is a directory named <code class="docutils literal notranslate"><span class="pre">.cmdstan</span></code> in your <code class="docutils literal notranslate"><span class="pre">$HOME</span></code> directory. <a class="footnote-reference brackets" href="#id2" id="id1">1</a>
@@ -382,24 +396,34 @@ get and set this environment variable:</p>
 <p class="rubric">Footnotes</p>
 <dl class="footnote brackets">
 <dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>In earlier versions, the hidden directory was named <code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code>;
-use of this directory has been deprecated.</p>
+<dd><p>In very early versions, this hidden directory was named <code class="docutils literal notranslate"><span class="pre">.cmdstanpy</span></code></p>
 </dd>
 </dl>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
               </div>
               
               
-              <div class='prev-next-bottom'>
-                
-    <a class='left-prev' id="prev-link" href="overview.html" title="previous page">Overview</a>
-    <a class='right-next' id="next-link" href="hello_world.html" title="next page">“Hello, World”</a>
-
-              </div>
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="overview.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Overview</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="hello_world.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">“Hello, World”</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
               
           </main>
           
@@ -407,20 +431,19 @@ use of this directory has been deprecated.</p>
       </div>
     </div>
   
-  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
-
-  <footer class="footer mt-5 mt-md-0">
+  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, Stan Development Team.<br/>
+    &copy; Copyright 2021, Stan Development Team.<br>
 </p>
     </div>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.1.2.<br/>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
 </p>
     </div>
     

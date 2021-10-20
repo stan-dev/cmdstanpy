@@ -28,6 +28,40 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
+    "## Prerequisites\n",
+    "\n",
+    "\n",
+    "CmdStanPy displays progress bars during sampling via use of package [tqdm](https://github.com/tqdm/tqdm).\n",
+    "In order for these to display properly, you must have the \n",
+    "[ipywidgets](https://ipywidgets.readthedocs.io/en/latest/index.html) package installed,\n",
+    "and depending on your version of Jupyter or JupyterLab, you must enable it via command:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!jupyter nbextension enable --py widgetsnbextension"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For more information, see the the\n",
+    "[installation instructions](https://ipywidgets.readthedocs.io/en/latest/user_install.html#), \n",
+    "also [this tqdm GitHub issue](https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637).\n",
+    "\n",
+    "\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
     "## Fitting a model to data\n",
     "\n",
     "In this example we use the CmdStan example model\n",
@@ -45,15 +79,14 @@
    "outputs": [],
    "source": [
     "import os\n",
-    "from cmdstanpy.model import CmdStanModel\n",
-    "from cmdstanpy.utils import cmdstan_path\n",
+    "from cmdstanpy import CmdStanModel, cmdstan_path\n",
     "    \n",
     "bernoulli_dir = os.path.join(cmdstan_path(), 'examples', 'bernoulli')\n",
-    "bernoulli_path = os.path.join(bernoulli_dir, 'bernoulli.stan')\n",
-    "bernoulli_data = os.path.join(bernoulli_dir, 'bernoulli.data.json')\n",
+    "stan_file = os.path.join(bernoulli_dir, 'bernoulli.stan')\n",
+    "data_file = os.path.join(bernoulli_dir, 'bernoulli.data.json')\n",
     "\n",
     "# instantiate, compile bernoulli model\n",
-    "bernoulli_model = CmdStanModel(stan_file=bernoulli_path)"
+    "model = CmdStanModel(stan_file=stan_file)"
    ]
   },
   {
@@ -72,7 +105,7 @@
    "outputs": [],
    "source": [
     "# run CmdStan's sample method, returns object `CmdStanMCMC`\n",
-    "bern_fit = bernoulli_model.sample(data=bernoulli_data)"
+    "fit = model.sample(data=data_file)"
    ]
   },
   {
@@ -91,8 +124,8 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "print('sampler diagnostic variables:\\n{}'.format(bern_fit.metadata.method_vars_cols.keys()))\n",
-    "print('stan model variables:\\n{}'.format(bern_fit.metadata.stan_vars_cols.keys()))"
+    "print('sampler diagnostic variables:\\n{}'.format(fit.metadata.method_vars_cols.keys()))\n",
+    "print('stan model variables:\\n{}'.format(fit.metadata.stan_vars_cols.keys()))"
    ]
   },
   {
@@ -101,7 +134,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "bern_fit.summary()"
+    "fit.summary()"
    ]
   },
   {
@@ -117,8 +150,8 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "print(bern_fit.draws().shape)\n",
-    "bern_fit.draws_pd().head()"
+    "print(fit.draws().shape)\n",
+    "fit.draws_pd().head()"
    ]
   },
   {
@@ -134,14 +167,14 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "bern_fit.draws_xr()"
+    "fit.draws_xr()"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "The ``bern_fit`` object records the command, the return code,\n",
+    "The ``fit`` object records the command, the return code,\n",
     "and the paths to the sampler output csv and console files.\n",
     "The string representation of this object displays the CmdStan commands and\n",
     "the location of the output files.\n",
@@ -160,7 +193,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "bern_fit"
+    "fit"
    ]
   },
   {
@@ -178,10 +211,52 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "## Running a data-generating model using `fixed_param=True`\n",
+    "### Sampler Progress\n",
+    "\n",
+    "Your model make take a long time to fit.  The `sample` method provides two arguments:\n",
+    "    \n",
+    "- visual progress bar:  `show_progress=True`\n",
+    "- stream CmdStan ouput to the console - `show_console=True`\n",
+    "    \n",
+    "To illustrate how progress bars work, we will run the bernoulli model. Since the progress bars are only visible while the sampler is running and the bernoulli model takes no time at all to fit, we run this model for 200K iterations, in order to see the progress bars in action."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fit = model.sample(data=data_file, iter_warmup=100000, iter_sampling=100000, show_progress=True)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The Stan language `print` statement can be use to monitor the Stan program state.\n",
+    "In order to see this information as the sampler is running, use the `show_console=True` argument.\n",
+    "This will stream all CmdStan messages to the terminal while the sampler is running.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fit = model.sample(data=data_file, chains=2, parallel_chains=1, show_console=True)\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Running a data-generating model\n",
     "\n",
     "In this example we use the CmdStan example model\n",
-    "[bernoulli_datagen.stan](https://github.com/stan-dev/cmdstanpy/blob/master/docs/notebooks/bernoulli_datagen.stan)\n",
+    "[data_filegen.stan](https://github.com/stan-dev/cmdstanpy/blob/master/docs/notebooks/data_filegen.stan)\n",
     "to generate a simulated dataset given fixed data values."
    ]
   },
@@ -191,10 +266,10 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "datagen_model = CmdStanModel(stan_file='bernoulli_datagen.stan')\n",
+    "model_datagen = CmdStanModel(stan_file='bernoulli_datagen.stan')\n",
     "datagen_data = {'N':300, 'theta':0.3}\n",
-    "sim_data = datagen_model.sample(data=datagen_data, fixed_param=True)\n",
-    "sim_data.summary()"
+    "fit_sim = model_datagen.sample(data=datagen_data, fixed_param=True)\n",
+    "fit_sim.summary()"
    ]
   },
   {
@@ -210,7 +285,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "drawset_pd = sim_data.draws_pd()\n",
+    "drawset_pd = fit_sim.draws_pd()\n",
     "drawset_pd.columns\n",
     "\n",
     "# restrict to columns over new outcomes of N Bernoulli trials\n",
@@ -238,7 +313,7 @@
    "name": "python",
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
-   "version": "3.9.5"
+   "version": "3.8.5"
   }
  },
  "nbformat": 4,
