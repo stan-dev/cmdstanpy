@@ -161,12 +161,14 @@ def cmdstan_path() -> str:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
             raise ValueError(
-                'No CmdStan installation found, run "install_cmdstan".'
+                'No CmdStan installation found, run "install_cmdstan" or'
+                ' (re)activate your conda environment!'
             )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                'No CmdStan installation found, run "install_cmdstan".'
+                'No CmdStan installation found, run "install_cmdstan" or'
+                ' (re)activate your conda environment!'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan

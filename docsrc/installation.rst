@@ -20,7 +20,8 @@ We recommend creating a new environment for CmdStan[Py]:
 
     conda create -n cmdstan -c conda-forge cmdstanpy
 
-but installation is possible in an existing environment:
+but installation is possible in an existing environment
+(Note: you must re-activate the environment after running this command!):
 
 .. code-block:: bash
 
