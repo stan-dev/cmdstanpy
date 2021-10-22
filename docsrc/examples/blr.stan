@@ -4,12 +4,10 @@ data {
   matrix [N, D] X;
   vector [N] y;
 }
-
 parameters {
   vector [D] beta;
   real <lower=0> sigma;
 }
-
 model {
   // prior
   target += normal_lpdf(beta | 0, 10);
