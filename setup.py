@@ -42,7 +42,7 @@ _classifiers = """
 Programming Language :: Python :: 3
 License :: OSI Approved :: BSD License
 Operating System :: OS Independent
-Development Status :: 4 - Beta
+Development Status :: 5 - Production/Stable
 Intended Audience :: Science/Research
 Natural Language :: English
 Programming Language :: Python
