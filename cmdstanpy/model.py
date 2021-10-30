@@ -394,7 +394,11 @@ class CmdStanModel:
                             )
                             get_logger().warning(console)
 
-                        if 'PCH file' in console:
+                        if (
+                            'PCH file' in console
+                            or 'model_header.hpp.gch' in console
+                            or 'precompiled header' in console
+                        ):
                             get_logger().warning(
                                 "CmdStan's precompiled header (PCH) files "
                                 "may need to be rebuilt."
