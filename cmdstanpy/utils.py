@@ -412,6 +412,7 @@ def cxx_toolchain_path(
 def rewrite_inf_nan(
     data: Union[float, int, List[Any]]
 ) -> Union[str, int, float, List[Any]]:
+    """Replaces NaN and Infinity with string representations"""
     if isinstance(data, float):
         if math.isnan(data):
             return 'NaN'
@@ -442,9 +443,6 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     :param data: A mapping from strings to values. This can be a dictionary
         or something more exotic like an :class:`xarray.Dataset`. This will be
         copied before type conversion, not modified
-
-    :param handle_nan_inf: If enabled, perform the (Slow!) checks necessary to
-        output NaN and inf as required for Stan
     """
     data_out = {}
     for key, val in data.items():
