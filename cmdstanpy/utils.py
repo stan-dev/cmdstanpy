@@ -894,9 +894,12 @@ def scan_sampling_iters(
         data = line.split(',')
         if len(data) != num_cols:
             raise ValueError(
-                'line {}: bad draw, expecting {} items, found {}'.format(
+                'line {}: bad draw, expecting {} items, found {}\n'.format(
                     lineno, num_cols, len(line.split(','))
                 )
+                + 'This error can be caused by running out of disk space.\n'
+                'Try clearing up TEMP or setting output_dir to a path'
+                ' on another drive.',
             )
         cur_pos = fd.tell()
         line = fd.readline().strip()
