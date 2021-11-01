@@ -338,6 +338,27 @@ class DataFilesTest(unittest.TestCase):
         with open(file_scalr) as fd:
             cmp(json.load(fd), dict_scalr)
 
+        # custom Stan serialization
+        dict_inf_nan = {
+            'a': np.array(
+                [
+                    [-np.inf, np.inf, np.NaN],
+                    [-float('inf'), float('inf'), float('NaN')],
+                    [
+                        np.float32(-np.inf),
+                        np.float32(np.inf),
+                        np.float32(np.NaN),
+                    ],
+                    [1e200 * -1e200, 1e220 * 1e200, -np.nan],
+                ]
+            )
+        }
+        dict_inf_nan_exp = {'a': [["-inf", "+inf", "NaN"]] * 4}
+        file_fin = os.path.join(_TMPDIR, 'inf.json')
+        write_stan_json(file_fin, dict_inf_nan)
+        with open(file_fin) as fd:
+            cmp(json.load(fd), dict_inf_nan_exp)
+
     def test_write_stan_json_bad(self):
         file_bad = os.path.join(_TMPDIR, 'bad.json')
 
@@ -348,14 +369,6 @@ class DataFilesTest(unittest.TestCase):
         dict_badtype_nested = {'a': ['a string']}
         with self.assertRaises(ValueError):
             write_stan_json(file_bad, dict_badtype_nested)
-
-        dict_inf = {'a': [np.inf]}
-        with self.assertRaises(ValueError):
-            write_stan_json(file_bad, dict_inf)
-
-        dict_nan = {'a': np.nan}
-        with self.assertRaises(ValueError):
-            write_stan_json(file_bad, dict_nan)
 
 
 class ReadStanCsvTest(unittest.TestCase):
