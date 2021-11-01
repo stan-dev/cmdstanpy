@@ -9,6 +9,7 @@ import subprocess
 import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
@@ -37,6 +38,7 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     cmdstan_path,
+    cmdstan_version_before,
     do_command,
     get_logger,
     returncode_msg,
@@ -862,10 +864,6 @@ class CmdStanModel:
                 'Argument threads_per_chain must be a positive integer value, '
                 'found {}.'.format(threads_per_chain)
             )
-        get_logger().debug(
-            'total threads: %u', parallel_chains * threads_per_chain
-        )
-        os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
 
         # TODO:  issue 49: inits can be initialization function
         sampler_args = SamplerArgs(
@@ -898,6 +896,28 @@ class CmdStanModel:
                 method_args=sampler_args,
                 refresh=refresh,
             )
+
+            multi_chain_proc = False
+            num_threads = threads_per_chain * parallel_chains
+            get_logger().debug('total threads: %u', num_threads)
+
+            if cmdstan_version_before(2, 28):
+                os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
+            elif chains > 1:
+                try:
+                    cmd = [self._exe_file, 'info']
+                    info = StringIO()
+                    do_command(cmd=cmd, fd_out=info)
+                    if 'STAN_THREADS=true' in info:
+                        multi_chain_proc = True
+                except RuntimeError:
+                    pass
+
+            if multi_chain_proc:
+                # recalc parallel chains / threads_per_chain
+                pass
+
+            # RunSet - do we need to retool?
             runset = RunSet(
                 args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
             )  # bookkeeping object for command, result, filepaths

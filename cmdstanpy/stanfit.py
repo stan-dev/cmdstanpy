@@ -69,7 +69,7 @@ class RunSet:
         args: CmdStanArgs,
         chains: int = 4,
         chain_ids: Optional[List[int]] = None,
-        time_fmt: str = "%Y%m%d%H%M%S",
+        time_fmt: str = "%Y%m%d%H%M%S"
     ) -> None:
         """Initialize object."""
         self._args = args
@@ -105,6 +105,11 @@ class RunSet:
         self._profile_files = ['' for _ in range(chains)]
         self._stdout_files = ['' for _ in range(chains)]
         self._cmds = []
+        # TODO:
+        # single-process - cmdstan must include `num_chains`, `num_threads`
+        # single-process - command arg output file=<filepath> - no chain-id
+        #                  but actual output filenames must match CmdStan output filenames
+        #                  need to keep track of output file=<basename>
         for i in range(chains):
             if args.output_dir is None:
                 csv_file = create_named_text_file(
