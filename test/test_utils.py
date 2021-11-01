@@ -339,11 +339,21 @@ class DataFilesTest(unittest.TestCase):
             cmp(json.load(fd), dict_scalr)
 
         # custom Stan serialization
-
         dict_inf_nan = {
-            'a': np.array([[-np.inf, np.inf, np.NaN, float('NaN')]])
+            'a': np.array(
+                [
+                    [-np.inf, np.inf, np.NaN],
+                    [-float('inf'), float('inf'), float('NaN')],
+                    [
+                        np.float32(-np.inf),
+                        np.float32(np.inf),
+                        np.float32(np.NaN),
+                    ],
+                    [1e200 * -1e200, 1e220 * 1e200, -np.nan],
+                ]
+            )
         }
-        dict_inf_nan_exp = {'a': np.array([["-inf", "+inf", "NaN", "NaN"]])}
+        dict_inf_nan_exp = {'a': [["-inf", "+inf", "NaN"]] * 4}
         file_fin = os.path.join(_TMPDIR, 'inf.json')
         write_stan_json(file_fin, dict_inf_nan)
         with open(file_fin) as fd:
