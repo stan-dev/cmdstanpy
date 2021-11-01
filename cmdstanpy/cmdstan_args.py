@@ -932,9 +932,9 @@ class CmdStanArgs:
                 cmd.append('init={}'.format(self.inits[idx]))
         cmd.append('output')
         cmd.append('file={}'.format(csv_file))
-        if diagnostic_file is not None:
+        if diagnostic_file:
             cmd.append('diagnostic_file={}'.format(diagnostic_file))
-        if profile_file is not None:
+        if profile_file:
             cmd.append('profile_file={}'.format(profile_file))
         if self.refresh is not None:
             cmd.append('refresh={}'.format(self.refresh))
