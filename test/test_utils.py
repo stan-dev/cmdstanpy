@@ -12,6 +12,7 @@ import shutil
 import stat
 import string
 import tempfile
+import traceback
 import unittest
 from pathlib import Path
 
@@ -359,6 +360,18 @@ class DataFilesTest(unittest.TestCase):
 
 
 class ReadStanCsvTest(unittest.TestCase):
+    # pylint: disable=invalid-name
+    @contextlib.contextmanager
+    def assertRaisesRegexNested(self, exc, msg):
+        """A version of assertRaisesRegex that checks the full traceback.
+
+        Useful for when an exception is raised from another and you wish to
+        inspect the inner exception.
+        """
+        with self.assertRaises(exc):
+            yield
+        self.assertRegex(traceback.format_exc(), msg)
+
     def test_check_sampler_csv_1(self):
         csv_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
         dict = check_sampler_csv(
@@ -373,13 +386,13 @@ class ReadStanCsvTest(unittest.TestCase):
         self.assertEqual(10, dict['draws_sampling'])
         self.assertEqual(8, len(dict['column_names']))
 
-        with self.assertRaisesRegex(
+        with self.assertRaisesRegexNested(
             ValueError, 'config error, expected thin = 2'
         ):
             check_sampler_csv(
                 path=csv_good, iter_warmup=100, iter_sampling=20, thin=2
             )
-        with self.assertRaisesRegex(
+        with self.assertRaisesRegexNested(
             ValueError, 'config error, expected save_warmup'
         ):
             check_sampler_csv(
@@ -388,7 +401,7 @@ class ReadStanCsvTest(unittest.TestCase):
                 iter_sampling=10,
                 save_warmup=True,
             )
-        with self.assertRaisesRegex(ValueError, 'expected 1000 draws'):
+        with self.assertRaisesRegexNested(ValueError, 'expected 1000 draws'):
             check_sampler_csv(path=csv_good, iter_warmup=100)
 
     def test_check_sampler_csv_2(self):
@@ -398,34 +411,34 @@ class ReadStanCsvTest(unittest.TestCase):
 
     def test_check_sampler_csv_3(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_cols.csv')
-        with self.assertRaisesRegex(Exception, '8 items'):
+        with self.assertRaisesRegexNested(Exception, '8 items'):
             check_sampler_csv(csv_bad)
 
     def test_check_sampler_csv_4(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_rows.csv')
-        with self.assertRaisesRegex(Exception, 'found 9'):
+        with self.assertRaisesRegexNested(Exception, 'found 9'):
             check_sampler_csv(csv_bad)
 
     def test_check_sampler_csv_metric_1(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_metric_1.csv')
-        with self.assertRaisesRegex(Exception, 'expecting metric'):
+        with self.assertRaisesRegexNested(Exception, 'expecting metric'):
             check_sampler_csv(csv_bad)
 
     def test_check_sampler_csv_metric_2(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_metric_2.csv')
-        with self.assertRaisesRegex(Exception, 'invalid step size'):
+        with self.assertRaisesRegexNested(Exception, 'invalid step size'):
             check_sampler_csv(csv_bad)
 
     def test_check_sampler_csv_metric_3(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_metric_3.csv')
-        with self.assertRaisesRegex(
+        with self.assertRaisesRegexNested(
             Exception, 'invalid or missing mass matrix specification'
         ):
             check_sampler_csv(csv_bad)
 
     def test_check_sampler_csv_metric_4(self):
         csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_metric_4.csv')
-        with self.assertRaisesRegex(
+        with self.assertRaisesRegexNested(
             Exception, 'invalid or missing mass matrix specification'
         ):
             check_sampler_csv(csv_bad)
@@ -461,7 +474,7 @@ class ReadStanCsvTest(unittest.TestCase):
         self.assertEqual(dict['max_depth'], 11)
         self.assertEqual(dict['delta'], 0.98)
 
-        with self.assertRaisesRegex(ValueError, 'config error'):
+        with self.assertRaisesRegexNested(ValueError, 'config error'):
             check_sampler_csv(
                 path=csv_file,
                 is_fixed_param=False,
@@ -469,7 +482,9 @@ class ReadStanCsvTest(unittest.TestCase):
                 iter_warmup=490,
                 thin=9,
             )
-        with self.assertRaisesRegex(ValueError, 'expected 490 draws, found 70'):
+        with self.assertRaisesRegexNested(
+            ValueError, 'expected 490 draws, found 70'
+        ):
             check_sampler_csv(
                 path=csv_file,
                 is_fixed_param=False,
