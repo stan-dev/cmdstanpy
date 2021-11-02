@@ -9,8 +9,8 @@ import shutil
 import stat
 import tempfile
 import unittest
-from importlib import reload
 from multiprocessing import cpu_count
+from test import CustomTestCase
 from time import time
 
 import numpy as np
@@ -45,14 +45,6 @@ SAMPLER_STATE = [
 ]
 # metadata should make this unnecessary
 BERNOULLI_COLS = SAMPLER_STATE + ['theta']
-
-
-@contextlib.contextmanager
-def without_import(library, module):
-    with unittest.mock.patch.dict('sys.modules', {library: None}):
-        reload(module)
-        yield
-    reload(module)
 
 
 class SampleTest(unittest.TestCase):
@@ -584,7 +576,7 @@ class SampleTest(unittest.TestCase):
         self.assertTrue('Sampling completed' in console)
 
 
-class CmdStanMCMCTest(unittest.TestCase):
+class CmdStanMCMCTest(CustomTestCase):
     # pylint: disable=too-many-public-methods
     def test_validate_good_run(self):
         # construct fit using existing sampler output
@@ -1092,7 +1084,9 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-hdr-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(ValueError, 'CmdStan config mismatch'):
+        with self.assertRaisesRegexNested(
+            ValueError, 'CmdStan config mismatch'
+        ):
             CmdStanMCMC(runset)
 
         # bad draws
@@ -1102,7 +1096,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-draws-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(ValueError, 'draws'):
+        with self.assertRaisesRegexNested(ValueError, 'draws'):
             CmdStanMCMC(runset)
 
         # mismatch - column headers, draws
@@ -1112,7 +1106,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-3.csv'),
             os.path.join(DATAFILES_PATH, 'runset-bad', 'bad-cols-bern-4.csv'),
         ]
-        with self.assertRaisesRegex(
+        with self.assertRaisesRegexNested(
             ValueError, 'bad draw, expecting 9 items, found 8'
         ):
             CmdStanMCMC(runset)
@@ -1604,7 +1598,7 @@ class CmdStanMCMCTest(unittest.TestCase):
         self.assertEqual(xr_var.theta.values.shape, (1, 100, 1))
 
     def test_no_xarray(self):
-        with without_import('xarray', cmdstanpy.stanfit):
+        with self.without_import('xarray', cmdstanpy.stanfit):
             with self.assertRaises(ImportError):
                 # if this fails the testing framework is the problem
                 import xarray as _  # noqa

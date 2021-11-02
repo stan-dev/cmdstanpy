@@ -607,12 +607,15 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
     dict: Dict[str, Any] = {}
     lineno = 0
     with open(path, 'r') as fd:
-        lineno = scan_config(fd, dict, lineno)
-        lineno = scan_column_names(fd, dict, lineno)
-        if not is_fixed_param:
-            lineno = scan_warmup_iters(fd, dict, lineno)
-            lineno = scan_hmc_params(fd, dict, lineno)
-        lineno = scan_sampling_iters(fd, dict, lineno)
+        try:
+            lineno = scan_config(fd, dict, lineno)
+            lineno = scan_column_names(fd, dict, lineno)
+            if not is_fixed_param:
+                lineno = scan_warmup_iters(fd, dict, lineno)
+                lineno = scan_hmc_params(fd, dict, lineno)
+            lineno = scan_sampling_iters(fd, dict, lineno)
+        except ValueError as e:
+            raise ValueError("Error in reading csv file: " + path) from e
     return dict
 
 
@@ -910,9 +913,12 @@ def scan_sampling_iters(
         data = line.split(',')
         if len(data) != num_cols:
             raise ValueError(
-                'line {}: bad draw, expecting {} items, found {}'.format(
+                'line {}: bad draw, expecting {} items, found {}\n'.format(
                     lineno, num_cols, len(line.split(','))
                 )
+                + 'This error could be caused by running out of disk space.\n'
+                'Try clearing up TEMP or setting output_dir to a path'
+                ' on another drive.',
             )
         cur_pos = fd.tell()
         line = fd.readline().strip()
