@@ -12,9 +12,9 @@ import shutil
 import stat
 import string
 import tempfile
-import traceback
 import unittest
 from pathlib import Path
+from test import CustomTestCase
 
 import numpy as np
 import pandas as pd
@@ -359,19 +359,7 @@ class DataFilesTest(unittest.TestCase):
             write_stan_json(file_bad, dict_nan)
 
 
-class ReadStanCsvTest(unittest.TestCase):
-    # pylint: disable=invalid-name
-    @contextlib.contextmanager
-    def assertRaisesRegexNested(self, exc, msg):
-        """A version of assertRaisesRegex that checks the full traceback.
-
-        Useful for when an exception is raised from another and you wish to
-        inspect the inner exception.
-        """
-        with self.assertRaises(exc):
-            yield
-        self.assertRegex(traceback.format_exc(), msg)
-
+class ReadStanCsvTest(CustomTestCase):
     def test_check_sampler_csv_1(self):
         csv_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
         dict = check_sampler_csv(
