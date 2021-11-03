@@ -897,7 +897,8 @@ class CmdStanArgs:
         csv_file: str,
         *,
         diagnostic_file: Optional[str] = None,
-        profile_file: Optional[str] = None
+        profile_file: Optional[str] = None,
+        num_chains: Optional[int] = None
     ) -> List[str]:
         """
         Compose CmdStan command for non-default arguments.
@@ -941,4 +942,6 @@ class CmdStanArgs:
         if self.sig_figs is not None:
             cmd.append('sig_figs={}'.format(self.sig_figs))
         cmd = self.method_args.compose(idx, cmd)
+        if num_chains:
+            cmd.append('num_chains={}'.format(num_chains))
         return cmd

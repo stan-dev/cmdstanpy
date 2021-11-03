@@ -62,6 +62,9 @@ class RunSet:
     Encapsulates the configuration and results of a call to any CmdStan
     inference method. Records the method return code and locations of
     all console, error, and output files.
+
+    RunSet object are instantiated by the CmdStanModel class inference methods
+    which are responsible for validating all inputs.
     """
 
     def __init__(
@@ -70,87 +73,56 @@ class RunSet:
         chains: int = 4,
         chain_ids: Union[List[int], int] = 1,
         time_fmt: str = "%Y%m%d%H%M%S",
-        single_process: Optional[bool] = None,
+        num_procs: Optional[int] = None,
     ) -> None:
         """Initialize object."""
         self._args = args
         self._chains = chains
-        self._single_process = (
-            chains == 1 if single_process is None else single_process
-        )
-        if chains < 1:
-            raise ValueError(
-                'Chains must be positive integer value, '
-                'found {}'.format(chains)
-            )
-
-        if isinstance(chain_ids, int):
-            if self._single_process or chains == 1:
-                chain_ids = [chain_ids + x for x in range(chains)]
-            else:  # should we even catch this error or just always do above?
-                # this logic is similar to stuff in Model - should only do once!
-                raise ValueError(
-                    'Must supply list of chains_ids, not single'
-                    ' start id when running multiple chains in different'
-                    ' processes'
-                )
-        elif len(chain_ids) != chains:
-            raise ValueError(
-                'Mismatch between number of chains and chain_ids, '
-                'found {} chains, but {} chain_ids'.format(
-                    chains, len(chain_ids)
-                )
-            )
         self._chain_ids = chain_ids
-        self._retcodes = (
-            [-1 for _ in range(chains)] if not self._single_process else [-1]
-        )
-
-        # prefix: ``<model_name>-<YYYYMMDDHHMM>_<chain_id>``
-        self.file_basename = (
-            f'{args.model_name}-{datetime.now().strftime(time_fmt)}'
-        )
-
+        if num_procs is None:
+            self._num_procs = chains
+        else:
+            self._num_procs = num_procs
+        self._retcodes = [-1 for _ in range(self._num_procs)]
         if args.output_dir is not None:
             self._output_dir = args.output_dir
         else:
             self._output_dir = _TMPDIR
 
-        self._csv_files = []
-        self._diagnostic_files = [''] * 4
-        self._profile_files = [''] * 4
-
-        if self._single_process:
-            self._stdout_files = [self.file_path("-stdout.txt")]
-        else:
-            self._stdout_files = [
-                self.file_path("-stdout.txt", id=i) for i in chain_ids
-            ]
-
-        if chains == 1:
-            self._csv_files.append(self.file_path(".csv"))
-            # optional output files:  diagnostics, profiling
-            if args.save_latent_dynamics:
-                self._diagnostic_files = [
-                    self.file_path(".csv", extra="-diagnostic")
-                ]
-
-            if args.save_profile:
-                self._profile_files = [self.file_path(".csv", extra="-profile")]
-
+        # output files prefix: ``<model_name>-<YYYYMMDDHHMM>_<chain_id>``
+        self._base_outfile = (
+            f'{args.model_name}-{datetime.now().strftime(time_fmt)}'
+        )
+        # per-process console messages
+        self._stdout_files = [''] * self._num_procs
+        if self._num_procs == 1:
+            self._stdout_files[0] = self.file_path("-stdout.txt")
         else:
             for i in range(chains):
-                self._csv_files.append(self.file_path(".csv", id=chain_ids[i]))
-                self._stdout_files.append(
-                    self.file_path("-stdout.txt", id=chain_ids[i])
-                )
+                self._stdout_files[i] = self.file_path("-stdout.txt", id=i)
 
-                # optional output files:  diagnostics, profiling
+        # per-chain output files
+        self._csv_files = [''] * chains
+        self._diagnostic_files = [''] * chains  # optional
+        self._profile_files = [''] * chains  # optional
+
+        if chains == 1:
+            self._csv_files[0] = self.file_path(".csv")
+            if args.save_latent_dynamics:
+                self._diagnostic_files[0] = self.file_path(
+                    ".csv", extra="-diagnostic"
+                )
+            if args.save_profile:
+                self._profile_files[0] = self.file_path(
+                    ".csv", extra="-profile"
+                )
+        else:
+            for i in range(chains):
+                self._csv_files[i] = self.file_path(".csv", id=chain_ids[i])
                 if args.save_latent_dynamics:
                     self._diagnostic_files[i] = self.file_path(
                         ".csv", extra="-diagnostic", id=chain_ids[i]
                     )
-
                 if args.save_profile:
                     self._profile_files[i] = self.file_path(
                         ".csv", extra="-profile", id=chain_ids[i]
@@ -191,6 +163,11 @@ class RunSet:
         return self._args.method
 
     @property
+    def num_procs(self) -> int:
+        """Number of processes run."""
+        return self._num_procs
+
+    @property
     def chains(self) -> int:
         """Number of chains."""
         return self._chains
@@ -201,10 +178,9 @@ class RunSet:
         return self._chain_ids
 
     def cmd(self, idx: int = 0) -> List[str]:
-        """List of call(s) to CmdStan, one call per-chain."""
-        if self._single_process:
-            # TODO add num_chains argument
-            # no need for num threads, handled by env variable
+        """Assemble call(s) to CmdStan."""
+        if self._num_procs == 1:
+            # specify sampler arg num_chains, num_threads handled by env variable
             return self._args.compose_command(
                 idx,
                 csv_file=self.file_path('.csv'),
@@ -214,6 +190,7 @@ class RunSet:
                 profile_file=self.file_path(".csv", extra="-profile")
                 if self._args.save_profile
                 else None,
+                num_chains=self._chains,
             )
         else:
             return self._args.compose_command(
@@ -238,6 +215,7 @@ class RunSet:
 
     def _check_retcodes(self) -> bool:
         """Returns ``True`` when all chains have retcode 0."""
+        print(self._retcodes)
         for code in self._retcodes:
             if code != 0:
                 return False
@@ -260,49 +238,38 @@ class RunSet:
         if id is not None:
             suffix = f"_{id}{suffix}"
         file = os.path.join(
-            self._output_dir, f"{self.file_basename}{extra}{suffix}"
+            self._output_dir, f"{self._base_outfile}{extra}{suffix}"
         )
         return file
 
     def _retcode(self, idx: int) -> int:
-        """Get retcode for chain[idx]."""
-        if self._single_process:
-            return self._retcodes[0]
+        """Get retcode for process[idx]."""
         return self._retcodes[idx]
 
     def _set_retcode(self, idx: int, val: int) -> None:
-        """Set retcode for chain[idx] to val."""
-        if self._single_process:
-            if self._retcodes[0] == 0 and val != 0:
-                self._retcodes[0] = val
-        else:
-            self._retcodes[idx] = val
+        """Set retcode at process[idx] to val."""
+        self._retcodes[idx] = val
 
     def get_err_msgs(self) -> str:
-        """Checks console messages for each chain."""
+        """Checks console messages for each CmdStan run."""
         msgs = []
-        for i in range(self._chains):
+        for i in range(self._num_procs):
             if (
                 os.path.exists(self._stdout_files[i])
                 and os.stat(self._stdout_files[i]).st_size > 0
             ):
-                if self._args.method == Method.SAMPLE:
+                if self._args.method == Method.OPTIMIZE:
+                    msgs.append('console log output:\n')
+                    with open(self._stdout_files[0], 'r') as fd:
+                        msgs.append(fd.read())
+                else:
                     with open(self._stdout_files[i], 'r') as fd:
                         contents = fd.read()
                         # pattern matches initial "Exception" or "Error" msg
                         pat = re.compile(r'^E[rx].*$', re.M)
                         errors = re.findall(pat, contents)
                         if len(errors) > 0:
-                            msgs.append(
-                                'chain_id {}:\n\t{}\n'.format(
-                                    self._chain_ids[i], '\n\t'.join(errors)
-                                )
-                            )
-                elif self._args.method == Method.OPTIMIZE:
-                    msgs.append('console log output:\n')
-                    with open(self._stdout_files[0], 'r') as fd:
-                        msgs.append(fd.read())
-
+                            msgs.append('\n\t'.join(errors))
         return '\n'.join(msgs)
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
@@ -333,11 +300,12 @@ class RunSet:
                 )
 
             path, filename = os.path.split(self._csv_files[i])
-            if path == _TMPDIR:  # cleanup tmpstr in filename
-                root, ext = os.path.splitext(filename)
-                rlist = root.split('-')
-                root = '-'.join(rlist[:-1])
-                filename = ''.join([root, ext])
+            # is this still necessary?
+            # if path == _TMPDIR:  # cleanup tmpstr in filename
+            #     root, ext = os.path.splitext(filename)
+            #     rlist = root.split('-')
+            #     root = '-'.join(rlist[:-1])
+            #     filename = ''.join([root, ext])
 
             to_path = os.path.join(dir, filename)
             if os.path.exists(to_path):
