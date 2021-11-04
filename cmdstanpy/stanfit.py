@@ -71,20 +71,23 @@ class RunSet:
         self,
         args: CmdStanArgs,
         chains: int,
-        chain_ids: List[int],
+        chain_ids: Optional[List[int]] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         one_process_per_chain: bool = True,
     ) -> None:
         """Initialize object (no input arg checks)."""
         self._args = args
         self._chains = chains
-        self._chain_ids = chain_ids
         self._one_process_per_chain = one_process_per_chain
         if one_process_per_chain:
             self._num_procs = chains
         else:
             self._num_procs = 1
         self._retcodes = [-1 for _ in range(self._num_procs)]
+        if chain_ids is None:
+            chain_ids = [i + 1 for i in range(chains)]
+        self._chain_ids = chain_ids
+
         if args.output_dir is not None:
             self._output_dir = args.output_dir
         else:

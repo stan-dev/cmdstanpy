@@ -1358,10 +1358,14 @@ class CmdStanModel:
         else:
             progress_hook = None
 
+        logger_prefix = 'CmdStan'
+        console_prefix = ''
         if runset.one_process_per_chain:
-            get_logger().info('Chain [%d] start processing', idx + 1)
-        else:
-            get_logger().info('CmdStan start processing')
+            logger_prefix = 'Chain [{}]'.format(idx + 1)
+            console_prefix = 'Chain [{}] '.format(idx + 1)
+
+        if show_console:
+            get_logger().info('%s start processing', logger_prefix)
 
         try:
             fd_out = open(runset.stdout_files[idx], 'w')
@@ -1380,14 +1384,11 @@ class CmdStanModel:
                     fd_out.write(line)
                     line = line.strip()
                     if show_console:
-                        if runset.one_process_per_chain:
-                            print('Chain [{}] {}'.format(idx + 1, line))
-                        else:
-                            print(line)
+                        print(f'{console_prefix}{line}')
                     elif progress_hook is not None:
                         progress_hook(line)
 
-            if progress_hook is not None:
+            if progress_hook is not None and proc.returncode == 0:
                 progress_hook("Done")
 
             stdout, _ = proc.communicate()
@@ -1396,10 +1397,7 @@ class CmdStanModel:
                 if show_console:
                     lines = stdout.split('\n')
                     for line in lines:
-                        if runset.one_process_per_chain:
-                            print('Chain [{}] {}'.format(idx + 1, line))
-                        else:
-                            print(line)
+                        print(f'{console_prefix}{line}')
             fd_out.close()
         except OSError as e:
             msg = 'Failed with error {}\n'.format(str(e))
@@ -1407,15 +1405,11 @@ class CmdStanModel:
         finally:
             fd_out.close()
 
-        if not show_progress:
-            if runset.one_process_per_chain:
-                get_logger().info('Chain [%d] processing completed', idx + 1)
-            else:
-                get_logger().info('CmdStan processing completed')
+        if show_console:
+            get_logger().info('%s finish', logger_prefix)
+            get_logger().info('proc.returncode: %d', proc.returncode)
 
-        get_logger().info('proc.returncode: %d', proc.returncode)
         runset._set_retcode(idx, proc.returncode)
-
         if proc.returncode != 0:
             retcode_summary = returncode_msg(proc.returncode)
             serror = ''
@@ -1423,15 +1417,11 @@ class CmdStanModel:
                 serror = os.strerror(proc.returncode)
             except (ArithmeticError, ValueError):
                 pass
-            if runset.one_process_per_chain:
-                get_logger().error(
-                    'Chain [%d] error: %s %s', idx + 1, retcode_summary, serror
-                )
-            else:
-                get_logger().error(
-                    'CmdStan error: %s %s', retcode_summary, serror
-                )
+            get_logger().error(
+                '%s error: %s %s', logger_prefix, retcode_summary, serror
+            )
         else:
+            # CmdStan may get rid of need for fixed_params - keep for now.
             with open(runset.stdout_files[idx], 'r') as fd:
                 console = fd.read()
                 if 'running fixed_param sampler' in console:
