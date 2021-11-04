@@ -1349,16 +1349,14 @@ class CmdStanModel:
              progress_hook: Optional[
                  Callable[[str], None]
              ] = self._wrap_sampler_per_chain_progress_hook(idx + 1, iter_total)
+        elif show_progress:
+            progress_hook: Optional[
+                Callable[[str], None]
+            ] = self._wrap_sampler_multi_chain_progress_hook(
+                runset.chains, iter_total
+            )
         else:
             progress_hook = None
-        # elif show_progress:
-        #     progress_hook: Optional[
-        #         Callable[[str], None]
-        #     ] = self._wrap_sampler_multi_chain_progress_hook(
-        #         runset.chains, iter_total
-        #     )
-        # get_logger().info('no progress hook? %d', progress_hook is None)
-        # get_logger().info('multi progress hook? %d', progress_hook is multi_chain_progress_hook)
 
         if runset.one_process_per_chain:
             get_logger().info('Chain [%d] start processing', idx + 1)
