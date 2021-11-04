@@ -1,7 +1,7 @@
 name: CmdStanPy
 
 on:
-  push: 
+  push:
     branches:
       - 'develop'
       - 'master'
@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9, "3.10"]
       fail-fast: false
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -65,7 +65,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           $whl = Get-ChildItem -Path dist -Filter *.whl | Select-Object -First 1
-          pip install "$whl" 
+          pip install "$whl"
 
       - name: Show libraries
         run: python -m pip freeze

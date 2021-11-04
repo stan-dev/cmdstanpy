@@ -409,6 +409,22 @@ def cxx_toolchain_path(
     return compiler_path, tool_path
 
 
+def rewrite_inf_nan(
+    data: Union[float, int, List[Any]]
+) -> Union[str, int, float, List[Any]]:
+    """Replaces NaN and Infinity with string representations"""
+    if isinstance(data, float):
+        if math.isnan(data):
+            return 'NaN'
+        if math.isinf(data):
+            return ('+' if data > 0 else '-') + 'inf'
+        return data
+    elif isinstance(data, list):
+        return [rewrite_inf_nan(item) for item in data]
+    else:
+        return data
+
+
 def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     """
     Dump a mapping of strings to data to a JSON file.
@@ -430,6 +446,7 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     """
     data_out = {}
     for key, val in data.items():
+        handle_nan_inf = False
         if val is not None:
             if isinstance(val, (str, bytes)) or (
                 type(val).__module__ != 'numpy'
@@ -440,18 +457,14 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
                     + f"write_stan_json for key '{key}'"
                 )
             try:
-                if not np.all(np.isfinite(val)):
-                    raise ValueError(
-                        "Input to write_stan_json has nan or infinite "
-                        + f"values for key '{key}'"
-                    )
+                handle_nan_inf = not np.all(np.isfinite(val))
             except TypeError:
                 # handles cases like val == ['hello']
                 # pylint: disable=raise-missing-from
                 raise ValueError(
                     "Invalid type provided to "
-                    + f"write_stan_json for key '{key}' "
-                    + f"as part of collection {type(val)}"
+                    f"write_stan_json for key '{key}' "
+                    f"as part of collection {type(val)}"
                 )
 
         if type(val).__module__ == 'numpy':
@@ -462,6 +475,9 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
             data_out[key] = int(val)
         else:
             data_out[key] = val
+
+        if handle_nan_inf:
+            data_out[key] = rewrite_inf_nan(data_out[key])
 
     with open(path, 'w') as fd:
         json.dump(data_out, fd)
@@ -591,12 +607,15 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
     dict: Dict[str, Any] = {}
     lineno = 0
     with open(path, 'r') as fd:
-        lineno = scan_config(fd, dict, lineno)
-        lineno = scan_column_names(fd, dict, lineno)
-        if not is_fixed_param:
-            lineno = scan_warmup_iters(fd, dict, lineno)
-            lineno = scan_hmc_params(fd, dict, lineno)
-        lineno = scan_sampling_iters(fd, dict, lineno)
+        try:
+            lineno = scan_config(fd, dict, lineno)
+            lineno = scan_column_names(fd, dict, lineno)
+            if not is_fixed_param:
+                lineno = scan_warmup_iters(fd, dict, lineno)
+                lineno = scan_hmc_params(fd, dict, lineno)
+            lineno = scan_sampling_iters(fd, dict, lineno)
+        except ValueError as e:
+            raise ValueError("Error in reading csv file: " + path) from e
     return dict
 
 
@@ -894,9 +913,12 @@ def scan_sampling_iters(
         data = line.split(',')
         if len(data) != num_cols:
             raise ValueError(
-                'line {}: bad draw, expecting {} items, found {}'.format(
+                'line {}: bad draw, expecting {} items, found {}\n'.format(
                     lineno, num_cols, len(line.split(','))
                 )
+                + 'This error could be caused by running out of disk space.\n'
+                'Try clearing up TEMP or setting output_dir to a path'
+                ' on another drive.',
             )
         cur_pos = fd.tell()
         line = fd.readline().strip()

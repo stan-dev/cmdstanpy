@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import unittest
-from importlib import reload
+from test import CustomTestCase
 
 import numpy as np
 import pandas as pd
@@ -21,15 +21,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
-@contextlib.contextmanager
-def without_import(library, module):
-    with unittest.mock.patch.dict('sys.modules', {library: None}):
-        reload(module)
-        yield
-    reload(module)
-
-
-class GenerateQuantitiesTest(unittest.TestCase):
+class GenerateQuantitiesTest(CustomTestCase):
     def test_from_csv_files(self):
         # fitted_params sample - list of filenames
         goodfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', 'bern')
@@ -357,7 +349,7 @@ class GenerateQuantitiesTest(unittest.TestCase):
             self.assertEqual(y_rep[0, i], bern_data['y'][i])
 
     def test_no_xarray(self):
-        with without_import('xarray', cmdstanpy.stanfit):
+        with self.without_import('xarray', cmdstanpy.stanfit):
             with self.assertRaises(ImportError):
                 # if this fails the testing framework is the problem
                 import xarray as _  # noqa
