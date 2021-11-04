@@ -1348,12 +1348,17 @@ class CmdStanModel:
         if show_progress and runset.one_process_per_chain:
              progress_hook: Optional[
                  Callable[[str], None]
-             ] = self._wrap_sampler_per_chain_progress_hook(idx + 1, iter_total)
+             ] = self._wrap_sampler_per_chain_progress_hook(
+                 chain_id=idx + 1,
+                 total=iter_total
+            )
         elif show_progress:
             progress_hook: Optional[
                 Callable[[str], None]
             ] = self._wrap_sampler_multi_chain_progress_hook(
-                runset.chains, iter_total
+                num_chains=runset.chains,
+                offset=runset.chain_ids[0],
+                total=iter_total
             )
         else:
             progress_hook = None
@@ -1461,12 +1466,14 @@ class CmdStanModel:
     @staticmethod
     @progbar.wrap_callback
     def _wrap_sampler_multi_chain_progress_hook(
-        num_chains: int, total: int
+        num_chains: int, offset: int, total: int
     ) -> Optional[Callable[[str], None]]:
         """
         Sets up tqdm callback for CmdStan sampler console msgs.
         Manages an array of progress bars, updates each according to chain id
         parsed out of console messages via regex matching.
+        Chain ids are sequential, not necessarily starting at one, therefore
+        first chain id must be supplied as the index offset.
         """
         pbar: List[tqdm] = [
             tqdm(
@@ -1489,7 +1496,7 @@ class CmdStanModel:
             else:
                 match = pat.match(line)                
                 if match:
-                    idx = int(match.group(1)) - 1
+                    idx = int(match.group(1)) - offset
                     pline = match.group(2).strip()
                     if 'Sampling' in pline:
                         pbar[idx].colour = 'blue'
