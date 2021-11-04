@@ -896,7 +896,7 @@ class CmdStanModel:
                 self._name,
                 self._exe_file,
                 chain_ids=chain_ids,
-                data=data,
+                data=_data,
                 seed=seed,
                 inits=_inits,
                 output_dir=output_dir,
