@@ -4,7 +4,7 @@ CmdStan arguments
 import os
 from enum import Enum, auto
 from time import time
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import numpy as np
 from numpy.random import RandomState
@@ -712,7 +712,7 @@ class CmdStanArgs:
         method_args: Union[
             SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
         ],
-        data: Union[str, Dict[str, Any], None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         seed: Union[int, List[int], None] = None,
         inits: Union[int, float, str, List[str], None] = None,
         output_dir: Optional[str] = None,

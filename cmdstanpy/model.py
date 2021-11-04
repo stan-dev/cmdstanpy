@@ -45,6 +45,7 @@ from cmdstanpy.utils import (
 
 from . import progress as progbar
 
+
 class CmdStanModel:
     # overview, omitted from doc comment in order to improve Sphinx docs.
     #    A CmdStanModel object encapsulates the Stan program and provides
@@ -851,7 +852,7 @@ class CmdStanModel:
                             'Chain_id must be a non-negative integer value,'
                             ' found {}.'.format(chain_id)
                         )
-        
+
         if parallel_chains is None:
             parallel_chains = max(min(cpu_count(), chains), 1)
         elif parallel_chains > chains:
@@ -911,13 +912,12 @@ class CmdStanModel:
             num_threads = threads_per_chain
             one_process_per_chain = True
             if (
-                force_one_process_per_chain is None or
-                force_one_process_per_chain is False
+                force_one_process_per_chain is None
+                or force_one_process_per_chain is False
             ):
                 try:
-                    cmd = [self.exe_file, 'info']
                     info = StringIO()
-                    do_command(cmd=cmd, fd_out=info)
+                    do_command(cmd=[str(self.exe_file), 'info'], fd_out=info)
                     lines = info.getvalue().split('\n')
                     if lines[3] == 'STAN_THREADS=true':
                         major = int(lines[0].split(' = ')[1])
@@ -953,17 +953,17 @@ class CmdStanModel:
                 chains=chains,
                 chain_ids=chain_ids,
                 time_fmt=time_fmt,
-                one_process_per_chain=one_process_per_chain
+                one_process_per_chain=one_process_per_chain,
             )
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(runset.num_procs):
                     executor.submit(
                         self._run_cmdstan,
-                        runset = runset,
-                        idx = i,
+                        runset=runset,
+                        idx=i,
                         show_progress=show_progress,
                         show_console=show_console,
-                        iter_total=iter_total
+                        iter_total=iter_total,
                     )
             if show_progress:
                 # advance terminal window cursor past progress bars
@@ -1322,7 +1322,6 @@ class CmdStanModel:
         vb = CmdStanVB(runset)
         return vb
 
-
     def _run_cmdstan(
         self,
         runset: RunSet,
@@ -1341,27 +1340,22 @@ class CmdStanModel:
         cmd = runset.cmd(idx)
         get_logger().debug(
             'cmd: %s\n,threads: %s',
-            cmd, str(os.environ.get('STAN_NUM_THREADS'))
+            cmd,
+            str(os.environ.get('STAN_NUM_THREADS')),
         )
         get_logger().debug('runset: %s', runset.__repr__())
 
+        progress_hook: Optional[Callable[[str], None]] = None
         if show_progress and runset.one_process_per_chain:
-             progress_hook: Optional[
-                 Callable[[str], None]
-             ] = self._wrap_sampler_per_chain_progress_hook(
-                 chain_id=idx + 1,
-                 total=iter_total
+            progress_hook = self._wrap_sampler_per_chain_progress_hook(
+                chain_id=idx + 1, total=iter_total
             )
         elif show_progress:
-            progress_hook: Optional[
-                Callable[[str], None]
-            ] = self._wrap_sampler_multi_chain_progress_hook(
+            progress_hook = self._wrap_sampler_multi_chain_progress_hook(
                 num_chains=runset.chains,
                 offset=runset.chain_ids[0],
-                total=iter_total
+                total=iter_total,
             )
-        else:
-            progress_hook = None
 
         logger_prefix = 'CmdStan'
         console_prefix = ''
@@ -1494,7 +1488,7 @@ class CmdStanModel:
                     pbar[i].update(total - pbar[i].n)
                     pbar[i].close()
             else:
-                match = pat.match(line)                
+                match = pat.match(line)
                 if match:
                     idx = int(match.group(1)) - offset
                     pline = match.group(2).strip()

@@ -70,7 +70,8 @@ class RunSet:
     def __init__(
         self,
         args: CmdStanArgs,
-        chains: int,
+        chains: int = 1,
+        *,
         chain_ids: Optional[List[int]] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         one_process_per_chain: bool = True,
@@ -87,7 +88,9 @@ class RunSet:
         if chain_ids is None:
             chain_ids = [i + 1 for i in range(chains)]
         self._chain_ids = chain_ids
-        get_logger().info('chain_ids: %s', ','.join([str(x) for x in self._chain_ids]))
+        get_logger().info(
+            'chain_ids: %s', ','.join([str(x) for x in self._chain_ids])
+        )
 
         if args.output_dir is not None:
             self._output_dir = args.output_dir
@@ -132,7 +135,6 @@ class RunSet:
                     self._profile_files[i] = self.file_path(
                         ".csv", extra="-profile", id=chain_ids[i]
                     )
-
 
     def __repr__(self) -> str:
         repr = 'RunSet: chains={}, num_processes={}'.format(
@@ -208,7 +210,7 @@ class RunSet:
                 else None,
                 profile_file=self.profile_files[idx]
                 if self._args.save_profile
-                else None
+                else None,
             )
         else:
             return self._args.compose_command(
@@ -220,7 +222,7 @@ class RunSet:
                 profile_file=self.file_path(".csv", extra="-profile")
                 if self._args.save_profile
                 else None,
-                num_chains=self._chains
+                num_chains=self._chains,
             )
 
     @property
@@ -321,15 +323,7 @@ class RunSet:
                     'Cannot access CSV file {}'.format(self._csv_files[i])
                 )
 
-            path, filename = os.path.split(self._csv_files[i])
-            # is this still necessary?
-            # if path == _TMPDIR:  # cleanup tmpstr in filename
-            #     root, ext = os.path.splitext(filename)
-            #     rlist = root.split('-')
-            #     root = '-'.join(rlist[:-1])
-            #     filename = ''.join([root, ext])
-
-            to_path = os.path.join(dir, filename)
+            to_path = os.path.join(dir, os.path.basename(self._csv_files[i]))
             if os.path.exists(to_path):
                 raise ValueError(
                     'File exists, not overwriting: {}'.format(to_path)
