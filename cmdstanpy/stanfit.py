@@ -63,26 +63,27 @@ class RunSet:
     inference method. Records the method return code and locations of
     all console, error, and output files.
 
-    RunSet object are instantiated by the CmdStanModel class inference methods
-    which are responsible for validating all inputs.
+    RunSet objects are instantiated by the CmdStanModel class inference methods
+    which validate all inputs, therefore "__init__" method skips input checks.
     """
 
     def __init__(
         self,
         args: CmdStanArgs,
-        chains: int = 4,
-        chain_ids: Union[List[int], int] = 1,
+        chains: int,
+        chain_ids: List[int],
         time_fmt: str = "%Y%m%d%H%M%S",
-        num_procs: Optional[int] = None,
+        one_process_per_chain: bool = True,
     ) -> None:
-        """Initialize object."""
+        """Initialize object (no input arg checks)."""
         self._args = args
         self._chains = chains
         self._chain_ids = chain_ids
-        if num_procs is None:
+        self._one_process_per_chain = one_process_per_chain
+        if one_process_per_chain:
             self._num_procs = chains
         else:
-            self._num_procs = num_procs
+            self._num_procs = 1
         self._retcodes = [-1 for _ in range(self._num_procs)]
         if args.output_dir is not None:
             self._output_dir = args.output_dir
@@ -95,11 +96,11 @@ class RunSet:
         )
         # per-process console messages
         self._stdout_files = [''] * self._num_procs
-        if self._num_procs == 1:
-            self._stdout_files[0] = self.file_path("-stdout.txt")
-        else:
+        if one_process_per_chain:
             for i in range(chains):
                 self._stdout_files[i] = self.file_path("-stdout.txt", id=i)
+        else:
+            self._stdout_files[0] = self.file_path("-stdout.txt")
 
         # per-chain output files
         self._csv_files = [''] * chains
@@ -128,14 +129,16 @@ class RunSet:
                         ".csv", extra="-profile", id=chain_ids[i]
                     )
 
+
     def __repr__(self) -> str:
-        repr = 'RunSet: chains={}'.format(self._chains)
-        repr = '{}\n cmd:\n\t{}'.format(repr, self.cmd(0))
+        repr = 'RunSet: chains={}, num_processes={}'.format(
+            self._chains, self._num_procs
+        )
+        repr = '{}\n cmd (chain 1):\n\t{}'.format(repr, self.cmd(0))
         repr = '{}\n retcodes={}'.format(repr, self._retcodes)
-        if os.path.exists(self._csv_files[0]):
-            repr = '{}\n csv_files:\n\t{}'.format(
-                repr, '\n\t'.join(self._csv_files)
-            )
+        repr = '{}\n csv_files (if run succeeds) :\n\t{}'.format(
+            repr, '\n\t'.join(self._csv_files)
+        )
         if self._args.save_latent_dynamics and os.path.exists(
             self._diagnostic_files[0]
         ):
@@ -146,10 +149,9 @@ class RunSet:
             repr = '{}\n profile_files:\n\t{}'.format(
                 repr, '\n\t'.join(self._profile_files)
             )
-        if os.path.exists(self._stdout_files[0]):
-            repr = '{}\n console_msgs:\n\t{}'.format(
-                repr, '\n\t'.join(self._stdout_files)
-            )
+        repr = '{}\n console_msgs: (if any)\n\t{}'.format(
+            repr, '\n\t'.join(self._stdout_files)
+        )
         return repr
 
     @property
@@ -168,6 +170,16 @@ class RunSet:
         return self._num_procs
 
     @property
+    def one_process_per_chain(self) -> bool:
+        """
+        When True, for each chain, call CmdStan in its own subprocess.
+        When False, use CmdStan's `num_chains` arg to run parallel chains.
+        Always True if CmdStan < 2.28.
+        For CmdStan 2.28 and up, `sample` method determines value.
+        """
+        return self._one_process_per_chain
+
+    @property
     def chains(self) -> int:
         """Number of chains."""
         return self._chains
@@ -177,10 +189,24 @@ class RunSet:
         """Chain ids."""
         return self._chain_ids
 
-    def cmd(self, idx: int = 0) -> List[str]:
-        """Assemble call(s) to CmdStan."""
-        if self._num_procs == 1:
-            # specify sampler arg num_chains, num_threads handled by env variable
+    def cmd(self, idx: int) -> List[str]:
+        """
+        Assemble CmdStan invocation.
+        When running parallel chains from single process (2.28 and up),
+        specify CmdStan arg `num_chains` and leave chain idx off CSV files.
+        """
+        if self._one_process_per_chain:
+            return self._args.compose_command(
+                idx,
+                csv_file=self.csv_files[idx],
+                diagnostic_file=self.diagnostic_files[idx]
+                if self._args.save_latent_dynamics
+                else None,
+                profile_file=self.profile_files[idx]
+                if self._args.save_profile
+                else None
+            )
+        else:
             return self._args.compose_command(
                 idx,
                 csv_file=self.file_path('.csv'),
@@ -190,14 +216,7 @@ class RunSet:
                 profile_file=self.file_path(".csv", extra="-profile")
                 if self._args.save_profile
                 else None,
-                num_chains=self._chains,
-            )
-        else:
-            return self._args.compose_command(
-                idx,
-                csv_file=self.csv_files[idx],
-                diagnostic_file=self.diagnostic_files[idx],
-                profile_file=self.profile_files[idx],
+                num_chains=self._chains
             )
 
     @property
@@ -215,7 +234,6 @@ class RunSet:
 
     def _check_retcodes(self) -> bool:
         """Returns ``True`` when all chains have retcode 0."""
-        print(self._retcodes)
         for code in self._retcodes:
             if code != 0:
                 return False
