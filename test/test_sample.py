@@ -310,7 +310,7 @@ class SampleTest(unittest.TestCase):
                 bern_model.sample(data=jdata, chains=1, output_dir=path)
             os.rmdir(dirname1)
 
-    def test_multi_proc(self):
+    def test_multi_proc_1(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
         logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
@@ -321,25 +321,31 @@ class SampleTest(unittest.TestCase):
                 data=logistic_data,
                 chains=4,
                 parallel_chains=1,
-                show_progress=False,
+                show_console=True,
             )
         log.check_present(
-            ('cmdstanpy', 'INFO', 'finish chain 1'),
-            ('cmdstanpy', 'INFO', 'start chain 2'),
+            ('cmdstanpy', 'INFO', 'Chain [1] done processing'),
+            ('cmdstanpy', 'INFO', 'Chain [2] start processing'),
         )
+
+    def test_multi_proc_2(self):
+        logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
+        logistic_model = CmdStanModel(stan_file=logistic_stan)
+        logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
                 data=logistic_data,
                 chains=4,
                 parallel_chains=2,
-                show_progress=False,
+                show_console=True,
             )
         if cpu_count() >= 4:
             # finish chains 1, 2 before starting chains 3, 4
             log.check_present(
-                ('cmdstanpy', 'INFO', 'finish chain 1'),
-                ('cmdstanpy', 'INFO', 'start chain 4'),
+                ('cmdstanpy', 'INFO', 'Chain [1] done processing'),
+                ('cmdstanpy', 'INFO', 'Chain [4] start processing'),
             )
         if cpu_count() >= 4:
             with LogCapture() as log:
@@ -348,12 +354,17 @@ class SampleTest(unittest.TestCase):
                     data=logistic_data,
                     chains=4,
                     parallel_chains=4,
-                    show_progress=False,
+                    show_console=True,
                 )
                 log.check_present(
-                    ('cmdstanpy', 'INFO', 'start chain 4'),
-                    ('cmdstanpy', 'INFO', 'finish chain 1'),
+                    ('cmdstanpy', 'INFO', 'Chain [4] start processing'),
+                    ('cmdstanpy', 'INFO', 'Chain [1] done processing'),
                 )
+
+    def test_multi_proc_msgs(self):
+        logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
+        logistic_model = CmdStanModel(stan_file=logistic_stan)
+        logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
 
         with LogCapture() as log:
             logging.getLogger()
@@ -364,7 +375,7 @@ class SampleTest(unittest.TestCase):
                 threads_per_chain=7,
                 show_progress=False,
             )
-        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 7'))
+        log.check_present(('cmdstanpy', 'DEBUG', 'threads: 7'))
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
@@ -374,7 +385,7 @@ class SampleTest(unittest.TestCase):
                 threads_per_chain=5,
                 show_progress=False,
             )
-        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 5'))
+        log.check_present(('cmdstanpy', 'DEBUG', 'threads: 5'))
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
@@ -382,23 +393,17 @@ class SampleTest(unittest.TestCase):
                 chains=1,
                 parallel_chains=7,
                 threads_per_chain=5,
+                show_progress=False,
             )
         log.check_present(
             (
                 'cmdstanpy',
                 'INFO',
-                'Requesting 7 parallel_chains for 1 chains, '
-                'running all chains in parallel.',
+                'Requested 7 parallel_chains but only 1 required, '
+                'will run all chains in parallel.',
             )
         )
-        with LogCapture() as log:
-            logging.getLogger()
-            logistic_model.sample(
-                data=logistic_data, chains=7, threads_per_chain=5
-            )
-            cores = max(min(cpu_count(), 7), 1)
-            expect = 'total threads: {}'.format(cores * 5)
-        log.check_present(('cmdstanpy', 'DEBUG', expect))
+
         with self.assertRaisesRegex(
             ValueError, 'parallel_chains must be a positive integer'
         ):
@@ -411,6 +416,18 @@ class SampleTest(unittest.TestCase):
             logistic_model.sample(
                 data=logistic_data, chains=4, threads_per_chain=-4
             )
+        # this logic is wrong.  write test for 2.28
+        # with LogCapture() as log:
+        #     logging.getLogger()
+        #     logistic_model.sample(
+        #         data=logistic_data,
+        #         chains=7,
+        #         threads_per_chain=5
+        #         show_progress=False,
+        #     )
+        #     cores = max(min(cpu_count(), 7), 1)
+        #     expect = 'threads: {}'.format(cores * 5)
+        # log.check_present(('cmdstanpy', 'DEBUG', expect))
 
     def test_fixed_param_good(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
@@ -565,8 +582,8 @@ class SampleTest(unittest.TestCase):
                 show_console=True,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('chain 1: method = sample' in console)
-        self.assertTrue('chain 2: method = sample' in console)
+        self.assertTrue('Chain [1] method = sample' in console)
+        self.assertTrue('Chain [2] method = sample' in console)
 
     def test_show_progress(self, stanfile='bernoulli.stan'):
         stan = os.path.join(DATAFILES_PATH, stanfile)
@@ -602,7 +619,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-1.csv'),
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-2.csv'),
@@ -1063,7 +1080,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         for i in range(4):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
@@ -1410,7 +1427,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             sig_figs=17,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'logistic_output_1.csv'),
             os.path.join(DATAFILES_PATH, 'logistic_output_2.csv'),
@@ -1455,7 +1472,7 @@ class CmdStanMCMCTest(unittest.TestCase):
             sig_figs=17,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'logistic_output_1.csv'),
             os.path.join(DATAFILES_PATH, 'logistic_output_2.csv'),

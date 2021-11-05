@@ -857,10 +857,9 @@ class CmdStanModel:
             parallel_chains = max(min(cpu_count(), chains), 1)
         elif parallel_chains > chains:
             get_logger().info(
-                'Requested %u parallel_chains for %u chains,'
-                ' will run all chains in parallel.',
-                parallel_chains,
-                chains,
+                'Requested %u parallel_chains but only %u required, '
+                'will run all chains in parallel.',
+                parallel_chains, chains
             )
             parallel_chains = chains
         elif parallel_chains < 1:
@@ -1337,13 +1336,18 @@ class CmdStanModel:
         Args 'show_progress' and 'show_console' allow use of progress bar,
         streaming output to console, respectively.
         """
-        cmd = runset.cmd(idx)
         get_logger().debug(
-            'cmd: %s\n,threads: %s',
-            cmd,
-            str(os.environ.get('STAN_NUM_THREADS')),
+            'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
         )
         get_logger().debug('runset: %s', runset.__repr__())
+
+        logger_prefix = 'CmdStan'
+        console_prefix = ''
+        if runset.one_process_per_chain:
+            logger_prefix = 'Chain [{}]'.format(idx + 1)
+            console_prefix = 'Chain [{}] '.format(idx + 1)
+        if show_console:
+            get_logger().info('%s start processing', logger_prefix)
 
         progress_hook: Optional[Callable[[str], None]] = None
         if show_progress and runset.one_process_per_chain:
@@ -1357,15 +1361,7 @@ class CmdStanModel:
                 total=iter_total,
             )
 
-        logger_prefix = 'CmdStan'
-        console_prefix = ''
-        if runset.one_process_per_chain:
-            logger_prefix = 'Chain [{}]'.format(idx + 1)
-            console_prefix = 'Chain [{}] '.format(idx + 1)
-
-        if show_console:
-            get_logger().info('%s start processing', logger_prefix)
-
+        cmd = runset.cmd(idx)
         try:
             fd_out = open(runset.stdout_files[idx], 'w')
             proc = subprocess.Popen(
@@ -1405,7 +1401,7 @@ class CmdStanModel:
             fd_out.close()
 
         if show_console:
-            get_logger().info('%s finish', logger_prefix)
+            get_logger().info('%s done processing', logger_prefix)
             get_logger().info('proc.returncode: %d', proc.returncode)
 
         runset._set_retcode(idx, proc.returncode)

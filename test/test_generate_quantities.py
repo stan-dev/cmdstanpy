@@ -426,10 +426,10 @@ class GenerateQuantitiesTest(unittest.TestCase):
                 show_console=True,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('chain 1: method = generate' in console)
-        self.assertTrue('chain 2: method = generate' in console)
-        self.assertTrue('chain 3: method = generate' in console)
-        self.assertTrue('chain 4: method = generate' in console)
+        self.assertTrue('Chain [1] method = generate' in console)
+        self.assertTrue('Chain [2] method = generate' in console)
+        self.assertTrue('Chain [3] method = generate' in console)
+        self.assertTrue('Chain [4] method = generate' in console)
 
 
 if __name__ == '__main__':
