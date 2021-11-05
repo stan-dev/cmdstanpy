@@ -859,7 +859,8 @@ class CmdStanModel:
             get_logger().info(
                 'Requested %u parallel_chains but only %u required, '
                 'will run all chains in parallel.',
-                parallel_chains, chains
+                parallel_chains,
+                chains,
             )
             parallel_chains = chains
         elif parallel_chains < 1:

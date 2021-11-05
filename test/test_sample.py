@@ -310,6 +310,7 @@ class SampleTest(unittest.TestCase):
                 bern_model.sample(data=jdata, chains=1, output_dir=path)
             os.rmdir(dirname1)
 
+    # pylint: disable=no-self-use
     def test_multi_proc_1(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
@@ -328,6 +329,7 @@ class SampleTest(unittest.TestCase):
             ('cmdstanpy', 'INFO', 'Chain [2] start processing'),
         )
 
+    # pylint: disable=no-self-use
     def test_multi_proc_2(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)

@@ -6,7 +6,8 @@ import unittest
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
 from cmdstanpy.stanfit import RunSet
-from cmdstanpy.utils import EXTENSION, cmdstan_version_before
+from cmdstanpy.utils import EXTENSION
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

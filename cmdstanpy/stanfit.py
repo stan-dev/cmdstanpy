@@ -143,17 +143,15 @@ class RunSet:
         repr = '{}\n cmd (chain 1):\n\t{}'.format(repr, self.cmd(0))
         repr = '{}\n retcodes={}'.format(repr, self._retcodes)
         repr = f'{repr}\n per-chain output files (showing chain 1 only):'
-        repr = '{}\n csv_file:\n\t{}'.format(
-            repr, self._csv_files[0]
-            )
+        repr = '{}\n csv_file:\n\t{}'.format(repr, self._csv_files[0])
         if self._args.save_latent_dynamics:
             repr = '{}\n diagnostics_file:\n\t{}'.format(
                 repr, self._diagnostic_files[0]
-                )
+            )
         if self._args.save_profile:
             repr = '{}\n profile_file:\n\t{}'.format(
                 repr, self._profile_files[0]
-                )
+            )
         repr = '{}\n console_msgs (if any):\n\t{}'.format(
             repr, self._stdout_files[0]
         )
