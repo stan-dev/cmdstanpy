@@ -947,6 +947,7 @@ class CmdStanModel:
                 show_progress = False
             else:
                 show_progress = show_progress and progbar.allow_show_progress()
+                get_logger().info('CmdStan start procesing')
 
             runset = RunSet(
                 args=args,
@@ -975,6 +976,7 @@ class CmdStanModel:
                         sys.stdout.write(' ' * term_size[0])
                         sys.stdout.flush()
                 sys.stdout.write('\n')
+                get_logger().info('CmdStan done processing.')
 
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
