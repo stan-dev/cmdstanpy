@@ -88,9 +88,6 @@ class RunSet:
         if chain_ids is None:
             chain_ids = [i + 1 for i in range(chains)]
         self._chain_ids = chain_ids
-        get_logger().info(
-            'chain_ids: %s', ','.join([str(x) for x in self._chain_ids])
-        )
 
         if args.output_dir is not None:
             self._output_dir = args.output_dir

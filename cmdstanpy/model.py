@@ -1338,31 +1338,28 @@ class CmdStanModel:
         streaming output to console, respectively.
         """
         get_logger().debug(
-            'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
+            'running CmdStan, num_threads: %s',
+            str(os.environ.get('STAN_NUM_THREADS')),
         )
-        get_logger().debug('runset: %s', runset.__repr__())
 
         logger_prefix = 'CmdStan'
         console_prefix = ''
         if runset.one_process_per_chain:
             logger_prefix = 'Chain [{}]'.format(idx + 1)
             console_prefix = 'Chain [{}] '.format(idx + 1)
-        if show_console:
-            get_logger().info('%s start processing', logger_prefix)
 
         progress_hook: Optional[Callable[[str], None]] = None
-        if show_progress and runset.one_process_per_chain:
-            progress_hook = self._wrap_sampler_per_chain_progress_hook(
-                chain_id=idx + 1, total=iter_total
-            )
-        elif show_progress:
-            progress_hook = self._wrap_sampler_multi_chain_progress_hook(
+        if show_progress:
+            progress_hook = self._wrap_sampler_progress_hook(
+                one_process_per_chain=runset.one_process_per_chain,
                 num_chains=runset.chains,
-                offset=runset.chain_ids[0],
+                chain_id=idx + 1,
+                id_offset=runset.chain_ids[0],
                 total=iter_total,
             )
-
         cmd = runset.cmd(idx)
+        if not show_progress:
+            get_logger().info('%s start processing', logger_prefix)
         try:
             fd_out = open(runset.stdout_files[idx], 'w')
             proc = subprocess.Popen(
@@ -1400,10 +1397,8 @@ class CmdStanModel:
             raise RuntimeError(msg) from e
         finally:
             fd_out.close()
-
-        if show_console:
+        if not show_progress:
             get_logger().info('%s done processing', logger_prefix)
-            get_logger().info('proc.returncode: %d', proc.returncode)
 
         runset._set_retcode(idx, proc.returncode)
         if proc.returncode != 0:
@@ -1429,69 +1424,54 @@ class CmdStanModel:
 
     @staticmethod
     @progbar.wrap_callback
-    def _wrap_sampler_per_chain_progress_hook(
-        chain_id: int, total: int
-    ) -> Optional[Callable[[str], None]]:
-        """Sets up tqdm callback for CmdStan sampler console msgs."""
-        pbar: tqdm = tqdm(
-            total=total,
-            bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
-            postfix=[dict(value="Status")],
-            desc=f'chain {chain_id}',
-            colour='yellow',
-        )
-
-        def per_chain_progress_hook(line: str) -> None:
-            if line == "Done":
-                pbar.postfix[0]["value"] = 'Sampling completed'
-                pbar.update(total - pbar.n)
-                pbar.close()
-            elif line.startswith("Iteration"):
-                if 'Sampling' in line:
-                    pbar.colour = 'blue'
-                pbar.update(1)
-                pbar.postfix[0]["value"] = line
-
-        return per_chain_progress_hook
-
-    @staticmethod
-    @progbar.wrap_callback
-    def _wrap_sampler_multi_chain_progress_hook(
-        num_chains: int, offset: int, total: int
+    def _wrap_sampler_progress_hook(
+        one_process_per_chain: bool,
+        num_chains: int,
+        chain_id: int,
+        id_offset: int,
+        total: int,
     ) -> Optional[Callable[[str], None]]:
         """
         Sets up tqdm callback for CmdStan sampler console msgs.
-        Manages an array of progress bars, updates each according to chain id
-        parsed out of console messages via regex matching.
-        Chain ids are sequential, not necessarily starting at one, therefore
-        first chain id must be supplied as the index offset.
+        CmdStan progress messages start with "Iteration", for single chain
+        process, "Chain [id] Iteration" for multi-chain processing.
+        For the latter, manage array of pbars, update accordingly.
         """
+        multi_pbars = num_chains > 1 and not one_process_per_chain
+        num_pbars = num_chains if multi_pbars else 1
+        pat = re.compile(r'Chain \[(\d*)\] (Iteration.*)')
+
         pbar: List[tqdm] = [
             tqdm(
                 total=total,
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
                 postfix=[dict(value="Status")],
-                desc=f'chain {i+1}',
+                desc=f'chain {chain_id + i}',
                 colour='yellow',
             )
-            for i in range(num_chains)
+            for i in range(num_pbars)
         ]
-        pat = re.compile(r'Chain \[(\d*)\] (.*)')
 
-        def multi_chain_progress_hook(line: str) -> None:
+        def progress_hook(line: str) -> None:
             if line == "Done":
-                for i in range(num_chains):
+                for i in range(num_pbars):
                     pbar[i].postfix[0]["value"] = 'Sampling completed'
                     pbar[i].update(total - pbar[i].n)
                     pbar[i].close()
-            else:
+            elif multi_pbars:
                 match = pat.match(line)
                 if match:
-                    idx = int(match.group(1)) - offset
+                    idx = int(match.group(1)) - id_offset
                     pline = match.group(2).strip()
                     if 'Sampling' in pline:
                         pbar[idx].colour = 'blue'
                     pbar[idx].update(1)
                     pbar[idx].postfix[0]['value'] = pline
+            else:
+                if line.startswith("Iteration"):
+                    if 'Sampling' in line:
+                        pbar[0].colour = 'blue'
+                    pbar[0].update(1)
+                    pbar[0].postfix[0]["value"] = line
 
-        return multi_chain_progress_hook
+        return progress_hook
