@@ -438,27 +438,28 @@ class SampleTest(unittest.TestCase):
 
     def test_multi_proc_threads(self):
         # 2.28 compile with cpp_options={'STAN_THREADS':'true'}
-        logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
-        logistic_model = CmdStanModel(
-            stan_file=logistic_stan,
-            compile=True,
-            cpp_options={'STAN_THREADS': 'true'},
-        )
-        logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+        if not cmdstan_version_before(2, 28):
+            logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
+            logistic_model = CmdStanModel(
+                stan_file=logistic_stan,
+                compile=True,
+                cpp_options={'STAN_THREADS': 'true'},
+                )
+            logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
 
-        with LogCapture() as log:
-            logging.getLogger()
-            logistic_model.sample(
-                data=logistic_data,
-                chains=7,
-                threads_per_chain=5,
-                iter_sampling=200,
-                iter_warmup=200,
-                show_progress=False,
+            with LogCapture() as log:
+                logging.getLogger()
+                logistic_model.sample(
+                    data=logistic_data,
+                    chains=7,
+                    threads_per_chain=5,
+                    iter_sampling=200,
+                    iter_warmup=200,
+                    show_progress=False,
+                )
+            log.check_present(
+                ('cmdstanpy', 'DEBUG', 'running CmdStan, num_threads: 35')
             )
-        log.check_present(
-            ('cmdstanpy', 'DEBUG', 'running CmdStan, num_threads: 35')
-        )
 
     def test_multi_proc_err_msgs(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
