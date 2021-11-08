@@ -562,12 +562,9 @@ class SampleTest(unittest.TestCase):
 
     def test_fixed_param_unspecified(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
-        datagen_model = CmdStanModel(stan_file=stan) 
-        # changed in 2.28 - update test
-        # datagen_fit = datagen_model.sample(iter_sampling=100, show_progress=False)
-        # self.assertEqual(
-        #     datagen_fit.draws().shape, (100, 4, len(datagen_fit.column_names))
-        # )  # ran 4 chains, set fixed_param=True afterwards
+        datagen_model = CmdStanModel(stan_file=stan)
+        datagen_fit = datagen_model.sample(iter_sampling=100, show_progress=False)
+        self.assertEqual(datagen_fit.step_size, None)
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
