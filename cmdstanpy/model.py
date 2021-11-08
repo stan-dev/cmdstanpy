@@ -912,21 +912,21 @@ class CmdStanModel:
             num_threads = threads_per_chain
             one_process_per_chain = True
             if (
-                force_one_process_per_chain is None and
-                not cmdstan_version_before(2, 28)
+                force_one_process_per_chain is None
+                and not cmdstan_version_before(2, 28)
             ):
-                assert isinstance(self.exe_file,str) # make typechecker happy
+                assert isinstance(self.exe_file,str)  # make typechecker happy
                 info_dict = model_info(self.exe_file)
                 if (
-                        info_dict is not None and
-                        info_dict['STAN_THREADS'] == 'true'
+                    info_dict is not None
+                    and info_dict['STAN_THREADS'] == 'true'
                 ):
                     one_process_per_chain = False
                     num_threads = parallel_chains * num_threads
                     parallel_procs = 1
             elif (
-                force_one_process_per_chain is False and
-                cmdstan_version_before(2, 28)
+                force_one_process_per_chain is False
+                and cmdstan_version_before(2, 28)
             ):
                 get_logger().info(
                     'Installed version of CmdStan cannot multi-process chains, '

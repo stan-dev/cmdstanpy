@@ -341,7 +341,7 @@ class SamplerArgs:
             cmd.append('save_warmup=1')
         if self.thin is not None:
             cmd.append('thin={}'.format(self.thin))
-        if self.fixed_param and cmdstan_version_before(2, 28):
+        if self.fixed_param:
             cmd.append('algorithm=fixed_param')
             return cmd
         else:
