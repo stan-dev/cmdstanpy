@@ -444,7 +444,7 @@ class SampleTest(unittest.TestCase):
                 stan_file=logistic_stan,
                 compile=True,
                 cpp_options={'STAN_THREADS': 'true'},
-                )
+            )
             logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
 
             with LogCapture() as log:
