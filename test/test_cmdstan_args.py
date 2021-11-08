@@ -275,7 +275,8 @@ class SamplerArgsTest(unittest.TestCase):
         args = SamplerArgs(fixed_param=True)
         args.validate(chains=1)
         cmd = args.compose(0, cmd=[])
-        self.assertIn('method=sample algorithm=fixed_param', ' '.join(cmd))
+        if cmdstan_version_before(2, 28):
+            self.assertIn('method=sample algorithm=fixed_param', ' '.join(cmd))
 
 
 class CmdStanArgsTest(unittest.TestCase):
