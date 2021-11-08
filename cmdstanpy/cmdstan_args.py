@@ -811,6 +811,7 @@ class CmdStanArgs:
                     'Argument "sig_figs" must be an integer between 1 and 18,'
                     ' found {}'.format(self.sig_figs)
                 )
+            # TODO: remove at some future release
             if cmdstan_version_before(2, 25):
                 self.sig_figs = None
                 get_logger().warning(

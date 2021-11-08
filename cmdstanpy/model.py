@@ -9,7 +9,6 @@ import subprocess
 import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
@@ -40,6 +39,7 @@ from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
     get_logger,
+    model_info,
     returncode_msg,
 )
 
@@ -853,29 +853,6 @@ class CmdStanModel:
                             ' found {}.'.format(chain_id)
                         )
 
-        if parallel_chains is None:
-            parallel_chains = max(min(cpu_count(), chains), 1)
-        elif parallel_chains > chains:
-            get_logger().info(
-                'Requested %u parallel_chains but only %u required, '
-                'will run all chains in parallel.',
-                parallel_chains,
-                chains,
-            )
-            parallel_chains = chains
-        elif parallel_chains < 1:
-            raise ValueError(
-                'Argument parallel_chains must be a positive integer value, '
-                'found {}.'.format(parallel_chains)
-            )
-        if threads_per_chain is None:
-            threads_per_chain = 1
-        if threads_per_chain < 1:
-            raise ValueError(
-                'Argument threads_per_chain must be a positive integer value, '
-                'found {}.'.format(threads_per_chain)
-            )
-
         sampler_args = SamplerArgs(
             iter_warmup=iter_warmup,
             iter_sampling=iter_sampling,
@@ -907,26 +884,53 @@ class CmdStanModel:
                 refresh=refresh,
             )
 
-            # 2.28 and up default: if exe compiled w/ threads, run single proc
-            # CmdStanArgs ctor validates model exe file
+            if parallel_chains is None:
+                parallel_chains = max(min(cpu_count(), chains), 1)
+            elif parallel_chains > chains:
+                get_logger().info(
+                    'Requested %u parallel_chains but only %u required, '
+                    'will run all chains in parallel.',
+                    parallel_chains,
+                    chains,
+                )
+                parallel_chains = chains
+            elif parallel_chains < 1:
+                raise ValueError(
+                    'Argument parallel_chains must be a positive integer value, '
+                    'found {}.'.format(parallel_chains)
+                )
+            if threads_per_chain is None:
+                threads_per_chain = 1
+            if threads_per_chain < 1:
+                raise ValueError(
+                    'Argument threads_per_chain must be a positive integer value, '
+                    'found {}.'.format(threads_per_chain)
+                )
+
+            parallel_procs = parallel_chains
             num_threads = threads_per_chain
             one_process_per_chain = True
-            if (
-                force_one_process_per_chain is None
-                or force_one_process_per_chain is False
-            ):
-                try:
-                    info = StringIO()
-                    do_command(cmd=[str(self.exe_file), 'info'], fd_out=info)
-                    lines = info.getvalue().split('\n')
-                    if lines[3] == 'STAN_THREADS=true':
-                        major = int(lines[0].split(' = ')[1])
-                        minor = int(lines[1].split(' = ')[1])
-                        if (major > 2) or (major == 2 and minor >= 28):
-                            num_threads = threads_per_chain * parallel_chains
-                            one_process_per_chain = False
-                except RuntimeError:
-                    pass
+            info_dict = model_info(self.exe_file)
+            if info_dict is not None:
+                # if version >= 2.28 run multi-chain single-proc if possible
+                major = info_dict['stan_version_major']
+                minor = info_dict['stan_version_minor']
+                if force_one_process_per_chain is None:
+                    if (
+                        info_dict.get('STAN_THREADS') == 'true'
+                        and major == 2
+                        and minor > 27
+                    ):
+                        one_process_per_chain = True
+                        num_threads = parallel_chains * num_threads
+                        parallel_procs = 1
+                elif force_one_process_per_chain is False:
+                    if major == 2 and minor < 28:
+                        get_logger().info(
+                            "CmdStan %d.%d doesn't support parallel chains",
+                            major,
+                            minor,
+                        )
             os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
             # progress reporting
@@ -956,7 +960,7 @@ class CmdStanModel:
                 time_fmt=time_fmt,
                 one_process_per_chain=one_process_per_chain,
             )
-            with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
+            with ThreadPoolExecutor(max_workers=parallel_procs) as executor:
                 for i in range(runset.num_procs):
                     executor.submit(
                         self._run_cmdstan,
