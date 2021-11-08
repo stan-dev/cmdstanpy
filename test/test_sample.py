@@ -449,9 +449,8 @@ class SampleTest(unittest.TestCase):
     def test_fixed_param_good(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
         datagen_model = CmdStanModel(stan_file=stan)
-        no_data = {}
         datagen_fit = datagen_model.sample(
-            data=no_data, seed=12345, iter_sampling=100, fixed_param=True
+            seed=12345, chains=1, iter_sampling=100, fixed_param=True
         )
         self.assertEqual(datagen_fit.runset._args.method, Method.SAMPLE)
         self.assertEqual(datagen_fit.metric_type, None)

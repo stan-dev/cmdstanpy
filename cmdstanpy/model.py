@@ -37,6 +37,7 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     cmdstan_path,
+    cmdstan_version_before,
     do_command,
     get_logger,
     model_info,
@@ -910,29 +911,29 @@ class CmdStanModel:
             parallel_procs = parallel_chains
             num_threads = threads_per_chain
             one_process_per_chain = True
-            assert isinstance(
-                self.exe_file,str
-            )  # make the typechecker happy
-            info_dict = model_info(self.exe_file)
-            if info_dict is not None:
-                major = int(info_dict['stan_version_major'])
-                minor = int(info_dict['stan_version_minor'])
-                if force_one_process_per_chain is None:
-                    if (
+            if (
+                force_one_process_per_chain is None and
+                not cmdstan_version_before(2, 28)
+            ):
+                assert isinstance(self.exe_file,str) # make typechecker happy
+                info_dict = model_info(self.exe_file)
+                if (
+                        info_dict is not None and
                         info_dict['STAN_THREADS'] == 'true'
-                        and major == 2
-                        and minor > 27
-                    ):
-                        one_process_per_chain = True
-                        num_threads = parallel_chains * num_threads
-                        parallel_procs = 1
-                elif force_one_process_per_chain is False:
-                    if major == 2 and minor < 28:
-                        get_logger().info(
-                            "CmdStan %d.%d doesn't support parallel chains",
-                            major,
-                            minor,
-                        )
+                ):
+                    one_process_per_chain = False
+                    num_threads = parallel_chains * num_threads
+                    parallel_procs = 1
+            elif (
+                force_one_process_per_chain is False and
+                cmdstan_version_before(2, 28)
+            ):
+                get_logger().info(
+                    'Installed version of CmdStan cannot multi-process chains, '
+                    'will run %d processes. '
+                    'Run "install_cmdstan" to upgrade to latest version.',
+                    chains
+                )
             os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
             # progress reporting
@@ -1419,16 +1420,16 @@ class CmdStanModel:
             get_logger().error(
                 '%s error: %s %s', logger_prefix, retcode_summary, serror
             )
-        else:
-            # CmdStan may get rid of need for fixed_params - keep for now.
-            with open(runset.stdout_files[idx], 'r') as fd:
-                console = fd.read()
-                if 'running fixed_param sampler' in console:
-                    sampler_args = runset._args.method_args
-                    assert isinstance(
-                        sampler_args, SamplerArgs
-                    )  # make the typechecker happy
-                    sampler_args.fixed_param = True
+
+        # hack needed to parse CSV files if model has no params
+        with open(runset.stdout_files[idx], 'r') as fd:
+            console = fd.read()
+            if 'running fixed_param sampler' in console:
+                sampler_args = runset._args.method_args
+                assert isinstance(
+                    sampler_args, SamplerArgs
+                )  # make the typechecker happy
+                sampler_args.fixed_param = True
 
     @staticmethod
     @progbar.wrap_callback
