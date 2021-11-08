@@ -239,10 +239,10 @@ def model_info(model_exe: str) -> Optional[Dict[str, str]]:
         result: Dict[str, Any] = {}
         lines = info.getvalue().split('\n')
         for line in lines:
-            kv_pair = line.split('=')
+            kv_pair = [x.strip() for x in line.split('=')]
             if len(kv_pair) != 2:
                 continue
-            result[kv_pair[0].strip()] = kv_pair[1].strip
+            result[kv_pair[0]] = kv_pair[1]
         return result
     except RuntimeError:
         return None

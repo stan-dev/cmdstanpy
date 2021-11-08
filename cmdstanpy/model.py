@@ -915,12 +915,11 @@ class CmdStanModel:
             )  # make the typechecker happy
             info_dict = model_info(self.exe_file)
             if info_dict is not None:
-                # if version >= 2.28 run multi-chain single-proc if possible
                 major = int(info_dict['stan_version_major'])
                 minor = int(info_dict['stan_version_minor'])
                 if force_one_process_per_chain is None:
                     if (
-                        info_dict.get('STAN_THREADS') == 'true'
+                        info_dict['STAN_THREADS'] == 'true'
                         and major == 2
                         and minor > 27
                     ):
