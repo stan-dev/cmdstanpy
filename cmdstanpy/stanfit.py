@@ -134,8 +134,8 @@ class RunSet:
                     )
 
     def __repr__(self) -> str:
-        repr = 'RunSet: chains={}, num_processes={}'.format(
-            self._chains, self._num_procs
+        repr = 'RunSet: chains={}, chain_ids={}, num_processes={}'.format(
+            self._chains, self._chain_ids, self._num_procs
         )
         repr = '{}\n cmd (chain 1):\n\t{}'.format(repr, self.cmd(0))
         repr = '{}\n retcodes={}'.format(repr, self._retcodes)

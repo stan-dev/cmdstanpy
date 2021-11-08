@@ -565,6 +565,7 @@ class SampleTest(unittest.TestCase):
         datagen_fit = datagen_model.sample(
             iter_sampling=100, show_progress=False
         )
+        print(datagen_fit)
         self.assertEqual(datagen_fit.step_size, None)
 
     def test_bernoulli_file_with_space(self):
@@ -609,7 +610,9 @@ class SampleTest(unittest.TestCase):
         sys_stderr = io.StringIO()  # tqdm prints to stderr
         with contextlib.redirect_stderr(sys_stderr):
             bern_model.sample(
-                data=jdata, chains=2, parallel_chains=2, show_progress=True
+                data=jdata,
+                chains=2, parallel_chains=2,
+                show_progress=True
             )
         console = sys_stderr.getvalue()
         self.assertTrue('chain 1' in console)
