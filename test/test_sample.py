@@ -563,7 +563,9 @@ class SampleTest(unittest.TestCase):
     def test_fixed_param_unspecified(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
         datagen_model = CmdStanModel(stan_file=stan)
-        datagen_fit = datagen_model.sample(iter_sampling=100, show_progress=False)
+        datagen_fit = datagen_model.sample(
+            iter_sampling=100, show_progress=False
+        )
         self.assertEqual(datagen_fit.step_size, None)
 
     def test_bernoulli_file_with_space(self):

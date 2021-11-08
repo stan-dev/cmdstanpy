@@ -896,14 +896,14 @@ class CmdStanModel:
                 parallel_chains = chains
             elif parallel_chains < 1:
                 raise ValueError(
-                    'Argument parallel_chains must be a positive integer value, '
+                    'Argument parallel_chains must be a positive integer, '
                     'found {}.'.format(parallel_chains)
                 )
             if threads_per_chain is None:
                 threads_per_chain = 1
             if threads_per_chain < 1:
                 raise ValueError(
-                    'Argument threads_per_chain must be a positive integer value, '
+                    'Argument threads_per_chain must be a positive integer, '
                     'found {}.'.format(threads_per_chain)
                 )
 
