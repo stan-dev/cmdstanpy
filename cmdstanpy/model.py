@@ -929,7 +929,7 @@ class CmdStanModel:
                 force_one_process_per_chain is False
                 and cmdstan_version_before(2, 28)
             ):
-                get_logger().info(
+                get_logger().warning(
                     'Installed version of CmdStan cannot multi-process chains, '
                     'will run %d processes. '
                     'Run "install_cmdstan" to upgrade to latest version.',
