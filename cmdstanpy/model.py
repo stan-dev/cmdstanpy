@@ -910,11 +910,14 @@ class CmdStanModel:
             parallel_procs = parallel_chains
             num_threads = threads_per_chain
             one_process_per_chain = True
+            assert isinstance(
+                self.exe_file,str
+            )  # make the typechecker happy
             info_dict = model_info(self.exe_file)
             if info_dict is not None:
                 # if version >= 2.28 run multi-chain single-proc if possible
-                major = info_dict['stan_version_major']
-                minor = info_dict['stan_version_minor']
+                major = int(info_dict['stan_version_major'])
+                minor = int(info_dict['stan_version_minor'])
                 if force_one_process_per_chain is None:
                     if (
                         info_dict.get('STAN_THREADS') == 'true'

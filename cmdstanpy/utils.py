@@ -233,7 +233,6 @@ def model_info(model_exe: str) -> Optional[Dict[str, str]]:
     If exe file compiled with CmdStan < 2.27, calling model with
     option 'info'  fail and method returns None.
     """
-    result = None
     try:
         info = StringIO()
         do_command(cmd=[model_exe, 'info'], fd_out=info)
@@ -244,9 +243,9 @@ def model_info(model_exe: str) -> Optional[Dict[str, str]]:
             if len(kv_pair) != 2:
                 continue
             result[kv_pair[0].strip()] = kv_pair[1].strip
+        return result
     except RuntimeError:
-        pass
-    return result
+        return None
 
 
 def cmdstan_version_before(major: int, minor: int) -> bool:
