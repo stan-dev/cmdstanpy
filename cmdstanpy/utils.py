@@ -14,7 +14,6 @@ import sys
 import tempfile
 from collections import OrderedDict
 from collections.abc import Collection
-from io import StringIO
 from typing import (
     Any,
     Callable,
@@ -224,28 +223,6 @@ def cmdstan_version() -> Optional[Tuple[int, ...]]:
         )
         return None
     return tuple(int(x) for x in splits[0:2])
-
-
-def model_info(model_exe: str) -> Optional[Dict[str, str]]:
-    """
-    Run model with option 'info'. Parse output statements, which all
-    have form 'key = value' into a Dict.
-    If exe file compiled with CmdStan < 2.27, calling model with
-    option 'info'  fail and method returns None.
-    """
-    try:
-        info = StringIO()
-        do_command(cmd=[model_exe, 'info'], fd_out=info)
-        result: Dict[str, Any] = {}
-        lines = info.getvalue().split('\n')
-        for line in lines:
-            kv_pair = [x.strip() for x in line.split('=')]
-            if len(kv_pair) != 2:
-                continue
-            result[kv_pair[0]] = kv_pair[1]
-        return result
-    except RuntimeError:
-        return None
 
 
 def cmdstan_version_before(major: int, minor: int) -> bool:

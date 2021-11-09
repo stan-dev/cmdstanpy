@@ -26,7 +26,7 @@ from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanMCMC, RunSet, from_csv
-from cmdstanpy.utils import EXTENSION, cmdstan_version_before, model_info
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -447,9 +447,10 @@ class SampleTest(unittest.TestCase):
                 force=True,
                 cpp_options={'STAN_THREADS': 'TRUE'},
             )
-            info_dict = model_info(logistic_model.exe_file)
+            info_dict = logistic_model.exe_info()
             self.assertTrue(info_dict is not None)
             self.assertTrue('STAN_THREADS' in info_dict)
+            self.assertEqual(info_dict['STAN_THREADS'], 'true')
 
             logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
             with LogCapture() as log:
@@ -649,11 +650,45 @@ class SampleTest(unittest.TestCase):
         sys_stderr = io.StringIO()  # tqdm prints to stderr
         with contextlib.redirect_stderr(sys_stderr):
             bern_model.sample(
-                data=jdata, chains=2, parallel_chains=2, show_progress=True
+                data=jdata,
+                chains=2,
+                iter_warmup=100,
+                iter_sampling=100,
+                show_progress=True,
             )
         console = sys_stderr.getvalue()
         self.assertTrue('chain 1' in console)
         self.assertTrue('chain 2' in console)
+        self.assertTrue('Sampling completed' in console)
+
+        sys_stderr = io.StringIO()  # tqdm prints to stderr
+        with contextlib.redirect_stderr(sys_stderr):
+            bern_model.sample(
+                data=jdata,
+                chains=7,
+                iter_warmup=100,
+                iter_sampling=100,
+                show_progress=True,
+            )
+        console = sys_stderr.getvalue()
+        self.assertTrue('chain 6' in console)
+        self.assertTrue('chain 7' in console)
+        self.assertTrue('Sampling completed' in console)
+        sys_stderr = io.StringIO()  # tqdm prints to stderr
+
+        with contextlib.redirect_stderr(sys_stderr):
+            bern_model.sample(
+                data=jdata,
+                chains=2,
+                chain_ids=[6,7],
+                iter_warmup=100,
+                iter_sampling=100,
+                force_one_process_per_chain=True,
+                show_progress=True,
+            )
+        console = sys_stderr.getvalue()
+        self.assertTrue('chain 6' in console)
+        self.assertTrue('chain 7' in console)
         self.assertTrue('Sampling completed' in console)
 
 

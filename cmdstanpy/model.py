@@ -9,6 +9,7 @@ import subprocess
 import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
@@ -40,7 +41,6 @@ from cmdstanpy.utils import (
     cmdstan_version_before,
     do_command,
     get_logger,
-    model_info,
     returncode_msg,
 )
 
@@ -430,6 +430,29 @@ class CmdStanModel:
                 else:
                     get_logger().error('model compilation failed')
 
+    def exe_info(self) -> Optional[Dict[str, str]]:
+        """
+        Run model with option 'info'. Parse output statements, which all
+        have form 'key = value' into a Dict.
+        If exe file compiled with CmdStan < 2.27, calling model with
+        option 'info'  fail and method returns None.
+        """
+        if self.exe_file is None:
+            return None
+        try:
+            info = StringIO()
+            do_command(cmd=[self.exe_file, 'info'], fd_out=info)
+            result: Dict[str, Any] = {}
+            lines = info.getvalue().split('\n')
+            for line in lines:
+                kv_pair = [x.strip() for x in line.split('=')]
+                if len(kv_pair) != 2:
+                    continue
+                result[kv_pair[0]] = kv_pair[1]
+            return result
+        except RuntimeError:
+            return None
+
     def optimize(
         self,
         data: Union[Mapping[str, Any], str, None] = None,
@@ -660,13 +683,20 @@ class CmdStanModel:
         :param chains: Number of sampler chains, must be a positive integer.
 
         :param parallel_chains: Number of processes to run in parallel. Must be
-            a positive integer.  Defaults to :func:`multiprocessing.cpu_count`.
+            a positive integer.  Defaults to :func:`multiprocessing.cpu_count`,
+            i.e., it will only run as many chains in parallel as there are
+            cores on the machine.   Note that CmdStan 2.28 and higher can run
+            all chains in parallel providing that the model was compiled with
+            threading support.
 
         :param threads_per_chain: The number of threads to use in parallelized
             sections within an MCMC chain (e.g., when using the Stan functions
             ``reduce_sum()``  or ``map_rect()``).  This will only have an effect
-            if the model was compiled with threading support. The total number
-            of threads used will be ``parallel_chains * threads_per_chain``.
+            if the model was compiled with threading support.  For such models,
+            CmdStan version 2.28 and higher will run all chains in parallel
+            from within a single process.  The total number of threads used
+            will be ``parallel_chains * threads_per_chain``, where the default
+            value for parallel_chains is the number of cpus, not chains.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
@@ -916,7 +946,7 @@ class CmdStanModel:
                 and not cmdstan_version_before(2, 28)
             ):
                 assert isinstance(self.exe_file, str)  # make typechecker happy
-                info_dict = model_info(self.exe_file)
+                info_dict = self.exe_info()
                 if (
                     info_dict is not None
                     and info_dict['STAN_THREADS'] == 'true'
@@ -936,26 +966,33 @@ class CmdStanModel:
                 )
             os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
-            # progress reporting
-            iter_total = 0
-            if iter_warmup is None:
-                iter_total += _CMDSTAN_WARMUP
-            else:
-                iter_total += iter_warmup
-            if iter_sampling is None:
-                iter_total += _CMDSTAN_SAMPLING
-            else:
-                iter_total += iter_sampling
-            if refresh is None:
-                refresh = _CMDSTAN_REFRESH
-            iter_total = iter_total // refresh + 2
-
             if show_console:
                 show_progress = False
             else:
                 show_progress = show_progress and progbar.allow_show_progress()
                 get_logger().info('CmdStan start procesing')
 
+            progress_hook: Optional[Callable[[str, int], None]] = None
+            if show_progress:
+                iter_total = 0
+                if iter_warmup is None:
+                    iter_total += _CMDSTAN_WARMUP
+                else:
+                    iter_total += iter_warmup
+                if iter_sampling is None:
+                    iter_total += _CMDSTAN_SAMPLING
+                else:
+                    iter_total += iter_sampling
+                if refresh is None:
+                    refresh = _CMDSTAN_REFRESH
+                iter_total = iter_total // refresh + 2
+
+                progress_hook = self._wrap_sampler_progress_hook(
+                    one_process_per_chain=one_process_per_chain,
+                    chains=chains,
+                    offset=chain_ids[0],
+                    total=iter_total,
+                )
             runset = RunSet(
                 args=args,
                 chains=chains,
@@ -971,7 +1008,7 @@ class CmdStanModel:
                         idx=i,
                         show_progress=show_progress,
                         show_console=show_console,
-                        iter_total=iter_total,
+                        progress_hook=progress_hook,
                     )
             if show_progress:
                 # advance terminal window cursor past progress bars
@@ -1331,13 +1368,14 @@ class CmdStanModel:
         vb = CmdStanVB(runset)
         return vb
 
+    # pylint: disable=no-self-use
     def _run_cmdstan(
         self,
         runset: RunSet,
         idx: int,
         show_progress: bool = False,
         show_console: bool = False,
-        iter_total: int = 0,
+        progress_hook: Optional[Callable[[str, int], None]] = None,
     ) -> None:
         """
         Helper function which encapsulates call to CmdStan.
@@ -1357,15 +1395,6 @@ class CmdStanModel:
             logger_prefix = 'Chain [{}]'.format(idx + 1)
             console_prefix = 'Chain [{}] '.format(idx + 1)
 
-        progress_hook: Optional[Callable[[str], None]] = None
-        if show_progress:
-            progress_hook = self._wrap_sampler_progress_hook(
-                one_process_per_chain=runset.one_process_per_chain,
-                num_chains=runset.chains,
-                chain_id=idx + 1,
-                id_offset=runset.chain_ids[0],
-                total=iter_total,
-            )
         cmd = runset.cmd(idx)
         get_logger().debug('CmdStan args: %s', cmd)
 
@@ -1390,10 +1419,10 @@ class CmdStanModel:
                     if show_console:
                         print(f'{console_prefix}{line}')
                     elif progress_hook is not None:
-                        progress_hook(line)
+                        progress_hook(line, idx)
 
             if progress_hook is not None and proc.returncode == 0:
-                progress_hook("Done")
+                progress_hook("Done", idx)
 
             stdout, _ = proc.communicate()
             if stdout:
@@ -1437,52 +1466,52 @@ class CmdStanModel:
     @progbar.wrap_callback
     def _wrap_sampler_progress_hook(
         one_process_per_chain: bool,
-        num_chains: int,
-        chain_id: int,
-        id_offset: int,
+        chains: int,
+        offset: int,
         total: int,
-    ) -> Optional[Callable[[str], None]]:
+    ) -> Optional[Callable[[str, int], None]]:
         """
         Sets up tqdm callback for CmdStan sampler console msgs.
         CmdStan progress messages start with "Iteration", for single chain
         process, "Chain [id] Iteration" for multi-chain processing.
         For the latter, manage array of pbars, update accordingly.
         """
-        multi_pbars = num_chains > 1 and not one_process_per_chain
-        num_pbars = num_chains if multi_pbars else 1
+        do_match = chains > 1 and not one_process_per_chain
         pat = re.compile(r'Chain \[(\d*)\] (Iteration.*)')
 
-        pbar: List[tqdm] = [
+        pbars: List[tqdm] = [
             tqdm(
                 total=total,
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
                 postfix=[dict(value="Status")],
-                desc=f'chain {chain_id + i}',
+                desc=f'chain {offset + i}',
                 colour='yellow',
             )
-            for i in range(num_pbars)
+            for i in range(chains)
         ]
 
-        def progress_hook(line: str) -> None:
+        def progress_hook(line: str, idx: int) -> None:
             if line == "Done":
-                for i in range(num_pbars):
-                    pbar[i].postfix[0]["value"] = 'Sampling completed'
-                    pbar[i].update(total - pbar[i].n)
-                    pbar[i].close()
-            elif multi_pbars:
-                match = pat.match(line)
-                if match:
-                    idx = int(match.group(1)) - id_offset
-                    pline = match.group(2).strip()
-                    if 'Sampling' in pline:
-                        pbar[idx].colour = 'blue'
-                    pbar[idx].update(1)
-                    pbar[idx].postfix[0]['value'] = pline
+                for i in range(chains):
+                    pbars[i].postfix[0]["value"] = 'Sampling completed'
+                    pbars[i].update(total - pbars[i].n)
+                    pbars[i].close()
             else:
-                if line.startswith("Iteration"):
-                    if 'Sampling' in line:
-                        pbar[0].colour = 'blue'
-                    pbar[0].update(1)
-                    pbar[0].postfix[0]["value"] = line
+                if do_match:
+                    match = pat.match(line)
+                    if match:
+                        idx = int(match.group(1)) - offset
+                        mline = match.group(2).strip()
+                    else:
+                        return
+                else:
+                    if line.startswith("Iteration"):
+                        mline = line
+                    else:
+                        return
+                if 'Sampling' in mline:
+                    pbars[idx].colour = 'blue'
+                pbars[idx].update(1)
+                pbars[idx].postfix[0]["value"] = mline
 
         return progress_hook

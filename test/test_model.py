@@ -152,6 +152,24 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(cpp_opts['STAN_MPI'], 'TRUE')
         self.assertEqual(cpp_opts['STAN_THREADS'], 'TRUE')
 
+    def test_model_info(self):
+        # copy so that parallel compile tests don't mess up exe
+        b2_filename = os.path.join(DATAFILES_PATH, 'b2.stan')
+        b2_file = shutil.copyfile(BERN_STAN, b2_filename)
+        cpp_opts = {'STAN_THREADS': 'TRUE'}
+        model = CmdStanModel(stan_file=b2_file, cpp_options=cpp_opts)
+        if model.exe_file is not None and os.path.exists(model.exe_file):
+            os.remove(model.exe_file)
+        null_dict = model.exe_info()
+        self.assertTrue(null_dict is None)
+
+        model.compile(force=True)
+        info_dict = model.exe_info()
+        self.assertTrue(info_dict is not None)
+        self.assertEqual(info_dict['STAN_THREADS'], 'true')
+        os.remove(model.stan_file)
+        os.remove(model.exe_file)
+
     def test_model_paths(self):
         # pylint: disable=unused-variable
         model = CmdStanModel(stan_file=BERN_STAN)  # instantiates exe
