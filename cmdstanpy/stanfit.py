@@ -640,7 +640,6 @@ class CmdStanMCMC:
                             'save_warmup',
                             'thin',
                             'refresh',
-                            'metric',
                         ]
                         and dzero[key] != drest[key]
                     ):
