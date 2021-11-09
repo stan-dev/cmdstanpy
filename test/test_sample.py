@@ -456,14 +456,15 @@ class SampleTest(unittest.TestCase):
                 logging.getLogger()
                 logistic_model.sample(
                     data=logistic_data,
-                    chains=7,
+                    chains=4,
+                    parallel_chains=4,
                     threads_per_chain=5,
                     iter_sampling=200,
                     iter_warmup=200,
                     show_progress=False,
                 )
             log.check_present(
-                ('cmdstanpy', 'DEBUG', 'running CmdStan, num_threads: 35')
+                ('cmdstanpy', 'DEBUG', 'running CmdStan, num_threads: 20')
             )
 
     def test_multi_proc_err_msgs(self):

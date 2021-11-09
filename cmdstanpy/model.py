@@ -917,7 +917,6 @@ class CmdStanModel:
             ):
                 assert isinstance(self.exe_file, str)  # make typechecker happy
                 info_dict = model_info(self.exe_file)
-                get_logger().debug('info_dict\n %s', info_dict)
                 if (
                     info_dict is not None
                     and info_dict['STAN_THREADS'] == 'true'
@@ -935,10 +934,6 @@ class CmdStanModel:
                     'Run "install_cmdstan" to upgrade to latest version.',
                     chains,
                 )
-            get_logger().debug(
-                'one_process_per_chain? %d', one_process_per_chain
-            )
-
             os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
             # progress reporting
@@ -1372,7 +1367,7 @@ class CmdStanModel:
                 total=iter_total,
             )
         cmd = runset.cmd(idx)
-        get_logger().debug(cmd)
+        get_logger().debug('CmdStan args: %s', cmd)
 
         if not show_progress:
             get_logger().info('%s start processing', logger_prefix)
