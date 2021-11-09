@@ -160,8 +160,8 @@ class CmdStanModelTest(unittest.TestCase):
         model = CmdStanModel(stan_file=b2_file, cpp_options=cpp_opts)
         if model.exe_file is not None and os.path.exists(model.exe_file):
             os.remove(model.exe_file)
-        null_dict = model.exe_info()
-        self.assertTrue(null_dict is None)
+        empty_dict = model.exe_info()
+        self.assertEqual(len(empty_dict), 0)
 
         model.compile(force=True)
         info_dict = model.exe_info()

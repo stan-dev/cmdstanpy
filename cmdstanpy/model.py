@@ -430,19 +430,19 @@ class CmdStanModel:
                 else:
                     get_logger().error('model compilation failed')
 
-    def exe_info(self) -> Optional[Dict[str, str]]:
+    def exe_info(self) -> Dict[str, str]:
         """
         Run model with option 'info'. Parse output statements, which all
         have form 'key = value' into a Dict.
         If exe file compiled with CmdStan < 2.27, calling model with
         option 'info'  fail and method returns None.
         """
+        result: Dict[str, Any] = {}
         if self.exe_file is None:
-            return None
+            return result
         try:
             info = StringIO()
             do_command(cmd=[self.exe_file, 'info'], fd_out=info)
-            result: Dict[str, Any] = {}
             lines = info.getvalue().split('\n')
             for line in lines:
                 kv_pair = [x.strip() for x in line.split('=')]
@@ -451,7 +451,7 @@ class CmdStanModel:
                 result[kv_pair[0]] = kv_pair[1]
             return result
         except RuntimeError:
-            return None
+            return result
 
     def optimize(
         self,
@@ -947,10 +947,7 @@ class CmdStanModel:
             ):
                 assert isinstance(self.exe_file, str)  # make typechecker happy
                 info_dict = self.exe_info()
-                if (
-                    info_dict is not None
-                    and info_dict['STAN_THREADS'] == 'true'
-                ):
+                if info_dict.get('STAN_THREADS') == 'true':
                     one_process_per_chain = False
                     num_threads = parallel_chains * num_threads
                     parallel_procs = 1
