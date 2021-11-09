@@ -626,19 +626,21 @@ class CmdStanMCMC:
                     thin=self._thin,
                 )
                 for key in dzero:
-                    # TODO: only check args that matter for CSV parsing
+                    # check args that matter for parsing, plus name, version
                     if (
                         key
-                        not in [
-                            'id',
-                            'algorithm',
-                            'diagnostic_file',
-                            'metric_file',
-                            'profile_file',
-                            'stepsize',
-                            'init',
-                            'seed',
-                            'start_datetime',
+                        in [
+                            'stan_version_major',
+                            'stan_version_minor',
+                            'stan_version_patch',
+                            'stanc_version',
+                            'model',
+                            'num_samples',
+                            'num_warmup',
+                            'save_warmup',
+                            'thin',
+                            'refresh',
+                            'metric',
                         ]
                         and dzero[key] != drest[key]
                     ):

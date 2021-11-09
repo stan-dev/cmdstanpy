@@ -26,7 +26,7 @@ from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanMCMC, RunSet, from_csv
-from cmdstanpy.utils import EXTENSION, cmdstan_version_before
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before, model_info
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -440,13 +440,18 @@ class SampleTest(unittest.TestCase):
         # 2.28 compile with cpp_options={'STAN_THREADS':'true'}
         if not cmdstan_version_before(2, 28):
             logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
-            logistic_model = CmdStanModel(
-                stan_file=logistic_stan,
-                compile=True,
-                cpp_options={'STAN_THREADS': 'true'},
-            )
-            logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+            logistic_model = CmdStanModel(stan_file=logistic_stan)
 
+            os.remove(logistic_model.exe_file)
+            logistic_model.compile(
+                force=True,
+                cpp_options={'STAN_THREADS': 'TRUE'},
+            )
+            info_dict = model_info(logistic_model.exe_file)
+            self.assertTrue(info_dict is not None)
+            self.assertTrue('STAN_THREADS' in info_dict)
+
+            logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
             with LogCapture() as log:
                 logging.getLogger()
                 logistic_model.sample(
@@ -598,7 +603,6 @@ class SampleTest(unittest.TestCase):
         datagen_fit = datagen_model.sample(
             iter_sampling=100, show_progress=False
         )
-        print(datagen_fit)
         self.assertEqual(datagen_fit.step_size, None)
 
     def test_bernoulli_file_with_space(self):
@@ -786,7 +790,6 @@ class CmdStanMCMCTest(unittest.TestCase):
             if file.endswith(".csv"):
                 csvfiles.append(os.path.join(csvfiles_path, file))
         bern_fit = from_csv(path=csvfiles)
-        print(bern_fit.metadata.method_vars_cols.keys())
 
         draws_pd = bern_fit.draws_pd()
         self.assertEqual(
