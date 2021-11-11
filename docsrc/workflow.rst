@@ -87,25 +87,22 @@ specify options for each compilation step.
 Options are specified as a Python dictionary mapping
 compiler option names to appropriate values.
 
-To use Stan's 
-`parallelization <https://mc-stan.org/docs/cmdstan-guide/parallelization.html>`__
-features, Stan programs must be compiled with the appropriate C++ compiler flags.
-If you are running GPU hardware and wish to use the OpenCL framework to speed up matrix operations,
-you must set the C++ compiler flag **STAN_OPENCL**.
-For high-level within-chain parallelization using the Stan language `reduce_sum` function,
-it's necessary to set the C++ compiler flag **STAN_THREADS**.  While any value can be used,
-we recommend the value ``True``.
+In order parallelize within-chain computations using the
+Stan language ``reduce_sum`` function, or to parallelize
+running the NUTS-HMC sampler across chains,
+the Stan model must be compiled with
+C++ compiler flag **STAN_THREADS**.
+While any value can be used,
+we recommend the value ``True``, e.g.:
 
-For example, given Stan program named 'proc_parallel.stan', you can take
-advantage of both kinds of parallelization by specifying the compiler options when instantiating
-the model:
 
 .. code-block:: python
 
-    proc_parallel_model = CmdStanModel(
-        stan_file='proc_parallel.stan',
-        cpp_options={"STAN_THREADS": True, "STAN_OPENCL": True},
-    )
+    import os
+    from cmdstanpy import CmdStanModel
+
+    my_stanfile = os.path.join('.', 'my_model.stan')
+    my_model = CmdStanModel(stan_file=my_stanfile, cpp_options={'STAN_THREADS':'true'})
 
 
 Assemble input and initialization data

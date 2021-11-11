@@ -61,6 +61,8 @@ The function :func:`~cmdstan_path` returns the value of this environment variabl
     # inspect model object 
     print(model)
 
+    # inspect compiled model
+    print(model.exe_info)
             
 Data inputs
 ^^^^^^^^^^^
@@ -184,6 +186,31 @@ to a specified directory.
     fit.save_csvfiles(dir='some/path')
 
 
+Parallelization
+^^^^^^^^^^^^^^^
+
+The Stan language
+`reduce_sum <https://mc-stan.org/docs/stan-users-guide/reduce-sum.html>`__
+function provides within-chain parallelization.
+For models which require computing the sum of a number of independent function evaluations,
+e.g., when evaluating a number of conditionally independent terms in a log-likelihood,
+the ``reduce_sum`` function is used to parallelize this computation.
+
+As of version CmdStan 2.28, it is possible to run the
+NUTS-HMC sampler on
+multiple chains from within a single executable using threads.
+This has the potential to speed up sampling.  It also
+reduces the overall memory footprint required for sampling as
+all chains share the same copy of data.the input data.
+When using within-chain parallelization all chains started within a single executable can share all the available threads and once a chain finishes the threads will be reused.
+
+Both within-chain and cross-chain parallelization use the
+Intel Threading Building Blocks (TBB) library.
+In order to do either, the Stan model must be compiled with
+C++ compiler flag ``STAN_THREADS``.  While any value can be used,
+we recommend the value ``TRUE``.
+
+
 Progress bar
 ^^^^^^^^^^^^
   
@@ -201,9 +228,8 @@ To suppress the progress bar, specify argument ``show_progress=False``.
 
     fit = model.sample(data=data_file, show_progress=False)
 
-To see the CmdStan console outputs instead, specify ``show_console=True``.
+To see the CmdStan console outputs instead of progress bars, specify ``show_console=True``.
 
- 
 .. ipython:: python
     :verbatim:
 
