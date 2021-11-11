@@ -943,39 +943,35 @@ class CmdStanModel:
             one_process_per_chain = True
             assert isinstance(self.exe_file, str)  # make typechecker happy
             info_dict = self.exe_info()
-            stan_threads = info_dict.get('STAN_THREADS')
-            if stan_threads is not None:
-                stan_threads = stan_threads.lower()
+            stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
             if (
                 force_one_process_per_chain is None
                 and not cmdstan_version_before(2, 28, info_dict)
-                and stan_threads is not None
                 and stan_threads == 'true'
             ):
                 one_process_per_chain = False
                 num_threads = parallel_chains * num_threads
                 parallel_procs = 1
             if force_one_process_per_chain is False:
-                if cmdstan_version_before(2, 28, info_dict):
+                if not cmdstan_version_before(2, 28, info_dict):
+                    one_process_per_chain = False
+                    num_threads = parallel_chains * num_threads
+                    parallel_procs = 1
+                    if stan_threads == 'false':
+                        get_logger().warning(
+                            'Stan program not compiled for threading, '
+                            'process will run chains sequentially. '
+                            'For multi-chain parallelization, recompile '
+                            'the model with argument '
+                            '"cpp_options={\'STAN_THREADS\':\'TRUE\'}.'
+                        )
+                else:
                     get_logger().warning(
                         'Installed version of CmdStan cannot multi-process '
                         'chains, will run %d processes. '
                         'Run "install_cmdstan" to upgrade to latest version.',
                         chains,
                     )
-                elif stan_threads is None or stan_threads == 'false':
-                    get_logger().warning(
-                        'Stan program not compiled for threading, '
-                        'will run %d processes. '
-                        'Recompile model and specify argument '
-                        '"cpp_options={\'STAN_THREADS\':\'TRUE\'}.',
-                        chains,
-                    )
-                else:
-                    one_process_per_chain = False
-                    num_threads = parallel_chains * num_threads
-                    parallel_procs = 1
-
             os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
             if show_console:
@@ -1405,8 +1401,8 @@ class CmdStanModel:
         logger_prefix = 'CmdStan'
         console_prefix = ''
         if runset.one_process_per_chain:
-            logger_prefix = 'Chain [{}]'.format(idx + runset.chain_ids[0])
-            console_prefix = 'Chain [{}] '.format(idx + runset.chain_ids[0])
+            logger_prefix = 'Chain [{}]'.format(runset.chain_ids[idx])
+            console_prefix = 'Chain [{}] '.format(runset.chain_ids[idx])
 
         cmd = runset.cmd(idx)
         get_logger().debug('CmdStan args: %s', cmd)

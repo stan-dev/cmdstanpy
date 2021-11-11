@@ -237,17 +237,13 @@ def cmdstan_version_before(
     :return: True if version at or above major.minor, else False.
     """
     cur_version = None
-    if info is None:
+    if info is None or 'stan_version_major' not in info:
         cur_version = cmdstan_version()
     else:
-        if (
-            info['stan_version_major'] is not None
-            and info['stan_version_minor'] is not None
-        ):
-            cur_version = (
-                int(info['stan_version_major']),
-                int(info['stan_version_minor']),
-            )
+        cur_version = (
+            int(info['stan_version_major']),
+            int(info['stan_version_minor']),
+        )
     if cur_version is None:
         get_logger().info(
             'Cannot determine whether version is before %d.%d.', major, minor
