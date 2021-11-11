@@ -62,151 +62,96 @@ class RunSet:
     Encapsulates the configuration and results of a call to any CmdStan
     inference method. Records the method return code and locations of
     all console, error, and output files.
+
+    RunSet objects are instantiated by the CmdStanModel class inference methods
+    which validate all inputs, therefore "__init__" method skips input checks.
     """
 
     def __init__(
         self,
         args: CmdStanArgs,
-        chains: int = 4,
+        chains: int = 1,
+        *,
         chain_ids: Optional[List[int]] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        one_process_per_chain: bool = True,
     ) -> None:
-        """Initialize object."""
+        """Initialize object (no input arg checks)."""
         self._args = args
         self._chains = chains
-        if chains < 1:
-            raise ValueError(
-                'Chains must be positive integer value, '
-                'found {}'.format(chains)
-            )
-        if chain_ids is None:
-            chain_ids = [x + 1 for x in range(chains)]
-        elif len(chain_ids) != chains:
-            raise ValueError(
-                'Mismatch between number of chains and chain_ids, '
-                'found {} chains, but {} chain_ids'.format(
-                    chains, len(chain_ids)
-                )
-            )
-        self._chain_ids = chain_ids
-        self._retcodes = [-1 for _ in range(chains)]
-
-        # console output written to text file
-        # prefix: ``<model_name>-<YYYYMMDDHHMM>-<chain_id>``
-        now = datetime.now()
-        now_str = now.strftime(time_fmt)
-        file_basename = '-'.join([args.model_name, now_str])
-        if args.output_dir is not None:
-            output_dir = args.output_dir
+        self._one_process_per_chain = one_process_per_chain
+        if one_process_per_chain:
+            self._num_procs = chains
         else:
-            output_dir = _TMPDIR
-        self._csv_files = ['' for _ in range(chains)]
-        self._diagnostic_files = ['' for _ in range(chains)]
-        self._profile_files = ['' for _ in range(chains)]
-        self._stdout_files = ['' for _ in range(chains)]
-        self._cmds = []
-        for i in range(chains):
-            if args.output_dir is None:
-                csv_file = create_named_text_file(
-                    dir=output_dir,
-                    prefix='{}-{}-'.format(file_basename, str(chain_ids[i])),
-                    suffix='.csv',
-                )
-            else:
-                csv_file = os.path.join(
-                    output_dir,
-                    '{}-{}.{}'.format(file_basename, str(chain_ids[i]), 'csv'),
-                )
-            self._csv_files[i] = csv_file
-            stdout_file = ''.join(
-                [os.path.splitext(csv_file)[0], '-stdout.txt']
-            )
-            self._stdout_files[i] = stdout_file
-            # optional output files:  diagnostics, profiling
+            self._num_procs = 1
+        self._retcodes = [-1 for _ in range(self._num_procs)]
+        if chain_ids is None:
+            chain_ids = [i + 1 for i in range(chains)]
+        self._chain_ids = chain_ids
+
+        if args.output_dir is not None:
+            self._output_dir = args.output_dir
+        else:
+            self._output_dir = _TMPDIR
+
+        # output files prefix: ``<model_name>-<YYYYMMDDHHMM>_<chain_id>``
+        self._base_outfile = (
+            f'{args.model_name}-{datetime.now().strftime(time_fmt)}'
+        )
+        # per-process console messages
+        self._stdout_files = [''] * self._num_procs
+        if one_process_per_chain:
+            for i in range(chains):
+                self._stdout_files[i] = self.file_path("-stdout.txt", id=i)
+        else:
+            self._stdout_files[0] = self.file_path("-stdout.txt")
+
+        # per-chain output files
+        self._csv_files = [''] * chains
+        self._diagnostic_files = [''] * chains  # optional
+        self._profile_files = [''] * chains  # optional
+
+        if chains == 1:
+            self._csv_files[0] = self.file_path(".csv")
             if args.save_latent_dynamics:
-                if args.output_dir is None:
-                    diag_file = create_named_text_file(
-                        dir=_TMPDIR,
-                        prefix='{}-diagnostic-{}-'.format(
-                            file_basename, str(chain_ids[i])
-                        ),
-                        suffix='.csv',
-                    )
-                else:
-                    diag_file = os.path.join(
-                        output_dir,
-                        '{}-diagnostic-{}.{}'.format(
-                            file_basename, str(chain_ids[i]), 'csv'
-                        ),
-                    )
-                self._diagnostic_files[i] = diag_file
+                self._diagnostic_files[0] = self.file_path(
+                    ".csv", extra="-diagnostic"
+                )
             if args.save_profile:
-                if args.output_dir is None:
-                    profile_file = create_named_text_file(
-                        dir=_TMPDIR,
-                        prefix='{}-profile-{}-'.format(
-                            file_basename, str(chain_ids[i])
-                        ),
-                        suffix='.csv',
-                    )
-                else:
-                    profile_file = os.path.join(
-                        output_dir,
-                        '{}-profile-{}.{}'.format(
-                            file_basename, str(chain_ids[i]), 'csv'
-                        ),
-                    )
-                self._profile_files[i] = profile_file
-            if args.save_latent_dynamics and args.save_profile:
-                self._cmds.append(
-                    args.compose_command(
-                        i,
-                        self._csv_files[i],
-                        diagnostic_file=self._diagnostic_files[i],
-                        profile_file=self._profile_files[i],
-                    )
+                self._profile_files[0] = self.file_path(
+                    ".csv", extra="-profile"
                 )
-            elif args.save_latent_dynamics:
-                self._cmds.append(
-                    args.compose_command(
-                        i,
-                        self._csv_files[i],
-                        diagnostic_file=self._diagnostic_files[i],
+        else:
+            for i in range(chains):
+                self._csv_files[i] = self.file_path(".csv", id=chain_ids[i])
+                if args.save_latent_dynamics:
+                    self._diagnostic_files[i] = self.file_path(
+                        ".csv", extra="-diagnostic", id=chain_ids[i]
                     )
-                )
-            elif args.save_profile:
-                self._cmds.append(
-                    args.compose_command(
-                        i,
-                        self._csv_files[i],
-                        profile_file=self._profile_files[i],
+                if args.save_profile:
+                    self._profile_files[i] = self.file_path(
+                        ".csv", extra="-profile", id=chain_ids[i]
                     )
-                )
-            else:
-                self._cmds.append(args.compose_command(i, self._csv_files[i]))
 
     def __repr__(self) -> str:
-        repr = 'RunSet: chains={}'.format(self._chains)
-        repr = '{}\n cmd:\n\t{}'.format(repr, self._cmds[0])
+        repr = 'RunSet: chains={}, chain_ids={}, num_processes={}'.format(
+            self._chains, self._chain_ids, self._num_procs
+        )
+        repr = '{}\n cmd (chain 1):\n\t{}'.format(repr, self.cmd(0))
         repr = '{}\n retcodes={}'.format(repr, self._retcodes)
-        if os.path.exists(self._csv_files[0]):
-            repr = '{}\n csv_files:\n\t{}'.format(
-                repr, '\n\t'.join(self._csv_files)
+        repr = f'{repr}\n per-chain output files (showing chain 1 only):'
+        repr = '{}\n csv_file:\n\t{}'.format(repr, self._csv_files[0])
+        if self._args.save_latent_dynamics:
+            repr = '{}\n diagnostics_file:\n\t{}'.format(
+                repr, self._diagnostic_files[0]
             )
-        if self._args.save_latent_dynamics and os.path.exists(
-            self._diagnostic_files[0]
-        ):
-            repr = '{}\n diagnostics_files:\n\t{}'.format(
-                repr, '\n\t'.join(self._diagnostic_files)
+        if self._args.save_profile:
+            repr = '{}\n profile_file:\n\t{}'.format(
+                repr, self._profile_files[0]
             )
-        if self._args.save_profile and os.path.exists(self._profile_files[0]):
-            repr = '{}\n profile_files:\n\t{}'.format(
-                repr, '\n\t'.join(self._profile_files)
-            )
-        if os.path.exists(self._stdout_files[0]):
-            repr = '{}\n console_msgs:\n\t{}'.format(
-                repr, '\n\t'.join(self._stdout_files)
-            )
+        repr = '{}\n console_msgs (if any):\n\t{}'.format(
+            repr, self._stdout_files[0]
+        )
         return repr
 
     @property
@@ -220,6 +165,21 @@ class RunSet:
         return self._args.method
 
     @property
+    def num_procs(self) -> int:
+        """Number of processes run."""
+        return self._num_procs
+
+    @property
+    def one_process_per_chain(self) -> bool:
+        """
+        When True, for each chain, call CmdStan in its own subprocess.
+        When False, use CmdStan's `num_chains` arg to run parallel chains.
+        Always True if CmdStan < 2.28.
+        For CmdStan 2.28 and up, `sample` method determines value.
+        """
+        return self._one_process_per_chain
+
+    @property
     def chains(self) -> int:
         """Number of chains."""
         return self._chains
@@ -229,10 +189,35 @@ class RunSet:
         """Chain ids."""
         return self._chain_ids
 
-    @property
-    def cmds(self) -> List[List[str]]:
-        """List of call(s) to CmdStan, one call per-chain."""
-        return self._cmds
+    def cmd(self, idx: int) -> List[str]:
+        """
+        Assemble CmdStan invocation.
+        When running parallel chains from single process (2.28 and up),
+        specify CmdStan arg `num_chains` and leave chain idx off CSV files.
+        """
+        if self._one_process_per_chain:
+            return self._args.compose_command(
+                idx,
+                csv_file=self.csv_files[idx],
+                diagnostic_file=self.diagnostic_files[idx]
+                if self._args.save_latent_dynamics
+                else None,
+                profile_file=self.profile_files[idx]
+                if self._args.save_profile
+                else None,
+            )
+        else:
+            return self._args.compose_command(
+                idx,
+                csv_file=self.file_path('.csv'),
+                diagnostic_file=self.file_path(".csv", extra="-diagnostic")
+                if self._args.save_latent_dynamics
+                else None,
+                profile_file=self.file_path(".csv", extra="-profile")
+                if self._args.save_profile
+                else None,
+                num_chains=self._chains,
+            )
 
     @property
     def csv_files(self) -> List[str]:
@@ -249,8 +234,8 @@ class RunSet:
 
     def _check_retcodes(self) -> bool:
         """Returns ``True`` when all chains have retcode 0."""
-        for i in range(self._chains):
-            if self._retcodes[i] != 0:
+        for code in self._retcodes:
+            if code != 0:
                 return False
         return True
 
@@ -264,39 +249,45 @@ class RunSet:
         """List of paths to CmdStan profiler files."""
         return self._profile_files
 
+    # pylint: disable=invalid-name
+    def file_path(
+        self, suffix: str, *, extra: str = "", id: Optional[int] = None
+    ) -> str:
+        if id is not None:
+            suffix = f"_{id}{suffix}"
+        file = os.path.join(
+            self._output_dir, f"{self._base_outfile}{extra}{suffix}"
+        )
+        return file
+
     def _retcode(self, idx: int) -> int:
-        """Get retcode for chain[idx]."""
+        """Get retcode for process[idx]."""
         return self._retcodes[idx]
 
     def _set_retcode(self, idx: int, val: int) -> None:
-        """Set retcode for chain[idx] to val."""
+        """Set retcode at process[idx] to val."""
         self._retcodes[idx] = val
 
     def get_err_msgs(self) -> str:
-        """Checks console messages for each chain."""
+        """Checks console messages for each CmdStan run."""
         msgs = []
-        for i in range(self._chains):
+        for i in range(self._num_procs):
             if (
                 os.path.exists(self._stdout_files[i])
                 and os.stat(self._stdout_files[i]).st_size > 0
             ):
-                if self._args.method == Method.SAMPLE:
+                if self._args.method == Method.OPTIMIZE:
+                    msgs.append('console log output:\n')
+                    with open(self._stdout_files[0], 'r') as fd:
+                        msgs.append(fd.read())
+                else:
                     with open(self._stdout_files[i], 'r') as fd:
                         contents = fd.read()
                         # pattern matches initial "Exception" or "Error" msg
                         pat = re.compile(r'^E[rx].*$', re.M)
                         errors = re.findall(pat, contents)
                         if len(errors) > 0:
-                            msgs.append(
-                                'chain_id {}:\n\t{}\n'.format(
-                                    self._chain_ids[i], '\n\t'.join(errors)
-                                )
-                            )
-                elif self._args.method == Method.OPTIMIZE:
-                    msgs.append('console log output:\n')
-                    with open(self._stdout_files[0], 'r') as fd:
-                        msgs.append(fd.read())
-
+                            msgs.append('\n\t'.join(errors))
         return '\n'.join(msgs)
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
@@ -326,14 +317,7 @@ class RunSet:
                     'Cannot access CSV file {}'.format(self._csv_files[i])
                 )
 
-            path, filename = os.path.split(self._csv_files[i])
-            if path == _TMPDIR:  # cleanup tmpstr in filename
-                root, ext = os.path.splitext(filename)
-                rlist = root.split('-')
-                root = '-'.join(rlist[:-1])
-                filename = ''.join([root, ext])
-
-            to_path = os.path.join(dir, filename)
+            to_path = os.path.join(dir, os.path.basename(self._csv_files[i]))
             if os.path.exists(to_path):
                 raise ValueError(
                     'File exists, not overwriting: {}'.format(to_path)
@@ -642,17 +626,20 @@ class CmdStanMCMC:
                     thin=self._thin,
                 )
                 for key in dzero:
+                    # check args that matter for parsing, plus name, version
                     if (
                         key
-                        not in [
-                            'id',
-                            'diagnostic_file',
-                            'metric_file',
-                            'profile_file',
-                            'stepsize',
-                            'init',
-                            'seed',
-                            'start_datetime',
+                        in [
+                            'stan_version_major',
+                            'stan_version_minor',
+                            'stan_version_patch',
+                            'stanc_version',
+                            'model',
+                            'num_samples',
+                            'num_warmup',
+                            'save_warmup',
+                            'thin',
+                            'refresh',
                         ]
                         and dzero[key] != drest[key]
                     ):
@@ -812,6 +799,7 @@ class CmdStanMCMC:
             dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv', name_only=True
         )
         csv_str = '--csv_filename={}'.format(tmp_csv_path)
+        # TODO: remove at some future release
         if cmdstan_version_before(2, 24):
             csv_str = '--csv_file={}'.format(tmp_csv_path)
         cmd = [
