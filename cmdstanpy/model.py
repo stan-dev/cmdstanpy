@@ -9,6 +9,7 @@ import subprocess
 import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
@@ -37,6 +38,7 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     TemporaryCopiedFile,
     cmdstan_path,
+    cmdstan_version_before,
     do_command,
     get_logger,
     returncode_msg,
@@ -428,6 +430,29 @@ class CmdStanModel:
                 else:
                     get_logger().error('model compilation failed')
 
+    def exe_info(self) -> Dict[str, str]:
+        """
+        Run model with option 'info'. Parse output statements, which all
+        have form 'key = value' into a Dict.
+        If exe file compiled with CmdStan < 2.27, option 'info' isn't
+        available and the method returns an empty dictionary.
+        """
+        result: Dict[str, Any] = {}
+        if self.exe_file is None:
+            return result
+        try:
+            info = StringIO()
+            do_command(cmd=[self.exe_file, 'info'], fd_out=info)
+            lines = info.getvalue().split('\n')
+            for line in lines:
+                kv_pair = [x.strip() for x in line.split('=')]
+                if len(kv_pair) != 2:
+                    continue
+                result[kv_pair[0]] = kv_pair[1]
+            return result
+        except RuntimeError:
+            return result
+
     def optimize(
         self,
         data: Union[Mapping[str, Any], str, None] = None,
@@ -580,7 +605,7 @@ class CmdStanModel:
             )
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, False, show_console)
+            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
 
         if not runset._check_retcodes():
             msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
@@ -624,6 +649,8 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        *,
+        force_one_process_per_chain: Optional[bool] = None,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS-HMC sampler to produce a set of draws
@@ -656,13 +683,20 @@ class CmdStanModel:
         :param chains: Number of sampler chains, must be a positive integer.
 
         :param parallel_chains: Number of processes to run in parallel. Must be
-            a positive integer.  Defaults to :func:`multiprocessing.cpu_count`.
+            a positive integer.  Defaults to :func:`multiprocessing.cpu_count`,
+            i.e., it will only run as many chains in parallel as there are
+            cores on the machine.   Note that CmdStan 2.28 and higher can run
+            all chains in parallel providing that the model was compiled with
+            threading support.
 
         :param threads_per_chain: The number of threads to use in parallelized
             sections within an MCMC chain (e.g., when using the Stan functions
             ``reduce_sum()``  or ``map_rect()``).  This will only have an effect
-            if the model was compiled with threading support. The total number
-            of threads used will be ``parallel_chains * threads_per_chain``.
+            if the model was compiled with threading support.  For such models,
+            CmdStan version 2.28 and higher will run all chains in parallel
+            from within a single process.  The total number of threads used
+            will be ``parallel_chains * threads_per_chain``, where the default
+            value for parallel_chains is the number of cpus, not chains.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
@@ -803,6 +837,15 @@ class CmdStanModel:
             :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
+        :param force_one_process_per_chain: If ``True``, run multiple chains in
+            distinct processes regardless of model ability to run parallel
+            chains (CmdStan 2.28+ feature). If ``False``, always run multiple
+            chains in one process (does not check that this is valid).
+
+            If None (Default): Check that CmdStan version is >=2.28, and that
+            model was compiled with STAN_THREADS=True, and utilize the
+            parallel chain functionality if those conditions are met.
+
         :return: CmdStanMCMC object
         """
         if chains is None:
@@ -817,7 +860,7 @@ class CmdStanModel:
                 )
             )
         if chain_ids is None:
-            chain_ids = [x + 1 for x in range(chains)]
+            chain_ids = [i + 1 for i in range(chains)]
         else:
             if isinstance(chain_ids, int):
                 if chain_ids < 1:
@@ -825,7 +868,7 @@ class CmdStanModel:
                         'Chain_id must be a positive integer value,'
                         ' found {}.'.format(chain_ids)
                     )
-                chain_ids = [chain_ids + i for i in range(chains)]
+                chain_ids = [i + chain_ids for i in range(chains)]
             else:
                 if not len(chain_ids) == chains:
                     raise ValueError(
@@ -840,34 +883,7 @@ class CmdStanModel:
                             'Chain_id must be a non-negative integer value,'
                             ' found {}.'.format(chain_id)
                         )
-        if parallel_chains is None:
-            parallel_chains = max(min(cpu_count(), chains), 1)
-        elif parallel_chains > chains:
-            get_logger().info(
-                'Requesting %u parallel_chains for %u chains,'
-                ' running all chains in parallel.',
-                parallel_chains,
-                chains,
-            )
-            parallel_chains = chains
-        elif parallel_chains < 1:
-            raise ValueError(
-                'Argument parallel_chains must be a positive integer value, '
-                'found {}.'.format(parallel_chains)
-            )
-        if threads_per_chain is None:
-            threads_per_chain = 1
-        if threads_per_chain < 1:
-            raise ValueError(
-                'Argument threads_per_chain must be a positive integer value, '
-                'found {}.'.format(threads_per_chain)
-            )
-        get_logger().debug(
-            'total threads: %u', parallel_chains * threads_per_chain
-        )
-        os.environ['STAN_NUM_THREADS'] = str(threads_per_chain)
 
-        # TODO:  issue 49: inits can be initialization function
         sampler_args = SamplerArgs(
             iter_warmup=iter_warmup,
             iter_sampling=iter_sampling,
@@ -898,41 +914,111 @@ class CmdStanModel:
                 method_args=sampler_args,
                 refresh=refresh,
             )
-            runset = RunSet(
-                args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
-            )  # bookkeeping object for command, result, filepaths
 
-            # progress reporting
-            iter_total = 0
-            if iter_warmup is None:
-                iter_total += _CMDSTAN_WARMUP
-            else:
-                iter_total += iter_warmup
-            if iter_sampling is None:
-                iter_total += _CMDSTAN_SAMPLING
-            else:
-                iter_total += iter_sampling
-            if refresh is None:
-                refresh = _CMDSTAN_REFRESH
-            iter_total = iter_total // refresh + 2
+            if parallel_chains is None:
+                parallel_chains = max(min(cpu_count(), chains), 1)
+            elif parallel_chains > chains:
+                get_logger().info(
+                    'Requested %u parallel_chains but only %u required, '
+                    'will run all chains in parallel.',
+                    parallel_chains,
+                    chains,
+                )
+                parallel_chains = chains
+            elif parallel_chains < 1:
+                raise ValueError(
+                    'Argument parallel_chains must be a positive integer, '
+                    'found {}.'.format(parallel_chains)
+                )
+            if threads_per_chain is None:
+                threads_per_chain = 1
+            if threads_per_chain < 1:
+                raise ValueError(
+                    'Argument threads_per_chain must be a positive integer, '
+                    'found {}.'.format(threads_per_chain)
+                )
+
+            parallel_procs = parallel_chains
+            num_threads = threads_per_chain
+            one_process_per_chain = True
+            assert isinstance(self.exe_file, str)  # make typechecker happy
+            info_dict = self.exe_info()
+            stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
+            if (
+                force_one_process_per_chain is None
+                and not cmdstan_version_before(2, 28, info_dict)
+                and stan_threads == 'true'
+            ):
+                one_process_per_chain = False
+                num_threads = parallel_chains * num_threads
+                parallel_procs = 1
+            if force_one_process_per_chain is False:
+                if not cmdstan_version_before(2, 28, info_dict):
+                    one_process_per_chain = False
+                    num_threads = parallel_chains * num_threads
+                    parallel_procs = 1
+                    if stan_threads == 'false':
+                        get_logger().warning(
+                            'Stan program not compiled for threading, '
+                            'process will run chains sequentially. '
+                            'For multi-chain parallelization, recompile '
+                            'the model with argument '
+                            '"cpp_options={\'STAN_THREADS\':\'TRUE\'}.'
+                        )
+                else:
+                    get_logger().warning(
+                        'Installed version of CmdStan cannot multi-process '
+                        'chains, will run %d processes. '
+                        'Run "install_cmdstan" to upgrade to latest version.',
+                        chains,
+                    )
+            os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
             if show_console:
                 show_progress = False
             else:
                 show_progress = show_progress and progbar.allow_show_progress()
+                get_logger().info('CmdStan start procesing')
 
-            get_logger().info('sampling: %s', runset.cmds[0])
-            with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
-                for i in range(chains):
+            progress_hook: Optional[Callable[[str, int], None]] = None
+            if show_progress:
+                iter_total = 0
+                if iter_warmup is None:
+                    iter_total += _CMDSTAN_WARMUP
+                else:
+                    iter_total += iter_warmup
+                if iter_sampling is None:
+                    iter_total += _CMDSTAN_SAMPLING
+                else:
+                    iter_total += iter_sampling
+                if refresh is None:
+                    refresh = _CMDSTAN_REFRESH
+                iter_total = iter_total // refresh + 2
+
+                progress_hook = self._wrap_sampler_progress_hook(
+                    chain_ids=chain_ids,
+                    total=iter_total,
+                )
+            runset = RunSet(
+                args=args,
+                chains=chains,
+                chain_ids=chain_ids,
+                time_fmt=time_fmt,
+                one_process_per_chain=one_process_per_chain,
+            )
+            with ThreadPoolExecutor(max_workers=parallel_procs) as executor:
+                for i in range(runset.num_procs):
                     executor.submit(
                         self._run_cmdstan,
-                        runset,
-                        i,
-                        show_progress,
-                        show_console,
-                        iter_total,
+                        runset=runset,
+                        idx=i,
+                        show_progress=show_progress,
+                        show_console=show_console,
+                        progress_hook=progress_hook,
                     )
-            if show_progress and progbar.allow_show_progress():
+            if show_progress and progress_hook is not None:
+                progress_hook("Done", -1)  # -1 == all chains finished
+
                 # advance terminal window cursor past progress bars
                 term_size: os.terminal_size = shutil.get_terminal_size(
                     fallback=(80, 24)
@@ -942,7 +1028,8 @@ class CmdStanModel:
                         sys.stdout.write(' ' * term_size[0])
                         sys.stdout.flush()
                 sys.stdout.write('\n')
-            get_logger().info('sampling completed')
+                get_logger().info('CmdStan done processing.')
+
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
                 msg = '{}Command and output files:\n{}'.format(
@@ -1079,7 +1166,10 @@ class CmdStanModel:
             with ThreadPoolExecutor(max_workers=parallel_chains) as executor:
                 for i in range(chains):
                     executor.submit(
-                        self._run_cmdstan, runset, i, False, show_console
+                        self._run_cmdstan,
+                        runset,
+                        i,
+                        show_console=show_console,
                     )
 
             if not runset._check_retcodes():
@@ -1241,7 +1331,7 @@ class CmdStanModel:
 
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, False, show_console)
+            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
@@ -1290,10 +1380,10 @@ class CmdStanModel:
     def _run_cmdstan(
         self,
         runset: RunSet,
-        idx: int = 0,
+        idx: int,
         show_progress: bool = False,
         show_console: bool = False,
-        iter_total: int = 0,
+        progress_hook: Optional[Callable[[str, int], None]] = None,
     ) -> None:
         """
         Helper function which encapsulates call to CmdStan.
@@ -1302,18 +1392,23 @@ class CmdStanModel:
         Args 'show_progress' and 'show_console' allow use of progress bar,
         streaming output to console, respectively.
         """
-
-        cmd = runset.cmds[idx]
+        get_logger().debug('idx %d', idx)
         get_logger().debug(
-            'threads: %s', str(os.environ.get('STAN_NUM_THREADS'))
+            'running CmdStan, num_threads: %s',
+            str(os.environ.get('STAN_NUM_THREADS')),
         )
-        if show_progress and progbar.allow_show_progress():
-            progress_hook: Optional[
-                Callable[[str], None]
-            ] = self._wrap_sampler_progress_hook(idx + 1, iter_total)
-        else:
-            get_logger().info('start chain %d', idx + 1)
-            progress_hook = None
+
+        logger_prefix = 'CmdStan'
+        console_prefix = ''
+        if runset.one_process_per_chain:
+            logger_prefix = 'Chain [{}]'.format(runset.chain_ids[idx])
+            console_prefix = 'Chain [{}] '.format(runset.chain_ids[idx])
+
+        cmd = runset.cmd(idx)
+        get_logger().debug('CmdStan args: %s', cmd)
+
+        if not show_progress:
+            get_logger().info('%s start processing', logger_prefix)
         try:
             fd_out = open(runset.stdout_files[idx], 'w')
             proc = subprocess.Popen(
@@ -1331,20 +1426,20 @@ class CmdStanModel:
                     fd_out.write(line)
                     line = line.strip()
                     if show_console:
-                        print('chain {}: {}'.format(idx + 1, line))
-                    elif show_progress and progress_hook is not None:
-                        progress_hook(line)
-            if show_progress and progress_hook is not None:
-                progress_hook("Done")
+                        print(f'{console_prefix}{line}')
+                    elif progress_hook is not None:
+                        progress_hook(line, idx)
 
             stdout, _ = proc.communicate()
+            retcode = proc.returncode
+            runset._set_retcode(idx, retcode)
+
             if stdout:
                 fd_out.write(stdout)
                 if show_console:
                     lines = stdout.split('\n')
                     for line in lines:
-                        print('chain {}: {}'.format(idx + 1, line))
-
+                        print(f'{console_prefix}{line}')
             fd_out.close()
         except OSError as e:
             msg = 'Failed with error {}\n'.format(str(e))
@@ -1353,51 +1448,72 @@ class CmdStanModel:
             fd_out.close()
 
         if not show_progress:
-            get_logger().info('finish chain %d', idx + 1)
-        runset._set_retcode(idx, proc.returncode)
-        if proc.returncode != 0:
-            retcode_summary = returncode_msg(proc.returncode)
+            get_logger().info('%s done processing', logger_prefix)
+
+        if retcode != 0:
+            retcode_summary = returncode_msg(retcode)
             serror = ''
             try:
-                serror = os.strerror(proc.returncode)
+                serror = os.strerror(retcode)
             except (ArithmeticError, ValueError):
                 pass
             get_logger().error(
-                'Chain %d error: %s %s', idx + 1, retcode_summary, serror
+                '%s error: %s %s', logger_prefix, retcode_summary, serror
             )
-        else:
-            with open(runset.stdout_files[idx], 'r') as fd:
-                console = fd.read()
-                if 'running fixed_param sampler' in console:
-                    sampler_args = runset._args.method_args
-                    assert isinstance(
-                        sampler_args, SamplerArgs
-                    )  # make the typechecker happy
-                    sampler_args.fixed_param = True
+
+        # hack needed to parse CSV files if model has no params
+        with open(runset.stdout_files[idx], 'r') as fd:
+            console = fd.read()
+            if 'running fixed_param sampler' in console:
+                sampler_args = runset._args.method_args
+                assert isinstance(
+                    sampler_args, SamplerArgs
+                )  # make the typechecker happy
+                sampler_args.fixed_param = True
 
     @staticmethod
     @progbar.wrap_callback
     def _wrap_sampler_progress_hook(
-        chain_id: int, total: int
-    ) -> Optional[Callable[[str], None]]:
-        """Sets up tqdm callback for CmdStan sampler console msgs."""
-        pbar: tqdm = tqdm(
-            total=total,
-            bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
-            postfix=[dict(value="Status")],
-            desc=f'chain {chain_id}',
-            colour='yellow',
-        )
+        chain_ids: List[int],
+        total: int,
+    ) -> Optional[Callable[[str, int], None]]:
+        """
+        Sets up tqdm callback for CmdStan sampler console msgs.
+        CmdStan progress messages start with "Iteration", for single chain
+        process, "Chain [id] Iteration" for multi-chain processing.
+        For the latter, manage array of pbars, update accordingly.
+        """
+        pat = re.compile(r'Chain \[(\d*)\] (Iteration.*)')
+        pbars: Dict[int, tqdm] = {
+            chain_id: tqdm(
+                total=total,
+                bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
+                postfix=[dict(value="Status")],
+                desc=f'chain {chain_id}',
+                colour='yellow',
+            )
+            for chain_id in chain_ids
+        }
 
-        def sampler_progress_hook(line: str) -> None:
+        def progress_hook(line: str, idx: int) -> None:
             if line == "Done":
-                pbar.postfix[0]["value"] = 'Sampling completed'
-                pbar.update(total - pbar.n)
-                pbar.close()
-            elif line.startswith("Iteration"):
-                if 'Sampling' in line:
-                    pbar.colour = 'blue'
-                pbar.update(1)
-                pbar.postfix[0]["value"] = line
+                for pbar in pbars.values():
+                    pbar.postfix[0]["value"] = 'Sampling completed'
+                    pbar.update(total - pbar.n)
+                    pbar.close()
+            else:
+                match = pat.match(line)
+                if match:
+                    idx = int(match.group(1))
+                    mline = match.group(2).strip()
+                elif line.startswith("Iteration"):
+                    mline = line
+                    idx = chain_ids[idx]
+                else:
+                    return
+                if 'Sampling' in mline:
+                    pbars[idx].colour = 'blue'
+                pbars[idx].update(1)
+                pbars[idx].postfix[0]["value"] = mline
 
-        return sampler_progress_hook
+        return progress_hook

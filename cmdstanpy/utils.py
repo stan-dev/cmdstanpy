@@ -225,17 +225,25 @@ def cmdstan_version() -> Optional[Tuple[int, ...]]:
     return tuple(int(x) for x in splits[0:2])
 
 
-def cmdstan_version_before(major: int, minor: int) -> bool:
+def cmdstan_version_before(
+    major: int, minor: int, info: Optional[Dict[str, str]] = None
+) -> bool:
     """
     Check that CmdStan version is less than Major.minor version.
 
     :param major: Major version number
     :param minor: Minor version number
 
-
     :return: True if version at or above major.minor, else False.
     """
-    cur_version = cmdstan_version()
+    cur_version = None
+    if info is None or 'stan_version_major' not in info:
+        cur_version = cmdstan_version()
+    else:
+        cur_version = (
+            int(info['stan_version_major']),
+            int(info['stan_version_minor']),
+        )
     if cur_version is None:
         get_logger().info(
             'Cannot determine whether version is before %d.%d.', major, minor

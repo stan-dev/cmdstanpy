@@ -58,7 +58,9 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=200,
             iter_sampling=100,
+            show_progress=False,
         )
         self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
         self.assertIn('method=sample', bern_fit.__repr__())
@@ -73,7 +75,7 @@ class SampleTest(unittest.TestCase):
 
         self.assertEqual(bern_fit.chains, 2)
         self.assertEqual(bern_fit.thin, 1)
-        self.assertEqual(bern_fit.num_draws_warmup, 1000)
+        self.assertEqual(bern_fit.num_draws_warmup, 200)
         self.assertEqual(bern_fit.num_draws_sampling, 100)
         self.assertEqual(bern_fit.column_names, tuple(BERNOULLI_COLS))
 
@@ -91,9 +93,10 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
-            iter_warmup=1000,
+            iter_warmup=200,
             iter_sampling=100,
             metric='dense_e',
+            show_progress=False,
         )
         self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
         self.assertIn('method=sample', bern_fit.__repr__())
@@ -121,8 +124,10 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
             output_dir=DATAFILES_PATH,
+            show_progress=False,
         )
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
@@ -140,7 +145,9 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
+            show_progress=False,
         )
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
 
@@ -150,7 +157,9 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
+            show_progress=False,
         )
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
 
@@ -161,7 +170,9 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
+            show_progress=False,
         )
         self.assertEqual(bern_fit.draws().shape, (100, 2, len(BERNOULLI_COLS)))
 
@@ -175,9 +186,10 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
-            iter_warmup=1000,
+            iter_warmup=100,
             iter_sampling=100,
             metric='unit_e',
+            show_progress=False,
         )
         self.assertEqual(bern_fit.metric_type, 'unit_e')
         self.assertEqual(bern_fit.step_size.shape, (2,))
@@ -203,8 +215,10 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
             inits=1.1,
+            show_progress=False,
         )
         self.assertIn('init=1.1', bern_fit.runset.__repr__())
 
@@ -213,8 +227,10 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
             inits=1,
+            show_progress=False,
         )
         self.assertIn('init=1', bern_fit.runset.__repr__())
 
@@ -231,8 +247,10 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
             inits=inits_path1,
+            show_progress=False,
         )
         self.assertIn(
             'init={}'.format(inits_path1.replace('\\', '\\\\')),
@@ -244,8 +262,10 @@ class SampleTest(unittest.TestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=100,
             inits=[inits_path1, inits_path2],
+            show_progress=False,
         )
         self.assertIn(
             'init={}'.format(inits_path1.replace('\\', '\\\\')),
@@ -258,6 +278,7 @@ class SampleTest(unittest.TestCase):
                 chains=2,
                 parallel_chains=2,
                 seed=12345,
+                iter_warmup=100,
                 iter_sampling=100,
                 inits=(1, 2),
             )
@@ -268,6 +289,7 @@ class SampleTest(unittest.TestCase):
                 chains=2,
                 parallel_chains=2,
                 seed=12345,
+                iter_warmup=100,
                 iter_sampling=100,
                 inits=-1,
             )
@@ -277,18 +299,10 @@ class SampleTest(unittest.TestCase):
         bern_model = CmdStanModel(stan_file=stan)
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
-            bern_model.sample(
-                chains=2, parallel_chains=2, seed=12345, iter_sampling=100
-            )
+            bern_model.sample()
 
         with self.assertRaisesRegex(RuntimeError, 'variable does not exist'):
-            bern_model.sample(
-                data={'foo': 1},
-                chains=2,
-                parallel_chains=2,
-                seed=12345,
-                iter_sampling=100,
-            )
+            bern_model.sample(data={'foo': 1})
 
         if platform.system() != 'Windows':
             jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -302,7 +316,29 @@ class SampleTest(unittest.TestCase):
                 bern_model.sample(data=jdata, chains=1, output_dir=path)
             os.rmdir(dirname1)
 
-    def test_multi_proc(self):
+    # pylint: disable=no-self-use
+    def test_multi_proc_1(self):
+        logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
+        logistic_model = CmdStanModel(stan_file=logistic_stan)
+        logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+
+        with LogCapture() as log:
+            logging.getLogger()
+            logistic_model.sample(
+                data=logistic_data,
+                chains=2,
+                parallel_chains=1,
+                iter_sampling=200,
+                iter_warmup=200,
+                show_console=True,
+            )
+        log.check_present(
+            ('cmdstanpy', 'INFO', 'Chain [1] done processing'),
+            ('cmdstanpy', 'INFO', 'Chain [2] start processing'),
+        )
+
+    # pylint: disable=no-self-use
+    def test_multi_proc_2(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
         logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
@@ -312,26 +348,16 @@ class SampleTest(unittest.TestCase):
             logistic_model.sample(
                 data=logistic_data,
                 chains=4,
-                parallel_chains=1,
-                show_progress=False,
-            )
-        log.check_present(
-            ('cmdstanpy', 'INFO', 'finish chain 1'),
-            ('cmdstanpy', 'INFO', 'start chain 2'),
-        )
-        with LogCapture() as log:
-            logging.getLogger()
-            logistic_model.sample(
-                data=logistic_data,
-                chains=4,
                 parallel_chains=2,
-                show_progress=False,
+                iter_sampling=200,
+                iter_warmup=200,
+                show_console=True,
             )
         if cpu_count() >= 4:
             # finish chains 1, 2 before starting chains 3, 4
             log.check_present(
-                ('cmdstanpy', 'INFO', 'finish chain 1'),
-                ('cmdstanpy', 'INFO', 'start chain 4'),
+                ('cmdstanpy', 'INFO', 'Chain [1] done processing'),
+                ('cmdstanpy', 'INFO', 'Chain [4] start processing'),
             )
         if cpu_count() >= 4:
             with LogCapture() as log:
@@ -340,12 +366,19 @@ class SampleTest(unittest.TestCase):
                     data=logistic_data,
                     chains=4,
                     parallel_chains=4,
-                    show_progress=False,
+                    iter_sampling=200,
+                    iter_warmup=200,
+                    show_console=True,
                 )
                 log.check_present(
-                    ('cmdstanpy', 'INFO', 'start chain 4'),
-                    ('cmdstanpy', 'INFO', 'finish chain 1'),
+                    ('cmdstanpy', 'INFO', 'Chain [4] start processing'),
+                    ('cmdstanpy', 'INFO', 'Chain [1] done processing'),
                 )
+
+    def test_num_threads_msgs(self):
+        logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
+        logistic_model = CmdStanModel(stan_file=logistic_stan)
+        logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
 
         with LogCapture() as log:
             logging.getLogger()
@@ -354,9 +387,13 @@ class SampleTest(unittest.TestCase):
                 chains=1,
                 parallel_chains=1,
                 threads_per_chain=7,
+                iter_sampling=200,
+                iter_warmup=200,
                 show_progress=False,
             )
-        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 7'))
+        log.check_present(
+            ('cmdstanpy', 'DEBUG', 'running CmdStan, num_threads: 7')
+        )
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
@@ -364,9 +401,13 @@ class SampleTest(unittest.TestCase):
                 chains=7,
                 parallel_chains=1,
                 threads_per_chain=5,
+                iter_sampling=200,
+                iter_warmup=200,
                 show_progress=False,
             )
-        log.check_present(('cmdstanpy', 'DEBUG', 'total threads: 5'))
+        log.check_present(
+            ('cmdstanpy', 'DEBUG', 'running CmdStan, num_threads: 5')
+        )
         with LogCapture() as log:
             logging.getLogger()
             logistic_model.sample(
@@ -374,23 +415,56 @@ class SampleTest(unittest.TestCase):
                 chains=1,
                 parallel_chains=7,
                 threads_per_chain=5,
+                iter_sampling=200,
+                iter_warmup=200,
+                show_progress=False,
             )
         log.check_present(
             (
                 'cmdstanpy',
                 'INFO',
-                'Requesting 7 parallel_chains for 1 chains, '
-                'running all chains in parallel.',
+                'Requested 7 parallel_chains but only 1 required, '
+                'will run all chains in parallel.',
             )
         )
-        with LogCapture() as log:
-            logging.getLogger()
-            logistic_model.sample(
-                data=logistic_data, chains=7, threads_per_chain=5
+
+    def test_multi_proc_threads(self):
+        # 2.28 compile with cpp_options={'STAN_THREADS':'true'}
+        if not cmdstan_version_before(2, 28):
+            logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
+            logistic_model = CmdStanModel(stan_file=logistic_stan)
+
+            os.remove(logistic_model.exe_file)
+            logistic_model.compile(
+                force=True,
+                cpp_options={'STAN_THREADS': 'TRUE'},
             )
-            cores = max(min(cpu_count(), 7), 1)
-            expect = 'total threads: {}'.format(cores * 5)
-        log.check_present(('cmdstanpy', 'DEBUG', expect))
+            info_dict = logistic_model.exe_info()
+            self.assertTrue(info_dict is not None)
+            self.assertTrue('STAN_THREADS' in info_dict)
+            self.assertEqual(info_dict['STAN_THREADS'], 'true')
+
+            logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+            with LogCapture() as log:
+                logging.getLogger()
+                logistic_model.sample(
+                    data=logistic_data,
+                    chains=4,
+                    parallel_chains=4,
+                    threads_per_chain=5,
+                    iter_sampling=200,
+                    iter_warmup=200,
+                    show_progress=False,
+                )
+            log.check_present(
+                ('cmdstanpy', 'DEBUG', 'running CmdStan, num_threads: 20')
+            )
+
+    def test_multi_proc_err_msgs(self):
+        logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
+        logistic_model = CmdStanModel(stan_file=logistic_stan)
+        logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
+
         with self.assertRaisesRegex(
             ValueError, 'parallel_chains must be a positive integer'
         ):
@@ -407,9 +481,8 @@ class SampleTest(unittest.TestCase):
     def test_fixed_param_good(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
         datagen_model = CmdStanModel(stan_file=stan)
-        no_data = {}
         datagen_fit = datagen_model.sample(
-            data=no_data, seed=12345, iter_sampling=100, fixed_param=True
+            seed=12345, chains=1, iter_sampling=100, fixed_param=True
         )
         self.assertEqual(datagen_fit.runset._args.method, Method.SAMPLE)
         self.assertEqual(datagen_fit.metric_type, None)
@@ -521,10 +594,10 @@ class SampleTest(unittest.TestCase):
     def test_fixed_param_unspecified(self):
         stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
         datagen_model = CmdStanModel(stan_file=stan)
-        datagen_fit = datagen_model.sample(iter_sampling=100)
-        self.assertEqual(
-            datagen_fit.draws().shape, (100, 4, len(datagen_fit.column_names))
-        )  # ran 4 chains, set fixed_param=True afterwards
+        datagen_fit = datagen_model.sample(
+            iter_sampling=100, show_progress=False
+        )
+        self.assertEqual(datagen_fit.step_size, None)
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
@@ -553,12 +626,13 @@ class SampleTest(unittest.TestCase):
                 chains=2,
                 parallel_chains=2,
                 seed=12345,
+                iter_warmup=100,
                 iter_sampling=100,
                 show_console=True,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('chain 1: method = sample' in console)
-        self.assertTrue('chain 2: method = sample' in console)
+        self.assertTrue('Chain [1] method = sample' in console)
+        self.assertTrue('Chain [2] method = sample' in console)
 
     def test_show_progress(self, stanfile='bernoulli.stan'):
         stan = os.path.join(DATAFILES_PATH, stanfile)
@@ -568,11 +642,45 @@ class SampleTest(unittest.TestCase):
         sys_stderr = io.StringIO()  # tqdm prints to stderr
         with contextlib.redirect_stderr(sys_stderr):
             bern_model.sample(
-                data=jdata, chains=2, parallel_chains=2, show_progress=True
+                data=jdata,
+                chains=2,
+                iter_warmup=100,
+                iter_sampling=100,
+                show_progress=True,
             )
         console = sys_stderr.getvalue()
         self.assertTrue('chain 1' in console)
         self.assertTrue('chain 2' in console)
+        self.assertTrue('Sampling completed' in console)
+
+        sys_stderr = io.StringIO()  # tqdm prints to stderr
+        with contextlib.redirect_stderr(sys_stderr):
+            bern_model.sample(
+                data=jdata,
+                chains=7,
+                iter_warmup=100,
+                iter_sampling=100,
+                show_progress=True,
+            )
+        console = sys_stderr.getvalue()
+        self.assertTrue('chain 6' in console)
+        self.assertTrue('chain 7' in console)
+        self.assertTrue('Sampling completed' in console)
+        sys_stderr = io.StringIO()  # tqdm prints to stderr
+
+        with contextlib.redirect_stderr(sys_stderr):
+            bern_model.sample(
+                data=jdata,
+                chains=2,
+                chain_ids=[6, 7],
+                iter_warmup=100,
+                iter_sampling=100,
+                force_one_process_per_chain=True,
+                show_progress=True,
+            )
+        console = sys_stderr.getvalue()
+        self.assertTrue('chain 6' in console)
+        self.assertTrue('chain 7' in console)
         self.assertTrue('Sampling completed' in console)
 
 
@@ -594,7 +702,7 @@ class CmdStanMCMCTest(CustomTestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-1.csv'),
             os.path.join(DATAFILES_PATH, 'runset-good', 'bern-2.csv'),
@@ -710,7 +818,6 @@ class CmdStanMCMCTest(CustomTestCase):
             if file.endswith(".csv"):
                 csvfiles.append(os.path.join(csvfiles_path, file))
         bern_fit = from_csv(path=csvfiles)
-        print(bern_fit.metadata.method_vars_cols.keys())
 
         draws_pd = bern_fit.draws_pd()
         self.assertEqual(
@@ -816,6 +923,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             metric=jmetric,
         )
@@ -825,6 +933,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             metric=[jmetric, jmetric2],
         )
@@ -838,6 +947,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=4,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             metric=metric_dict_1,
         )
@@ -845,6 +955,7 @@ class CmdStanMCMCTest(CustomTestCase):
             data=jdata,
             chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             metric=[metric_dict_1, metric_dict_2],
         )
@@ -856,6 +967,7 @@ class CmdStanMCMCTest(CustomTestCase):
                 chains=4,
                 parallel_chains=2,
                 seed=12345,
+                iter_warmup=100,
                 iter_sampling=200,
                 metric=[metric_dict_1, metric_dict_2],
             )
@@ -871,6 +983,7 @@ class CmdStanMCMCTest(CustomTestCase):
                 data=jdata,
                 chains=2,
                 seed=12345,
+                iter_warmup=100,
                 iter_sampling=200,
                 metric=[metric_dict_1, metric_dict_2],
             )
@@ -883,6 +996,7 @@ class CmdStanMCMCTest(CustomTestCase):
                 data=jdata,
                 chains=2,
                 seed=12345,
+                iter_warmup=100,
                 iter_sampling=200,
                 metric=some_dict,
             )
@@ -897,6 +1011,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             step_size=1,
         )
@@ -906,6 +1021,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             step_size=[1, 2],
         )
@@ -920,6 +1036,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=[44444, 55555],
+            iter_warmup=100,
             iter_sampling=200,
         )
 
@@ -954,6 +1071,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
         )
         for i in range(bern_fit.runset.chains):
@@ -1055,7 +1173,7 @@ class CmdStanMCMCTest(CustomTestCase):
             output_dir=DATAFILES_PATH,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         for i in range(4):
             runset._set_retcode(i, 0)
         self.assertTrue(runset._check_retcodes())
@@ -1404,7 +1522,7 @@ class CmdStanMCMCTest(CustomTestCase):
             sig_figs=17,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'logistic_output_1.csv'),
             os.path.join(DATAFILES_PATH, 'logistic_output_2.csv'),
@@ -1449,7 +1567,7 @@ class CmdStanMCMCTest(CustomTestCase):
             sig_figs=17,
             method_args=sampler_args,
         )
-        runset = RunSet(args=cmdstan_args)
+        runset = RunSet(args=cmdstan_args, chains=4)
         runset._csv_files = [
             os.path.join(DATAFILES_PATH, 'logistic_output_1.csv'),
             os.path.join(DATAFILES_PATH, 'logistic_output_2.csv'),
@@ -1507,6 +1625,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             save_latent_dynamics=True,
         )
@@ -1521,6 +1640,7 @@ class CmdStanMCMCTest(CustomTestCase):
             chains=2,
             parallel_chains=2,
             seed=12345,
+            iter_warmup=100,
             iter_sampling=200,
             save_profile=True,
         )

@@ -4,7 +4,7 @@ CmdStan arguments
 import os
 from enum import Enum, auto
 from time import time
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import numpy as np
 from numpy.random import RandomState
@@ -712,7 +712,7 @@ class CmdStanArgs:
         method_args: Union[
             SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
         ],
-        data: Union[str, Dict[str, Any], None] = None,
+        data: Union[Mapping[str, Any], str, None] = None,
         seed: Union[int, List[int], None] = None,
         inits: Union[int, float, str, List[str], None] = None,
         output_dir: Optional[str] = None,
@@ -811,6 +811,7 @@ class CmdStanArgs:
                     'Argument "sig_figs" must be an integer between 1 and 18,'
                     ' found {}'.format(self.sig_figs)
                 )
+            # TODO: remove at some future release
             if cmdstan_version_before(2, 25):
                 self.sig_figs = None
                 get_logger().warning(
@@ -897,7 +898,8 @@ class CmdStanArgs:
         csv_file: str,
         *,
         diagnostic_file: Optional[str] = None,
-        profile_file: Optional[str] = None
+        profile_file: Optional[str] = None,
+        num_chains: Optional[int] = None
     ) -> List[str]:
         """
         Compose CmdStan command for non-default arguments.
@@ -932,13 +934,15 @@ class CmdStanArgs:
                 cmd.append('init={}'.format(self.inits[idx]))
         cmd.append('output')
         cmd.append('file={}'.format(csv_file))
-        if diagnostic_file is not None:
+        if diagnostic_file:
             cmd.append('diagnostic_file={}'.format(diagnostic_file))
-        if profile_file is not None:
+        if profile_file:
             cmd.append('profile_file={}'.format(profile_file))
         if self.refresh is not None:
             cmd.append('refresh={}'.format(self.refresh))
         if self.sig_figs is not None:
             cmd.append('sig_figs={}'.format(self.sig_figs))
         cmd = self.method_args.compose(idx, cmd)
+        if num_chains:
+            cmd.append('num_chains={}'.format(num_chains))
         return cmd

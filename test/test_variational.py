@@ -230,7 +230,7 @@ class VariationalTest(unittest.TestCase):
                 seed=12345,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('chain 1: method = variational' in console)
+        self.assertTrue('Chain [1] method = variational' in console)
 
 
 if __name__ == '__main__':
