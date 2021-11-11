@@ -680,7 +680,7 @@ class SampleTest(unittest.TestCase):
             bern_model.sample(
                 data=jdata,
                 chains=2,
-                chain_ids=[6,7],
+                chain_ids=[6, 7],
                 iter_warmup=100,
                 iter_sampling=100,
                 force_one_process_per_chain=True,
