@@ -9,7 +9,7 @@ import unittest
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION
+from cmdstanpy.utils import EXTENSION, get_logger
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -153,22 +153,30 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(cpp_opts['STAN_THREADS'], 'TRUE')
 
     def test_model_info(self):
-        # copy so that parallel compile tests don't mess up exe
-        b2_filename = os.path.join(DATAFILES_PATH, 'b2.stan')
-        b2_file = shutil.copyfile(BERN_STAN, b2_filename)
-        cpp_opts = {'STAN_THREADS': 'TRUE'}
-        model = CmdStanModel(stan_file=b2_file, cpp_options=cpp_opts)
-        if model.exe_file is not None and os.path.exists(model.exe_file):
-            os.remove(model.exe_file)
-        empty_dict = model.exe_info()
-        self.assertEqual(len(empty_dict), 0)
-
+        model = CmdStanModel(stan_file=BERN_STAN, compile=False)
         model.compile(force=True)
-        info_dict = model.exe_info()
-        self.assertTrue(info_dict is not None)
-        self.assertEqual(info_dict['STAN_THREADS'], 'true')
-        os.remove(model.stan_file)
-        os.remove(model.exe_file)
+        info_dict = model.exe_info
+        self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
+
+    def test_compile_force(self):
+        model = CmdStanModel(stan_file=BERN_STAN, compile=False, cpp_options={})
+        if model.exe_file is not None:
+            os.remove(modle.exe_file)
+        model.compile(force=True)
+        info_dict = model.exe_info
+        self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
+        
+        override_opts = {'STAN_THREADS': 'TRUE'}
+        # model.compile(force=True, cpp_options=override_opts)
+        # dict2 = model.exe_info
+        # get_logger().info('dict 2 %s', dict2)
+        # self.assertEqual(dict2['STAN_THREADS'].lower(), 'false')
+
+        model.compile(force=True, cpp_options=override_opts, override_options=True)
+        dict3 = model.exe_info
+        get_logger().info('dict 3 %s', dict3)
+        self.assertEqual(dict3['STAN_THREADS'].lower(), 'true')
+
 
     def test_model_paths(self):
         # pylint: disable=unused-variable
@@ -270,6 +278,7 @@ class CmdStanModelTest(unittest.TestCase):
             shutil.copyfile(BERN_STAN, bern_stan_new)
             model = CmdStanModel(stan_file=bern_stan_new)
 
+            get_logger().info("here")
             old_exe_time = os.path.getmtime(model.exe_file)
             os.remove(bern_exe_new)
             model.compile()

@@ -230,6 +230,30 @@ class CmdStanModel:
         return self._exe_file
 
     @property
+    def exe_info(self) -> Dict[str, str]:
+        """
+        Run model with option 'info'. Parse output statements, which all
+        have form 'key = value' into a Dict.
+        If exe file compiled with CmdStan < 2.27, option 'info' isn't
+        available and the method returns an empty dictionary.
+        """
+        result: Dict[str, Any] = {}
+        if self.exe_file is None:
+            return result
+        try:
+            info = StringIO()
+            do_command(cmd=[self.exe_file, 'info'], fd_out=info)
+            lines = info.getvalue().split('\n')
+            for line in lines:
+                kv_pair = [x.strip() for x in line.split('=')]
+                if len(kv_pair) != 2:
+                    continue
+                result[kv_pair[0]] = kv_pair[1]
+            return result
+        except RuntimeError:
+            return result
+
+    @property
     def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
         """Options to stanc compilers."""
         return self._compiler_options._stanc_options
@@ -429,29 +453,6 @@ class CmdStanModel:
                     get_logger().info('compiled model file: %s', self._exe_file)
                 else:
                     get_logger().error('model compilation failed')
-
-    def exe_info(self) -> Dict[str, str]:
-        """
-        Run model with option 'info'. Parse output statements, which all
-        have form 'key = value' into a Dict.
-        If exe file compiled with CmdStan < 2.27, option 'info' isn't
-        available and the method returns an empty dictionary.
-        """
-        result: Dict[str, Any] = {}
-        if self.exe_file is None:
-            return result
-        try:
-            info = StringIO()
-            do_command(cmd=[self.exe_file, 'info'], fd_out=info)
-            lines = info.getvalue().split('\n')
-            for line in lines:
-                kv_pair = [x.strip() for x in line.split('=')]
-                if len(kv_pair) != 2:
-                    continue
-                result[kv_pair[0]] = kv_pair[1]
-            return result
-        except RuntimeError:
-            return result
 
     def optimize(
         self,
@@ -942,7 +943,7 @@ class CmdStanModel:
             num_threads = threads_per_chain
             one_process_per_chain = True
             assert isinstance(self.exe_file, str)  # make typechecker happy
-            info_dict = self.exe_info()
+            info_dict = self.exe_info
             stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
             if (
                 force_one_process_per_chain is None

@@ -439,7 +439,7 @@ class SampleTest(unittest.TestCase):
                 force=True,
                 cpp_options={'STAN_THREADS': 'TRUE'},
             )
-            info_dict = logistic_model.exe_info()
+            info_dict = logistic_model.exe_info
             self.assertTrue(info_dict is not None)
             self.assertTrue('STAN_THREADS' in info_dict)
             self.assertEqual(info_dict['STAN_THREADS'], 'true')
