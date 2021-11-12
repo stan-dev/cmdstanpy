@@ -297,7 +297,8 @@ class CmdStanModel:
 
         By default, this function compares the timestamps on the source and
         executable files; if the executable is newer than the source file, it
-        will not recompile the file, unless argument ``force`` is ``True``.
+        will not recompile the file, unless argument ``force`` is ``True``
+        or unless the compiler options have been changed.
 
         :param force: When ``True``, always compile, even if the executable file
             is newer than the source file.  Used for Stan models which have
@@ -316,10 +317,10 @@ class CmdStanModel:
             raise RuntimeError('Please specify source file')
 
         compiler_options = None
-        if not (
-            stanc_options is None
-            and cpp_options is None
-            and user_header is None
+        if (
+            stanc_options is not None
+            or cpp_options is not None
+            or user_header is not None
         ):
             compiler_options = CompilerOptions(
                 stanc_options=stanc_options,
@@ -327,132 +328,127 @@ class CmdStanModel:
                 user_header=user_header,
             )
             compiler_options.validate()
-            if self._compiler_options is None:
-                self._compiler_options = compiler_options
-            elif override_options:
-                self._compiler_options = compiler_options
-            else:
-                self._compiler_options.add(compiler_options)
-
-        # check if exe file exists in original location
-        exe_file, _ = os.path.splitext(os.path.abspath(self._stan_file))
-        exe_file = Path(exe_file).as_posix() + EXTENSION
-        do_compile = True
-        if os.path.exists(exe_file):
-            src_time = os.path.getmtime(self._stan_file)
-            exe_time = os.path.getmtime(exe_file)
-            if exe_time > src_time and not force:
-                do_compile = False
-                get_logger().info('found newer exe file, not recompiling')
-                self._exe_file = exe_file
-                get_logger().info('compiled model file: %s', self._exe_file)
-        if do_compile:
-            compilation_failed = False
-            with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-                exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
-                exe_file = Path(exe_file).as_posix() + EXTENSION
-                do_compile = True
-                if os.path.exists(exe_file):
-                    src_time = os.path.getmtime(self._stan_file)
-                    exe_time = os.path.getmtime(exe_file)
-                    if exe_time > src_time and not force:
-                        do_compile = False
-                        get_logger().info(
-                            'found newer exe file, not recompiling'
-                        )
-
-                if do_compile:
-                    get_logger().info(
-                        'compiling stan program, exe file: %s', exe_file
-                    )
-                    if self._compiler_options is not None:
-                        self._compiler_options.validate()
-                        get_logger().info(
-                            'compiler options: %s', self._compiler_options
-                        )
-                    make = os.getenv(
-                        'MAKE',
-                        'make'
-                        if platform.system() != 'Windows'
-                        else 'mingw32-make',
-                    )
-                    cmd = [make]
-                    if self._compiler_options is not None:
-                        cmd.extend(self._compiler_options.compose())
-                    cmd.append(Path(exe_file).as_posix())
-
-                    sout = io.StringIO()
-                    try:
-                        do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
-                    except RuntimeError as e:
-                        sout.write(f'\n{str(e)}\n')
-                        compilation_failed = True
-                    finally:
-                        console = sout.getvalue()
-
-                    if compilation_failed or 'Warning:' in console:
-                        lines = console.split('\n')
-                        warnings = [x for x in lines if x.startswith('Warning')]
-                        syntax_errors = [
-                            x for x in lines if x.startswith('Syntax error')
-                        ]
-                        semantic_errors = [
-                            x for x in lines if x.startswith('Semantic error')
-                        ]
-                        exceptions = [
-                            x
-                            for x in lines
-                            if x.startswith('Uncaught exception')
-                        ]
-                        if (
-                            len(syntax_errors) > 0
-                            or len(semantic_errors) > 0
-                            or len(exceptions) > 0
-                        ):
-                            get_logger().error(
-                                'Stan program failed to compile:'
-                            )
-                            get_logger().warning(console)
-                        elif len(warnings) > 0:
-                            get_logger().warning(
-                                'Stan compiler has produced %d warnings:',
-                                len(warnings),
-                            )
-                            get_logger().warning(console)
-
-                        if (
-                            'PCH file' in console
-                            or 'model_header.hpp.gch' in console
-                            or 'precompiled header' in console
-                        ):
-                            get_logger().warning(
-                                "CmdStan's precompiled header (PCH) files "
-                                "may need to be rebuilt."
-                                "If your model failed to compile please run "
-                                "cmdstanpy.rebuild_cmdstan().\nIf the "
-                                "issue persists please open a bug report"
-                            )
-
-                if not compilation_failed:
-                    if is_copied:
-                        original_target_dir = os.path.dirname(
-                            os.path.abspath(self._stan_file)
-                        )
-                        new_exec_name = (
-                            os.path.basename(
-                                os.path.splitext(self._stan_file)[0]
-                            )
-                            + EXTENSION
-                        )
-                        self._exe_file = os.path.join(
-                            original_target_dir, new_exec_name
-                        )
-                        shutil.copy(exe_file, self._exe_file)
-                    else:
-                        self._exe_file = exe_file
-                    get_logger().info('compiled model file: %s', self._exe_file)
+            get_logger().debug('compiler options args: %s', compiler_options)
+            get_logger().debug('self_compiler_options arg: %s', self._compiler_options)
+            if compiler_options != self._compiler_options:
+                get_logger().debug('not equal')
+                force = True
+                if self._compiler_options is None:
+                    self._compiler_options = compiler_options
+                elif override_options:
+                    self._compiler_options = compiler_options
                 else:
-                    get_logger().error('model compilation failed')
+                    self._compiler_options.add(compiler_options)
+
+        src_time = os.path.getmtime(self._stan_file)
+        exe_base, _ = os.path.splitext(os.path.abspath(self._stan_file))
+        exe_target = Path(exe_base).as_posix() + EXTENSION
+        if os.path.exists(exe_target):
+            exe_time = os.path.getmtime(exe_target)
+        else:
+            exe_time = 0
+        if exe_time > src_time and not force:
+            get_logger().info(
+                'found newer exe file, not recompiling'
+            )
+            if self._exe_file is None:  # called from constructor
+                self._exe_file = exe_target
+            return
+
+        compilation_failed = False
+        # if target path has space, use copy in a tmpdir (GNU-Make constraint)
+        with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
+            get_logger().debug(
+                'is_copied? %d, stan_file: %s',
+                is_copied, os.path.abspath(stan_file)
+            )
+            if is_copied:
+                exe_tmp, _ = os.path.splitext(os.path.abspath(stan_file))
+                exe_file = Path(exe_tmp).as_posix() + EXTENSION
+            else:
+                exe_file = exe_target
+
+            if os.path.exists(exe_file):
+                hpp_file = Path(exe_base).as_posix() + '.hpp'
+                if os.path.exists(hpp_file):
+                    os.remove(hpp_file)
+                os.remove(exe_file)
+            get_logger().info(
+                    'compiling stan file %s to exe file %s',
+                    self._stan_file, exe_target
+            )
+            if is_copied:
+                get_logger().debug(
+                    'tmp files: src: %s, exe: %s', stan_file, exe_file
+                )
+
+            make = os.getenv(
+                'MAKE',
+                'make' if platform.system() != 'Windows' else 'mingw32-make'
+            )
+            cmd = [make]
+            if self._compiler_options is not None:
+                cmd.extend(self._compiler_options.compose())
+            cmd.append(Path(exe_file).as_posix())
+
+            sout = io.StringIO()
+            try:
+                do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
+            except RuntimeError as e:
+                sout.write(f'\n{str(e)}\n')
+                compilation_failed = True
+            finally:
+                console = sout.getvalue()
+                
+            success = not compilation_failed and 'Warning:' not in console
+            get_logger().debug('success? %d', success)
+
+            if success:
+                if is_copied:
+                    shutil.copy(exe_file, exe_target)
+                self._exe_file = exe_target
+                get_logger().info(
+                    'compiled model executable: %s', self._exe_file
+                )
+            else:
+                lines = console.split('\n')
+                warnings = [x for x in lines if x.startswith('Warning')]
+                syntax_errors = [
+                    x for x in lines if x.startswith('Syntax error')
+                ]
+                semantic_errors = [
+                    x for x in lines if x.startswith('Semantic error')
+                ]
+                exceptions = [
+                    x for x in lines if x.startswith('Uncaught exception')
+                ]
+                if (
+                    len(syntax_errors) > 0
+                    or len(semantic_errors) > 0
+                    or len(exceptions) > 0
+                ):
+                    get_logger().error('Stan program failed to compile:')
+                    get_logger().warning(console)
+                elif len(warnings) > 0:
+                    get_logger().warning(
+                        'Stan compiler has produced %d warnings:',
+                        len(warnings),
+                    )
+                    get_logger().warning(console)
+
+                if (
+                    'PCH file' in console
+                    or 'model_header.hpp.gch' in console
+                    or 'precompiled header' in console
+                ):
+                    get_logger().warning(
+                        "CmdStan's precompiled header (PCH) files "
+                        "may need to be rebuilt."
+                        "If your model failed to compile please run "
+                        "cmdstanpy.rebuild_cmdstan().\nIf the "
+                        "issue persists please open a bug report"
+                    )
+
 
     def optimize(
         self,

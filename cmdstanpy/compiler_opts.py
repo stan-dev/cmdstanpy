@@ -67,6 +67,26 @@ class CompilerOptions:
             self._stanc_options, self._cpp_options
         )
 
+    def __eq__(self, other) -> bool:
+        """Overrides the default implementation"""
+        if self.is_empty and other is None:  # equiv w/r/t compiler
+            return True
+        if not isinstance(other, CompilerOptions):
+            return False
+        return (
+            self._stanc_options == other.stanc_options
+            and self._cpp_options == other.cpp_options
+            and self._user_header == other.user_header
+        )
+
+    def is_empty(self) -> bool:
+        """True if no options specified."""
+        return (
+            self._stanc_options == {}
+            and self._cpp_options == {}
+            and self._user_header == ''
+        )
+
     @property
     def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
         """Stanc compiler options."""
@@ -76,6 +96,11 @@ class CompilerOptions:
     def cpp_options(self) -> Dict[str, Union[bool, int]]:
         """C++ compiler options."""
         return self._cpp_options
+
+    @property
+    def user_header(self) -> str:
+        """user header."""
+        return self._user_header
 
     def validate(self) -> None:
         """
