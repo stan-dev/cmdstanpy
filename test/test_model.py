@@ -72,15 +72,11 @@ class CmdStanModelTest(unittest.TestCase):
 
     # pylint: disable=no-self-use
     def test_model_pedantic(self):
+        stan_file=os.path.join(DATAFILES_PATH, 'bernoulli_pedantic.stan')
         with LogCapture(level=logging.WARNING) as log:
             logging.getLogger()
-            CmdStanModel(
-                model_name='bern',
-                stan_file=os.path.join(
-                    DATAFILES_PATH, 'bernoulli_pedantic.stan'
-                ),
-                stanc_options={'warn-pedantic': True},
-            )
+            model = CmdStanModel(model_name='bern', stan_file=stan_file)
+            model.compile(force=True, stanc_options={'warn-pedantic': True})
         log.check_present(
             (
                 'cmdstanpy',

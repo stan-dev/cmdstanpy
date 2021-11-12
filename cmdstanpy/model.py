@@ -328,10 +328,7 @@ class CmdStanModel:
                 user_header=user_header,
             )
             compiler_options.validate()
-            get_logger().debug('compiler options args: %s', compiler_options)
-            get_logger().debug('self_compiler_options arg: %s', self._compiler_options)
             if compiler_options != self._compiler_options:
-                get_logger().debug('not equal')
                 force = True
                 if self._compiler_options is None:
                     self._compiler_options = compiler_options
@@ -358,10 +355,6 @@ class CmdStanModel:
         compilation_failed = False
         # if target path has space, use copy in a tmpdir (GNU-Make constraint)
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            get_logger().debug(
-                'is_copied? %d, stan_file: %s',
-                is_copied, os.path.abspath(stan_file)
-            )
             if is_copied:
                 exe_tmp, _ = os.path.splitext(os.path.abspath(stan_file))
                 exe_file = Path(exe_tmp).as_posix() + EXTENSION
@@ -377,10 +370,6 @@ class CmdStanModel:
                     'compiling stan file %s to exe file %s',
                     self._stan_file, exe_target
             )
-            if is_copied:
-                get_logger().debug(
-                    'tmp files: src: %s, exe: %s', stan_file, exe_file
-                )
 
             make = os.getenv(
                 'MAKE',
@@ -399,18 +388,15 @@ class CmdStanModel:
                 compilation_failed = True
             finally:
                 console = sout.getvalue()
-                
-            success = not compilation_failed and 'Warning:' not in console
-            get_logger().debug('success? %d', success)
 
-            if success:
+            if not compilation_failed:
                 if is_copied:
                     shutil.copy(exe_file, exe_target)
                 self._exe_file = exe_target
                 get_logger().info(
                     'compiled model executable: %s', self._exe_file
                 )
-            else:
+            if compilation_failed or 'Warning' in console:
                 lines = console.split('\n')
                 warnings = [x for x in lines if x.startswith('Warning')]
                 syntax_errors = [
@@ -435,8 +421,7 @@ class CmdStanModel:
                         len(warnings),
                     )
                     get_logger().warning(console)
-
-                if (
+                elif (
                     'PCH file' in console
                     or 'model_header.hpp.gch' in console
                     or 'precompiled header' in console
