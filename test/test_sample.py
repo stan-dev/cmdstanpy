@@ -67,6 +67,7 @@ class SampleTest(unittest.TestCase):
 
         self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
 
+        print(bern_fit.runset)
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             stdout_file = bern_fit.runset.stdout_files[i]
@@ -439,7 +440,7 @@ class SampleTest(unittest.TestCase):
                 force=True,
                 cpp_options={'STAN_THREADS': 'TRUE'},
             )
-            info_dict = logistic_model.exe_info
+            info_dict = logistic_model.exe_info()
             self.assertTrue(info_dict is not None)
             self.assertTrue('STAN_THREADS' in info_dict)
             self.assertEqual(info_dict['STAN_THREADS'], 'true')
