@@ -1163,6 +1163,7 @@ def show_versions(output: bool = True) -> str:
 
     try:
         deps_info.append(('cmdstan_folder', cmdstan_path()))
+        deps_info.append(('cmdstan', str(cmdstan_version())))
     # pylint: disable=broad-except
     except Exception:
         deps_info.append(('cmdstan', 'NOT FOUND'))
