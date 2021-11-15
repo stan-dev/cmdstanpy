@@ -141,6 +141,8 @@ class CmdStanModel:
                 )
             if not self._name:
                 self._name, _ = os.path.splitext(filename)
+
+            # TODO: When minimum version is 2.27, use --info instead
             # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
@@ -160,9 +162,11 @@ class CmdStanModel:
             # try to detect models w/out parameters, needed for sampler
             self._fixed_param = False
             model_info = self.src_info()
-            if 'parameters' in model_info:
-                if len(model_info['parameters']) == 0:
-                    self._fixed_param = True
+            if (
+                'parameters' in model_info
+                and len(model_info['parameters']) == 0
+            ):
+                self._fixed_param = True
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -354,6 +358,7 @@ class CmdStanModel:
                 user_header=user_header,
             )
             compiler_options.validate()
+
             if compiler_options != self._compiler_options:
                 force = True
                 if self._compiler_options is None:
@@ -364,9 +369,7 @@ class CmdStanModel:
                     self._compiler_options.add(compiler_options)
 
         src_time = os.path.getmtime(self._stan_file)
-        exe_target = (
-            os.path.basename(os.path.splitext(self._stan_file)[0]) + EXTENSION
-        )
+        exe_target = os.path.splitext(self._stan_file)[0] + EXTENSION
         if os.path.exists(exe_target):
             exe_time = os.path.getmtime(exe_target)
         else:
@@ -381,17 +384,15 @@ class CmdStanModel:
         # if target path has space, use copy in a tmpdir (GNU-Make constraint)
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             if is_copied:
-                exe_file = (
-                    os.path.basename(os.path.splitext(stan_file)[0]) + EXTENSION
-                )
+                exe_file = os.path.splitext(stan_file)[0] + EXTENSION
             else:
                 exe_file = exe_target
 
-            if os.path.exists(exe_target):
-                os.remove(exe_target)
             hpp_file = os.path.splitext(exe_target)[0] + '.hpp'
             if os.path.exists(hpp_file):
                 os.remove(hpp_file)
+            if os.path.exists(exe_target):
+                os.remove(exe_target)
 
             get_logger().info(
                 'compiling stan file %s to exe file %s',
@@ -953,13 +954,11 @@ class CmdStanModel:
             parallel_procs = parallel_chains
             num_threads = threads_per_chain
             one_process_per_chain = True
-            assert isinstance(self.exe_file, str)  # make typechecker happy
             info_dict = self.exe_info()
             stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
             # run multi-chain sampler unless algo is fixed_param or 1 chain
-            force_one_process_per_chain = (
-                force_one_process_per_chain or fixed_param or (chains == 1)
-            )
+            if fixed_param or (chains == 1):
+                force_one_process_per_chain = True
 
             if (
                 force_one_process_per_chain is None
@@ -969,7 +968,7 @@ class CmdStanModel:
                 one_process_per_chain = False
                 num_threads = parallel_chains * num_threads
                 parallel_procs = 1
-            elif force_one_process_per_chain is False:
+            if force_one_process_per_chain is False:
                 if not cmdstan_version_before(2, 28, info_dict):
                     one_process_per_chain = False
                     num_threads = parallel_chains * num_threads
