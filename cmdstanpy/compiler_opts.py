@@ -69,7 +69,7 @@ class CompilerOptions:
 
     def __eq__(self, other: Any) -> bool:
         """Overrides the default implementation"""
-        if self.is_empty and other is None:  # equiv w/r/t compiler
+        if self.is_empty() and other is None:  # equiv w/r/t compiler
             return True
         if not isinstance(other, CompilerOptions):
             return False
