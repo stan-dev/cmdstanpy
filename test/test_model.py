@@ -56,19 +56,29 @@ class CmdStanModelTest(unittest.TestCase):
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertTrue(model.exe_file.endswith(BERN_EXE))
 
-        # instantiate with existing exe only - no model
-        model2 = CmdStanModel(exe_file=BERN_EXE)
-        self.assertEqual(BERN_EXE, model2.exe_file)
-        with self.assertRaises(RuntimeError):
-            model2.code()
-        with self.assertRaises(RuntimeError):
-            model2.compile()
-
         # instantiate, don't compile
         os.remove(BERN_EXE)
         model = CmdStanModel(stan_file=BERN_STAN, compile=False)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
+
+    def test_exe_only(self):
+        model = CmdStanModel(stan_file=BERN_STAN)
+        self.assertEqual(BERN_EXE, model.exe_file)
+        exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
+        shutil.copyfile(model.exe_file, exe_only)
+
+        model2 = CmdStanModel(exe_file=exe_only)
+        with self.assertRaises(RuntimeError):
+            model2.code()
+        with self.assertRaises(RuntimeError):
+            model2.compile()
+        self.assertFalse(model2._fixed_param)
+
+    def test_fixed_param(self):
+        stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
+        model = CmdStanModel(stan_file=stan)
+        self.assertTrue(model._fixed_param)
 
     # pylint: disable=no-self-use
     def test_model_pedantic(self):
