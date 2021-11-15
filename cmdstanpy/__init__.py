@@ -50,6 +50,7 @@ from .stanfit import (  # noqa
 from .utils import set_cmdstan_path  # noqa
 from .utils import (
     cmdstan_path,
+    cmdstan_version,
     install_cmdstan,
     set_make_env,
     show_versions,
@@ -71,4 +72,5 @@ __all__ = [
     'write_stan_json',
     'show_versions',
     'rebuild_cmdstan',
+    'cmdstan_version',
 ]
