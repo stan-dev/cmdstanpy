@@ -114,6 +114,7 @@ class CmdStanModel:
             cpp_options=cpp_options,
             user_header=user_header,
         )
+        self._fixed_param = False
 
         if model_name is not None:
             if not model_name.strip():
@@ -160,7 +161,6 @@ class CmdStanModel:
                     self._compiler_options.add_include_path(path)
 
             # try to detect models w/out parameters, needed for sampler
-            self._fixed_param = False
             if not cmdstan_version_before(2, 27) and cmdstan_version_before(
                 2, 29
             ):
@@ -1053,6 +1053,19 @@ class CmdStanModel:
                     msg, runset.__repr__()
                 )
                 raise RuntimeError(msg)
+
+            # if there was an exe-file only initialization,
+            # this could happen, so throw a nice error
+            if (
+                sampler_args.fixed_param
+                and not one_process_per_chain
+                and chains > 1
+            ):
+                raise RuntimeError(
+                    "Cannot use single-process multichain parallelism"
+                    " with algorithm fixed_param.\nTry setting argument"
+                    " force_one_process_per_chain to True"
+                )
 
             mcmc = CmdStanMCMC(runset)
         return mcmc
