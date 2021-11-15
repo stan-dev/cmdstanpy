@@ -1000,7 +1000,7 @@ def do_command(
        https://github.com/tqdm/tqdm#hooks-and-callbacks.
 
     """
-    get_logger().debug('cmd: %s', ' '.join(cmd))
+    get_logger().debug('cmd: %s\ncwd: %s', ' '.join(cmd), cwd)
     try:
         proc = subprocess.Popen(
             cmd,

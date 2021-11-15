@@ -7,6 +7,8 @@ import re
 import shutil
 import subprocess
 import sys
+import ujson as json
+
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
@@ -155,6 +157,23 @@ class CmdStanModel:
                     }
                 else:
                     self._compiler_options.add_include_path(path)
+
+            # try to detect models w/out parameters, needed for sampler
+            self._fixed_param = False
+            if not cmdstan_version_before(2, 27):
+                cmd = [os.path.join('bin', 'stanc'), '--info', self._stan_file]
+                sout = io.StringIO()
+                try:
+                    do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
+                    info_dict = json.loads(sout.getvalue())
+                    if (
+                        'parameters' in info_dict
+                        and isinstance(info_dict['parameters'], Mapping)
+                    ):
+                        if len(info_dict['parameters'].keys()) == 0:
+                            self._fixed_param = True
+                except (ValueError, RuntimeError):
+                    pass
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -622,7 +641,7 @@ class CmdStanModel:
         adapt_init_phase: Optional[int] = None,
         adapt_metric_window: Optional[int] = None,
         adapt_step_size: Optional[int] = None,
-        fixed_param: bool = False,
+        fixed_param: Optional[bool] = None,
         output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
@@ -830,6 +849,9 @@ class CmdStanModel:
 
         :return: CmdStanMCMC object
         """
+        if fixed_param is None:
+            fixed_param = self._fixed_param
+
         if chains is None:
             if fixed_param:
                 chains = 1
@@ -926,15 +948,17 @@ class CmdStanModel:
             assert isinstance(self.exe_file, str)  # make typechecker happy
             info_dict = self.exe_info
             stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
+            # run multi-chain sampler if possible, unless algo is fixed_param
             if (
                 force_one_process_per_chain is None
                 and not cmdstan_version_before(2, 28, info_dict)
+                and not fixed_param
                 and stan_threads == 'true'
             ):
                 one_process_per_chain = False
                 num_threads = parallel_chains * num_threads
                 parallel_procs = 1
-            if force_one_process_per_chain is False:
+            if force_one_process_per_chain is False and not fixed_param:
                 if not cmdstan_version_before(2, 28, info_dict):
                     one_process_per_chain = False
                     num_threads = parallel_chains * num_threads
@@ -1444,6 +1468,7 @@ class CmdStanModel:
             )
 
         # hack needed to parse CSV files if model has no params
+        # do we still need this?
         with open(runset.stdout_files[idx], 'r') as fd:
             console = fd.read()
             if 'running fixed_param sampler' in console:
