@@ -14,10 +14,11 @@ class CompilerOptsTest(unittest.TestCase):
         opts_a = CompilerOptions()
         self.assertTrue(opts_a.is_empty())
 
-        opts_b = CompilerOptions()
+        opts_b = None
         self.assertTrue(opts_a == opts_b)
-        opts_c = None
-        self.assertFalse(opts_a != opts_c)
+
+        opts_c = CompilerOptions(stanc_options={'--O'})
+        self.assertTrue(opts_a != opts_c != opts_b)
 
         stanc_opts = {}
         cpp_opts = {'STAN_THREADS': 'T'}
