@@ -28,13 +28,13 @@ given a set of N observations of i.i.d. binary data
 
 .. code:: stan
 
-   data { 
-      int<lower=0> N; 
+   data {
+      int<lower=0> N;
       int<lower=0,upper=1> y[N];
-    } 
+    }
     parameters {
       real<lower=0,upper=1> theta;
-    } 
+    }
     model {
       theta ~ beta(1,1);  // uniform prior on interval 0,1
       y ~ bernoulli(theta);
@@ -52,18 +52,18 @@ The function :func:`~cmdstan_path` returns the value of this environment variabl
     import os
     from cmdstanpy import cmdstan_path, CmdStanModel
 
-    # specify Stan program file 
+    # specify Stan program file
     stan_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
 
     # instantiate the model; compiles the Stan program as needed.
     model = CmdStanModel(stan_file=stan_file)
 
-    # inspect model object 
+    # inspect model object
     print(model)
 
     # inspect compiled model
-    print(model.exe_info)
-            
+    print(model.exe_info())
+
 Data inputs
 ^^^^^^^^^^^
 
@@ -105,8 +105,8 @@ to a temporary directory which is deleted when the current Python session is ter
     # specify data file
     data_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
 
-    # fit the model 
-    fit = model.sample(data=data_file) 
+    # fit the model
+    fit = model.sample(data=data_file)
 
     # printing the object reports sampler commands, output files
     print(fit)
@@ -139,13 +139,13 @@ The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all St
 
 .. ipython:: python
 
-    fit.draws().shape 
-    fit.draws(concat_chains=True).shape 
+    fit.draws().shape
+    fit.draws(concat_chains=True).shape
 
-    draws_theta = fit.stan_variable(var='theta') 
-    draws_theta.shape 
+    draws_theta = fit.stan_variable(var='theta')
+    draws_theta.shape
 
-                        
+
 CmdStan utilities:  `stansummary`, `diagnose`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -213,9 +213,9 @@ we recommend the value ``TRUE``.
 
 Progress bar
 ^^^^^^^^^^^^
-  
+
 By default, CmdStanPy displays a progress bar during sampling.
- 
+
 .. ipython:: python
     :verbatim:
 
@@ -243,7 +243,7 @@ this provides a way to inspect and debug model behavoir.
 
 Jupyter Lab Notebook requirements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  
+
 In a Jupyter notebook, this package requires the `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package.
 For help on installation and configuration, see
 `ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_

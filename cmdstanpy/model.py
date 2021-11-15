@@ -159,19 +159,10 @@ class CmdStanModel:
 
             # try to detect models w/out parameters, needed for sampler
             self._fixed_param = False
-            if not cmdstan_version_before(2, 27):
-                cmd = [os.path.join('bin', 'stanc'), '--info', self._stan_file]
-                sout = io.StringIO()
-                try:
-                    do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
-                    info_dict = json.loads(sout.getvalue())
-                    if 'parameters' in info_dict and isinstance(
-                        info_dict['parameters'], Mapping
-                    ):
-                        if len(info_dict['parameters'].keys()) == 0:
-                            self._fixed_param = True
-                except (ValueError, RuntimeError):
-                    pass
+            model_info = self.src_info()
+            if 'parameters' in model_info:
+                if len(model_info['parameters']) == 0:
+                    self._fixed_param = True
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -246,7 +237,6 @@ class CmdStanModel:
         """Full path to Stan exe file."""
         return self._exe_file
 
-    @property
     def exe_info(self) -> Dict[str, str]:
         """
         Run model with option 'info'. Parse output statements, which all
@@ -254,7 +244,7 @@ class CmdStanModel:
         If exe file compiled with CmdStan < 2.27, option 'info' isn't
         available and the method returns an empty dictionary.
         """
-        result: Dict[str, Any] = {}
+        result: Dict[str, str] = {}
         if self.exe_file is None:
             return result
         try:
@@ -268,6 +258,25 @@ class CmdStanModel:
                 result[kv_pair[0]] = kv_pair[1]
             return result
         except RuntimeError:
+            return result
+
+    def src_info(self) -> Dict[str, Any]:
+        """
+        Run stanc with option '--info'.
+
+        If stanc is older than 2.27 or if the stan
+        file cannot be found, returns an empty dictionary.
+        """
+        result: Dict[str, Any] = {}
+        if self.stan_file is None:
+            return result
+        try:
+            cmd = [os.path.join('bin', 'stanc'), '--info', self.stan_file]
+            sout = io.StringIO()
+            do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
+            result = json.loads(sout.getvalue())
+            return result
+        except (ValueError, RuntimeError):
             return result
 
     @property
@@ -355,8 +364,9 @@ class CmdStanModel:
                     self._compiler_options.add(compiler_options)
 
         src_time = os.path.getmtime(self._stan_file)
-        exe_base, _ = os.path.splitext(os.path.abspath(self._stan_file))
-        exe_target = Path(exe_base).as_posix() + EXTENSION
+        exe_target = (
+            os.path.basename(os.path.splitext(self._stan_file)[0]) + EXTENSION
+        )
         if os.path.exists(exe_target):
             exe_time = os.path.getmtime(exe_target)
         else:
@@ -371,16 +381,18 @@ class CmdStanModel:
         # if target path has space, use copy in a tmpdir (GNU-Make constraint)
         with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
             if is_copied:
-                exe_tmp, _ = os.path.splitext(os.path.abspath(stan_file))
-                exe_file = Path(exe_tmp).as_posix() + EXTENSION
+                exe_file = (
+                    os.path.basename(os.path.splitext(stan_file)[0]) + EXTENSION
+                )
             else:
                 exe_file = exe_target
 
-            if os.path.exists(exe_file):
-                hpp_file = Path(exe_base).as_posix() + '.hpp'
-                if os.path.exists(hpp_file):
-                    os.remove(hpp_file)
-                os.remove(exe_file)
+            if os.path.exists(exe_target):
+                os.remove(exe_target)
+            hpp_file = os.path.splitext(exe_target)[0] + '.hpp'
+            if os.path.exists(hpp_file):
+                os.remove(hpp_file)
+
             get_logger().info(
                 'compiling stan file %s to exe file %s',
                 self._stan_file,
@@ -942,19 +954,22 @@ class CmdStanModel:
             num_threads = threads_per_chain
             one_process_per_chain = True
             assert isinstance(self.exe_file, str)  # make typechecker happy
-            info_dict = self.exe_info
+            info_dict = self.exe_info()
             stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
-            # run multi-chain sampler if possible, unless algo is fixed_param
+            # run multi-chain sampler unless algo is fixed_param or 1 chain
+            force_one_process_per_chain = (
+                force_one_process_per_chain or fixed_param or (chains == 1)
+            )
+
             if (
                 force_one_process_per_chain is None
                 and not cmdstan_version_before(2, 28, info_dict)
-                and not fixed_param
                 and stan_threads == 'true'
             ):
                 one_process_per_chain = False
                 num_threads = parallel_chains * num_threads
                 parallel_procs = 1
-            if force_one_process_per_chain is False and not fixed_param:
+            elif force_one_process_per_chain is False:
                 if not cmdstan_version_before(2, 28, info_dict):
                     one_process_per_chain = False
                     num_threads = parallel_chains * num_threads
