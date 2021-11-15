@@ -600,6 +600,15 @@ class SampleTest(unittest.TestCase):
         )
         self.assertEqual(datagen_fit.step_size, None)
 
+        exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
+        shutil.copyfile(datagen_model.exe_file, exe_only)
+        datagen2_model = CmdStanModel(exe_file=exe_only)
+        datagen2_fit = datagen2_model.sample(
+            iter_sampling=100, show_progress=False
+        )
+        self.assertEqual(datagen2_fit.chains, 4)
+        self.assertEqual(datagen2_fit.step_size, None)
+
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
 
