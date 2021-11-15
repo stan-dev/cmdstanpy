@@ -72,7 +72,7 @@ class CmdStanModelTest(unittest.TestCase):
 
     # pylint: disable=no-self-use
     def test_model_pedantic(self):
-        stan_file=os.path.join(DATAFILES_PATH, 'bernoulli_pedantic.stan')
+        stan_file = os.path.join(DATAFILES_PATH, 'bernoulli_pedantic.stan')
         with LogCapture(level=logging.WARNING) as log:
             logging.getLogger()
             model = CmdStanModel(model_name='bern', stan_file=stan_file)
@@ -157,22 +157,23 @@ class CmdStanModelTest(unittest.TestCase):
     def test_compile_force(self):
         model = CmdStanModel(stan_file=BERN_STAN, compile=False, cpp_options={})
         if model.exe_file is not None:
-            os.remove(modle.exe_file)
+            os.remove(model.exe_file)
         model.compile(force=True)
         info_dict = model.exe_info
         self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
-        
+
         override_opts = {'STAN_THREADS': 'TRUE'}
         # model.compile(force=True, cpp_options=override_opts)
         # dict2 = model.exe_info
         # get_logger().info('dict 2 %s', dict2)
         # self.assertEqual(dict2['STAN_THREADS'].lower(), 'false')
 
-        model.compile(force=True, cpp_options=override_opts, override_options=True)
+        model.compile(
+            force=True, cpp_options=override_opts, override_options=True
+        )
         dict3 = model.exe_info
         get_logger().info('dict 3 %s', dict3)
         self.assertEqual(dict3['STAN_THREADS'].lower(), 'true')
-
 
     def test_model_paths(self):
         # pylint: disable=unused-variable
