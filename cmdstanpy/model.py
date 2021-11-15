@@ -161,12 +161,15 @@ class CmdStanModel:
 
             # try to detect models w/out parameters, needed for sampler
             self._fixed_param = False
-            model_info = self.src_info()
-            if (
-                'parameters' in model_info
-                and len(model_info['parameters']) == 0
+            if not cmdstan_version_before(2, 27) and cmdstan_version_before(
+                2, 29
             ):
-                self._fixed_param = True
+                model_info = self.src_info()
+                if (
+                    'parameters' in model_info
+                    and len(model_info['parameters']) == 0
+                ):
+                    self._fixed_param = True
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -368,17 +371,15 @@ class CmdStanModel:
                 else:
                     self._compiler_options.add(compiler_options)
 
-        src_time = os.path.getmtime(self._stan_file)
         exe_target = os.path.splitext(self._stan_file)[0] + EXTENSION
         if os.path.exists(exe_target):
+            src_time = os.path.getmtime(self._stan_file)
             exe_time = os.path.getmtime(exe_target)
-        else:
-            exe_time = 0
-        if exe_time > src_time and not force:
-            get_logger().info('found newer exe file, not recompiling')
-            if self._exe_file is None:  # called from constructor
-                self._exe_file = exe_target
-            return
+            if exe_time > src_time and not force:
+                get_logger().info('found newer exe file, not recompiling')
+                if self._exe_file is None:  # called from constructor
+                    self._exe_file = exe_target
+                return
 
         compilation_failed = False
         # if target path has space, use copy in a tmpdir (GNU-Make constraint)
@@ -1478,7 +1479,7 @@ class CmdStanModel:
             )
 
         # hack needed to parse CSV files if model has no params
-        # do we still need this?
+        # needed if exe is supplied without stan file
         with open(runset.stdout_files[idx], 'r') as fd:
             console = fd.read()
             if 'running fixed_param sampler' in console:
