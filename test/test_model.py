@@ -162,18 +162,19 @@ class CmdStanModelTest(unittest.TestCase):
         info_dict = model.exe_info()
         self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
 
-        override_opts = {'STAN_THREADS': 'TRUE'}
-        # model.compile(force=True, cpp_options=override_opts)
-        # dict2 = model.exe_info()
-        # get_logger().info('dict 2 %s', dict2)
-        # self.assertEqual(dict2['STAN_THREADS'].lower(), 'false')
+        more_opts = {'STAN_THREADS': 'TRUE'}
+        model.compile(force=True, cpp_options=more_opts)
+        dict2 = model.exe_info()
+        print(f'dict 2 \n{dict2}')
+        self.assertEqual(dict2['STAN_THREADS'].lower(), 'true')
 
+        override_opts = {'STAN_NO_RANGE_CHECK': 'TRUE'}
         model.compile(
             force=True, cpp_options=override_opts, override_options=True
         )
         dict3 = model.exe_info()
-        get_logger().info('dict 3 %s', dict3)
-        self.assertEqual(dict3['STAN_THREADS'].lower(), 'true')
+        print(f'dict 3 \n{dict3}')
+        self.assertEqual(dict3['STAN_THREADS'].lower(), 'false')
 
     def test_model_paths(self):
         # pylint: disable=unused-variable
