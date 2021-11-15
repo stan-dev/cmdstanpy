@@ -67,7 +67,7 @@ class CompilerOptions:
             self._stanc_options, self._cpp_options
         )
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         """Overrides the default implementation"""
         if self.is_empty and other is None:  # equiv w/r/t compiler
             return True

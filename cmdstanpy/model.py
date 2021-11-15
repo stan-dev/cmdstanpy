@@ -7,8 +7,6 @@ import re
 import shutil
 import subprocess
 import sys
-import ujson as json
-
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
@@ -16,6 +14,7 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
+import ujson as json
 from tqdm.auto import tqdm
 
 from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
@@ -166,9 +165,8 @@ class CmdStanModel:
                 try:
                     do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
                     info_dict = json.loads(sout.getvalue())
-                    if (
-                        'parameters' in info_dict
-                        and isinstance(info_dict['parameters'], Mapping)
+                    if 'parameters' in info_dict and isinstance(
+                        info_dict['parameters'], Mapping
                     ):
                         if len(info_dict['parameters'].keys()) == 0:
                             self._fixed_param = True
@@ -364,9 +362,7 @@ class CmdStanModel:
         else:
             exe_time = 0
         if exe_time > src_time and not force:
-            get_logger().info(
-                'found newer exe file, not recompiling'
-            )
+            get_logger().info('found newer exe file, not recompiling')
             if self._exe_file is None:  # called from constructor
                 self._exe_file = exe_target
             return
@@ -386,13 +382,14 @@ class CmdStanModel:
                     os.remove(hpp_file)
                 os.remove(exe_file)
             get_logger().info(
-                    'compiling stan file %s to exe file %s',
-                    self._stan_file, exe_target
+                'compiling stan file %s to exe file %s',
+                self._stan_file,
+                exe_target,
             )
 
             make = os.getenv(
                 'MAKE',
-                'make' if platform.system() != 'Windows' else 'mingw32-make'
+                'make' if platform.system() != 'Windows' else 'mingw32-make',
             )
             cmd = [make]
             if self._compiler_options is not None:
@@ -452,7 +449,6 @@ class CmdStanModel:
                         "cmdstanpy.rebuild_cmdstan().\nIf the "
                         "issue persists please open a bug report"
                     )
-
 
     def optimize(
         self,
