@@ -176,7 +176,7 @@ class CmdStanModelTest(CustomTestCase):
         self.assertTrue(os.path.exists(model.exe_file))
 
         info_dict = model.exe_info()
-        print(f'{info_dict=}')
+        print(f'info={info_dict}')
         self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
 
         more_opts = {'STAN_THREADS': 'TRUE'}
@@ -186,7 +186,7 @@ class CmdStanModelTest(CustomTestCase):
         self.assertTrue(os.path.exists(model.exe_file))
 
         info_dict2 = model.exe_info()
-        print(f'{info_dict2=}')
+        print(f'info2={info_dict2}')
         self.assertEqual(info_dict2['STAN_THREADS'].lower(), 'true')
 
         override_opts = {'STAN_NO_RANGE_CHECK': 'TRUE'}
@@ -195,7 +195,7 @@ class CmdStanModelTest(CustomTestCase):
             force=True, cpp_options=override_opts, override_options=True
         )
         info_dict3 = model.exe_info()
-        print(f'{info_dict3=}')
+        print(f'info3={info_dict3}')
         self.assertEqual(info_dict3['STAN_THREADS'].lower(), 'false')
 
     def test_model_paths(self):

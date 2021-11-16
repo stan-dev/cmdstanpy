@@ -114,7 +114,7 @@ class CmdStanModel:
             cpp_options=cpp_options,
             user_header=user_header,
         )
-        self._fixed_param: Optional[bool] = None
+        self._fixed_param = False
 
         if model_name is not None:
             if not model_name.strip():
@@ -425,9 +425,8 @@ class CmdStanModel:
 
             get_logger().debug('Console output:\n%s', console)
             if not compilation_failed:
-                if is_copied or not os.path.samefile(exe_file, exe_target):
+                if is_copied:
                     shutil.copy(exe_file, exe_target)
-                print(exe_target, exe_file)
                 self._exe_file = exe_target
                 get_logger().info(
                     'compiled model executable: %s', self._exe_file
@@ -657,7 +656,7 @@ class CmdStanModel:
         adapt_init_phase: Optional[int] = None,
         adapt_metric_window: Optional[int] = None,
         adapt_step_size: Optional[int] = None,
-        fixed_param: Optional[bool] = None,
+        fixed_param: bool = False,
         output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,

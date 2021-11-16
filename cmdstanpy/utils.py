@@ -1014,7 +1014,7 @@ def do_command(
             stderr=subprocess.STDOUT,  # avoid buffer overflow
             env=os.environ,
             universal_newlines=True,
-            shell=True,
+            shell=platform.system() == 'Windows',
         )
         while proc.poll() is None:
             if proc.stdout is not None:
