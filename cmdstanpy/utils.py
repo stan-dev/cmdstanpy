@@ -1004,44 +1004,44 @@ def do_command(
     """
     get_logger().debug('cmd: %s\ncwd: %s', ' '.join(cmd), cwd)
     try:
-        # TODO: replace with subprocess.run in later Python versions?
-        proc = subprocess.Popen(
-            cmd,
-            cwd=cwd,
-            bufsize=1,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,  # avoid buffer overflow
-            env=os.environ,
-            universal_newlines=True,
-            shell=platform.system() == 'Windows',
-        )
-        while proc.poll() is None:
-            if proc.stdout is not None:
-                line = proc.stdout.readline()
-                if fd_out is not None:
-                    fd_out.write(line)
-                if pbar is not None:
-                    pbar(line.strip())
-
-        stdout, _ = proc.communicate()
-        if stdout:
-            if len(stdout) > 0:
-                if fd_out is not None:
-                    fd_out.write(stdout)
-                if pbar is not None:
-                    pbar(stdout.strip())
-
-        if proc.returncode != 0:  # throw RuntimeError + msg
-            serror = ''
-            try:
-                serror = os.strerror(proc.returncode)
-            except (ArithmeticError, ValueError):
-                pass
-            msg = 'Command {}\n\t{} {}'.format(
-                cmd, returncode_msg(proc.returncode), serror
+        # NB: Using this rather than cwd arg to Popen due to windows behavior
+        with pushd(cwd if cwd is not None else '.'):
+            # TODO: replace with subprocess.run in later Python versions?
+            proc = subprocess.Popen(
+                cmd,
+                bufsize=1,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # avoid buffer overflow
+                env=os.environ,
+                universal_newlines=True,
             )
-            raise RuntimeError(msg)
+            while proc.poll() is None:
+                if proc.stdout is not None:
+                    line = proc.stdout.readline()
+                    if fd_out is not None:
+                        fd_out.write(line)
+                    if pbar is not None:
+                        pbar(line.strip())
+
+            stdout, _ = proc.communicate()
+            if stdout:
+                if len(stdout) > 0:
+                    if fd_out is not None:
+                        fd_out.write(stdout)
+                    if pbar is not None:
+                        pbar(stdout.strip())
+
+            if proc.returncode != 0:  # throw RuntimeError + msg
+                serror = ''
+                try:
+                    serror = os.strerror(proc.returncode)
+                except (ArithmeticError, ValueError):
+                    pass
+                msg = 'Command {}\n\t{} {}'.format(
+                    cmd, returncode_msg(proc.returncode), serror
+                )
+                raise RuntimeError(msg)
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
