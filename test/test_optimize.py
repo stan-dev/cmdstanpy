@@ -582,7 +582,6 @@ class OptimizeTest(unittest.TestCase):
         console = sys_stdout.getvalue()
         self.assertTrue('Chain [1] method = optimize' in console)
 
-
     def test_exe_only(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
@@ -599,7 +598,6 @@ class OptimizeTest(unittest.TestCase):
         self.assertEqual(
             mle.optimized_params_np[1], mle.optimized_params_dict['theta']
         )
-
 
 
 if __name__ == '__main__':

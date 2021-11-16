@@ -233,7 +233,6 @@ class VariationalTest(unittest.TestCase):
         console = sys_stdout.getvalue()
         self.assertTrue('Chain [1] method = variational' in console)
 
-
     def test_exe_only(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
@@ -245,7 +244,6 @@ class VariationalTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         variational = bern2_model.variational(data=jdata, algorithm='meanfield')
         self.assertEqual(variational.variational_sample.shape, (1000, 4))
-
 
 
 if __name__ == '__main__':
