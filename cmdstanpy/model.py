@@ -169,10 +169,7 @@ class CmdStanModel:
             ):
                 model_info = self.src_info()
                 if 'parameters' in model_info:
-                    if len(model_info['parameters']) == 0:
-                        self._fixed_param = True
-                    else:
-                        self._fixed_param = False
+                    self._fixed_param = len(model_info['parameters']) == 0
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
