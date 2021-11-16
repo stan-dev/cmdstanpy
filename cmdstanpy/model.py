@@ -114,7 +114,7 @@ class CmdStanModel:
             cpp_options=cpp_options,
             user_header=user_header,
         )
-        self._fixed_param = None
+        self._fixed_param: Optional[bool] = None
 
         if model_name is not None:
             if not model_name.strip():
