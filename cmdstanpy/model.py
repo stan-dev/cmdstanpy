@@ -114,7 +114,7 @@ class CmdStanModel:
             cpp_options=cpp_options,
             user_header=user_header,
         )
-        self._fixed_param = False
+        self._fixed_param = None
 
         if model_name is not None:
             if not model_name.strip():
@@ -165,11 +165,11 @@ class CmdStanModel:
                 2, 29
             ):
                 model_info = self.src_info()
-                if (
-                    'parameters' in model_info
-                    and len(model_info['parameters']) == 0
-                ):
-                    self._fixed_param = True
+                if ('parameters' in model_info):
+                    if len(model_info['parameters']) == 0:
+                        self._fixed_param = True
+                    else:
+                        self._fixed_param = False
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -1047,6 +1047,21 @@ class CmdStanModel:
                 sys.stdout.write('\n')
                 get_logger().info('CmdStan done processing.')
 
+
+            get_logger().debug('runset\n%s', runset.__repr__())
+            with open(runset.stdout_files[0], 'r') as fd:
+                console_msgs = fd.read()
+                get_logger().debug('chain 1 console\n%s', console_msgs)
+
+            # hack needed to parse CSV files if model has no params
+            # needed if exe is supplied without stan file
+            with open(runset.stdout_files[0], 'r') as fd:
+                console_msgs = fd.read()
+                if 'running fixed_param sampler' in console_msgs:
+                    get_logger().debug("fixed param model")
+                    sampler_args.fixed_param = True
+                    runset._args.method_args = sampler_args
+
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
                 msg = '{}Command and output files:\n{}'.format(
@@ -1490,17 +1505,6 @@ class CmdStanModel:
             get_logger().error(
                 '%s error: %s %s', logger_prefix, retcode_summary, serror
             )
-
-        # hack needed to parse CSV files if model has no params
-        # needed if exe is supplied without stan file
-        with open(runset.stdout_files[idx], 'r') as fd:
-            console = fd.read()
-            if 'running fixed_param sampler' in console:
-                sampler_args = runset._args.method_args
-                assert isinstance(
-                    sampler_args, SamplerArgs
-                )  # make the typechecker happy
-                sampler_args.fixed_param = True
 
     @staticmethod
     @progbar.wrap_callback
