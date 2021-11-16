@@ -24,11 +24,7 @@ from time import sleep
 from typing import Any, Dict, List
 
 from cmdstanpy import _DOT_CMDSTAN
-from cmdstanpy.utils import (
-    pushd,
-    validate_dir,
-    wrap_url_progress_hook,
-)
+from cmdstanpy.utils import pushd, validate_dir, wrap_url_progress_hook
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 IS_64BITS = sys.maxsize > 2 ** 32

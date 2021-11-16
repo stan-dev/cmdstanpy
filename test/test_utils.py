@@ -27,7 +27,7 @@ from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
-    TemporaryCopiedFile,
+    SanitizedOrTmpFilePath,
     check_sampler_csv,
     cmdstan_path,
     cmdstan_version,
@@ -91,7 +91,7 @@ class CmdStanPathTest(unittest.TestCase):
             prefix="cmdstan_tests", dir=_TMPDIR
         ) as tmpdir:
             good_path = os.path.join(tmpdir, 'good_dir')
-            with TemporaryCopiedFile(good_path) as (pth, is_changed):
+            with SanitizedOrTmpFilePath(good_path) as (pth, is_changed):
                 self.assertEqual(pth, good_path)
                 self.assertFalse(is_changed)
 
@@ -104,7 +104,7 @@ class CmdStanPathTest(unittest.TestCase):
 
             stan_copied = None
             try:
-                with TemporaryCopiedFile(stan_bad) as (pth, is_changed):
+                with SanitizedOrTmpFilePath(stan_bad) as (pth, is_changed):
                     stan_copied = pth
                     self.assertTrue(os.path.exists(stan_copied))
                     self.assertTrue(' ' not in stan_copied)

@@ -1,6 +1,7 @@
 """Testing utilities for CmdStanPy."""
 
 import contextlib
+import os
 import unittest
 from importlib import reload
 
@@ -30,3 +31,8 @@ class CustomTestCase(unittest.TestCase):
             reload(module)
             yield
         reload(module)
+
+    # pylint: disable=invalid-name
+    def assertPathsEqual(self, path1, path2):
+        """Assert paths are equal after normalization"""
+        self.assertTrue(os.path.samefile(path1, path2))

@@ -173,7 +173,7 @@ def cmdstan_path() -> str:
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
     validate_cmdstan_path(cmdstan)
-    return cmdstan
+    return os.path.normpath(cmdstan)
 
 
 def cmdstan_version() -> Optional[Tuple[int, ...]]:
@@ -1002,6 +1002,7 @@ def do_command(
     """
     get_logger().debug('cmd: %s\ncwd: %s', ' '.join(cmd), cwd)
     try:
+        # TODO: replace with subprocess.run in later Python versions?
         proc = subprocess.Popen(
             cmd,
             cwd=cwd,
@@ -1011,6 +1012,7 @@ def do_command(
             stderr=subprocess.STDOUT,  # avoid buffer overflow
             env=os.environ,
             universal_newlines=True,
+            shell=True,
         )
         while proc.poll() is None:
             if proc.stdout is not None:
@@ -1389,7 +1391,7 @@ class MaybeDictToFilePath:
                     pass
 
 
-class TemporaryCopiedFile:
+class SanitizedOrTmpFilePath:
     """Context manager for tmpfiles, handles spaces in filepath."""
 
     def __init__(self, file_path: str):

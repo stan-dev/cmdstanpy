@@ -13,8 +13,8 @@
 # serve to show the default.
 
 import os
-import sys
 import subprocess
+import sys
 
 # debug info
 print("python exec:", sys.executable)
