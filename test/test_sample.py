@@ -605,7 +605,7 @@ class SampleTest(unittest.TestCase):
         os.chmod(exe_only, 0o755)
         datagen2_model = CmdStanModel(exe_file=exe_only)
         datagen2_fit = datagen2_model.sample(
-            iter_sampling=200, show_progress=False
+            iter_sampling=200, show_console=True
         )
         self.assertEqual(datagen2_fit.chains, 4)
         self.assertEqual(datagen2_fit.step_size, None)

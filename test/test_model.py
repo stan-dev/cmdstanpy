@@ -57,11 +57,23 @@ class CmdStanModelTest(CustomTestCase):
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertPathsEqual(model.exe_file, BERN_EXE)
 
+    def test_ctor_compile_arg(self):
         # instantiate, don't compile
-        os.remove(BERN_EXE)
+        if os.path.exists(BERN_EXE):
+            os.remove(BERN_EXE)
         model = CmdStanModel(stan_file=BERN_STAN, compile=False)
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertEqual(None, model.exe_file)
+
+        model = CmdStanModel(stan_file=BERN_STAN, compile=True)
+        self.assertPathsEqual(model.exe_file, BERN_EXE)
+        exe_time = os.path.getmtime(model.exe_file)
+
+        model = CmdStanModel(stan_file=BERN_STAN)
+        self.assertTrue(exe_time == os.path.getmtime(model.exe_file))
+
+        model = CmdStanModel(stan_file=BERN_STAN, compile='force')
+        self.assertTrue(exe_time < os.path.getmtime(model.exe_file))
 
     def test_exe_only(self):
         model = CmdStanModel(stan_file=BERN_STAN)
@@ -109,6 +121,10 @@ class CmdStanModelTest(CustomTestCase):
             CmdStanModel(
                 stan_file=os.path.join(DATAFILES_PATH, "external.stan")
             )
+        CmdStanModel(stan_file=BERN_STAN)
+        os.remove(BERN_EXE)
+        with self.assertRaises(ValueError):
+            CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
 
     def test_stanc_options(self):
         opts = {
