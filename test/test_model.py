@@ -164,6 +164,12 @@ class CmdStanModelTest(CustomTestCase):
         model.compile(force=True)
         info_dict = model.exe_info()
         self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
+
+        if model.exe_file is not None and os.path.exists(model.exe_file):
+            os.remove(model.exe_file)
+        empty_dict = model.exe_info()
+        self.assertEqual(len(empty_dict), 0)
+
         model_info = model.src_info()
         self.assertNotEqual(model_info, {})
         self.assertIn('theta', model_info['parameters'])
