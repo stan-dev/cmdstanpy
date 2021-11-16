@@ -5,11 +5,12 @@ import os
 import shutil
 import tempfile
 import unittest
+from test import CustomTestCase
 
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, get_logger
+from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -33,12 +34,12 @@ BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
-class CmdStanModelTest(unittest.TestCase):
+class CmdStanModelTest(CustomTestCase):
     def test_model_good(self):
         # compile on instantiation, override model name
         model = CmdStanModel(model_name='bern', stan_file=BERN_STAN)
         self.assertEqual(BERN_STAN, model.stan_file)
-        self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
+        self.assertPathsEqual(model.exe_file, BERN_EXE)
         self.assertEqual('bern', model.name)
 
         # compile with external header
@@ -54,7 +55,7 @@ class CmdStanModelTest(unittest.TestCase):
         # instantiate with existing exe
         model = CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
         self.assertEqual(BERN_STAN, model.stan_file)
-        self.assertTrue(model.exe_file.endswith(BERN_EXE))
+        self.assertPathsEqual(model.exe_file, BERN_EXE)
 
         # instantiate, don't compile
         os.remove(BERN_EXE)
@@ -164,27 +165,58 @@ class CmdStanModelTest(unittest.TestCase):
         info_dict = model.exe_info()
         self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
 
-    def test_compile_force(self):
-        model = CmdStanModel(stan_file=BERN_STAN, compile=False, cpp_options={})
-        if model.exe_file is not None:
+        if model.exe_file is not None and os.path.exists(model.exe_file):
             os.remove(model.exe_file)
+        empty_dict = model.exe_info()
+        self.assertEqual(len(empty_dict), 0)
+
+        model_info = model.src_info()
+        self.assertNotEqual(model_info, {})
+        self.assertIn('theta', model_info['parameters'])
+
+    def test_compile_force(self):
+        if os.path.exists(BERN_EXE):
+            os.remove(BERN_EXE)
+        model = CmdStanModel(stan_file=BERN_STAN, compile=False, cpp_options={})
+        self.assertIsNone(model.exe_file)
+
         model.compile(force=True)
+        self.assertIsNotNone(model.exe_file)
+        self.assertTrue(os.path.exists(model.exe_file))
+
         info_dict = model.exe_info()
+        print(f'info={info_dict}')
         self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
 
         more_opts = {'STAN_THREADS': 'TRUE'}
-        model.compile(force=True, cpp_options=more_opts)
-        dict2 = model.exe_info()
-        print(f'dict 2 \n{dict2}')
-        self.assertEqual(dict2['STAN_THREADS'].lower(), 'true')
 
-        override_opts = {'STAN_NO_RANGE_CHECK': 'TRUE'}
+        model.compile(force=True, cpp_options=more_opts)
+        self.assertIsNotNone(model.exe_file)
+        self.assertTrue(os.path.exists(model.exe_file))
+
+        info_dict2 = model.exe_info()
+        print(f'info2={info_dict2}')
+        self.assertEqual(info_dict2['STAN_THREADS'].lower(), 'true')
+
+        override_opts = {'STAN_NO_RANGE_CHECKS': 'TRUE'}
+
         model.compile(
             force=True, cpp_options=override_opts, override_options=True
         )
-        dict3 = model.exe_info()
-        print(f'dict 3 \n{dict3}')
-        self.assertEqual(dict3['STAN_THREADS'].lower(), 'false')
+        info_dict3 = model.exe_info()
+        print(f'info3={info_dict3}')
+        self.assertEqual(info_dict3['STAN_THREADS'].lower(), 'false')
+        # cmdstan#1056
+        # self.assertEqual(info_dict3['STAN_NO_RANGE_CHECKS'].lower(), 'true')
+
+        model.compile(force=True, cpp_options=more_opts)
+        info_dict4 = model.exe_info()
+        self.assertEqual(info_dict4['STAN_THREADS'].lower(), 'true')
+
+        # test compile='force' in constructor
+        model2 = CmdStanModel(stan_file=BERN_STAN, compile='force')
+        info_dict5 = model2.exe_info()
+        self.assertEqual(info_dict5['STAN_THREADS'].lower(), 'false')
 
     def test_model_paths(self):
         # pylint: disable=unused-variable
@@ -256,10 +288,10 @@ class CmdStanModelTest(unittest.TestCase):
 
     def test_model_compile(self):
         model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
+        self.assertPathsEqual(model.exe_file, BERN_EXE)
 
         model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
+        self.assertPathsEqual(model.exe_file, BERN_EXE)
         old_exe_time = os.path.getmtime(model.exe_file)
         os.remove(BERN_EXE)
         model.compile()
@@ -286,7 +318,6 @@ class CmdStanModelTest(unittest.TestCase):
             shutil.copyfile(BERN_STAN, bern_stan_new)
             model = CmdStanModel(stan_file=bern_stan_new)
 
-            get_logger().info("here")
             old_exe_time = os.path.getmtime(model.exe_file)
             os.remove(bern_exe_new)
             model.compile()
@@ -305,7 +336,7 @@ class CmdStanModelTest(unittest.TestCase):
             stan_file=BERN_STAN, stanc_options={'include_paths': DATAFILES_PATH}
         )
         self.assertEqual(BERN_STAN, model.stan_file)
-        self.assertTrue(model.exe_file.endswith(BERN_EXE.replace('\\', '/')))
+        self.assertPathsEqual(model.exe_file, BERN_EXE)
 
     def test_model_includes_implicit(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
@@ -313,7 +344,7 @@ class CmdStanModelTest(unittest.TestCase):
         if os.path.exists(exe):
             os.remove(exe)
         model2 = CmdStanModel(stan_file=stan)
-        self.assertTrue(model2.exe_file.endswith(exe.replace('\\', '/')))
+        self.assertPathsEqual(model2.exe_file, exe)
 
 
 if __name__ == '__main__':

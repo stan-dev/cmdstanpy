@@ -37,7 +37,7 @@ from cmdstanpy.stanfit import (
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
-    TemporaryCopiedFile,
+    SanitizedOrTmpFilePath,
     cmdstan_path,
     cmdstan_version_before,
     do_command,
@@ -70,6 +70,8 @@ class CmdStanModel:
         must match, (but different directory locations are allowed).
 
     :param compile: Whether or not to compile the model.  Default is ``True``.
+        If set to the string ``"force"``, it will always compile even if
+        an existing executable is found.
 
     :param stanc_options: Options for stanc compiler, specified as a Python
         dictionary containing Stanc3 compiler option name, value pairs.
@@ -89,7 +91,8 @@ class CmdStanModel:
         model_name: Optional[str] = None,
         stan_file: Optional[str] = None,
         exe_file: Optional[str] = None,
-        compile: bool = True,
+        # TODO should be Literal['force'] not str
+        compile: Union[bool, str] = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
         user_header: Optional[str] = None,
@@ -114,7 +117,7 @@ class CmdStanModel:
             cpp_options=cpp_options,
             user_header=user_header,
         )
-        self._fixed_param: Optional[bool] = None
+        self._fixed_param = False
 
         if model_name is not None:
             if not model_name.strip():
@@ -166,10 +169,7 @@ class CmdStanModel:
             ):
                 model_info = self.src_info()
                 if 'parameters' in model_info:
-                    if len(model_info['parameters']) == 0:
-                        self._fixed_param = True
-                    else:
-                        self._fixed_param = False
+                    self._fixed_param = len(model_info['parameters']) == 0
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -210,7 +210,7 @@ class CmdStanModel:
                 get_logger().debug("TBB already found in load path")
 
         if compile and self._exe_file is None:
-            self.compile()
+            self.compile(force=compile == 'force')
             if self._exe_file is None:
                 raise ValueError(
                     'Unable to compile Stan model file: {}.'.format(
@@ -264,7 +264,8 @@ class CmdStanModel:
                     continue
                 result[kv_pair[0]] = kv_pair[1]
             return result
-        except RuntimeError:
+        except RuntimeError as e:
+            get_logger().debug(e)
             return result
 
     def src_info(self) -> Dict[str, Any]:
@@ -278,12 +279,18 @@ class CmdStanModel:
         if self.stan_file is None:
             return result
         try:
-            cmd = [os.path.join('bin', 'stanc'), '--info', self.stan_file]
+
+            cmd = [
+                os.path.join('.', 'bin', 'stanc' + EXTENSION),
+                '--info',
+                self.stan_file,
+            ]
             sout = io.StringIO()
             do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
             result = json.loads(sout.getvalue())
             return result
-        except (ValueError, RuntimeError):
+        except (ValueError, RuntimeError) as e:
+            get_logger().debug(e)
             return result
 
     @property
@@ -370,7 +377,6 @@ class CmdStanModel:
                     self._compiler_options = compiler_options
                 else:
                     self._compiler_options.add(compiler_options)
-
         exe_target = os.path.splitext(self._stan_file)[0] + EXTENSION
         if os.path.exists(exe_target):
             src_time = os.path.getmtime(self._stan_file)
@@ -383,17 +389,15 @@ class CmdStanModel:
 
         compilation_failed = False
         # if target path has space, use copy in a tmpdir (GNU-Make constraint)
-        with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-            if is_copied:
-                exe_file = os.path.splitext(stan_file)[0] + EXTENSION
-            else:
-                exe_file = exe_target
+        with SanitizedOrTmpFilePath(self._stan_file) as (stan_file, is_copied):
+            exe_file = os.path.splitext(stan_file)[0] + EXTENSION
 
-            hpp_file = os.path.splitext(exe_target)[0] + '.hpp'
+            hpp_file = os.path.splitext(exe_file)[0] + '.hpp'
             if os.path.exists(hpp_file):
                 os.remove(hpp_file)
-            if os.path.exists(exe_target):
-                os.remove(exe_target)
+            if os.path.exists(exe_file):
+                get_logger().debug('Removing %s', exe_file)
+                os.remove(exe_file)
 
             get_logger().info(
                 'compiling stan file %s to exe file %s',
@@ -419,6 +423,7 @@ class CmdStanModel:
             finally:
                 console = sout.getvalue()
 
+            get_logger().debug('Console output:\n%s', console)
             if not compilation_failed:
                 if is_copied:
                     shutil.copy(exe_file, exe_target)
@@ -651,7 +656,7 @@ class CmdStanModel:
         adapt_init_phase: Optional[int] = None,
         adapt_metric_window: Optional[int] = None,
         adapt_step_size: Optional[int] = None,
-        fixed_param: Optional[bool] = None,
+        fixed_param: bool = False,
         output_dir: Optional[str] = None,
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
@@ -1048,16 +1053,14 @@ class CmdStanModel:
                 get_logger().info('CmdStan done processing.')
 
             get_logger().debug('runset\n%s', runset.__repr__())
-            with open(runset.stdout_files[0], 'r') as fd:
-                console_msgs = fd.read()
-                get_logger().debug('chain 1 console\n%s', console_msgs)
 
             # hack needed to parse CSV files if model has no params
             # needed if exe is supplied without stan file
             with open(runset.stdout_files[0], 'r') as fd:
                 console_msgs = fd.read()
+                get_logger().debug('Chain 1 console:\n%s', console_msgs)
                 if 'running fixed_param sampler' in console_msgs:
-                    get_logger().debug("fixed param model")
+                    get_logger().debug("Detected fixed param model")
                     sampler_args.fixed_param = True
                     runset._args.method_args = sampler_args
 
