@@ -557,7 +557,7 @@ def parse_rdump_value(rhs: str) -> Union[int, float, np.ndarray]:
 
 def check_sampler_csv(
     path: str,
-    is_fixed_param: bool = False,
+    is_fixed_param: Optional[bool] = None,
     iter_sampling: Optional[int] = None,
     iter_warmup: Optional[int] = None,
     save_warmup: bool = False,
@@ -610,7 +610,9 @@ def check_sampler_csv(
     return meta
 
 
-def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
+def scan_sampler_csv(
+    path: str, is_fixed_param: Optional[bool]
+) -> Dict[str, Any]:
     """Process sampler stan_csv output file line by line."""
     dict: Dict[str, Any] = {}
     lineno = 0

@@ -51,7 +51,7 @@ class SamplerArgs:
         adapt_init_phase: Optional[int] = None,
         adapt_metric_window: Optional[int] = None,
         adapt_step_size: Optional[int] = None,
-        fixed_param: bool = False,
+        fixed_param: Optional[bool] = None,
     ) -> None:
         """Initialize object."""
         self.iter_warmup = iter_warmup
