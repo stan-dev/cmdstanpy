@@ -165,7 +165,7 @@ class CmdStanModel:
                 2, 29
             ):
                 model_info = self.src_info()
-                if ('parameters' in model_info):
+                if 'parameters' in model_info:
                     if len(model_info['parameters']) == 0:
                         self._fixed_param = True
                     else:
@@ -1046,7 +1046,6 @@ class CmdStanModel:
                         sys.stdout.flush()
                 sys.stdout.write('\n')
                 get_logger().info('CmdStan done processing.')
-
 
             get_logger().debug('runset\n%s', runset.__repr__())
             with open(runset.stdout_files[0], 'r') as fd:
