@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 import os
+import shutil
 import unittest
 
 import numpy as np
@@ -580,6 +581,25 @@ class OptimizeTest(unittest.TestCase):
             )
         console = sys_stdout.getvalue()
         self.assertTrue('Chain [1] method = optimize' in console)
+
+
+    def test_exe_only(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
+        shutil.copyfile(bern_model.exe_file, exe_only)
+        os.chmod(exe_only, 0o755)
+
+        bern2_model = CmdStanModel(exe_file=exe_only)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        mle = bern_model.optimize(data=jdata)
+        self.assertEqual(
+            mle.optimized_params_np[0], mle.optimized_params_dict['lp__']
+        )
+        self.assertEqual(
+            mle.optimized_params_np[1], mle.optimized_params_dict['theta']
+        )
+
 
 
 if __name__ == '__main__':
