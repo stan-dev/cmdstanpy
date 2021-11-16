@@ -1061,13 +1061,6 @@ class CmdStanModel:
                     sampler_args.fixed_param = True
                     runset._args.method_args = sampler_args
 
-            if not runset._check_retcodes():
-                msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
-                msg = '{}Command and output files:\n{}'.format(
-                    msg, runset.__repr__()
-                )
-                raise RuntimeError(msg)
-
             # if there was an exe-file only initialization,
             # this could happen, so throw a nice error
             if (
@@ -1080,6 +1073,13 @@ class CmdStanModel:
                     " with algorithm fixed_param.\nTry setting argument"
                     " force_one_process_per_chain to True"
                 )
+
+            if not runset._check_retcodes():
+                msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
+                msg = '{}Command and output files:\n{}'.format(
+                    msg, runset.__repr__()
+                )
+                raise RuntimeError(msg)
 
             mcmc = CmdStanMCMC(runset)
         return mcmc
