@@ -591,7 +591,7 @@ class OptimizeTest(unittest.TestCase):
 
         bern2_model = CmdStanModel(exe_file=exe_only)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        mle = bern_model.optimize(data=jdata)
+        mle = bern2_model.optimize(data=jdata)
         self.assertEqual(
             mle.optimized_params_np[0], mle.optimized_params_dict['lp__']
         )
