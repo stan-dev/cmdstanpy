@@ -70,6 +70,8 @@ class CmdStanModel:
         must match, (but different directory locations are allowed).
 
     :param compile: Whether or not to compile the model.  Default is ``True``.
+        If set to the string ``"force"``, it will always compile even if
+        an existing executable is found.
 
     :param stanc_options: Options for stanc compiler, specified as a Python
         dictionary containing Stanc3 compiler option name, value pairs.
@@ -89,7 +91,8 @@ class CmdStanModel:
         model_name: Optional[str] = None,
         stan_file: Optional[str] = None,
         exe_file: Optional[str] = None,
-        compile: bool = True,
+        # TODO should be Literal['force'] not str
+        compile: Union[bool, str] = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
         user_header: Optional[str] = None,
@@ -210,7 +213,7 @@ class CmdStanModel:
                 get_logger().debug("TBB already found in load path")
 
         if compile and self._exe_file is None:
-            self.compile()
+            self.compile(force=compile == 'force')
             if self._exe_file is None:
                 raise ValueError(
                     'Unable to compile Stan model file: {}.'.format(

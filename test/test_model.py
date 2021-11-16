@@ -192,7 +192,7 @@ class CmdStanModelTest(CustomTestCase):
         print(f'info2={info_dict2}')
         self.assertEqual(info_dict2['STAN_THREADS'].lower(), 'true')
 
-        override_opts = {'STAN_NO_RANGE_CHECK': 'TRUE'}
+        override_opts = {'STAN_NO_RANGE_CHECKS': 'TRUE'}
 
         model.compile(
             force=True, cpp_options=override_opts, override_options=True
@@ -200,6 +200,17 @@ class CmdStanModelTest(CustomTestCase):
         info_dict3 = model.exe_info()
         print(f'info3={info_dict3}')
         self.assertEqual(info_dict3['STAN_THREADS'].lower(), 'false')
+        # cmdstan#1056
+        # self.assertEqual(info_dict3['STAN_NO_RANGE_CHECKS'].lower(), 'true')
+
+        model.compile(force=True, cpp_options=more_opts)
+        info_dict4 = model.exe_info()
+        self.assertEqual(info_dict4['STAN_THREADS'].lower(), 'true')
+
+        # test compile='force' in constructor
+        model2 = CmdStanModel(stan_file=BERN_STAN, compile='force')
+        info_dict5 = model2.exe_info()
+        self.assertEqual(info_dict5['STAN_THREADS'].lower(), 'false')
 
     def test_model_paths(self):
         # pylint: disable=unused-variable
