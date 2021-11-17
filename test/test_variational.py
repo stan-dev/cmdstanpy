@@ -242,7 +242,11 @@ class VariationalTest(unittest.TestCase):
 
         bern2_model = CmdStanModel(exe_file=exe_only)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        variational = bern2_model.variational(data=jdata, algorithm='meanfield')
+        variational = bern2_model.variational(
+            data=jdata,
+            require_converged=False,
+            seed=12345,
+            algorithm='meanfield')
         self.assertEqual(variational.variational_sample.shape, (1000, 4))
 
 
