@@ -39,18 +39,21 @@ managing the resulting inference for a single model and set of inputs.
 Compile the Stan model
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The: :class:`CmdStanModel` class manages the Stan program and its corresponding compiled executable and
-provides properties and functions to inspect the model code and filepaths.
+The: :class:`CmdStanModel` class provides methods
+to compile and run the Stan program.
+A CmdStanModel object can be instantiated by specifying
+either a Stan file or the executable file.
 
-A model object can be instantiated by specifying either the Stan program file path
-or the compiled executable file path or both.
-If only the Stan program file is specified, by default,
-CmdStanPy will try to compile the model.
-If both the model and executable file are specified,
-the constructor will compare the filesystem timestamps and
-will only compile the program if the Stan file has a later timestamp which
-indicates that the program may have been edited.
-The constructor argument ``compile=False`` will override the default behavoir.
+By default, when a CmdStanModel object is instantiated from a Stan file,
+CmdStanPy will automatically compile the model if:
+
+- CmdStanPy cannot find a corresponding executable file in the same directory, or
+- The timestamp on the executable is older than the Stan file.
+
+The argument `compile` controls this behavoir.
+When ``False`` the model object doesn't try to compile the Stan file.
+When ``True`` the model compiles the Stan file only if the timestamp is older than the Stan file.
+When ``Force`` the model always compiles or recompiles the mode.
 
 .. code-block:: python
 
@@ -64,10 +67,6 @@ The constructor argument ``compile=False`` will override the default behavoir.
     my_model.exe_file
     my_model.code()
 
-The method :meth:`~CmdStanModel.compile` is used to compile the model as needed.
-When the argument ``force=True`` is present, CmdStanPy will always compile the model,
-even if the existing executable file is newer than the Stan program file.
- 
 Model compilation is carried out via the GNU Make build tool.
 The CmdStan ``makefile`` contains a set of general rules which
 specify the dependencies between the Stan program and the
