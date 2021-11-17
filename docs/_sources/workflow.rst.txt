@@ -39,18 +39,21 @@ managing the resulting inference for a single model and set of inputs.
 Compile the Stan model
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The: :class:`CmdStanModel` class manages the Stan program and its corresponding compiled executable and
-provides properties and functions to inspect the model code and filepaths.
+The: :class:`CmdStanModel` class provides methods
+to compile and run the Stan program.
+A CmdStanModel object can be instantiated by specifying
+either a Stan file or the executable file, or both.
+If only the Stan file path is specified, the constructor will
+check for the existence of a correspondingly named exe file in
+the same directory.  If found, it will use this as the exe file path.
 
-A model object can be instantiated by specifying either the Stan program file path
-or the compiled executable file path or both.
-If only the Stan program file is specified, by default,
-CmdStanPy will try to compile the model.
-If both the model and executable file are specified,
-the constructor will compare the filesystem timestamps and
-will only compile the program if the Stan file has a later timestamp which
-indicates that the program may have been edited.
-The constructor argument ``compile=False`` will override the default behavoir.
+By default, when a CmdStanModel object is instantiated from a Stan file,
+the constructor will compile the model as needed.
+The constructor argument `compile` controls this behavior.
+
+* ``compile=False``: never compile the Stan file.
+* ``compile=Force``: always compile the Stan file.
+* ``compile=True``: (default) compile the Stan file as needed, i.e., if no exe file exists or if the Stan file is newer than the exe file.
 
 .. code-block:: python
 
@@ -64,10 +67,9 @@ The constructor argument ``compile=False`` will override the default behavoir.
     my_model.exe_file
     my_model.code()
 
-The method :meth:`~CmdStanModel.compile` is used to compile the model as needed.
-When the argument ``force=True`` is present, CmdStanPy will always compile the model,
-even if the existing executable file is newer than the Stan program file.
- 
+The CmdStanModel class also provides the :meth:`~CmdStanModel.compile` method,
+which can be called at any point to (re)compile the model as needed.
+
 Model compilation is carried out via the GNU Make build tool.
 The CmdStan ``makefile`` contains a set of general rules which
 specify the dependencies between the Stan program and the
@@ -87,25 +89,22 @@ specify options for each compilation step.
 Options are specified as a Python dictionary mapping
 compiler option names to appropriate values.
 
-To use Stan's 
-`parallelization <https://mc-stan.org/docs/cmdstan-guide/parallelization.html>`__
-features, Stan programs must be compiled with the appropriate C++ compiler flags.
-If you are running GPU hardware and wish to use the OpenCL framework to speed up matrix operations,
-you must set the C++ compiler flag **STAN_OPENCL**.
-For high-level within-chain parallelization using the Stan language `reduce_sum` function,
-it's necessary to set the C++ compiler flag **STAN_THREADS**.  While any value can be used,
-we recommend the value ``True``.
+In order parallelize within-chain computations using the
+Stan language ``reduce_sum`` function, or to parallelize
+running the NUTS-HMC sampler across chains,
+the Stan model must be compiled with
+C++ compiler flag **STAN_THREADS**.
+While any value can be used,
+we recommend the value ``True``, e.g.:
 
-For example, given Stan program named 'proc_parallel.stan', you can take
-advantage of both kinds of parallelization by specifying the compiler options when instantiating
-the model:
 
 .. code-block:: python
 
-    proc_parallel_model = CmdStanModel(
-        stan_file='proc_parallel.stan',
-        cpp_options={"STAN_THREADS": True, "STAN_OPENCL": True},
-    )
+    import os
+    from cmdstanpy import CmdStanModel
+
+    my_stanfile = os.path.join('.', 'my_model.stan')
+    my_model = CmdStanModel(stan_file=my_stanfile, cpp_options={'STAN_THREADS':'true'})
 
 
 Assemble input and initialization data
@@ -127,7 +126,7 @@ numpy arrays or pandas.Series.
 Run the CmdStan inference engine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For each CmdStan inference method, there is a corresponding method on the :class:`CmdStanModel` class. 
+For each CmdStan inference method, there is a corresponding method on the :class:`CmdStanModel` class.
 An example of each is provided in the `next section <examples.rst>`__
 
 * The :meth:`~CmdStanModel.sample` method runs Stan's
@@ -137,14 +136,14 @@ An example of each is provided in the `next section <examples.rst>`__
   a sample from the posterior distribution of the model conditioned on the data.
 
 * The :meth:`~CmdStanModel.variational` method runs Stan's
-  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`_. 
+  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`_.
 
   It returns a :class:`CmdStanVB` object which contains
   an approximation the posterior distribution in the unconstrained variable space.
 
 * The :meth:`~CmdStanModel.optimize` runs one of
   `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`_
-  to find a mode of the density specified by the Stan program.  
+  to find a mode of the density specified by the Stan program.
 
   It returns a :class:`CmdStanMLE` object.
 
@@ -155,16 +154,16 @@ An example of each is provided in the `next section <examples.rst>`__
 
   It returns a :class:`CmdStanGQ` object.
 
-  
+
 Validate, view, export the inference engine outputs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The inference engine results objects 
+The inference engine results objects
 :class:`CmdStanMCMC`, :class:`CmdStanVB`, :class:`CmdStanMLE` and :class:`CmdStanGQ,`
 contain the CmdStan method configuration information
 and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
-as well as method-specific informational properties and methods.objects 
+as well as method-specific informational properties and methods.objects
 
 Metadata
 --------
@@ -192,14 +191,14 @@ the object's :attr:`~CmdStanMCMC.metadata` property.
   property specifies the names, dimensions of the Stan model variables.
 
 Output data
------------  
+-----------
 
 The CSV data is assembled into the inference result object.
 CmdStanPy provides accessor methods which return this information
 either as columnar data (i.e., in terms of the CSV file columns),
 or as method and model variables.
 
-The :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd` methods 
+The :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd` methods
 for both :class:`CmdStanMCMC` and :class:`CmdStanGQ` return the sample contents
 in columnar format, as a numpy.ndarray or pandas.DataFrame, respectively. Similarly,
 the :meth:`~CmdStanMCMC.draws_xr` method  of these two objects returns the sample

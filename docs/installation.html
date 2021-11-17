@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Installation &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>Installation &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -260,7 +260,8 @@ and CmdStan are both available via the
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create -n cmdstan -c conda-forge cmdstanpy
 </pre></div>
 </div>
-<p>but installation is possible in an existing environment:</p>
+<p>but installation is possible in an existing environment
+(Note: you must re-activate the environment after running this command!):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda install -c conda-forge cmdstanpy
 </pre></div>
 </div>
@@ -270,9 +271,9 @@ a conda environment. To use them, run <code class="docutils literal notranslate"
 or whichever name you used for your environment (following <code class="docutils literal notranslate"><span class="pre">-n</span></code>
 above).</p>
 <p>Note that CmdStan is only available on conda for versions
-2.27.0 and newer. If you require an older version, you must use
+2.26.1 and newer. If you require an older version, you must use
 one of the following methods to install it. If you require a
-version of CmdStan <em>newer</em> than 2.27.0, but not the latest,
+version of CmdStan <em>newer</em> than 2.26.1”, but not the latest,
 you can install it in the standard conda way by specifying
 <code class="docutils literal notranslate"><span class="pre">cmdstan==VERSION</span></code> in the install command.</p>
 </section>
@@ -357,7 +358,7 @@ dir <span class="s2">&quot;%HOME%/.cmdstan&quot;</span>
 </div>
 <p>The named arguments: <cite>-d &lt;directory&gt;</cite> and  <cite>-v &lt;version&gt;</cite>
 can be used to override these defaults:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan -d my_local_cmdstan -v <span class="m">2</span>.20.0
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan -d my_local_cmdstan -v <span class="m">2</span>.27.0
 ls -F my_local_cmdstan
 </pre></div>
 </div>
@@ -443,7 +444,7 @@ get and set this environment variable:</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

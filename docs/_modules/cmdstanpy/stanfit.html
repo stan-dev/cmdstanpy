@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>cmdstanpy.stanfit &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="../../_static/css/theme.css" rel="stylesheet">
   <link href="../../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -58,7 +58,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -227,156 +227,101 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="RunSet"><a class="viewcode-back" href="../../api.html#cmdstanpy.RunSet">[docs]</a><span class="k">class</span> <span class="nc">RunSet</span><span class="p">:</span>
+<div class="viewcode-block" id="RunSet"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.RunSet">[docs]</a><span class="k">class</span> <span class="nc">RunSet</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encapsulates the configuration and results of a call to any CmdStan</span>
 <span class="sd">    inference method. Records the method return code and locations of</span>
 <span class="sd">    all console, error, and output files.</span>
+
+<span class="sd">    RunSet objects are instantiated by the CmdStanModel class inference methods</span>
+<span class="sd">    which validate all inputs, therefore &quot;__init__&quot; method skips input checks.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">args</span><span class="p">:</span> <span class="n">CmdStanArgs</span><span class="p">,</span>
-        <span class="n">chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">chain_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
+        <span class="n">one_process_per_chain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Initialize object (no input arg checks).&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="n">args</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_chains</span> <span class="o">=</span> <span class="n">chains</span>
-        <span class="k">if</span> <span class="n">chains</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;Chains must be positive integer value, &#39;</span>
-                <span class="s1">&#39;found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chains</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">chain_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">chain_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="n">chains</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;Mismatch between number of chains and chain_ids, &#39;</span>
-                <span class="s1">&#39;found </span><span class="si">{}</span><span class="s1"> chains, but </span><span class="si">{}</span><span class="s1"> chain_ids&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">chains</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span> <span class="o">=</span> <span class="n">chain_ids</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
-
-        <span class="c1"># console output written to text file</span>
-        <span class="c1"># prefix: ``&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-&lt;chain_id&gt;``</span>
-        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
-        <span class="n">now_str</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">time_fmt</span><span class="p">)</span>
-        <span class="n">file_basename</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">args</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">now_str</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">output_dir</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_one_process_per_chain</span> <span class="o">=</span> <span class="n">one_process_per_chain</span>
+        <span class="k">if</span> <span class="n">one_process_per_chain</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span> <span class="o">=</span> <span class="n">chains</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">output_dir</span> <span class="o">=</span> <span class="n">_TMPDIR</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">csv_file</span> <span class="o">=</span> <span class="n">create_named_text_file</span><span class="p">(</span>
-                    <span class="nb">dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
-                    <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">-&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])),</span>
-                    <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">csv_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                    <span class="n">output_dir</span><span class="p">,</span>
-                    <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="s1">&#39;csv&#39;</span><span class="p">),</span>
-                <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">csv_file</span>
-            <span class="n">stdout_file</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">csv_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;-stdout.txt&#39;</span><span class="p">]</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">stdout_file</span>
-            <span class="c1"># optional output files:  diagnostics, profiling</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">chain_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">chain_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span> <span class="o">=</span> <span class="n">chain_ids</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_dir</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_dir</span> <span class="o">=</span> <span class="n">_TMPDIR</span>
+
+        <span class="c1"># output files prefix: ``&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;_&lt;chain_id&gt;``</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_outfile</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">time_fmt</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+        <span class="c1"># per-process console messages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span>
+        <span class="k">if</span> <span class="n">one_process_per_chain</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;-stdout.txt&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;-stdout.txt&quot;</span><span class="p">)</span>
+
+        <span class="c1"># per-chain output files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">chains</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">chains</span>  <span class="c1"># optional</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">chains</span>  <span class="c1"># optional</span>
+
+        <span class="k">if</span> <span class="n">chains</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">diag_file</span> <span class="o">=</span> <span class="n">create_named_text_file</span><span class="p">(</span>
-                        <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">,</span>
-                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-diagnostic-</span><span class="si">{}</span><span class="s1">-&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                        <span class="p">),</span>
-                        <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">diag_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">output_dir</span><span class="p">,</span>
-                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-diagnostic-</span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="s1">&#39;csv&#39;</span>
-                        <span class="p">),</span>
-                    <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">diag_file</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
+                    <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-diagnostic&quot;</span>
+                <span class="p">)</span>
             <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">profile_file</span> <span class="o">=</span> <span class="n">create_named_text_file</span><span class="p">(</span>
-                        <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">,</span>
-                        <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-profile-</span><span class="si">{}</span><span class="s1">-&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                        <span class="p">),</span>
-                        <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">profile_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">output_dir</span><span class="p">,</span>
-                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">-profile-</span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="n">file_basename</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="s1">&#39;csv&#39;</span>
-                        <span class="p">),</span>
-                    <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile_file</span>
-            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
-                        <span class="n">i</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                        <span class="n">diagnostic_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                        <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
+                    <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span>
                 <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
-                        <span class="n">i</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                        <span class="n">diagnostic_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
+                        <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-diagnostic&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                     <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
-                        <span class="n">i</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                        <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
+                        <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                     <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;RunSet: chains=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">)</span>
-        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> cmd:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;RunSet: chains=</span><span class="si">{}</span><span class="s1">, chain_ids=</span><span class="si">{}</span><span class="s1">, num_processes=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span>
+        <span class="p">)</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> cmd (chain 1):</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cmd</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> retcodes=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> csv_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">)</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">repr</span><span class="si">}</span><span class="se">\n</span><span class="s1"> per-chain output files (showing chain 1 only):&#39;</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> csv_file:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_latent_dynamics</span><span class="p">:</span>
+            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> diagnostics_file:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_latent_dynamics</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> diagnostics_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
+            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> profile_file:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_profile</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> profile_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> console_msgs:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="nb">repr</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">)</span>
-            <span class="p">)</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> console_msgs (if any):</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="nd">@property</span>
@@ -390,6 +335,21 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_procs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Number of processes run.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">one_process_per_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        When True, for each chain, call CmdStan in its own subprocess.</span>
+<span class="sd">        When False, use CmdStan&#39;s `num_chains` arg to run parallel chains.</span>
+<span class="sd">        Always True if CmdStan &lt; 2.28.</span>
+<span class="sd">        For CmdStan 2.28 and up, `sample` method determines value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_process_per_chain</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Number of chains.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chains</span>
@@ -399,10 +359,35 @@
         <span class="sd">&quot;&quot;&quot;Chain ids.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">cmds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;List of call(s) to CmdStan, one call per-chain.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmds</span>
+<div class="viewcode-block" id="RunSet.cmd"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.RunSet.cmd">[docs]</a>    <span class="k">def</span> <span class="nf">cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assemble CmdStan invocation.</span>
+<span class="sd">        When running parallel chains from single process (2.28 and up),</span>
+<span class="sd">        specify CmdStan arg `num_chains` and leave chain idx off CSV files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_one_process_per_chain</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
+                <span class="n">idx</span><span class="p">,</span>
+                <span class="n">csv_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+                <span class="n">diagnostic_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">diagnostic_files</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_latent_dynamics</span>
+                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">profile_files</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_profile</span>
+                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">compose_command</span><span class="p">(</span>
+                <span class="n">idx</span><span class="p">,</span>
+                <span class="n">csv_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">),</span>
+                <span class="n">diagnostic_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-diagnostic&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_latent_dynamics</span>
+                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_profile</span>
+                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">num_chains</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">,</span>
+            <span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -419,8 +404,8 @@
 
     <span class="k">def</span> <span class="nf">_check_retcodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Returns ``True`` when all chains have retcode 0.&quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span>
 
@@ -434,42 +419,48 @@
         <span class="sd">&quot;&quot;&quot;List of paths to CmdStan profiler files.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span>
 
+    <span class="c1"># pylint: disable=invalid-name</span>
+    <span class="k">def</span> <span class="nf">file_path</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="nb">id</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_outfile</span><span class="si">}{</span><span class="n">extra</span><span class="si">}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">file</span>
+
     <span class="k">def</span> <span class="nf">_retcode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get retcode for chain[idx].&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Get retcode for process[idx].&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_set_retcode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Set retcode for chain[idx] to val.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set retcode at process[idx] to val.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
-<div class="viewcode-block" id="RunSet.get_err_msgs"><a class="viewcode-back" href="../../api.html#cmdstanpy.RunSet.get_err_msgs">[docs]</a>    <span class="k">def</span> <span class="nf">get_err_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Checks console messages for each chain.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="RunSet.get_err_msgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.RunSet.get_err_msgs">[docs]</a>    <span class="k">def</span> <span class="nf">get_err_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Checks console messages for each CmdStan run.&quot;&quot;&quot;</span>
         <span class="n">msgs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span>
             <span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">SAMPLE</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">OPTIMIZE</span><span class="p">:</span>
+                    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;console log output:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                        <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
                     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
                         <span class="n">contents</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
                         <span class="c1"># pattern matches initial &quot;Exception&quot; or &quot;Error&quot; msg</span>
                         <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^E[rx].*$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
                         <span class="n">errors</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">pat</span><span class="p">,</span> <span class="n">contents</span><span class="p">)</span>
                         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                                <span class="s1">&#39;chain_id </span><span class="si">{}</span><span class="s1">:</span><span class="se">\n\t</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
-                                <span class="p">)</span>
-                            <span class="p">)</span>
-                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">OPTIMIZE</span><span class="p">:</span>
-                    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;console log output:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                        <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-
+                            <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span>
         <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msgs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="RunSet.save_csvfiles"><a class="viewcode-back" href="../../api.html#cmdstanpy.RunSet.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="RunSet.save_csvfiles"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.RunSet.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Moves CSV files to specified directory.</span>
 
@@ -496,14 +487,7 @@
                     <span class="s1">&#39;Cannot access CSV file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="p">)</span>
 
-            <span class="n">path</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-            <span class="k">if</span> <span class="n">path</span> <span class="o">==</span> <span class="n">_TMPDIR</span><span class="p">:</span>  <span class="c1"># cleanup tmpstr in filename</span>
-                <span class="n">root</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-                <span class="n">rlist</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
-                <span class="n">root</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rlist</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">root</span><span class="p">,</span> <span class="n">ext</span><span class="p">])</span>
-
-            <span class="n">to_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="n">to_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">to_path</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;File exists, not overwriting: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">to_path</span><span class="p">)</span>
@@ -520,7 +504,7 @@
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div></div>
 
 
-<div class="viewcode-block" id="InferenceMetadata"><a class="viewcode-back" href="../../api.html#cmdstanpy.InferenceMetadata">[docs]</a><span class="k">class</span> <span class="nc">InferenceMetadata</span><span class="p">:</span>
+<div class="viewcode-block" id="InferenceMetadata"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.InferenceMetadata">[docs]</a><span class="k">class</span> <span class="nc">InferenceMetadata</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    CmdStan configuration and contents of output file parsed out of</span>
 <span class="sd">    the Stan CSV file header comments and column headers.</span>
@@ -812,17 +796,20 @@
                     <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dzero</span><span class="p">:</span>
+                    <span class="c1"># check args that matter for parsing, plus name, version</span>
                     <span class="k">if</span> <span class="p">(</span>
                         <span class="n">key</span>
-                        <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
-                            <span class="s1">&#39;id&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;diagnostic_file&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;metric_file&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;profile_file&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;stepsize&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;init&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;seed&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;start_datetime&#39;</span><span class="p">,</span>
+                        <span class="ow">in</span> <span class="p">[</span>
+                            <span class="s1">&#39;stan_version_major&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;stan_version_minor&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;stan_version_patch&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;stanc_version&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;model&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;num_samples&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;num_warmup&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;save_warmup&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;thin&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;refresh&#39;</span><span class="p">,</span>
                         <span class="p">]</span>
                         <span class="ow">and</span> <span class="n">dzero</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">drest</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                     <span class="p">):</span>
@@ -982,6 +969,7 @@
             <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">tmp_csv_file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="n">name_only</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
         <span class="n">csv_str</span> <span class="o">=</span> <span class="s1">&#39;--csv_filename=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">)</span>
+        <span class="c1"># TODO: remove at some future release</span>
         <span class="k">if</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">24</span><span class="p">):</span>
             <span class="n">csv_str</span> <span class="o">=</span> <span class="s1">&#39;--csv_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
@@ -2450,7 +2438,7 @@
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

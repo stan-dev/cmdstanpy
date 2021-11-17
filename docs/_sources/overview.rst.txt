@@ -9,16 +9,20 @@ It wraps the
 command line interface in a small set of
 Python classes which provide methods to do analysis and manage the resulting
 set of model, data, and posterior estimates.
-
-CmdStanPy is a lightweight interface in that it is designed to use minimal
-memory beyond what is used by CmdStan itself to do inference given
-and model and data.It runs and records an analysis, but the user chooses
-whether or not to instantiate the results in memory,
-thus CmdStanPy has the potential to fit more complex models
+It is lightweight in that it uses minimal
+memory beyond the memory used by CmdStan.
+CmdStanPy runs CmdStan, but only instantiates the resulting inference
+objects in memory upon request.
+Thus CmdStanPy has the potential to fit more complex models
 to larger datasets than might be possible in PyStan or RStan.
-It manages the set of CmdStan input and output files and provides
-methods and options which allow the user to save these files
-to a specific filepath.
-By default, CmdStan output files are written to a temporary directory
-in order to avoid filling up the user's filesystem.
+
+CmdStan is a file-based interface.
+CmdStanPy manages the Stan program files and the CmdStan output files.
+The user can specify the output directory for the CmdStan outputs,
+otherwise the files will be written to a 
+temporary filesystem which persists throughout the session.
+This allows the user to test and develop models prospectively,
+following the Bayesian workflow.
+
+
 
