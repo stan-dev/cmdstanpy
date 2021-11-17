@@ -42,18 +42,18 @@ Compile the Stan model
 The: :class:`CmdStanModel` class provides methods
 to compile and run the Stan program.
 A CmdStanModel object can be instantiated by specifying
-either a Stan file or the executable file.
+either a Stan file or the executable file, or both.
+If only the Stan file path is specified, the constructor will
+check for the existence of a correspondingly named exe file in
+the same directory.  If found, it will use this as the exe file path.
 
 By default, when a CmdStanModel object is instantiated from a Stan file,
-CmdStanPy will automatically compile the model if:
+the constructor will compile the model as needed.
+The constructor argument `compile` controls this behavior.
 
-- CmdStanPy cannot find a corresponding executable file in the same directory, or
-- The timestamp on the executable is older than the Stan file.
-
-The argument `compile` controls this behavoir.
-When ``False`` the model object doesn't try to compile the Stan file.
-When ``True`` the model compiles the Stan file only if the timestamp is older than the Stan file.
-When ``Force`` the model always compiles or recompiles the mode.
+* ``compile=False``: never compile the Stan file.
+* ``compile=Force``: always compile the Stan file.
+* ``compile=True``: (default) compile the Stan file as needed, i.e., if no exe file exists or if the Stan file is newer than the exe file.
 
 .. code-block:: python
 
@@ -66,6 +66,9 @@ When ``Force`` the model always compiles or recompiles the mode.
     my_model.stan_file
     my_model.exe_file
     my_model.code()
+
+The CmdStanModel class also provides the :meth:`~CmdStanModel.compile` method,
+which can be called at any point to (re)compile the model as needed.
 
 Model compilation is carried out via the GNU Make build tool.
 The CmdStan ``makefile`` contains a set of general rules which
