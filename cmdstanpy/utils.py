@@ -173,7 +173,7 @@ def cmdstan_path() -> str:
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
     validate_cmdstan_path(cmdstan)
-    return cmdstan
+    return os.path.normpath(cmdstan)
 
 
 def cmdstan_version() -> Optional[Tuple[int, ...]]:
@@ -1000,44 +1000,46 @@ def do_command(
        https://github.com/tqdm/tqdm#hooks-and-callbacks.
 
     """
-    get_logger().debug('cmd: %s', ' '.join(cmd))
+    get_logger().debug('cmd: %s\ncwd: %s', ' '.join(cmd), cwd)
     try:
-        proc = subprocess.Popen(
-            cmd,
-            cwd=cwd,
-            bufsize=1,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,  # avoid buffer overflow
-            env=os.environ,
-            universal_newlines=True,
-        )
-        while proc.poll() is None:
-            if proc.stdout is not None:
-                line = proc.stdout.readline()
-                if fd_out is not None:
-                    fd_out.write(line)
-                if pbar is not None:
-                    pbar(line.strip())
-
-        stdout, _ = proc.communicate()
-        if stdout:
-            if len(stdout) > 0:
-                if fd_out is not None:
-                    fd_out.write(stdout)
-                if pbar is not None:
-                    pbar(stdout.strip())
-
-        if proc.returncode != 0:  # throw RuntimeError + msg
-            serror = ''
-            try:
-                serror = os.strerror(proc.returncode)
-            except (ArithmeticError, ValueError):
-                pass
-            msg = 'Command {}\n\t{} {}'.format(
-                cmd, returncode_msg(proc.returncode), serror
+        # NB: Using this rather than cwd arg to Popen due to windows behavior
+        with pushd(cwd if cwd is not None else '.'):
+            # TODO: replace with subprocess.run in later Python versions?
+            proc = subprocess.Popen(
+                cmd,
+                bufsize=1,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # avoid buffer overflow
+                env=os.environ,
+                universal_newlines=True,
             )
-            raise RuntimeError(msg)
+            while proc.poll() is None:
+                if proc.stdout is not None:
+                    line = proc.stdout.readline()
+                    if fd_out is not None:
+                        fd_out.write(line)
+                    if pbar is not None:
+                        pbar(line.strip())
+
+            stdout, _ = proc.communicate()
+            if stdout:
+                if len(stdout) > 0:
+                    if fd_out is not None:
+                        fd_out.write(stdout)
+                    if pbar is not None:
+                        pbar(stdout.strip())
+
+            if proc.returncode != 0:  # throw RuntimeError + msg
+                serror = ''
+                try:
+                    serror = os.strerror(proc.returncode)
+                except (ArithmeticError, ValueError):
+                    pass
+                msg = 'Command {}\n\t{} {}'.format(
+                    cmd, returncode_msg(proc.returncode), serror
+                )
+                raise RuntimeError(msg)
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
         raise RuntimeError(msg) from e
@@ -1390,7 +1392,7 @@ class MaybeDictToFilePath:
                     pass
 
 
-class TemporaryCopiedFile:
+class SanitizedOrTmpFilePath:
     """Context manager for tmpfiles, handles spaces in filepath."""
 
     def __init__(self, file_path: str):

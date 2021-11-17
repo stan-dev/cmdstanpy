@@ -10,6 +10,22 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 class CompilerOptsTest(unittest.TestCase):
+    def test_opts_empty_eq(self):
+        opts_a = CompilerOptions()
+        self.assertTrue(opts_a.is_empty())
+
+        opts_b = None
+        self.assertTrue(opts_a == opts_b)
+
+        opts_c = CompilerOptions(stanc_options={'--O'})
+        self.assertTrue(opts_a != opts_c != opts_b)
+
+        stanc_opts = {}
+        cpp_opts = {'STAN_THREADS': 'T'}
+        opts_c = CompilerOptions(stanc_options=stanc_opts, cpp_options=cpp_opts)
+        self.assertFalse(opts_c.is_empty())
+        self.assertFalse(opts_a == opts_c)
+
     def test_opts_empty(self):
         opts = CompilerOptions()
         opts.validate()

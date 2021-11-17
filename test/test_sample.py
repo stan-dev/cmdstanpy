@@ -67,6 +67,7 @@ class SampleTest(unittest.TestCase):
 
         self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
 
+        print(bern_fit.runset)
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             stdout_file = bern_fit.runset.stdout_files[i]
@@ -598,6 +599,16 @@ class SampleTest(unittest.TestCase):
             iter_sampling=100, show_progress=False
         )
         self.assertEqual(datagen_fit.step_size, None)
+
+        exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
+        shutil.copyfile(datagen_model.exe_file, exe_only)
+        os.chmod(exe_only, 0o755)
+        datagen2_model = CmdStanModel(exe_file=exe_only)
+        datagen2_fit = datagen2_model.sample(
+            iter_sampling=200, show_console=True
+        )
+        self.assertEqual(datagen2_fit.chains, 4)
+        self.assertEqual(datagen2_fit.step_size, None)
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
