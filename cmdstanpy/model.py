@@ -210,7 +210,7 @@ class CmdStanModel:
                 get_logger().debug("TBB already found in load path")
 
         if compile and self._exe_file is None:
-            self.compile(force=compile == 'force')
+            self.compile(force=str(compile).lower() == 'force')
             if self._exe_file is None:
                 raise ValueError(
                     'Unable to compile Stan model file: {}.'.format(
