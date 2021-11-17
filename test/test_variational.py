@@ -246,7 +246,8 @@ class VariationalTest(unittest.TestCase):
             data=jdata,
             require_converged=False,
             seed=12345,
-            algorithm='meanfield')
+            algorithm='meanfield',
+        )
         self.assertEqual(variational.variational_sample.shape, (1000, 4))
 
 
