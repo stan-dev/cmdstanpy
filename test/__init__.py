@@ -39,11 +39,12 @@ class CustomTestCase(unittest.TestCase):
         """
         Temporarily updates the ``os.environ`` dictionary in-place.
 
-        The ``os.environ`` dictionary is updated in-place so that the modification
-        is sure to work in all situations.
+        The ``os.environ`` dictionary is updated in-place so that
+        the modification is sure to work in all situations.
 
         :param remove: Environment variables to remove.
-        :param update: Dictionary of environment variables and values to add/update.
+        :param update: Dictionary of environment variables and values to
+             add/update.
         """
         env = os.environ
         update = update or {}
@@ -58,11 +59,13 @@ class CustomTestCase(unittest.TestCase):
 
         try:
             env.update(update)
-            [env.pop(k, None) for k in remove]
+            for k in remove:
+                env.pop(k, None)
             yield
         finally:
             env.update(update_after)
-            [env.pop(k) for k in remove_after]
+            for k in remove_after:
+                env.pop(k)
 
     # pylint: disable=invalid-name
     def assertPathsEqual(self, path1, path2):

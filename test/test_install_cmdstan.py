@@ -1,9 +1,7 @@
 """install_cmdstan test"""
 
-import os
 import unittest
 from test import CustomTestCase
-from unittest.mock import patch
 
 from cmdstanpy.install_cmdstan import (
     CmdStanInstallError,
