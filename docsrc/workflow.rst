@@ -53,7 +53,7 @@ CmdStanPy will automatically compile the model if:
 The argument `compile` controls this behavoir.
 When ``False`` the model object doesn't try to compile the Stan file.
 When ``True`` the model compiles the Stan file only if the timestamp is older than the Stan file.
-When ``Force`` the model always compiles or recompiles the mode.
+When ``"force"`` the model always (re)compiles.
 
 .. code-block:: python
 
@@ -123,7 +123,7 @@ numpy arrays or pandas.Series.
 Run the CmdStan inference engine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For each CmdStan inference method, there is a corresponding method on the :class:`CmdStanModel` class. 
+For each CmdStan inference method, there is a corresponding method on the :class:`CmdStanModel` class.
 An example of each is provided in the `next section <examples.rst>`__
 
 * The :meth:`~CmdStanModel.sample` method runs Stan's
@@ -133,14 +133,14 @@ An example of each is provided in the `next section <examples.rst>`__
   a sample from the posterior distribution of the model conditioned on the data.
 
 * The :meth:`~CmdStanModel.variational` method runs Stan's
-  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`_. 
+  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`_.
 
   It returns a :class:`CmdStanVB` object which contains
   an approximation the posterior distribution in the unconstrained variable space.
 
 * The :meth:`~CmdStanModel.optimize` runs one of
   `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`_
-  to find a mode of the density specified by the Stan program.  
+  to find a mode of the density specified by the Stan program.
 
   It returns a :class:`CmdStanMLE` object.
 
@@ -151,16 +151,16 @@ An example of each is provided in the `next section <examples.rst>`__
 
   It returns a :class:`CmdStanGQ` object.
 
-  
+
 Validate, view, export the inference engine outputs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The inference engine results objects 
+The inference engine results objects
 :class:`CmdStanMCMC`, :class:`CmdStanVB`, :class:`CmdStanMLE` and :class:`CmdStanGQ,`
 contain the CmdStan method configuration information
 and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
-as well as method-specific informational properties and methods.objects 
+as well as method-specific informational properties and methods.objects
 
 Metadata
 --------
@@ -188,14 +188,14 @@ the object's :attr:`~CmdStanMCMC.metadata` property.
   property specifies the names, dimensions of the Stan model variables.
 
 Output data
------------  
+-----------
 
 The CSV data is assembled into the inference result object.
 CmdStanPy provides accessor methods which return this information
 either as columnar data (i.e., in terms of the CSV file columns),
 or as method and model variables.
 
-The :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd` methods 
+The :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd` methods
 for both :class:`CmdStanMCMC` and :class:`CmdStanGQ` return the sample contents
 in columnar format, as a numpy.ndarray or pandas.DataFrame, respectively. Similarly,
 the :meth:`~CmdStanMCMC.draws_xr` method  of these two objects returns the sample
