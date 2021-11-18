@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>“Hello, World” &#8212; CmdStanPy 1.0.0rc2 documentation</title>
+    <title>“Hello, World” &#8212; CmdStanPy 1.0.0rc3 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc3</a>
     
   </div>
 
@@ -365,15 +365,15 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="gp">In [9]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_1.csv</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_2.csv</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_3.csv</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_4.csv</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_1.csv</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_2.csv</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_3.csv</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_4.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_0-stdout.txt</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_1-stdout.txt</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_2-stdout.txt</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_3-stdout.txt</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_0-stdout.txt</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_1-stdout.txt</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_2-stdout.txt</span>
+<span class="go">	/tmp/tmp4pkl2o9a/bernoulli-20211118203521_3-stdout.txt</span>
 </pre></div>
 </div>
 </section>
@@ -422,10 +422,10 @@ summaries of the total joint log-probability density <strong>lp__</strong> plus
 all model parameters and quantities of interest in a pandas.DataFrame:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 <span class="gh">Out[14]: </span><span class="go"></span>
-<span class="go">       Mean    MCSE  StdDev     5%   50%   95%   N_Eff  N_Eff/s  R_hat</span>
-<span class="go">name                                                                  </span>
-<span class="go">lp__  -7.30  0.0190    0.77 -8.800 -7.00 -6.80  1600.0  33000.0    1.0</span>
-<span class="go">theta  0.25  0.0034    0.12  0.076  0.24  0.47  1400.0  27000.0    1.0</span>
+<span class="go">       Mean    MCSE  StdDev    5%   50%   95%   N_Eff  N_Eff/s  R_hat</span>
+<span class="go">name                                                                 </span>
+<span class="go">lp__  -7.30  0.0180    0.75 -8.80 -7.00 -6.70  1700.0  29000.0    1.0</span>
+<span class="go">theta  0.25  0.0034    0.12  0.08  0.24  0.47  1300.0  21000.0    1.0</span>
 </pre></div>
 </div>
 <p>CmdStan is distributed with a second posterior analysis utility
@@ -435,7 +435,7 @@ looking for potential problems which indicate that the sample
 isn’t a representative sample from the posterior.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose" title="cmdstanpy.CmdStanMCMC.diagnose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnose()</span></code></a> method runs this utility and prints the output to the console.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [15]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
-<span class="go">Processing csv files: /tmp/tmpa2iclw1i/bernoulli-20211117190758_1.csv, /tmp/tmpa2iclw1i/bernoulli-20211117190758_2.csv, /tmp/tmpa2iclw1i/bernoulli-20211117190758_3.csv, /tmp/tmpa2iclw1i/bernoulli-20211117190758_4.csv</span>
+<span class="go">Processing csv files: /tmp/tmp4pkl2o9a/bernoulli-20211118203521_1.csv, /tmp/tmp4pkl2o9a/bernoulli-20211118203521_2.csv, /tmp/tmp4pkl2o9a/bernoulli-20211118203521_3.csv, /tmp/tmp4pkl2o9a/bernoulli-20211118203521_4.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>

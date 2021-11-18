@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.0.0rc2 documentation</title>
+    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.0.0rc3 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc3</a>
     
   </div>
 
@@ -567,7 +567,7 @@ INFO:cmdstanpy:CmdStan start procesing
 ERROR:cmdstanpy:Error in progress bar initialization:
         IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
 Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f2dbc156a60&gt;
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f7ff8f67a60&gt;
 Traceback (most recent call last):
   File &#34;/opt/hostedtoolcache/Python/3.9.8/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
     self.close()
@@ -660,25 +660,25 @@ INFO:cmdstanpy:CmdStan done processing.
     <tr>
       <th>lp__</th>
       <td>-7.30</td>
-      <td>0.0210</td>
-      <td>0.73</td>
-      <td>-8.600</td>
+      <td>0.018</td>
+      <td>0.72</td>
+      <td>-8.80</td>
       <td>-7.00</td>
-      <td>-6.80</td>
-      <td>1300.0</td>
-      <td>25000.0</td>
+      <td>-6.70</td>
+      <td>1600.0</td>
+      <td>28000.0</td>
       <td>1.0</td>
     </tr>
     <tr>
       <th>theta</th>
-      <td>0.26</td>
-      <td>0.0032</td>
+      <td>0.25</td>
+      <td>0.003</td>
       <td>0.12</td>
-      <td>0.086</td>
-      <td>0.24</td>
+      <td>0.08</td>
+      <td>0.23</td>
       <td>0.47</td>
-      <td>1400.0</td>
-      <td>27000.0</td>
+      <td>1600.0</td>
+      <td>28000.0</td>
       <td>1.0</td>
     </tr>
   </tbody>
@@ -774,18 +774,18 @@ INFO:cmdstanpy:Chain [4] done processing
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (1000, 4, 10) (&#39;y_rep[1]&#39;, &#39;y_rep[2]&#39;, &#39;y_rep[3]&#39;, &#39;y_rep[4]&#39;, &#39;y_rep[5]&#39;, &#39;y_rep[6]&#39;, &#39;y_rep[7]&#39;, &#39;y_rep[8]&#39;, &#39;y_rep[9]&#39;, &#39;y_rep[10]&#39;)
-[[0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
- [1. 1. 0. 1. 0. 1. 0. 1. 1. 1.]
- [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
- [1. 1. 0. 0. 0. 1. 0. 1. 1. 1.]]
-[[0. 0. 0. 1. 1. 0. 1. 0. 0. 0.]
+[[0. 1. 1. 1. 1. 1. 1. 0. 0. 0.]
+ [0. 1. 0. 1. 1. 1. 1. 0. 0. 0.]
+ [0. 1. 1. 1. 1. 1. 1. 0. 1. 0.]
+ [0. 1. 0. 1. 1. 1. 1. 0. 0. 0.]]
+[[1. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
  [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
- [0. 0. 0. 1. 0. 0. 1. 0. 0. 0.]
- [0. 0. 0. 1. 1. 0. 1. 0. 0. 0.]]
-[[1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [1. 1. 1. 0. 0. 0. 1. 0. 0. 0.]
- [1. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [1. 1. 1. 0. 0. 0. 1. 0. 0. 0.]]
+ [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
+ [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]]
+[[0. 1. 1. 1. 0. 0. 0. 1. 1. 1.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 1. 1.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 0. 1.]]
 </pre></div></div>
 </div>
 <p>We can also use <code class="docutils literal notranslate"><span class="pre">draws_pd(inc_sample=True)</span></code> to get a pandas DataFrame which combines the input drawset with the generated quantities.</p>
@@ -855,40 +855,40 @@ INFO:cmdstanpy:Chain [4] done processing
   <tbody>
     <tr>
       <th>0</th>
-      <td>-6.75025</td>
-      <td>1.000000</td>
-      <td>1.07533</td>
+      <td>-6.75236</td>
+      <td>0.990882</td>
+      <td>1.22644</td>
       <td>1.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>6.82108</td>
-      <td>0.241716</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>6.96518</td>
+      <td>0.238483</td>
       <td>0.0</td>
       <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-6.84104</td>
-      <td>0.950519</td>
-      <td>1.07533</td>
-      <td>2.0</td>
+      <td>-6.93925</td>
+      <td>0.948820</td>
+      <td>1.22644</td>
+      <td>1.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>6.95895</td>
-      <td>0.306309</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>6.94860</td>
+      <td>0.332042</td>
       <td>1.0</td>
-      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
       <td>0.0</td>
       <td>1.0</td>
       <td>0.0</td>
@@ -897,24 +897,24 @@ INFO:cmdstanpy:Chain [4] done processing
     </tr>
     <tr>
       <th>2</th>
-      <td>-6.76722</td>
-      <td>0.993801</td>
-      <td>1.07533</td>
-      <td>2.0</td>
-      <td>3.0</td>
+      <td>-6.99729</td>
+      <td>0.972893</td>
+      <td>1.22644</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>6.88037</td>
-      <td>0.226055</td>
+      <td>7.08133</td>
+      <td>0.344320</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
     </tr>
   </tbody>
 </table>

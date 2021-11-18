@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.0rc2 documentation</title>
+    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.0rc3 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc3</a>
     
   </div>
 
@@ -562,7 +562,7 @@ INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_3784/728714853.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">/tmp/ipykernel_3906/728714853.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
 <span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model_external<span class="ansi-blue-fg">.</span>compile<span class="ansi-blue-fg">(</span>user_header<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;make_odds.hpp&#39;</span><span class="ansi-blue-fg">)</span>
 
 <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">compile</span><span class="ansi-blue-fg">(self, force, stanc_options, cpp_options, user_header, override_options)</span>
@@ -607,7 +607,7 @@ INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_3784/4268543152.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">/tmp/ipykernel_3906/4268543152.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
 <span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>fit <span class="ansi-blue-fg">=</span> model_external<span class="ansi-blue-fg">.</span>sample<span class="ansi-blue-fg">(</span>data<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">{</span><span class="ansi-blue-fg">&#39;N&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">10</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">&#39;y&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">}</span><span class="ansi-blue-fg">)</span>
 <span class="ansi-green-intense-fg ansi-bold">      2</span> fit<span class="ansi-blue-fg">.</span>stan_variable<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;odds&#39;</span><span class="ansi-blue-fg">)</span>
 
