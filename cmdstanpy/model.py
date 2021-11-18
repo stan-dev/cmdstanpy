@@ -14,6 +14,7 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
+import ujson as json
 from tqdm.auto import tqdm
 
 from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
@@ -36,7 +37,7 @@ from cmdstanpy.stanfit import (
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
-    TemporaryCopiedFile,
+    SanitizedOrTmpFilePath,
     cmdstan_path,
     cmdstan_version_before,
     do_command,
@@ -69,6 +70,8 @@ class CmdStanModel:
         must match, (but different directory locations are allowed).
 
     :param compile: Whether or not to compile the model.  Default is ``True``.
+        If set to the string ``"force"``, it will always compile even if
+        an existing executable is found.
 
     :param stanc_options: Options for stanc compiler, specified as a Python
         dictionary containing Stanc3 compiler option name, value pairs.
@@ -88,7 +91,8 @@ class CmdStanModel:
         model_name: Optional[str] = None,
         stan_file: Optional[str] = None,
         exe_file: Optional[str] = None,
-        compile: bool = True,
+        # TODO should be Literal['force'] not str
+        compile: Union[bool, str] = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
         user_header: Optional[str] = None,
@@ -113,6 +117,7 @@ class CmdStanModel:
             cpp_options=cpp_options,
             user_header=user_header,
         )
+        self._fixed_param = False
 
         if model_name is not None:
             if not model_name.strip():
@@ -140,6 +145,8 @@ class CmdStanModel:
                 )
             if not self._name:
                 self._name, _ = os.path.splitext(filename)
+
+            # TODO: When minimum version is 2.27, use --info instead
             # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
@@ -155,6 +162,14 @@ class CmdStanModel:
                     }
                 else:
                     self._compiler_options.add_include_path(path)
+
+            # try to detect models w/out parameters, needed for sampler
+            if not cmdstan_version_before(2, 27) and cmdstan_version_before(
+                2, 29
+            ):
+                model_info = self.src_info()
+                if 'parameters' in model_info:
+                    self._fixed_param = len(model_info['parameters']) == 0
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -195,7 +210,7 @@ class CmdStanModel:
                 get_logger().debug("TBB already found in load path")
 
         if compile and self._exe_file is None:
-            self.compile()
+            self.compile(force=str(compile).lower() == 'force')
             if self._exe_file is None:
                 raise ValueError(
                     'Unable to compile Stan model file: {}.'.format(
@@ -228,6 +243,55 @@ class CmdStanModel:
     def exe_file(self) -> Optional[str]:
         """Full path to Stan exe file."""
         return self._exe_file
+
+    def exe_info(self) -> Dict[str, str]:
+        """
+        Run model with option 'info'. Parse output statements, which all
+        have form 'key = value' into a Dict.
+        If exe file compiled with CmdStan < 2.27, option 'info' isn't
+        available and the method returns an empty dictionary.
+        """
+        result: Dict[str, str] = {}
+        if self.exe_file is None:
+            return result
+        try:
+            info = StringIO()
+            do_command(cmd=[self.exe_file, 'info'], fd_out=info)
+            lines = info.getvalue().split('\n')
+            for line in lines:
+                kv_pair = [x.strip() for x in line.split('=')]
+                if len(kv_pair) != 2:
+                    continue
+                result[kv_pair[0]] = kv_pair[1]
+            return result
+        except RuntimeError as e:
+            get_logger().debug(e)
+            return result
+
+    def src_info(self) -> Dict[str, Any]:
+        """
+        Run stanc with option '--info'.
+
+        If stanc is older than 2.27 or if the stan
+        file cannot be found, returns an empty dictionary.
+        """
+        result: Dict[str, Any] = {}
+        if self.stan_file is None:
+            return result
+        try:
+
+            cmd = [
+                os.path.join('.', 'bin', 'stanc' + EXTENSION),
+                '--info',
+                self.stan_file,
+            ]
+            sout = io.StringIO()
+            do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
+            result = json.loads(sout.getvalue())
+            return result
+        except (ValueError, RuntimeError) as e:
+            get_logger().debug(e)
+            return result
 
     @property
     def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
@@ -273,7 +337,8 @@ class CmdStanModel:
 
         By default, this function compares the timestamps on the source and
         executable files; if the executable is newer than the source file, it
-        will not recompile the file, unless argument ``force`` is ``True``.
+        will not recompile the file, unless argument ``force`` is ``True``
+        or unless the compiler options have been changed.
 
         :param force: When ``True``, always compile, even if the executable file
             is newer than the source file.  Used for Stan models which have
@@ -292,10 +357,10 @@ class CmdStanModel:
             raise RuntimeError('Please specify source file')
 
         compiler_options = None
-        if not (
-            stanc_options is None
-            and cpp_options is None
-            and user_header is None
+        if (
+            stanc_options is not None
+            or cpp_options is not None
+            or user_header is not None
         ):
             compiler_options = CompilerOptions(
                 stanc_options=stanc_options,
@@ -303,155 +368,106 @@ class CmdStanModel:
                 user_header=user_header,
             )
             compiler_options.validate()
-            if self._compiler_options is None:
-                self._compiler_options = compiler_options
-            elif override_options:
-                self._compiler_options = compiler_options
-            else:
-                self._compiler_options.add(compiler_options)
 
-        # check if exe file exists in original location
-        exe_file, _ = os.path.splitext(os.path.abspath(self._stan_file))
-        exe_file = Path(exe_file).as_posix() + EXTENSION
-        do_compile = True
-        if os.path.exists(exe_file):
-            src_time = os.path.getmtime(self._stan_file)
-            exe_time = os.path.getmtime(exe_file)
-            if exe_time > src_time and not force:
-                do_compile = False
-                get_logger().info('found newer exe file, not recompiling')
-                self._exe_file = exe_file
-                get_logger().info('compiled model file: %s', self._exe_file)
-        if do_compile:
-            compilation_failed = False
-            with TemporaryCopiedFile(self._stan_file) as (stan_file, is_copied):
-                exe_file, _ = os.path.splitext(os.path.abspath(stan_file))
-                exe_file = Path(exe_file).as_posix() + EXTENSION
-                do_compile = True
-                if os.path.exists(exe_file):
-                    src_time = os.path.getmtime(self._stan_file)
-                    exe_time = os.path.getmtime(exe_file)
-                    if exe_time > src_time and not force:
-                        do_compile = False
-                        get_logger().info(
-                            'found newer exe file, not recompiling'
-                        )
-
-                if do_compile:
-                    get_logger().info(
-                        'compiling stan program, exe file: %s', exe_file
-                    )
-                    if self._compiler_options is not None:
-                        self._compiler_options.validate()
-                        get_logger().info(
-                            'compiler options: %s', self._compiler_options
-                        )
-                    make = os.getenv(
-                        'MAKE',
-                        'make'
-                        if platform.system() != 'Windows'
-                        else 'mingw32-make',
-                    )
-                    cmd = [make]
-                    if self._compiler_options is not None:
-                        cmd.extend(self._compiler_options.compose())
-                    cmd.append(Path(exe_file).as_posix())
-
-                    sout = io.StringIO()
-                    try:
-                        do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
-                    except RuntimeError as e:
-                        sout.write(f'\n{str(e)}\n')
-                        compilation_failed = True
-                    finally:
-                        console = sout.getvalue()
-
-                    if compilation_failed or 'Warning:' in console:
-                        lines = console.split('\n')
-                        warnings = [x for x in lines if x.startswith('Warning')]
-                        syntax_errors = [
-                            x for x in lines if x.startswith('Syntax error')
-                        ]
-                        semantic_errors = [
-                            x for x in lines if x.startswith('Semantic error')
-                        ]
-                        exceptions = [
-                            x
-                            for x in lines
-                            if x.startswith('Uncaught exception')
-                        ]
-                        if (
-                            len(syntax_errors) > 0
-                            or len(semantic_errors) > 0
-                            or len(exceptions) > 0
-                        ):
-                            get_logger().error(
-                                'Stan program failed to compile:'
-                            )
-                            get_logger().warning(console)
-                        elif len(warnings) > 0:
-                            get_logger().warning(
-                                'Stan compiler has produced %d warnings:',
-                                len(warnings),
-                            )
-                            get_logger().warning(console)
-
-                        if (
-                            'PCH file' in console
-                            or 'model_header.hpp.gch' in console
-                            or 'precompiled header' in console
-                        ):
-                            get_logger().warning(
-                                "CmdStan's precompiled header (PCH) files "
-                                "may need to be rebuilt."
-                                "If your model failed to compile please run "
-                                "cmdstanpy.rebuild_cmdstan().\nIf the "
-                                "issue persists please open a bug report"
-                            )
-
-                if not compilation_failed:
-                    if is_copied:
-                        original_target_dir = os.path.dirname(
-                            os.path.abspath(self._stan_file)
-                        )
-                        new_exec_name = (
-                            os.path.basename(
-                                os.path.splitext(self._stan_file)[0]
-                            )
-                            + EXTENSION
-                        )
-                        self._exe_file = os.path.join(
-                            original_target_dir, new_exec_name
-                        )
-                        shutil.copy(exe_file, self._exe_file)
-                    else:
-                        self._exe_file = exe_file
-                    get_logger().info('compiled model file: %s', self._exe_file)
+            if compiler_options != self._compiler_options:
+                force = True
+                if self._compiler_options is None:
+                    self._compiler_options = compiler_options
+                elif override_options:
+                    self._compiler_options = compiler_options
                 else:
-                    get_logger().error('model compilation failed')
+                    self._compiler_options.add(compiler_options)
+        exe_target = os.path.splitext(self._stan_file)[0] + EXTENSION
+        if os.path.exists(exe_target):
+            src_time = os.path.getmtime(self._stan_file)
+            exe_time = os.path.getmtime(exe_target)
+            if exe_time > src_time and not force:
+                get_logger().info('found newer exe file, not recompiling')
+                if self._exe_file is None:  # called from constructor
+                    self._exe_file = exe_target
+                return
 
-    def exe_info(self) -> Dict[str, str]:
-        """
-        Run model with option 'info'. Parse output statements, which all
-        have form 'key = value' into a Dict.
-        If exe file compiled with CmdStan < 2.27, option 'info' isn't
-        available and the method returns an empty dictionary.
-        """
-        result: Dict[str, Any] = {}
-        if self.exe_file is None:
-            return result
-        try:
-            info = StringIO()
-            do_command(cmd=[self.exe_file, 'info'], fd_out=info)
-            lines = info.getvalue().split('\n')
-            for line in lines:
-                kv_pair = [x.strip() for x in line.split('=')]
-                if len(kv_pair) != 2:
-                    continue
-                result[kv_pair[0]] = kv_pair[1]
-            return result
-        except RuntimeError:
-            return result
+        compilation_failed = False
+        # if target path has space, use copy in a tmpdir (GNU-Make constraint)
+        with SanitizedOrTmpFilePath(self._stan_file) as (stan_file, is_copied):
+            exe_file = os.path.splitext(stan_file)[0] + EXTENSION
+
+            hpp_file = os.path.splitext(exe_file)[0] + '.hpp'
+            if os.path.exists(hpp_file):
+                os.remove(hpp_file)
+            if os.path.exists(exe_file):
+                get_logger().debug('Removing %s', exe_file)
+                os.remove(exe_file)
+
+            get_logger().info(
+                'compiling stan file %s to exe file %s',
+                self._stan_file,
+                exe_target,
+            )
+
+            make = os.getenv(
+                'MAKE',
+                'make' if platform.system() != 'Windows' else 'mingw32-make',
+            )
+            cmd = [make]
+            if self._compiler_options is not None:
+                cmd.extend(self._compiler_options.compose())
+            cmd.append(Path(exe_file).as_posix())
+
+            sout = io.StringIO()
+            try:
+                do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
+            except RuntimeError as e:
+                sout.write(f'\n{str(e)}\n')
+                compilation_failed = True
+            finally:
+                console = sout.getvalue()
+
+            get_logger().debug('Console output:\n%s', console)
+            if not compilation_failed:
+                if is_copied:
+                    shutil.copy(exe_file, exe_target)
+                self._exe_file = exe_target
+                get_logger().info(
+                    'compiled model executable: %s', self._exe_file
+                )
+            if compilation_failed or 'Warning' in console:
+                lines = console.split('\n')
+                warnings = [x for x in lines if x.startswith('Warning')]
+                syntax_errors = [
+                    x for x in lines if x.startswith('Syntax error')
+                ]
+                semantic_errors = [
+                    x for x in lines if x.startswith('Semantic error')
+                ]
+                exceptions = [
+                    x for x in lines if x.startswith('Uncaught exception')
+                ]
+                if (
+                    len(syntax_errors) > 0
+                    or len(semantic_errors) > 0
+                    or len(exceptions) > 0
+                ):
+                    get_logger().error('Stan program failed to compile:')
+                    get_logger().warning(console)
+                elif len(warnings) > 0:
+                    get_logger().warning(
+                        'Stan compiler has produced %d warnings:',
+                        len(warnings),
+                    )
+                    get_logger().warning(console)
+                elif (
+                    'PCH file' in console
+                    or 'model_header.hpp.gch' in console
+                    or 'precompiled header' in console
+                ):
+                    get_logger().warning(
+                        "CmdStan's precompiled header (PCH) files "
+                        "may need to be rebuilt."
+                        "If your model failed to compile please run "
+                        "cmdstanpy.rebuild_cmdstan().\nIf the "
+                        "issue persists please open a bug report"
+                    )
 
     def optimize(
         self,
@@ -848,6 +864,9 @@ class CmdStanModel:
 
         :return: CmdStanMCMC object
         """
+        if fixed_param is None:
+            fixed_param = self._fixed_param
+
         if chains is None:
             if fixed_param:
                 chains = 1
@@ -941,9 +960,12 @@ class CmdStanModel:
             parallel_procs = parallel_chains
             num_threads = threads_per_chain
             one_process_per_chain = True
-            assert isinstance(self.exe_file, str)  # make typechecker happy
             info_dict = self.exe_info()
             stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
+            # run multi-chain sampler unless algo is fixed_param or 1 chain
+            if fixed_param or (chains == 1):
+                force_one_process_per_chain = True
+
             if (
                 force_one_process_per_chain is None
                 and not cmdstan_version_before(2, 28, info_dict)
@@ -1029,6 +1051,31 @@ class CmdStanModel:
                         sys.stdout.flush()
                 sys.stdout.write('\n')
                 get_logger().info('CmdStan done processing.')
+
+            get_logger().debug('runset\n%s', runset.__repr__())
+
+            # hack needed to parse CSV files if model has no params
+            # needed if exe is supplied without stan file
+            with open(runset.stdout_files[0], 'r') as fd:
+                console_msgs = fd.read()
+                get_logger().debug('Chain 1 console:\n%s', console_msgs)
+                if 'running fixed_param sampler' in console_msgs:
+                    get_logger().debug("Detected fixed param model")
+                    sampler_args.fixed_param = True
+                    runset._args.method_args = sampler_args
+
+            # if there was an exe-file only initialization,
+            # this could happen, so throw a nice error
+            if (
+                sampler_args.fixed_param
+                and not one_process_per_chain
+                and chains > 1
+            ):
+                raise RuntimeError(
+                    "Cannot use single-process multichain parallelism"
+                    " with algorithm fixed_param.\nTry setting argument"
+                    " force_one_process_per_chain to True"
+                )
 
             if not runset._check_retcodes():
                 msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
@@ -1460,16 +1507,6 @@ class CmdStanModel:
             get_logger().error(
                 '%s error: %s %s', logger_prefix, retcode_summary, serror
             )
-
-        # hack needed to parse CSV files if model has no params
-        with open(runset.stdout_files[idx], 'r') as fd:
-            console = fd.read()
-            if 'running fixed_param sampler' in console:
-                sampler_args = runset._args.method_args
-                assert isinstance(
-                    sampler_args, SamplerArgs
-                )  # make the typechecker happy
-                sampler_args.fixed_param = True
 
     @staticmethod
     @progbar.wrap_callback

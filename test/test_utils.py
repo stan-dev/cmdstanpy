@@ -27,7 +27,7 @@ from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
     EXTENSION,
     MaybeDictToFilePath,
-    TemporaryCopiedFile,
+    SanitizedOrTmpFilePath,
     check_sampler_csv,
     cmdstan_path,
     cmdstan_version,
@@ -54,45 +54,32 @@ BERN_DATA = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 
 
-class CmdStanPathTest(unittest.TestCase):
+class CmdStanPathTest(CustomTestCase):
     def test_default_path(self):
-        cur_value = None
         if 'CMDSTAN' in os.environ:
-            cur_value = os.environ['CMDSTAN']
-        try:
-            if 'CMDSTAN' in os.environ:
-                self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
-                path = os.environ['CMDSTAN']
-                del os.environ['CMDSTAN']
+            self.assertPathsEqual(cmdstan_path(), os.environ['CMDSTAN'])
+            path = os.environ['CMDSTAN']
+            with self.modified_environ('CMDSTAN'):
                 self.assertFalse('CMDSTAN' in os.environ)
                 set_cmdstan_path(path)
-                self.assertEqual(cmdstan_path(), path)
+                self.assertPathsEqual(cmdstan_path(), path)
                 self.assertTrue('CMDSTAN' in os.environ)
-            else:
-                cmdstan_dir = os.path.expanduser(
-                    os.path.join('~', _DOT_CMDSTAN)
-                )
-                install_version = os.path.join(
-                    cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
-                )
-                self.assertTrue(
-                    os.path.samefile(cmdstan_path(), install_version)
-                )
-                self.assertTrue('CMDSTAN' in os.environ)
-        finally:
-            if cur_value is not None:
-                os.environ['CMDSTAN'] = cur_value
-            else:
-                if 'CMDSTAN' in os.environ:
-                    del os.environ['CMDSTAN']
+        else:
+            cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+            install_version = os.path.join(
+                cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
+            )
+            self.assertTrue(os.path.samefile(cmdstan_path(), install_version))
+            self.assertTrue('CMDSTAN' in os.environ)
 
     def test_non_spaces_location(self):
         with tempfile.TemporaryDirectory(
             prefix="cmdstan_tests", dir=_TMPDIR
         ) as tmpdir:
             good_path = os.path.join(tmpdir, 'good_dir')
-            with TemporaryCopiedFile(good_path) as (pth, is_changed):
-                self.assertEqual(pth, good_path)
+            os.mkdir(good_path)
+            with SanitizedOrTmpFilePath(good_path) as (pth, is_changed):
+                self.assertPathsEqual(pth, good_path)
                 self.assertFalse(is_changed)
 
             # prepare files for test
@@ -104,7 +91,7 @@ class CmdStanPathTest(unittest.TestCase):
 
             stan_copied = None
             try:
-                with TemporaryCopiedFile(stan_bad) as (pth, is_changed):
+                with SanitizedOrTmpFilePath(stan_bad) as (pth, is_changed):
                     stan_copied = pth
                     self.assertTrue(os.path.exists(stan_copied))
                     self.assertTrue(' ' not in stan_copied)
@@ -117,19 +104,20 @@ class CmdStanPathTest(unittest.TestCase):
                 self.assertFalse(os.path.exists(stan_copied))
 
             # cleanup after test
+            shutil.rmtree(good_path, ignore_errors=True)
             shutil.rmtree(bad_path, ignore_errors=True)
 
     def test_set_path(self):
         if 'CMDSTAN' in os.environ:
-            self.assertEqual(cmdstan_path(), os.environ['CMDSTAN'])
+            self.assertPathsEqual(cmdstan_path(), os.environ['CMDSTAN'])
         else:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
             install_version = os.path.join(
                 cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
             )
             set_cmdstan_path(install_version)
-            self.assertEqual(install_version, cmdstan_path())
-            self.assertEqual(install_version, os.environ['CMDSTAN'])
+            self.assertPathsEqual(install_version, cmdstan_path())
+            self.assertPathsEqual(install_version, os.environ['CMDSTAN'])
 
     def test_validate_path(self):
         if 'CMDSTAN' in os.environ:
@@ -209,29 +197,27 @@ class CmdStanPathTest(unittest.TestCase):
             fake_bin = os.path.join(fake_path, 'bin')
             os.makedirs(fake_bin)
             Path(os.path.join(fake_bin, 'stanc' + EXTENSION)).touch()
-            os.environ['CMDSTAN'] = fake_path
-            self.assertTrue(fake_path == cmdstan_path())
-            expect = (
-                'CmdStan installation {} missing makefile, '
-                'cannot get version.'.format(fake_path)
-            )
-            with LogCapture() as log:
-                logging.getLogger()
-                cmdstan_version()
-            log.check_present(('cmdstanpy', 'INFO', expect))
-            fake_makefile = os.path.join(fake_path, 'makefile')
-            with open(fake_makefile, 'w') as fd:
-                fd.write('...  CMDSTAN_VERSION := dont_need_no_mmp\n\n')
-            expect = (
-                'Cannot parse version, expected "<major>.<minor>.<patch>", '
-                'found: "dont_need_no_mmp".'
-            )
-            with LogCapture() as log:
-                logging.getLogger()
-                cmdstan_version()
-            log.check_present(('cmdstanpy', 'INFO', expect))
-        # cleanup
-        del os.environ['CMDSTAN']
+            with self.modified_environ(CMDSTAN=fake_path):
+                self.assertTrue(fake_path == cmdstan_path())
+                expect = (
+                    'CmdStan installation {} missing makefile, '
+                    'cannot get version.'.format(fake_path)
+                )
+                with LogCapture() as log:
+                    logging.getLogger()
+                    cmdstan_version()
+                log.check_present(('cmdstanpy', 'INFO', expect))
+                fake_makefile = os.path.join(fake_path, 'makefile')
+                with open(fake_makefile, 'w') as fd:
+                    fd.write('...  CMDSTAN_VERSION := dont_need_no_mmp\n\n')
+                expect = (
+                    'Cannot parse version, expected "<major>.<minor>.<patch>", '
+                    'found: "dont_need_no_mmp".'
+                )
+                with LogCapture() as log:
+                    logging.getLogger()
+                    cmdstan_version()
+                log.check_present(('cmdstanpy', 'INFO', expect))
         cmdstan_path()
 
 

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -501,10 +501,9 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
-INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
+INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
 ERROR:cmdstanpy:Stan program failed to compile:
-WARNING:cmdstanpy:make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.28.0&#39;
+WARNING:cmdstanpy:make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.28.1&#39;
 
 --- Translating Stan model to C++ code ---
 bin/stanc  --o=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan
@@ -519,12 +518,11 @@ Semantic error in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/ber
 
 Some function is declared without specifying a definition.
 make[2]: *** [make/program:50: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp] Error 1
-make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.28.0&#39;
+make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.28.1&#39;
 
 Command [&#39;make&#39;, &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external&#39;]
         error during processing No such file or directory
 
-ERROR:cmdstanpy:model compilation failed
 </pre></div></div>
 </div>
 <p>Even enabling the <code class="docutils literal notranslate"><span class="pre">--allow_undefined</span></code> flag to stanc3 will not allow this model to be compiled quite yet.</p>
@@ -542,9 +540,7 @@ ERROR:cmdstanpy:model compilation failed
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
-INFO:cmdstanpy:compiler options: stanc_options={&#39;allow_undefined&#39;: True}, cpp_options={}
-ERROR:cmdstanpy:model compilation failed
+INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
 </pre></div></div>
 </div>
 <p>To resolve this, we need to both tell the Stan compiler an undefined function is okay <strong>and</strong> let C++ know what it should be.</p>
@@ -562,11 +558,35 @@ ERROR:cmdstanpy:model compilation failed
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
+<div class="output_area docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
-INFO:cmdstanpy:compiler options: stanc_options={&#39;allow_undefined&#39;: True}, cpp_options={&#39;USER_HEADER&#39;: &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/make_odds.hpp&#39;}
-INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">/tmp/ipykernel_3784/728714853.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model_external<span class="ansi-blue-fg">.</span>compile<span class="ansi-blue-fg">(</span>user_header<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;make_odds.hpp&#39;</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">compile</span><span class="ansi-blue-fg">(self, force, stanc_options, cpp_options, user_header, override_options)</span>
+<span class="ansi-green-intense-fg ansi-bold">    368</span>                 user_header<span class="ansi-blue-fg">=</span>user_header<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    369</span>             )
+<span class="ansi-green-fg">--&gt; 370</span><span class="ansi-red-fg">             </span>compiler_options<span class="ansi-blue-fg">.</span>validate<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    371</span>
+<span class="ansi-green-intense-fg ansi-bold">    372</span>             <span class="ansi-green-fg">if</span> compiler_options <span class="ansi-blue-fg">!=</span> self<span class="ansi-blue-fg">.</span>_compiler_options<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/compiler_opts.py</span> in <span class="ansi-cyan-fg">validate</span><span class="ansi-blue-fg">(self)</span>
+<span class="ansi-green-intense-fg ansi-bold">    110</span>         self<span class="ansi-blue-fg">.</span>validate_stanc_opts<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    111</span>         self<span class="ansi-blue-fg">.</span>validate_cpp_opts<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">--&gt; 112</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>validate_user_header<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    113</span>
+<span class="ansi-green-intense-fg ansi-bold">    114</span>     <span class="ansi-green-fg">def</span> validate_stanc_opts<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">-&gt;</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/compiler_opts.py</span> in <span class="ansi-cyan-fg">validate_user_header</span><span class="ansi-blue-fg">(self)</span>
+<span class="ansi-green-intense-fg ansi-bold">    184</span>                 <span class="ansi-green-fg">and</span> os<span class="ansi-blue-fg">.</span>path<span class="ansi-blue-fg">.</span>isfile<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">.</span>_user_header<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    185</span>             ):
+<span class="ansi-green-fg">--&gt; 186</span><span class="ansi-red-fg">                 raise ValueError(
+</span><span class="ansi-green-intense-fg ansi-bold">    187</span>                     <span class="ansi-blue-fg">f&#34;User header file {self._user_header} cannot be found&#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">    188</span>                 )
+
+<span class="ansi-red-fg">ValueError</span>: User header file make_odds.hpp cannot be found
 </pre></div></div>
 </div>
 <p>We can then run this model and inspect the output</p>
@@ -580,41 +600,39 @@ INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-INFO:cmdstanpy:sampling: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=91806&#39;, &#39;data&#39;, &#39;file=/tmp/tmp3drp3pza/e1asorac.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp3drp3pza/bernoulli_external-20211019133658-1-fu4u0t73.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
-ERROR:cmdstanpy:Error in progress bar initialization:
-        IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f01dc3a8310&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f01dc3a8310&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-        self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-        self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
-self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:start chain 4
-INFO:cmdstanpy:sampling completed
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([0.090568, 0.263977, 0.362605, ..., 0.298994, 0.423499, 0.292286])
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+<span class="ansi-green-fg">/tmp/ipykernel_3784/4268543152.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>fit <span class="ansi-blue-fg">=</span> model_external<span class="ansi-blue-fg">.</span>sample<span class="ansi-blue-fg">(</span>data<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">{</span><span class="ansi-blue-fg">&#39;N&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">10</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">&#39;y&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">}</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">      2</span> fit<span class="ansi-blue-fg">.</span>stan_variable<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;odds&#39;</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">sample</span><span class="ansi-blue-fg">(self, data, chains, parallel_chains, threads_per_chain, seed, chain_ids, inits, iter_warmup, iter_sampling, save_warmup, thin, max_treedepth, metric, step_size, adapt_engaged, adapt_delta, adapt_init_phase, adapt_metric_window, adapt_step_size, fixed_param, output_dir, sig_figs, save_latent_dynamics, save_profile, show_progress, show_console, refresh, time_fmt, force_one_process_per_chain)</span>
+<span class="ansi-green-intense-fg ansi-bold">    920</span>         )
+<span class="ansi-green-intense-fg ansi-bold">    921</span>         <span class="ansi-green-fg">with</span> MaybeDictToFilePath<span class="ansi-blue-fg">(</span>data<span class="ansi-blue-fg">,</span> inits<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">as</span> <span class="ansi-blue-fg">(</span>_data<span class="ansi-blue-fg">,</span> _inits<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 922</span><span class="ansi-red-fg">             args = CmdStanArgs(
+</span><span class="ansi-green-intense-fg ansi-bold">    923</span>                 self<span class="ansi-blue-fg">.</span>_name<span class="ansi-blue-fg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    924</span>                 self<span class="ansi-blue-fg">.</span>_exe_file<span class="ansi-blue-fg">,</span>
+
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/cmdstan_args.py</span> in <span class="ansi-cyan-fg">__init__</span><span class="ansi-blue-fg">(self, model_name, model_exe, chain_ids, method_args, data, seed, inits, output_dir, sig_figs, save_latent_dynamics, save_profile, refresh)</span>
+<span class="ansi-green-intense-fg ansi-bold">    744</span>             self<span class="ansi-blue-fg">.</span>method <span class="ansi-blue-fg">=</span> Method<span class="ansi-blue-fg">.</span>VARIATIONAL
+<span class="ansi-green-intense-fg ansi-bold">    745</span>         self<span class="ansi-blue-fg">.</span>method_args<span class="ansi-blue-fg">.</span>validate<span class="ansi-blue-fg">(</span>len<span class="ansi-blue-fg">(</span>chain_ids<span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">if</span> chain_ids <span class="ansi-green-fg">else</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">--&gt; 746</span><span class="ansi-red-fg">         </span>self<span class="ansi-blue-fg">.</span>validate<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    747</span>
+<span class="ansi-green-intense-fg ansi-bold">    748</span>     <span class="ansi-green-fg">def</span> validate<span class="ansi-blue-fg">(</span>self<span class="ansi-blue-fg">)</span> <span class="ansi-blue-fg">-&gt;</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/cmdstan_args.py</span> in <span class="ansi-cyan-fg">validate</span><span class="ansi-blue-fg">(self)</span>
+<span class="ansi-green-intense-fg ansi-bold">    758</span>             <span class="ansi-green-fg">raise</span> ValueError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;no stan model specified&#39;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    759</span>         <span class="ansi-green-fg">if</span> self<span class="ansi-blue-fg">.</span>model_exe <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 760</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">raise</span> ValueError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;model not compiled&#39;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    761</span>
+<span class="ansi-green-intense-fg ansi-bold">    762</span>         <span class="ansi-green-fg">if</span> self<span class="ansi-blue-fg">.</span>chain_ids <span class="ansi-green-fg">is</span> <span class="ansi-green-fg">not</span> <span class="ansi-green-fg">None</span><span class="ansi-blue-fg">:</span>
+
+<span class="ansi-red-fg">ValueError</span>: model not compiled
 </pre></div></div>
 </div>
 <p>The contents of this header file are a bit complicated unless you are familiar with the C++ internals of Stan, so they are presented without comment:</p>
@@ -672,7 +690,7 @@ array([0.090568, 0.263977, 0.362605, ..., 0.298994, 0.423499, 0.292286])
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

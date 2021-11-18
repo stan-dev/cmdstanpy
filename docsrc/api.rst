@@ -4,6 +4,15 @@
 API Reference
 #############
 
+The following documents the public API of CmdStanPy. It is expected to be stable between versions,
+with backwards compatibility between minor versions and deprecation warnings preceeding breaking changes.
+There is also the `internal API <internal_api.rst>`__, which is makes no such guarantees.
+
+.. toctree::
+   :hidden:
+
+   internal_api.rst
+
 *******
 Classes
 *******
@@ -54,21 +63,14 @@ CmdStanVB
    :members:
 
 
-InferenceMetadata
-=================
-
-.. autoclass:: cmdstanpy.InferenceMetadata
-   :members:
-
-RunSet
-======
-
-.. autoclass:: cmdstanpy.stanfit.RunSet
-   :members:
-
 *********
 Functions
 *********
+
+show_versions
+=============
+
+.. autofunction:: cmdstanpy.show_versions
 
 cmdstan_path
 ============
@@ -84,6 +86,11 @@ set_cmdstan_path
 ================
 
 .. autofunction:: cmdstanpy.set_cmdstan_path
+
+cmdstan_version
+================
+
+.. autofunction:: cmdstanpy.cmdstan_version
 
 set_make_env
 ============

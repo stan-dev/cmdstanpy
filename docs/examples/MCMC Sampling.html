@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>MCMC Sampling &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>MCMC Sampling &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -514,7 +514,7 @@ optional arguments:
   --json         output paths as machine-readable json
   --debug        output debug information about paths
 
-Available subcommands: dejavu kernel kernelspec migrate nbconvert run
+Available subcommands: dejavu execute kernel kernelspec migrate nbconvert run
 troubleshoot trust
 
 Jupyter command `jupyter-nbextension` not found.
@@ -549,7 +549,6 @@ Jupyter command `jupyter-nbextension` not found.
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 INFO:cmdstanpy:found newer exe file, not recompiling
-INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli
 </pre></div></div>
 </div>
 <p>By default, the model is compiled during instantiation. The compiled executable is created in the same directory as the program file. If the directory already contains an executable file with a newer timestamp, the model is not recompiled.</p>
@@ -564,32 +563,46 @@ INFO:cmdstanpy:compiled model file: /home/runner/.cmdstan/cmdstan-2.28.0/example
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:sampling: [&#39;/home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=44666&#39;, &#39;data&#39;, &#39;file=/home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp6ndnm29s/bernoulli-20211019133600-1-u90vky8_.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
+INFO:cmdstanpy:CmdStan start procesing
 ERROR:cmdstanpy:Error in progress bar initialization:
         IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
 Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f00b824c1f0&gt;
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f9c44eaca60&gt;
 Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
+  File &#34;/opt/hostedtoolcache/Python/3.9.8/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
     self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
+  File &#34;/opt/hostedtoolcache/Python/3.9.8/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
     self.disp(bar_style=&#39;danger&#39;, check_delay=False)
 AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f00b824c1f0&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-    self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-    self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:start chain 4
-INFO:cmdstanpy:sampling completed
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:CmdStan done processing.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">sample</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object, which contains: - metadata - draws - HMC tuning parameters <code class="docutils literal notranslate"><span class="pre">metric</span></code>, <code class="docutils literal notranslate"><span class="pre">step_size</span></code></p>
@@ -673,13 +686,13 @@ dict_keys([&#39;theta&#39;])
     <tr>
       <th>lp__</th>
       <td>-7.30</td>
-      <td>0.0230</td>
-      <td>0.82</td>
-      <td>-8.900</td>
+      <td>0.0210</td>
+      <td>0.78</td>
+      <td>-8.80</td>
       <td>-7.00</td>
       <td>-6.70</td>
-      <td>1300.0</td>
-      <td>21000.0</td>
+      <td>1400.0</td>
+      <td>28000.0</td>
       <td>1.0</td>
     </tr>
     <tr>
@@ -687,11 +700,11 @@ dict_keys([&#39;theta&#39;])
       <td>0.25</td>
       <td>0.0032</td>
       <td>0.12</td>
-      <td>0.074</td>
+      <td>0.08</td>
       <td>0.24</td>
       <td>0.47</td>
       <td>1400.0</td>
-      <td>23000.0</td>
+      <td>27000.0</td>
       <td>1.0</td>
     </tr>
   </tbody>
@@ -753,58 +766,58 @@ dict_keys([&#39;theta&#39;])
   <tbody>
     <tr>
       <th>0</th>
-      <td>-7.46706</td>
-      <td>1.000000</td>
-      <td>0.928629</td>
+      <td>-6.77141</td>
+      <td>0.992499</td>
+      <td>0.828144</td>
       <td>1.0</td>
-      <td>1.0</td>
+      <td>3.0</td>
       <td>0.0</td>
-      <td>7.74438</td>
-      <td>0.123063</td>
+      <td>6.82875</td>
+      <td>0.277663</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-6.81714</td>
-      <td>1.000000</td>
-      <td>0.928629</td>
+      <td>-7.72225</td>
+      <td>0.717138</td>
+      <td>0.828144</td>
       <td>1.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>7.38157</td>
-      <td>0.205553</td>
+      <td>8.72575</td>
+      <td>0.107059</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-6.90496</td>
-      <td>0.993293</td>
-      <td>0.928629</td>
-      <td>2.0</td>
-      <td>3.0</td>
+      <td>-8.36061</td>
+      <td>0.941213</td>
+      <td>0.828144</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>6.90842</td>
-      <td>0.184680</td>
+      <td>8.36236</td>
+      <td>0.078822</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>-6.82746</td>
-      <td>1.000000</td>
-      <td>0.928629</td>
-      <td>2.0</td>
-      <td>3.0</td>
+      <td>-8.68289</td>
+      <td>0.976188</td>
+      <td>0.828144</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>6.89321</td>
-      <td>0.202514</td>
+      <td>8.76441</td>
+      <td>0.068456</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>-6.75690</td>
-      <td>0.880840</td>
-      <td>0.928629</td>
+      <td>-7.94758</td>
+      <td>0.927800</td>
+      <td>0.828144</td>
       <td>2.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>7.64382</td>
-      <td>0.233591</td>
+      <td>10.64360</td>
+      <td>0.095578</td>
     </tr>
   </tbody>
 </table>
@@ -827,15 +840,15 @@ dict_keys([&#39;theta&#39;])
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">RuntimeError</span>                              Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_4006/564936507.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">/tmp/ipykernel_3342/564936507.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
 <span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>fit<span class="ansi-blue-fg">.</span>draws_xr<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
 
 <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/stanfit.py</span> in <span class="ansi-cyan-fg">draws_xr</span><span class="ansi-blue-fg">(self, vars, inc_warmup)</span>
-<span class="ansi-green-intense-fg ansi-bold">    931</span>         &#34;&#34;&#34;
-<span class="ansi-green-intense-fg ansi-bold">    932</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> XARRAY_INSTALLED<span class="ansi-blue-fg">:</span>
-<span class="ansi-green-fg">--&gt; 933</span><span class="ansi-red-fg">             raise RuntimeError(
-</span><span class="ansi-green-intense-fg ansi-bold">    934</span>                 <span class="ansi-blue-fg">&#39;Package &#34;xarray&#34; is not installed, cannot produce draws array.&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">    935</span>             )
+<span class="ansi-green-intense-fg ansi-bold">    919</span>         &#34;&#34;&#34;
+<span class="ansi-green-intense-fg ansi-bold">    920</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> XARRAY_INSTALLED<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 921</span><span class="ansi-red-fg">             raise RuntimeError(
+</span><span class="ansi-green-intense-fg ansi-bold">    922</span>                 <span class="ansi-blue-fg">&#39;Package &#34;xarray&#34; is not installed, cannot produce draws array.&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">    923</span>             )
 
 <span class="ansi-red-fg">RuntimeError</span>: Package &#34;xarray&#34; is not installed, cannot produce draws array.
 </pre></div></div>
@@ -859,15 +872,15 @@ dict_keys([&#39;theta&#39;])
 <div class="highlight"><pre>
 CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
  csv_files:
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-1-u90vky8_.csv
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-2-wr72mp_5.csv
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-3-m_pdxmhw.csv
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-4-rknceq3w.csv
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_1.csv
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_2.csv
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_3.csv
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_4.csv
  output_files:
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-1-u90vky8_-stdout.txt
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-2-wr72mp_5-stdout.txt
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-3-m_pdxmhw-stdout.txt
-        /tmp/tmp6ndnm29s/bernoulli-20211019133600-4-rknceq3w-stdout.txt
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_0-stdout.txt
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_1-stdout.txt
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_2-stdout.txt
+        /tmp/tmpcuz8x2pt/bernoulli-20211117190702_3-stdout.txt
 </pre></div></div>
 </div>
 <p>The sampler output files are written to a temporary directory which is deleted upon session exit unless the <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is specified. The <code class="docutils literal notranslate"><span class="pre">save_csvfiles</span></code> function moves the CmdStan CSV output files to a specified directory without having to re-run the sampler. The console output files are not saved. These files are treated as ephemeral; if the sample is valid, all relevant information is recorded in the CSV files.</p>
@@ -894,16 +907,15 @@ CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hm
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:sampling: [&#39;/home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=24823&#39;, &#39;data&#39;, &#39;file=/home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp6ndnm29s/bernoulli-20211019133600-1-s8pwqv99.csv&#39;, &#39;method=sample&#39;, &#39;num_samples=100000&#39;, &#39;num_warmup=100000&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
-INFO:cmdstanpy:start chain 1
-INFO:cmdstanpy:start chain 2
-INFO:cmdstanpy:finish chain 1
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:finish chain 2
-INFO:cmdstanpy:start chain 4
-INFO:cmdstanpy:finish chain 4
-INFO:cmdstanpy:finish chain 3
-INFO:cmdstanpy:sampling completed
+INFO:cmdstanpy:CmdStan start procesing
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [2] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:cmdstanpy:Chain [3] start processing
+INFO:cmdstanpy:Chain [2] done processing
+INFO:cmdstanpy:Chain [4] start processing
+INFO:cmdstanpy:Chain [3] done processing
+INFO:cmdstanpy:Chain [4] done processing
 </pre></div></div>
 </div>
 <p>The Stan language <code class="docutils literal notranslate"><span class="pre">print</span></code> statement can be use to monitor the Stan program state. In order to see this information as the sampler is running, use the <code class="docutils literal notranslate"><span class="pre">show_console=True</span></code> argument. This will stream all CmdStan messages to the terminal while the sampler is running.</p>
@@ -923,12 +935,10 @@ INFO:cmdstanpy:sampling completed
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:sampling: [&#39;/home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=48639&#39;, &#39;data&#39;, &#39;file=/home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp6ndnm29s/bernoulli-20211019133607-1-dn90ftr5.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
-INFO:cmdstanpy:start chain 1
-INFO:cmdstanpy:finish chain 1
-INFO:cmdstanpy:start chain 2
-INFO:cmdstanpy:finish chain 2
-INFO:cmdstanpy:sampling completed
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:cmdstanpy:Chain [2] start processing
+INFO:cmdstanpy:Chain [2] done processing
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -936,152 +946,152 @@ INFO:cmdstanpy:sampling completed
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-chain 1: method = sample (Default)
-chain 1: sample
-chain 1: num_samples = 1000 (Default)
-chain 1: num_warmup = 1000 (Default)
-chain 1: save_warmup = 0 (Default)
-chain 1: thin = 1 (Default)
-chain 1: adapt
-chain 1: engaged = 1 (Default)
-chain 1: gamma = 0.050000000000000003 (Default)
-chain 1: delta = 0.80000000000000004 (Default)
-chain 1: kappa = 0.75 (Default)
-chain 1: t0 = 10 (Default)
-chain 1: init_buffer = 75 (Default)
-chain 1: term_buffer = 50 (Default)
-chain 1: window = 25 (Default)
-chain 1: algorithm = hmc (Default)
-chain 1: hmc
-chain 1: engine = nuts (Default)
-chain 1: nuts
-chain 1: max_depth = 10 (Default)
-chain 1: metric = diag_e (Default)
-chain 1: metric_file =  (Default)
-chain 1: stepsize = 1 (Default)
-chain 1: stepsize_jitter = 0 (Default)
-chain 1: num_chains = 1 (Default)
-chain 1: id = 1 (Default)
-chain 1: data
-chain 1: file = /home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli.data.json
-chain 1: init = 2 (Default)
-chain 1: random
-chain 1: seed = 48639
-chain 1: output
-chain 1: file = /tmp/tmp6ndnm29s/bernoulli-20211019133607-1-dn90ftr5.csv
-chain 1: diagnostic_file =  (Default)
-chain 1: refresh = 100 (Default)
-chain 1: sig_figs = -1 (Default)
-chain 1: profile_file = profile.csv (Default)
-chain 1: num_threads = 1 (Default)
-chain 1:
-chain 1:
-chain 1: Gradient evaluation took 0.000157 seconds
-chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.57 seconds.
-chain 1: Adjust your expectations accordingly!
-chain 1:
-chain 1:
-chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)
-chain 1: Iteration:  100 / 2000 [  5%]  (Warmup)
-chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)
-chain 1: Iteration:  300 / 2000 [ 15%]  (Warmup)
-chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)
-chain 1: Iteration:  500 / 2000 [ 25%]  (Warmup)
-chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)
-chain 1: Iteration:  700 / 2000 [ 35%]  (Warmup)
-chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)
-chain 1: Iteration:  900 / 2000 [ 45%]  (Warmup)
-chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)
-chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)
-chain 1: Iteration: 1100 / 2000 [ 55%]  (Sampling)
-chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)
-chain 1: Iteration: 1300 / 2000 [ 65%]  (Sampling)
-chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)
-chain 1: Iteration: 1500 / 2000 [ 75%]  (Sampling)
-chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)
-chain 1: Iteration: 1700 / 2000 [ 85%]  (Sampling)
-chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
-chain 1: Iteration: 1900 / 2000 [ 95%]  (Sampling)
-chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
-chain 1:
-chain 1: Elapsed Time: 0.007 seconds (Warm-up)
-chain 1: 0.016 seconds (Sampling)
-chain 1: 0.023 seconds (Total)
-chain 1:
-chain 1:
-chain 2: method = sample (Default)
-chain 2: sample
-chain 2: num_samples = 1000 (Default)
-chain 2: num_warmup = 1000 (Default)
-chain 2: save_warmup = 0 (Default)
-chain 2: thin = 1 (Default)
-chain 2: adapt
-chain 2: engaged = 1 (Default)
-chain 2: gamma = 0.050000000000000003 (Default)
-chain 2: delta = 0.80000000000000004 (Default)
-chain 2: kappa = 0.75 (Default)
-chain 2: t0 = 10 (Default)
-chain 2: init_buffer = 75 (Default)
-chain 2: term_buffer = 50 (Default)
-chain 2: window = 25 (Default)
-chain 2: algorithm = hmc (Default)
-chain 2: hmc
-chain 2: engine = nuts (Default)
-chain 2: nuts
-chain 2: max_depth = 10 (Default)
-chain 2: metric = diag_e (Default)
-chain 2: metric_file =  (Default)
-chain 2: stepsize = 1 (Default)
-chain 2: stepsize_jitter = 0 (Default)
-chain 2: num_chains = 1 (Default)
-chain 2: id = 2
-chain 2: data
-chain 2: file = /home/runner/.cmdstan/cmdstan-2.28.0/examples/bernoulli/bernoulli.data.json
-chain 2: init = 2 (Default)
-chain 2: random
-chain 2: seed = 48639
-chain 2: output
-chain 2: file = /tmp/tmp6ndnm29s/bernoulli-20211019133607-2-c5dwkdft.csv
-chain 2: diagnostic_file =  (Default)
-chain 2: refresh = 100 (Default)
-chain 2: sig_figs = -1 (Default)
-chain 2: profile_file = profile.csv (Default)
-chain 2: num_threads = 1 (Default)
-chain 2:
-chain 2:
-chain 2: Gradient evaluation took 2e-06 seconds
-chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.02 seconds.
-chain 2: Adjust your expectations accordingly!
-chain 2:
-chain 2:
-chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)
-chain 2: Iteration:  100 / 2000 [  5%]  (Warmup)
-chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)
-chain 2: Iteration:  300 / 2000 [ 15%]  (Warmup)
-chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)
-chain 2: Iteration:  500 / 2000 [ 25%]  (Warmup)
-chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)
-chain 2: Iteration:  700 / 2000 [ 35%]  (Warmup)
-chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)
-chain 2: Iteration:  900 / 2000 [ 45%]  (Warmup)
-chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)
-chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)
-chain 2: Iteration: 1100 / 2000 [ 55%]  (Sampling)
-chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)
-chain 2: Iteration: 1300 / 2000 [ 65%]  (Sampling)
-chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)
-chain 2: Iteration: 1500 / 2000 [ 75%]  (Sampling)
-chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)
-chain 2: Iteration: 1700 / 2000 [ 85%]  (Sampling)
-chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
-chain 2: Iteration: 1900 / 2000 [ 95%]  (Sampling)
-chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
-chain 2:
-chain 2:  Elapsed Time: 0.004 seconds (Warm-up)
-chain 2:                0.015 seconds (Sampling)
-chain 2:                0.019 seconds (Total)
-chain 2:
-chain 2:
+Chain [1] method = sample (Default)
+Chain [1] sample
+Chain [1] num_samples = 1000 (Default)
+Chain [1] num_warmup = 1000 (Default)
+Chain [1] save_warmup = 0 (Default)
+Chain [1] thin = 1 (Default)
+Chain [1] adapt
+Chain [1] engaged = 1 (Default)
+Chain [1] gamma = 0.050000000000000003 (Default)
+Chain [1] delta = 0.80000000000000004 (Default)
+Chain [1] kappa = 0.75 (Default)
+Chain [1] t0 = 10 (Default)
+Chain [1] init_buffer = 75 (Default)
+Chain [1] term_buffer = 50 (Default)
+Chain [1] window = 25 (Default)
+Chain [1] algorithm = hmc (Default)
+Chain [1] hmc
+Chain [1] engine = nuts (Default)
+Chain [1] nuts
+Chain [1] max_depth = 10 (Default)
+Chain [1] metric = diag_e (Default)
+Chain [1] metric_file =  (Default)
+Chain [1] stepsize = 1 (Default)
+Chain [1] stepsize_jitter = 0 (Default)
+Chain [1] num_chains = 1 (Default)
+Chain [1] id = 1 (Default)
+Chain [1] data
+Chain [1] file = /home/runner/.cmdstan/cmdstan-2.28.1/examples/bernoulli/bernoulli.data.json
+Chain [1] init = 2 (Default)
+Chain [1] random
+Chain [1] seed = 4722
+Chain [1] output
+Chain [1] file = /tmp/tmpcuz8x2pt/bernoulli-20211117190708_1.csv
+Chain [1] diagnostic_file =  (Default)
+Chain [1] refresh = 100 (Default)
+Chain [1] sig_figs = -1 (Default)
+Chain [1] profile_file = profile.csv (Default)
+Chain [1] num_threads = 1 (Default)
+Chain [1]
+Chain [1]
+Chain [1] Gradient evaluation took 8e-06 seconds
+Chain [1] 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.
+Chain [1] Adjust your expectations accordingly!
+Chain [1]
+Chain [1]
+Chain [1] Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain [1] Iteration:  100 / 2000 [  5%]  (Warmup)
+Chain [1] Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain [1] Iteration:  300 / 2000 [ 15%]  (Warmup)
+Chain [1] Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain [1] Iteration:  500 / 2000 [ 25%]  (Warmup)
+Chain [1] Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain [1] Iteration:  700 / 2000 [ 35%]  (Warmup)
+Chain [1] Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain [1] Iteration:  900 / 2000 [ 45%]  (Warmup)
+Chain [1] Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain [1] Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain [1] Iteration: 1100 / 2000 [ 55%]  (Sampling)
+Chain [1] Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain [1] Iteration: 1300 / 2000 [ 65%]  (Sampling)
+Chain [1] Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain [1] Iteration: 1500 / 2000 [ 75%]  (Sampling)
+Chain [1] Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain [1] Iteration: 1700 / 2000 [ 85%]  (Sampling)
+Chain [1] Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain [1] Iteration: 1900 / 2000 [ 95%]  (Sampling)
+Chain [1] Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain [1]
+Chain [1] Elapsed Time: 0.008 seconds (Warm-up)
+Chain [1] 0.013 seconds (Sampling)
+Chain [1]                0.021 seconds (Total)
+Chain [1]
+Chain [1]
+Chain [2] method = sample (Default)
+Chain [2] sample
+Chain [2] num_samples = 1000 (Default)
+Chain [2] num_warmup = 1000 (Default)
+Chain [2] save_warmup = 0 (Default)
+Chain [2] thin = 1 (Default)
+Chain [2] adapt
+Chain [2] engaged = 1 (Default)
+Chain [2] gamma = 0.050000000000000003 (Default)
+Chain [2] delta = 0.80000000000000004 (Default)
+Chain [2] kappa = 0.75 (Default)
+Chain [2] t0 = 10 (Default)
+Chain [2] init_buffer = 75 (Default)
+Chain [2] term_buffer = 50 (Default)
+Chain [2] window = 25 (Default)
+Chain [2] algorithm = hmc (Default)
+Chain [2] hmc
+Chain [2] engine = nuts (Default)
+Chain [2] nuts
+Chain [2] max_depth = 10 (Default)
+Chain [2] metric = diag_e (Default)
+Chain [2] metric_file =  (Default)
+Chain [2] stepsize = 1 (Default)
+Chain [2] stepsize_jitter = 0 (Default)
+Chain [2] num_chains = 1 (Default)
+Chain [2] id = 2
+Chain [2] data
+Chain [2] file = /home/runner/.cmdstan/cmdstan-2.28.1/examples/bernoulli/bernoulli.data.json
+Chain [2] init = 2 (Default)
+Chain [2] random
+Chain [2] seed = 4722
+Chain [2] output
+Chain [2] file = /tmp/tmpcuz8x2pt/bernoulli-20211117190708_2.csv
+Chain [2] diagnostic_file =  (Default)
+Chain [2] refresh = 100 (Default)
+Chain [2] sig_figs = -1 (Default)
+Chain [2] profile_file = profile.csv (Default)
+Chain [2] num_threads = 1 (Default)
+Chain [2]
+Chain [2]
+Chain [2] Gradient evaluation took 2e-06 seconds
+Chain [2] 1000 transitions using 10 leapfrog steps per transition would take 0.02 seconds.
+Chain [2] Adjust your expectations accordingly!
+Chain [2]
+Chain [2]
+Chain [2] Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain [2] Iteration:  100 / 2000 [  5%]  (Warmup)
+Chain [2] Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain [2] Iteration:  300 / 2000 [ 15%]  (Warmup)
+Chain [2] Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain [2] Iteration:  500 / 2000 [ 25%]  (Warmup)
+Chain [2] Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain [2] Iteration:  700 / 2000 [ 35%]  (Warmup)
+Chain [2] Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain [2] Iteration:  900 / 2000 [ 45%]  (Warmup)
+Chain [2] Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain [2] Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain [2] Iteration: 1100 / 2000 [ 55%]  (Sampling)
+Chain [2] Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain [2] Iteration: 1300 / 2000 [ 65%]  (Sampling)
+Chain [2] Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain [2] Iteration: 1500 / 2000 [ 75%]  (Sampling)
+Chain [2] Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain [2] Iteration: 1700 / 2000 [ 85%]  (Sampling)
+Chain [2] Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain [2] Iteration: 1900 / 2000 [ 95%]  (Sampling)
+Chain [2] Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain [2]
+Chain [2] Elapsed Time: 0.005 seconds (Warm-up)
+Chain [2] 0.012 seconds (Sampling)
+Chain [2] 0.017 seconds (Total)
+Chain [2]
+Chain [2]
 </pre></div></div>
 </div>
 </section>
@@ -1106,13 +1116,11 @@ chain 2:
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
-INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
-INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
-INFO:cmdstanpy:sampling: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=96469&#39;, &#39;data&#39;, &#39;file=/tmp/tmp6ndnm29s/tx9uh4p9.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp6ndnm29s/bernoulli_datagen-20211019133614-1-qaadjn46.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=fixed_param&#39;]
-INFO:cmdstanpy:start chain 1
-INFO:cmdstanpy:finish chain 1
-INFO:cmdstanpy:sampling completed
+INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
+INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
+INFO:cmdstanpy:CmdStan start procesing
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1166,7 +1174,7 @@ INFO:cmdstanpy:sampling completed
       <th>lp__</th>
       <td>0</td>
       <td>NaN</td>
-      <td>0</td>
+      <td>0.0</td>
       <td>0</td>
       <td>0</td>
       <td>0.0</td>
@@ -1178,11 +1186,11 @@ INFO:cmdstanpy:sampling completed
       <th>theta_rep</th>
       <td>90</td>
       <td>0.27</td>
-      <td>8</td>
+      <td>7.8</td>
       <td>77</td>
       <td>90</td>
       <td>100.0</td>
-      <td>860.0</td>
+      <td>840.0</td>
       <td>120000.0</td>
       <td>1.0</td>
     </tr>
@@ -1276,7 +1284,7 @@ INFO:matplotlib.font_manager:generated new fontManager
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

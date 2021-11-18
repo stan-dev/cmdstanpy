@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>Index &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -58,7 +58,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -171,7 +171,8 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#C"><strong>C</strong></a>
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
@@ -189,6 +190,18 @@
  | <a href="#W"><strong>W</strong></a>
  
 </div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.add">add() (cmdstanpy.compiler_opts.CompilerOptions method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.add_include_path">add_include_path() (cmdstanpy.compiler_opts.CompilerOptions method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -197,7 +210,7 @@
       <ul>
         <li><a href="api.html#cmdstanpy.CmdStanMCMC.chain_ids">(cmdstanpy.CmdStanMCMC property)</a>
 </li>
-        <li><a href="api.html#cmdstanpy.stanfit.RunSet.chain_ids">(cmdstanpy.stanfit.RunSet property)</a>
+        <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.chain_ids">(cmdstanpy.stanfit.RunSet property)</a>
 </li>
       </ul></li>
       <li><a href="api.html#cmdstanpy.CmdStanGQ.chains">chains (cmdstanpy.CmdStanGQ property)</a>
@@ -205,14 +218,18 @@
       <ul>
         <li><a href="api.html#cmdstanpy.CmdStanMCMC.chains">(cmdstanpy.CmdStanMCMC property)</a>
 </li>
-        <li><a href="api.html#cmdstanpy.stanfit.RunSet.chains">(cmdstanpy.stanfit.RunSet property)</a>
+        <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.chains">(cmdstanpy.stanfit.RunSet property)</a>
 </li>
       </ul></li>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.cmds">cmds (cmdstanpy.stanfit.RunSet property)</a>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.cmd">cmd() (cmdstanpy.stanfit.RunSet method)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.InferenceMetadata.cmdstan_config">cmdstan_config (cmdstanpy.InferenceMetadata property)</a>
+      <li><a href="internal_api.html#cmdstanpy.InferenceMetadata.cmdstan_config">cmdstan_config (cmdstanpy.InferenceMetadata property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.cmdstan_path">cmdstan_path() (in module cmdstanpy)</a>
+</li>
+      <li><a href="api.html#cmdstanpy.cmdstan_version">cmdstan_version() (in module cmdstanpy)</a>
+</li>
+      <li><a href="internal_api.html#cmdstanpy.cmdstan_args.CmdStanArgs">CmdStanArgs (class in cmdstanpy.cmdstan_args)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanGQ">CmdStanGQ (class in cmdstanpy)</a>
 </li>
@@ -220,8 +237,6 @@
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMLE">CmdStanMLE (class in cmdstanpy)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanModel">CmdStanModel (class in cmdstanpy)</a>
 </li>
       <li>
@@ -231,6 +246,8 @@
         <li><a href="index.html#module-cmdstanpy">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanVB">CmdStanVB (class in cmdstanpy)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanModel.code">code() (cmdstanpy.CmdStanModel method)</a>
@@ -249,9 +266,27 @@
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanModel.compile">compile() (cmdstanpy.CmdStanModel method)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.CmdStanModel.cpp_options">cpp_options (cmdstanpy.CmdStanModel property)</a>
+      <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions">CompilerOptions (class in cmdstanpy.compiler_opts)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.csv_files">csv_files (cmdstanpy.stanfit.RunSet property)</a>
+      <li><a href="internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.compose">compose() (cmdstanpy.cmdstan_args.OptimizeArgs method)</a>
+
+      <ul>
+        <li><a href="internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs.compose">(cmdstanpy.cmdstan_args.SamplerArgs method)</a>
+</li>
+        <li><a href="internal_api.html#cmdstanpy.cmdstan_args.VariationalArgs.compose">(cmdstanpy.cmdstan_args.VariationalArgs method)</a>
+</li>
+        <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.compose">(cmdstanpy.compiler_opts.CompilerOptions method)</a>
+</li>
+      </ul></li>
+      <li><a href="internal_api.html#cmdstanpy.cmdstan_args.CmdStanArgs.compose_command">compose_command() (cmdstanpy.cmdstan_args.CmdStanArgs method)</a>
+</li>
+      <li><a href="api.html#cmdstanpy.CmdStanModel.cpp_options">cpp_options (cmdstanpy.CmdStanModel property)</a>
+
+      <ul>
+        <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.cpp_options">(cmdstanpy.compiler_opts.CompilerOptions property)</a>
+</li>
+      </ul></li>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.csv_files">csv_files (cmdstanpy.stanfit.RunSet property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -261,7 +296,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.diagnose">diagnose() (cmdstanpy.CmdStanMCMC method)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.diagnostic_files">diagnostic_files (cmdstanpy.stanfit.RunSet property)</a>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.diagnostic_files">diagnostic_files (cmdstanpy.stanfit.RunSet property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanGQ.draws">draws() (cmdstanpy.CmdStanGQ method)</a>
 
@@ -295,6 +330,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanModel.exe_file">exe_file (cmdstanpy.CmdStanModel property)</a>
 </li>
+      <li><a href="api.html#cmdstanpy.CmdStanModel.exe_info">exe_info() (cmdstanpy.CmdStanModel method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -313,7 +350,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.get_err_msgs">get_err_msgs() (cmdstanpy.stanfit.RunSet method)</a>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.get_err_msgs">get_err_msgs() (cmdstanpy.stanfit.RunSet method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -321,11 +358,13 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cmdstanpy.InferenceMetadata">InferenceMetadata (class in cmdstanpy)</a>
+      <li><a href="internal_api.html#cmdstanpy.InferenceMetadata">InferenceMetadata (class in cmdstanpy)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.install_cmdstan">install_cmdstan() (in module cmdstanpy)</a>
+</li>
+      <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.is_empty">is_empty() (cmdstanpy.compiler_opts.CompilerOptions method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -343,19 +382,19 @@
         <li><a href="api.html#cmdstanpy.CmdStanVB.metadata">(cmdstanpy.CmdStanVB property)</a>
 </li>
       </ul></li>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.method">method (cmdstanpy.stanfit.RunSet property)</a>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.method">method (cmdstanpy.stanfit.RunSet property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.method_variables">method_variables() (cmdstanpy.CmdStanMCMC method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cmdstanpy.InferenceMetadata.method_vars_cols">method_vars_cols (cmdstanpy.InferenceMetadata property)</a>
+      <li><a href="internal_api.html#cmdstanpy.InferenceMetadata.method_vars_cols">method_vars_cols (cmdstanpy.InferenceMetadata property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.metric">metric (cmdstanpy.CmdStanMCMC property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.metric_type">metric_type (cmdstanpy.CmdStanMCMC property)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.model">model (cmdstanpy.stanfit.RunSet property)</a>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.model">model (cmdstanpy.stanfit.RunSet property)</a>
 </li>
       <li>
     module
@@ -372,11 +411,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanModel.name">name (cmdstanpy.CmdStanModel property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.num_draws_sampling">num_draws_sampling (cmdstanpy.CmdStanMCMC property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.num_draws_warmup">num_draws_warmup (cmdstanpy.CmdStanMCMC property)</a>
+</li>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.num_procs">num_procs (cmdstanpy.stanfit.RunSet property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -384,14 +425,18 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.one_process_per_chain">one_process_per_chain (cmdstanpy.stanfit.RunSet property)</a>
+</li>
       <li><a href="api.html#cmdstanpy.CmdStanModel.optimize">optimize() (cmdstanpy.CmdStanModel method)</a>
+</li>
+      <li><a href="internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs">OptimizeArgs (class in cmdstanpy.cmdstan_args)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMLE.optimized_iterations_np">optimized_iterations_np (cmdstanpy.CmdStanMLE property)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.CmdStanMLE.optimized_iterations_pd">optimized_iterations_pd (cmdstanpy.CmdStanMLE property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cmdstanpy.CmdStanMLE.optimized_iterations_pd">optimized_iterations_pd (cmdstanpy.CmdStanMLE property)</a>
+</li>
       <li><a href="api.html#cmdstanpy.CmdStanMLE.optimized_params_dict">optimized_params_dict (cmdstanpy.CmdStanMLE property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMLE.optimized_params_np">optimized_params_np (cmdstanpy.CmdStanMLE property)</a>
@@ -404,7 +449,7 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.profile_files">profile_files (cmdstanpy.stanfit.RunSet property)</a>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.profile_files">profile_files (cmdstanpy.stanfit.RunSet property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -412,7 +457,7 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet">RunSet (class in cmdstanpy.stanfit)</a>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet">RunSet (class in cmdstanpy.stanfit)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -421,6 +466,8 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanModel.sample">sample() (cmdstanpy.CmdStanModel method)</a>
+</li>
+      <li><a href="internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs">SamplerArgs (class in cmdstanpy.cmdstan_args)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanGQ.save_csvfiles">save_csvfiles() (cmdstanpy.CmdStanGQ method)</a>
 
@@ -431,12 +478,16 @@
 </li>
         <li><a href="api.html#cmdstanpy.CmdStanVB.save_csvfiles">(cmdstanpy.CmdStanVB method)</a>
 </li>
-        <li><a href="api.html#cmdstanpy.stanfit.RunSet.save_csvfiles">(cmdstanpy.stanfit.RunSet method)</a>
+        <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.save_csvfiles">(cmdstanpy.stanfit.RunSet method)</a>
 </li>
       </ul></li>
       <li><a href="api.html#cmdstanpy.set_cmdstan_path">set_cmdstan_path() (in module cmdstanpy)</a>
 </li>
       <li><a href="api.html#cmdstanpy.set_make_env">set_make_env() (in module cmdstanpy)</a>
+</li>
+      <li><a href="api.html#cmdstanpy.show_versions">show_versions() (in module cmdstanpy)</a>
+</li>
+      <li><a href="api.html#cmdstanpy.CmdStanModel.src_info">src_info() (cmdstanpy.CmdStanModel method)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanModel.stan_file">stan_file (cmdstanpy.CmdStanModel property)</a>
 </li>
@@ -462,13 +513,17 @@
         <li><a href="api.html#cmdstanpy.CmdStanVB.stan_variables">(cmdstanpy.CmdStanVB method)</a>
 </li>
       </ul></li>
-      <li><a href="api.html#cmdstanpy.InferenceMetadata.stan_vars_cols">stan_vars_cols (cmdstanpy.InferenceMetadata property)</a>
+      <li><a href="internal_api.html#cmdstanpy.InferenceMetadata.stan_vars_cols">stan_vars_cols (cmdstanpy.InferenceMetadata property)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.InferenceMetadata.stan_vars_dims">stan_vars_dims (cmdstanpy.InferenceMetadata property)</a>
+      <li><a href="internal_api.html#cmdstanpy.InferenceMetadata.stan_vars_dims">stan_vars_dims (cmdstanpy.InferenceMetadata property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanModel.stanc_options">stanc_options (cmdstanpy.CmdStanModel property)</a>
+
+      <ul>
+        <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.stanc_options">(cmdstanpy.compiler_opts.CompilerOptions property)</a>
 </li>
-      <li><a href="api.html#cmdstanpy.stanfit.RunSet.stdout_files">stdout_files (cmdstanpy.stanfit.RunSet property)</a>
+      </ul></li>
+      <li><a href="internal_api.html#cmdstanpy.stanfit.RunSet.stdout_files">stdout_files (cmdstanpy.stanfit.RunSet property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanMCMC.step_size">step_size (cmdstanpy.CmdStanMCMC property)</a>
 </li>
@@ -489,24 +544,48 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanModel.user_header">user_header (cmdstanpy.CmdStanModel property)</a>
+
+      <ul>
+        <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.user_header">(cmdstanpy.compiler_opts.CompilerOptions property)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internal_api.html#cmdstanpy.cmdstan_args.CmdStanArgs.validate">validate() (cmdstanpy.cmdstan_args.CmdStanArgs method)</a>
+
+      <ul>
+        <li><a href="internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.validate">(cmdstanpy.cmdstan_args.OptimizeArgs method)</a>
+</li>
+        <li><a href="internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs.validate">(cmdstanpy.cmdstan_args.SamplerArgs method)</a>
+</li>
+        <li><a href="internal_api.html#cmdstanpy.cmdstan_args.VariationalArgs.validate">(cmdstanpy.cmdstan_args.VariationalArgs method)</a>
+</li>
+        <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate">(cmdstanpy.compiler_opts.CompilerOptions method)</a>
+</li>
+      </ul></li>
+      <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_cpp_opts">validate_cpp_opts() (cmdstanpy.compiler_opts.CompilerOptions method)</a>
+</li>
+      <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_stanc_opts">validate_stanc_opts() (cmdstanpy.compiler_opts.CompilerOptions method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_user_header">validate_user_header() (cmdstanpy.compiler_opts.CompilerOptions method)</a>
+</li>
       <li><a href="api.html#cmdstanpy.CmdStanModel.variational">variational() (cmdstanpy.CmdStanModel method)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanVB.variational_params_dict">variational_params_dict (cmdstanpy.CmdStanVB property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cmdstanpy.CmdStanVB.variational_params_np">variational_params_np (cmdstanpy.CmdStanVB property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanVB.variational_params_pd">variational_params_pd (cmdstanpy.CmdStanVB property)</a>
 </li>
       <li><a href="api.html#cmdstanpy.CmdStanVB.variational_sample">variational_sample (cmdstanpy.CmdStanVB property)</a>
+</li>
+      <li><a href="internal_api.html#cmdstanpy.cmdstan_args.VariationalArgs">VariationalArgs (class in cmdstanpy.cmdstan_args)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -546,7 +625,7 @@
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

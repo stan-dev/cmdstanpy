@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -463,12 +463,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <section id="Using-Variational-Estimates-to-Initialize-the-NUTS-HMC-Sampler">
 <h1>Using Variational Estimates to Initialize the NUTS-HMC Sampler<a class="headerlink" href="#Using-Variational-Estimates-to-Initialize-the-NUTS-HMC-Sampler" title="Permalink to this headline">¶</a></h1>
-<p>In this example we show how to use the parameter estimates return by Stan’s variational inference algorithm as the initial parameter values for Stan’s NUTS-HMC sampler, using a the <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/models/stan/logearn_height.stan">earnings-logearn_height model</a> and data from the <a class="reference external" href="https://github.com/stan-dev/posteriordb">posteriordb package</a>.</p>
-<p>The experiments reported in the paper <a class="reference external" href="https://arxiv.org/abs/2108.03782">Pathfinder: Parallel quasi-Newton variational inference</a> by Zhang et al. show that mean-field ADVI provides a better estimate of the posterior, as measured by the 1-Wasserstein distance to the reference posterior, than 75 iterations of the warmup Phase I algorithm used by the NUTS-HMC sampler, furthermore, ADVI is more computationally efficient, requiring fewer evaluations of the log density and gradient functions.
-Therefore, using the estimates from ADVI to initialize the parameter values for the NUTS-HMC sampler will allow the sampler to do a better job of adapting the stepsize and metric during warmup, resulting in better performance and estimation.</p>
+<p>In this example we show how to use the parameter estimates return by Stan’s variational inference algorithm as the initial parameter values for Stan’s NUTS-HMC sampler. By default, the sampler algorithm randomly initializes all model parameters in the range uniform[-2, 2]. When the true parameter value is outside of this range, starting from the ADVI estimates will speed up and improve adaptation.</p>
 <section id="Model-and-data">
 <h2>Model and data<a class="headerlink" href="#Model-and-data" title="Permalink to this headline">¶</a></h2>
-<p>For conveince, we have copied the posteriordb model and data to this directory, in files <a class="reference external" href="logearn_height.stan">logearn_height.stan</a> and <a class="reference external" href="earnings.json">earnings.json</a>.</p>
+<p>The Stan model and data are taken from the <a class="reference external" href="https://github.com/stan-dev/posteriordb">posteriordb package</a>.</p>
+<p>We use the <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/models/stan/blr.stan">blr model</a>, a Bayesian standard linear regression model with noninformative priors, and its corresponding simulated dataset <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/data/data/sblri.json.zip">sblri.json</a>, which was simulated via script <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/data/data-raw/sblr/sblr.R">sblr.R</a>. For
+conveince, we have copied the posteriordb model and data to this directory, in files <code class="docutils literal notranslate"><span class="pre">blr.stan</span></code> and <code class="docutils literal notranslate"><span class="pre">sblri.json</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -477,64 +477,23 @@ Therefore, using the estimates from ADVI to initialize the parameter values for 
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
 
-<span class="n">stan_file</span> <span class="o">=</span> <span class="s1">&#39;logearn_height.stan&#39;</span>
-<span class="n">data_file</span> <span class="o">=</span> <span class="s1">&#39;earnings.json&#39;</span>
+<span class="n">stan_file</span> <span class="o">=</span> <span class="s1">&#39;blr.stan&#39;</span> <span class="c1"># basic linear regression</span>
+<span class="n">data_file</span> <span class="o">=</span> <span class="s1">&#39;sblri.json&#39;</span> <span class="c1"># simulated data</span>
 
-<span class="c1"># instantiate, compile bernoulli model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">code</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan program, exe file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height
-INFO:cmdstanpy:compiler options: stanc_options={}, cpp_options={}
-INFO:cmdstanpy:compiled model file: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height
+INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
+INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
 </pre></div></div>
-</div>
-<p>The earnings dataset is a set of 1192 observations of annual earnings in USD, height in inches, and indicator for sex==male.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">json</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-    <span class="n">data_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">])</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;earn&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
-
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-dict_keys([&#39;N&#39;, &#39;earn&#39;, &#39;height&#39;, &#39;male&#39;])
-1192
-50000 74
-60000 66
-30000 64
-50000 63
-51000 63
-</pre></div></div>
-</div>
-<p>The “logearn_height” model regresses the log earnings on height.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">code</span><span class="p">())</span>
-</pre></div>
-</div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -542,20 +501,21 @@ dict_keys([&#39;N&#39;, &#39;earn&#39;, &#39;height&#39;, &#39;male&#39;])
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 data {
-  int&lt;lower=0&gt; N;
-  vector[N] earn;
-  vector[N] height;
-}
-transformed data {           // log transformation
-  vector[N] log_earn;
-  log_earn = log(earn);
+  int &lt;lower=0&gt; N;
+  int &lt;lower=0&gt; D;
+  matrix [N, D] X;
+  vector [N] y;
 }
 parameters {
-  vector[2] beta;
-  real&lt;lower=0&gt; sigma;
+  vector [D] beta;
+  real &lt;lower=0&gt; sigma;
 }
 model {
-  log_earn ~ normal(beta[1] + beta[2] * height, sigma);
+  // prior
+  target += normal_lpdf(beta | 0, 10);
+  target += normal_lpdf(sigma | 0, 10);
+  // likelihood
+  target += normal_lpdf(y | X * beta, sigma);
 }
 
 </pre></div></div>
@@ -563,9 +523,9 @@ model {
 </section>
 <section id="Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates">
 <h2>Run Stan’s variational inference algorithm, obtain fitted estimates<a class="headerlink" href="#Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> method <code class="docutils literal notranslate"><span class="pre">variational</span></code> runs CmdStan’s ADVI algorithm. Conditioning the model on the data results in a posterior geometry which is difficult to navigate. Because the ADVI algorithm is unstable and may fail to converge, we run it with argument <code class="docutils literal notranslate"><span class="pre">require_converged</span></code> set to <code class="docutils literal notranslate"><span class="pre">False</span></code>. We also specify a seed, to avoid instabilities as well as for reproducibility.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> method <code class="docutils literal notranslate"><span class="pre">variational</span></code> runs CmdStan’s ADVI algorithm. Because this algorithm is unstable and may fail to converge, we run it with argument <code class="docutils literal notranslate"><span class="pre">require_converged</span></code> set to <code class="docutils literal notranslate"><span class="pre">False</span></code>. We also specify a seed, to avoid instabilities as well as for reproducibility.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -578,20 +538,20 @@ model {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:start chain 1
-INFO:cmdstanpy:finish chain 1
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [1] done processing
 WARNING:cmdstanpy:The algorithm may not have converged.
 Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
-<p>The ADVI algorithm provides estimates of all model parameters as well as the step size scaling factor <code class="docutils literal notranslate"><span class="pre">eta</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">variational</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanVB</span></code> object, with methods <code class="docutils literal notranslate"><span class="pre">eta</span></code> and <code class="docutils literal notranslate"><span class="pre">stan_variables</span></code>, which return the step size scaling factor and estimates of all model parameters as a Python dictionary respectively.</p>
+<p>The ADVI algorithm provides estimates of all model parameters.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">variational</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanVB</span></code> object, with method <code class="docutils literal notranslate"><span class="pre">stan_variables</span></code>, which returns the approximate estimates of all model parameters as a Python dictionary.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="n">vb_fit</span><span class="o">.</span><span class="n">eta</span><span class="p">,</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">())</span>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -600,60 +560,69 @@ Proceeding because require_converged is set to False
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-10.0 {&#39;beta&#39;: array([2.74011 , 0.104137]), &#39;sigma&#39;: 3.83589}
+{&#39;beta&#39;: array([0.997115, 0.993865, 0.991472, 0.993601, 1.0095  ]), &#39;sigma&#39;: 1.67}
 </pre></div></div>
 </div>
-<p>Posteriordb provides reference posteriors for all models. For the logearn_height model, conditioned on the dataset <code class="docutils literal notranslate"><span class="pre">earnings.json</span></code>, the posterior variables are:</p>
-<ul class="simple">
-<li><p>beta[1]: 5.782</p></li>
-<li><p>beta[2]: 0.059</p></li>
-<li><p>sigma: 0.894</p></li>
-</ul>
-<p>By default, the sampler algorithm randomly initializes all model parameters in the range uniform[-2, 2]. The ADVI estimates will provide a better starting point, especially w/r/t to parameter <code class="docutils literal notranslate"><span class="pre">beta[1]</span></code>, than the defaults. In addition, we can use the step size scaling factor to scale the initial step size, which allows us to skip the first phase of warmup (default 75 iterations).</p>
+<p>Posteriordb provides reference posteriors for all models. For the blr model, conditioned on the dataset <code class="docutils literal notranslate"><span class="pre">sblri.json</span></code>, the reference posteriors are in file <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/reference_posteriors/summary_statistics/mean/mean/sblri-blr.json">sblri-blr.json</a></p>
+<p>The reference posteriors for all elements of <code class="docutils literal notranslate"><span class="pre">beta</span></code> and <code class="docutils literal notranslate"><span class="pre">sigma</span></code> are all very close to <span class="math">1.0</span>.</p>
+<p>The experiments reported in the paper <a class="reference external" href="https://arxiv.org/abs/2108.03782">Pathfinder: Parallel quasi-Newton variational inference</a> by Zhang et al. show that mean-field ADVI provides a better estimate of the posterior, as measured by the 1-Wasserstein distance to the reference posterior, than 75 iterations of the warmup Phase I algorithm used by the NUTS-HMC sampler, furthermore, ADVI is more computationally efficient, requiring fewer evaluations of the log density and gradient functions.
+Therefore, using the estimates from ADVI to initialize the parameter values for the NUTS-HMC sampler will allow the sampler to do a better job of adapting the stepsize and metric during warmup, resulting in better performance and estimation.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="n">vb_vars</span> <span class="o">=</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">()</span>
-<span class="n">vb_stepsize</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">eta</span>
 <span class="n">mcmc_vb_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
-    <span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">inits</span><span class="o">=</span><span class="n">vb_vars</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="n">vb_stepsize</span><span class="p">,</span>
-    <span class="n">adapt_init_phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">inits</span><span class="o">=</span><span class="n">vb_vars</span><span class="p">,</span> <span class="n">iter_warmup</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">12345</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:sampling: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=123&#39;, &#39;data&#39;, &#39;file=earnings.json&#39;, &#39;init=/tmp/tmp1zpxl682/531tv4uq.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp1zpxl682/logearn_height-20211019133712-1-n2ti0eb0.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;stepsize=0.1&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;, &#39;init_buffer=0&#39;]
+INFO:cmdstanpy:CmdStan start procesing
 ERROR:cmdstanpy:Error in progress bar initialization:
         IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
 Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f6020b7f1f0&gt;
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f301034da60&gt;
 Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f6020b7f1f0&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
+  File &#34;/opt/hostedtoolcache/Python/3.9.8/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
     self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-        self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.7/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+  File &#34;/opt/hostedtoolcache/Python/3.9.8/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
     self.disp(bar_style=&#39;danger&#39;, check_delay=False)
 AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:start chain 4
-INFO:cmdstanpy:sampling completed
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+INFO:cmdstanpy:CmdStan done processing.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -662,7 +631,7 @@ INFO:cmdstanpy:sampling completed
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -710,69 +679,133 @@ INFO:cmdstanpy:sampling completed
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-460.000</td>
-      <td>0.0360</td>
-      <td>1.200</td>
-      <td>-460.000</td>
-      <td>-460.000</td>
-      <td>-460.00</td>
-      <td>1200.0</td>
-      <td>120.0</td>
-      <td>1.0</td>
+      <td>-160.00</td>
+      <td>0.054000</td>
+      <td>1.70000</td>
+      <td>-160.00</td>
+      <td>-160.00</td>
+      <td>-150.00</td>
+      <td>1000.00</td>
+      <td>2100.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
       <th>beta[1]</th>
-      <td>5.800</td>
-      <td>0.0140</td>
-      <td>0.470</td>
-      <td>5.000</td>
-      <td>5.800</td>
-      <td>6.60</td>
-      <td>1178.0</td>
-      <td>124.0</td>
-      <td>1.0</td>
+      <td>1.00</td>
+      <td>0.000013</td>
+      <td>0.00096</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>5094.00</td>
+      <td>10188.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
       <th>beta[2]</th>
-      <td>0.059</td>
-      <td>0.0002</td>
-      <td>0.007</td>
-      <td>0.047</td>
-      <td>0.059</td>
-      <td>0.07</td>
-      <td>1160.0</td>
-      <td>122.0</td>
-      <td>1.0</td>
+      <td>1.00</td>
+      <td>0.000018</td>
+      <td>0.00120</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>4139.00</td>
+      <td>8278.00</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>beta[3]</th>
+      <td>1.00</td>
+      <td>0.000013</td>
+      <td>0.00093</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>5196.00</td>
+      <td>10392.00</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>beta[4]</th>
+      <td>1.00</td>
+      <td>0.000015</td>
+      <td>0.00100</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>4664.00</td>
+      <td>9328.00</td>
+      <td>1.00</td>
+    </tr>
+    <tr>
+      <th>beta[5]</th>
+      <td>1.00</td>
+      <td>0.000014</td>
+      <td>0.00100</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>1.00</td>
+      <td>5161.00</td>
+      <td>10323.00</td>
+      <td>1.00</td>
     </tr>
     <tr>
       <th>sigma</th>
-      <td>0.900</td>
-      <td>0.0000</td>
-      <td>0.000</td>
-      <td>0.900</td>
-      <td>0.900</td>
-      <td>0.90</td>
-      <td>1905.9</td>
-      <td>200.6</td>
-      <td>1.0</td>
+      <td>0.96</td>
+      <td>0.000000</td>
+      <td>0.07000</td>
+      <td>0.85</td>
+      <td>0.95</td>
+      <td>1.08</td>
+      <td>267.04</td>
+      <td>534.07</td>
+      <td>1.02</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>The sampler results match the reference posterior, (taking into account MCSE).</p>
-<ul class="simple">
-<li><p>beta[1]: 5.782</p></li>
-<li><p>beta[2]: 0.059</p></li>
-<li><p>sigma: 0.894</p></li>
-</ul>
-<p>To see how this is useful, we run the sampler with default initializations, step size, and warmup.</p>
+<p>The sampler estimates match the reference posterior.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">mcmc_random_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">mcmc_vb_inits_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Processing csv files: /tmp/tmp37kyvhme/blr-20211117190743_1.csv, /tmp/tmp37kyvhme/blr-20211117190743_2.csv, /tmp/tmp37kyvhme/blr-20211117190743_3.csv, /tmp/tmp37kyvhme/blr-20211117190743_4.csv
+
+Checking sampler transitions treedepth.
+Treedepth satisfactory for all transitions.
+
+Checking sampler transitions for divergences.
+No divergent transitions found.
+
+Checking E-BFMI - sampler transitions HMC potential energy.
+E-BFMI satisfactory.
+
+Effective sample size satisfactory.
+
+Split R-hat values satisfactory all parameters.
+
+Processing complete, no problems detected.
+
+</pre></div></div>
+</div>
+<p>Using the default random parameter initializations, we need to run more warmup iteratons. If we only run 75 warmup iterations with random inits, the result fails to estimate <code class="docutils literal notranslate"><span class="pre">sigma</span></code> correctly. It is necessary to run the model with at least 150 warmup iterations to produce a good set of estimates.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">mcmc_random_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">iter_warmup</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -781,20 +814,19 @@ INFO:cmdstanpy:sampling completed
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:sampling: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/logearn_height&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=123&#39;, &#39;data&#39;, &#39;file=earnings.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp1zpxl682/logearn_height-20211019133721-1-rr1sno4g.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
-INFO:cmdstanpy:start chain 1
-INFO:cmdstanpy:start chain 2
-INFO:cmdstanpy:finish chain 2
-INFO:cmdstanpy:start chain 3
-INFO:cmdstanpy:finish chain 1
-INFO:cmdstanpy:start chain 4
-INFO:cmdstanpy:finish chain 4
-INFO:cmdstanpy:finish chain 3
-INFO:cmdstanpy:sampling completed
+INFO:cmdstanpy:CmdStan start procesing
+INFO:cmdstanpy:Chain [1] start processing
+INFO:cmdstanpy:Chain [2] start processing
+INFO:cmdstanpy:Chain [1] done processing
+INFO:cmdstanpy:Chain [3] start processing
+INFO:cmdstanpy:Chain [3] done processing
+INFO:cmdstanpy:Chain [4] start processing
+INFO:cmdstanpy:Chain [4] done processing
+INFO:cmdstanpy:Chain [2] done processing
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -803,7 +835,7 @@ INFO:cmdstanpy:sampling completed
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -851,57 +883,134 @@ INFO:cmdstanpy:sampling completed
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-460.000</td>
-      <td>0.0360</td>
-      <td>1.2000</td>
-      <td>-460.000</td>
-      <td>-460.000</td>
-      <td>-460.00</td>
-      <td>1200.0</td>
-      <td>130.0</td>
-      <td>1.0</td>
+      <td>-190.0</td>
+      <td>25.00000</td>
+      <td>36.0000</td>
+      <td>-230.00</td>
+      <td>-170.0</td>
+      <td>-160.0</td>
+      <td>2.0</td>
+      <td>10.0</td>
+      <td>13.0</td>
     </tr>
     <tr>
       <th>beta[1]</th>
-      <td>5.800</td>
-      <td>0.0130</td>
-      <td>0.4500</td>
-      <td>5.100</td>
-      <td>5.800</td>
-      <td>6.50</td>
-      <td>1142.0</td>
-      <td>123.0</td>
+      <td>1.0</td>
+      <td>0.00012</td>
+      <td>0.0021</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>293.0</td>
+      <td>1474.0</td>
       <td>1.0</td>
     </tr>
     <tr>
       <th>beta[2]</th>
-      <td>0.059</td>
-      <td>0.0002</td>
-      <td>0.0068</td>
-      <td>0.047</td>
-      <td>0.059</td>
-      <td>0.07</td>
-      <td>1144.0</td>
-      <td>124.0</td>
+      <td>1.0</td>
+      <td>0.00020</td>
+      <td>0.0029</td>
+      <td>0.99</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>204.0</td>
+      <td>1025.0</td>
       <td>1.0</td>
     </tr>
     <tr>
-      <th>sigma</th>
-      <td>0.900</td>
-      <td>0.0000</td>
-      <td>0.0000</td>
-      <td>0.900</td>
-      <td>0.900</td>
-      <td>0.90</td>
-      <td>1532.8</td>
-      <td>165.7</td>
+      <th>beta[3]</th>
       <td>1.0</td>
+      <td>0.00013</td>
+      <td>0.0021</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>250.0</td>
+      <td>1256.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>beta[4]</th>
+      <td>1.0</td>
+      <td>0.00013</td>
+      <td>0.0022</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>279.0</td>
+      <td>1404.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>beta[5]</th>
+      <td>1.0</td>
+      <td>0.00017</td>
+      <td>0.0023</td>
+      <td>1.00</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>180.0</td>
+      <td>902.0</td>
+      <td>1.1</td>
+    </tr>
+    <tr>
+      <th>sigma</th>
+      <td>2.0</td>
+      <td>0.70000</td>
+      <td>1.1000</td>
+      <td>0.90</td>
+      <td>2.7</td>
+      <td>3.2</td>
+      <td>2.0</td>
+      <td>10.2</td>
+      <td>11.3</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>Using the variational estimates to skip warmup phase I shows improved N_Eff/s (number of effective sampler per second) values for all parameters. This is a simple model run on a small dataset. For complex models where the initial parameter values are far from the default initializations, this procedure may allow for faster and better adaptation during warmup.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="n">mcmc_random_inits_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Processing csv files: /tmp/tmp37kyvhme/blr-20211117190744_1.csv, /tmp/tmp37kyvhme/blr-20211117190744_2.csv, /tmp/tmp37kyvhme/blr-20211117190744_3.csv, /tmp/tmp37kyvhme/blr-20211117190744_4.csv
+
+Checking sampler transitions treedepth.
+Treedepth satisfactory for all transitions.
+
+Checking sampler transitions for divergences.
+544 of 4000 (14%) transitions ended with a divergence.
+These divergent transitions indicate that HMC is not fully able to explore the posterior distribution.
+Try increasing adapt delta closer to 1.
+If this doesn&#39;t remove all divergences, try to reparameterize the model.
+
+Checking E-BFMI - sampler transitions HMC potential energy.
+The E-BFMI, 0.008, is below the nominal threshold of 0.3 which suggests that HMC may have trouble exploring the target distribution.
+If possible, try to reparameterize the model.
+
+The following parameters had fewer than 0.001 effective draws per transition:
+  sigma
+Such low values indicate that the effective sample size estimators may be biased high and actual performance may be substantially lower than quoted.
+
+The following parameters had split R-hat greater than 1.1:
+  beta[5], sigma
+Such high values indicate incomplete mixing and biased estimation.
+You should consider regularizating your model with additional prior information or a more effective parameterization.
+
+Processing complete.
+
+</pre></div></div>
+</div>
 </section>
 </section>
 
@@ -945,7 +1054,7 @@ INFO:cmdstanpy:sampling completed
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

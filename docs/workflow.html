@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -267,17 +267,21 @@ The following sections describe the process of building, running, and
 managing the resulting inference for a single model and set of inputs.</p>
 <section id="compile-the-stan-model">
 <span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Permalink to this headline">¶</a></h2>
-<p>The: <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class manages the Stan program and its corresponding compiled executable and
-provides properties and functions to inspect the model code and filepaths.</p>
-<p>A model object can be instantiated by specifying either the Stan program file path
-or the compiled executable file path or both.
-If only the Stan program file is specified, by default,
-CmdStanPy will try to compile the model.
-If both the model and executable file are specified,
-the constructor will compare the filesystem timestamps and
-will only compile the program if the Stan file has a later timestamp which
-indicates that the program may have been edited.
-The constructor argument <code class="docutils literal notranslate"><span class="pre">compile=False</span></code> will override the default behavoir.</p>
+<p>The: <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class provides methods
+to compile and run the Stan program.
+A CmdStanModel object can be instantiated by specifying
+either a Stan file or the executable file, or both.
+If only the Stan file path is specified, the constructor will
+check for the existence of a correspondingly named exe file in
+the same directory.  If found, it will use this as the exe file path.</p>
+<p>By default, when a CmdStanModel object is instantiated from a Stan file,
+the constructor will compile the model as needed.
+The constructor argument <cite>compile</cite> controls this behavior.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">compile=False</span></code>: never compile the Stan file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile=Force</span></code>: always compile the Stan file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile=True</span></code>: (default) compile the Stan file as needed, i.e., if no exe file exists or if the Stan file is newer than the exe file.</p></li>
+</ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
 
@@ -289,9 +293,8 @@ The constructor argument <code class="docutils literal notranslate"><span class=
 <span class="n">my_model</span><span class="o">.</span><span class="n">code</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The method <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.compile" title="cmdstanpy.CmdStanModel.compile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile()</span></code></a> is used to compile the model as needed.
-When the argument <code class="docutils literal notranslate"><span class="pre">force=True</span></code> is present, CmdStanPy will always compile the model,
-even if the existing executable file is newer than the Stan program file.</p>
+<p>The CmdStanModel class also provides the <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.compile" title="cmdstanpy.CmdStanModel.compile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile()</span></code></a> method,
+which can be called at any point to (re)compile the model as needed.</p>
 <p>Model compilation is carried out via the GNU Make build tool.
 The CmdStan <code class="docutils literal notranslate"><span class="pre">makefile</span></code> contains a set of general rules which
 specify the dependencies between the Stan program and the
@@ -309,21 +312,18 @@ allow optional arguments <code class="docutils literal notranslate"><span class=
 specify options for each compilation step.
 Options are specified as a Python dictionary mapping
 compiler option names to appropriate values.</p>
-<p>To use Stan’s
-<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/parallelization.html">parallelization</a>
-features, Stan programs must be compiled with the appropriate C++ compiler flags.
-If you are running GPU hardware and wish to use the OpenCL framework to speed up matrix operations,
-you must set the C++ compiler flag <strong>STAN_OPENCL</strong>.
-For high-level within-chain parallelization using the Stan language <cite>reduce_sum</cite> function,
-it’s necessary to set the C++ compiler flag <strong>STAN_THREADS</strong>.  While any value can be used,
-we recommend the value <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
-<p>For example, given Stan program named ‘proc_parallel.stan’, you can take
-advantage of both kinds of parallelization by specifying the compiler options when instantiating
-the model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">proc_parallel_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span>
-    <span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;proc_parallel.stan&#39;</span><span class="p">,</span>
-    <span class="n">cpp_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;STAN_THREADS&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;STAN_OPENCL&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
-<span class="p">)</span>
+<p>In order parallelize within-chain computations using the
+Stan language <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code> function, or to parallelize
+running the NUTS-HMC sampler across chains,
+the Stan model must be compiled with
+C++ compiler flag <strong>STAN_THREADS</strong>.
+While any value can be used,
+we recommend the value <code class="docutils literal notranslate"><span class="pre">True</span></code>, e.g.:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
+
+<span class="n">my_stanfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;my_model.stan&#39;</span><span class="p">)</span>
+<span class="n">my_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">my_stanfile</span><span class="p">,</span> <span class="n">cpp_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;STAN_THREADS&#39;</span><span class="p">:</span><span class="s1">&#39;true&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
 </section>
@@ -379,21 +379,21 @@ as well as method-specific informational properties and methods.objects</p>
 <h3>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h3>
 <p>By <cite>metadata</cite> we mean the information parsed from the header comments and header row of the
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html">Stan CSV files</a>
-into a <a class="reference internal" href="api.html#cmdstanpy.InferenceMetadata" title="cmdstanpy.InferenceMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceMetadata</span></code></a> object which is exposed via
+into a <a class="reference internal" href="internal_api.html#cmdstanpy.InferenceMetadata" title="cmdstanpy.InferenceMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceMetadata</span></code></a> object which is exposed via
 the object’s <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.metadata" title="cmdstanpy.CmdStanMCMC.metadata"><code class="xref py py-attr docutils literal notranslate"><span class="pre">metadata</span></code></a> property.</p>
 <ul class="simple">
-<li><p>The metadata <a class="reference internal" href="api.html#cmdstanpy.InferenceMetadata.cmdstan_config" title="cmdstanpy.InferenceMetadata.cmdstan_config"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cmdstan_config</span></code></a>
+<li><p>The metadata <a class="reference internal" href="internal_api.html#cmdstanpy.InferenceMetadata.cmdstan_config" title="cmdstanpy.InferenceMetadata.cmdstan_config"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cmdstan_config</span></code></a>
 property provides the CmdStan configuration information parsed out
 of the Stan CSV file header.</p></li>
-<li><p>The metadata <a class="reference internal" href="api.html#cmdstanpy.InferenceMetadata.method_vars_cols" title="cmdstanpy.InferenceMetadata.method_vars_cols"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_vars_cols</span></code></a>
+<li><p>The metadata <a class="reference internal" href="internal_api.html#cmdstanpy.InferenceMetadata.method_vars_cols" title="cmdstanpy.InferenceMetadata.method_vars_cols"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_vars_cols</span></code></a>
 property returns the names, column indices of the inference engine method variables,
 e.g.,
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/mcmc-intro.html#mcmc_output_csv">the NUTS-HMC sampler output variables</a>
 are <code class="docutils literal notranslate"><span class="pre">lp__</span></code>, …, <code class="docutils literal notranslate"><span class="pre">energy__</span></code>.</p></li>
-<li><p>The metadata <a class="reference internal" href="api.html#cmdstanpy.InferenceMetadata.stan_vars_cols" title="cmdstanpy.InferenceMetadata.stan_vars_cols"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stan_vars_cols</span></code></a>
+<li><p>The metadata <a class="reference internal" href="internal_api.html#cmdstanpy.InferenceMetadata.stan_vars_cols" title="cmdstanpy.InferenceMetadata.stan_vars_cols"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stan_vars_cols</span></code></a>
 property returns the names, column indices of all Stan model variables.
 Container variables will span as many columns, one column per element.</p></li>
-<li><p>The metadata <a class="reference internal" href="api.html#cmdstanpy.InferenceMetadata.stan_vars_dims" title="cmdstanpy.InferenceMetadata.stan_vars_dims"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stan_vars_dims</span></code></a>
+<li><p>The metadata <a class="reference internal" href="internal_api.html#cmdstanpy.InferenceMetadata.stan_vars_dims" title="cmdstanpy.InferenceMetadata.stan_vars_dims"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stan_vars_dims</span></code></a>
 property specifies the names, dimensions of the Stan model variables.</p></li>
 </ul>
 </section>
@@ -407,7 +407,7 @@ or as method and model variables.</p>
 for both <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> and <a class="reference internal" href="api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a> return the sample contents
 in columnar format, as a numpy.ndarray or pandas.DataFrame, respectively. Similarly,
 the <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws_xr" title="cmdstanpy.CmdStanMCMC.draws_xr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_xr()</span></code></a> method  of these two objects returns the sample
-contents as an <a class="reference external" href="https://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.19.1.dev6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which maps the method and model variable
+contents as an <a class="reference external" href="https://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.20.2.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which maps the method and model variable
 names to their respective values.</p>
 <p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.method_variables" title="cmdstanpy.CmdStanMCMC.method_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">method_variables()</span></code></a> method returns a Python dict over all inference
 method variables.</p>
@@ -462,7 +462,7 @@ The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_vari
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

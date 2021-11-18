@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.0.0rc1 documentation</title>
+    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.0.0rc2 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -60,7 +60,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
     
   </div>
 
@@ -234,6 +234,7 @@ set of model, data, and posterior estimates.</p>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#accessing-the-sample">Accessing the sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#cmdstan-utilities-stansummary-diagnose">CmdStan utilities:  <cite>stansummary</cite>, <cite>diagnose</cite></a></li>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#managing-stan-csv-files">Managing Stan CSV files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hello_world.html#parallelization">Parallelization</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#progress-bar">Progress bar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hello_world.html#jupyter-lab-notebook-requirements">Jupyter Lab Notebook requirements</a></li>
 </ul>
@@ -285,14 +286,14 @@ set of model, data, and posterior estimates.</p>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmle">CmdStanMLE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstangq">CmdStanGQ</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanvb">CmdStanVB</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#inferencemetadata">InferenceMetadata</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#runset">RunSet</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#show-versions">show_versions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstan-path">cmdstan_path</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#install-cmdstan">install_cmdstan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#set-cmdstan-path">set_cmdstan_path</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstan-version">cmdstan_version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#set-make-env">set_make_env</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#from-csv">from_csv</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#write-stan-json">write_stan_json</a></li>
@@ -338,7 +339,7 @@ set of model, data, and posterior estimates.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.2.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
 </p>
     </div>
     

@@ -3,6 +3,7 @@
 import contextlib
 import io
 import os
+import shutil
 import unittest
 from math import fabs
 
@@ -231,6 +232,23 @@ class VariationalTest(unittest.TestCase):
             )
         console = sys_stdout.getvalue()
         self.assertTrue('Chain [1] method = variational' in console)
+
+    def test_exe_only(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
+        shutil.copyfile(bern_model.exe_file, exe_only)
+        os.chmod(exe_only, 0o755)
+
+        bern2_model = CmdStanModel(exe_file=exe_only)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        variational = bern2_model.variational(
+            data=jdata,
+            require_converged=False,
+            seed=12345,
+            algorithm='meanfield',
+        )
+        self.assertEqual(variational.variational_sample.shape, (1000, 4))
 
 
 if __name__ == '__main__':
