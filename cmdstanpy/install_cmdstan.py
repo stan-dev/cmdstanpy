@@ -538,5 +538,9 @@ def main(args: Dict[str, Any]) -> None:
             print('CmdStan version {} already installed'.format(version))
 
 
-if __name__ == '__main__':
+def __main__() -> None:
     main(parse_cmdline_args())
+
+
+if __name__ == '__main__':
+    __main__()

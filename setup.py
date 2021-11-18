@@ -74,8 +74,8 @@ setuptools.setup(
     packages=['cmdstanpy'],
     entry_points={
         'console_scripts': [
-            'install_cmdstan=cmdstanpy.install_cmdstan:main',
-            'install_cxx_toolchain=cmdstanpy.install_cxx_toolchain:main',
+            'install_cmdstan=cmdstanpy.install_cmdstan:__main__',
+            'install_cxx_toolchain=cmdstanpy.install_cxx_toolchain:__main__',
         ]
     },
     install_requires=INSTALL_REQUIRES,
