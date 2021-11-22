@@ -25,9 +25,9 @@ jobs:
         id: check-cmdstan
         run: |
             if [[ "${{ github.event.inputs.cmdstan-version }}" == "latest" ]]; then
-              echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
-            else [[ "${{ github.event.inputs.cmdstan-version }}" != "latest" ]]; then
               echo "::set-output name=version::${{ github.event.inputs.cmdstan-version }}"
+            else
+                echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
             fi
     outputs:
       version: ${{ steps.check-cmdstan.outputs.version }}
