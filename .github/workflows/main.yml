@@ -1,5 +1,5 @@
 name: CmdStanPy
-
+    
 on:
   push:
     branches:
@@ -8,6 +8,13 @@ on:
     tags:
       - '**'
   pull_request:
+  workflow_dispatch:
+    inputs:
+      cmdstan-version:
+        description: 'Version to test'
+        required: false
+        default: 'latest'
+      
 jobs:
   get-cmdstan-version:
     # get the latest cmdstan version to use as part of the cache key
@@ -17,7 +24,11 @@ jobs:
       - name: Get CmdStan version
         id: check-cmdstan
         run: |
-          echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
+            if [[ "${{ github.event.inputs.cmdstan-version }}" == "latest" ]]; then
+              echo "::set-output name=version::${{ github.event.inputs.cmdstan-version }}"
+            else
+                echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
+            fi
     outputs:
       version: ${{ steps.check-cmdstan.outputs.version }}
 
