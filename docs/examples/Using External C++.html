@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.0rc3 documentation</title>
+    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.0 documentation</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet">
   <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc3</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0</a>
     
   </div>
 
@@ -503,7 +503,7 @@ generated quantities {
 <div class="highlight"><pre>
 INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
 ERROR:cmdstanpy:Stan program failed to compile:
-WARNING:cmdstanpy:make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.28.1&#39;
+WARNING:cmdstanpy:make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.28.2&#39;
 
 --- Translating Stan model to C++ code ---
 bin/stanc  --o=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan
@@ -518,7 +518,7 @@ Semantic error in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/ber
 
 Some function is declared without specifying a definition.
 make[2]: *** [make/program:50: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp] Error 1
-make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.28.1&#39;
+make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.28.2&#39;
 
 Command [&#39;make&#39;, &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external&#39;]
         error during processing No such file or directory
@@ -562,7 +562,7 @@ INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_3906/728714853.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">/tmp/ipykernel_3816/728714853.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
 <span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model_external<span class="ansi-blue-fg">.</span>compile<span class="ansi-blue-fg">(</span>user_header<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">&#39;make_odds.hpp&#39;</span><span class="ansi-blue-fg">)</span>
 
 <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">compile</span><span class="ansi-blue-fg">(self, force, stanc_options, cpp_options, user_header, override_options)</span>
@@ -607,7 +607,7 @@ INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-<span class="ansi-green-fg">/tmp/ipykernel_3906/4268543152.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">/tmp/ipykernel_3816/4268543152.py</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
 <span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>fit <span class="ansi-blue-fg">=</span> model_external<span class="ansi-blue-fg">.</span>sample<span class="ansi-blue-fg">(</span>data<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">{</span><span class="ansi-blue-fg">&#39;N&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">10</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">&#39;y&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-blue-fg">[</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">0</span><span class="ansi-blue-fg">,</span><span class="ansi-cyan-fg">1</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">}</span><span class="ansi-blue-fg">)</span>
 <span class="ansi-green-intense-fg ansi-bold">      2</span> fit<span class="ansi-blue-fg">.</span>stan_variable<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;odds&#39;</span><span class="ansi-blue-fg">)</span>
 
@@ -690,7 +690,7 @@ INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
 </p>
     </div>
     
