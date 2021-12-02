@@ -1729,7 +1729,7 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertEqual(xr_var.theta.values.shape, (1, 100, 1))
 
     def test_no_xarray(self):
-        with self.without_import('xarray', cmdstanpy.stanfit):
+        with self.without_import('xarray', cmdstanpy.stanfit.mcmc):
             with self.assertRaises(ImportError):
                 # if this fails the testing framework is the problem
                 import xarray as _  # noqa
