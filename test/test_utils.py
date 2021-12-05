@@ -812,7 +812,7 @@ class DoCommandTest(unittest.TestCase):
         # after = None
         try:
             do_command(cmd=['ls /does-not-exist'], cwd=os.path.dirname(before))
-        except RuntimeError as exc:
+        except RuntimeError:
             pass
         finally:
             after = os.getcwd()
