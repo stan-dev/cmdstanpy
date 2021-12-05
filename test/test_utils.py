@@ -806,6 +806,17 @@ class DoCommandTest(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 do_command(args, HERE)
 
+    def test_restore_cwd(self):
+        "Ensure do_command in a different cwd restores cwd after error."
+        before = os.getcwd()
+        # after = None
+        try:
+            do_command(cmd=['ls /does-not-exist'], cwd=os.path.dirname(before))
+        except RuntimeError as exc:
+            pass
+        finally:
+            after = os.getcwd()
+        self.assertEqual(before, after)
 
 class FlattenTest(unittest.TestCase):
     def test_good(self):
