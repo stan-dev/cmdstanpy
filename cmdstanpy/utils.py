@@ -1001,6 +1001,7 @@ def do_command(
 
     """
     get_logger().debug('cmd: %s\ncwd: %s', ' '.join(cmd), cwd)
+    restore_cwd = os.getcwd() if cwd is not None else None
     try:
         # NB: Using this rather than cwd arg to Popen due to windows behavior
         with pushd(cwd if cwd is not None else '.'):
@@ -1042,6 +1043,8 @@ def do_command(
                 raise RuntimeError(msg)
     except OSError as e:
         msg = 'Command: {}\nfailed with error {}\n'.format(cmd, str(e))
+        if restore_cwd is not None:
+            os.chdir(restore_cwd)
         raise RuntimeError(msg) from e
 
 
