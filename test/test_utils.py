@@ -818,6 +818,7 @@ class DoCommandTest(unittest.TestCase):
             after = os.getcwd()
         self.assertEqual(before, after)
 
+
 class FlattenTest(unittest.TestCase):
     def test_good(self):
         array_3d = np.empty((200, 4, 4))
