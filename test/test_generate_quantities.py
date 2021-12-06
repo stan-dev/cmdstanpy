@@ -349,7 +349,7 @@ class GenerateQuantitiesTest(CustomTestCase):
             self.assertEqual(y_rep[0, i], bern_data['y'][i])
 
     def test_no_xarray(self):
-        with self.without_import('xarray', cmdstanpy.stanfit):
+        with self.without_import('xarray', cmdstanpy.stanfit.mcmc):
             with self.assertRaises(ImportError):
                 # if this fails the testing framework is the problem
                 import xarray as _  # noqa
