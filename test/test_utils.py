@@ -813,12 +813,9 @@ class PushdTest(unittest.TestCase):
     def test_restore_cwd(self):
         "Ensure do_command in a different cwd restores cwd after error."
         cwd = os.getcwd()
-        try:
-            with self.assertRaises(RuntimeError):
-                with pushd(os.path.dirname(cwd)):
-                    raise RuntimeError('error')
-        except RuntimeError:
-            pass
+        with self.assertRaises(RuntimeError):
+            with pushd(os.path.dirname(cwd)):
+                raise RuntimeError('error')
         self.assertEqual(cwd, os.getcwd())
 
 
