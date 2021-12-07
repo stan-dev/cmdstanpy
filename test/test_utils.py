@@ -45,6 +45,7 @@ from cmdstanpy.utils import (
     validate_dir,
     windows_short_path,
     write_stan_json,
+    pushd,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -806,17 +807,19 @@ class DoCommandTest(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 do_command(args, HERE)
 
+
+class PushdTest(unittest.TestCase):
+
     def test_restore_cwd(self):
         "Ensure do_command in a different cwd restores cwd after error."
-        before = os.getcwd()
-        # after = None
+        cwd = os.getcwd()
         try:
-            do_command(cmd=['ls /does-not-exist'], cwd=os.path.dirname(before))
+            with self.assertRaises(RuntimeError):
+                with pushd(os.path.dirname(cwd)):
+                    raise RuntimeError('error')
         except RuntimeError:
             pass
-        finally:
-            after = os.getcwd()
-        self.assertEqual(before, after)
+        self.assertEqual(cwd, os.getcwd())
 
 
 class FlattenTest(unittest.TestCase):
