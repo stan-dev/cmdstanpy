@@ -1319,8 +1319,10 @@ def pushd(new_dir: str) -> Iterator[None]:
     """Acts like pushd/popd."""
     previous_dir = os.getcwd()
     os.chdir(new_dir)
-    yield
-    os.chdir(previous_dir)
+    try:
+        yield
+    finally:
+        os.chdir(previous_dir)
 
 
 def report_signal(sig: int) -> None:
