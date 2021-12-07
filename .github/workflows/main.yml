@@ -1,5 +1,5 @@
 name: CmdStanPy
-    
+
 on:
   push:
     branches:
@@ -14,7 +14,7 @@ on:
         description: 'Version to test'
         required: false
         default: 'latest'
-      
+
 jobs:
   get-cmdstan-version:
     # get the latest cmdstan version to use as part of the cache key
@@ -81,11 +81,15 @@ jobs:
       - name: Show libraries
         run: python -m pip freeze
 
+      - name: Get system info
+        uses: kenchan0130/actions-system-info@v1.0.0
+        id: system-info
+
       - name: CmdStan installation cacheing
         uses: actions/cache@v2
         with:
           path: ~/.cmdstan
-          key: ${{ runner.os }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
+          key: ${{ runner.os }}-${{ steps.system-info.outputs.release }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
 
       - name: Install CmdStan (Linux, macOS)
         if: matrix.os != 'windows-latest'
