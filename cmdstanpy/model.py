@@ -1000,7 +1000,7 @@ class CmdStanModel:
                 show_progress = False
             else:
                 show_progress = show_progress and progbar.allow_show_progress()
-                get_logger().info('CmdStan start procesing')
+                get_logger().info('CmdStan start processing')
 
             progress_hook: Optional[Callable[[str, int], None]] = None
             if show_progress:
