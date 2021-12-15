@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     OptimizeArgs,
-    SamplerArgs,
+    SampleArgs,
     VariationalArgs,
 )
 from cmdstanpy.utils import check_sampler_csv, get_logger, scan_config
@@ -109,7 +109,7 @@ def from_csv(
     try:
         if config_dict['method'] == 'sample':
             chains = len(csvfiles)
-            sampler_args = SamplerArgs(
+            sampler_args = SampleArgs(
                 iter_sampling=config_dict['num_samples'],
                 iter_warmup=config_dict['num_warmup'],
                 thin=config_dict['thin'],
@@ -134,7 +134,7 @@ def from_csv(
                         thin=config_dict['thin'],
                         save_warmup=config_dict['save_warmup'],
                     )
-                    sampler_args = SamplerArgs(
+                    sampler_args = SampleArgs(
                         iter_sampling=config_dict['num_samples'],
                         iter_warmup=config_dict['num_warmup'],
                         thin=config_dict['thin'],

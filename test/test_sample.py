@@ -23,7 +23,7 @@ except ImportError:
 
 import cmdstanpy.stanfit
 from cmdstanpy import _TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, Method, SampleArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanMCMC, RunSet, from_csv
 from cmdstanpy.utils import EXTENSION, cmdstan_version_before
@@ -701,7 +701,7 @@ class CmdStanMCMCTest(CustomTestCase):
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs(
+        sampler_args = SampleArgs(
             iter_sampling=100, max_treedepth=11, adapt_delta=0.95
         )
         cmdstan_args = CmdStanArgs(
@@ -773,7 +773,7 @@ class CmdStanMCMCTest(CustomTestCase):
 
     def test_validate_big_run(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
-        sampler_args = SamplerArgs(iter_warmup=1500, iter_sampling=1000)
+        sampler_args = SampleArgs(iter_warmup=1500, iter_sampling=1000)
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
@@ -1141,7 +1141,7 @@ class CmdStanMCMCTest(CustomTestCase):
 
     def test_diagnose_divergences(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
@@ -1172,7 +1172,7 @@ class CmdStanMCMCTest(CustomTestCase):
     def test_validate_bad_run(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs(max_treedepth=11, adapt_delta=0.95)
+        sampler_args = SampleArgs(max_treedepth=11, adapt_delta=0.95)
 
         # some chains had errors
         cmdstan_args = CmdStanArgs(
@@ -1522,7 +1522,7 @@ class CmdStanMCMCTest(CustomTestCase):
         # construct CmdStanMCMC from logistic model output, config
         exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
         rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
-        sampler_args = SamplerArgs(iter_sampling=100)
+        sampler_args = SampleArgs(iter_sampling=100)
         cmdstan_args = CmdStanArgs(
             model_name='logistic',
             model_exe=exe,
@@ -1567,7 +1567,7 @@ class CmdStanMCMCTest(CustomTestCase):
         # construct CmdStanMCMC from logistic model output, config
         exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
         rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
-        sampler_args = SamplerArgs(iter_sampling=100)
+        sampler_args = SampleArgs(iter_sampling=100)
         cmdstan_args = CmdStanArgs(
             model_name='logistic',
             model_exe=exe,

@@ -22,7 +22,7 @@ from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
     OptimizeArgs,
-    SamplerArgs,
+    SampleArgs,
     VariationalArgs,
 )
 from cmdstanpy.compiler_opts import CompilerOptions
@@ -903,7 +903,7 @@ class CmdStanModel:
                             ' found {}.'.format(chain_id)
                         )
 
-        sampler_args = SamplerArgs(
+        sampler_args = SampleArgs(
             iter_warmup=iter_warmup,
             iter_sampling=iter_sampling,
             save_warmup=save_warmup,

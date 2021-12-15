@@ -3,7 +3,7 @@
 import os
 import unittest
 
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, SampleArgs
 from cmdstanpy.stanfit import InferenceMetadata, RunSet
 from cmdstanpy.utils import EXTENSION, check_sampler_csv
 
@@ -20,7 +20,7 @@ class InferenceMetadataTest(unittest.TestCase):
         # construct fit using existing sampler output
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs(
+        sampler_args = SampleArgs(
             iter_sampling=100, max_treedepth=11, adapt_delta=0.95
         )
         cmdstan_args = CmdStanArgs(

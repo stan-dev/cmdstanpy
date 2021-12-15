@@ -4,7 +4,7 @@ import os
 import unittest
 
 from cmdstanpy import _TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, SampleArgs
 from cmdstanpy.stanfit import RunSet
 from cmdstanpy.utils import EXTENSION
 
@@ -16,7 +16,7 @@ class RunSetTest(unittest.TestCase):
     def test_check_repr(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         chain_ids = [1, 2, 3, 4]  # default
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -36,7 +36,7 @@ class RunSetTest(unittest.TestCase):
     def test_check_retcodes(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         chain_ids = [1, 2, 3, 4]  # default
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -63,7 +63,7 @@ class RunSetTest(unittest.TestCase):
     def test_get_err_msgs(self):
         exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
         rdata = os.path.join(DATAFILES_PATH, 'logistic.missing_data.R')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         chain_ids = [1, 2, 3]
         cmdstan_args = CmdStanArgs(
             model_name='logistic',
@@ -84,7 +84,7 @@ class RunSetTest(unittest.TestCase):
     def test_output_filenames(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         chain_ids = [1, 2, 3, 4]
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -101,7 +101,7 @@ class RunSetTest(unittest.TestCase):
     def test_commands(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         chain_ids = [1, 2, 3, 4]
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -117,7 +117,7 @@ class RunSetTest(unittest.TestCase):
     def test_save_latent_dynamics(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         chain_ids = [1, 2, 3, 4]
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -145,7 +145,7 @@ class RunSetTest(unittest.TestCase):
     def test_chain_ids(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         chain_ids = [11, 12, 13, 14]
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',

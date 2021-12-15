@@ -14,7 +14,7 @@ from cmdstanpy.cmdstan_args import (
     GenerateQuantitiesArgs,
     Method,
     OptimizeArgs,
-    SamplerArgs,
+    SampleArgs,
     VariationalArgs,
 )
 from cmdstanpy.utils import cmdstan_version_before
@@ -58,18 +58,18 @@ class OptimizeArgsTest(unittest.TestCase):
 
 class SamplerArgsTest(unittest.TestCase):
     def test_args_min(self):
-        args = SamplerArgs()
+        args = SampleArgs()
         args.validate(chains=4)
         cmd = args.compose(idx=1, cmd=[])
         self.assertIn('method=sample algorithm=hmc', ' '.join(cmd))
 
     def test_args_chains(self):
-        args = SamplerArgs()
+        args = SampleArgs()
         with self.assertRaises(ValueError):
             args.validate(chains=None)
 
     def test_good(self):
-        args = SamplerArgs(
+        args = SampleArgs(
             iter_warmup=10,
             iter_sampling=20,
             save_warmup=True,
@@ -88,7 +88,7 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('max_depth=15', ' '.join(cmd))
         self.assertIn('adapt engaged=1 delta=0.99', ' '.join(cmd))
 
-        args = SamplerArgs(iter_warmup=10)
+        args = SampleArgs(iter_warmup=10)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn('method=sample', ' '.join(cmd))
@@ -98,106 +98,106 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertNotIn('algorithm=hmc engine=nuts', ' '.join(cmd))
 
     def test_bad(self):
-        args = SamplerArgs(iter_warmup=-10)
+        args = SampleArgs(iter_warmup=-10)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(iter_warmup=10, adapt_engaged=False)
+        args = SampleArgs(iter_warmup=10, adapt_engaged=False)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(iter_sampling=-10)
+        args = SampleArgs(iter_sampling=-10)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(thin=-10)
+        args = SampleArgs(thin=-10)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(max_treedepth=-10)
+        args = SampleArgs(max_treedepth=-10)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(step_size=-10)
+        args = SampleArgs(step_size=-10)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(step_size=[1.0, 1.1])
+        args = SampleArgs(step_size=[1.0, 1.1])
         with self.assertRaises(ValueError):
             args.validate(chains=1)
 
-        args = SamplerArgs(step_size=[1.0, -1.1])
+        args = SampleArgs(step_size=[1.0, -1.1])
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_delta=1.1)
+        args = SampleArgs(adapt_delta=1.1)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_delta=-0.1)
+        args = SampleArgs(adapt_delta=-0.1)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(max_treedepth=12, fixed_param=True)
+        args = SampleArgs(max_treedepth=12, fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(metric='dense', fixed_param=True)
+        args = SampleArgs(metric='dense', fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(step_size=0.5, fixed_param=True)
+        args = SampleArgs(step_size=0.5, fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_delta=0.88, adapt_engaged=False)
+        args = SampleArgs(adapt_delta=0.88, adapt_engaged=False)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_init_phase=0.88)
+        args = SampleArgs(adapt_init_phase=0.88)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_metric_window=0.88)
+        args = SampleArgs(adapt_metric_window=0.88)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_step_size=0.88)
+        args = SampleArgs(adapt_step_size=0.88)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_init_phase=-1)
+        args = SampleArgs(adapt_init_phase=-1)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_metric_window=-2)
+        args = SampleArgs(adapt_metric_window=-2)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_step_size=-3)
+        args = SampleArgs(adapt_step_size=-3)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
-        args = SamplerArgs(adapt_delta=0.88, fixed_param=True)
+        args = SampleArgs(adapt_delta=0.88, fixed_param=True)
         with self.assertRaises(ValueError):
             args.validate(chains=2)
 
     def test_adapt(self):
-        args = SamplerArgs(adapt_engaged=False)
+        args = SampleArgs(adapt_engaged=False)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn(
             'method=sample algorithm=hmc adapt engaged=0', ' '.join(cmd)
         )
 
-        args = SamplerArgs(adapt_engaged=True)
+        args = SampleArgs(adapt_engaged=True)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn(
             'method=sample algorithm=hmc adapt engaged=1', ' '.join(cmd)
         )
 
-        args = SamplerArgs(
+        args = SampleArgs(
             adapt_init_phase=26, adapt_metric_window=60, adapt_step_size=34
         )
         args.validate(chains=4)
@@ -207,48 +207,48 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('window=60', ' '.join(cmd))
         self.assertIn('term_buffer=34', ' '.join(cmd))
 
-        args = SamplerArgs()
+        args = SampleArgs()
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertNotIn('engine=nuts', ' '.join(cmd))
         self.assertNotIn('adapt engaged=0', ' '.join(cmd))
 
     def test_metric(self):
-        args = SamplerArgs(metric='dense_e')
+        args = SampleArgs(metric='dense_e')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn(
             'method=sample algorithm=hmc metric=dense_e', ' '.join(cmd)
         )
 
-        args = SamplerArgs(metric='dense')
+        args = SampleArgs(metric='dense')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn(
             'method=sample algorithm=hmc metric=dense_e', ' '.join(cmd)
         )
 
-        args = SamplerArgs(metric='diag_e')
+        args = SampleArgs(metric='diag_e')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn(
             'method=sample algorithm=hmc metric=diag_e', ' '.join(cmd)
         )
 
-        args = SamplerArgs(metric='diag')
+        args = SampleArgs(metric='diag')
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn(
             'method=sample algorithm=hmc metric=diag_e', ' '.join(cmd)
         )
 
-        args = SamplerArgs()
+        args = SampleArgs()
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertNotIn('metric=', ' '.join(cmd))
 
         jmetric = os.path.join(DATAFILES_PATH, 'bernoulli.metric.json')
-        args = SamplerArgs(metric=jmetric)
+        args = SampleArgs(metric=jmetric)
         args.validate(chains=4)
         cmd = args.compose(1, cmd=[])
         self.assertIn('metric=diag_e', ' '.join(cmd))
@@ -256,23 +256,23 @@ class SamplerArgsTest(unittest.TestCase):
         self.assertIn('bernoulli.metric.json', ' '.join(cmd))
 
         jmetric2 = os.path.join(DATAFILES_PATH, 'bernoulli.metric-2.json')
-        args = SamplerArgs(metric=[jmetric, jmetric2])
+        args = SampleArgs(metric=[jmetric, jmetric2])
         args.validate(chains=2)
         cmd = args.compose(0, cmd=[])
         self.assertIn('bernoulli.metric.json', ' '.join(cmd))
         cmd = args.compose(1, cmd=[])
         self.assertIn('bernoulli.metric-2.json', ' '.join(cmd))
 
-        args = SamplerArgs(metric=[jmetric, jmetric2])
+        args = SampleArgs(metric=[jmetric, jmetric2])
         with self.assertRaises(ValueError):
             args.validate(chains=4)
 
-        args = SamplerArgs(metric='/no/such/path/to.file')
+        args = SampleArgs(metric='/no/such/path/to.file')
         with self.assertRaises(ValueError):
             args.validate(chains=4)
 
     def test_fixed_param(self):
-        args = SamplerArgs(fixed_param=True)
+        args = SampleArgs(fixed_param=True)
         args.validate(chains=1)
         cmd = args.compose(0, cmd=[])
         self.assertIn('method=sample algorithm=fixed_param', ' '.join(cmd))
@@ -281,7 +281,7 @@ class SamplerArgsTest(unittest.TestCase):
 class CmdStanArgsTest(unittest.TestCase):
     def test_compose(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
             model_exe=exe,
@@ -298,7 +298,7 @@ class CmdStanArgsTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         jinits = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
 
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         with self.assertRaises(ValueError):
             CmdStanArgs(
                 model_name='bernoulli',
@@ -323,7 +323,7 @@ class CmdStanArgsTest(unittest.TestCase):
     def test_args_good(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
 
         cmdstan_args = CmdStanArgs(
             model_name='bernoulli',
@@ -367,7 +367,7 @@ class CmdStanArgsTest(unittest.TestCase):
     def test_args_inits(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
 
         jinits = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
         jinits1 = os.path.join(DATAFILES_PATH, 'bernoulli.init_1.json')
@@ -421,7 +421,7 @@ class CmdStanArgsTest(unittest.TestCase):
 
     # pylint: disable=no-value-for-parameter
     def test_args_bad(self):
-        sampler_args = SamplerArgs(iter_warmup=10, iter_sampling=20)
+        sampler_args = SampleArgs(iter_warmup=10, iter_sampling=20)
 
         with self.assertRaisesRegex(
             Exception, 'missing 2 required positional arguments'
@@ -574,7 +574,7 @@ class CmdStanArgsTest(unittest.TestCase):
             )
 
     def test_args_sig_figs(self):
-        sampler_args = SamplerArgs()
+        sampler_args = SampleArgs()
         cmdstan_path()  # sets os.environ['CMDSTAN']
         if cmdstan_version_before(2, 25):
             with LogCapture() as log:

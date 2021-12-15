@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import re
 from typing import List
 
 import setuptools
@@ -36,7 +35,8 @@ def requirements_optional() -> List[str]:
 def get_version() -> str:
     version_file = open(os.path.join('cmdstanpy', '_version.py'))
     version_contents = version_file.read()
-    return re.search("__version__ = '(.*?)'", version_contents).group(1)
+
+    return version_contents.split('=')[1].strip()
 
 
 _classifiers = """
@@ -72,7 +72,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
-    packages=['cmdstanpy', 'cmdstanpy.stanfit'],
+    packages=['cmdstanpy', 'cmdstanpy.stanfit', 'cmdstanpy.cmdstan_args'],
     entry_points={
         'console_scripts': [
             'install_cmdstan=cmdstanpy.install_cmdstan:__main__',

@@ -29,7 +29,7 @@ except ImportError:
     XARRAY_INSTALLED = False
 
 from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
-from cmdstanpy.cmdstan_args import Method, SamplerArgs
+from cmdstanpy.cmdstan_args import Method, SampleArgs
 from cmdstanpy.utils import (
     EXTENSION,
     check_sampler_csv,
@@ -74,7 +74,7 @@ class CmdStanMCMC:
         # info from runset to be exposed
         sampler_args = self.runset._args.method_args
         assert isinstance(
-            sampler_args, SamplerArgs
+            sampler_args, SampleArgs
         )  # make the typechecker happy
         iter_sampling = sampler_args.iter_sampling
         if iter_sampling is None:
