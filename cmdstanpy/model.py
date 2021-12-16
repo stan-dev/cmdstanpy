@@ -293,6 +293,56 @@ class CmdStanModel:
             get_logger().debug(e)
             return result
 
+    def format_model(
+        self, save: bool = False, canonicalize: Union[bool, List[str]] = False
+    ) -> None:
+        """
+        Run stanc's auto-formatter on the model code. Either saves directly
+        back to the file or prints for inspection
+
+
+        :param save: If True, save the updated code to disk, rather than
+            printing it. By default False
+        :param canonicalize: Whether or not the compiler should 'canonicalize'
+            the Stan model, removing things like deprecated syntax. Default is
+            False. If True, all canonicalizations are run. If it is a list of
+            strings, those options are passed to stanc (new in Stan 2.29)
+        """
+        if self.stan_file is None or not os.path.isfile(self.stan_file):
+            raise ValueError("No Stan file found for this module")
+        try:
+            cmd = [
+                os.path.join('.', 'bin', 'stanc' + EXTENSION),
+                '--auto-format',
+            ]
+            if canonicalize:
+                if isinstance(canonicalize, list):
+                    cmd.append('--canonicalize=' + ','.join(canonicalize))
+                else:
+                    cmd.append('--print-canonical')
+
+            cmd.append(self.stan_file)
+
+            out = subprocess.run(
+                cmd,
+                cwd=cmdstan_path(),
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            if out.stderr:
+                print(out.stderr)
+            result = out.stdout
+            if save:
+                shutil.copyfile(self.stan_file, self.stan_file + '.bak')
+                with (open(self.stan_file, 'w')) as file:
+                    file.write(result)
+            else:
+                print(result)
+
+        except (ValueError, RuntimeError) as e:
+            raise RuntimeError("Stanc formatting failed") from e
+
     @property
     def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
         """Options to stanc compilers."""
