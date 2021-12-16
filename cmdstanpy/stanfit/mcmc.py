@@ -64,7 +64,7 @@ class CmdStanMCMC:
         runset: RunSet,
     ) -> None:
         """Initialize object."""
-        if not runset.method == Method.SAMPLE:
+        if not isinstance(runset._args, SampleArgs):
             raise ValueError(
                 'Wrong runset method, expecting sample runset, '
                 'found method {}'.format(runset.method)
@@ -72,10 +72,8 @@ class CmdStanMCMC:
         self.runset = runset
 
         # info from runset to be exposed
-        sampler_args = self.runset._args.method_args
-        assert isinstance(
-            sampler_args, SampleArgs
-        )  # make the typechecker happy
+        sampler_args: SampleArgs = runset._args
+
         iter_sampling = sampler_args.iter_sampling
         if iter_sampling is None:
             self._iter_sampling = _CMDSTAN_SAMPLING
@@ -93,7 +91,7 @@ class CmdStanMCMC:
             self._thin = thin
         self._is_fixed_param = sampler_args.fixed_param
         self._save_warmup = sampler_args.save_warmup
-        self._sig_figs = runset._args.sig_figs
+        self._sig_figs = runset._args.cmdstan_args.sig_figs
         # info from CSV values, instantiated lazily
         self._metric = np.array(())
         self._step_size = np.array(())
@@ -106,7 +104,7 @@ class CmdStanMCMC:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
             self.runset.model,
             self.runset.chains,
-            self.runset._args.method_args.compose(0, cmd=[]),
+            self.runset.cmd(0),
         )
         repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
             repr,
@@ -444,7 +442,9 @@ class CmdStanMCMC:
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
-        tmp_csv_file = 'stansummary-{}-'.format(self.runset._args.model_name)
+        tmp_csv_file = 'stansummary-{}-'.format(
+            self.runset._args.cmdstan_args.model_name
+        )
         tmp_csv_path = create_named_text_file(
             dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv', name_only=True
         )
@@ -755,7 +755,7 @@ class CmdStanGQ:
         repr = 'CmdStanGQ: model={} chains={}{}'.format(
             self.runset.model,
             self.chains,
-            self.runset._args.method_args.compose(0, cmd=[]),
+            self.runset.cmd(0),
         )
         repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
             repr,

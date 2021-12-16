@@ -2,6 +2,11 @@
 
 from typing import List, Optional
 
+from cmdstanpy.cmdstan_args.cmdstan import RunConfiguration
+
+from .cmdstan import CmdStanArgs
+from .util import Method
+
 
 class VariationalArgs:
     """Arguments needed for variational method."""
@@ -10,6 +15,7 @@ class VariationalArgs:
 
     def __init__(
         self,
+        args: CmdStanArgs,
         algorithm: Optional[str] = None,
         iter: Optional[int] = None,
         grad_samples: Optional[int] = None,
@@ -21,6 +27,7 @@ class VariationalArgs:
         eval_elbo: Optional[int] = None,
         output_samples: Optional[int] = None,
     ) -> None:
+        self.cmdstan_args = args
         self.algorithm = algorithm
         self.iter = iter
         self.grad_samples = grad_samples
@@ -31,10 +38,9 @@ class VariationalArgs:
         self.tol_rel_obj = tol_rel_obj
         self.eval_elbo = eval_elbo
         self.output_samples = output_samples
+        self.validate()
 
-    def validate(
-        self, chains: Optional[int] = None  # pylint: disable=unused-argument
-    ) -> None:
+    def validate(self) -> None:
         """
         Check arguments correctness and consistency.
         """
@@ -100,11 +106,16 @@ class VariationalArgs:
                     ' found {}'.format(self.output_samples)
                 )
 
-    # pylint: disable=unused-argument
-    def compose(self, idx: int, cmd: List[str]) -> List[str]:
+    @classmethod
+    def method(cls) -> Method:
+        return Method.VARIATIONAL
+
+    def compose_command(self, rs: RunConfiguration, idx: int) -> List[str]:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
+        cmd = self.cmdstan_args.begin_command(rs, idx)
+
         cmd.append('method=variational')
         if self.algorithm is not None:
             cmd.append('algorithm={}'.format(self.algorithm))

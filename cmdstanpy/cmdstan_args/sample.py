@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 
 from cmdstanpy import _TMPDIR
+from cmdstanpy.cmdstan_args.cmdstan import RunConfiguration
 from cmdstanpy.utils import create_named_text_file, read_metric, write_stan_json
+
+from .cmdstan import CmdStanArgs
+from .util import Method
 
 
 class SampleArgs:
@@ -14,6 +18,7 @@ class SampleArgs:
 
     def __init__(
         self,
+        args: CmdStanArgs,
         iter_warmup: Optional[int] = None,
         iter_sampling: Optional[int] = None,
         save_warmup: bool = False,
@@ -31,6 +36,7 @@ class SampleArgs:
         fixed_param: bool = False,
     ) -> None:
         """Initialize object."""
+        self.cmdstan_args = args
         self.iter_warmup = iter_warmup
         self.iter_sampling = iter_sampling
         self.save_warmup = save_warmup
@@ -46,9 +52,9 @@ class SampleArgs:
         self.adapt_metric_window = adapt_metric_window
         self.adapt_step_size = adapt_step_size
         self.fixed_param = fixed_param
-        self.diagnostic_file = None
+        self.validate()
 
-    def validate(self, chains: Optional[int]) -> None:
+    def validate(self) -> None:
         """
         Check arguments correctness and consistency.
 
@@ -56,6 +62,11 @@ class SampleArgs:
         * if file(s) for metric are supplied, check contents.
         * length of per-chain lists equals specified # of chains
         """
+        chains = (
+            len(self.cmdstan_args.chain_ids)
+            if self.cmdstan_args.chain_ids
+            else None
+        )
         if not isinstance(chains, int) or chains < 1:
             raise ValueError(
                 'Sampler expects number of chains to be greater than 0.'
@@ -305,10 +316,16 @@ class SampleArgs:
                 'When fixed_param=True, cannot specify adaptation parameters.'
             )
 
-    def compose(self, idx: int, cmd: List[str]) -> List[str]:
+    @classmethod
+    def method(cls) -> Method:
+        return Method.SAMPLE
+
+    def compose_command(self, rs: RunConfiguration, idx: int) -> List[str]:
         """
         Compose CmdStan command for method-specific non-default arguments.
         """
+        cmd = self.cmdstan_args.begin_command(rs, idx)
+
         cmd.append('method=sample')
         if self.iter_sampling is not None:
             cmd.append('num_samples={}'.format(self.iter_sampling))
@@ -351,5 +368,8 @@ class SampleArgs:
             cmd.append('window={}'.format(self.adapt_metric_window))
         if self.adapt_step_size is not None:
             cmd.append('term_buffer={}'.format(self.adapt_step_size))
+
+        if not rs.one_process_per_chain and rs.chains > 1:
+            cmd.append('num_chains={}'.format(rs.chains))
 
         return cmd

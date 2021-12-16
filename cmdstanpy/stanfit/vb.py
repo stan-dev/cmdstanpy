@@ -31,7 +31,7 @@ class CmdStanVB:
 
     def __repr__(self) -> str:
         repr = 'CmdStanVB: model={}{}'.format(
-            self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
+            self.runset.model, self.runset.cmd(0)
         )
         repr = '{}\n csv_file:\n\t{}\n output_file:\n\t{}'.format(
             repr,

@@ -11,7 +11,8 @@ from time import time
 from typing import List, Optional
 
 from cmdstanpy import _TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, Method
+from cmdstanpy.cmdstan_args import Method
+from cmdstanpy.cmdstan_args.cmdstan import Args
 from cmdstanpy.utils import get_logger
 
 
@@ -27,7 +28,7 @@ class RunSet:
 
     def __init__(
         self,
-        args: CmdStanArgs,
+        args: Args,
         chains: int = 1,
         *,
         chain_ids: Optional[List[int]] = None,
@@ -47,14 +48,15 @@ class RunSet:
             chain_ids = [i + 1 for i in range(chains)]
         self._chain_ids = chain_ids
 
-        if args.output_dir is not None:
-            self._output_dir = args.output_dir
+        if args.cmdstan_args.output_dir is not None:
+            self._output_dir = args.cmdstan_args.output_dir
         else:
             self._output_dir = _TMPDIR
 
         # output files prefix: ``<model_name>-<YYYYMMDDHHMM>_<chain_id>``
         self._base_outfile = (
-            f'{args.model_name}-{datetime.now().strftime(time_fmt)}'
+            f'{args.cmdstan_args.model_name}'
+            f'-{datetime.now().strftime(time_fmt)}'
         )
         # per-process console messages
         self._stdout_files = [''] * self._num_procs
@@ -71,22 +73,22 @@ class RunSet:
 
         if chains == 1:
             self._csv_files[0] = self.file_path(".csv")
-            if args.save_latent_dynamics:
+            if args.cmdstan_args.save_latent_dynamics:
                 self._diagnostic_files[0] = self.file_path(
                     ".csv", extra="-diagnostic"
                 )
-            if args.save_profile:
+            if args.cmdstan_args.save_profile:
                 self._profile_files[0] = self.file_path(
                     ".csv", extra="-profile"
                 )
         else:
             for i in range(chains):
                 self._csv_files[i] = self.file_path(".csv", id=chain_ids[i])
-                if args.save_latent_dynamics:
+                if args.cmdstan_args.save_latent_dynamics:
                     self._diagnostic_files[i] = self.file_path(
                         ".csv", extra="-diagnostic", id=chain_ids[i]
                     )
-                if args.save_profile:
+                if args.cmdstan_args.save_profile:
                     self._profile_files[i] = self.file_path(
                         ".csv", extra="-profile", id=chain_ids[i]
                     )
@@ -99,11 +101,11 @@ class RunSet:
         repr = '{}\n retcodes={}'.format(repr, self._retcodes)
         repr = f'{repr}\n per-chain output files (showing chain 1 only):'
         repr = '{}\n csv_file:\n\t{}'.format(repr, self._csv_files[0])
-        if self._args.save_latent_dynamics:
+        if self._args.cmdstan_args.save_latent_dynamics:
             repr = '{}\n diagnostics_file:\n\t{}'.format(
                 repr, self._diagnostic_files[0]
             )
-        if self._args.save_profile:
+        if self._args.cmdstan_args.save_profile:
             repr = '{}\n profile_file:\n\t{}'.format(
                 repr, self._profile_files[0]
             )
@@ -115,12 +117,12 @@ class RunSet:
     @property
     def model(self) -> str:
         """Stan model name."""
-        return self._args.model_name
+        return self._args.cmdstan_args.model_name
 
     @property
     def method(self) -> Method:
         """CmdStan method used to generate this fit."""
-        return self._args.method
+        return self._args.method()
 
     @property
     def num_procs(self) -> int:
@@ -147,35 +149,47 @@ class RunSet:
         """Chain ids."""
         return self._chain_ids
 
+    def get_csv_file(self, idx: int) -> str:
+        """
+        Return csv file for idx. If there is only one process,
+        return the 'template' name, regardless of idx
+        """
+        if self._one_process_per_chain:
+            return self._csv_files[idx]
+        else:
+            return self.file_path('.csv')
+
+    def get_diagnostic_file(self, idx: int) -> str:
+        """
+        Return diagnostic file for idx. If there is only one process,
+        return the 'template' name, regardless of idx
+        Note: It is up to the caller to know whether diagnostics
+        were stored for this run.
+        """
+        if self._one_process_per_chain:
+            return self._diagnostic_files[idx]
+        else:
+            return self.file_path(".csv", extra="-diagnostic")
+
+    def get_profile_file(self, idx: int) -> str:
+        """
+        Return profile file for idx. If there is only one process,
+        return the 'template' name, regardless of idx
+        Note: It is up to the caller to know whether profiling
+        was saved for this run.
+        """
+        if self._one_process_per_chain:
+            return self._profile_files[idx]
+        else:
+            return self.file_path(".csv", extra="-profile")
+
     def cmd(self, idx: int) -> List[str]:
         """
         Assemble CmdStan invocation.
         When running parallel chains from single process (2.28 and up),
         specify CmdStan arg `num_chains` and leave chain idx off CSV files.
         """
-        if self._one_process_per_chain:
-            return self._args.compose_command(
-                idx,
-                csv_file=self.csv_files[idx],
-                diagnostic_file=self.diagnostic_files[idx]
-                if self._args.save_latent_dynamics
-                else None,
-                profile_file=self.profile_files[idx]
-                if self._args.save_profile
-                else None,
-            )
-        else:
-            return self._args.compose_command(
-                idx,
-                csv_file=self.file_path('.csv'),
-                diagnostic_file=self.file_path(".csv", extra="-diagnostic")
-                if self._args.save_latent_dynamics
-                else None,
-                profile_file=self.file_path(".csv", extra="-profile")
-                if self._args.save_profile
-                else None,
-                num_chains=self._chains,
-            )
+        return self._args.compose_command(self, idx)
 
     @property
     def csv_files(self) -> List[str]:

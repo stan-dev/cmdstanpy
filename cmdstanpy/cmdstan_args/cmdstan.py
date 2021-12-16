@@ -1,30 +1,49 @@
 """Top-level argument object for CmdStan"""
 
 import os
-from enum import Enum, auto
 from time import time
-from typing import Any, List, Mapping, Optional, Union
+from typing import Any, List, Mapping, Optional, Protocol, Union
 
 from numpy.random import RandomState
 
 from cmdstanpy.utils import cmdstan_path, cmdstan_version_before, get_logger
 
-from .generatequantities import GenerateQuantitiesArgs
-from .optimize import OptimizeArgs
-from .sample import SampleArgs
-from .variational import VariationalArgs
+from .util import Method
 
 
-class Method(Enum):
-    """Supported CmdStan method names."""
+class RunConfiguration(Protocol):
+    """
+    A protocol mirroring the necessary parts of RunSet to make mypy happy.
+    Cannot use RunSet itself due to circular import problem
+    """
 
-    SAMPLE = auto()
-    OPTIMIZE = auto()
-    GENERATE_QUANTITIES = auto()
-    VARIATIONAL = auto()
+    @property
+    def one_process_per_chain(self) -> bool:
+        ...
 
-    def __repr__(self) -> str:
-        return '<%s.%s>' % (self.__class__.__name__, self.name)
+    @property
+    def chains(self) -> int:
+        ...
+
+    def get_csv_file(self, idx: int) -> str:
+        ...
+
+    def get_diagnostic_file(self, idx: int) -> str:
+        ...
+
+    def get_profile_file(self, idx: int) -> str:
+        ...
+
+
+class Args(Protocol):
+    cmdstan_args: "CmdStanArgs"
+
+    def compose_command(self, rs: RunConfiguration, idx: int) -> List[str]:
+        ...
+
+    @classmethod
+    def method(cls) -> Method:
+        ...
 
 
 class CmdStanArgs:
@@ -39,9 +58,6 @@ class CmdStanArgs:
         model_name: str,
         model_exe: Optional[str],
         chain_ids: Union[List[int], None],
-        method_args: Union[
-            SampleArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
-        ],
         data: Union[Mapping[str, Any], str, None] = None,
         seed: Union[int, List[int], None] = None,
         inits: Union[int, float, str, List[str], None] = None,
@@ -63,16 +79,7 @@ class CmdStanArgs:
         self.save_latent_dynamics = save_latent_dynamics
         self.save_profile = save_profile
         self.refresh = refresh
-        self.method_args = method_args
-        if isinstance(method_args, SampleArgs):
-            self.method = Method.SAMPLE
-        elif isinstance(method_args, OptimizeArgs):
-            self.method = Method.OPTIMIZE
-        elif isinstance(method_args, GenerateQuantitiesArgs):
-            self.method = Method.GENERATE_QUANTITIES
-        elif isinstance(method_args, VariationalArgs):
-            self.method = Method.VARIATIONAL
-        self.method_args.validate(len(chain_ids) if chain_ids else None)
+
         self.validate()
 
     def validate(self) -> None:
@@ -222,15 +229,7 @@ class CmdStanArgs:
                     if not os.path.exists(inits):
                         raise ValueError('no such file {}'.format(inits))
 
-    def compose_command(
-        self,
-        idx: int,
-        csv_file: str,
-        *,
-        diagnostic_file: Optional[str] = None,
-        profile_file: Optional[str] = None,
-        num_chains: Optional[int] = None
-    ) -> List[str]:
+    def begin_command(self, rs: RunConfiguration, idx: int) -> List[str]:
         """
         Compose CmdStan command for non-default arguments.
         """
@@ -263,16 +262,15 @@ class CmdStanArgs:
             else:
                 cmd.append('init={}'.format(self.inits[idx]))
         cmd.append('output')
-        cmd.append('file={}'.format(csv_file))
-        if diagnostic_file:
-            cmd.append('diagnostic_file={}'.format(diagnostic_file))
-        if profile_file:
-            cmd.append('profile_file={}'.format(profile_file))
+        # files taken from RunSet
+        cmd.append('file={}'.format(rs.get_csv_file(idx)))
+        if self.save_latent_dynamics:
+            cmd.append('diagnostic_file={}'.format(rs.get_diagnostic_file(idx)))
+        if self.save_profile:
+            cmd.append('profile_file={}'.format(rs.get_profile_file(idx)))
         if self.refresh is not None:
             cmd.append('refresh={}'.format(self.refresh))
         if self.sig_figs is not None:
             cmd.append('sig_figs={}'.format(self.sig_figs))
-        cmd = self.method_args.compose(idx, cmd)
-        if num_chains:
-            cmd.append('num_chains={}'.format(num_chains))
+
         return cmd

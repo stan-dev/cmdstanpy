@@ -6,7 +6,7 @@ from typing import Dict, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from cmdstanpy.cmdstan_args import Method, OptimizeArgs
+from cmdstanpy.cmdstan_args import OptimizeArgs
 from cmdstanpy.utils import get_logger, scan_optimize_csv
 
 from .metadata import InferenceMetadata
@@ -21,7 +21,7 @@ class CmdStanMLE:
 
     def __init__(self, runset: RunSet) -> None:
         """Initialize object."""
-        if not runset.method == Method.OPTIMIZE:
+        if not isinstance(runset._args, OptimizeArgs):
             raise ValueError(
                 'Wrong runset method, expecting optimize runset, '
                 'found method {}'.format(runset.method)
@@ -29,16 +29,14 @@ class CmdStanMLE:
         self.runset = runset
         # info from runset to be exposed
         self.converged = runset._check_retcodes()
-        optimize_args = self.runset._args.method_args
-        assert isinstance(
-            optimize_args, OptimizeArgs
-        )  # make the typechecker happy
+        optimize_args: OptimizeArgs = runset._args
+
         self._save_iterations = optimize_args.save_iterations
         self._set_mle_attrs(runset.csv_files[0])
 
     def __repr__(self) -> str:
         repr = 'CmdStanMLE: model={}{}'.format(
-            self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
+            self.runset.model, self.runset.cmd(0)
         )
         repr = '{}\n csv_file:\n\t{}\n output_file:\n\t{}'.format(
             repr,

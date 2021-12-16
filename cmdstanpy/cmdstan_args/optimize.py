@@ -2,14 +2,20 @@
 
 from typing import List, Optional
 
+from cmdstanpy.cmdstan_args.cmdstan import RunConfiguration
+
+from .cmdstan import CmdStanArgs
+from .util import Method
+
 
 class OptimizeArgs:
     """Container for arguments for the optimizer."""
 
-    OPTIMIZE_ALGOS = {'BFGS', 'bfgs', 'LBFGS', 'lbfgs', 'Newton', 'newton'}
+    OPTIMIZE_ALGOS = {'bfgs', 'lbfgs', 'newton'}
 
     def __init__(
         self,
+        args: CmdStanArgs,
         algorithm: Optional[str] = None,
         init_alpha: Optional[float] = None,
         iter: Optional[int] = None,
@@ -22,7 +28,8 @@ class OptimizeArgs:
         history_size: Optional[int] = None,
     ) -> None:
 
-        self.algorithm = algorithm
+        self.cmdstan_args = args
+        self.algorithm = algorithm.lower() if algorithm else None
         self.init_alpha = init_alpha
         self.iter = iter
         self.save_iterations = save_iterations
@@ -33,10 +40,9 @@ class OptimizeArgs:
         self.tol_param = tol_param
         self.history_size = history_size
         self.thin = None
+        self.validate()
 
-    def validate(
-        self, chains: Optional[int] = None  # pylint: disable=unused-argument
-    ) -> None:
+    def validate(self) -> None:
         """
         Check arguments correctness and consistency.
         """
@@ -51,9 +57,9 @@ class OptimizeArgs:
             )
 
         if self.init_alpha is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm == 'newton':
                 raise ValueError(
-                    'init_alpha must not be set when algorithm is Newton'
+                    'init_alpha must not be set when algorithm is newton'
                 )
             if isinstance(self.init_alpha, float):
                 if self.init_alpha <= 0:
@@ -69,9 +75,9 @@ class OptimizeArgs:
                 raise ValueError('iter must be type of int')
 
         if self.tol_obj is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm == 'newton':
                 raise ValueError(
-                    'tol_obj must not be set when algorithm is Newton'
+                    'tol_obj must not be set when algorithm is newton'
                 )
             if isinstance(self.tol_obj, float):
                 if self.tol_obj <= 0:
@@ -80,9 +86,9 @@ class OptimizeArgs:
                 raise ValueError('tol_obj must be type of float')
 
         if self.tol_rel_obj is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm == 'newton':
                 raise ValueError(
-                    'tol_rel_obj must not be set when algorithm is Newton'
+                    'tol_rel_obj must not be set when algorithm is newton'
                 )
             if isinstance(self.tol_rel_obj, float):
                 if self.tol_rel_obj <= 0:
@@ -91,9 +97,9 @@ class OptimizeArgs:
                 raise ValueError('tol_rel_obj must be type of float')
 
         if self.tol_grad is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm == 'newton':
                 raise ValueError(
-                    'tol_grad must not be set when algorithm is Newton'
+                    'tol_grad must not be set when algorithm is newton'
                 )
             if isinstance(self.tol_grad, float):
                 if self.tol_grad <= 0:
@@ -102,9 +108,9 @@ class OptimizeArgs:
                 raise ValueError('tol_grad must be type of float')
 
         if self.tol_rel_grad is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm == 'newton':
                 raise ValueError(
-                    'tol_rel_grad must not be set when algorithm is Newton'
+                    'tol_rel_grad must not be set when algorithm is newton'
                 )
             if isinstance(self.tol_rel_grad, float):
                 if self.tol_rel_grad <= 0:
@@ -113,9 +119,9 @@ class OptimizeArgs:
                 raise ValueError('tol_rel_grad must be type of float')
 
         if self.tol_param is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm == 'newton':
                 raise ValueError(
-                    'tol_param must not be set when algorithm is Newton'
+                    'tol_param must not be set when algorithm is newton'
                 )
             if isinstance(self.tol_param, float):
                 if self.tol_param <= 0:
@@ -124,10 +130,10 @@ class OptimizeArgs:
                 raise ValueError('tol_param must be type of float')
 
         if self.history_size is not None:
-            if self.algorithm == 'Newton' or self.algorithm == 'BFGS':
+            if self.algorithm == 'newton' or self.algorithm == 'BFGS':
                 raise ValueError(
                     'history_size must not be set when algorithm is '
-                    'Newton or BFGS'
+                    'newton or BFGS'
                 )
             if isinstance(self.history_size, int):
                 if self.history_size < 0:
@@ -135,12 +141,19 @@ class OptimizeArgs:
             else:
                 raise ValueError('history_size must be type of int')
 
-    # pylint: disable=unused-argument
-    def compose(self, idx: int, cmd: List[str]) -> List[str]:
-        """compose command string for CmdStan for non-default arg values."""
+    @classmethod
+    def method(cls) -> Method:
+        return Method.OPTIMIZE
+
+    def compose_command(self, rs: RunConfiguration, idx: int) -> List[str]:
+        """
+        Compose CmdStan command for method-specific non-default arguments.
+        """
+        cmd = self.cmdstan_args.begin_command(rs, idx)
+
         cmd.append('method=optimize')
         if self.algorithm:
-            cmd.append('algorithm={}'.format(self.algorithm.lower()))
+            cmd.append('algorithm={}'.format(self.algorithm))
         if self.init_alpha is not None:
             cmd.append('init_alpha={}'.format(self.init_alpha))
         if self.tol_obj is not None:

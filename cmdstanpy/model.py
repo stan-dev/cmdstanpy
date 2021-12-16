@@ -592,18 +592,6 @@ class CmdStanModel:
 
         :return: CmdStanMLE object
         """
-        optimize_args = OptimizeArgs(
-            algorithm=algorithm,
-            init_alpha=init_alpha,
-            tol_obj=tol_obj,
-            tol_rel_obj=tol_rel_obj,
-            tol_grad=tol_grad,
-            tol_rel_grad=tol_rel_grad,
-            tol_param=tol_param,
-            history_size=history_size,
-            iter=iter,
-            save_iterations=save_iterations,
-        )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
@@ -616,11 +604,23 @@ class CmdStanModel:
                 output_dir=output_dir,
                 sig_figs=sig_figs,
                 save_profile=save_profile,
-                method_args=optimize_args,
                 refresh=refresh,
             )
+            optimize_args = OptimizeArgs(
+                args=args,
+                algorithm=algorithm,
+                init_alpha=init_alpha,
+                tol_obj=tol_obj,
+                tol_rel_obj=tol_rel_obj,
+                tol_grad=tol_grad,
+                tol_rel_grad=tol_rel_grad,
+                tol_param=tol_param,
+                history_size=history_size,
+                iter=iter,
+                save_iterations=save_iterations,
+            )
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
+            runset = RunSet(args=optimize_args, chains=1, time_fmt=time_fmt)
             self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
 
         if not runset._check_retcodes():
@@ -903,21 +903,6 @@ class CmdStanModel:
                             ' found {}.'.format(chain_id)
                         )
 
-        sampler_args = SampleArgs(
-            iter_warmup=iter_warmup,
-            iter_sampling=iter_sampling,
-            save_warmup=save_warmup,
-            thin=thin,
-            max_treedepth=max_treedepth,
-            metric=metric,
-            step_size=step_size,
-            adapt_engaged=adapt_engaged,
-            adapt_delta=adapt_delta,
-            adapt_init_phase=adapt_init_phase,
-            adapt_metric_window=adapt_metric_window,
-            adapt_step_size=adapt_step_size,
-            fixed_param=fixed_param,
-        )
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
                 self._name,
@@ -930,10 +915,24 @@ class CmdStanModel:
                 sig_figs=sig_figs,
                 save_latent_dynamics=save_latent_dynamics,
                 save_profile=save_profile,
-                method_args=sampler_args,
                 refresh=refresh,
             )
-
+            sampler_args = SampleArgs(
+                args=args,
+                iter_warmup=iter_warmup,
+                iter_sampling=iter_sampling,
+                save_warmup=save_warmup,
+                thin=thin,
+                max_treedepth=max_treedepth,
+                metric=metric,
+                step_size=step_size,
+                adapt_engaged=adapt_engaged,
+                adapt_delta=adapt_delta,
+                adapt_init_phase=adapt_init_phase,
+                adapt_metric_window=adapt_metric_window,
+                adapt_step_size=adapt_step_size,
+                fixed_param=fixed_param,
+            )
             if parallel_chains is None:
                 parallel_chains = max(min(cpu_count(), chains), 1)
             elif parallel_chains > chains:
@@ -1022,7 +1021,7 @@ class CmdStanModel:
                     total=iter_total,
                 )
             runset = RunSet(
-                args=args,
+                args=sampler_args,
                 chains=chains,
                 chain_ids=chain_ids,
                 time_fmt=time_fmt,
@@ -1062,7 +1061,7 @@ class CmdStanModel:
                 if 'running fixed_param sampler' in console_msgs:
                     get_logger().debug("Detected fixed param model")
                     sampler_args.fixed_param = True
-                    runset._args.method_args = sampler_args
+                    runset._args = sampler_args
 
             # if there was an exe-file only initialization,
             # this could happen, so throw a nice error
@@ -1188,10 +1187,7 @@ class CmdStanModel:
                 'Sample contains saved warmup draws which will be used '
                 'to generate additional quantities of interest.'
             )
-        generate_quantities_args = GenerateQuantitiesArgs(
-            csv_files=sample_csv_files
-        )
-        generate_quantities_args.validate(chains)
+
         with MaybeDictToFilePath(data, None) as (_data, _inits):
             args = CmdStanArgs(
                 self._name,
@@ -1201,11 +1197,16 @@ class CmdStanModel:
                 seed=seed,
                 output_dir=gq_output_dir,
                 sig_figs=sig_figs,
-                method_args=generate_quantities_args,
                 refresh=refresh,
             )
+            generate_quantities_args = GenerateQuantitiesArgs(
+                args=args, csv_files=sample_csv_files
+            )
             runset = RunSet(
-                args=args, chains=chains, chain_ids=chain_ids, time_fmt=time_fmt
+                args=generate_quantities_args,
+                chains=chains,
+                chain_ids=chain_ids,
+                time_fmt=time_fmt,
             )
 
             parallel_chains_avail = cpu_count()
@@ -1347,18 +1348,6 @@ class CmdStanModel:
 
         :return: CmdStanVB object
         """
-        variational_args = VariationalArgs(
-            algorithm=algorithm,
-            iter=iter,
-            grad_samples=grad_samples,
-            elbo_samples=elbo_samples,
-            eta=eta,
-            adapt_engaged=adapt_engaged,
-            adapt_iter=adapt_iter,
-            tol_rel_obj=tol_rel_obj,
-            eval_elbo=eval_elbo,
-            output_samples=output_samples,
-        )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
@@ -1372,12 +1361,24 @@ class CmdStanModel:
                 sig_figs=sig_figs,
                 save_latent_dynamics=save_latent_dynamics,
                 save_profile=save_profile,
-                method_args=variational_args,
                 refresh=refresh,
+            )
+            variational_args = VariationalArgs(
+                args=args,
+                algorithm=algorithm,
+                iter=iter,
+                grad_samples=grad_samples,
+                elbo_samples=elbo_samples,
+                eta=eta,
+                adapt_engaged=adapt_engaged,
+                adapt_iter=adapt_iter,
+                tol_rel_obj=tol_rel_obj,
+                eval_elbo=eval_elbo,
+                output_samples=output_samples,
             )
 
             dummy_chain_id = 0
-            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
+            runset = RunSet(args=variational_args, chains=1, time_fmt=time_fmt)
             self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
 
         # treat failure to converge as failure

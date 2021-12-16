@@ -109,7 +109,13 @@ def from_csv(
     try:
         if config_dict['method'] == 'sample':
             chains = len(csvfiles)
+            cmdstan_args = CmdStanArgs(
+                model_name=config_dict['model'],
+                model_exe=config_dict['model'],
+                chain_ids=[x + 1 for x in range(chains)],
+            )
             sampler_args = SampleArgs(
+                args=cmdstan_args,
                 iter_sampling=config_dict['num_samples'],
                 iter_warmup=config_dict['num_warmup'],
                 thin=config_dict['thin'],
@@ -135,6 +141,7 @@ def from_csv(
                         save_warmup=config_dict['save_warmup'],
                     )
                     sampler_args = SampleArgs(
+                        args=cmdstan_args,
                         iter_sampling=config_dict['num_samples'],
                         iter_warmup=config_dict['num_warmup'],
                         thin=config_dict['thin'],
@@ -146,13 +153,7 @@ def from_csv(
                         'Invalid or corrupt Stan CSV output file, '
                     ) from e
 
-            cmdstan_args = CmdStanArgs(
-                model_name=config_dict['model'],
-                model_exe=config_dict['model'],
-                chain_ids=[x + 1 for x in range(chains)],
-                method_args=sampler_args,
-            )
-            runset = RunSet(args=cmdstan_args, chains=chains)
+            runset = RunSet(args=sampler_args, chains=chains)
             runset._csv_files = csvfiles
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
@@ -165,17 +166,17 @@ def from_csv(
                     "Cannot find optimization algorithm"
                     " in file {}.".format(csvfiles[0])
                 )
-            optimize_args = OptimizeArgs(
-                algorithm=config_dict['algorithm'],
-                save_iterations=config_dict['save_iterations'],
-            )
             cmdstan_args = CmdStanArgs(
                 model_name=config_dict['model'],
                 model_exe=config_dict['model'],
                 chain_ids=None,
-                method_args=optimize_args,
             )
-            runset = RunSet(args=cmdstan_args)
+            optimize_args = OptimizeArgs(
+                args=cmdstan_args,
+                algorithm=config_dict['algorithm'],
+                save_iterations=config_dict['save_iterations'],
+            )
+            runset = RunSet(args=optimize_args)
             runset._csv_files = csvfiles
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
@@ -186,7 +187,13 @@ def from_csv(
                     "Cannot find variational algorithm"
                     " in file {}.".format(csvfiles[0])
                 )
+            cmdstan_args = CmdStanArgs(
+                model_name=config_dict['model'],
+                model_exe=config_dict['model'],
+                chain_ids=None,
+            )
             variational_args = VariationalArgs(
+                args=cmdstan_args,
                 algorithm=config_dict['algorithm'],
                 iter=config_dict['iter'],
                 grad_samples=config_dict['grad_samples'],
@@ -196,13 +203,7 @@ def from_csv(
                 eval_elbo=config_dict['eval_elbo'],
                 output_samples=config_dict['output_samples'],
             )
-            cmdstan_args = CmdStanArgs(
-                model_name=config_dict['model'],
-                model_exe=config_dict['model'],
-                chain_ids=None,
-                method_args=variational_args,
-            )
-            runset = RunSet(args=cmdstan_args)
+            runset = RunSet(args=variational_args)
             runset._csv_files = csvfiles
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
