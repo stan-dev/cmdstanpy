@@ -2,6 +2,7 @@
 
 import os
 import re
+from typing import List
 
 import setuptools
 
@@ -14,19 +15,19 @@ def readme_contents() -> str:
     return src
 
 
-def requirements() -> str:
+def requirements() -> List[str]:
     with open(os.path.join(HERE, 'requirements.txt'), 'r') as fd:
         src = fd.read()
     return src.splitlines()
 
 
-def requirements_test() -> str:
+def requirements_test() -> List[str]:
     with open(os.path.join(HERE, 'requirements-test.txt'), 'r') as fd:
         src = fd.read()
     return src.splitlines()
 
 
-def requirements_optional() -> str:
+def requirements_optional() -> List[str]:
     with open(os.path.join(HERE, 'requirements-optional.txt'), 'r') as fd:
         src = fd.read()
     return src.splitlines()
@@ -71,11 +72,11 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
-    packages=['cmdstanpy'],
+    packages=['cmdstanpy', 'cmdstanpy.stanfit'],
     entry_points={
         'console_scripts': [
-            'install_cmdstan=cmdstanpy.install_cmdstan:main',
-            'install_cxx_toolchain=cmdstanpy.install_cxx_toolchain:main',
+            'install_cmdstan=cmdstanpy.install_cmdstan:__main__',
+            'install_cxx_toolchain=cmdstanpy.install_cxx_toolchain:__main__',
         ]
     },
     install_requires=INSTALL_REQUIRES,

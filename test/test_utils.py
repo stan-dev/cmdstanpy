@@ -45,6 +45,7 @@ from cmdstanpy.utils import (
     validate_dir,
     windows_short_path,
     write_stan_json,
+    pushd,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -805,6 +806,17 @@ class DoCommandTest(unittest.TestCase):
             args = ['bash', '/bin/junk']
             with self.assertRaises(RuntimeError):
                 do_command(args, HERE)
+
+
+class PushdTest(unittest.TestCase):
+
+    def test_restore_cwd(self):
+        "Ensure do_command in a different cwd restores cwd after error."
+        cwd = os.getcwd()
+        with self.assertRaises(RuntimeError):
+            with pushd(os.path.dirname(cwd)):
+                raise RuntimeError('error')
+        self.assertEqual(cwd, os.getcwd())
 
 
 class FlattenTest(unittest.TestCase):

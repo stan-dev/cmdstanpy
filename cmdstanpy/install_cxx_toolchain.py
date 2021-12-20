@@ -360,5 +360,9 @@ def parse_cmdline_args() -> Dict[str, Any]:
     return vars(parser.parse_args(sys.argv[1:]))
 
 
-if __name__ == '__main__':
+def __main__() -> None:
     main(parse_cmdline_args())
+
+
+if __name__ == '__main__':
+    __main__()

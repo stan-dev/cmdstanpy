@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>“Hello, World” &#8212; CmdStanPy 1.0.0rc2 documentation</title>
+    <title>“Hello, World” &#8212; CmdStanPy 1.0.0 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0rc2</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0</a>
     
   </div>
 
@@ -315,13 +315,13 @@ The function <a class="reference internal" href="api.html#cmdstanpy.cmdstan_path
 <span class="go"># inspect model object</span>
 <span class="gp">In [5]: </span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 <span class="go">CmdStanModel: name=bernoulli</span>
-<span class="go">	 stan_file=/home/runner/.cmdstan/cmdstan-2.28.1/examples/bernoulli/bernoulli.stan</span>
-<span class="go">	 exe_file=/home/runner/.cmdstan/cmdstan-2.28.1/examples/bernoulli/bernoulli</span>
+<span class="go">	 stan_file=/home/runner/.cmdstan/cmdstan-2.28.2/examples/bernoulli/bernoulli.stan</span>
+<span class="go">	 exe_file=/home/runner/.cmdstan/cmdstan-2.28.2/examples/bernoulli/bernoulli</span>
 <span class="go">	 compiler_options=stanc_options={}, cpp_options={}</span>
 
 <span class="go"># inspect compiled model</span>
 <span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">exe_info</span><span class="p">())</span>
-<span class="go">{&#39;stan_version_major&#39;: &#39;2&#39;, &#39;stan_version_minor&#39;: &#39;28&#39;, &#39;stan_version_patch&#39;: &#39;1&#39;, &#39;STAN_THREADS&#39;: &#39;false&#39;, &#39;STAN_MPI&#39;: &#39;false&#39;, &#39;STAN_OPENCL&#39;: &#39;false&#39;, &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;, &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}</span>
+<span class="go">{&#39;stan_version_major&#39;: &#39;2&#39;, &#39;stan_version_minor&#39;: &#39;28&#39;, &#39;stan_version_patch&#39;: &#39;2&#39;, &#39;STAN_THREADS&#39;: &#39;false&#39;, &#39;STAN_MPI&#39;: &#39;false&#39;, &#39;STAN_OPENCL&#39;: &#39;false&#39;, &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;, &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}</span>
 </pre></div>
 </div>
 </section>
@@ -357,7 +357,7 @@ to a temporary directory which is deleted when the current Python session is ter
 
 <span class="go"># fit the model</span>
 <span class="gp">In [8]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
-<span class="go">INFO:cmdstanpy:CmdStan start procesing</span>
+<span class="go">INFO:cmdstanpy:CmdStan start processing</span>
 <span class="go">                                                                                                                                                                                                                                                                                                                                </span>
 <span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
 
@@ -365,15 +365,15 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="gp">In [9]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_1.csv</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_2.csv</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_3.csv</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_4.csv</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_1.csv</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_2.csv</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_3.csv</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_4.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_0-stdout.txt</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_1-stdout.txt</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_2-stdout.txt</span>
-<span class="go">	/tmp/tmpa2iclw1i/bernoulli-20211117190758_3-stdout.txt</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_0-stdout.txt</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_1-stdout.txt</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_2-stdout.txt</span>
+<span class="go">	/tmp/tmpfe5bx034/bernoulli-20211202172201_3-stdout.txt</span>
 </pre></div>
 </div>
 </section>
@@ -424,8 +424,8 @@ all model parameters and quantities of interest in a pandas.DataFrame:</p>
 <span class="gh">Out[14]: </span><span class="go"></span>
 <span class="go">       Mean    MCSE  StdDev     5%   50%   95%   N_Eff  N_Eff/s  R_hat</span>
 <span class="go">name                                                                  </span>
-<span class="go">lp__  -7.30  0.0190    0.77 -8.800 -7.00 -6.80  1600.0  33000.0    1.0</span>
-<span class="go">theta  0.25  0.0034    0.12  0.076  0.24  0.47  1400.0  27000.0    1.0</span>
+<span class="go">lp__  -7.30  0.0190    0.70 -8.700 -7.00 -6.70  1300.0  24000.0    1.0</span>
+<span class="go">theta  0.25  0.0031    0.12  0.079  0.24  0.47  1500.0  27000.0    1.0</span>
 </pre></div>
 </div>
 <p>CmdStan is distributed with a second posterior analysis utility
@@ -435,7 +435,7 @@ looking for potential problems which indicate that the sample
 isn’t a representative sample from the posterior.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose" title="cmdstanpy.CmdStanMCMC.diagnose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnose()</span></code></a> method runs this utility and prints the output to the console.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [15]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
-<span class="go">Processing csv files: /tmp/tmpa2iclw1i/bernoulli-20211117190758_1.csv, /tmp/tmpa2iclw1i/bernoulli-20211117190758_2.csv, /tmp/tmpa2iclw1i/bernoulli-20211117190758_3.csv, /tmp/tmpa2iclw1i/bernoulli-20211117190758_4.csv</span>
+<span class="go">Processing csv files: /tmp/tmpfe5bx034/bernoulli-20211202172201_1.csv, /tmp/tmpfe5bx034/bernoulli-20211202172201_2.csv, /tmp/tmpfe5bx034/bernoulli-20211202172201_3.csv, /tmp/tmpfe5bx034/bernoulli-20211202172201_4.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>
@@ -554,7 +554,7 @@ and <a class="reference external" href="https://github.com/tqdm/tqdm/issues/394#
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
 </p>
     </div>
     
