@@ -763,7 +763,7 @@ class CmdStanGQ:
         )
         return repr
 
-    def _validate_csv_files(self) -> dict[str, Any]:
+    def _validate_csv_files(self) -> Dict[str, Any]:
         """
         Checks that Stan CSV output files for all chains are consistent
         and returns dict containing config and column names.
