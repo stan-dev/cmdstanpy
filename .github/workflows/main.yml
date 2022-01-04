@@ -60,6 +60,7 @@ jobs:
           pip install codecov
 
       - name: Run flake8, pylint, mypy
+        if: matrix.python-version == '3.10'
         run: |
           flake8 cmdstanpy test
           pylint -v cmdstanpy test
