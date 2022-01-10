@@ -1222,7 +1222,7 @@ class CmdStanGQ:
         return result
 
     def _assemble_generated_quantities(self) -> None:
-        # use numpy loadtxt
+        # use pandas read_csv
         warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
         num_draws = self.mcmc_sample.draws(inc_warmup=warmup).shape[0]
         gq_sample: np.ndarray = np.empty(
@@ -1231,11 +1231,9 @@ class CmdStanGQ:
             order='F',
         )
         for chain in range(self.chains):
-            with open(self.runset.csv_files[chain], 'r') as fd:
-                lines = (line for line in fd if not line.startswith('#'))
-                gq_sample[:, chain, :] = np.loadtxt(
-                    lines, dtype=np.ndarray, ndmin=2, skiprows=1, delimiter=','
-                )
+            gq_sample[:, chain, :] = pd.read_csv(
+                self.runset.csv_files[chain], sep=',', comment='#', header=0,
+            ).values
         self._draws = gq_sample
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
