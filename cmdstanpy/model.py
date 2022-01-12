@@ -311,6 +311,7 @@ class CmdStanModel:
         if self.stan_file is None or not os.path.isfile(self.stan_file):
             raise ValueError("No Stan file found for this module")
         try:
+            # TODO need include paths if they exist.
             cmd = [
                 os.path.join('.', 'bin', 'stanc' + EXTENSION),
                 '--auto-format',

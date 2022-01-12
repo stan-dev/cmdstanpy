@@ -95,9 +95,9 @@ class CmdStanMCMC:
         self._save_warmup = sampler_args.save_warmup
         self._sig_figs = runset._args.sig_figs
         # info from CSV values, instantiated lazily
-        self._metric = np.array(())
-        self._step_size = np.array(())
-        self._draws = np.array(())
+        self._metric: np.ndarray = np.array(())
+        self._step_size: np.ndarray = np.array(())
+        self._draws: np.ndarray = np.array(())
         # info from CSV initial comments and header
         config = self._validate_csv_files()
         self._metadata: InferenceMetadata = InferenceMetadata(config)
@@ -231,7 +231,7 @@ class CmdStanMCMC:
         CmdStanMCMC.draws_xr
         CmdStanGQ.draws
         """
-        if self._draws.size == 0:
+        if self._draws.shape == (0,):
             self._assemble_draws()
 
         if inc_warmup and not self._save_warmup:
@@ -246,7 +246,7 @@ class CmdStanMCMC:
 
         if concat_chains:
             return flatten_chains(self._draws[start_idx:, :, :])
-        return self._draws[start_idx:, :, :]  # type: ignore
+        return self._draws[start_idx:, :, :]
 
     def _validate_csv_files(self) -> Dict[str, Any]:
         """
@@ -309,9 +309,6 @@ class CmdStanMCMC:
         Allocates and populates the step size, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
-        if self._draws.shape != (0,):
-            return
-
         num_draws = self.num_draws_sampling
         sampling_iter_start = 0
         if self._save_warmup:
@@ -527,7 +524,8 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
 
-        self._assemble_draws()
+        if self._draws.shape == (0,):
+            self._assemble_draws()
         cols = []
         if vars is not None:
             for var in set(vars_list):
@@ -583,7 +581,8 @@ class CmdStanMCMC:
         else:
             vars_list = vars
 
-        self._assemble_draws()
+        if self._draws.shape == (0,):
+            self._assemble_draws()
 
         num_draws = self.num_draws_sampling
         meta = self._metadata.cmdstan_config
@@ -663,7 +662,8 @@ class CmdStanMCMC:
             raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:
             raise ValueError('Unknown variable name: {}'.format(var))
-        self._assemble_draws()
+        if self._draws.shape == (0,):
+            self._assemble_draws()
         draw1 = 0
         if not inc_warmup and self._save_warmup:
             draw1 = self.num_draws_warmup
@@ -675,9 +675,7 @@ class CmdStanMCMC:
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[var])
         # pylint: disable=redundant-keyword-arg
-        return self._draws[draw1:, :, col_idxs].reshape(  # type: ignore
-            dims, order='F'
-        )
+        return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -705,7 +703,8 @@ class CmdStanMCMC:
         containing per-draw diagnostic values.
         """
         result = {}
-        self._assemble_draws()
+        if self._draws.shape == (0,):
+            self._assemble_draws()
         for idxs in self.metadata.method_vars_cols.values():
             for idx in idxs:
                 result[self.column_names[idx]] = self._draws[:, :, idx]
@@ -747,7 +746,7 @@ class CmdStanGQ:
             )
         self.runset = runset
         self.mcmc_sample = mcmc_sample
-        self._draws = np.array(())
+        self._draws: np.ndarray = np.array(())
         config = self._validate_csv_files()
         self._metadata = InferenceMetadata(config)
 
@@ -764,7 +763,7 @@ class CmdStanGQ:
         )
         return repr
 
-    def _validate_csv_files(self) -> dict:
+    def _validate_csv_files(self) -> Dict[str, Any]:
         """
         Checks that Stan CSV output files for all chains are consistent
         and returns dict containing config and column names.
@@ -868,7 +867,7 @@ class CmdStanGQ:
         CmdStanGQ.draws_xr
         CmdStanMCMC.draws
         """
-        if self._draws.size == 0:
+        if self._draws.shape == (0,):
             self._assemble_generated_quantities()
         if (
             inc_warmup
@@ -909,13 +908,13 @@ class CmdStanGQ:
         if concat_chains:
             return flatten_chains(self._draws[start_idx:, :, :])
         if inc_sample:
-            return np.dstack(  # type: ignore
+            return np.dstack(
                 (
                     np.delete(self.mcmc_sample.draws(), drop_cols, axis=1),
                     self._draws,
                 )
             )[start_idx:, :, :]
-        return self._draws[start_idx:, :, :]  # type: ignore
+        return self._draws[start_idx:, :, :]
 
     def draws_pd(
         self,
@@ -955,7 +954,8 @@ class CmdStanGQ:
                 'Draws from warmup iterations not available,'
                 ' must run sampler with "save_warmup=True".'
             )
-        self._assemble_generated_quantities()
+        if self._draws.shape == (0,):
+            self._assemble_generated_quantities()
 
         gq_cols = []
         mcmc_vars = []
@@ -1076,7 +1076,8 @@ class CmdStanGQ:
         for var in dup_vars:
             vars_list.remove(var)
 
-        self._assemble_generated_quantities()
+        if self._draws.shape == (0,):
+            self._assemble_generated_quantities()
 
         num_draws = self.mcmc_sample.num_draws_sampling
         sample_config = self.mcmc_sample.metadata.cmdstan_config
@@ -1173,7 +1174,8 @@ class CmdStanGQ:
         if var not in gq_var_names:
             return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable
-            self._assemble_generated_quantities()
+            if self._draws.shape == (0,):
+                self._assemble_generated_quantities()
             draw1 = 0
             if (
                 not inc_warmup
@@ -1191,9 +1193,7 @@ class CmdStanGQ:
             if len(col_idxs) > 0:
                 dims.extend(self._metadata.stan_vars_dims[var])
             # pylint: disable=redundant-keyword-arg
-            return self._draws[draw1:, :, col_idxs].reshape(  # type: ignore
-                dims, order='F'
-            )
+            return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
@@ -1222,10 +1222,10 @@ class CmdStanGQ:
         return result
 
     def _assemble_generated_quantities(self) -> None:
-        # use numpy genfromtext
+        # use numpy loadtxt
         warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
         num_draws = self.mcmc_sample.draws(inc_warmup=warmup).shape[0]
-        gq_sample = np.empty(
+        gq_sample: np.ndarray = np.empty(
             (num_draws, self.chains, len(self.column_names)),
             dtype=float,
             order='F',

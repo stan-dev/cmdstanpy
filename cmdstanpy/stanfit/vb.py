@@ -126,6 +126,7 @@ class CmdStanVB:
             raise ValueError('Unknown variable name: {}'.format(var))
         col_idxs = list(self._metadata.stan_vars_cols[var])
         shape: Tuple[int, ...] = ()
+        result: Union[np.ndarray, float]
         if len(col_idxs) > 1:
             shape = self._metadata.stan_vars_dims[var]
             result = np.asarray(self._variational_mean)[col_idxs].reshape(
@@ -133,7 +134,6 @@ class CmdStanVB:
             )
         else:
             result = float(self._variational_mean[col_idxs[0]])
-        assert isinstance(result, (np.ndarray, float))
         return result
 
     def stan_variables(self) -> Dict[str, Union[np.ndarray, float]]:

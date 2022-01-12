@@ -54,13 +54,9 @@ class CmdStanMLE:
         meta = scan_optimize_csv(sample_csv_0, self._save_iterations)
         self._metadata = InferenceMetadata(meta)
         self._column_names: Tuple[str, ...] = meta['column_names']
-        assert isinstance(meta['mle'], np.ndarray)  # make the typechecker happy
-        self._mle = meta['mle']
+        self._mle: np.ndarray = meta['mle']
         if self._save_iterations:
-            assert isinstance(
-                meta['all_iters'], np.ndarray
-            )  # make the typechecker happy
-            self._all_iters = meta['all_iters']
+            self._all_iters: np.ndarray = meta['all_iters']
 
     @property
     def column_names(self) -> Tuple[str, ...]:
@@ -202,13 +198,13 @@ class CmdStanMLE:
             num_rows = self._all_iters.shape[0]
         else:
             num_rows = 1
+
+        result: Union[np.ndarray, float]
         if len(col_idxs) > 1:  # container var
             dims = (num_rows,) + self._metadata.stan_vars_dims[var]
             # pylint: disable=redundant-keyword-arg
             if num_rows > 1:
-                result = self._all_iters[:, col_idxs].reshape(  # type: ignore
-                    dims, order='F'
-                )
+                result = self._all_iters[:, col_idxs].reshape(dims, order='F')
             else:
                 result = self._mle[col_idxs].reshape(dims[1:], order="F")
         else:  # scalar var
@@ -217,9 +213,7 @@ class CmdStanMLE:
                 result = self._all_iters[:, col_idx]
             else:
                 result = float(self._mle[col_idx])
-        assert isinstance(
-            result, (np.ndarray, float)
-        )  # make the typechecker happy
+
         return result
 
     def stan_variables(

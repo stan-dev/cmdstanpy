@@ -14,16 +14,17 @@ line_length = 80
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 no_implicit_optional = true
-# disallow_any_generics = true # disabled due to issues with numpy < 1.20
+# disallow_any_generics = true # disabled due to issues with numpy
 warn_return_any = true
 # warn_unused_ignores = true # can't be run on CI due to windows having different ctypes
+check_untyped_defs = true
+warn_redundant_casts = true
+strict_equality = true
+disallow_untyped_calls = true
 
 [[tool.mypy.overrides]]
 module = [
     'tqdm.auto',
     'pandas',
-    'ujson',
-    'numpy', # these two are required for py36, which numpy 1.21 doesn't support
-    'numpy.random'
     ]
 ignore_missing_imports = true
