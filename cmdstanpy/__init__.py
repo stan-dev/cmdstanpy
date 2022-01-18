@@ -55,6 +55,7 @@ from .utils import (
     set_make_env,
     show_versions,
     write_stan_json,
+    write_stan_file,
 )
 
 __all__ = [
@@ -73,4 +74,5 @@ __all__ = [
     'show_versions',
     'rebuild_cmdstan',
     'cmdstan_version',
+    'write_stan_file',
 ]

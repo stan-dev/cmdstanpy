@@ -13,6 +13,7 @@ import stat
 import string
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 from test import CustomTestCase
 
@@ -46,6 +47,7 @@ from cmdstanpy.utils import (
     windows_short_path,
     write_stan_json,
     pushd,
+    write_stan_file,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -873,6 +875,38 @@ class ShowProgressTest(unittest.TestCase):
             -1, msgs.find('Disabling progress bars for this session')
         )
         self.assertFalse(allow_show_progress())
+
+
+class WriteStanFileTest(unittest.TestCase):
+    CODE = 'arbitrary file content'
+    HASH = 'cb3c19e635365e77ffbafcc2a50e4f21a7163fe5'
+
+    def test_write_stan_file_default_dir(self):
+        with mock.patch('builtins.open') as stream:
+            actual_path = write_stan_file(self.CODE)
+            expected_path = os.path.join(cmdstan_path(), 'models',
+                                         f'{self.HASH}.stan')
+            assert actual_path == expected_path
+            stream.assert_called_once_with(expected_path, 'w')
+
+    def test_write_stan_file_other_dir(self):
+        directory = 'other'
+        with mock.patch('builtins.open') as stream:
+            actual_path = write_stan_file(self.CODE, directory)
+            expected_path = os.path.join(directory, f'{self.HASH}.stan')
+            assert actual_path == expected_path
+            stream.assert_called_once_with(expected_path, 'w')
+
+    def test_write_stan_file_already_exists(self):
+        directory = 'other'
+        with mock.patch('builtins.open') as stream, \
+                mock.patch('os.path.isfile') as isfile:
+            isfile.return_value = True
+            actual_path = write_stan_file(self.CODE, directory)
+            expected_path = os.path.join(directory, f'{self.HASH}.stan')
+            assert actual_path == expected_path
+            isfile.assert_called_once_with(actual_path)
+            stream.assert_not_called()
 
 
 if __name__ == '__main__':

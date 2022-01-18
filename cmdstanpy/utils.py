@@ -3,6 +3,7 @@ Utility functions
 """
 import contextlib
 import functools
+import hashlib
 import logging
 import math
 import os
@@ -1431,3 +1432,27 @@ class SanitizedOrTmpFilePath:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+
+def write_stan_file(code: str, directory: Union[str, None] = None) -> str:
+    """
+    Write the model code to a file and return the path based on the code hash.
+
+    :param code: Code to write to a file.
+    :param directory: Directory to write the code to (defaults to the cmdstanpy
+        models directory).
+
+    :return: Path to the file containing the code..
+    """
+    # Generate the path based on the code and check whether it already exists.
+    directory = directory or os.path.join(cmdstan_path(), 'models')
+    digest = hashlib.sha1(code.encode()).hexdigest()
+    stan_file = os.path.join(directory, f'{digest}.stan')
+    if os.path.isfile(stan_file):
+        return stan_file
+
+    # Write the file to disk.
+    os.makedirs(directory, exist_ok=True)
+    with open(stan_file, 'w') as stream:
+        stream.write(code)
+    return stan_file
