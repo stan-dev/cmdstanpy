@@ -884,8 +884,7 @@ class WriteStanFileTest(unittest.TestCase):
     def test_write_stan_file_default_dir(self):
         with mock.patch('builtins.open') as stream:
             actual_path = write_stan_file(self.CODE)
-            expected_suffix = os.path.join('cmdstanpy_models',
-                                           f'{self.HASH}.stan')
+            expected_suffix = f'model_{self.HASH}.stan'
             assert actual_path.endswith(expected_suffix)
             stream.assert_called_once_with(actual_path, 'w')
 
@@ -893,10 +892,9 @@ class WriteStanFileTest(unittest.TestCase):
         directory = 'other'
         with mock.patch('builtins.open') as stream:
             actual_path = write_stan_file(self.CODE, directory)
-            expected_path = os.path.abspath(os.path.join(directory,
-                                                         f'{self.HASH}.stan'))
-            assert actual_path == expected_path
-            stream.assert_called_once_with(expected_path, 'w')
+            expected_suffix = os.path.join(directory, f'model_{self.HASH}.stan')
+            assert actual_path.endswith(expected_suffix)
+            stream.assert_called_once_with(actual_path, 'w')
 
     def test_write_stan_file_already_exists(self):
         directory = 'other'
@@ -904,7 +902,7 @@ class WriteStanFileTest(unittest.TestCase):
                 mock.patch('os.path.isfile') as isfile:
             isfile.return_value = True
             actual_path = write_stan_file(self.CODE, directory)
-            expected_suffix = os.path.join(directory, f'{self.HASH}.stan')
+            expected_suffix = os.path.join(directory, f'model_{self.HASH}.stan')
             assert actual_path.endswith(expected_suffix)
             isfile.assert_called_once_with(actual_path)
             stream.assert_not_called()

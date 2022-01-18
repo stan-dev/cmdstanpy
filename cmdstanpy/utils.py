@@ -1445,11 +1445,9 @@ def write_stan_file(code: str, directory: Union[str, None] = None) -> str:
     :return: Path to the file containing the code..
     """
     # Generate the path based on the code and check whether it already exists.
-    directory = os.path.abspath(
-        directory or os.path.join(tempfile.gettempdir(), 'cmdstanpy_models')
-    )
+    directory = os.path.abspath(directory or _TMPDIR)
     digest = hashlib.sha1(code.encode()).hexdigest()
-    stan_file = os.path.join(directory, f'{digest}.stan')
+    stan_file = os.path.join(directory, f'model_{digest}.stan')
     if os.path.isfile(stan_file):
         return stan_file
 
