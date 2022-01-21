@@ -142,7 +142,8 @@ class CompilerOptions:
                 else:
                     get_logger().warning(
                         'compiler option "%s" is deprecated and '
-                        'should not be used'
+                        'should not be used',
+                        deprecated,
                     )
         for key, val in self._stanc_options.items():
             if key in STANC_IGNORE_OPTS:
