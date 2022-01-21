@@ -152,13 +152,9 @@ class CmdStanModel:
                 program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(self._stan_file)
-                if self._compiler_options is None:
-                    self._compiler_options = CompilerOptions(
-                        stanc_options={'include_paths': [path]}
-                    )
-                elif self._compiler_options._stanc_options is None:
+                if self._compiler_options._stanc_options is None:
                     self._compiler_options._stanc_options = {
-                        'include_paths': [path]
+                        'include-paths': [path]
                     }
                 else:
                     self._compiler_options.add_include_path(path)
@@ -279,9 +275,18 @@ class CmdStanModel:
         if self.stan_file is None:
             return result
         try:
-
+            includes = ''
+            if (
+                self.stanc_options is not None
+                and 'include-paths' in self.stanc_options
+            ):
+                includes = '--include-paths=' + ','.join(
+                    Path(p).as_posix()
+                    for p in self.stanc_options['include-paths']  # type: ignore
+                )
             cmd = [
                 os.path.join('.', 'bin', 'stanc' + EXTENSION),
+                includes,
                 '--info',
                 self.stan_file,
             ]
