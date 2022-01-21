@@ -128,6 +128,8 @@ class CmdStanModel:
                 )
             self._name = model_name.strip()
 
+        self._compiler_options.validate()
+
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -181,8 +183,6 @@ class CmdStanModel:
                         ' executable, expecting basename: {}'
                         ' found: {}.'.format(self._name, exename)
                     )
-
-        self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             try:
@@ -280,6 +280,7 @@ class CmdStanModel:
                 self.stanc_options is not None
                 and 'include-paths' in self.stanc_options
             ):
+                print(self.stanc_options)
                 includes = '--include-paths=' + ','.join(
                     Path(p).as_posix()
                     for p in self.stanc_options['include-paths']  # type: ignore
