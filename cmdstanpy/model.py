@@ -128,6 +128,8 @@ class CmdStanModel:
                 )
             self._name = model_name.strip()
 
+        self._compiler_options.validate()
+
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -152,13 +154,9 @@ class CmdStanModel:
                 program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(self._stan_file)
-                if self._compiler_options is None:
-                    self._compiler_options = CompilerOptions(
-                        stanc_options={'include_paths': [path]}
-                    )
-                elif self._compiler_options._stanc_options is None:
+                if self._compiler_options._stanc_options is None:
                     self._compiler_options._stanc_options = {
-                        'include_paths': [path]
+                        'include-paths': [path]
                     }
                 else:
                     self._compiler_options.add_include_path(path)
@@ -185,8 +183,6 @@ class CmdStanModel:
                         ' executable, expecting basename: {}'
                         ' found: {}.'.format(self._name, exename)
                     )
-
-        self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             try:
@@ -279,9 +275,19 @@ class CmdStanModel:
         if self.stan_file is None:
             return result
         try:
-
+            includes = ''
+            if (
+                self.stanc_options is not None
+                and 'include-paths' in self.stanc_options
+            ):
+                print(self.stanc_options)
+                includes = '--include-paths=' + ','.join(
+                    Path(p).as_posix()
+                    for p in self.stanc_options['include-paths']  # type: ignore
+                )
             cmd = [
                 os.path.join('.', 'bin', 'stanc' + EXTENSION),
+                includes,
                 '--info',
                 self.stan_file,
             ]
