@@ -169,16 +169,15 @@ class CompilerOptions:
         for opt in ignore:
             del self._stanc_options[opt]
         if paths is not None:
-            self._stanc_options['include-paths'] = paths
-            bad_paths = [
-                dir
-                for dir in self._stanc_options['include-paths']
-                if not os.path.exists(dir)
-            ]
+            bad_paths = [dir for dir in paths if not os.path.exists(dir)]
             if any(bad_paths):
                 raise ValueError(
                     'invalid include paths: {}'.format(', '.join(bad_paths))
                 )
+
+            self._stanc_options['include-paths'] = [
+                os.path.abspath(os.path.expanduser(path)) for path in paths
+            ]
 
     def validate_cpp_opts(self) -> None:
         """
@@ -254,19 +253,19 @@ class CompilerOptions:
 
     def add_include_path(self, path: str) -> None:
         """Adds include path to existing set of compiler options."""
+        path = os.path.abspath(os.path.expanduser(path))
         if 'include-paths' not in self._stanc_options:
             self._stanc_options['include-paths'] = [path]
         elif path not in self._stanc_options['include-paths']:
             self._stanc_options['include-paths'].append(path)
 
-    def compose(self) -> List[str]:
-        """Format makefile options as list of strings."""
+    def compose_stanc(self) -> List[str]:
         opts = []
         if self._stanc_options is not None and len(self._stanc_options) > 0:
             for key, val in self._stanc_options.items():
                 if key == 'include-paths':
                     opts.append(
-                        'STANCFLAGS+=--include-paths='
+                        '--include-paths='
                         + ','.join(
                             (
                                 Path(p).as_posix()
@@ -275,9 +274,14 @@ class CompilerOptions:
                         )
                     )
                 elif key == 'name':
-                    opts.append(f'STANCFLAGS+=--name={val}')
+                    opts.append(f'--name={val}')
                 else:
-                    opts.append(f'STANCFLAGS+=--{key}')
+                    opts.append(f'--{key}')
+        return opts
+
+    def compose(self) -> List[str]:
+        """Format makefile options as list of strings."""
+        opts = ['STANCFLAGS+=' + flag for flag in self.compose_stanc()]
         if self._cpp_options is not None and len(self._cpp_options) > 0:
             for key, val in self._cpp_options.items():
                 opts.append(f'{key}={val}')
