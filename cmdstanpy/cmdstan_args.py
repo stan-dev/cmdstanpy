@@ -202,10 +202,7 @@ class SamplerArgs:
                 if all(isinstance(elem, dict) for elem in self.metric):
                     metric_files: List[str] = []
                     for i, metric in enumerate(self.metric):
-                        assert isinstance(
-                            metric, dict
-                        )  # make the typechecker happy
-                        metric_dict: Dict[str, Any] = metric
+                        metric_dict: Dict[str, Any] = metric  # type: ignore
                         if 'inv_metric' not in metric_dict:
                             raise ValueError(
                                 'Entry "inv_metric" not found in metric dict '

@@ -128,6 +128,8 @@ class CmdStanModel:
                 )
             self._name = model_name.strip()
 
+        self._compiler_options.validate()
+
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -146,19 +148,14 @@ class CmdStanModel:
             if not self._name:
                 self._name, _ = os.path.splitext(filename)
 
-            # TODO: When minimum version is 2.27, use --info instead
             # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(self._stan_file)
-                if self._compiler_options is None:
-                    self._compiler_options = CompilerOptions(
-                        stanc_options={'include_paths': [path]}
-                    )
-                elif self._compiler_options._stanc_options is None:
+                if self._compiler_options._stanc_options is None:
                     self._compiler_options._stanc_options = {
-                        'include_paths': [path]
+                        'include-paths': [path]
                     }
                 else:
                     self._compiler_options.add_include_path(path)
@@ -185,8 +182,6 @@ class CmdStanModel:
                         ' executable, expecting basename: {}'
                         ' found: {}.'.format(self._name, exename)
                     )
-
-        self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             try:
@@ -279,12 +274,15 @@ class CmdStanModel:
         if self.stan_file is None:
             return result
         try:
-
-            cmd = [
-                os.path.join('.', 'bin', 'stanc' + EXTENSION),
-                '--info',
-                self.stan_file,
-            ]
+            cmd = (
+                [os.path.join('.', 'bin', 'stanc' + EXTENSION)]
+                # handle include-paths, allow-undefined etc
+                + self._compiler_options.compose_stanc()
+                + [
+                    '--info',
+                    self.stan_file,
+                ]
+            )
             sout = io.StringIO()
             do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
             result = json.loads(sout.getvalue())

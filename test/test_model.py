@@ -129,7 +129,7 @@ class CmdStanModelTest(CustomTestCase):
     def test_stanc_options(self):
         opts = {
             'O': True,
-            'allow_undefined': True,
+            'allow-undefined': True,
             'use-opencl': True,
             'name': 'foo',
         }
@@ -138,7 +138,7 @@ class CmdStanModelTest(CustomTestCase):
         )
         stanc_opts = model.stanc_options
         self.assertTrue(stanc_opts['O'])
-        self.assertTrue(stanc_opts['allow_undefined'])
+        self.assertTrue(stanc_opts['allow-undefined'])
         self.assertTrue(stanc_opts['use-opencl'])
         self.assertTrue(stanc_opts['name'] == 'foo')
 
@@ -151,12 +151,12 @@ class CmdStanModelTest(CustomTestCase):
                 stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
         with self.assertRaises(ValueError):
-            bad_opts = {'include_paths': True}
+            bad_opts = {'include-paths': True}
             model = CmdStanModel(
                 stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
         with self.assertRaises(ValueError):
-            bad_opts = {'include_paths': 'lkjdf'}
+            bad_opts = {'include-paths': 'lkjdf'}
             model = CmdStanModel(
                 stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
@@ -189,6 +189,15 @@ class CmdStanModelTest(CustomTestCase):
         model_info = model.src_info()
         self.assertNotEqual(model_info, {})
         self.assertIn('theta', model_info['parameters'])
+
+        model_include = CmdStanModel(
+            stan_file=os.path.join(DATAFILES_PATH, "bernoulli_include.stan"),
+            compile=False,
+        )
+        model_info_include = model_include.src_info()
+        self.assertNotEqual(model_info_include, {})
+        self.assertIn('theta', model_info_include['parameters'])
+        self.assertIn('included_files', model_info_include)
 
     def test_compile_force(self):
         if os.path.exists(BERN_EXE):
@@ -349,7 +358,7 @@ class CmdStanModelTest(CustomTestCase):
         if os.path.exists(BERN_EXE):
             os.remove(BERN_EXE)
         model = CmdStanModel(
-            stan_file=BERN_STAN, stanc_options={'include_paths': DATAFILES_PATH}
+            stan_file=BERN_STAN, stanc_options={'include-paths': DATAFILES_PATH}
         )
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertPathsEqual(model.exe_file, BERN_EXE)

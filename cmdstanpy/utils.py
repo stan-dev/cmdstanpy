@@ -51,7 +51,13 @@ def get_logger() -> logging.Logger:
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
     if len(logger.handlers) == 0:
-        logging.basicConfig(level=logging.INFO)
+        # send all messages to handlers
+        logger.setLevel(logging.DEBUG)
+        # add a default handler to the logger to INFO and higher
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        logger.addHandler(handler)
     return logger
 
 
@@ -639,7 +645,7 @@ def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
         for line in fd:
             iters += 1
     if save_iters:
-        all_iters = np.empty(
+        all_iters: np.ndarray = np.empty(
             (iters, len(dict['column_names'])), dtype=float, order='F'
         )
     # rescan to capture estimates
@@ -658,7 +664,7 @@ def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
             if save_iters:
                 all_iters[i, :] = [float(x) for x in xs]
             if i == iters - 1:
-                mle = np.array(xs, dtype=float)
+                mle: np.ndarray = np.array(xs, dtype=float)
     dict['mle'] = mle
     if save_iters:
         dict['all_iters'] = all_iters
@@ -944,7 +950,7 @@ def read_metric(path: str) -> List[int]:
         with open(path, 'r') as fd:
             metric_dict = json.load(fd)
         if 'inv_metric' in metric_dict:
-            dims_np = np.asarray(metric_dict['inv_metric'])
+            dims_np: np.ndarray = np.asarray(metric_dict['inv_metric'])
             return list(dims_np.shape)
         else:
             raise ValueError(
