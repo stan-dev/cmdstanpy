@@ -148,7 +148,6 @@ class CmdStanModel:
             if not self._name:
                 self._name, _ = os.path.splitext(filename)
 
-            # TODO: When minimum version is 2.27, use --info instead
             # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
@@ -275,22 +274,15 @@ class CmdStanModel:
         if self.stan_file is None:
             return result
         try:
-            includes = ''
-            if (
-                self.stanc_options is not None
-                and 'include-paths' in self.stanc_options
-            ):
-                print(self.stanc_options)
-                includes = '--include-paths=' + ','.join(
-                    Path(p).as_posix()
-                    for p in self.stanc_options['include-paths']  # type: ignore
-                )
-            cmd = [
-                os.path.join('.', 'bin', 'stanc' + EXTENSION),
-                includes,
-                '--info',
-                self.stan_file,
-            ]
+            cmd = (
+                [os.path.join('.', 'bin', 'stanc' + EXTENSION)]
+                # handle include-paths, allow-undefined etc
+                + self._compiler_options.compose_stanc()
+                + [
+                    '--info',
+                    self.stan_file,
+                ]
+            )
             sout = io.StringIO()
             do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
             result = json.loads(sout.getvalue())
