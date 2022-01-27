@@ -460,7 +460,9 @@ def main(args: Dict[str, Any]) -> None:
         print('Installing CmdStan version: {}'.format(version))
     else:
         raise ValueError(
-            'Invalid version requested: {}, cannot install.'.format(version)
+            f'Version {version} cannot be downloaded. '
+            'Connection to GitHub failed. '
+            'Check firewall settings or ensure this version exists.'
         )
 
     cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
