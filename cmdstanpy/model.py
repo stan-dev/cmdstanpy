@@ -161,12 +161,12 @@ class CmdStanModel:
                     self._compiler_options.add_include_path(path)
 
             # try to detect models w/out parameters, needed for sampler
-            if not cmdstan_version_before(2, 27) and cmdstan_version_before(
-                2, 29
-            ):
+            if not cmdstan_version_before(
+                2, 27
+            ):  # unknown end of version range
                 model_info = self.src_info()
                 if 'parameters' in model_info:
-                    self._fixed_param = len(model_info['parameters']) == 0
+                    self._fixed_param |= len(model_info['parameters']) == 0
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -283,9 +283,14 @@ class CmdStanModel:
                     self.stan_file,
                 ]
             )
-            sout = io.StringIO()
-            do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
-            result = json.loads(sout.getvalue())
+            out = subprocess.run(
+                cmd,
+                cwd=cmdstan_path(),
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout
+            result = json.loads(out)
             return result
         except (ValueError, RuntimeError) as e:
             get_logger().debug(e)

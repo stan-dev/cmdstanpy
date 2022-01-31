@@ -1160,7 +1160,7 @@ class CmdStanMCMCTest(CustomTestCase):
         expected = '\n'.join(
             [
                 'Checking sampler transitions treedepth.',
-                '424 of 1000 (42%) transitions hit the maximum '
+                '424 of 1000 (42.40%) transitions hit the maximum '
                 'treedepth limit of 8, or 2^8 leapfrog steps.',
                 'Trajectories that are prematurely terminated '
                 'due to this limit will result in slow exploration.',
