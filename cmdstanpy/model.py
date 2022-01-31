@@ -283,13 +283,10 @@ class CmdStanModel:
                     self.stan_file,
                 ]
             )
-            out = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                check=True,
-            ).stdout
-            result = json.loads(out)
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, check=True
+            )
+            result = json.loads(proc.stdout)
             return result
         except (
             ValueError,
