@@ -1157,17 +1157,18 @@ class CmdStanMCMCTest(CustomTestCase):
         ]
         fit = CmdStanMCMC(runset)
         # TODO - use cmdstan test files instead
-        expected = '\n'.join(
-            [
-                'Checking sampler transitions treedepth.',
-                '424 of 1000 (42.40%) transitions hit the maximum '
-                'treedepth limit of 8, or 2^8 leapfrog steps.',
-                'Trajectories that are prematurely terminated '
-                'due to this limit will result in slow exploration.',
-                'For optimal performance, increase this limit.',
-            ]
-        )
-        self.assertIn(expected, fit.diagnose().replace('\r\n', '\n'))
+        expected = [
+            'Checking sampler transitions treedepth.',
+            '424 of 1000',
+            'treedepth limit of 8, or 2^8 leapfrog steps.',
+            'Trajectories that are prematurely terminated '
+            'due to this limit will result in slow exploration.',
+            'For optimal performance, increase this limit.',
+        ]
+
+        diagnose = fit.diagnose()
+        for e in expected:
+            self.assertIn(e, diagnose)
 
     def test_validate_bad_run(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
