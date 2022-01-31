@@ -275,7 +275,7 @@ class CmdStanModel:
             return result
         try:
             cmd = (
-                [os.path.join('.', 'bin', 'stanc' + EXTENSION)]
+                [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
                 # handle include-paths, allow-undefined etc
                 + self._compiler_options.compose_stanc()
                 + [
@@ -285,7 +285,6 @@ class CmdStanModel:
             )
             out = subprocess.run(
                 cmd,
-                cwd=cmdstan_path(),
                 capture_output=True,
                 text=True,
                 check=True,
