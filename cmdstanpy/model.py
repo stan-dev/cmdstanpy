@@ -292,7 +292,7 @@ class CmdStanModel:
             ).stdout
             result = json.loads(out)
             return result
-        except (ValueError, RuntimeError) as e:
+        except (ValueError, RuntimeError, OSError) as e:
             get_logger().debug(e)
             return result
 
