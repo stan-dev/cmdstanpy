@@ -10,7 +10,10 @@ from typing import Any, Dict, List, Optional, Union
 from cmdstanpy.utils import get_logger
 
 STANC_OPTS = [
-    'O',
+    'O'
+    'O1',
+    'O2',
+    'Oexperimental'
     'allow-undefined',
     'use-opencl',
     'warn-uninitialized',
@@ -44,11 +47,6 @@ STANC_IGNORE_OPTS = [
     'help',
     'version',
 ]
-
-
-VALID_OPTIM_OPTS = (0,
-                    1,
-                    "experimental")
 
 
 class CompilerOptions:
@@ -132,6 +130,8 @@ class CompilerOptions:
             return
         ignore = []
         paths = None
+        has_O_flag = False
+
         for deprecated, replacement in STANC_DEPRECATED_OPTS.items():
             if deprecated in self._stanc_options:
                 if replacement:
@@ -170,10 +170,13 @@ class CompilerOptions:
                     self._cpp_options = {'STAN_OPENCL': 'TRUE'}
                 else:
                     self._cpp_options['STAN_OPENCL'] = 'TRUE'
-            elif key == 'O':
-                if val not in VALID_OPTIM_OPTS:
-                    raise ValueError(f'unknown optimization options {key}')
-
+            elif key.startswith('O'):
+                if has_O_flag:
+                    raise UserWarning('More than one of (O, O1, O2, Oexperimental)'
+                                      'optimizations passed. Only the last one will'
+                                      'be used')
+                else:
+                    has_O_flag = True
 
         for opt in ignore:
             del self._stanc_options[opt]
@@ -284,9 +287,6 @@ class CompilerOptions:
                     )
                 elif key == 'name':
                     opts.append(f'--name={val}')
-                elif key == 'O':
-                    opts.append(f'--O{val}')
-
                 else:
                     opts.append(f'--{key}')
         return opts
