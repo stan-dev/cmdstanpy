@@ -2,6 +2,7 @@
 
 import os
 import unittest
+import logging
 
 from testfixtures import LogCapture
 
@@ -85,7 +86,18 @@ class CompilerOptsTest(unittest.TestCase):
         # should add to logger
         stanc_opts['Oexperimental'] = True
         opts = CompilerOptions(stanc_options=stanc_opts)
-        opts.validate()
+        with LogCapture() as log:
+            logging.getLogger()
+
+
+            opts.validate()
+
+        expect = ('More than one of (O, O1, O2, Oexperimental)'
+                  'optimizations passed. Only the last one will'
+                  'be used')
+
+         log.check_present(('cmdstanpy', 'WARNING', expect))
+
         self.assertEqual(
             opts.compose(),
             ['STANCFLAGS+=--warn-uninitialized',
