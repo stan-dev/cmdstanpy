@@ -78,10 +78,12 @@ class CompilerOptsTest(unittest.TestCase):
         opts.validate()
         self.assertEqual(
             opts.compose(),
-            ['STANCFLAGS+=--warn-uninitialized',
-             'STANCFLAGS+=--name=foo',
-             'STANCFLAGS+=--O1'],
-             )
+            [
+                'STANCFLAGS+=--warn-uninitialized',
+                'STANCFLAGS+=--name=foo',
+                'STANCFLAGS+=--O1',
+            ],
+        )
 
         # should add to logger
         stanc_opts['Oexperimental'] = True
@@ -89,23 +91,25 @@ class CompilerOptsTest(unittest.TestCase):
         with LogCapture() as log:
             logging.getLogger()
 
-
             opts.validate()
 
-        expect = ('More than one of (O, O1, O2, Oexperimental)'
-                  'optimizations passed. Only the last one will'
-                  'be used')
+        expect = (
+            'More than one of (O, O1, O2, Oexperimental)'
+            'optimizations passed. Only the last one will'
+            'be used'
+        )
 
-         log.check_present(('cmdstanpy', 'WARNING', expect))
+        log.check_present(('cmdstanpy', 'WARNING', expect))
 
         self.assertEqual(
             opts.compose(),
-            ['STANCFLAGS+=--warn-uninitialized',
-             'STANCFLAGS+=--name=foo',
-             'STANCFLAGS+=--O1',
-             'STANCFLAGS+=--Oexperimental'],
-             )
-
+            [
+                'STANCFLAGS+=--warn-uninitialized',
+                'STANCFLAGS+=--name=foo',
+                'STANCFLAGS+=--O1',
+                'STANCFLAGS+=--Oexperimental',
+            ],
+        )
 
     def test_opts_stanc_deprecated(self):
         stanc_opts = {}
