@@ -10,9 +10,11 @@ from typing import Any, Dict, List, Optional, Union
 from cmdstanpy.utils import get_logger
 
 STANC_OPTS = [
-    'O' 'O1',
+    'O',
+    'O1',
     'O2',
-    'Oexperimental' 'allow-undefined',
+    'Oexperimental',
+    'allow-undefined',
     'use-opencl',
     'warn-uninitialized',
     'include-paths',
