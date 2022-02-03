@@ -19,7 +19,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts_b = None
         self.assertTrue(opts_a == opts_b)
 
-        opts_c = CompilerOptions(stanc_options={'--O'})
+        opts_c = CompilerOptions(stanc_options={'O'})
         self.assertTrue(opts_a != opts_c != opts_b)
 
         stanc_opts = {}
