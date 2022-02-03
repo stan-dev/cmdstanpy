@@ -46,6 +46,11 @@ STANC_IGNORE_OPTS = [
 ]
 
 
+VALID_OPTIM_OPTS = (0,
+                    1,
+                    "experimental")
+
+
 class CompilerOptions:
     """
     User-specified flags for stanc and C++ compiler.
@@ -165,6 +170,10 @@ class CompilerOptions:
                     self._cpp_options = {'STAN_OPENCL': 'TRUE'}
                 else:
                     self._cpp_options['STAN_OPENCL'] = 'TRUE'
+            elif key == 'O':
+                if val not in VALID_OPTIM_OPTS:
+                    raise ValueError(f'unknown optimization options {key}')
+
 
         for opt in ignore:
             del self._stanc_options[opt]
@@ -275,6 +284,9 @@ class CompilerOptions:
                     )
                 elif key == 'name':
                     opts.append(f'--name={val}')
+                elif key == 'O':
+                    opts.append(f'--O={val}')
+
                 else:
                     opts.append(f'--{key}')
         return opts
