@@ -172,7 +172,7 @@ class CompilerOptions:
                     self._cpp_options['STAN_OPENCL'] = 'TRUE'
             elif key.startswith('O'):
                 if has_O_flag:
-                    raise UserWarning('More than one of (O, O1, O2, Oexperimental)'
+                    get_logger().warning('More than one of (O, O1, O2, Oexperimental)'
                                       'optimizations passed. Only the last one will'
                                       'be used')
                 else:
