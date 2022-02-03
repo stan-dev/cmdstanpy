@@ -72,6 +72,29 @@ class CompilerOptsTest(unittest.TestCase):
             ['STANCFLAGS+=--warn-uninitialized', 'STANCFLAGS+=--name=foo'],
         )
 
+        stanc_opts['O1'] = True
+        opts = CompilerOptions(stanc_options=stanc_opts)
+        opts.validate()
+        self.assertEqual(
+            opts.compose(),
+            ['STANCFLAGS+=--warn-uninitialized',
+             'STANCFLAGS+=--name=foo',
+             'STANCFLAGS+=--O1'],
+             )
+
+        # should add to logger
+        stanc_opts['Oexperimental'] = True
+        opts = CompilerOptions(stanc_options=stanc_opts)
+        opts.validate()
+        self.assertEqual(
+            opts.compose(),
+            ['STANCFLAGS+=--warn-uninitialized',
+             'STANCFLAGS+=--name=foo',
+             'STANCFLAGS+=--O1',
+             'STANCFLAGS+=--Oexperimental'],
+             )
+
+
     def test_opts_stanc_deprecated(self):
         stanc_opts = {}
         stanc_opts['allow_undefined'] = True
