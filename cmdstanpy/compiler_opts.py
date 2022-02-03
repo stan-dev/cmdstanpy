@@ -285,7 +285,7 @@ class CompilerOptions:
                 elif key == 'name':
                     opts.append(f'--name={val}')
                 elif key == 'O':
-                    opts.append(f'--O={val}')
+                    opts.append(f'--O{val}')
 
                 else:
                     opts.append(f'--{key}')
