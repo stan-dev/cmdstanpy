@@ -130,7 +130,7 @@ class CompilerOptions:
             return
         ignore = []
         paths = None
-        has_O_flag = False
+        has_o_flag = False
 
         for deprecated, replacement in STANC_DEPRECATED_OPTS.items():
             if deprecated in self._stanc_options:
@@ -171,14 +171,14 @@ class CompilerOptions:
                 else:
                     self._cpp_options['STAN_OPENCL'] = 'TRUE'
             elif key.startswith('O'):
-                if has_O_flag:
+                if has_o_flag:
                     get_logger().warning(
                         'More than one of (O, O1, O2, Oexperimental)'
                         'optimizations passed. Only the last one will'
                         'be used'
                     )
                 else:
-                    has_O_flag = True
+                    has_o_flag = True
 
         for opt in ignore:
             del self._stanc_options[opt]
