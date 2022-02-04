@@ -38,6 +38,7 @@ from cmdstanpy.utils import (
     parse_method_vars,
     parse_rdump_value,
     parse_stan_vars,
+    pushd,
     read_metric,
     rload,
     set_cmdstan_path,
@@ -45,7 +46,6 @@ from cmdstanpy.utils import (
     validate_dir,
     windows_short_path,
     write_stan_json,
-    pushd,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -346,6 +346,13 @@ class DataFilesTest(unittest.TestCase):
         write_stan_json(file_fin, dict_inf_nan)
         with open(file_fin) as fd:
             cmp(json.load(fd), dict_inf_nan_exp)
+
+        dict_complex = {'a': np.array([np.complex64(3), 3 + 4j])}
+        dict_complex_exp = {'a': [[3, 0], [3, 4]]}
+        file_complex = os.path.join(_TMPDIR, 'complex.json')
+        write_stan_json(file_complex, dict_complex)
+        with open(file_complex) as fd:
+            cmp(json.load(fd), dict_complex_exp)
 
     def test_write_stan_json_bad(self):
         file_bad = os.path.join(_TMPDIR, 'bad.json')
@@ -809,7 +816,6 @@ class DoCommandTest(unittest.TestCase):
 
 
 class PushdTest(unittest.TestCase):
-
     def test_restore_cwd(self):
         "Ensure do_command in a different cwd restores cwd after error."
         cwd = os.getcwd()

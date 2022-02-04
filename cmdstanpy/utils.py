@@ -3,6 +3,7 @@ Utility functions
 """
 import contextlib
 import functools
+import json
 import logging
 import math
 import os
@@ -30,7 +31,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-import ujson as json
+import ujson
 from tqdm.auto import tqdm
 
 from cmdstanpy import (
@@ -439,6 +440,13 @@ def rewrite_inf_nan(
         return data
 
 
+def serialize_complex(c: Any) -> List[float]:
+    if isinstance(c, complex):
+        return [c.real, c.imag]
+    else:
+        raise TypeError(f"Unserializable type: {type(c)}")
+
+
 def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     """
     Dump a mapping of strings to data to a JSON file.
@@ -494,7 +502,11 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
             data_out[key] = rewrite_inf_nan(data_out[key])
 
     with open(path, 'w') as fd:
-        json.dump(data_out, fd)
+        try:
+            ujson.dump(data_out, fd)
+        except TypeError as e:
+            get_logger().debug(e)
+            json.dump(data_out, fd, default=serialize_complex)
 
 
 def rload(fname: str) -> Optional[Dict[str, Union[int, float, np.ndarray]]]:
@@ -948,7 +960,7 @@ def read_metric(path: str) -> List[int]:
     """
     if path.endswith('.json'):
         with open(path, 'r') as fd:
-            metric_dict = json.load(fd)
+            metric_dict = ujson.load(fd)
         if 'inv_metric' in metric_dict:
             dims_np: np.ndarray = np.asarray(metric_dict['inv_metric'])
             return list(dims_np.shape)
