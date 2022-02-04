@@ -11,8 +11,8 @@ from cmdstanpy.utils import get_logger
 
 STANC_OPTS = [
     'O',
+    'O0',
     'O1',
-    'O2',
     'Oexperimental',
     'allow-undefined',
     'use-opencl',

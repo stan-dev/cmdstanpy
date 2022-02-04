@@ -127,23 +127,26 @@ class CmdStanModelTest(CustomTestCase):
             CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
 
     def test_stanc_options(self):
-        opts = {
-            'O': True,
-            'allow-undefined': True,
-            'use-opencl': True,
-            'name': 'foo',
-        }
-        model = CmdStanModel(
-            stan_file=BERN_STAN, compile=False, stanc_options=opts
-        )
-        stanc_opts = model.stanc_options
-        self.assertTrue(stanc_opts['O'])
-        self.assertTrue(stanc_opts['allow-undefined'])
-        self.assertTrue(stanc_opts['use-opencl'])
-        self.assertTrue(stanc_opts['name'] == 'foo')
 
-        cpp_opts = model.cpp_options
-        self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
+        allowed_optims = ("", "0", "1", "experimental")
+        for optim in allowed_optims:
+            opts = {
+                f'O{optim}': True,
+                'allow-undefined': True,
+                'use-opencl': True,
+                'name': 'foo',
+            }
+            model = CmdStanModel(
+                stan_file=BERN_STAN, compile=False, stanc_options=opts
+            )
+            stanc_opts = model.stanc_options
+            self.assertTrue(stanc_opts[f'O{optim}'])
+            self.assertTrue(stanc_opts['allow-undefined'])
+            self.assertTrue(stanc_opts['use-opencl'])
+            self.assertTrue(stanc_opts['name'] == 'foo')
+
+            cpp_opts = model.cpp_options
+            self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
 
         with self.assertRaises(ValueError):
             bad_opts = {'X': True}
