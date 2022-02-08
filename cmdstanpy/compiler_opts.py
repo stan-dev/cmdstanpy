@@ -11,6 +11,9 @@ from cmdstanpy.utils import get_logger
 
 STANC_OPTS = [
     'O',
+    'O0',
+    'O1',
+    'Oexperimental',
     'allow-undefined',
     'use-opencl',
     'warn-uninitialized',
@@ -127,6 +130,8 @@ class CompilerOptions:
             return
         ignore = []
         paths = None
+        has_o_flag = False
+
         for deprecated, replacement in STANC_DEPRECATED_OPTS.items():
             if deprecated in self._stanc_options:
                 if replacement:
@@ -165,6 +170,15 @@ class CompilerOptions:
                     self._cpp_options = {'STAN_OPENCL': 'TRUE'}
                 else:
                     self._cpp_options['STAN_OPENCL'] = 'TRUE'
+            elif key.startswith('O'):
+                if has_o_flag:
+                    get_logger().warning(
+                        'More than one of (O, O1, O2, Oexperimental)'
+                        'optimizations passed. Only the last one will'
+                        'be used'
+                    )
+                else:
+                    has_o_flag = True
 
         for opt in ignore:
             del self._stanc_options[opt]
