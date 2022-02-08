@@ -794,10 +794,17 @@ def munge_varnames(names: List[str]) -> List[str]:
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    return [
-        re.sub(r',([\d,]+)$', r'[\1]', column.replace('.', ','))
-        for column in names
-    ]
+    result = []
+    for name in names:
+        if '.' not in name:
+            result.append(name)
+        else:
+            head, *rest = name.split('.')
+            result.append(''.join([
+                head,'[', ','.join(rest), ']'
+                ]))
+    print(result)
+    return result
 
 
 def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
@@ -843,7 +850,11 @@ def parse_stan_vars(
         else:
             if idx < len(names) - 1 and names[idx + 1].split('[')[0] == var:
                 continue
-            dims = [int(x) for x in dims[0][:-1].split(',')]
+            coords = dims[0][:-1].split(',')
+            if coords[-1] == 'imag':
+                dims = [int(x) for x in coords[:-1]]
+            else:
+                dims = [int(x) for x in coords]
             dims_map[var] = tuple(dims)
             cols_map[var] = tuple(idxs)
             idxs = []
