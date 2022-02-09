@@ -14,6 +14,7 @@ import sys
 import tempfile
 from collections import OrderedDict
 from collections.abc import Collection
+from enum import Enum, auto
 from typing import (
     Any,
     Callable,
@@ -44,6 +45,17 @@ from cmdstanpy import (
 from . import progress as progbar
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
+
+class BaseType(Enum):
+    """Stan langauge base type"""
+
+    COMPLEX = auto()
+    PRIM = auto()  # future: int / real
+
+
+    def __repr__(self) -> str:
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
+            
 
 
 @functools.lru_cache(maxsize=None)
@@ -822,23 +834,32 @@ def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
 
 
 def parse_stan_vars(
-    names: Tuple[str, ...]
-) -> Tuple[Dict[str, Tuple[int, ...]], Dict[str, Tuple[int, ...]]]:
+        names: Tuple[str, ...]
+) -> Tuple[
+    Dict[str, Tuple[int, ...]],
+    Dict[str, Tuple[int, ...]],
+    Dict[str, BaseType]
+    ]:
     """
     Parses out Stan variable names (i.e., names not ending in `__`)
     from list of CSV file column names.
-    Returns a pair of dicts which map variable names to dimensions and
-    variable names to columns, respectively, using zero-based column indexing.
+    Returns a dicts which map variable names to base type, dimensions and
+    CSV file columns, respectively, using zero-based column indexing.
     Note: assumes: (a) munged varnames and (b) container vars are non-ragged
-    and dense; no checks size, indices.
+    and dense; no checks on size, indices.
     """
     if names is None:
         raise ValueError('missing argument "names"')
     dims_map: Dict[str, Tuple[int, ...]] = {}
     cols_map: Dict[str, Tuple[int, ...]] = {}
+    types_map: Dict[str, BaseType] = {}
     idxs = []
     dims: Union[List[str], List[int]]
     for (idx, name) in enumerate(names):
+        if name.endswith(',real]') or name.endswith(',imag]'):
+            basetype = BaseType.COMPLEX
+        else:
+            basetype = BaseType.PRIM
         idxs.append(idx)
         var, *dims = name.split('[')
         if var.endswith('__'):
@@ -846,6 +867,7 @@ def parse_stan_vars(
         elif len(dims) == 0:
             dims_map[var] = ()
             cols_map[var] = tuple(idxs)
+            types_map[var] = basetype
             idxs = []
         else:
             if idx < len(names) - 1 and names[idx + 1].split('[')[0] == var:
@@ -853,12 +875,14 @@ def parse_stan_vars(
             coords = dims[0][:-1].split(',')
             if coords[-1] == 'imag':
                 dims = [int(x) for x in coords[:-1]]
+                dims.append(2)
             else:
                 dims = [int(x) for x in coords]
             dims_map[var] = tuple(dims)
             cols_map[var] = tuple(idxs)
+            types_map[var] = basetype
             idxs = []
-    return (dims_map, cols_map)
+    return (dims_map, cols_map, types_map)
 
 
 def scan_hmc_params(
