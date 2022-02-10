@@ -46,16 +46,15 @@ from . import progress as progbar
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
+
 class BaseType(Enum):
     """Stan langauge base type"""
 
     COMPLEX = auto()
     PRIM = auto()  # future: int / real
 
-
     def __repr__(self) -> str:
         return '<%s.%s>' % (self.__class__.__name__, self.name)
-            
 
 
 @functools.lru_cache(maxsize=None)
@@ -812,10 +811,7 @@ def munge_varnames(names: List[str]) -> List[str]:
             result.append(name)
         else:
             head, *rest = name.split('.')
-            result.append(''.join([
-                head,'[', ','.join(rest), ']'
-                ]))
-    print(result)
+            result.append(''.join([head, '[', ','.join(rest), ']']))
     return result
 
 
@@ -834,12 +830,10 @@ def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
 
 
 def parse_stan_vars(
-        names: Tuple[str, ...]
+    names: Tuple[str, ...]
 ) -> Tuple[
-    Dict[str, Tuple[int, ...]],
-    Dict[str, Tuple[int, ...]],
-    Dict[str, BaseType]
-    ]:
+    Dict[str, Tuple[int, ...]], Dict[str, Tuple[int, ...]], Dict[str, BaseType]
+]:
     """
     Parses out Stan variable names (i.e., names not ending in `__`)
     from list of CSV file column names.
@@ -856,7 +850,7 @@ def parse_stan_vars(
     idxs = []
     dims: Union[List[str], List[int]]
     for (idx, name) in enumerate(names):
-        if name.endswith(',real]') or name.endswith(',imag]'):
+        if name.endswith('real]') or name.endswith('imag]'):
             basetype = BaseType.COMPLEX
         else:
             basetype = BaseType.PRIM

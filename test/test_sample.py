@@ -1762,6 +1762,22 @@ class CmdStanMCMCTest(CustomTestCase):
                 self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
                 self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
 
+    def test_complex_output(self):
+        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.sample(chains=1, iter_sampling=10)
+
+        self.assertEqual(fit.stan_variable('zs').shape, (10, 2, 3))
+        self.assertEqual(fit.stan_variable('z')[0], 3 + 4j)
+        # make sure the name 'imag' isn't magic
+        self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
+
+        self.assertNotIn("zs_dim_2", fit.draws_xr())
+        # getting a raw scalar out of xarray is heavy
+        self.assertEqual(
+            fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
