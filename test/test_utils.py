@@ -716,7 +716,7 @@ class ParseVarsTest(unittest.TestCase):
         cols_map = {}
         x = ['lp__', 'z[real]', 'z[imag]']
         dims_map, cols_map, types_map = parse_stan_vars(x)
-        self.assertEqual(len(dims_map), 2)
+        self.assertEqual(len(dims_map), 1)
         self.assertEqual(dims_map['z'], (2,))
         self.assertEqual(types_map['z'], BaseType.COMPLEX)
 
