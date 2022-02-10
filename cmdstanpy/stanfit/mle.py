@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy.cmdstan_args import Method, OptimizeArgs
-from cmdstanpy.utils import get_logger, scan_optimize_csv
+from cmdstanpy.utils import BaseType, get_logger, scan_optimize_csv
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -199,7 +199,6 @@ class CmdStanMLE:
         else:
             num_rows = 1
 
-        result: Union[np.ndarray, float]
         if len(col_idxs) > 1:  # container var
             dims = (num_rows,) + self._metadata.stan_vars_dims[var]
             # pylint: disable=redundant-keyword-arg
@@ -207,14 +206,17 @@ class CmdStanMLE:
                 result = self._all_iters[:, col_idxs].reshape(dims, order='F')
             else:
                 result = self._mle[col_idxs].reshape(dims[1:], order="F")
+
+            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
+                result = result[..., 0] + 1j * result[..., 1]
+            return result
+
         else:  # scalar var
             col_idx = col_idxs[0]
             if num_rows > 1:
-                result = self._all_iters[:, col_idx]
+                return self._all_iters[:, col_idx]
             else:
-                result = float(self._mle[col_idx])
-
-        return result
+                return float(self._mle[col_idx])
 
     def stan_variables(
         self, inc_iterations: bool = False

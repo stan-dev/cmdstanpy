@@ -250,6 +250,20 @@ class VariationalTest(unittest.TestCase):
         )
         self.assertEqual(variational.variational_sample.shape, (1000, 4))
 
+    def test_complex_output(self):
+        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.variational(
+            require_converged=False,
+            seed=12345,
+            algorithm='meanfield',
+        )
+
+        self.assertEqual(fit.stan_variable('zs').shape, (2, 3))
+        self.assertEqual(fit.stan_variable('z'), 3 + 4j)
+        # make sure the name 'imag' isn't magic
+        self.assertEqual(fit.stan_variable('imag').shape, (2,))
+
 
 if __name__ == '__main__':
     unittest.main()
