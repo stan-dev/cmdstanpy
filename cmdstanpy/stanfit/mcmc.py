@@ -672,10 +672,9 @@ class CmdStanMCMC:
         num_draws = self.num_draws_sampling
         if inc_warmup and self._save_warmup:
             num_draws += self.num_draws_warmup
-        num_draws_tot = num_draws * self.chains
-        dims = [num_draws_tot]
+        dims = [num_draws * self.chains]
         col_idxs = self._metadata.stan_vars_cols[var]
-        if len(self._metadata.stan_vars_dims[var]) > 0:
+        if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[var])
         draws = self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
         if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
