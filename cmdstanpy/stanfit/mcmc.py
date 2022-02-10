@@ -676,25 +676,10 @@ class CmdStanMCMC:
         col_idxs = self._metadata.stan_vars_cols[var]
         if len(self._metadata.stan_vars_dims[var]) > 0:
             dims.extend(self._metadata.stan_vars_dims[var])
-        if self._metadata.stan_vars_types[var] != BaseType.COMPLEX:
-            # pylint: disable=redundant-keyword-arg
-            return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
-        else:
-            dims.pop()
-            draws_complex = np.empty(
-                (math.prod(dims)), dtype=complex, order='F'
-            )
-            # pylint: disable=redundant-keyword-arg
-            slice = self._draws[draw1:, :, col_idxs].reshape(
-                (num_draws_tot, len(col_idxs)), order='F'
-            )
-            idx = 0
-            for i in range(num_draws_tot):
-                it = iter(slice[i, :])
-                for x in it:
-                    draws_complex[idx] = x + 1j * next(it)
-                    idx += 1
-            return draws_complex.reshape(dims, order='F')
+        draws = self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+        if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
+            draws = draws[..., 0] + 1j * draws[..., 1]
+        return draws
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
