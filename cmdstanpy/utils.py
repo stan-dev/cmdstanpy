@@ -837,7 +837,7 @@ def parse_stan_vars(
     """
     Parses out Stan variable names (i.e., names not ending in `__`)
     from list of CSV file column names.
-    Returns a dicts which map variable names to base type, dimensions and
+    Returns three dicts which map variable names to base type, dimensions and
     CSV file columns, respectively, using zero-based column indexing.
     Note: assumes: (a) munged varnames and (b) container vars are non-ragged
     and dense; no checks on size, indices.
