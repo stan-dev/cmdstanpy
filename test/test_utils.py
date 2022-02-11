@@ -348,6 +348,13 @@ class DataFilesTest(unittest.TestCase):
         with open(file_fin) as fd:
             cmp(json.load(fd), dict_inf_nan_exp)
 
+        dict_complex = {'a': np.array([np.complex64(3), 3 + 4j])}
+        dict_complex_exp = {'a': [[3, 0], [3, 4]]}
+        file_complex = os.path.join(_TMPDIR, 'complex.json')
+        write_stan_json(file_complex, dict_complex)
+        with open(file_complex) as fd:
+            cmp(json.load(fd), dict_complex_exp)
+
     def test_write_stan_json_bad(self):
         file_bad = os.path.join(_TMPDIR, 'bad.json')
 
