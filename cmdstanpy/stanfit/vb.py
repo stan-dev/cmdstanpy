@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils import scan_variational_csv
+from cmdstanpy.utils import BaseType, scan_variational_csv
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -126,15 +126,17 @@ class CmdStanVB:
             raise ValueError('Unknown variable name: {}'.format(var))
         col_idxs = list(self._metadata.stan_vars_cols[var])
         shape: Tuple[int, ...] = ()
-        result: Union[np.ndarray, float]
         if len(col_idxs) > 1:
             shape = self._metadata.stan_vars_dims[var]
-            result = np.asarray(self._variational_mean)[col_idxs].reshape(
-                shape, order="F"
-            )
+            result: np.ndarray = np.asarray(self._variational_mean)[
+                col_idxs
+            ].reshape(shape, order="F")
+
+            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
+                result = result[..., 0] + 1j * result[..., 1]
+            return result
         else:
-            result = float(self._variational_mean[col_idxs[0]])
-        return result
+            return float(self._variational_mean[col_idxs[0]])
 
     def stan_variables(self) -> Dict[str, Union[np.ndarray, float]]:
         """

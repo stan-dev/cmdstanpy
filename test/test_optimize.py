@@ -599,6 +599,16 @@ class OptimizeTest(unittest.TestCase):
             mle.optimized_params_np[1], mle.optimized_params_dict['theta']
         )
 
+    def test_complex_output(self):
+        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.optimize()
+
+        self.assertEqual(fit.stan_variable('zs').shape, (2, 3))
+        self.assertEqual(fit.stan_variable('z'), 3 + 4j)
+        # make sure the name 'imag' isn't magic
+        self.assertEqual(fit.stan_variable('imag').shape, (2,))
+
 
 if __name__ == '__main__':
     unittest.main()

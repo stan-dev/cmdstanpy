@@ -3,7 +3,7 @@
 import copy
 from typing import Any, Dict, Tuple
 
-from cmdstanpy.utils import parse_method_vars, parse_stan_vars
+from cmdstanpy.utils import parse_method_vars, parse_stan_vars, BaseType
 
 
 class InferenceMetadata:
@@ -17,11 +17,12 @@ class InferenceMetadata:
         """Initialize object from CSV headers"""
         self._cmdstan_config = config
         self._method_vars_cols = parse_method_vars(names=config['column_names'])
-        stan_vars_dims, stan_vars_cols = parse_stan_vars(
+        stan_vars_dims, stan_vars_cols, stan_vars_types = parse_stan_vars(
             names=config['column_names']
         )
         self._stan_vars_dims = stan_vars_dims
         self._stan_vars_cols = stan_vars_cols
+        self._stan_vars_types = stan_vars_types
 
     def __repr__(self) -> str:
         return 'Metadata:\n{}\n'.format(self._cmdstan_config)
@@ -66,3 +67,11 @@ class InferenceMetadata:
         Uses deepcopy for immutability.
         """
         return copy.deepcopy(self._stan_vars_dims)
+
+    @property
+    def stan_vars_types(self) -> Dict[str, BaseType]:
+        """
+        Returns map from Stan program variable names to variable base type.
+        Uses deepcopy for immutability.
+        """
+        return copy.deepcopy(self._stan_vars_types)
