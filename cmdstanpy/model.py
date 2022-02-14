@@ -298,7 +298,11 @@ class CmdStanModel:
             return result
 
     def format_model(
-        self, save: bool = False, canonicalize: Union[bool, List[str]] = False
+        self,
+        save: bool = False,
+        canonicalize: Union[bool, str, List[str]] = False,
+        *,
+        unsafe: bool = False,
     ) -> None:
         """
         Run stanc's auto-formatter on the model code. Either saves directly
@@ -311,37 +315,43 @@ class CmdStanModel:
             the Stan model, removing things like deprecated syntax. Default is
             False. If True, all canonicalizations are run. If it is a list of
             strings, those options are passed to stanc (new in Stan 2.29)
+        :param unsafe: If True, do not create stanfile.bak backups before
+            writing to the file. Only do this if you're sure you have other
+            copies of the file or are using a version control system like Git.
         """
         if self.stan_file is None or not os.path.isfile(self.stan_file):
             raise ValueError("No Stan file found for this module")
         try:
-            # TODO need include paths if they exist.
-            cmd = [
-                os.path.join('.', 'bin', 'stanc' + EXTENSION),
-                '--auto-format',
-            ]
+            cmd = (
+                [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
+                # handle include-paths, allow-undefined etc
+                + self._compiler_options.compose_stanc()
+                + [self.stan_file]
+            )
+
             if canonicalize:
                 if isinstance(canonicalize, list):
                     cmd.append('--canonicalize=' + ','.join(canonicalize))
+                elif isinstance(canonicalize, str):
+                    cmd.append('--canonicalize=' + canonicalize)
                 else:
                     cmd.append('--print-canonical')
 
-            cmd.append(self.stan_file)
+            if not (cmdstan_version_before(2, 29) and canonicalize):
+                cmd.append('--auto-format')
 
             out = subprocess.run(
-                cmd,
-                cwd=cmdstan_path(),
-                capture_output=True,
-                text=True,
-                check=True,
+                cmd, capture_output=True, text=True, check=True
             )
             if out.stderr:
-                print(out.stderr)
+                get_logger().warning(out.stderr)
             result = out.stdout
             if save:
-                shutil.copyfile(self.stan_file, self.stan_file + '.bak')
-                with (open(self.stan_file, 'w')) as file:
-                    file.write(result)
+                if result:
+                    if not unsafe:
+                        shutil.copyfile(self.stan_file, self.stan_file + '.bak')
+                    with (open(self.stan_file, 'w')) as file:
+                        file.write(result)
             else:
                 print(result)
 

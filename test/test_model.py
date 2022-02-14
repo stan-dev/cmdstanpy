@@ -1,5 +1,7 @@
 """CmdStanModel tests"""
 
+import contextlib
+import io
 import logging
 import os
 import shutil
@@ -10,7 +12,7 @@ from test import CustomTestCase
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -34,6 +36,7 @@ BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
+# pylint: disable=too-many-public-methods
 class CmdStanModelTest(CustomTestCase):
     def test_model_good(self):
         # compile on instantiation, override model name
@@ -373,6 +376,34 @@ class CmdStanModelTest(CustomTestCase):
             os.remove(exe)
         model2 = CmdStanModel(stan_file=stan)
         self.assertPathsEqual(model2.exe_file, exe)
+
+    def test_model_format(self):
+        # deprecations expire in this version
+        if cmdstan_version_before(2, 32):
+            stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+
+            model = CmdStanModel(stan_file=stan, compile=False)
+
+            sys_stdout = io.StringIO()
+            with contextlib.redirect_stdout(sys_stdout):
+                model.format_model()
+
+            formatted = sys_stdout.getvalue()
+            self.assertIn("//", formatted)
+            self.assertNotIn("#", formatted)
+            self.assertEqual(formatted.count('('), 5)
+
+            sys_stdout = io.StringIO()
+            with contextlib.redirect_stdout(sys_stdout):
+                model.format_model(canonicalize=True)
+
+            formatted = sys_stdout.getvalue()
+            print(formatted)
+            self.assertNotIn("<-", formatted)
+            self.assertEqual(formatted.count('('), 0)
+
+        else:
+            assert False, "Test needs to be updated for Stan 2.32"
 
 
 if __name__ == '__main__':
