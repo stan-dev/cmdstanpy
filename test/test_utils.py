@@ -26,6 +26,7 @@ from cmdstanpy.model import CmdStanModel
 from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
     EXTENSION,
+    BaseType,
     MaybeDictToFilePath,
     SanitizedOrTmpFilePath,
     check_sampler_csv,
@@ -38,6 +39,7 @@ from cmdstanpy.utils import (
     parse_method_vars,
     parse_rdump_value,
     parse_stan_vars,
+    pushd,
     read_metric,
     rload,
     set_cmdstan_path,
@@ -45,7 +47,6 @@ from cmdstanpy.utils import (
     validate_dir,
     windows_short_path,
     write_stan_json,
-    pushd,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -346,6 +347,13 @@ class DataFilesTest(unittest.TestCase):
         write_stan_json(file_fin, dict_inf_nan)
         with open(file_fin) as fd:
             cmp(json.load(fd), dict_inf_nan_exp)
+
+        dict_complex = {'a': np.array([np.complex64(3), 3 + 4j])}
+        dict_complex_exp = {'a': [[3, 0], [3, 4]]}
+        file_complex = os.path.join(_TMPDIR, 'complex.json')
+        write_stan_json(file_complex, dict_complex)
+        with open(file_complex) as fd:
+            cmp(json.load(fd), dict_complex_exp)
 
     def test_write_stan_json_bad(self):
         file_bad = os.path.join(_TMPDIR, 'bad.json')
@@ -660,9 +668,10 @@ class ParseVarsTest(unittest.TestCase):
         x = []
         sampler_vars = parse_method_vars(x)
         self.assertEqual(len(sampler_vars), 0)
-        stan_vars_dims, stan_vars_cols = parse_stan_vars(x)
+        stan_vars_dims, stan_vars_cols, stan_var_types = parse_stan_vars(x)
         self.assertEqual(len(stan_vars_dims), 0)
         self.assertEqual(len(stan_vars_cols), 0)
+        self.assertEqual(len(stan_var_types), 0)
 
     def test_parse_missing(self):
         with self.assertRaises(ValueError):
@@ -693,7 +702,7 @@ class ParseVarsTest(unittest.TestCase):
 
     def test_parse_scalars(self):
         x = ['lp__', 'foo']
-        dims_map, cols_map = parse_stan_vars(x)
+        dims_map, cols_map, _ = parse_stan_vars(x)
         self.assertEqual(len(dims_map), 1)
         self.assertEqual(dims_map['foo'], ())
         self.assertEqual(len(cols_map), 1)
@@ -702,13 +711,21 @@ class ParseVarsTest(unittest.TestCase):
         dims_map = {}
         cols_map = {}
         x = ['lp__', 'foo1', 'foo2']
-        dims_map, cols_map = parse_stan_vars(x)
+        dims_map, cols_map, _ = parse_stan_vars(x)
         self.assertEqual(len(dims_map), 2)
         self.assertEqual(dims_map['foo1'], ())
         self.assertEqual(dims_map['foo2'], ())
         self.assertEqual(len(cols_map), 2)
         self.assertEqual(cols_map['foo1'], (1,))
         self.assertEqual(cols_map['foo2'], (2,))
+
+        dims_map = {}
+        cols_map = {}
+        x = ['lp__', 'z[real]', 'z[imag]']
+        dims_map, cols_map, types_map = parse_stan_vars(x)
+        self.assertEqual(len(dims_map), 1)
+        self.assertEqual(dims_map['z'], (2,))
+        self.assertEqual(types_map['z'], BaseType.COMPLEX)
 
     def test_parse_containers(self):
         # demonstrates flaw in shortcut to get container dims
@@ -722,7 +739,7 @@ class ParseVarsTest(unittest.TestCase):
             'phi[10]',
             'bar',
         ]
-        dims_map, cols_map = parse_stan_vars(x)
+        dims_map, cols_map, _ = parse_stan_vars(x)
         self.assertEqual(len(dims_map), 3)
         self.assertEqual(dims_map['foo'], ())
         self.assertEqual(dims_map['phi'], (10,))  # sic
@@ -752,7 +769,7 @@ class ParseVarsTest(unittest.TestCase):
         ]
         dims_map = {}
         cols_map = {}
-        dims_map, cols_map = parse_stan_vars(x)
+        dims_map, cols_map, _ = parse_stan_vars(x)
         self.assertEqual(len(dims_map), 3)
         self.assertEqual(
             dims_map['phi'],
@@ -780,7 +797,7 @@ class ParseVarsTest(unittest.TestCase):
         ]
         dims_map = {}
         cols_map = {}
-        dims_map, cols_map = parse_stan_vars(x)
+        dims_map, cols_map, _ = parse_stan_vars(x)
         self.assertEqual(len(dims_map), 2)
         self.assertEqual(
             dims_map['phi'],
@@ -809,7 +826,6 @@ class DoCommandTest(unittest.TestCase):
 
 
 class PushdTest(unittest.TestCase):
-
     def test_restore_cwd(self):
         "Ensure do_command in a different cwd restores cwd after error."
         cwd = os.getcwd()

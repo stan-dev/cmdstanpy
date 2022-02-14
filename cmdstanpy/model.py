@@ -128,6 +128,8 @@ class CmdStanModel:
                 )
             self._name = model_name.strip()
 
+        self._compiler_options.validate()
+
         if stan_file is None:
             if exe_file is None:
                 raise ValueError(
@@ -146,30 +148,25 @@ class CmdStanModel:
             if not self._name:
                 self._name, _ = os.path.splitext(filename)
 
-            # TODO: When minimum version is 2.27, use --info instead
             # if program has include directives, record path
             with open(self._stan_file, 'r') as fd:
                 program = fd.read()
             if '#include' in program:
                 path, _ = os.path.split(self._stan_file)
-                if self._compiler_options is None:
-                    self._compiler_options = CompilerOptions(
-                        stanc_options={'include_paths': [path]}
-                    )
-                elif self._compiler_options._stanc_options is None:
+                if self._compiler_options._stanc_options is None:
                     self._compiler_options._stanc_options = {
-                        'include_paths': [path]
+                        'include-paths': [path]
                     }
                 else:
                     self._compiler_options.add_include_path(path)
 
             # try to detect models w/out parameters, needed for sampler
-            if not cmdstan_version_before(2, 27) and cmdstan_version_before(
-                2, 29
-            ):
+            if not cmdstan_version_before(
+                2, 27
+            ):  # unknown end of version range
                 model_info = self.src_info()
                 if 'parameters' in model_info:
-                    self._fixed_param = len(model_info['parameters']) == 0
+                    self._fixed_param |= len(model_info['parameters']) == 0
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -185,8 +182,6 @@ class CmdStanModel:
                         ' executable, expecting basename: {}'
                         ' found: {}.'.format(self._name, exename)
                     )
-
-        self._compiler_options.validate()
 
         if platform.system() == 'Windows':
             try:
@@ -279,17 +274,26 @@ class CmdStanModel:
         if self.stan_file is None:
             return result
         try:
-
-            cmd = [
-                os.path.join('.', 'bin', 'stanc' + EXTENSION),
-                '--info',
-                self.stan_file,
-            ]
-            sout = io.StringIO()
-            do_command(cmd=cmd, cwd=cmdstan_path(), fd_out=sout)
-            result = json.loads(sout.getvalue())
+            cmd = (
+                [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
+                # handle include-paths, allow-undefined etc
+                + self._compiler_options.compose_stanc()
+                + [
+                    '--info',
+                    self.stan_file,
+                ]
+            )
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, check=True
+            )
+            result = json.loads(proc.stdout)
             return result
-        except (ValueError, RuntimeError) as e:
+        except (
+            ValueError,
+            RuntimeError,
+            OSError,
+            subprocess.CalledProcessError,
+        ) as e:
             get_logger().debug(e)
             return result
 

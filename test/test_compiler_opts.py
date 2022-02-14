@@ -2,6 +2,9 @@
 
 import os
 import unittest
+import logging
+
+from testfixtures import LogCapture
 
 from cmdstanpy.compiler_opts import CompilerOptions
 
@@ -17,7 +20,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts_b = None
         self.assertTrue(opts_a == opts_b)
 
-        opts_c = CompilerOptions(stanc_options={'--O'})
+        opts_c = CompilerOptions(stanc_options={'O'})
         self.assertTrue(opts_a != opts_c != opts_b)
 
         stanc_opts = {}
@@ -70,6 +73,66 @@ class CompilerOptsTest(unittest.TestCase):
             ['STANCFLAGS+=--warn-uninitialized', 'STANCFLAGS+=--name=foo'],
         )
 
+        stanc_opts['O1'] = True
+        opts = CompilerOptions(stanc_options=stanc_opts)
+        opts.validate()
+        self.assertEqual(
+            opts.compose(),
+            [
+                'STANCFLAGS+=--warn-uninitialized',
+                'STANCFLAGS+=--name=foo',
+                'STANCFLAGS+=--O1',
+            ],
+        )
+
+        # should add to logger
+        stanc_opts['Oexperimental'] = True
+        opts = CompilerOptions(stanc_options=stanc_opts)
+        with LogCapture() as log:
+            logging.getLogger()
+
+            opts.validate()
+
+        expect = (
+            'More than one of (O, O1, O2, Oexperimental)'
+            'optimizations passed. Only the last one will'
+            'be used'
+        )
+
+        log.check_present(('cmdstanpy', 'WARNING', expect))
+
+        self.assertEqual(
+            opts.compose(),
+            [
+                'STANCFLAGS+=--warn-uninitialized',
+                'STANCFLAGS+=--name=foo',
+                'STANCFLAGS+=--O1',
+                'STANCFLAGS+=--Oexperimental',
+            ],
+        )
+
+    def test_opts_stanc_deprecated(self):
+        stanc_opts = {}
+        stanc_opts['allow_undefined'] = True
+        opts = CompilerOptions(stanc_options=stanc_opts)
+        with LogCapture() as log:
+            opts.validate()
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'compiler option "allow_undefined" is deprecated,'
+                ' use "allow-undefined" instead',
+            )
+        )
+        self.assertEqual(opts.compose(), ['STANCFLAGS+=--allow-undefined'])
+
+        stanc_opts['include_paths'] = DATAFILES_PATH
+        opts = CompilerOptions(stanc_options=stanc_opts)
+        opts.validate()
+        self.assertIn('include-paths', opts.stanc_options)
+        self.assertNotIn('include_paths', opts.stanc_options)
+
     def test_opts_stanc_opencl(self):
         stanc_opts = {}
         stanc_opts['use-opencl'] = 'foo'
@@ -89,22 +152,22 @@ class CompilerOptsTest(unittest.TestCase):
     def test_opts_stanc_includes(self):
         path2 = os.path.join(HERE, 'data', 'optimize')
         paths_str = ','.join([DATAFILES_PATH, path2]).replace('\\', '/')
-        expect = 'STANCFLAGS+=--include_paths=' + paths_str
+        expect = 'STANCFLAGS+=--include-paths=' + paths_str
 
-        stanc_opts = {'include_paths': paths_str}
+        stanc_opts = {'include-paths': paths_str}
         opts = CompilerOptions(stanc_options=stanc_opts)
         opts.validate()
         opts_list = opts.compose()
         self.assertTrue(expect in opts_list)
 
-        stanc_opts = {'include_paths': [DATAFILES_PATH, path2]}
+        stanc_opts = {'include-paths': [DATAFILES_PATH, path2]}
         opts = CompilerOptions(stanc_options=stanc_opts)
         opts.validate()
         opts_list = opts.compose()
         self.assertTrue(expect in opts_list)
 
     def test_opts_add_include_paths(self):
-        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace(
+        expect = 'STANCFLAGS+=--include-paths=' + DATAFILES_PATH.replace(
             '\\', '/'
         )
         stanc_opts = {'warn-uninitialized': True}
@@ -120,7 +183,7 @@ class CompilerOptsTest(unittest.TestCase):
 
         path2 = os.path.join(HERE, 'data', 'optimize')
         paths_str = ','.join([DATAFILES_PATH, path2]).replace('\\', '/')
-        expect = 'STANCFLAGS+=--include_paths=' + paths_str
+        expect = 'STANCFLAGS+=--include-paths=' + paths_str
         opts.add_include_path(path2)
         opts.validate()
         opts_list = opts.compose()
@@ -169,7 +232,7 @@ class CompilerOptsTest(unittest.TestCase):
         header_file = os.path.join(DATAFILES_PATH, 'return_one.hpp')
         opts = CompilerOptions(user_header=header_file)
         opts.validate()
-        self.assertTrue(opts.stanc_options['allow_undefined'])
+        self.assertTrue(opts.stanc_options['allow-undefined'])
 
         bad = os.path.join(DATAFILES_PATH, 'nonexistant.hpp')
         opts = CompilerOptions(user_header=bad)
@@ -209,20 +272,20 @@ class CompilerOptsTest(unittest.TestCase):
         self.assertTrue('STAN_OPENCL=FALSE' in opts_list)
         self.assertTrue('OPENCL_DEVICE_ID=2' in opts_list)
 
-        expect = 'STANCFLAGS+=--include_paths=' + DATAFILES_PATH.replace(
+        expect = 'STANCFLAGS+=--include-paths=' + DATAFILES_PATH.replace(
             '\\', '/'
         )
-        stanc_opts2 = {'include_paths': DATAFILES_PATH}
+        stanc_opts2 = {'include-paths': DATAFILES_PATH}
         new_opts2 = CompilerOptions(stanc_options=stanc_opts2)
         opts.add(new_opts2)
         opts_list = opts.compose()
         self.assertTrue(expect in opts_list)
 
         path2 = os.path.join(HERE, 'data', 'optimize')
-        expect = 'STANCFLAGS+=--include_paths=' + ','.join(
+        expect = 'STANCFLAGS+=--include-paths=' + ','.join(
             [DATAFILES_PATH, path2]
         ).replace('\\', '/')
-        stanc_opts3 = {'include_paths': path2}
+        stanc_opts3 = {'include-paths': path2}
         new_opts3 = CompilerOptions(stanc_options=stanc_opts3)
         opts.add(new_opts3)
         opts_list = opts.compose()

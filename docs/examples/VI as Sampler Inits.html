@@ -6,29 +6,29 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.0 documentation</title>
+    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.1 documentation</title>
     
-  <link href="../_static/css/theme.css" rel="stylesheet">
-  <link href="../_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
-
+    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
     
-  <link rel="stylesheet"
-    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
     
       
-
+  
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-  <link rel="preload" as="script" href="../_static/js/index.be7d3bbb2ef33a8344ce.js">
-
+    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.0</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
     
   </div>
 
@@ -122,22 +122,16 @@
       <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
         <li class="nav-item">
-          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter">
-            <span><i class="fab fa-twitter"></i></span>
-            <label class="sr-only">Twitter</label>
-          </a>
+          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter"></i></span>
+            <label class="sr-only">Twitter</label></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub">
-            <span><i class="fab fa-github"></i></span>
-            <label class="sr-only">GitHub</label>
-          </a>
+          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums">
-            <span><i class="fas fa-users"></i></span>
-            <label class="sr-only">Forums</label>
-          </a>
+          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums"><span><i class="fas fa-users"></i></span>
+            <label class="sr-only">Forums</label></a>
         </li>
       </ul>
       </div>
@@ -423,7 +417,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
@@ -473,8 +467,7 @@ conveince, we have copied the posteriordb model and data to this directory, in f
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
 
 <span class="n">stan_file</span> <span class="o">=</span> <span class="s1">&#39;blr.stan&#39;</span> <span class="c1"># basic linear regression</span>
@@ -528,8 +521,7 @@ model {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vb_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">require_converged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">vb_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">variational</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">require_converged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -550,8 +542,7 @@ Proceeding because require_converged is set to False
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">())</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -571,8 +562,7 @@ Therefore, using the estimates from ADVI to initialize the parameter values for 
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">vb_vars</span> <span class="o">=</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">vb_vars</span> <span class="o">=</span> <span class="n">vb_fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">()</span>
 <span class="n">mcmc_vb_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span>
     <span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">inits</span><span class="o">=</span><span class="n">vb_vars</span><span class="p">,</span> <span class="n">iter_warmup</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">12345</span>
 <span class="p">)</span>
@@ -588,11 +578,11 @@ INFO:cmdstanpy:CmdStan start processing
 ERROR:cmdstanpy:Error in progress bar initialization:
         IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
 Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7fdcf4893550&gt;
+Exception ignored in: &lt;function tqdm.__del__ at 0x7f87683f7ee0&gt;
 Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.9/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
+  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
     self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.9/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
+  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
     self.disp(bar_style=&#39;danger&#39;, check_delay=False)
 AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
 </pre></div></div>
@@ -625,8 +615,7 @@ INFO:cmdstanpy:CmdStan done processing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">mcmc_vb_inits_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mcmc_vb_inits_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -686,7 +675,7 @@ INFO:cmdstanpy:CmdStan done processing.
       <td>-160.00</td>
       <td>-150.00</td>
       <td>1000.00</td>
-      <td>1900.00</td>
+      <td>1800.00</td>
       <td>1.00</td>
     </tr>
     <tr>
@@ -698,7 +687,7 @@ INFO:cmdstanpy:CmdStan done processing.
       <td>1.00</td>
       <td>1.00</td>
       <td>5094.00</td>
-      <td>9364.00</td>
+      <td>8984.00</td>
       <td>1.00</td>
     </tr>
     <tr>
@@ -710,7 +699,7 @@ INFO:cmdstanpy:CmdStan done processing.
       <td>1.00</td>
       <td>1.00</td>
       <td>4139.00</td>
-      <td>7608.00</td>
+      <td>7300.00</td>
       <td>1.00</td>
     </tr>
     <tr>
@@ -722,7 +711,7 @@ INFO:cmdstanpy:CmdStan done processing.
       <td>1.00</td>
       <td>1.00</td>
       <td>5196.00</td>
-      <td>9552.00</td>
+      <td>9164.00</td>
       <td>1.00</td>
     </tr>
     <tr>
@@ -734,7 +723,7 @@ INFO:cmdstanpy:CmdStan done processing.
       <td>1.00</td>
       <td>1.00</td>
       <td>4664.00</td>
-      <td>8573.00</td>
+      <td>8226.00</td>
       <td>1.00</td>
     </tr>
     <tr>
@@ -746,7 +735,7 @@ INFO:cmdstanpy:CmdStan done processing.
       <td>1.00</td>
       <td>1.00</td>
       <td>5161.00</td>
-      <td>9488.00</td>
+      <td>9103.00</td>
       <td>1.00</td>
     </tr>
     <tr>
@@ -758,7 +747,7 @@ INFO:cmdstanpy:CmdStan done processing.
       <td>0.95</td>
       <td>1.08</td>
       <td>267.04</td>
-      <td>490.88</td>
+      <td>470.96</td>
       <td>1.02</td>
     </tr>
   </tbody>
@@ -770,8 +759,7 @@ INFO:cmdstanpy:CmdStan done processing.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="n">mcmc_vb_inits_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">mcmc_vb_inits_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -780,7 +768,7 @@ INFO:cmdstanpy:CmdStan done processing.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmpv1qegecd/blr-20211202172140_1.csv, /tmp/tmpv1qegecd/blr-20211202172140_2.csv, /tmp/tmpv1qegecd/blr-20211202172140_3.csv, /tmp/tmpv1qegecd/blr-20211202172140_4.csv
+Processing csv files: /tmp/tmp213h0o4a/blr-20220214160033_1.csv, /tmp/tmp213h0o4a/blr-20220214160033_2.csv, /tmp/tmp213h0o4a/blr-20220214160033_3.csv, /tmp/tmp213h0o4a/blr-20220214160033_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
@@ -804,8 +792,7 @@ Processing complete, no problems detected.
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">mcmc_random_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">iter_warmup</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mcmc_random_inits_fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">iter_warmup</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -829,8 +816,7 @@ INFO:cmdstanpy:Chain [2] done processing
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">mcmc_random_inits_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mcmc_random_inits_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -890,7 +876,7 @@ INFO:cmdstanpy:Chain [2] done processing
       <td>-170.0</td>
       <td>-160.0</td>
       <td>2.0</td>
-      <td>9.7</td>
+      <td>9.4</td>
       <td>13.0</td>
     </tr>
     <tr>
@@ -902,7 +888,7 @@ INFO:cmdstanpy:Chain [2] done processing
       <td>1.0</td>
       <td>1.0</td>
       <td>293.0</td>
-      <td>1410.0</td>
+      <td>1358.0</td>
       <td>1.0</td>
     </tr>
     <tr>
@@ -914,7 +900,7 @@ INFO:cmdstanpy:Chain [2] done processing
       <td>1.0</td>
       <td>1.0</td>
       <td>204.0</td>
-      <td>980.0</td>
+      <td>944.0</td>
       <td>1.0</td>
     </tr>
     <tr>
@@ -926,7 +912,7 @@ INFO:cmdstanpy:Chain [2] done processing
       <td>1.0</td>
       <td>1.0</td>
       <td>250.0</td>
-      <td>1202.0</td>
+      <td>1157.0</td>
       <td>1.0</td>
     </tr>
     <tr>
@@ -938,7 +924,7 @@ INFO:cmdstanpy:Chain [2] done processing
       <td>1.0</td>
       <td>1.0</td>
       <td>279.0</td>
-      <td>1343.0</td>
+      <td>1294.0</td>
       <td>1.0</td>
     </tr>
     <tr>
@@ -950,7 +936,7 @@ INFO:cmdstanpy:Chain [2] done processing
       <td>1.0</td>
       <td>1.0</td>
       <td>180.0</td>
-      <td>863.0</td>
+      <td>831.0</td>
       <td>1.1</td>
     </tr>
     <tr>
@@ -962,7 +948,7 @@ INFO:cmdstanpy:Chain [2] done processing
       <td>2.7</td>
       <td>3.2</td>
       <td>2.0</td>
-      <td>9.8</td>
+      <td>9.4</td>
       <td>11.3</td>
     </tr>
   </tbody>
@@ -973,8 +959,7 @@ INFO:cmdstanpy:Chain [2] done processing
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="nb">print</span><span class="p">(</span><span class="n">mcmc_random_inits_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">mcmc_random_inits_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -983,7 +968,7 @@ INFO:cmdstanpy:Chain [2] done processing
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmpv1qegecd/blr-20211202172141_1.csv, /tmp/tmpv1qegecd/blr-20211202172141_2.csv, /tmp/tmpv1qegecd/blr-20211202172141_3.csv, /tmp/tmpv1qegecd/blr-20211202172141_4.csv
+Processing csv files: /tmp/tmp213h0o4a/blr-20220214160034_1.csv, /tmp/tmp213h0o4a/blr-20220214160034_2.csv, /tmp/tmp213h0o4a/blr-20220214160034_3.csv, /tmp/tmp213h0o4a/blr-20220214160034_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
@@ -1019,7 +1004,7 @@ Processing complete.
               
               
               <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
+<div class='prev-next-area'>
     <a class='left-prev' id="prev-link" href="Variational%20Inference.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
@@ -1042,8 +1027,8 @@ Processing complete.
       </div>
     </div>
   
-  <script src="../_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -1054,7 +1039,7 @@ Processing complete.
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.3.1.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
 </p>
     </div>
     

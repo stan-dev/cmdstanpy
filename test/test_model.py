@@ -127,23 +127,26 @@ class CmdStanModelTest(CustomTestCase):
             CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
 
     def test_stanc_options(self):
-        opts = {
-            'O': True,
-            'allow_undefined': True,
-            'use-opencl': True,
-            'name': 'foo',
-        }
-        model = CmdStanModel(
-            stan_file=BERN_STAN, compile=False, stanc_options=opts
-        )
-        stanc_opts = model.stanc_options
-        self.assertTrue(stanc_opts['O'])
-        self.assertTrue(stanc_opts['allow_undefined'])
-        self.assertTrue(stanc_opts['use-opencl'])
-        self.assertTrue(stanc_opts['name'] == 'foo')
 
-        cpp_opts = model.cpp_options
-        self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
+        allowed_optims = ("", "0", "1", "experimental")
+        for optim in allowed_optims:
+            opts = {
+                f'O{optim}': True,
+                'allow-undefined': True,
+                'use-opencl': True,
+                'name': 'foo',
+            }
+            model = CmdStanModel(
+                stan_file=BERN_STAN, compile=False, stanc_options=opts
+            )
+            stanc_opts = model.stanc_options
+            self.assertTrue(stanc_opts[f'O{optim}'])
+            self.assertTrue(stanc_opts['allow-undefined'])
+            self.assertTrue(stanc_opts['use-opencl'])
+            self.assertTrue(stanc_opts['name'] == 'foo')
+
+            cpp_opts = model.cpp_options
+            self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
 
         with self.assertRaises(ValueError):
             bad_opts = {'X': True}
@@ -151,12 +154,12 @@ class CmdStanModelTest(CustomTestCase):
                 stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
         with self.assertRaises(ValueError):
-            bad_opts = {'include_paths': True}
+            bad_opts = {'include-paths': True}
             model = CmdStanModel(
                 stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
         with self.assertRaises(ValueError):
-            bad_opts = {'include_paths': 'lkjdf'}
+            bad_opts = {'include-paths': 'lkjdf'}
             model = CmdStanModel(
                 stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
             )
@@ -189,6 +192,15 @@ class CmdStanModelTest(CustomTestCase):
         model_info = model.src_info()
         self.assertNotEqual(model_info, {})
         self.assertIn('theta', model_info['parameters'])
+
+        model_include = CmdStanModel(
+            stan_file=os.path.join(DATAFILES_PATH, "bernoulli_include.stan"),
+            compile=False,
+        )
+        model_info_include = model_include.src_info()
+        self.assertNotEqual(model_info_include, {})
+        self.assertIn('theta', model_info_include['parameters'])
+        self.assertIn('included_files', model_info_include)
 
     def test_compile_force(self):
         if os.path.exists(BERN_EXE):
@@ -349,7 +361,7 @@ class CmdStanModelTest(CustomTestCase):
         if os.path.exists(BERN_EXE):
             os.remove(BERN_EXE)
         model = CmdStanModel(
-            stan_file=BERN_STAN, stanc_options={'include_paths': DATAFILES_PATH}
+            stan_file=BERN_STAN, stanc_options={'include-paths': DATAFILES_PATH}
         )
         self.assertEqual(BERN_STAN, model.stan_file)
         self.assertPathsEqual(model.exe_file, BERN_EXE)

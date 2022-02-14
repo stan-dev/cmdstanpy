@@ -3,6 +3,7 @@ Utility functions
 """
 import contextlib
 import functools
+import json
 import logging
 import math
 import os
@@ -14,6 +15,7 @@ import sys
 import tempfile
 from collections import OrderedDict
 from collections.abc import Collection
+from enum import Enum, auto
 from typing import (
     Any,
     Callable,
@@ -30,7 +32,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-import ujson as json
+import ujson
 from tqdm.auto import tqdm
 
 from cmdstanpy import (
@@ -46,12 +48,28 @@ from . import progress as progbar
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
+class BaseType(Enum):
+    """Stan langauge base type"""
+
+    COMPLEX = auto()
+    PRIM = auto()  # future: int / real
+
+    def __repr__(self) -> str:
+        return '<%s.%s>' % (self.__class__.__name__, self.name)
+
+
 @functools.lru_cache(maxsize=None)
 def get_logger() -> logging.Logger:
     """cmdstanpy logger"""
     logger = logging.getLogger('cmdstanpy')
     if len(logger.handlers) == 0:
-        logging.basicConfig(level=logging.INFO)
+        # send all messages to handlers
+        logger.setLevel(logging.DEBUG)
+        # add a default handler to the logger to INFO and higher
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        logger.addHandler(handler)
     return logger
 
 
@@ -433,6 +451,13 @@ def rewrite_inf_nan(
         return data
 
 
+def serialize_complex(c: Any) -> List[float]:
+    if isinstance(c, complex):
+        return [c.real, c.imag]
+    else:
+        raise TypeError(f"Unserializable type: {type(c)}")
+
+
 def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     """
     Dump a mapping of strings to data to a JSON file.
@@ -488,7 +513,11 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
             data_out[key] = rewrite_inf_nan(data_out[key])
 
     with open(path, 'w') as fd:
-        json.dump(data_out, fd)
+        try:
+            ujson.dump(data_out, fd)
+        except TypeError as e:
+            get_logger().debug(e)
+            json.dump(data_out, fd, default=serialize_complex)
 
 
 def rload(fname: str) -> Optional[Dict[str, Union[int, float, np.ndarray]]]:
@@ -788,10 +817,14 @@ def munge_varnames(names: List[str]) -> List[str]:
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    return [
-        re.sub(r',([\d,]+)$', r'[\1]', column.replace('.', ','))
-        for column in names
-    ]
+    result = []
+    for name in names:
+        if '.' not in name:
+            result.append(name)
+        else:
+            head, *rest = name.split('.')
+            result.append(''.join([head, '[', ','.join(rest), ']']))
+    return result
 
 
 def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
@@ -810,22 +843,29 @@ def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
 
 def parse_stan_vars(
     names: Tuple[str, ...]
-) -> Tuple[Dict[str, Tuple[int, ...]], Dict[str, Tuple[int, ...]]]:
+) -> Tuple[
+    Dict[str, Tuple[int, ...]], Dict[str, Tuple[int, ...]], Dict[str, BaseType]
+]:
     """
     Parses out Stan variable names (i.e., names not ending in `__`)
     from list of CSV file column names.
-    Returns a pair of dicts which map variable names to dimensions and
-    variable names to columns, respectively, using zero-based column indexing.
+    Returns three dicts which map variable names to base type, dimensions and
+    CSV file columns, respectively, using zero-based column indexing.
     Note: assumes: (a) munged varnames and (b) container vars are non-ragged
-    and dense; no checks size, indices.
+    and dense; no checks on size, indices.
     """
     if names is None:
         raise ValueError('missing argument "names"')
     dims_map: Dict[str, Tuple[int, ...]] = {}
     cols_map: Dict[str, Tuple[int, ...]] = {}
+    types_map: Dict[str, BaseType] = {}
     idxs = []
     dims: Union[List[str], List[int]]
     for (idx, name) in enumerate(names):
+        if name.endswith('real]') or name.endswith('imag]'):
+            basetype = BaseType.COMPLEX
+        else:
+            basetype = BaseType.PRIM
         idxs.append(idx)
         var, *dims = name.split('[')
         if var.endswith('__'):
@@ -833,15 +873,22 @@ def parse_stan_vars(
         elif len(dims) == 0:
             dims_map[var] = ()
             cols_map[var] = tuple(idxs)
+            types_map[var] = basetype
             idxs = []
         else:
             if idx < len(names) - 1 and names[idx + 1].split('[')[0] == var:
                 continue
-            dims = [int(x) for x in dims[0][:-1].split(',')]
+            coords = dims[0][:-1].split(',')
+            if coords[-1] == 'imag':
+                dims = [int(x) for x in coords[:-1]]
+                dims.append(2)
+            else:
+                dims = [int(x) for x in coords]
             dims_map[var] = tuple(dims)
             cols_map[var] = tuple(idxs)
+            types_map[var] = basetype
             idxs = []
-    return (dims_map, cols_map)
+    return (dims_map, cols_map, types_map)
 
 
 def scan_hmc_params(
@@ -942,7 +989,7 @@ def read_metric(path: str) -> List[int]:
     """
     if path.endswith('.json'):
         with open(path, 'r') as fd:
-            metric_dict = json.load(fd)
+            metric_dict = ujson.load(fd)
         if 'inv_metric' in metric_dict:
             dims_np: np.ndarray = np.asarray(metric_dict['inv_metric'])
             return list(dims_np.shape)

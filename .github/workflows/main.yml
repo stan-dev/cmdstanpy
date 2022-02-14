@@ -13,7 +13,7 @@ on:
       cmdstan-version:
         description: 'Version to test'
         required: false
-        default: 'latest'
+        default: ''
 
 jobs:
   get-cmdstan-version:
@@ -24,7 +24,7 @@ jobs:
       - name: Get CmdStan version
         id: check-cmdstan
         run: |
-            if [[ "${{ github.event.inputs.cmdstan-version }}" == "latest" ]]; then
+            if [[ "${{ github.event.inputs.cmdstan-version }}" != "" ]]; then
               echo "::set-output name=version::${{ github.event.inputs.cmdstan-version }}"
             else
                 echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
@@ -96,14 +96,14 @@ jobs:
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
-          python -m cmdstanpy.install_cmdstan
+          python -m cmdstanpy.install_cmdstan --version ${{ needs.get-cmdstan-version.outputs.version }}
 
       - name: Install CmdStan (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
-          python -m cmdstanpy.install_cmdstan --compiler
+          python -m cmdstanpy.install_cmdstan --compiler --version ${{ needs.get-cmdstan-version.outputs.version }}
 
       - name: Run tests
         run: |

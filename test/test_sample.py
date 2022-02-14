@@ -1157,17 +1157,18 @@ class CmdStanMCMCTest(CustomTestCase):
         ]
         fit = CmdStanMCMC(runset)
         # TODO - use cmdstan test files instead
-        expected = '\n'.join(
-            [
-                'Checking sampler transitions treedepth.',
-                '424 of 1000 (42%) transitions hit the maximum '
-                'treedepth limit of 8, or 2^8 leapfrog steps.',
-                'Trajectories that are prematurely terminated '
-                'due to this limit will result in slow exploration.',
-                'For optimal performance, increase this limit.',
-            ]
-        )
-        self.assertIn(expected, fit.diagnose().replace('\r\n', '\n'))
+        expected = [
+            'Checking sampler transitions treedepth.',
+            '424 of 1000',
+            'treedepth limit of 8, or 2^8 leapfrog steps.',
+            'Trajectories that are prematurely terminated '
+            'due to this limit will result in slow exploration.',
+            'For optimal performance, increase this limit.',
+        ]
+
+        diagnose = fit.diagnose()
+        for e in expected:
+            self.assertIn(e, diagnose)
 
     def test_validate_bad_run(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
@@ -1760,6 +1761,22 @@ class CmdStanMCMCTest(CustomTestCase):
             for j in range(3):
                 self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
                 self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
+
+    def test_complex_output(self):
+        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.sample(chains=1, iter_sampling=10)
+
+        self.assertEqual(fit.stan_variable('zs').shape, (10, 2, 3))
+        self.assertEqual(fit.stan_variable('z')[0], 3 + 4j)
+        # make sure the name 'imag' isn't magic
+        self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
+
+        self.assertNotIn("zs_dim_2", fit.draws_xr())
+        # getting a raw scalar out of xarray is heavy
+        self.assertEqual(
+            fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+        )
 
 
 if __name__ == '__main__':

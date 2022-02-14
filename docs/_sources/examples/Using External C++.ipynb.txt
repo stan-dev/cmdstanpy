@@ -60,7 +60,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "Even enabling the `--allow_undefined` flag to stanc3 will not allow this model to be compiled quite yet."
+    "Even enabling the `--allow-undefined` flag to stanc3 will not allow this model to be compiled quite yet."
    ]
   },
   {
@@ -69,7 +69,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "model_external.compile(stanc_options={'allow_undefined':True})"
+    "model_external.compile(stanc_options={'allow-undefined':True})"
    ]
   },
   {
@@ -80,7 +80,7 @@
     "\n",
     "We can provide a definition in a C++ header file by using the `user_header` argument to either the CmdStanModel constructor or the `compile` method. \n",
     "\n",
-    "This will enables the `allow_undefined` flag automatically."
+    "This will enables the `allow-undefined` flag automatically."
    ]
   },
   {
