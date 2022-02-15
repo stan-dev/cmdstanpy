@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import ujson as json
 from tqdm.auto import tqdm
@@ -300,7 +300,7 @@ class CmdStanModel:
     def format_model(
         self,
         save: bool = False,
-        canonicalize: Union[bool, str, List[str]] = False,
+        canonicalize: Union[bool, str, Iterable[str]] = False,
         *,
         unsafe: bool = False,
     ) -> None:
@@ -330,10 +330,10 @@ class CmdStanModel:
             )
 
             if canonicalize:
-                if isinstance(canonicalize, list):
-                    cmd.append('--canonicalize=' + ','.join(canonicalize))
-                elif isinstance(canonicalize, str):
+                if isinstance(canonicalize, str):
                     cmd.append('--canonicalize=' + canonicalize)
+                elif isinstance(canonicalize, Iterable):
+                    cmd.append('--canonicalize=' + ','.join(canonicalize))
                 else:
                     cmd.append('--print-canonical')
 
@@ -350,8 +350,8 @@ class CmdStanModel:
                 if result:
                     if not unsafe:
                         shutil.copyfile(self.stan_file, self.stan_file + '.bak')
-                    with (open(self.stan_file, 'w')) as file:
-                        file.write(result)
+                    with (open(self.stan_file, 'w')) as file_handle:
+                        file_handle.write(result)
             else:
                 print(result)
 
