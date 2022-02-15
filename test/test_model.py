@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from test import CustomTestCase
 
+import pytest
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
@@ -377,33 +378,32 @@ class CmdStanModelTest(CustomTestCase):
         model2 = CmdStanModel(stan_file=stan)
         self.assertPathsEqual(model2.exe_file, exe)
 
+    @pytest.mark.skipif(
+        not cmdstan_version_before(2, 32),
+        reason="Deprecated syntax removed in Stan 2.32",
+    )
     def test_model_format(self):
-        # deprecations expire in this version
-        if cmdstan_version_before(2, 32):
-            stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
 
-            model = CmdStanModel(stan_file=stan, compile=False)
+        model = CmdStanModel(stan_file=stan, compile=False)
 
-            sys_stdout = io.StringIO()
-            with contextlib.redirect_stdout(sys_stdout):
-                model.format_model()
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format_model()
 
-            formatted = sys_stdout.getvalue()
-            self.assertIn("//", formatted)
-            self.assertNotIn("#", formatted)
-            self.assertEqual(formatted.count('('), 5)
+        formatted = sys_stdout.getvalue()
+        self.assertIn("//", formatted)
+        self.assertNotIn("#", formatted)
+        self.assertEqual(formatted.count('('), 5)
 
-            sys_stdout = io.StringIO()
-            with contextlib.redirect_stdout(sys_stdout):
-                model.format_model(canonicalize=True)
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format_model(canonicalize=True)
 
-            formatted = sys_stdout.getvalue()
-            print(formatted)
-            self.assertNotIn("<-", formatted)
-            self.assertEqual(formatted.count('('), 0)
-
-        else:
-            assert False, "Test needs to be updated for Stan 2.32"
+        formatted = sys_stdout.getvalue()
+        print(formatted)
+        self.assertNotIn("<-", formatted)
+        self.assertEqual(formatted.count('('), 0)
 
 
 if __name__ == '__main__':
