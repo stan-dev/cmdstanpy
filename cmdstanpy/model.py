@@ -297,26 +297,29 @@ class CmdStanModel:
             get_logger().debug(e)
             return result
 
-    def format_model(
+    def format(
         self,
-        save: bool = False,
+        overwrite_file: bool = False,
         canonicalize: Union[bool, str, Iterable[str]] = False,
+        max_line_length: int = 78,
         *,
-        unsafe: bool = False,
+        backup: bool = True,
     ) -> None:
         """
         Run stanc's auto-formatter on the model code. Either saves directly
         back to the file or prints for inspection
 
 
-        :param save: If True, save the updated code to disk, rather than
-            printing it. By default False
+        :param overwrite_file: If True, save the updated code to disk, rather
+            than printing it. By default False
         :param canonicalize: Whether or not the compiler should 'canonicalize'
             the Stan model, removing things like deprecated syntax. Default is
             False. If True, all canonicalizations are run. If it is a list of
             strings, those options are passed to stanc (new in Stan 2.29)
-        :param unsafe: If True, do not create stanfile.bak backups before
-            writing to the file. Only do this if you're sure you have other
+        :param max_line_length: Set the wrapping point for the formatter. The
+            default value is 78, which wraps most lines by the 80th character.
+        :param backup: If True, create a stanfile.bak backup before
+            writing to the file. Only disable this if you're sure you have other
             copies of the file or are using a version control system like Git.
         """
         if self.stan_file is None or not os.path.isfile(self.stan_file):
@@ -330,15 +333,22 @@ class CmdStanModel:
             )
 
             if canonicalize:
-                if isinstance(canonicalize, str):
+                if cmdstan_version_before(2, 29) or isinstance(
+                    canonicalize, bool
+                ):
+                    cmd.append('--print-canonical')
+                elif isinstance(canonicalize, str):
                     cmd.append('--canonicalize=' + canonicalize)
                 elif isinstance(canonicalize, Iterable):
                     cmd.append('--canonicalize=' + ','.join(canonicalize))
-                else:
-                    cmd.append('--print-canonical')
 
+            # before 2.29, having both --print-canonical
+            # and --auto-format printed twice
             if not (cmdstan_version_before(2, 29) and canonicalize):
                 cmd.append('--auto-format')
+
+            if not cmdstan_version_before(2, 29):
+                cmd.append(f'--max-line-length={max_line_length}')
 
             out = subprocess.run(
                 cmd, capture_output=True, text=True, check=True
@@ -346,9 +356,9 @@ class CmdStanModel:
             if out.stderr:
                 get_logger().warning(out.stderr)
             result = out.stdout
-            if save:
+            if overwrite_file:
                 if result:
-                    if not unsafe:
+                    if backup:
                         shutil.copyfile(self.stan_file, self.stan_file + '.bak')
                     with (open(self.stan_file, 'w')) as file_handle:
                         file_handle.write(result)

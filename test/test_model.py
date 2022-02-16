@@ -382,14 +382,14 @@ class CmdStanModelTest(CustomTestCase):
         not cmdstan_version_before(2, 32),
         reason="Deprecated syntax removed in Stan 2.32",
     )
-    def test_model_format(self):
-        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+    def test_model_format_deprecations(self):
+        stan = os.path.join(DATAFILES_PATH, 'format_me_deprecations.stan')
 
         model = CmdStanModel(stan_file=stan, compile=False)
 
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            model.format_model()
+            model.format()
 
         formatted = sys_stdout.getvalue()
         self.assertIn("//", formatted)
@@ -398,12 +398,40 @@ class CmdStanModelTest(CustomTestCase):
 
         sys_stdout = io.StringIO()
         with contextlib.redirect_stdout(sys_stdout):
-            model.format_model(canonicalize=True)
+            model.format(canonicalize=True)
 
         formatted = sys_stdout.getvalue()
         print(formatted)
         self.assertNotIn("<-", formatted)
         self.assertEqual(formatted.count('('), 0)
+
+    @pytest.mark.skipif(
+        cmdstan_version_before(2, 29), reason='Options only available later'
+    )
+    def test_model_format_options(self):
+        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+
+        model = CmdStanModel(stan_file=stan, compile=False)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(max_line_length=10)
+        formatted = sys_stdout.getvalue()
+        self.assertGreater(len(formatted.splitlines()), 11)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(canonicalize='braces')
+        formatted = sys_stdout.getvalue()
+        self.assertEqual(formatted.count('{'), 3)
+        self.assertEqual(formatted.count('('), 4)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(canonicalize=['parentheses'])
+        formatted = sys_stdout.getvalue()
+        self.assertEqual(formatted.count('{'), 1)
+        self.assertEqual(formatted.count('('), 1)
 
 
 if __name__ == '__main__':
