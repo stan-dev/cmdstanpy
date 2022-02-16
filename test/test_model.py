@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import unittest
 from test import CustomTestCase
+from unittest.mock import MagicMock, patch
 
 import pytest
 from testfixtures import LogCapture, StringComparison
@@ -432,6 +433,26 @@ class CmdStanModelTest(CustomTestCase):
         formatted = sys_stdout.getvalue()
         self.assertEqual(formatted.count('{'), 1)
         self.assertEqual(formatted.count('('), 1)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(canonicalize=True)
+        formatted = sys_stdout.getvalue()
+        self.assertEqual(formatted.count('{'), 3)
+        self.assertEqual(formatted.count('('), 1)
+
+    @patch('cmdstanpy.utils.cmdstan_version', MagicMock(return_value=(2, 27)))
+    def test_format_old_version(self):
+        self.assertTrue(cmdstan_version_before(2, 28))
+
+        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+        model = CmdStanModel(stan_file=stan, compile=False)
+        with self.assertRaisesRegexNested(RuntimeError, r"--canonicalize"):
+            model.format(canonicalize='braces')
+        with self.assertRaisesRegexNested(RuntimeError, r"--max-line"):
+            model.format(max_line_length=88)
+
+        model.format(canonicalize=True)
 
 
 if __name__ == '__main__':

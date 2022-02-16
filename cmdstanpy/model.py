@@ -39,6 +39,7 @@ from cmdstanpy.utils import (
     MaybeDictToFilePath,
     SanitizedOrTmpFilePath,
     cmdstan_path,
+    cmdstan_version,
     cmdstan_version_before,
     do_command,
     get_logger,
@@ -333,14 +334,24 @@ class CmdStanModel:
             )
 
             if canonicalize:
-                if cmdstan_version_before(2, 29) or isinstance(
-                    canonicalize, bool
-                ):
-                    cmd.append('--print-canonical')
-                elif isinstance(canonicalize, str):
-                    cmd.append('--canonicalize=' + canonicalize)
-                elif isinstance(canonicalize, Iterable):
-                    cmd.append('--canonicalize=' + ','.join(canonicalize))
+                if cmdstan_version_before(2, 29):
+                    if isinstance(canonicalize, bool):
+                        cmd.append('--print-canonical')
+                    else:
+                        raise ValueError(
+                            "Invalid arguments passed for current CmdStan"
+                            + " version({})\n".format(
+                                cmdstan_version() or "Unknown"
+                            )
+                            + "--canonicalize requires 2.29 or higher"
+                        )
+                else:
+                    if isinstance(canonicalize, str):
+                        cmd.append('--canonicalize=' + canonicalize)
+                    elif isinstance(canonicalize, Iterable):
+                        cmd.append('--canonicalize=' + ','.join(canonicalize))
+                    else:
+                        cmd.append('--print-canonical')
 
             # before 2.29, having both --print-canonical
             # and --auto-format printed twice
@@ -349,6 +360,12 @@ class CmdStanModel:
 
             if not cmdstan_version_before(2, 29):
                 cmd.append(f'--max-line-length={max_line_length}')
+            elif max_line_length != 78:
+                raise ValueError(
+                    "Invalid arguments passed for current CmdStan version"
+                    + " ({})\n".format(cmdstan_version() or "Unknown")
+                    + "--max-line-length requires 2.29 or higher"
+                )
 
             out = subprocess.run(
                 cmd, capture_output=True, text=True, check=True
