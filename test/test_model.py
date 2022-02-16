@@ -406,6 +406,13 @@ class CmdStanModelTest(CustomTestCase):
         self.assertNotIn("<-", formatted)
         self.assertEqual(formatted.count('('), 0)
 
+        shutil.copy(stan, stan + '.testbak')
+        try:
+            model.format(overwrite_file=True, canonicalize=True)
+            self.assertTrue(os.path.exists(stan + '.bak'))
+        finally:
+            shutil.copy(stan + '.testbak', stan)
+
     @pytest.mark.skipif(
         cmdstan_version_before(2, 29), reason='Options only available later'
     )
