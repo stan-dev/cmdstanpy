@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from glob import glob
 from test import CustomTestCase
 from unittest.mock import MagicMock, patch
 
@@ -409,7 +410,7 @@ class CmdStanModelTest(CustomTestCase):
         shutil.copy(stan, stan + '.testbak')
         try:
             model.format(overwrite_file=True, canonicalize=True)
-            self.assertTrue(os.path.exists(stan + '.bak'))
+            self.assertEqual(len(glob(stan + '.bak-*')), 1)
         finally:
             shutil.copy(stan + '.testbak', stan)
 

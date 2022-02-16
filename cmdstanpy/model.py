@@ -9,6 +9,7 @@ import subprocess
 import sys
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
@@ -376,7 +377,12 @@ class CmdStanModel:
             if overwrite_file:
                 if result:
                     if backup:
-                        shutil.copyfile(self.stan_file, self.stan_file + '.bak')
+                        shutil.copyfile(
+                            self.stan_file,
+                            self.stan_file
+                            + '.bak-'
+                            + datetime.now().strftime("%Y%m%d%H%M%S"),
+                        )
                     with (open(self.stan_file, 'w')) as file_handle:
                         file_handle.write(result)
             else:
