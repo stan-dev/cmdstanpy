@@ -1,16 +1,21 @@
 """CmdStanModel tests"""
 
+import contextlib
+import io
 import logging
 import os
 import shutil
 import tempfile
 import unittest
+from glob import glob
 from test import CustomTestCase
+from unittest.mock import MagicMock, patch
 
+import pytest
 from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -34,6 +39,7 @@ BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
+# pylint: disable=too-many-public-methods
 class CmdStanModelTest(CustomTestCase):
     def test_model_good(self):
         # compile on instantiation, override model name
@@ -373,6 +379,88 @@ class CmdStanModelTest(CustomTestCase):
             os.remove(exe)
         model2 = CmdStanModel(stan_file=stan)
         self.assertPathsEqual(model2.exe_file, exe)
+
+    @pytest.mark.skipif(
+        not cmdstan_version_before(2, 32),
+        reason="Deprecated syntax removed in Stan 2.32",
+    )
+    def test_model_format_deprecations(self):
+        stan = os.path.join(DATAFILES_PATH, 'format_me_deprecations.stan')
+
+        model = CmdStanModel(stan_file=stan, compile=False)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format()
+
+        formatted = sys_stdout.getvalue()
+        self.assertIn("//", formatted)
+        self.assertNotIn("#", formatted)
+        self.assertEqual(formatted.count('('), 5)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(canonicalize=True)
+
+        formatted = sys_stdout.getvalue()
+        print(formatted)
+        self.assertNotIn("<-", formatted)
+        self.assertEqual(formatted.count('('), 0)
+
+        shutil.copy(stan, stan + '.testbak')
+        try:
+            model.format(overwrite_file=True, canonicalize=True)
+            self.assertEqual(len(glob(stan + '.bak-*')), 1)
+        finally:
+            shutil.copy(stan + '.testbak', stan)
+
+    @pytest.mark.skipif(
+        cmdstan_version_before(2, 29), reason='Options only available later'
+    )
+    def test_model_format_options(self):
+        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+
+        model = CmdStanModel(stan_file=stan, compile=False)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(max_line_length=10)
+        formatted = sys_stdout.getvalue()
+        self.assertGreater(len(formatted.splitlines()), 11)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(canonicalize='braces')
+        formatted = sys_stdout.getvalue()
+        self.assertEqual(formatted.count('{'), 3)
+        self.assertEqual(formatted.count('('), 4)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(canonicalize=['parentheses'])
+        formatted = sys_stdout.getvalue()
+        self.assertEqual(formatted.count('{'), 1)
+        self.assertEqual(formatted.count('('), 1)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.format(canonicalize=True)
+        formatted = sys_stdout.getvalue()
+        self.assertEqual(formatted.count('{'), 3)
+        self.assertEqual(formatted.count('('), 1)
+
+    @patch('cmdstanpy.utils.cmdstan_version', MagicMock(return_value=(2, 27)))
+    def test_format_old_version(self):
+        self.assertTrue(cmdstan_version_before(2, 28))
+
+        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+        model = CmdStanModel(stan_file=stan, compile=False)
+        with self.assertRaisesRegexNested(RuntimeError, r"--canonicalize"):
+            model.format(canonicalize='braces')
+        with self.assertRaisesRegexNested(RuntimeError, r"--max-line"):
+            model.format(max_line_length=88)
+
+        model.format(canonicalize=True)
 
 
 if __name__ == '__main__':
