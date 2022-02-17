@@ -8,8 +8,10 @@ import pytest
 from cmdstanpy import install_cxx_toolchain
 
 
-@pytest.mark.skipif(platform.system() != 'Windows', reason='Windows only tests')
 class InstallCxxScriptTest(unittest.TestCase):
+    @pytest.mark.skipif(
+        platform.system() != 'Windows', reason='Windows only tests'
+    )
     def test_config(self):
         """Test config output."""
 
@@ -28,6 +30,9 @@ class InstallCxxScriptTest(unittest.TestCase):
 
         self.assertEqual(config, config_reference)
 
+    @pytest.mark.skipif(
+        platform.system() == 'Windows', reason='Windows only tests'
+    )
     def test_install_not_windows(self):
         """Try to install on unsupported platform."""
 
@@ -38,6 +43,9 @@ class InstallCxxScriptTest(unittest.TestCase):
         ):
             install_cxx_toolchain.main({})
 
+    @pytest.mark.skipif(
+        platform.system() != 'Windows', reason='Windows only tests'
+    )
     def test_normalize_version(self):
         """Test supported versions."""
 
@@ -51,6 +59,9 @@ class InstallCxxScriptTest(unittest.TestCase):
                 install_cxx_toolchain.normalize_version(ver), '3.5'
             )
 
+    @pytest.mark.skipif(
+        platform.system() != 'Windows', reason='Windows only tests'
+    )
     def test_toolchain_name(self):
         """Check toolchain name."""
 
