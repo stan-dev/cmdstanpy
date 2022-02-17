@@ -3,34 +3,38 @@
 import platform
 import unittest
 
+import pytest
+
 from cmdstanpy import install_cxx_toolchain
 
 
 class InstallCxxScriptTest(unittest.TestCase):
+    @pytest.mark.skipif(
+        platform.system() != 'Windows', reason='Windows only tests'
+    )
     def test_config(self):
         """Test config output."""
-        if platform.system() != 'Windows':
-            return
-        else:
-            config = install_cxx_toolchain.get_config('C:\\RTools', True)
 
-            config_reference = [
-                '/SP-',
-                '/VERYSILENT',
-                '/SUPPRESSMSGBOXES',
-                '/CURRENTUSER',
-                'LANG="English"',
-                '/DIR="RTools"',
-                '/NOICONS',
-                '/NORESTART',
-            ]
+        config = install_cxx_toolchain.get_config('C:\\RTools', True)
 
-            self.assertEqual(config, config_reference)
+        config_reference = [
+            '/SP-',
+            '/VERYSILENT',
+            '/SUPPRESSMSGBOXES',
+            '/CURRENTUSER',
+            'LANG="English"',
+            '/DIR="RTools"',
+            '/NOICONS',
+            '/NORESTART',
+        ]
 
+        self.assertEqual(config, config_reference)
+
+    @pytest.mark.skipif(
+        platform.system() == 'Windows', reason='Windows only tests'
+    )
     def test_install_not_windows(self):
         """Try to install on unsupported platform."""
-        if platform.system() == 'Windows':
-            return
 
         with self.assertRaisesRegex(
             NotImplementedError,
@@ -39,29 +43,29 @@ class InstallCxxScriptTest(unittest.TestCase):
         ):
             install_cxx_toolchain.main({})
 
+    @pytest.mark.skipif(
+        platform.system() != 'Windows', reason='Windows only tests'
+    )
     def test_normalize_version(self):
         """Test supported versions."""
-        if platform.system() != 'Windows':
-            return
-        else:
-            for ver in ['4.0', '4', '40']:
-                self.assertEqual(
-                    install_cxx_toolchain.normalize_version(ver), '4.0'
-                )
 
-            for ver in ['3.5', '35']:
-                self.assertEqual(
-                    install_cxx_toolchain.normalize_version(ver), '3.5'
-                )
+        for ver in ['4.0', '4', '40']:
+            self.assertEqual(
+                install_cxx_toolchain.normalize_version(ver), '4.0'
+            )
 
+        for ver in ['3.5', '35']:
+            self.assertEqual(
+                install_cxx_toolchain.normalize_version(ver), '3.5'
+            )
+
+    @pytest.mark.skipif(
+        platform.system() != 'Windows', reason='Windows only tests'
+    )
     def test_toolchain_name(self):
         """Check toolchain name."""
-        if platform.system() != 'Windows':
-            return
-        else:
-            self.assertEqual(
-                install_cxx_toolchain.get_toolchain_name(), 'RTools'
-            )
+
+        self.assertEqual(install_cxx_toolchain.get_toolchain_name(), 'RTools')
 
 
 if __name__ == '__main__':

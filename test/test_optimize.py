@@ -192,7 +192,7 @@ class CmdStanMLETest(unittest.TestCase):
             history_size=5,
         )
         self.assertEqual(1, len(bern_mle.metadata.stan_vars_dims))
-        self.assertTrue('theta' in bern_mle.metadata.stan_vars_dims)
+        self.assertIn('theta', bern_mle.metadata.stan_vars_dims)
         self.assertEqual(bern_mle.metadata.stan_vars_dims['theta'], ())
         theta = bern_mle.stan_variable(var='theta')
         self.assertTrue(isinstance(theta, float))
@@ -219,7 +219,7 @@ class CmdStanMLETest(unittest.TestCase):
             history_size=5,
         )
         self.assertEqual(3, len(multidim_mle.metadata.stan_vars_dims))
-        self.assertTrue('y_rep' in multidim_mle.metadata.stan_vars_dims)
+        self.assertIn('y_rep', multidim_mle.metadata.stan_vars_dims)
         self.assertEqual(
             multidim_mle.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
         )
@@ -231,11 +231,11 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertTrue(isinstance(var_frac_60, float))
         vars = multidim_mle.stan_variables()
         self.assertEqual(len(vars), len(multidim_mle.metadata.stan_vars_dims))
-        self.assertTrue('y_rep' in vars)
+        self.assertIn('y_rep', vars)
         self.assertEqual(vars['y_rep'].shape, (5, 4, 3))
-        self.assertTrue('beta' in vars)
+        self.assertIn('beta', vars)
         self.assertEqual(vars['beta'].shape, (2,))
-        self.assertTrue('frac_60' in vars)
+        self.assertIn('frac_60', vars)
         self.assertTrue(isinstance(vars['frac_60'], float))
 
         multidim_mle_iters = multidim_model.optimize(
@@ -256,11 +256,11 @@ class CmdStanMLETest(unittest.TestCase):
         self.assertEqual(
             len(vars_iters), len(multidim_mle_iters.metadata.stan_vars_dims)
         )
-        self.assertTrue('y_rep' in vars_iters)
+        self.assertIn('y_rep', vars_iters)
         self.assertEqual(vars_iters['y_rep'].shape, (8, 5, 4, 3))
-        self.assertTrue('beta' in vars_iters)
+        self.assertIn('beta', vars_iters)
         self.assertEqual(vars_iters['beta'].shape, (8, 2))
-        self.assertTrue('frac_60' in vars_iters)
+        self.assertIn('frac_60', vars_iters)
         self.assertEqual(vars_iters['frac_60'].shape, (8,))
 
 
@@ -580,7 +580,7 @@ class OptimizeTest(unittest.TestCase):
                 show_console=True,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('Chain [1] method = optimize' in console)
+        self.assertIn('Chain [1] method = optimize', console)
 
     def test_exe_only(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')

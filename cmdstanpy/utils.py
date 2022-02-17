@@ -838,7 +838,7 @@ def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
     if names is None:
         raise ValueError('missing argument "names"')
     # note: method vars are currently all scalar so not checking for structure
-    return {v: tuple([k]) for (k, v) in enumerate(names) if v.endswith('__')}
+    return {v: (k,) for (k, v) in enumerate(names) if v.endswith('__')}
 
 
 def parse_stan_vars(

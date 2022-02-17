@@ -62,17 +62,17 @@ class CmdStanPathTest(CustomTestCase):
             self.assertPathsEqual(cmdstan_path(), os.environ['CMDSTAN'])
             path = os.environ['CMDSTAN']
             with self.modified_environ('CMDSTAN'):
-                self.assertFalse('CMDSTAN' in os.environ)
+                self.assertNotIn('CMDSTAN', os.environ)
                 set_cmdstan_path(path)
                 self.assertPathsEqual(cmdstan_path(), path)
-                self.assertTrue('CMDSTAN' in os.environ)
+                self.assertIn('CMDSTAN', os.environ)
         else:
             cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
             install_version = os.path.join(
                 cmdstan_dir, get_latest_cmdstan(cmdstan_dir)
             )
             self.assertTrue(os.path.samefile(cmdstan_path(), install_version))
-            self.assertTrue('CMDSTAN' in os.environ)
+            self.assertIn('CMDSTAN', os.environ)
 
     def test_non_spaces_location(self):
         with tempfile.TemporaryDirectory(
@@ -96,7 +96,7 @@ class CmdStanPathTest(CustomTestCase):
                 with SanitizedOrTmpFilePath(stan_bad) as (pth, is_changed):
                     stan_copied = pth
                     self.assertTrue(os.path.exists(stan_copied))
-                    self.assertTrue(' ' not in stan_copied)
+                    self.assertNotIn(' ', stan_copied)
                     self.assertTrue(is_changed)
                     raise RuntimeError
             except RuntimeError:
@@ -541,56 +541,50 @@ class ReadMetricTest(unittest.TestCase):
             read_metric(metric_file)
 
 
-# pylint: disable=no-self-use
+@pytest.mark.skipif(platform.system() != 'Windows', reason='Windows only tests')
 class WindowsShortPath(unittest.TestCase):
     def test_windows_short_path_directory(self):
-        if platform.system() != 'Windows':
-            return
         with tempfile.TemporaryDirectory(
             prefix="cmdstan_tests", dir=_TMPDIR
         ) as tmpdir:
             original_path = os.path.join(tmpdir, 'new path')
             os.makedirs(original_path, exist_ok=True)
-            assert os.path.exists(original_path)
-            assert ' ' in original_path
+            self.assertTrue(os.path.exists(original_path))
+            self.assertIn(' ', original_path)
             short_path = windows_short_path(original_path)
-            assert os.path.exists(short_path)
-            assert original_path != short_path
-            assert ' ' not in short_path
+            self.assertTrue(os.path.exists(short_path))
+            self.assertNotEqual(original_path, short_path)
+            self.assertNotIn(' ', short_path)
 
     def test_windows_short_path_file(self):
-        if platform.system() != 'Windows':
-            return
         with tempfile.TemporaryDirectory(
             prefix="cmdstan_tests", dir=_TMPDIR
         ) as tmpdir:
             original_path = os.path.join(tmpdir, 'new path', 'my_file.csv')
             os.makedirs(os.path.split(original_path)[0], exist_ok=True)
-            assert os.path.exists(os.path.split(original_path)[0])
-            assert ' ' in original_path
-            assert os.path.splitext(original_path)[1] == '.csv'
+            self.assertTrue(os.path.exists(os.path.split(original_path)[0]))
+            self.assertIn(' ', original_path)
+            self.assertEqual(os.path.splitext(original_path)[1], '.csv')
             short_path = windows_short_path(original_path)
-            assert os.path.exists(os.path.split(short_path)[0])
-            assert original_path != short_path
-            assert ' ' not in short_path
-            assert os.path.splitext(short_path)[1] == '.csv'
+            self.assertTrue(os.path.exists(os.path.split(short_path)[0]))
+            self.assertNotEqual(original_path, short_path)
+            self.assertNotIn(' ', short_path)
+            self.assertEqual(os.path.splitext(short_path)[1], '.csv')
 
     def test_windows_short_path_file_with_space(self):
         """Test that the function doesn't touch filename."""
-        if platform.system() != 'Windows':
-            return
         with tempfile.TemporaryDirectory(
             prefix="cmdstan_tests", dir=_TMPDIR
         ) as tmpdir:
             original_path = os.path.join(tmpdir, 'new path', 'my file.csv')
             os.makedirs(os.path.split(original_path)[0], exist_ok=True)
-            assert os.path.exists(os.path.split(original_path)[0])
-            assert ' ' in original_path
+            self.assertTrue(os.path.exists(os.path.split(original_path)[0]))
+            self.assertIn(' ', original_path)
             short_path = windows_short_path(original_path)
-            assert os.path.exists(os.path.split(short_path)[0])
-            assert original_path != short_path
-            assert ' ' in short_path
-            assert os.path.splitext(short_path)[1] == '.csv'
+            self.assertTrue(os.path.exists(os.path.split(short_path)[0]))
+            self.assertNotEqual(original_path, short_path)
+            self.assertIn(' ', short_path)
+            self.assertEqual(os.path.splitext(short_path)[1], '.csv')
 
 
 class RloadTest(unittest.TestCase):
@@ -815,7 +809,7 @@ class DoCommandTest(unittest.TestCase):
     def test_capture_console(self):
         tmp = io.StringIO()
         do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
-        self.assertTrue('test_utils.py' in tmp.getvalue())
+        self.assertIn('test_utils.py', tmp.getvalue())
 
     def test_exit(self):
         sys_stdout = io.StringIO()
