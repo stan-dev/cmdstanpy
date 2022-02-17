@@ -88,7 +88,7 @@ class CmdStanVBTest(unittest.TestCase):
             ('lp__', 'log_p__', 'log_g__', 'mu[1]', 'mu[2]'),
         )
         self.assertEqual(1, len(variational.metadata.stan_vars_dims))
-        self.assertTrue('mu' in variational.metadata.stan_vars_dims)
+        self.assertIn('mu', variational.metadata.stan_vars_dims)
         self.assertEqual(variational.metadata.stan_vars_dims['mu'], (2,))
         mu = variational.stan_variable(var='mu')
         self.assertEqual(mu.shape, (2,))
@@ -108,7 +108,7 @@ class CmdStanVBTest(unittest.TestCase):
             algorithm='meanfield',
         )
         self.assertEqual(3, len(multidim_variational.metadata.stan_vars_dims))
-        self.assertTrue('y_rep' in multidim_variational.metadata.stan_vars_dims)
+        self.assertIn('y_rep', multidim_variational.metadata.stan_vars_dims)
         self.assertEqual(
             multidim_variational.metadata.stan_vars_dims['y_rep'], (5, 4, 3)
         )
@@ -122,11 +122,11 @@ class CmdStanVBTest(unittest.TestCase):
         self.assertEqual(
             len(vars), len(multidim_variational.metadata.stan_vars_dims)
         )
-        self.assertTrue('y_rep' in vars)
+        self.assertIn('y_rep', vars)
         self.assertEqual(vars['y_rep'].shape, (5, 4, 3))
-        self.assertTrue('beta' in vars)
+        self.assertIn('beta', vars)
         self.assertEqual(vars['beta'].shape, (2,))
-        self.assertTrue('frac_60' in vars)
+        self.assertIn('frac_60', vars)
         self.assertTrue(isinstance(vars['frac_60'], float))
 
 
@@ -231,7 +231,7 @@ class VariationalTest(unittest.TestCase):
                 seed=12345,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('Chain [1] method = variational' in console)
+        self.assertIn('Chain [1] method = variational', console)
 
     def test_exe_only(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')

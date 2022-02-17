@@ -418,10 +418,10 @@ class GenerateQuantitiesTest(CustomTestCase):
                 show_console=True,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('Chain [1] method = generate' in console)
-        self.assertTrue('Chain [2] method = generate' in console)
-        self.assertTrue('Chain [3] method = generate' in console)
-        self.assertTrue('Chain [4] method = generate' in console)
+        self.assertIn('Chain [1] method = generate', console)
+        self.assertIn('Chain [2] method = generate', console)
+        self.assertIn('Chain [3] method = generate', console)
+        self.assertIn('Chain [4] method = generate', console)
 
     def test_complex_output(self):
         stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
