@@ -155,7 +155,7 @@ class CmdStanMLE:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         *,
         inc_iterations: bool = False,
         warn: bool = True,
@@ -179,10 +179,12 @@ class CmdStanMLE:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var is None:
-            raise ValueError('no variable name specified.')
         if var not in self._metadata.stan_vars_dims:
-            raise ValueError('unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars_dims)
+            )
         if warn and inc_iterations and not self._save_iterations:
             get_logger().warning(
                 'Intermediate iterations not saved to CSV output file. '

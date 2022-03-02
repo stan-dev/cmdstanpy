@@ -619,7 +619,7 @@ class CmdStanMCMC:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         inc_warmup: bool = False,
     ) -> np.ndarray:
         """
@@ -660,10 +660,12 @@ class CmdStanMCMC:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var is None:
-            raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars_dims)
+            )
         if self._draws.shape == (0,):
             self._assemble_draws()
         draw1 = 0
@@ -1130,7 +1132,7 @@ class CmdStanGQ:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         inc_warmup: bool = False,
     ) -> np.ndarray:
         """
@@ -1171,12 +1173,14 @@ class CmdStanGQ:
         CmdStanMLE.stan_variable
         CmdStanVB.stan_variable
         """
-        if var is None:
-            raise ValueError('No variable name specified.')
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
         if not (var in model_var_names or var in gq_var_names):
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(model_var_names | gq_var_names)
+            )
         if var not in gq_var_names:
             return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable

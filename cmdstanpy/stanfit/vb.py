@@ -103,9 +103,7 @@ class CmdStanVB:
         """
         return self._metadata
 
-    def stan_variable(
-        self, var: Optional[str] = None
-    ) -> Union[np.ndarray, float]:
+    def stan_variable(self, var: str) -> Union[np.ndarray, float]:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -123,7 +121,11 @@ class CmdStanVB:
         if var is None:
             raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars_dims)
+            )
         col_idxs = list(self._metadata.stan_vars_cols[var])
         shape: Tuple[int, ...] = ()
         if len(col_idxs) > 1:
