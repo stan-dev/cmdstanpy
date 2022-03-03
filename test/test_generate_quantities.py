@@ -444,6 +444,26 @@ class GenerateQuantitiesTest(CustomTestCase):
             fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
         )
 
+    def test_attrs(self):
+        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model_bern = CmdStanModel(stan_file=stan_bern)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
+
+        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.generate_quantities(data=jdata, mcmc_sample=fit_sampling)
+
+        self.assertEqual(fit.a[0], 4.5)
+        self.assertEqual(fit.b.shape, (10, 3))
+        self.assertEqual(fit.theta.shape, (10,))
+
+        fit.draws()
+        self.assertEqual(fit.stan_variable('draws')[0], 0)
+
+        with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
+            dummy = fit.c
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -730,7 +730,7 @@ def scan_variational_csv(path: str) -> Dict[str, Any]:
             lineno += 1
         xs = line.split(',')
         variational_mean = [float(x) for x in xs]
-        dict['variational_mean'] = variational_mean
+        dict['variational_mean'] = np.array(variational_mean)
         dict['variational_sample'] = pd.read_csv(
             path,
             comment='#',

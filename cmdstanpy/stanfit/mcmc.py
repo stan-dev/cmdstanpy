@@ -117,6 +117,14 @@ class CmdStanMCMC:
         # TODO - hamiltonian, profiling files
         return repr
 
+    def __getattr__(self, attr: str) -> np.ndarray:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
+
     @property
     def chains(self) -> int:
         """Number of chains."""
@@ -619,7 +627,7 @@ class CmdStanMCMC:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         inc_warmup: bool = False,
     ) -> np.ndarray:
         """
@@ -647,6 +655,9 @@ class CmdStanMCMC:
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
 
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
+
         :param var: variable name
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
@@ -660,10 +671,12 @@ class CmdStanMCMC:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var is None:
-            raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars_dims)
+            )
         if self._draws.shape == (0,):
             self._assemble_draws()
         draw1 = 0
@@ -766,6 +779,14 @@ class CmdStanGQ:
             '\n\t'.join(self.runset.stdout_files),
         )
         return repr
+
+    def __getattr__(self, attr: str) -> np.ndarray:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
 
     def _validate_csv_files(self) -> Dict[str, Any]:
         """
@@ -1130,7 +1151,7 @@ class CmdStanGQ:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         inc_warmup: bool = False,
     ) -> np.ndarray:
         """
@@ -1158,6 +1179,9 @@ class CmdStanGQ:
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
 
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
+
         :param var: variable name
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
@@ -1171,12 +1195,14 @@ class CmdStanGQ:
         CmdStanMLE.stan_variable
         CmdStanVB.stan_variable
         """
-        if var is None:
-            raise ValueError('No variable name specified.')
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
         if not (var in model_var_names or var in gq_var_names):
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(model_var_names | gq_var_names)
+            )
         if var not in gq_var_names:
             return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable

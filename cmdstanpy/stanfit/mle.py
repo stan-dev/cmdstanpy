@@ -50,6 +50,14 @@ class CmdStanMLE:
             repr = '{} optimization failed to converge.'.format(repr)
         return repr
 
+    def __getattr__(self, attr: str) -> Union[np.ndarray, float]:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
+
     def _set_mle_attrs(self, sample_csv_0: str) -> None:
         meta = scan_optimize_csv(sample_csv_0, self._save_iterations)
         self._metadata = InferenceMetadata(meta)
@@ -155,7 +163,7 @@ class CmdStanMLE:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         *,
         inc_iterations: bool = False,
         warn: bool = True,
@@ -164,6 +172,9 @@ class CmdStanMLE:
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
         numpy.ndarray match the shape of the Stan program variable.
+
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
 
         :param var: variable name
 
@@ -179,10 +190,12 @@ class CmdStanMLE:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var is None:
-            raise ValueError('no variable name specified.')
         if var not in self._metadata.stan_vars_dims:
-            raise ValueError('unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars_dims)
+            )
         if warn and inc_iterations and not self._save_iterations:
             get_logger().warning(
                 'Intermediate iterations not saved to CSV output file. '
