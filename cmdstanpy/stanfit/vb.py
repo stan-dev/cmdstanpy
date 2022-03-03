@@ -41,6 +41,14 @@ class CmdStanVB:
         # TODO - diagnostic, profiling files
         return repr
 
+    def __getattr__(self, attr: str) -> Union[np.ndarray, float]:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
+
     def _set_variational_attrs(self, sample_csv_0: str) -> None:
         meta = scan_variational_csv(sample_csv_0)
         self._metadata = InferenceMetadata(meta)
@@ -108,6 +116,9 @@ class CmdStanVB:
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
         numpy.ndarray match the shape of the Stan program variable.
+
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
 
         :param var: variable name
 

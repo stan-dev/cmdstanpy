@@ -117,6 +117,14 @@ class CmdStanMCMC:
         # TODO - hamiltonian, profiling files
         return repr
 
+    def __getattr__(self, attr: str) -> np.ndarray:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
+
     @property
     def chains(self) -> int:
         """Number of chains."""
@@ -647,6 +655,9 @@ class CmdStanMCMC:
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
 
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
+
         :param var: variable name
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
@@ -768,6 +779,14 @@ class CmdStanGQ:
             '\n\t'.join(self.runset.stdout_files),
         )
         return repr
+
+    def __getattr__(self, attr: str) -> np.ndarray:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
 
     def _validate_csv_files(self) -> Dict[str, Any]:
         """
@@ -1159,6 +1178,9 @@ class CmdStanGQ:
         For example, if the Stan program variable ``theta`` is a 3x3 matrix,
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
+
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
 
         :param var: variable name
 

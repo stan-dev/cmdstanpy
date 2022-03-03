@@ -609,6 +609,24 @@ class OptimizeTest(unittest.TestCase):
         # make sure the name 'imag' isn't magic
         self.assertEqual(fit.stan_variable('imag').shape, (2,))
 
+    def test_attrs(self):
+        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit = model.optimize(data=jdata)
+
+        self.assertEqual(fit.a, 4.5)
+        self.assertEqual(fit.b.shape, (3,))
+        self.assertIsInstance(fit.theta, float)
+
+        self.assertEqual(fit.stan_variable('thin'), 3.5)
+
+        self.assertIsInstance(fit.optimized_params_np, np.ndarray)
+        self.assertEqual(fit.stan_variable('optimized_params_np'), 0)
+
+        with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
+            dummy = fit.c
+
 
 if __name__ == '__main__':
     unittest.main()

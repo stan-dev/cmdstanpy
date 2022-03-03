@@ -1776,6 +1776,25 @@ class CmdStanMCMCTest(CustomTestCase):
             fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
         )
 
+    def test_attrs(self):
+        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit = model.sample(chains=1, iter_sampling=10, data=jdata)
+
+        self.assertEqual(fit.a[0], 4.5)
+        self.assertEqual(fit.b.shape, (10, 3))
+        self.assertEqual(fit.theta.shape, (10,))
+
+        self.assertEqual(fit.thin, 1)
+        self.assertEqual(fit.stan_variable('thin')[0], 3.5)
+
+        fit.draws()
+        self.assertEqual(fit.stan_variable('draws')[0], 0)
+
+        with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
+            dummy = fit.c
+
 
 if __name__ == '__main__':
     unittest.main()
