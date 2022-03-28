@@ -14,6 +14,7 @@ from typing import (
     List,
     MutableMapping,
     Optional,
+    Sequence,
     Tuple,
     Union,
 )
@@ -382,8 +383,8 @@ class CmdStanMCMC:
 
     def summary(
         self,
-        percentiles: Optional[List[int]] = None,
-        sig_figs: Optional[int] = None,
+        percentiles: Sequence[int] = (5, 50, 95),
+        sig_figs: int = 6,
     ) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output CSV files, assemble
@@ -393,8 +394,9 @@ class CmdStanMCMC:
         quantities variables listed in the order in which they were declared
         in the Stan program.
 
-        :param percentiles: Ordered non-empty list of percentiles to report.
-            Must be integers from (1, 99), inclusive.
+        :param percentiles: Ordered non-empty sequence of percentiles to report.
+            Must be integers from (1, 99), inclusive. Defaults to
+            ``(5, 50, 95)``
 
         :param sig_figs: Number of significant figures to report.
             Must be an integer between 1 and 18.  If unspecified, the default
@@ -405,40 +407,38 @@ class CmdStanMCMC:
 
         :return: pandas.DataFrame
         """
-        percentiles_str = '--percentiles=5,50,95'
-        if percentiles is not None:
-            if len(percentiles) == 0:
+
+        if len(percentiles) == 0:
+            raise ValueError(
+                'Invalid percentiles argument, must be ordered'
+                ' non-empty list from (1, 99), inclusive.'
+            )
+        cur_pct = 0
+        for pct in percentiles:
+            if pct > 99 or not pct > cur_pct:
                 raise ValueError(
-                    'Invalid percentiles argument, must be ordered'
+                    'Invalid percentiles spec, must be ordered'
                     ' non-empty list from (1, 99), inclusive.'
                 )
-            cur_pct = 0
-            for pct in percentiles:
-                if pct > 99 or not pct > cur_pct:
-                    raise ValueError(
-                        'Invalid percentiles spec, must be ordered'
-                        ' non-empty list from (1, 99), inclusive.'
-                    )
-                cur_pct = pct
-            percentiles_str = '='.join(
-                ['--percentiles', ','.join([str(x) for x in percentiles])]
+            cur_pct = pct
+        percentiles_str = (
+            f"--percentiles= {','.join(str(x) for x in percentiles)}"
+        )
+
+        if not isinstance(sig_figs, int) or sig_figs < 1 or sig_figs > 18:
+            raise ValueError(
+                'Keyword "sig_figs" must be an integer between 1 and 18,'
+                ' found {}'.format(sig_figs)
             )
-        sig_figs_str = '--sig_figs=2'
-        if sig_figs is not None:
-            if not isinstance(sig_figs, int) or sig_figs < 1 or sig_figs > 18:
-                raise ValueError(
-                    'Keyword "sig_figs" must be an integer between 1 and 18,'
-                    ' found {}'.format(sig_figs)
-                )
-            csv_sig_figs = self._sig_figs or 6
-            if sig_figs > csv_sig_figs:
-                get_logger().warning(
-                    'Requesting %d significant digits of output, but CSV files'
-                    ' only have %d digits of precision.',
-                    sig_figs,
-                    csv_sig_figs,
-                )
-            sig_figs_str = '--sig_figs=' + str(sig_figs)
+        csv_sig_figs = self._sig_figs or 6
+        if sig_figs > csv_sig_figs:
+            get_logger().warning(
+                'Requesting %d significant digits of output, but CSV files'
+                ' only have %d digits of precision.',
+                sig_figs,
+                csv_sig_figs,
+            )
+        sig_figs_str = f'--sig_figs={sig_figs}'
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
