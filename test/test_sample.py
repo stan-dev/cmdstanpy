@@ -441,8 +441,8 @@ class SampleTest(unittest.TestCase):
                 cpp_options={'STAN_THREADS': 'TRUE'},
             )
             info_dict = logistic_model.exe_info()
-            self.assertTrue(info_dict is not None)
-            self.assertTrue('STAN_THREADS' in info_dict)
+            self.assertIsNotNone(info_dict)
+            self.assertIn('STAN_THREADS', info_dict)
             self.assertEqual(info_dict['STAN_THREADS'], 'true')
 
             logistic_data = os.path.join(DATAFILES_PATH, 'logistic.data.R')
@@ -642,8 +642,8 @@ class SampleTest(unittest.TestCase):
                 show_console=True,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('Chain [1] method = sample' in console)
-        self.assertTrue('Chain [2] method = sample' in console)
+        self.assertIn('Chain [1] method = sample', console)
+        self.assertIn('Chain [2] method = sample', console)
 
     def test_show_progress(self, stanfile='bernoulli.stan'):
         stan = os.path.join(DATAFILES_PATH, stanfile)
@@ -660,9 +660,9 @@ class SampleTest(unittest.TestCase):
                 show_progress=True,
             )
         console = sys_stderr.getvalue()
-        self.assertTrue('chain 1' in console)
-        self.assertTrue('chain 2' in console)
-        self.assertTrue('Sampling completed' in console)
+        self.assertIn('chain 1', console)
+        self.assertIn('chain 2', console)
+        self.assertIn('Sampling completed', console)
 
         sys_stderr = io.StringIO()  # tqdm prints to stderr
         with contextlib.redirect_stderr(sys_stderr):
@@ -674,9 +674,9 @@ class SampleTest(unittest.TestCase):
                 show_progress=True,
             )
         console = sys_stderr.getvalue()
-        self.assertTrue('chain 6' in console)
-        self.assertTrue('chain 7' in console)
-        self.assertTrue('Sampling completed' in console)
+        self.assertIn('chain 6', console)
+        self.assertIn('chain 7', console)
+        self.assertIn('Sampling completed', console)
         sys_stderr = io.StringIO()  # tqdm prints to stderr
 
         with contextlib.redirect_stderr(sys_stderr):
@@ -690,9 +690,9 @@ class SampleTest(unittest.TestCase):
                 show_progress=True,
             )
         console = sys_stderr.getvalue()
-        self.assertTrue('chain 6' in console)
-        self.assertTrue('chain 7' in console)
-        self.assertTrue('Sampling completed' in console)
+        self.assertIn('chain 6', console)
+        self.assertIn('chain 7', console)
+        self.assertIn('Sampling completed', console)
 
 
 class CmdStanMCMCTest(CustomTestCase):
@@ -1388,7 +1388,7 @@ class CmdStanMCMCTest(CustomTestCase):
             data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
         )
         self.assertEqual(1, len(bern_fit.metadata.stan_vars_dims))
-        self.assertTrue('theta' in bern_fit.metadata.stan_vars_dims)
+        self.assertIn('theta', bern_fit.metadata.stan_vars_dims)
         self.assertEqual(bern_fit.metadata.stan_vars_dims['theta'], ())
         self.assertEqual(bern_fit.stan_variable(var='theta').shape, (200,))
         with self.assertRaises(ValueError):
@@ -1401,13 +1401,13 @@ class CmdStanMCMCTest(CustomTestCase):
         fit = from_csv(path=csvfiles_path)
         self.assertEqual(20, fit.num_draws_sampling)
         self.assertEqual(8, len(fit.metadata.stan_vars_dims))
-        self.assertTrue('z' in fit.metadata.stan_vars_dims)
+        self.assertIn('z', fit.metadata.stan_vars_dims)
         self.assertEqual(fit.metadata.stan_vars_dims['z'], (20, 2))
         vars = fit.stan_variables()
         self.assertEqual(len(vars), len(fit.metadata.stan_vars_dims))
-        self.assertTrue('z' in vars)
+        self.assertIn('z', vars)
         self.assertEqual(vars['z'].shape, (20, 20, 2))
-        self.assertTrue('theta' in vars)
+        self.assertIn('theta', vars)
         self.assertEqual(vars['theta'].shape, (20, 4))
 
     def test_variables_3d(self):
@@ -1416,7 +1416,7 @@ class CmdStanMCMCTest(CustomTestCase):
         fit = from_csv(path=csvfiles_path)
         self.assertEqual(20, fit.num_draws_sampling)
         self.assertEqual(3, len(fit.metadata.stan_vars_dims))
-        self.assertTrue('y_rep' in fit.metadata.stan_vars_dims)
+        self.assertIn('y_rep', fit.metadata.stan_vars_dims)
         self.assertEqual(fit.metadata.stan_vars_dims['y_rep'], (5, 4, 3))
         var_y_rep = fit.stan_variable(var='y_rep')
         self.assertEqual(var_y_rep.shape, (20, 5, 4, 3))
@@ -1426,11 +1426,11 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertEqual(var_frac_60.shape, (20,))
         vars = fit.stan_variables()
         self.assertEqual(len(vars), len(fit.metadata.stan_vars_dims))
-        self.assertTrue('y_rep' in vars)
+        self.assertIn('y_rep', vars)
         self.assertEqual(vars['y_rep'].shape, (20, 5, 4, 3))
-        self.assertTrue('beta' in vars)
+        self.assertIn('beta', vars)
         self.assertEqual(vars['beta'].shape, (20, 2))
-        self.assertTrue('frac_60' in vars)
+        self.assertIn('frac_60', vars)
         self.assertEqual(vars['frac_60'].shape, (20,))
 
     def test_variables_issue_361(self):
@@ -1592,18 +1592,16 @@ class CmdStanMCMCTest(CustomTestCase):
         fit = CmdStanMCMC(runset)
         meta = fit.metadata
         self.assertEqual(meta.cmdstan_config['model'], 'logistic_model')
-        col_names = tuple(
-            [
-                'lp__',
-                'accept_stat__',
-                'stepsize__',
-                'treedepth__',
-                'n_leapfrog__',
-                'divergent__',
-                'energy__',
-                'beta[1]',
-                'beta[2]',
-            ]
+        col_names = (
+            'lp__',
+            'accept_stat__',
+            'stepsize__',
+            'treedepth__',
+            'n_leapfrog__',
+            'divergent__',
+            'energy__',
+            'beta[1]',
+            'beta[2]',
         )
 
         self.assertEqual(fit.chains, 4)
@@ -1619,14 +1617,14 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertEqual(fit.metadata.cmdstan_config['metric'], 'diag_e')
         self.assertAlmostEqual(fit.metadata.cmdstan_config['delta'], 0.80)
 
-        self.assertTrue('n_leapfrog__' in fit.metadata.method_vars_cols)
-        self.assertTrue('energy__' in fit.metadata.method_vars_cols)
-        self.assertTrue('beta' not in fit.metadata.method_vars_cols)
-        self.assertTrue('energy__' not in fit.metadata.stan_vars_dims)
-        self.assertTrue('beta' in fit.metadata.stan_vars_dims)
-        self.assertTrue('beta' in fit.metadata.stan_vars_cols)
-        self.assertEqual(fit.metadata.stan_vars_dims['beta'], tuple([2]))
-        self.assertEqual(fit.metadata.stan_vars_cols['beta'], tuple([7, 8]))
+        self.assertIn('n_leapfrog__', fit.metadata.method_vars_cols)
+        self.assertIn('energy__', fit.metadata.method_vars_cols)
+        self.assertNotIn('beta', fit.metadata.method_vars_cols)
+        self.assertNotIn('energy__', fit.metadata.stan_vars_dims)
+        self.assertIn('beta', fit.metadata.stan_vars_dims)
+        self.assertIn('beta', fit.metadata.stan_vars_cols)
+        self.assertEqual(fit.metadata.stan_vars_dims['beta'], (2,))
+        self.assertEqual(fit.metadata.stan_vars_cols['beta'], (7, 8))
 
     def test_save_latent_dynamics(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -1761,6 +1759,41 @@ class CmdStanMCMCTest(CustomTestCase):
             for j in range(3):
                 self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
                 self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
+
+    def test_complex_output(self):
+        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.sample(chains=1, iter_sampling=10)
+
+        self.assertEqual(fit.stan_variable('zs').shape, (10, 2, 3))
+        self.assertEqual(fit.stan_variable('z')[0], 3 + 4j)
+        # make sure the name 'imag' isn't magic
+        self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
+
+        self.assertNotIn("zs_dim_2", fit.draws_xr())
+        # getting a raw scalar out of xarray is heavy
+        self.assertEqual(
+            fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+        )
+
+    def test_attrs(self):
+        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit = model.sample(chains=1, iter_sampling=10, data=jdata)
+
+        self.assertEqual(fit.a[0], 4.5)
+        self.assertEqual(fit.b.shape, (10, 3))
+        self.assertEqual(fit.theta.shape, (10,))
+
+        self.assertEqual(fit.thin, 1)
+        self.assertEqual(fit.stan_variable('thin')[0], 3.5)
+
+        fit.draws()
+        self.assertEqual(fit.stan_variable('draws')[0], 0)
+
+        with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
+            dummy = fit.c
 
 
 if __name__ == '__main__':

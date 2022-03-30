@@ -705,7 +705,7 @@ class CmdStanArgs:
         self,
         model_name: str,
         model_exe: Optional[str],
-        chain_ids: Union[List[int], None],
+        chain_ids: Optional[List[int]],
         method_args: Union[
             SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
         ],

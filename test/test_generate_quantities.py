@@ -418,10 +418,51 @@ class GenerateQuantitiesTest(CustomTestCase):
                 show_console=True,
             )
         console = sys_stdout.getvalue()
-        self.assertTrue('Chain [1] method = generate' in console)
-        self.assertTrue('Chain [2] method = generate' in console)
-        self.assertTrue('Chain [3] method = generate' in console)
-        self.assertTrue('Chain [4] method = generate' in console)
+        self.assertIn('Chain [1] method = generate', console)
+        self.assertIn('Chain [2] method = generate', console)
+        self.assertIn('Chain [3] method = generate', console)
+        self.assertIn('Chain [4] method = generate', console)
+
+    def test_complex_output(self):
+        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model_bern = CmdStanModel(stan_file=stan_bern)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
+
+        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.generate_quantities(mcmc_sample=fit_sampling)
+
+        self.assertEqual(fit.stan_variable('zs').shape, (10, 2, 3))
+        self.assertEqual(fit.stan_variable('z')[0], 3 + 4j)
+        # make sure the name 'imag' isn't magic
+        self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
+
+        self.assertNotIn("zs_dim_2", fit.draws_xr())
+        # getting a raw scalar out of xarray is heavy
+        self.assertEqual(
+            fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+        )
+
+    def test_attrs(self):
+        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model_bern = CmdStanModel(stan_file=stan_bern)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
+
+        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.generate_quantities(data=jdata, mcmc_sample=fit_sampling)
+
+        self.assertEqual(fit.a[0], 4.5)
+        self.assertEqual(fit.b.shape, (10, 3))
+        self.assertEqual(fit.theta.shape, (10,))
+
+        fit.draws()
+        self.assertEqual(fit.stan_variable('draws')[0], 0)
+
+        with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
+            dummy = fit.c
 
 
 if __name__ == '__main__':

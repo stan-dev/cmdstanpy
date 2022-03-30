@@ -14,6 +14,7 @@ from typing import (
     List,
     MutableMapping,
     Optional,
+    Sequence,
     Tuple,
     Union,
 )
@@ -32,6 +33,7 @@ from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs
 from cmdstanpy.utils import (
     EXTENSION,
+    BaseType,
     check_sampler_csv,
     cmdstan_path,
     cmdstan_version_before,
@@ -115,6 +117,14 @@ class CmdStanMCMC:
         )
         # TODO - hamiltonian, profiling files
         return repr
+
+    def __getattr__(self, attr: str) -> np.ndarray:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
 
     @property
     def chains(self) -> int:
@@ -381,8 +391,8 @@ class CmdStanMCMC:
 
     def summary(
         self,
-        percentiles: Optional[List[int]] = None,
-        sig_figs: Optional[int] = None,
+        percentiles: Sequence[int] = (5, 50, 95),
+        sig_figs: int = 6,
     ) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output CSV files, assemble
@@ -392,8 +402,9 @@ class CmdStanMCMC:
         quantities variables listed in the order in which they were declared
         in the Stan program.
 
-        :param percentiles: Ordered non-empty list of percentiles to report.
-            Must be integers from (1, 99), inclusive.
+        :param percentiles: Ordered non-empty sequence of percentiles to report.
+            Must be integers from (1, 99), inclusive. Defaults to
+            ``(5, 50, 95)``
 
         :param sig_figs: Number of significant figures to report.
             Must be an integer between 1 and 18.  If unspecified, the default
@@ -404,40 +415,38 @@ class CmdStanMCMC:
 
         :return: pandas.DataFrame
         """
-        percentiles_str = '--percentiles=5,50,95'
-        if percentiles is not None:
-            if len(percentiles) == 0:
+
+        if len(percentiles) == 0:
+            raise ValueError(
+                'Invalid percentiles argument, must be ordered'
+                ' non-empty list from (1, 99), inclusive.'
+            )
+        cur_pct = 0
+        for pct in percentiles:
+            if pct > 99 or not pct > cur_pct:
                 raise ValueError(
-                    'Invalid percentiles argument, must be ordered'
+                    'Invalid percentiles spec, must be ordered'
                     ' non-empty list from (1, 99), inclusive.'
                 )
-            cur_pct = 0
-            for pct in percentiles:
-                if pct > 99 or not pct > cur_pct:
-                    raise ValueError(
-                        'Invalid percentiles spec, must be ordered'
-                        ' non-empty list from (1, 99), inclusive.'
-                    )
-                cur_pct = pct
-            percentiles_str = '='.join(
-                ['--percentiles', ','.join([str(x) for x in percentiles])]
+            cur_pct = pct
+        percentiles_str = (
+            f"--percentiles= {','.join(str(x) for x in percentiles)}"
+        )
+
+        if not isinstance(sig_figs, int) or sig_figs < 1 or sig_figs > 18:
+            raise ValueError(
+                'Keyword "sig_figs" must be an integer between 1 and 18,'
+                ' found {}'.format(sig_figs)
             )
-        sig_figs_str = '--sig_figs=2'
-        if sig_figs is not None:
-            if not isinstance(sig_figs, int) or sig_figs < 1 or sig_figs > 18:
-                raise ValueError(
-                    'Keyword "sig_figs" must be an integer between 1 and 18,'
-                    ' found {}'.format(sig_figs)
-                )
-            csv_sig_figs = self._sig_figs or 6
-            if sig_figs > csv_sig_figs:
-                get_logger().warning(
-                    'Requesting %d significant digits of output, but CSV files'
-                    ' only have %d digits of precision.',
-                    sig_figs,
-                    csv_sig_figs,
-                )
-            sig_figs_str = '--sig_figs=' + str(sig_figs)
+        csv_sig_figs = self._sig_figs or 6
+        if sig_figs > csv_sig_figs:
+            get_logger().warning(
+                'Requesting %d significant digits of output, but CSV files'
+                ' only have %d digits of precision.',
+                sig_figs,
+                csv_sig_figs,
+            )
+        sig_figs_str = f'--sig_figs={sig_figs}'
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
@@ -610,6 +619,7 @@ class CmdStanMCMC:
                 self._metadata.stan_vars_cols[var],
                 0,
                 self.draws(inc_warmup=inc_warmup),
+                self._metadata.stan_vars_types[var],
             )
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
@@ -617,7 +627,7 @@ class CmdStanMCMC:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         inc_warmup: bool = False,
     ) -> np.ndarray:
         """
@@ -645,6 +655,9 @@ class CmdStanMCMC:
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
 
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
+
         :param var: variable name
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
@@ -658,10 +671,12 @@ class CmdStanMCMC:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var is None:
-            raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars_dims)
+            )
         if self._draws.shape == (0,):
             self._assemble_draws()
         draw1 = 0
@@ -674,8 +689,10 @@ class CmdStanMCMC:
         col_idxs = self._metadata.stan_vars_cols[var]
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[var])
-        # pylint: disable=redundant-keyword-arg
-        return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+        draws = self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+        if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
+            draws = draws[..., 0] + 1j * draws[..., 1]
+        return draws
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -762,6 +779,14 @@ class CmdStanGQ:
             '\n\t'.join(self.runset.stdout_files),
         )
         return repr
+
+    def __getattr__(self, attr: str) -> np.ndarray:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
 
     def _validate_csv_files(self) -> Dict[str, Any]:
         """
@@ -1106,6 +1131,7 @@ class CmdStanGQ:
                 self._metadata.stan_vars_cols[var],
                 0,
                 self.draws(inc_warmup=inc_warmup),
+                self._metadata.stan_vars_types[var],
             )
         if inc_sample:
             for var in mcmc_vars_list:
@@ -1116,6 +1142,7 @@ class CmdStanGQ:
                     self.mcmc_sample.metadata.stan_vars_cols[var],
                     0,
                     self.mcmc_sample.draws(inc_warmup=inc_warmup),
+                    self.mcmc_sample._metadata.stan_vars_types[var],
                 )
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
@@ -1124,7 +1151,7 @@ class CmdStanGQ:
 
     def stan_variable(
         self,
-        var: Optional[str] = None,
+        var: str,
         inc_warmup: bool = False,
     ) -> np.ndarray:
         """
@@ -1152,6 +1179,9 @@ class CmdStanGQ:
         and the sample consists of 4 chains with 1000 post-warmup draws,
         this function will return a numpy.ndarray with shape (4000,3,3).
 
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
+
         :param var: variable name
 
         :param inc_warmup: When ``True`` and the warmup draws are present in
@@ -1165,12 +1195,14 @@ class CmdStanGQ:
         CmdStanMLE.stan_variable
         CmdStanVB.stan_variable
         """
-        if var is None:
-            raise ValueError('No variable name specified.')
         model_var_names = self.mcmc_sample.metadata.stan_vars_cols.keys()
         gq_var_names = self.metadata.stan_vars_cols.keys()
         if not (var in model_var_names or var in gq_var_names):
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(model_var_names | gq_var_names)
+            )
         if var not in gq_var_names:
             return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable
@@ -1193,7 +1225,10 @@ class CmdStanGQ:
             if len(col_idxs) > 0:
                 dims.extend(self._metadata.stan_vars_dims[var])
             # pylint: disable=redundant-keyword-arg
-            return self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+            draws = self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
+                draws = draws[..., 0] + 1j * draws[..., 1]
+            return draws
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
@@ -1262,6 +1297,7 @@ def build_xarray_data(
     col_idxs: Tuple[int, ...],
     start_row: int,
     drawset: np.ndarray,
+    var_type: BaseType,
 ) -> None:
     """
     Adds Stan variable name, labels, and values to a dictionary
@@ -1270,12 +1306,19 @@ def build_xarray_data(
     var_dims: Tuple[str, ...] = ('draw', 'chain')
     if dims:
         var_dims += tuple(f"{var_name}_dim_{i}" for i in range(len(dims)))
+
+        draws = drawset[start_row:, :, col_idxs].reshape(
+            *drawset.shape[:2], *dims, order="F"
+        )
+        if var_type == BaseType.COMPLEX:
+            draws = draws[..., 0] + 1j * draws[..., 1]
+            var_dims = var_dims[:-1]
+
         data[var_name] = (
             var_dims,
-            drawset[start_row:, :, col_idxs].reshape(
-                *drawset.shape[:2], *dims, order="F"
-            ),
+            draws,
         )
+
     else:
         data[var_name] = (
             var_dims,

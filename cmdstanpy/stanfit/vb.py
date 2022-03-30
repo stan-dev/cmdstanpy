@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils import scan_variational_csv
+from cmdstanpy.utils import BaseType, scan_variational_csv
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -40,6 +40,14 @@ class CmdStanVB:
         )
         # TODO - diagnostic, profiling files
         return repr
+
+    def __getattr__(self, attr: str) -> Union[np.ndarray, float]:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
 
     def _set_variational_attrs(self, sample_csv_0: str) -> None:
         meta = scan_variational_csv(sample_csv_0)
@@ -103,13 +111,14 @@ class CmdStanVB:
         """
         return self._metadata
 
-    def stan_variable(
-        self, var: Optional[str] = None
-    ) -> Union[np.ndarray, float]:
+    def stan_variable(self, var: str) -> Union[np.ndarray, float]:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
         numpy.ndarray match the shape of the Stan program variable.
+
+        This functionaltiy is also available via a shortcut using ``.`` -
+        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
 
         :param var: variable name
 
@@ -123,18 +132,24 @@ class CmdStanVB:
         if var is None:
             raise ValueError('No variable name specified.')
         if var not in self._metadata.stan_vars_dims:
-            raise ValueError('Unknown variable name: {}'.format(var))
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars_dims)
+            )
         col_idxs = list(self._metadata.stan_vars_cols[var])
         shape: Tuple[int, ...] = ()
-        result: Union[np.ndarray, float]
         if len(col_idxs) > 1:
             shape = self._metadata.stan_vars_dims[var]
-            result = np.asarray(self._variational_mean)[col_idxs].reshape(
-                shape, order="F"
-            )
+            result: np.ndarray = np.asarray(self._variational_mean)[
+                col_idxs
+            ].reshape(shape, order="F")
+
+            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
+                result = result[..., 0] + 1j * result[..., 1]
+            return result
         else:
-            result = float(self._variational_mean[col_idxs[0]])
-        return result
+            return float(self._variational_mean[col_idxs[0]])
 
     def stan_variables(self) -> Dict[str, Union[np.ndarray, float]]:
         """
