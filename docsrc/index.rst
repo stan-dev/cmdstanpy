@@ -29,6 +29,7 @@ set of model, data, and posterior estimates.
    hello_world
    workflow
    examples
+   community
    api
 
 :ref:`genindex`
