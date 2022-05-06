@@ -43,7 +43,7 @@ from cmdstanpy.utils import (
     do_command,
     get_logger,
     returncode_msg,
-    macos_make_arch_args,
+    macos_make_arch,
 )
 
 from . import progress as progbar
@@ -414,8 +414,10 @@ class CmdStanModel:
                 'MAKE',
                 'make' if platform.system() != 'Windows' else 'mingw32-make',
             )
-            maybe_force_arch = macos_make_arch_args()
-            cmd = maybe_force_arch + [make]
+
+            cmd = [make]
+            if sys.platform == 'darwin':
+                cmd = macos_make_arch() + cmd
             if self._compiler_options is not None:
                 cmd.extend(self._compiler_options.compose())
             cmd.append(Path(exe_file).as_posix())

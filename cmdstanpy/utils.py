@@ -1480,22 +1480,14 @@ class SanitizedOrTmpFilePath:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
 
 
-def macos_make_arch_args():
-    """Determine what, if any, `arch -arm64` prefix for the `make` invocation."""
+def macos_make_arch():
+    """Determine what `arch -arm64` prefix required for `make` invocations."""
     if sys.platform != 'darwin':
         return []
-    pch_name = 'stan/src/stan/model/model_header.hpp.gch'
-    pch_path = f'{cmdstan_path()}/{pch_name}'
-    with tempfile.TemporaryDirectory() as td:
-        with open(f'{td}/foo.cpp', 'w') as fd:
-            fd.write('int foo() { }')
-        out = subprocess.Popen(
-            ['g++', '-include-pch',  pch_path, '-c', 'foo.cpp'],
-            cwd=td, stderr=subprocess.PIPE
-        )
-        err = out.stderr.read().decode('ascii')
-    match = re.search(r"was compiled for the target '(.*?)-", err, re.MULTILINE)
+    cmd = ['file', cmdstan_path() + '/bin/stansummary']
+    out = subprocess.check_output(cmd).decode('ascii').strip()
+    match = re.search(r"Mach-O 64-bit executable (.*?)$", out)
     if match:
-        pch_arch, = match.groups()
-        return ['arch', '-' + pch_arch]
+        arch, = match.groups()
+        return ['arch', '-' + arch]
     return []
