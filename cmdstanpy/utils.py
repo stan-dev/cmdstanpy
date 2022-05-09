@@ -1480,7 +1480,7 @@ class SanitizedOrTmpFilePath:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
 
 
-def macos_make_arch():
+def macos_make_arch() -> List[str]:
     """Determine what `arch -arm64` prefix required for `make` invocations."""
     if sys.platform != 'darwin':
         return []
