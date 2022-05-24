@@ -1175,10 +1175,13 @@ class CmdStanModel:
                     " force_one_process_per_chain to True"
                 )
 
-            if not runset._check_retcodes():
-                msg = 'Error during sampling:\n{}'.format(runset.get_err_msgs())
-                msg = '{}Command and output files:\n{}'.format(
-                    msg, runset.__repr__()
+            errors = runset.get_err_msgs()
+            if errors or not runset._check_retcodes():
+                msg = (
+                    f'Error during sampling:\n{errors}\n'
+                    + f'Command and output files:\n{repr(runset)}\n'
+                    + 'Consider re-running with show_console=True if the above'
+                    + ' output is unclear!'
                 )
                 raise RuntimeError(msg)
 
@@ -1317,12 +1320,13 @@ class CmdStanModel:
                         show_console=show_console,
                     )
 
-            if not runset._check_retcodes():
-                msg = 'Error during generate_quantities:\n{}'.format(
-                    runset.get_err_msgs()
-                )
-                msg = '{}Command and output files:\n{}'.format(
-                    msg, runset.__repr__()
+            errors = runset.get_err_msgs()
+            if errors:
+                msg = (
+                    f'Error during generate_quantities:\n{errors}\n'
+                    + f'Command and output files:\n{repr(runset)}\n'
+                    + 'Consider re-running with show_console=True if the above'
+                    + ' output is unclear!'
                 )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, mcmc_sample=mcmc_fit)
