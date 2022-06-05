@@ -24,12 +24,17 @@ import pandas as pd
 
 try:
     import xarray as xr
-
     XARRAY_INSTALLED = True
 except ImportError:
     XARRAY_INSTALLED = False
 
-from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
+from cmdstanpy import (
+    _CMDSTAN_SAMPLING,
+    _CMDSTAN_THIN,
+    _CMDSTAN_WARMUP,
+    _CMDSTAN_MAX_TREEDEPTH,
+    _TMPDIR
+)
 from cmdstanpy.cmdstan_args import Method, SamplerArgs
 from cmdstanpy.utils import (
     EXTENSION,
@@ -43,7 +48,6 @@ from cmdstanpy.utils import (
     get_logger,
     scan_generated_quantities_csv,
 )
-
 from .metadata import InferenceMetadata
 from .runset import RunSet
 
@@ -78,31 +82,29 @@ class CmdStanMCMC:
         assert isinstance(
             sampler_args, SamplerArgs
         )  # make the typechecker happy
-        iter_sampling = sampler_args.iter_sampling
-        if iter_sampling is None:
+        self._iter_sampling = sampler_args.iter_sampling
+        if self._iter_sampling is None:
             self._iter_sampling = _CMDSTAN_SAMPLING
-        else:
-            self._iter_sampling = iter_sampling
-        iter_warmup = sampler_args.iter_warmup
-        if iter_warmup is None:
+        self._iter_warmup = sampler_args.iter_warmup
+        if self._iter_warmup is None:
             self._iter_warmup = _CMDSTAN_WARMUP
-        else:
-            self._iter_warmup = iter_warmup
-        thin = sampler_args.thin
-        if thin is None:
+        self._thin = sampler_args.thin
+        if self._thin is None:
             self._thin: int = _CMDSTAN_THIN
-        else:
-            self._thin = thin
+        self._max_treedepth = sampler_args.max_treedepth
+        if self._max_treedepth is None:
+            self._max_treedepth: int = _CMDSTAN_MAX_TREEDEPTH
         self._is_fixed_param = sampler_args.fixed_param
         self._save_warmup = sampler_args.save_warmup
         self._sig_figs = runset._args.sig_figs
+
         # info from CSV values, instantiated lazily
         self._metric: np.ndarray = np.array(())
         self._step_size: np.ndarray = np.array(())
         self._draws: np.ndarray = np.array(())
         self._divergences: np.ndarray = np.array(())
-        self._max_treedepth: int = 0
-        self._treedepths: List[List[int]] = []
+        self._treedepths: np.ndarray = np.array(())
+
         # info from CSV initial comments and header
         config = self._validate_csv_files()
         self._metadata: InferenceMetadata = InferenceMetadata(config)
@@ -195,8 +197,7 @@ class CmdStanMCMC:
                 'Unit diagnonal metric, inverse mass matrix size unknown.'
             )
             return None
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
         return self._metric
 
     @property
@@ -207,9 +208,16 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if self._step_size.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
         return self._step_size
+
+    @property
+    def thin(self) -> int:
+        """
+        Period between recorded iterations.  (Default is 1).
+        """
+        return self._thin
+
 
     @property
     def divergences(self) -> Optional[np.ndarray]:
@@ -219,40 +227,32 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
         return self._divergences
 
     @property
-    def treedepths(self) -> Optional[List[List[int]]]:
+    def max_treedepth_hits(self) -> Optional[np.ndarray]:
         """
-        Per-chain counts over treedepths reached for post-warmup iterations.
+        Per-chain total number of post-warmup iterations where the NUTS sampler
+        reached the maximum allowed treedepth.
         When sampler algorithm 'fixed_param' is specified, returns None.
         """
         if self._is_fixed_param:
             return None
-        if self._treedepths == []:
-            self._assemble_draws()
+        self._assemble_draws()
+        return self._treedepths[ :, self._max_treedepth]
+
+    @property
+    def treedepths(self) -> Optional[np.ndarray]:
+        """
+        Per-chain counts of treedepth reached per iteration.
+        When sampler algorithm 'fixed_param' is specified, returns None.
+        """
+        if self._is_fixed_param:
+            return None
+        self._assemble_draws()
         return self._treedepths
 
-    @property
-    def max_treedepth(self) -> int:
-        """
-        Maximum treedepth over all post-warmup iterations.
-        When sampler algorithm 'fixed_param' is specified, returns None.
-        """
-        if self._is_fixed_param:
-            return None
-        if self._max_treedepth == 0:
-            self._assemble_draws()
-        return self._max_treedepth
-
-    @property
-    def thin(self) -> int:
-        """
-        Period between recorded iterations.  (Default is 1).
-        """
-        return self._thin
 
     def draws(
         self, *, inc_warmup: bool = False, concat_chains: bool = False
@@ -358,6 +358,8 @@ class CmdStanMCMC:
         Allocates and populates the step size, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
+        if self._draws.shape != (0,):
+            return
         num_draws = self.num_draws_sampling
         sampling_iter_start = 0
         if self._save_warmup:
@@ -434,17 +436,18 @@ class CmdStanMCMC:
                 self._draws[sampling_iter_start:, :, idx_divergent].astype(int)
                 )
             idx_treedepth = self._metadata.method_vars_cols['treedepth__'][0]
-            self._max_treedepth = np.amax(
-                 self._draws[sampling_iter_start:, :, idx_treedepth].astype(int)
-                )
-            self._treedepths = [
-                np.bincount(
+            self._treedepths = np.zeros(
+                (self.chains, self._max_treedepth + 1),
+                dtype=int, order='F',
+            )
+            for i in range(self.runset.chains):
+                counts = np.bincount(
                     self._draws[
-                         sampling_iter_start:, i, idx_treedepth
-                         ].astype(int)
+                        sampling_iter_start:, i, idx_treedepth
+                        ].astype(int)
                     )
-                for i in range(self.runset.chains)
-                ]
+                self._treedepths[i, :len(counts)] = counts
+
 
     def summary(
         self,
