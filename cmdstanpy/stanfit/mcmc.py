@@ -32,7 +32,6 @@ from cmdstanpy import (
     _CMDSTAN_SAMPLING,
     _CMDSTAN_THIN,
     _CMDSTAN_WARMUP,
-    _CMDSTAN_MAX_TREEDEPTH,
     _TMPDIR
 )
 from cmdstanpy.cmdstan_args import Method, SamplerArgs
@@ -91,9 +90,6 @@ class CmdStanMCMC:
         self._thin = sampler_args.thin
         if self._thin is None:
             self._thin: int = _CMDSTAN_THIN
-        self._max_treedepth = sampler_args.max_treedepth
-        if self._max_treedepth is None:
-            self._max_treedepth: int = _CMDSTAN_MAX_TREEDEPTH
         self._is_fixed_param = sampler_args.fixed_param
         self._save_warmup = sampler_args.save_warmup
         self._sig_figs = runset._args.sig_figs
@@ -108,6 +104,9 @@ class CmdStanMCMC:
         # info from CSV initial comments and header
         config = self._validate_csv_files()
         self._metadata: InferenceMetadata = InferenceMetadata(config)
+        if not self._is_fixed_param:
+            self._max_treedepth = self._metadata.cmdstan_config['max_depth']
+
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
