@@ -1795,6 +1795,37 @@ class CmdStanMCMCTest(CustomTestCase):
         with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
             dummy = fit.c
 
+    def test_diagnostics(self):
+        # centered 8 schools hits funnel
+        stan = os.path.join(DATAFILES_PATH, 'eight_schools.stan')
+        model = CmdStanModel(stan_file=stan)
+        rdata = os.path.join(DATAFILES_PATH, 'eight_schools.data.R')
+        fit = model.sample(
+            data=rdata,
+            seed=55157,
+            show_progress=False,
+            show_console=False,
+        )
+        self.assertTrue(fit.treedepths.shape, (4, 11))
+        self.assertEqual(fit.treedepths[0, 10], 0)
+        self.assertEqual(fit.treedepths[3, 10], 6)
+        self.assertTrue(all([a == b for a, b in zip(fit.max_treedepth_hits, [0, 0, 0, 6])]))
+        self.assertTrue(all([a == b for a, b in zip(fit.divergences, [10, 143, 5, 4])]))
+
+        # fixed_param returns None
+        stan = os.path.join(DATAFILES_PATH, 'container_vars.stan')
+        container_vars_model = CmdStanModel(stan_file=stan)
+        fit = container_vars_model.sample(
+            chains=1,
+            iter_sampling=4,
+            fixed_param=True,
+            show_progress=False,
+            show_console=False,
+        )
+        self.assertEqual(fit.treedepths, None)
+        self.assertEqual(fit.max_treedepth_hits, None)
+        self.assertEqual(fit.divergences, None)
+
 
 if __name__ == '__main__':
     unittest.main()

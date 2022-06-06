@@ -143,8 +143,8 @@ class CmdStanMLETest(unittest.TestCase):
             )
 
     def test_eight_schools(self):
-        stan = os.path.join(DATAFILES_PATH, 'optimize', 'eight_schools.stan')
-        rdata = os.path.join(DATAFILES_PATH, 'optimize', 'eight_schools.data.R')
+        stan = os.path.join(DATAFILES_PATH, 'eight_schools.stan')
+        rdata = os.path.join(DATAFILES_PATH, 'eight_schools.data.R')
         model = CmdStanModel(stan_file=stan)
         with self.assertRaises(RuntimeError):
             model.optimize(data=rdata, algorithm='LBFGS')
