@@ -95,18 +95,16 @@ class CmdStanMCMC:
         self._sig_figs = runset._args.sig_figs
 
         # info from CSV values, instantiated lazily
+        self._draws: np.ndarray = np.array(())
+        # only valid when not is_fixed_param 
         self._metric: np.ndarray = np.array(())
         self._step_size: np.ndarray = np.array(())
-        self._draws: np.ndarray = np.array(())
-        self._divergences: np.ndarray = np.array(())
-        self._treedepths: np.ndarray = np.array(())
+        self._divergences: np.ndarray = np.zeros(self.runset.chains, int)
+        self._max_treedepths: np.ndarray = np.zeros(self.runset.chains, int)
 
         # info from CSV initial comments and header
         config = self._validate_csv_files()
         self._metadata: InferenceMetadata = InferenceMetadata(config)
-        if not self._is_fixed_param:
-            self._max_treedepth = self._metadata.cmdstan_config['max_depth']
-
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -217,7 +215,6 @@ class CmdStanMCMC:
         """
         return self._thin
 
-
     @property
     def divergences(self) -> Optional[np.ndarray]:
         """
@@ -226,11 +223,10 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        self._assemble_draws()
         return self._divergences
 
     @property
-    def max_treedepth_hits(self) -> Optional[np.ndarray]:
+    def max_treedepths(self) -> Optional[np.ndarray]:
         """
         Per-chain total number of post-warmup iterations where the NUTS sampler
         reached the maximum allowed treedepth.
@@ -238,20 +234,7 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        self._assemble_draws()
-        return self._treedepths[ :, self._max_treedepth]
-
-    @property
-    def treedepths(self) -> Optional[np.ndarray]:
-        """
-        Per-chain counts of treedepth reached per iteration.
-        When sampler algorithm 'fixed_param' is specified, returns None.
-        """
-        if self._is_fixed_param:
-            return None
-        self._assemble_draws()
-        return self._treedepths
-
+        return self._max_treedepths
 
     def draws(
         self, *, inc_warmup: bool = False, concat_chains: bool = False
@@ -301,6 +284,7 @@ class CmdStanMCMC:
         Checks that Stan CSV output files for all chains are consistent
         and returns dict containing config and column names.
 
+        Tabulates sampling iters which are divergent or at max treedepth
         Raises exception when inconsistencies detected.
         """
         dzero = {}
@@ -314,6 +298,9 @@ class CmdStanMCMC:
                     save_warmup=self._save_warmup,
                     thin=self._thin,
                 )
+                if 'ct_divergences' in dzero:
+                    self._divergences[i] = dzero['ct_divergences']
+                    self._max_treedepths[i] = dzero['ct_max_treedepth']
             else:
                 drest = check_sampler_csv(
                     path=self.runset.csv_files[i],
@@ -350,6 +337,12 @@ class CmdStanMCMC:
                                 drest[key],
                             )
                         )
+                if 'ct_divergences' in drest:
+                    self._divergences[i] = drest['ct_divergences']
+                    self._max_treedepths[i] = drest['ct_max_treedepth']
+                    get_logger().info('divergences %s', self._divergences)
+                    get_logger().info('max_treedepth hits %s', self._max_treedepths)
+
         return dzero
 
     def _assemble_draws(self) -> None:
@@ -427,26 +420,7 @@ class CmdStanMCMC:
                     line = fd.readline().strip()
                     xs = line.split(',')
                     self._draws[i, chain, :] = [float(x) for x in xs]
-
         assert self._draws is not None
-        if not self._is_fixed_param:
-            idx_divergent = self._metadata.method_vars_cols['divergent__'][0]
-            self._divergences = sum(
-                self._draws[sampling_iter_start:, :, idx_divergent].astype(int)
-                )
-            idx_treedepth = self._metadata.method_vars_cols['treedepth__'][0]
-            self._treedepths = np.zeros(
-                (self.chains, self._max_treedepth + 1),
-                dtype=int, order='F',
-            )
-            for i in range(self.runset.chains):
-                counts = np.bincount(
-                    self._draws[
-                        sampling_iter_start:, i, idx_treedepth
-                        ].astype(int)
-                    )
-                self._treedepths[i, :len(counts)] = counts
-
 
     def summary(
         self,

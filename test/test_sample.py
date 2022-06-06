@@ -1806,10 +1806,7 @@ class CmdStanMCMCTest(CustomTestCase):
             show_progress=False,
             show_console=False,
         )
-        self.assertTrue(fit.treedepths.shape, (4, 11))
-        self.assertEqual(fit.treedepths[0, 10], 0)
-        self.assertEqual(fit.treedepths[3, 10], 6)
-        self.assertTrue(all([a == b for a, b in zip(fit.max_treedepth_hits, [0, 0, 0, 6])]))
+        self.assertTrue(all([a == b for a, b in zip(fit.max_treedepths, [0, 0, 0, 6])]))
         self.assertTrue(all([a == b for a, b in zip(fit.divergences, [10, 143, 5, 4])]))
 
         # fixed_param returns None
@@ -1822,8 +1819,7 @@ class CmdStanMCMCTest(CustomTestCase):
             show_progress=False,
             show_console=False,
         )
-        self.assertEqual(fit.treedepths, None)
-        self.assertEqual(fit.max_treedepth_hits, None)
+        self.assertEqual(fit.max_treedepths, None)
         self.assertEqual(fit.divergences, None)
 
 

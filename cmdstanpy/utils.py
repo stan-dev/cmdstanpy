@@ -957,9 +957,21 @@ def scan_sampling_iters(
 ) -> int:
     """
     Parse sampling iteration, save number of iterations to config_dict.
+    Also save number of divergences, max_treedepth hits
     """
     draws_found = 0
     num_cols = len(config_dict['column_names'])
+    idx_divergent = None
+    idx_treedepth = None
+    max_treedepth = None
+    try:
+        idx_divergent = config_dict['column_names'].index('divergent__')
+        idx_treedepth = config_dict['column_names'].index('treedepth__')
+        max_treedepth = config_dict['max_depth']
+        ct_divergences = 0
+        ct_max_treedepth = 0
+    except ValueError:
+        pass
     cur_pos = fd.tell()
     line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
@@ -975,9 +987,19 @@ def scan_sampling_iters(
                 'Try clearing up TEMP or setting output_dir to a path'
                 ' on another drive.',
             )
+        if max_treedepth:
+            ct_divergences += int(data[idx_divergent])
+            if int(data[idx_treedepth]) == max_treedepth:
+                ct_max_treedepth += 1
         cur_pos = fd.tell()
         line = fd.readline().strip()
     config_dict['draws_sampling'] = draws_found
+    if max_treedepth:
+        config_dict['ct_divergences'] = ct_divergences
+        config_dict['ct_max_treedepth'] = ct_max_treedepth
+        get_logger().info(
+            'config_dict %s', config_dict
+            )
     fd.seek(cur_pos)
     return lineno
 
