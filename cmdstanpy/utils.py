@@ -132,7 +132,6 @@ def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     # unmunge as needed
     mmp = latest.split('.')
     if int(mmp[2]) < 0:
-        print("here")
         rc_num = str(int(mmp[2]) + 100)
         mmp[2] = "0-rc" + rc_num
         latest = '.'.join(mmp)
@@ -997,9 +996,6 @@ def scan_sampling_iters(
     if max_treedepth:
         config_dict['ct_divergences'] = ct_divergences
         config_dict['ct_max_treedepth'] = ct_max_treedepth
-        get_logger().info(
-            'config_dict %s', config_dict
-            )
     fd.seek(cur_pos)
     return lineno
 

@@ -105,6 +105,24 @@ class CmdStanMCMC:
         # info from CSV initial comments and header
         config = self._validate_csv_files()
         self._metadata: InferenceMetadata = InferenceMetadata(config)
+        # prelim diagnostics
+        if np.any(self._divergences) or np.any(self._max_treedepths):
+            diagnostics = [' Some chains may have failed to converge.']
+            total_iters = config['num_samples']
+            for i in range(self.runset._chains):
+                if self._divergences[i] > 0:
+                    diagnostics.append(
+                        f'Chain {i + 1} had {self._divergences[i]} divergent transitions ({(self._divergences[i]/total_iters)*100:.1f}%)'
+                    )
+                if self._max_treedepths[i] > 0:
+                    diagnostics.append(
+                        f'Chain {i + 1} had {self._max_treedepths[i]} at max treedepth ({(self._max_treedepths[i]/total_iters)*100:.1f}%)'
+                    )
+            diagnostics.append(
+                'Run the "diagnose()" method for further diagnostics'
+            )
+            get_logger().warning('\n'.join(diagnostics))    
+
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -340,9 +358,6 @@ class CmdStanMCMC:
                 if 'ct_divergences' in drest:
                     self._divergences[i] = drest['ct_divergences']
                     self._max_treedepths[i] = drest['ct_max_treedepth']
-                    get_logger().info('divergences %s', self._divergences)
-                    get_logger().info('max_treedepth hits %s', self._max_treedepths)
-
         return dzero
 
     def _assemble_draws(self) -> None:
