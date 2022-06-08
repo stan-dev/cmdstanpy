@@ -24,16 +24,12 @@ import pandas as pd
 
 try:
     import xarray as xr
+
     XARRAY_INSTALLED = True
 except ImportError:
     XARRAY_INSTALLED = False
 
-from cmdstanpy import (
-    _CMDSTAN_SAMPLING,
-    _CMDSTAN_THIN,
-    _CMDSTAN_WARMUP,
-    _TMPDIR
-)
+from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs
 from cmdstanpy.utils import (
     EXTENSION,
@@ -96,7 +92,7 @@ class CmdStanMCMC:
 
         # info from CSV values, instantiated lazily
         self._draws: np.ndarray = np.array(())
-        # only valid when not is_fixed_param 
+        # only valid when not is_fixed_param
         self._metric: np.ndarray = np.array(())
         self._step_size: np.ndarray = np.array(())
         self._divergences: np.ndarray = np.zeros(self.runset.chains, int)
@@ -107,22 +103,25 @@ class CmdStanMCMC:
         self._metadata: InferenceMetadata = InferenceMetadata(config)
         # prelim diagnostics
         if np.any(self._divergences) or np.any(self._max_treedepths):
-            diagnostics = [' Some chains may have failed to converge.']
-            total_iters = config['num_samples']
+            diagnostics = ['Some chains may have failed to converge.']
+            total_iters = config['num_samples']  # pylint: disable=unused-variable
             for i in range(self.runset._chains):
                 if self._divergences[i] > 0:
                     diagnostics.append(
-                        f'Chain {i + 1} had {self._divergences[i]} divergent transitions ({(self._divergences[i]/total_iters)*100:.1f}%)'
+                        f'Chain {i + 1} had {self._divergences[i]} '
+                        'divergent transitions '
+                        f'({((self._divergences[i]/total_iters)*100):.1f}%)'
                     )
                 if self._max_treedepths[i] > 0:
                     diagnostics.append(
-                        f'Chain {i + 1} had {self._max_treedepths[i]} at max treedepth ({(self._max_treedepths[i]/total_iters)*100:.1f}%)'
+                        f'Chain {i + 1} had {self._max_treedepths[i]} '
+                        'iterations at max treedepth '
+                        f'({((self._max_treedepths[i]/total_iters)*100):.1f}%)'
                     )
             diagnostics.append(
-                'Run the "diagnose()" method for further diagnostics'
+                'Use function "diagnose()" to see further information.'
             )
-            get_logger().warning('\n'.join(diagnostics))    
-
+            get_logger().warning('\n\t'.join(diagnostics))
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(

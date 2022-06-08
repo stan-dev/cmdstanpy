@@ -68,7 +68,10 @@ def get_logger() -> logging.Logger:
         # add a default handler to the logger to INFO and higher
         handler = logging.StreamHandler()
         handler.setLevel(logging.INFO)
-        handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            "%H:%M:%S"
+            ))
         logger.addHandler(handler)
     return logger
 
@@ -291,7 +294,7 @@ def cxx_toolchain_path(
         if os.path.exists(os.path.join(toolchain_root, 'mingw64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -315,7 +318,7 @@ def cxx_toolchain_path(
         elif os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -367,7 +370,7 @@ def cxx_toolchain_path(
                 if version not in ('35', '3.5', '3'):
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                        'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
@@ -392,7 +395,7 @@ def cxx_toolchain_path(
                 else:
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                        'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
