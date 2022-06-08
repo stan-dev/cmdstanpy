@@ -132,7 +132,6 @@ def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
     # unmunge as needed
     mmp = latest.split('.')
     if int(mmp[2]) < 0:
-        print("here")
         rc_num = str(int(mmp[2]) + 100)
         mmp[2] = "0-rc" + rc_num
         latest = '.'.join(mmp)
