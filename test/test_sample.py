@@ -62,8 +62,8 @@ class SampleTest(unittest.TestCase):
             iter_sampling=100,
             show_progress=False,
         )
-        self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
-        self.assertIn('method=sample', bern_fit.__repr__())
+        self.assertIn('CmdStanMCMC: model=bernoulli', repr(bern_fit))
+        self.assertIn('method=sample', repr(bern_fit))
 
         self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
 
@@ -99,8 +99,8 @@ class SampleTest(unittest.TestCase):
             metric='dense_e',
             show_progress=False,
         )
-        self.assertIn('CmdStanMCMC: model=bernoulli', bern_fit.__repr__())
-        self.assertIn('method=sample', bern_fit.__repr__())
+        self.assertIn('CmdStanMCMC: model=bernoulli', repr(bern_fit))
+        self.assertIn('method=sample', repr(bern_fit))
 
         self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
 
@@ -221,7 +221,7 @@ class SampleTest(unittest.TestCase):
             inits=1.1,
             show_progress=False,
         )
-        self.assertIn('init=1.1', bern_fit.runset.__repr__())
+        self.assertIn('init=1.1', repr(bern_fit.runset))
 
         bern_fit = bern_model.sample(
             data=jdata,
@@ -233,7 +233,7 @@ class SampleTest(unittest.TestCase):
             inits=1,
             show_progress=False,
         )
-        self.assertIn('init=1', bern_fit.runset.__repr__())
+        self.assertIn('init=1', repr(bern_fit.runset))
 
         # Save init to json
         inits_path1 = os.path.join(_TMPDIR, 'inits_test_1.json')
@@ -255,7 +255,7 @@ class SampleTest(unittest.TestCase):
         )
         self.assertIn(
             'init={}'.format(inits_path1.replace('\\', '\\\\')),
-            bern_fit.runset.__repr__(),
+            repr(bern_fit.runset),
         )
 
         bern_fit = bern_model.sample(
@@ -270,7 +270,7 @@ class SampleTest(unittest.TestCase):
         )
         self.assertIn(
             'init={}'.format(inits_path1.replace('\\', '\\\\')),
-            bern_fit.runset.__repr__(),
+            repr(bern_fit.runset),
         )
 
         with self.assertRaises(ValueError):
@@ -317,7 +317,6 @@ class SampleTest(unittest.TestCase):
                 bern_model.sample(data=jdata, chains=1, output_dir=path)
             os.rmdir(dirname1)
 
-    # pylint: disable=no-self-use
     def test_multi_proc_1(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
@@ -338,7 +337,6 @@ class SampleTest(unittest.TestCase):
             ('cmdstanpy', 'INFO', 'Chain [2] start processing'),
         )
 
-    # pylint: disable=no-self-use
     def test_multi_proc_2(self):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
         logistic_model = CmdStanModel(stan_file=logistic_stan)
@@ -615,7 +613,7 @@ class SampleTest(unittest.TestCase):
 
     def test_bernoulli_path_with_space(self):
         self.test_bernoulli_good(
-            'path with space/' 'bernoulli_path_with_space.stan'
+            'path with space/' + 'bernoulli_path_with_space.stan'
         )
 
     def test_index_bounds_error(self):
@@ -922,7 +920,6 @@ class CmdStanMCMCTest(CustomTestCase):
         fixed_param_sample = from_csv(path=csv_path)
         self.assertEqual(fixed_param_sample.draws_pd().shape, (100, 85))
 
-    # pylint: disable=no-self-use
     def test_custom_metric(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')

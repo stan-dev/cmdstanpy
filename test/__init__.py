@@ -24,7 +24,6 @@ class CustomTestCase(unittest.TestCase):
             exn_string += "\n" + str(exception)
         self.assertRegex(exn_string, msg)
 
-    # pylint: disable=no-self-use
     @contextlib.contextmanager
     def without_import(self, library, module):
         with unittest.mock.patch.dict('sys.modules', {library: None}):
@@ -33,7 +32,6 @@ class CustomTestCase(unittest.TestCase):
         reload(module)
 
     # recipe from https://stackoverflow.com/a/34333710
-    # pylint: disable=no-self-use
     @contextlib.contextmanager
     def modified_environ(self, *remove, **update):
         """

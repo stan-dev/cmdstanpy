@@ -1,8 +1,8 @@
 """Compiler options tests"""
 
+import logging
 import os
 import unittest
-import logging
 
 from testfixtures import LogCapture
 
@@ -33,7 +33,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions()
         opts.validate()
         self.assertEqual(opts.compose(), [])
-        self.assertEqual(opts.__repr__(), 'stanc_options={}, cpp_options={}')
+        self.assertEqual(repr(opts), 'stanc_options={}, cpp_options={}')
 
         stanc_opts = {}
         opts = CompilerOptions(stanc_options=stanc_opts)
@@ -48,7 +48,7 @@ class CompilerOptsTest(unittest.TestCase):
         opts = CompilerOptions(stanc_options=stanc_opts, cpp_options=cpp_opts)
         opts.validate()
         self.assertEqual(opts.compose(), [])
-        self.assertEqual(opts.__repr__(), 'stanc_options={}, cpp_options={}')
+        self.assertEqual(repr(opts), 'stanc_options={}, cpp_options={}')
 
     def test_opts_stanc(self):
         stanc_opts = {}
