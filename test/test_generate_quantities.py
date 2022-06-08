@@ -39,8 +39,8 @@ class GenerateQuantitiesTest(CustomTestCase):
         self.assertEqual(
             bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
         )
-        self.assertIn('CmdStanGQ: model=bernoulli_ppc', bern_gqs.__repr__())
-        self.assertIn('method=generate_quantities', bern_gqs.__repr__())
+        self.assertIn('CmdStanGQ: model=bernoulli_ppc', repr(bern_gqs))
+        self.assertIn('method=generate_quantities', repr(bern_gqs))
 
         self.assertEqual(bern_gqs.runset.chains, 4)
         for i in range(bern_gqs.runset.chains):
@@ -128,8 +128,8 @@ class GenerateQuantitiesTest(CustomTestCase):
         self.assertEqual(
             bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
         )
-        self.assertIn('CmdStanGQ: model=bernoulli_ppc', bern_gqs.__repr__())
-        self.assertIn('method=generate_quantities', bern_gqs.__repr__())
+        self.assertIn('CmdStanGQ: model=bernoulli_ppc', repr(bern_gqs))
+        self.assertIn('method=generate_quantities', repr(bern_gqs))
         self.assertEqual(bern_gqs.runset.chains, 4)
         for i in range(bern_gqs.runset.chains):
             self.assertEqual(bern_gqs.runset._retcode(i), 0)

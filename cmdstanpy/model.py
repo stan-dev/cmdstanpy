@@ -1150,7 +1150,7 @@ class CmdStanModel:
                 sys.stdout.write('\n')
                 get_logger().info('CmdStan done processing.')
 
-            get_logger().debug('runset\n%s', runset.__repr__())
+            get_logger().debug('runset\n%s', repr(runset))
 
             # hack needed to parse CSV files if model has no params
             # needed if exe is supplied without stan file
@@ -1525,7 +1525,6 @@ class CmdStanModel:
         vb = CmdStanVB(runset)
         return vb
 
-    # pylint: disable=no-self-use
     def _run_cmdstan(
         self,
         runset: RunSet,
