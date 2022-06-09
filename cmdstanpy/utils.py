@@ -68,10 +68,12 @@ def get_logger() -> logging.Logger:
         # add a default handler to the logger to INFO and higher
         handler = logging.StreamHandler()
         handler.setLevel(logging.INFO)
-        handler.setFormatter(logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            "%H:%M:%S"
-            ))
+        handler.setFormatter(
+            logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                "%H:%M:%S",
+            )
+        )
         logger.addHandler(handler)
     return logger
 
@@ -966,12 +968,12 @@ def scan_sampling_iters(
     idx_divergent = None
     idx_treedepth = None
     max_treedepth = None
+    ct_divergences = 0
+    ct_max_treedepth = 0
     try:
         idx_divergent = config_dict['column_names'].index('divergent__')
         idx_treedepth = config_dict['column_names'].index('treedepth__')
         max_treedepth = config_dict['max_depth']
-        ct_divergences = 0
-        ct_max_treedepth = 0
     except ValueError:
         pass
     cur_pos = fd.tell()
@@ -990,8 +992,8 @@ def scan_sampling_iters(
                 ' on another drive.',
             )
         if max_treedepth:
-            ct_divergences += int(data[idx_divergent])
-            if int(data[idx_treedepth]) == max_treedepth:
+            ct_divergences += int(data[idx_divergent])  # type: ignore
+            if int(data[idx_treedepth]) == max_treedepth:  # type: ignore
                 ct_max_treedepth += 1
         cur_pos = fd.tell()
         line = fd.readline().strip()

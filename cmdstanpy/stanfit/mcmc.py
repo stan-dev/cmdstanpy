@@ -77,15 +77,15 @@ class CmdStanMCMC:
         assert isinstance(
             sampler_args, SamplerArgs
         )  # make the typechecker happy
-        self._iter_sampling = sampler_args.iter_sampling
-        if self._iter_sampling is None:
-            self._iter_sampling = _CMDSTAN_SAMPLING
-        self._iter_warmup = sampler_args.iter_warmup
-        if self._iter_warmup is None:
-            self._iter_warmup = _CMDSTAN_WARMUP
-        self._thin = sampler_args.thin
-        if self._thin is None:
-            self._thin: int = _CMDSTAN_THIN
+        self._iter_sampling:int = _CMDSTAN_SAMPLING
+        if sampler_args.iter_sampling is not None:
+            self._iter_sampling = sampler_args.iter_sampling
+        self._iter_warmup:int = _CMDSTAN_WARMUP
+        if sampler_args.iter_warmup is not None:
+            self._iter_warmup = sampler_args.iter_warmup
+        self._thin:int  = _CMDSTAN_THIN
+        if sampler_args.thin is not None:
+            self._thin = sampler_args.thin
         self._is_fixed_param = sampler_args.fixed_param
         self._save_warmup = sampler_args.save_warmup
         self._sig_figs = runset._args.sig_figs
