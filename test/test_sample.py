@@ -14,7 +14,7 @@ from test import CustomTestCase
 from time import time
 
 import numpy as np
-from testfixtures import LogCapture
+from testfixtures import LogCapture, StringComparison
 
 try:
     import ujson as json
@@ -1237,6 +1237,18 @@ class CmdStanMCMCTest(CustomTestCase):
             ValueError, 'bad draw, expecting 9 items, found 8'
         ):
             CmdStanMCMC(runset)
+
+    def test_sample_sporadic_exception(self):
+        stan = os.path.join(DATAFILES_PATH, 'linear_regression.stan')
+        jdata = os.path.join(DATAFILES_PATH, 'linear_regression.data.json')
+        linear_model = CmdStanModel(stan_file=stan)
+        # will produce a failure due to calling normal_lpdf with 0 for scale
+        # but then continue sampling normally
+        with LogCapture() as log:
+            linear_model.sample(data=jdata, inits=0)
+        log.check_present(
+            ('cmdstanpy', 'WARNING', StringComparison(r"Non-fatal error.*"))
+        )
 
     def test_save_warmup(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
