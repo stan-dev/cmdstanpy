@@ -177,7 +177,7 @@ def cmdstan_path() -> str:
     Validate, then return CmdStan directory path.
     """
     cmdstan = ''
-    if 'CMDSTAN' in os.environ:
+    if 'CMDSTAN' in os.environ and len(os.environ['CMDSTAN']) > 0:
         cmdstan = os.environ['CMDSTAN']
     else:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
