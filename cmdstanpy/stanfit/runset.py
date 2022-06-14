@@ -6,6 +6,7 @@ such as file locations
 import os
 import re
 import shutil
+import tempfile
 from datetime import datetime
 from time import time
 from typing import List, Optional
@@ -50,7 +51,10 @@ class RunSet:
         if args.output_dir is not None:
             self._output_dir = args.output_dir
         else:
-            self._output_dir = _TMPDIR
+            # make a per-run subdirectory of our master temp directory
+            self._output_dir = tempfile.mkdtemp(
+                prefix=args.model_name, dir=_TMPDIR
+            )
 
         # output files prefix: ``<model_name>-<YYYYMMDDHHMM>_<chain_id>``
         self._base_outfile = (
