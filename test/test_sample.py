@@ -1769,6 +1769,20 @@ class CmdStanMCMCTest(CustomTestCase):
                 self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
                 self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
 
+    def test_overlapping_names(self):
+        stan = os.path.join(DATAFILES_PATH, 'normal-rng.stan')
+
+        mod = CmdStanModel(stan_file=stan)
+        # %Y to force same names
+        fits = [
+            mod.sample(data={}, time_fmt="%Y", iter_sampling=1, iter_warmup=1)
+            for i in range(10)
+        ]
+
+        self.assertEqual(
+            len(np.unique([fit.stan_variables()["x"][0] for fit in fits])), 10
+        )
+
     def test_complex_output(self):
         stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
         model = CmdStanModel(stan_file=stan)
