@@ -173,7 +173,8 @@ The CmdStanPy commands ``cmdstan_path`` and ``set_cmdstan_path``
 get and set this environment variable:
 
 .. code-block:: python
-
+    
+    import os
     from cmdstanpy import cmdstan_path, set_cmdstan_path
 
     oldpath = cmdstan_path()
