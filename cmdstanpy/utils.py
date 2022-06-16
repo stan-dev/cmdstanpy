@@ -1381,7 +1381,9 @@ class MaybeDictToFilePath:
 
     def __init__(
         self,
-        *objs: Union[str, Mapping[str, Any], List[Any], int, float, None],
+        *objs: Union[
+            str, Mapping[str, Any], List[Any], int, float, os.PathLike, None
+        ],
     ):
         self._unlink = [False] * len(objs)
         self._paths: List[Any] = [''] * len(objs)
@@ -1396,7 +1398,7 @@ class MaybeDictToFilePath:
                 write_stan_json(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
-            elif isinstance(obj, str):
+            elif isinstance(obj, (str, os.PathLike)):
                 if not os.path.exists(obj):
                     raise ValueError("File doesn't exist {}".format(obj))
                 self._paths[i] = obj

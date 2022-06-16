@@ -48,6 +48,8 @@ STANC_IGNORE_OPTS = [
     'version',
 ]
 
+OptionalPath = Union[str, os.PathLike, None]
+
 
 class CompilerOptions:
     """
@@ -64,12 +66,12 @@ class CompilerOptions:
         *,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
-        user_header: Optional[str] = None,
+        user_header: OptionalPath = None,
     ) -> None:
         """Initialize object."""
         self._stanc_options = stanc_options if stanc_options is not None else {}
         self._cpp_options = cpp_options if cpp_options is not None else {}
-        self._user_header = user_header if user_header is not None else ''
+        self._user_header = str(user_header) if user_header is not None else ''
 
     def __repr__(self) -> str:
         return 'stanc_options={}, cpp_options={}'.format(
