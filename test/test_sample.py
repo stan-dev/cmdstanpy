@@ -1795,6 +1795,7 @@ class CmdStanMCMCTest(CustomTestCase):
         with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
             dummy = fit.c
 
+    # pylint: disable=use-a-generator
     def test_diagnostics(self):
         # centered 8 schools hits funnel
         stan = os.path.join(DATAFILES_PATH, 'eight_schools.stan')
