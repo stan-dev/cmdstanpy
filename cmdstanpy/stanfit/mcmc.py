@@ -83,7 +83,7 @@ class CmdStanMCMC:
         self._iter_warmup:int = _CMDSTAN_WARMUP
         if sampler_args.iter_warmup is not None:
             self._iter_warmup = sampler_args.iter_warmup
-        self._thin:int  = _CMDSTAN_THIN
+        self._thin:int = _CMDSTAN_THIN
         if sampler_args.thin is not None:
             self._thin = sampler_args.thin
         self._is_fixed_param = sampler_args.fixed_param
@@ -104,19 +104,19 @@ class CmdStanMCMC:
         # prelim diagnostics
         if np.any(self._divergences) or np.any(self._max_treedepths):
             diagnostics = ['Some chains may have failed to converge.']
-            total_iters = config['num_samples']  # pylint: disable=unused-variable
+            ct_iters = config['num_samples']  # pylint: disable=unused-variable
             for i in range(self.runset._chains):
                 if self._divergences[i] > 0:
                     diagnostics.append(
                         f'Chain {i + 1} had {self._divergences[i]} '
                         'divergent transitions '
-                        f'({((self._divergences[i]/total_iters)*100):.1f}%)'
+                        f'({((self._divergences[i]/ct_iters)*100):.1f}%)'
                     )
                 if self._max_treedepths[i] > 0:
                     diagnostics.append(
                         f'Chain {i + 1} had {self._max_treedepths[i]} '
                         'iterations at max treedepth '
-                        f'({((self._max_treedepths[i]/total_iters)*100):.1f}%)'
+                        f'({((self._max_treedepths[i]/ct_iters)*100):.1f}%)'
                     )
             diagnostics.append(
                 'Use function "diagnose()" to see further information.'
