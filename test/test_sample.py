@@ -1807,25 +1807,26 @@ class CmdStanMCMCTest(CustomTestCase):
                 seed=55157,
                 show_progress=False,
                 show_console=False,
-                )
-            
-            self.assertTrue(all(
-                [a == b for a, b in zip(fit.max_treedepths, [0, 0, 0, 6])]
-            ))
-            self.assertTrue(all(
-                [a == b for a, b in zip(fit.divergences, [10, 143, 5, 4])]
-            ))
+            )
+
+            self.assertTrue(
+                all([a == b for a, b in zip(fit.max_treedepths, [0, 0, 0, 6])])
+            )
+            self.assertTrue(
+                all([a == b for a, b in zip(fit.divergences, [10, 143, 5, 4])])
+            )
 
             log.check_present(
-                ('cmdstanpy',
-                     'WARNING',
-                     'Some chains may have failed to converge.\n'
-                '\tChain 1 had 10 divergent transitions (1.0%)\n'
-                '\tChain 2 had 143 divergent transitions (14.3%)\n'
-                '\tChain 3 had 5 divergent transitions (0.5%)\n'
-                '\tChain 4 had 4 divergent transitions (0.4%)\n'
-                '\tChain 4 had 6 iterations at max treedepth (0.6%)\n'
-                '\tUse function "diagnose()" to see further information.'
+                (
+                    'cmdstanpy',
+                    'WARNING',
+                    'Some chains may have failed to converge.\n'
+                    '\tChain 1 had 10 divergent transitions (1.0%)\n'
+                    '\tChain 2 had 143 divergent transitions (14.3%)\n'
+                    '\tChain 3 had 5 divergent transitions (0.5%)\n'
+                    '\tChain 4 had 4 divergent transitions (0.4%)\n'
+                    '\tChain 4 had 6 iterations at max treedepth (0.6%)\n'
+                    '\tUse function "diagnose()" to see further information.',
                 ),
             )
 
