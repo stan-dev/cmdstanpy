@@ -95,8 +95,10 @@ class CmdStanMCMC:
         # only valid when not is_fixed_param
         self._metric: np.ndarray = np.array(())
         self._step_size: np.ndarray = np.array(())
-        self._divergences: np.ndarray = np.array(())
-        self._max_treedepths: np.ndarray = np.array(())
+        self._divergences: np.ndarray = np.zeros(self.runset.chains, dtype=int)
+        self._max_treedepths: np.ndarray = np.zeros(
+            self.runset.chains, dtype=int
+        )
 
         # info from CSV initial comments and header
         config = self._validate_csv_files()
@@ -285,14 +287,6 @@ class CmdStanMCMC:
         Tabulates sampling iters which are divergent or at max treedepth
         Raises exception when inconsistencies detected.
         """
-        if not self._is_fixed_param:
-            self._divergences: np.ndarray = np.zeros(
-                self.runset.chains, dtype=int
-            )
-            self._max_treedepths: np.ndarray = np.zeros(
-                self.runset.chains, dtype=int
-            )
-
         dzero = {}
         for i in range(self.chains):
             if i == 0:
