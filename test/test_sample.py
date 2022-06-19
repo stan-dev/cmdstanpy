@@ -1808,11 +1808,15 @@ class CmdStanMCMCTest(CustomTestCase):
                 data=rdata,
                 seed=55157,
             )
-            log.check_present((
-                'cmdstanpy',
-                'WARNING',
-                StringComparison(r'(?s).*Some chains may have failed to converge.*')
-            ))
+            log.check_present(
+                (
+                    'cmdstanpy',
+                    'WARNING',
+                    StringComparison(
+                        r'(?s).*Some chains may have failed to converge.*'
+                    ),
+                )
+            )
             self.assertFalse(np.all(fit.divergences == 0))
 
         with LogCapture(level=logging.WARNING) as log:
@@ -1822,11 +1826,13 @@ class CmdStanMCMCTest(CustomTestCase):
                 seed=40508,
                 max_treedepth=3,
             )
-            log.check_present((
-                'cmdstanpy',
-                'WARNING',
-                StringComparison(r'(?s).*max treedepth*')
-            ))
+            log.check_present(
+                (
+                    'cmdstanpy',
+                    'WARNING',
+                    StringComparison(r'(?s).*max treedepth*'),
+                )
+            )
             self.assertFalse(np.all(fit.max_treedepths == 0))
 
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')

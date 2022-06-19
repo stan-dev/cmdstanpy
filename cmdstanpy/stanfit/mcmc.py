@@ -77,13 +77,13 @@ class CmdStanMCMC:
         assert isinstance(
             sampler_args, SamplerArgs
         )  # make the typechecker happy
-        self._iter_sampling:int = _CMDSTAN_SAMPLING
+        self._iter_sampling: int = _CMDSTAN_SAMPLING
         if sampler_args.iter_sampling is not None:
             self._iter_sampling = sampler_args.iter_sampling
-        self._iter_warmup:int = _CMDSTAN_WARMUP
+        self._iter_warmup: int = _CMDSTAN_WARMUP
         if sampler_args.iter_warmup is not None:
             self._iter_warmup = sampler_args.iter_warmup
-        self._thin:int = _CMDSTAN_THIN
+        self._thin: int = _CMDSTAN_THIN
         if sampler_args.thin is not None:
             self._thin = sampler_args.thin
         self._is_fixed_param = sampler_args.fixed_param
@@ -286,8 +286,12 @@ class CmdStanMCMC:
         Raises exception when inconsistencies detected.
         """
         if not self._is_fixed_param:
-            self._divergences: np.ndarray = np.zeros(self.runset.chains, dtype=int)
-            self._max_treedepths: np.ndarray = np.zeros(self.runset.chains, dtype=int)
+            self._divergences: np.ndarray = np.zeros(
+                self.runset.chains, dtype=int
+            )
+            self._max_treedepths: np.ndarray = np.zeros(
+                self.runset.chains, dtype=int
+            )
 
         dzero = {}
         for i in range(self.chains):
@@ -369,7 +373,7 @@ class CmdStanMCMC:
                 'Use function "diagnose()" to see further information.'
             )
             get_logger().warning('\n\t'.join(diagnostics))
-    
+
     def _assemble_draws(self) -> None:
         """
         Allocates and populates the step size, metric, and sample arrays
