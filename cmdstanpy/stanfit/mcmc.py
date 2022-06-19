@@ -95,33 +95,14 @@ class CmdStanMCMC:
         # only valid when not is_fixed_param
         self._metric: np.ndarray = np.array(())
         self._step_size: np.ndarray = np.array(())
-        self._divergences: np.ndarray = np.zeros(self.runset.chains, int)
-        self._max_treedepths: np.ndarray = np.zeros(self.runset.chains, int)
+        self._divergences: np.ndarray = np.array(())
+        self._max_treedepths: np.ndarray = np.array(())
 
         # info from CSV initial comments and header
         config = self._validate_csv_files()
         self._metadata: InferenceMetadata = InferenceMetadata(config)
-        # prelim diagnostics
-        if np.any(self._divergences) or np.any(self._max_treedepths):
-            diagnostics = ['Some chains may have failed to converge.']
-            ct_iters = config['num_samples']  # pylint: disable=unused-variable
-            for i in range(self.runset._chains):
-                if self._divergences[i] > 0:
-                    diagnostics.append(
-                        f'Chain {i + 1} had {self._divergences[i]} '
-                        'divergent transitions '
-                        f'({((self._divergences[i]/ct_iters)*100):.1f}%)'
-                    )
-                if self._max_treedepths[i] > 0:
-                    diagnostics.append(
-                        f'Chain {i + 1} had {self._max_treedepths[i]} '
-                        'iterations at max treedepth '
-                        f'({((self._max_treedepths[i]/ct_iters)*100):.1f}%)'
-                    )
-            diagnostics.append(
-                'Use function "diagnose()" to see further information.'
-            )
-            get_logger().warning('\n\t'.join(diagnostics))
+        if not self._is_fixed_param:
+            self._check_sampler_diagnostics()
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -304,6 +285,10 @@ class CmdStanMCMC:
         Tabulates sampling iters which are divergent or at max treedepth
         Raises exception when inconsistencies detected.
         """
+        if not self._is_fixed_param:
+            self._divergences: np.ndarray = np.zeros(self.runset.chains, dtype=int)
+            self._max_treedepths: np.ndarray = np.zeros(self.runset.chains, dtype=int)
+
         dzero = {}
         for i in range(self.chains):
             if i == 0:
@@ -359,6 +344,32 @@ class CmdStanMCMC:
                     self._max_treedepths[i] = drest['ct_max_treedepth']
         return dzero
 
+    # pylint: disable=unused-variable
+    def _check_sampler_diagnostics(self) -> None:
+        """
+        Warn if any iterations ended in divergences or hit maxtreedepth.
+        """
+        if np.any(self._divergences) or np.any(self._max_treedepths):
+            diagnostics = ['Some chains may have failed to converge.']
+            ct_iters = self.metadata.cmdstan_config['num_samples']
+            for i in range(self.runset._chains):
+                if self._divergences[i] > 0:
+                    diagnostics.append(
+                        f'Chain {i + 1} had {self._divergences[i]} '
+                        'divergent transitions '
+                        f'({((self._divergences[i]/ct_iters)*100):.1f}%)'
+                    )
+                if self._max_treedepths[i] > 0:
+                    diagnostics.append(
+                        f'Chain {i + 1} had {self._max_treedepths[i]} '
+                        'iterations at max treedepth '
+                        f'({((self._max_treedepths[i]/ct_iters)*100):.1f}%)'
+                    )
+            diagnostics.append(
+                'Use function "diagnose()" to see further information.'
+            )
+            get_logger().warning('\n\t'.join(diagnostics))
+    
     def _assemble_draws(self) -> None:
         """
         Allocates and populates the step size, metric, and sample arrays

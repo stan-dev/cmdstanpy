@@ -654,7 +654,7 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
             if not is_fixed_param:
                 lineno = scan_warmup_iters(fd, dict, lineno)
                 lineno = scan_hmc_params(fd, dict, lineno)
-            lineno = scan_sampling_iters(fd, dict, lineno)
+            lineno = scan_sampling_iters(fd, dict, lineno, is_fixed_param)
         except ValueError as e:
             raise ValueError("Error in reading csv file: " + path) from e
     return dict
@@ -957,7 +957,7 @@ def scan_hmc_params(
 
 
 def scan_sampling_iters(
-    fd: TextIO, config_dict: Dict[str, Any], lineno: int
+    fd: TextIO, config_dict: Dict[str, Any], lineno: int, is_fixed_param: bool
 ) -> int:
     """
     Parse sampling iteration, save number of iterations to config_dict.
@@ -965,17 +965,13 @@ def scan_sampling_iters(
     """
     draws_found = 0
     num_cols = len(config_dict['column_names'])
-    idx_divergent = None
-    idx_treedepth = None
-    max_treedepth = None
-    ct_divergences = 0
-    ct_max_treedepth = 0
-    try:
+    if not is_fixed_param:
         idx_divergent = config_dict['column_names'].index('divergent__')
         idx_treedepth = config_dict['column_names'].index('treedepth__')
         max_treedepth = config_dict['max_depth']
-    except ValueError:
-        pass
+        ct_divergences = 0
+        ct_max_treedepth = 0
+
     cur_pos = fd.tell()
     line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
@@ -991,17 +987,18 @@ def scan_sampling_iters(
                 'Try clearing up TEMP or setting output_dir to a path'
                 ' on another drive.',
             )
-        if max_treedepth:
+        cur_pos = fd.tell()
+        line = fd.readline().strip()
+        if not is_fixed_param:
             ct_divergences += int(data[idx_divergent])  # type: ignore
             if int(data[idx_treedepth]) == max_treedepth:  # type: ignore
                 ct_max_treedepth += 1
-        cur_pos = fd.tell()
-        line = fd.readline().strip()
+
+    fd.seek(cur_pos)
     config_dict['draws_sampling'] = draws_found
-    if max_treedepth:
+    if not is_fixed_param:
         config_dict['ct_divergences'] = ct_divergences
         config_dict['ct_max_treedepth'] = ct_max_treedepth
-    fd.seek(cur_pos)
     return lineno
 
 

@@ -14,7 +14,7 @@ from test import CustomTestCase
 from time import time
 
 import numpy as np
-from testfixtures import LogCapture
+from testfixtures import LogCapture, StringComparison
 
 try:
     import ujson as json
@@ -488,6 +488,8 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.step_size, None)
+        self.assertEqual(datagen_fit.divergences, None)
+        self.assertEqual(datagen_fit.max_treedepths, None)
 
         for i in range(datagen_fit.runset.chains):
             csv_file = datagen_fit.runset.csv_files[i]
@@ -1805,13 +1807,12 @@ class CmdStanMCMCTest(CustomTestCase):
             fit = model.sample(
                 data=rdata,
                 seed=55157,
-                show_progress=False,
-                show_console=False,
             )
-            msg = log.actual()[-1][-1]
-            self.assertTrue(
-                msg.startswith('Some chains may have failed to converge.')
-            )
+            log.check_present((
+                'cmdstanpy',
+                'WARNING',
+                StringComparison(r'(?s).*Some chains may have failed to converge.*')
+            ))
             self.assertFalse(np.all(fit.divergences == 0))
 
         with LogCapture(level=logging.WARNING) as log:
@@ -1821,8 +1822,11 @@ class CmdStanMCMCTest(CustomTestCase):
                 seed=40508,
                 max_treedepth=3,
             )
-            msg = log.actual()[-1][-1]
-            self.assertTrue('max treedepth' in msg)
+            log.check_present((
+                'cmdstanpy',
+                'WARNING',
+                StringComparison(r'(?s).*max treedepth*')
+            ))
             self.assertFalse(np.all(fit.max_treedepths == 0))
 
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
