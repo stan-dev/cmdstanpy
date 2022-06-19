@@ -67,7 +67,6 @@ class SampleTest(unittest.TestCase):
 
         self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
 
-        print(bern_fit.runset)
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             stdout_file = bern_fit.runset.stdout_files[i]
