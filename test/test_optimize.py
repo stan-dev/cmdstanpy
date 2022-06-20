@@ -37,8 +37,8 @@ class CmdStanMLETest(unittest.TestCase):
             os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
         ]
         mle = CmdStanMLE(runset)
-        self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
-        self.assertIn('method=optimize', mle.__repr__())
+        self.assertIn('CmdStanMLE: model=rosenbrock', repr(mle))
+        self.assertIn('method=optimize', repr(mle))
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
@@ -48,8 +48,8 @@ class CmdStanMLETest(unittest.TestCase):
             DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv'
         )
         mle = from_csv(path=csvfiles_path)
-        self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
-        self.assertIn('method=optimize', mle.__repr__())
+        self.assertIn('CmdStanMLE: model=rosenbrock', repr(mle))
+        self.assertIn('method=optimize', repr(mle))
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.optimized_params_dict['x'], 1, places=3)
         self.assertAlmostEqual(mle.optimized_params_dict['y'], 1, places=3)
@@ -59,8 +59,8 @@ class CmdStanMLETest(unittest.TestCase):
             DATAFILES_PATH, 'optimize', 'eight_schools_mle_iters.csv'
         )
         mle = from_csv(path=csvfiles_path)
-        self.assertIn('CmdStanMLE: model=eight_schools', mle.__repr__())
-        self.assertIn('method=optimize', mle.__repr__())
+        self.assertIn('CmdStanMLE: model=eight_schools', repr(mle))
+        self.assertIn('method=optimize', repr(mle))
         self.assertEqual(
             mle.column_names,
             (
@@ -89,8 +89,8 @@ class CmdStanMLETest(unittest.TestCase):
         stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
         model = CmdStanModel(stan_file=stan)
         mle = model.optimize(algorithm='LBFGS')
-        self.assertIn('CmdStanMLE: model=rosenbrock', mle.__repr__())
-        self.assertIn('method=optimize', mle.__repr__())
+        self.assertIn('CmdStanMLE: model=rosenbrock', repr(mle))
+        self.assertIn('method=optimize', repr(mle))
         self.assertTrue(mle.converged)
         self.assertEqual(mle.column_names, ('lp__', 'x', 'y'))
         self.assertAlmostEqual(mle.stan_variable('x'), 1, places=3)
@@ -152,8 +152,8 @@ class CmdStanMLETest(unittest.TestCase):
         mle = model.optimize(
             data=rdata, algorithm='LBFGS', require_converged=False
         )
-        self.assertIn('CmdStanMLE: model=eight_schools', mle.__repr__())
-        self.assertIn('method=optimize', mle.__repr__())
+        self.assertIn('CmdStanMLE: model=eight_schools', repr(mle))
+        self.assertIn('method=optimize', repr(mle))
         self.assertFalse(mle.converged)
         with LogCapture() as log:
             self.assertEqual(mle.optimized_params_pd.shape, (1, 11))

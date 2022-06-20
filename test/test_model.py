@@ -99,7 +99,6 @@ class CmdStanModelTest(CustomTestCase):
         model = CmdStanModel(stan_file=stan)
         self.assertTrue(model._fixed_param)
 
-    # pylint: disable=no-self-use
     def test_model_pedantic(self):
         stan_file = os.path.join(DATAFILES_PATH, 'bernoulli_pedantic.stan')
         with LogCapture(level=logging.WARNING) as log:
@@ -313,7 +312,7 @@ class CmdStanModelTest(CustomTestCase):
 
     def test_repr(self):
         model = CmdStanModel(stan_file=BERN_STAN)
-        model_repr = model.__repr__()
+        model_repr = repr(model)
         self.assertIn('name=bernoulli', model_repr)
 
     def test_print(self):

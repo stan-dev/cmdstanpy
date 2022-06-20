@@ -1150,7 +1150,7 @@ class CmdStanModel:
                 sys.stdout.write('\n')
                 get_logger().info('CmdStan done processing.')
 
-            get_logger().debug('runset\n%s', runset.__repr__())
+            get_logger().debug('runset\n%s', repr(runset))
 
             # hack needed to parse CSV files if model has no params
             # needed if exe is supplied without stan file
@@ -1176,7 +1176,7 @@ class CmdStanModel:
                 )
 
             errors = runset.get_err_msgs()
-            if errors or not runset._check_retcodes():
+            if not runset._check_retcodes():
                 msg = (
                     f'Error during sampling:\n{errors}\n'
                     + f'Command and output files:\n{repr(runset)}\n'
@@ -1184,6 +1184,13 @@ class CmdStanModel:
                     + ' output is unclear!'
                 )
                 raise RuntimeError(msg)
+            if errors:
+                msg = (
+                    f'Non-fatal error during sampling:\n{errors}\n'
+                    + 'Consider re-running with show_console=True if the above'
+                    + ' output is unclear!'
+                )
+                get_logger().warning(msg)
 
             mcmc = CmdStanMCMC(runset)
         return mcmc
@@ -1525,7 +1532,6 @@ class CmdStanModel:
         vb = CmdStanVB(runset)
         return vb
 
-    # pylint: disable=no-self-use
     def _run_cmdstan(
         self,
         runset: RunSet,

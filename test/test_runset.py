@@ -26,12 +26,12 @@ class RunSetTest(unittest.TestCase):
             method_args=sampler_args,
         )
         runset = RunSet(args=cmdstan_args, chains=4)
-        self.assertIn('RunSet: chains=4', runset.__repr__())
-        self.assertIn('method=sample', runset.__repr__())
-        self.assertIn('retcodes=[-1, -1, -1, -1]', runset.__repr__())
-        self.assertIn('csv_file', runset.__repr__())
-        self.assertIn('console_msgs', runset.__repr__())
-        self.assertNotIn('diagnostics_file', runset.__repr__())
+        self.assertIn('RunSet: chains=4', repr(runset))
+        self.assertIn('method=sample', repr(runset))
+        self.assertIn('retcodes=[-1, -1, -1, -1]', repr(runset))
+        self.assertIn('csv_file', repr(runset))
+        self.assertIn('console_msgs', repr(runset))
+        self.assertNotIn('diagnostics_file', repr(runset))
 
     def test_check_retcodes(self):
         exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
