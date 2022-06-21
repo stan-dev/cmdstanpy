@@ -67,7 +67,6 @@ class SampleTest(unittest.TestCase):
 
         self.assertEqual(bern_fit.runset._args.method, Method.SAMPLE)
 
-        print(bern_fit.runset)
         for i in range(bern_fit.runset.chains):
             csv_file = bern_fit.runset.csv_files[i]
             stdout_file = bern_fit.runset.stdout_files[i]
@@ -487,6 +486,8 @@ class SampleTest(unittest.TestCase):
         self.assertEqual(datagen_fit.metric_type, None)
         self.assertEqual(datagen_fit.metric, None)
         self.assertEqual(datagen_fit.step_size, None)
+        self.assertEqual(datagen_fit.divergences, None)
+        self.assertEqual(datagen_fit.max_treedepths, None)
 
         for i in range(datagen_fit.runset.chains):
             csv_file = datagen_fit.runset.csv_files[i]
@@ -1817,6 +1818,68 @@ class CmdStanMCMCTest(CustomTestCase):
 
         with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
             dummy = fit.c
+
+    def test_diagnostics(self):
+        # centered 8 schools hits funnel
+        stan = os.path.join(DATAFILES_PATH, 'eight_schools.stan')
+        model = CmdStanModel(stan_file=stan)
+        rdata = os.path.join(DATAFILES_PATH, 'eight_schools.data.R')
+        with LogCapture(level=logging.WARNING) as log:
+            logging.getLogger()
+            fit = model.sample(
+                data=rdata,
+                seed=55157,
+            )
+            log.check_present(
+                (
+                    'cmdstanpy',
+                    'WARNING',
+                    StringComparison(
+                        r'(?s).*Some chains may have failed to converge.*'
+                    ),
+                )
+            )
+            self.assertFalse(np.all(fit.divergences == 0))
+
+        with LogCapture(level=logging.WARNING) as log:
+            logging.getLogger()
+            fit = model.sample(
+                data=rdata,
+                seed=40508,
+                max_treedepth=3,
+            )
+            log.check_present(
+                (
+                    'cmdstanpy',
+                    'WARNING',
+                    StringComparison(r'(?s).*max treedepth*'),
+                )
+            )
+            self.assertFalse(np.all(fit.max_treedepths == 0))
+
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit = model.sample(
+            data=jdata,
+            iter_warmup=200,
+            iter_sampling=100,
+        )
+        self.assertTrue(np.all(fit.divergences == 0))
+        self.assertTrue(np.all(fit.max_treedepths == 0))
+
+        # fixed_param returns None
+        stan = os.path.join(DATAFILES_PATH, 'container_vars.stan')
+        container_vars_model = CmdStanModel(stan_file=stan)
+        fit = container_vars_model.sample(
+            chains=1,
+            iter_sampling=4,
+            fixed_param=True,
+            show_progress=False,
+            show_console=False,
+        )
+        self.assertEqual(fit.max_treedepths, None)
+        self.assertEqual(fit.divergences, None)
 
 
 if __name__ == '__main__':
