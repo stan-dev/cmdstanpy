@@ -173,13 +173,11 @@ class CmdStanMCMC:
     @property
     def metric_type(self) -> Optional[str]:
         """
-        Metric type used for adaptation, either 'diag_e' or 'dense_e'.
+        Metric type used for adaptation, either 'diag_e' or 'dense_e', according
+        to CmdStan arg 'metric'.
         When sampler algorithm 'fixed_param' is specified, metric_type is None.
         """
-        if self._is_fixed_param:
-            return None
-        # cmdstan arg name
-        return self._metadata.cmdstan_config['metric']  # type: ignore
+        return self._metadata.cmdstan_config['metric']  if not self._is_fixed_param else None
 
     @property
     def metric(self) -> Optional[np.ndarray]:
@@ -203,10 +201,8 @@ class CmdStanMCMC:
         Step size used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, step size is None.
         """
-        if self._is_fixed_param:
-            return None
         self._assemble_draws()
-        return self._step_size
+        return self._step_size if not self._is_fixed_param else None
 
     @property
     def thin(self) -> int:
@@ -221,9 +217,7 @@ class CmdStanMCMC:
         Per-chain total number of post-warmup divergent iterations.
         When sampler algorithm 'fixed_param' is specified, returns None.
         """
-        if self._is_fixed_param:
-            return None
-        return self._divergences
+        return self._divergences if not self._is_fixed_param else None
 
     @property
     def max_treedepths(self) -> Optional[np.ndarray]:
@@ -232,9 +226,7 @@ class CmdStanMCMC:
         reached the maximum allowed treedepth.
         When sampler algorithm 'fixed_param' is specified, returns None.
         """
-        if self._is_fixed_param:
-            return None
-        return self._max_treedepths
+        return self._max_treedepths if not self._is_fixed_param else None
 
     def draws(
         self, *, inc_warmup: bool = False, concat_chains: bool = False
@@ -298,7 +290,7 @@ class CmdStanMCMC:
                     save_warmup=self._save_warmup,
                     thin=self._thin,
                 )
-                if 'ct_divergences' in dzero:
+                if not self._is_fixed_param:
                     self._divergences[i] = dzero['ct_divergences']
                     self._max_treedepths[i] = dzero['ct_max_treedepth']
             else:
@@ -337,12 +329,11 @@ class CmdStanMCMC:
                                 drest[key],
                             )
                         )
-                if 'ct_divergences' in drest:
+                if not self._is_fixed_param:
                     self._divergences[i] = drest['ct_divergences']
                     self._max_treedepths[i] = drest['ct_max_treedepth']
         return dzero
 
-    # pylint: disable=unused-variable
     def _check_sampler_diagnostics(self) -> None:
         """
         Warn if any iterations ended in divergences or hit maxtreedepth.
