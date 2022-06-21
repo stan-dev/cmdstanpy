@@ -43,7 +43,6 @@ from cmdstanpy.utils import (
     get_logger,
     scan_generated_quantities_csv,
 )
-
 from .metadata import InferenceMetadata
 from .runset import RunSet
 
@@ -78,31 +77,34 @@ class CmdStanMCMC:
         assert isinstance(
             sampler_args, SamplerArgs
         )  # make the typechecker happy
-        iter_sampling = sampler_args.iter_sampling
-        if iter_sampling is None:
-            self._iter_sampling = _CMDSTAN_SAMPLING
-        else:
-            self._iter_sampling = iter_sampling
-        iter_warmup = sampler_args.iter_warmup
-        if iter_warmup is None:
-            self._iter_warmup = _CMDSTAN_WARMUP
-        else:
-            self._iter_warmup = iter_warmup
-        thin = sampler_args.thin
-        if thin is None:
-            self._thin: int = _CMDSTAN_THIN
-        else:
-            self._thin = thin
+        self._iter_sampling: int = _CMDSTAN_SAMPLING
+        if sampler_args.iter_sampling is not None:
+            self._iter_sampling = sampler_args.iter_sampling
+        self._iter_warmup: int = _CMDSTAN_WARMUP
+        if sampler_args.iter_warmup is not None:
+            self._iter_warmup = sampler_args.iter_warmup
+        self._thin: int = _CMDSTAN_THIN
+        if sampler_args.thin is not None:
+            self._thin = sampler_args.thin
         self._is_fixed_param = sampler_args.fixed_param
         self._save_warmup = sampler_args.save_warmup
         self._sig_figs = runset._args.sig_figs
+
         # info from CSV values, instantiated lazily
+        self._draws: np.ndarray = np.array(())
+        # only valid when not is_fixed_param
         self._metric: np.ndarray = np.array(())
         self._step_size: np.ndarray = np.array(())
-        self._draws: np.ndarray = np.array(())
+        self._divergences: np.ndarray = np.zeros(self.runset.chains, dtype=int)
+        self._max_treedepths: np.ndarray = np.zeros(
+            self.runset.chains, dtype=int
+        )
+
         # info from CSV initial comments and header
         config = self._validate_csv_files()
         self._metadata: InferenceMetadata = InferenceMetadata(config)
+        if not self._is_fixed_param:
+            self._check_sampler_diagnostics()
 
     def __repr__(self) -> str:
         repr = 'CmdStanMCMC: model={} chains={}{}'.format(
@@ -171,13 +173,15 @@ class CmdStanMCMC:
     @property
     def metric_type(self) -> Optional[str]:
         """
-        Metric type used for adaptation, either 'diag_e' or 'dense_e'.
+        Metric type used for adaptation, either 'diag_e' or 'dense_e', according
+        to CmdStan arg 'metric'.
         When sampler algorithm 'fixed_param' is specified, metric_type is None.
         """
-        if self._is_fixed_param:
-            return None
-        # cmdstan arg name
-        return self._metadata.cmdstan_config['metric']  # type: ignore
+        return (
+            self._metadata.cmdstan_config['metric']
+            if not self._is_fixed_param
+            else None
+        )
 
     @property
     def metric(self) -> Optional[np.ndarray]:
@@ -192,8 +196,7 @@ class CmdStanMCMC:
                 'Unit diagnonal metric, inverse mass matrix size unknown.'
             )
             return None
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
         return self._metric
 
     @property
@@ -202,11 +205,8 @@ class CmdStanMCMC:
         Step size used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, step size is None.
         """
-        if self._is_fixed_param:
-            return None
-        if self._step_size.shape == (0,):
-            self._assemble_draws()
-        return self._step_size
+        self._assemble_draws()
+        return self._step_size if not self._is_fixed_param else None
 
     @property
     def thin(self) -> int:
@@ -214,6 +214,23 @@ class CmdStanMCMC:
         Period between recorded iterations.  (Default is 1).
         """
         return self._thin
+
+    @property
+    def divergences(self) -> Optional[np.ndarray]:
+        """
+        Per-chain total number of post-warmup divergent iterations.
+        When sampler algorithm 'fixed_param' is specified, returns None.
+        """
+        return self._divergences if not self._is_fixed_param else None
+
+    @property
+    def max_treedepths(self) -> Optional[np.ndarray]:
+        """
+        Per-chain total number of post-warmup iterations where the NUTS sampler
+        reached the maximum allowed treedepth.
+        When sampler algorithm 'fixed_param' is specified, returns None.
+        """
+        return self._max_treedepths if not self._is_fixed_param else None
 
     def draws(
         self, *, inc_warmup: bool = False, concat_chains: bool = False
@@ -263,6 +280,7 @@ class CmdStanMCMC:
         Checks that Stan CSV output files for all chains are consistent
         and returns dict containing config and column names.
 
+        Tabulates sampling iters which are divergent or at max treedepth
         Raises exception when inconsistencies detected.
         """
         dzero = {}
@@ -276,6 +294,9 @@ class CmdStanMCMC:
                     save_warmup=self._save_warmup,
                     thin=self._thin,
                 )
+                if not self._is_fixed_param:
+                    self._divergences[i] = dzero['ct_divergences']
+                    self._max_treedepths[i] = dzero['ct_max_treedepth']
             else:
                 drest = check_sampler_csv(
                     path=self.runset.csv_files[i],
@@ -312,13 +333,43 @@ class CmdStanMCMC:
                                 drest[key],
                             )
                         )
+                if not self._is_fixed_param:
+                    self._divergences[i] = drest['ct_divergences']
+                    self._max_treedepths[i] = drest['ct_max_treedepth']
         return dzero
+
+    def _check_sampler_diagnostics(self) -> None:
+        """
+        Warn if any iterations ended in divergences or hit maxtreedepth.
+        """
+        if np.any(self._divergences) or np.any(self._max_treedepths):
+            diagnostics = ['Some chains may have failed to converge.']
+            ct_iters = self.metadata.cmdstan_config['num_samples']
+            for i in range(self.runset._chains):
+                if self._divergences[i] > 0:
+                    diagnostics.append(
+                        f'Chain {i + 1} had {self._divergences[i]} '
+                        'divergent transitions '
+                        f'({((self._divergences[i]/ct_iters)*100):.1f}%)'
+                    )
+                if self._max_treedepths[i] > 0:
+                    diagnostics.append(
+                        f'Chain {i + 1} had {self._max_treedepths[i]} '
+                        'iterations at max treedepth '
+                        f'({((self._max_treedepths[i]/ct_iters)*100):.1f}%)'
+                    )
+            diagnostics.append(
+                'Use function "diagnose()" to see further information.'
+            )
+            get_logger().warning('\n\t'.join(diagnostics))
 
     def _assemble_draws(self) -> None:
         """
         Allocates and populates the step size, metric, and sample arrays
         by parsing the validated stan_csv files.
         """
+        if self._draws.shape != (0,):
+            return
         num_draws = self.num_draws_sampling
         sampling_iter_start = 0
         if self._save_warmup:
