@@ -445,4 +445,6 @@ copybutton_prompt_text = (
     r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 )
 copybutton_prompt_is_regexp = True
-nbsphinx_execute = 'never'
+
+# speed up build if editing the docs
+# nbsphinx_execute = 'never'
