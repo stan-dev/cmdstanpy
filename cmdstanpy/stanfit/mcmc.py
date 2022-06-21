@@ -177,7 +177,11 @@ class CmdStanMCMC:
         to CmdStan arg 'metric'.
         When sampler algorithm 'fixed_param' is specified, metric_type is None.
         """
-        return self._metadata.cmdstan_config['metric']  if not self._is_fixed_param else None
+        return (
+            self._metadata.cmdstan_config['metric']
+            if not self._is_fixed_param
+            else None
+        )
 
     @property
     def metric(self) -> Optional[np.ndarray]:
