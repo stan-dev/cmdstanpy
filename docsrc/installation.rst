@@ -16,7 +16,7 @@ There are several ways to install CmdStanPy and the underlying CmdStan component
   GitHub `CmdStanPy <https://github.com/stan-dev/cmdstanpy>`_ repository.
 
 If you install CmdStanPy from PyPI or GitHub you will need to
-install CmdStan as well, see section :ref:`CmdStan Installation<cmdstan-install>` below.
+install CmdStan as well, see section :ref:`CmdStan Installation <cmdstan-install>` below.
 
   
 Conda: install CmdStanPy, CmdStan, C++ toolchain
