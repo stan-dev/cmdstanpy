@@ -16,7 +16,7 @@ There are several ways to install CmdStanPy and the underlying CmdStan component
   GitHub `CmdStanPy <https://github.com/stan-dev/cmdstanpy>`_ repository.
 
 If you install CmdStanPy from PyPI or GitHub you will need to
-install CmdStan as well, see section :ref:`CmdStan Installation <cmdstan-install>` below.
+install CmdStan as well, see section :ref:`CmdStan Installation <cmdstan-install>`: below.
 
   
 Conda: install CmdStanPy, CmdStan, C++ toolchain
@@ -59,7 +59,7 @@ If you require a specific release of CmdStan, CmdStan versions
 2.26.1 and *newer* can be installed by specifying
 ``cmdstan==VERSION`` in the install command.
 Versions before 2.26.1 can be downloaded from the CmdStan
-`releases <https://github.com/stan-dev/cmdstan/releases>`__ page.
+`releases <https://github.com/stan-dev/cmdstan/releases>`_ page.
 
 A Conda environment is a directory that contains a specific collection of Conda packages.
 To see the locations of your conda environments, use the command
@@ -128,14 +128,13 @@ To install the current develop branch from GitHub:
 
 
 .. _cmdstan-install:
-
 CmdStan Installation
 --------------------
 
 If you have installed CmdStanPy from PyPI or Github,
 **you must install CmdStan**.
 The recommended way to do so is via the ``install_cmdstan`` function
-:ref:`described below<install-cmdstan-fun>`.
+:ref:`described below<install-cmdstan-fun>`:.
 
 If you installed CmdStanPy with conda, CmdStan and the C++ toolchain,
 both CmdStan and the C++ toolchain are installed into directory ``$CONDA_PREFIX/bin``
@@ -205,7 +204,7 @@ DIY Installation
 ^^^^^^^^^^^^^^^^
 
 If you with to install CmdStan yourself, follow the instructions
-in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`__.
+in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`_.
 
 Locating the CmdStan installation directory
 -------------------------------------------
