@@ -41,7 +41,7 @@ class InstallCxxScriptTest(unittest.TestCase):
             r'Download for the C\+\+ toolchain on the current platform has not '
             r'been implemented:\s*\S+',
         ):
-            install_cxx_toolchain.main({})
+            install_cxx_toolchain.run_rtools_install({})
 
     @pytest.mark.skipif(
         platform.system() != 'Windows', reason='Windows only tests'

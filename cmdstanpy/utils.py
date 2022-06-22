@@ -1285,23 +1285,22 @@ def install_cmdstan(
 
     :return: Boolean value; ``True`` for success.
     """
-    logger = get_logger()
-    args = {
-        "version": version,
-        "overwrite": overwrite,
-        "verbose": verbose,
-        "compiler": compiler,
-        "progress": progress,
-        "dir": dir,
-        "cores": cores,
-    }
-
     try:
-        from .install_cmdstan import main
+        from .install_cmdstan import InstallationSettings, run_install
 
-        main(args)
+        args = InstallationSettings(
+            version=version,
+            overwrite=overwrite,
+            verbose=verbose,
+            compiler=compiler,
+            progress=progress,
+            dir=dir,
+            cores=cores,
+        )
+        run_install(args)
     # pylint: disable=broad-except
     except Exception as e:
+        logger = get_logger()
         logger.warning('CmdStan installation failed.')
         logger.warning(str(e))
         return False
