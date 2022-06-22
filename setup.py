@@ -72,7 +72,11 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
+    license_files=['LICENSE.md'],
     packages=['cmdstanpy', 'cmdstanpy.stanfit'],
+    package_data={
+        'cmdstanpy': ['py.typed'],
+    },
     entry_points={
         'console_scripts': [
             'install_cmdstan=cmdstanpy.install_cmdstan:__main__',

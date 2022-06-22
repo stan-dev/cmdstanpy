@@ -19,6 +19,8 @@ from cmdstanpy.utils import (
     write_stan_json,
 )
 
+OptionalPath = Union[str, os.PathLike, None]
+
 
 class Method(Enum):
     """Supported CmdStan method names."""
@@ -704,7 +706,7 @@ class CmdStanArgs:
     def __init__(
         self,
         model_name: str,
-        model_exe: Optional[str],
+        model_exe: OptionalPath,
         chain_ids: Optional[List[int]],
         method_args: Union[
             SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
@@ -712,7 +714,7 @@ class CmdStanArgs:
         data: Union[Mapping[str, Any], str, None] = None,
         seed: Union[int, List[int], None] = None,
         inits: Union[int, float, str, List[str], None] = None,
-        output_dir: Optional[str] = None,
+        output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
         save_profile: bool = False,
@@ -828,7 +830,7 @@ class CmdStanArgs:
                     '0 and 2**32-1, found {}.'.format(self.seed)
                 )
             if isinstance(self.seed, int):
-                if self.seed < 0 or self.seed > 2 ** 32 - 1:
+                if self.seed < 0 or self.seed > 2**32 - 1:
                     raise ValueError(
                         'Argument "seed" must be an integer between '
                         '0 and 2**32-1, found {}.'.format(self.seed)
@@ -847,7 +849,7 @@ class CmdStanArgs:
                         )
                     )
                 for seed in self.seed:
-                    if seed < 0 or seed > 2 ** 32 - 1:
+                    if seed < 0 or seed > 2**32 - 1:
                         raise ValueError(
                             'Argument "seed" must be an integer value'
                             ' between 0 and 2**32-1,'

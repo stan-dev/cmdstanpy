@@ -3,3 +3,4 @@
 
 include requirements*.txt
 include LICENSE.md
+include cmdstanpy/py.typed

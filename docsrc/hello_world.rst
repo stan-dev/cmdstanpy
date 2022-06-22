@@ -1,7 +1,7 @@
 .. py:currentmodule:: cmdstanpy
 
-"Hello, World"
---------------
+"Hello, World!"
+---------------
 
 Fitting a Stan model using the NUTS-HMC sampler
 ***********************************************
@@ -10,10 +10,11 @@ In order to verify the installation and also to demonstrate
 the CmdStanPy workflow, we use CmdStanPy to fit the
 the example Stan model ``bernoulli.stan``
 to the dataset ``bernoulli.data.json``.
-This model and data are included with the CmdStan distribution
-in subdirectory ``examples/bernoulli``.
-This example allows the user to verify that CmdStanPy, CmdStan,
+The ``bernoulli.stan`` is a `Hello, World! <https://en.wikipedia.org/wiki/%22Hello,_World!%22_program>`__
+program which illustrates the basic syntax of the Stan language.
+It allows the user to verify that CmdStanPy, CmdStan,
 the StanC compiler, and the C++ toolchain have all been properly installed.
+
 For substantive example models and
 guidance on coding statistical models in Stan, see
 the `CmdStan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`_.
@@ -42,18 +43,15 @@ given a set of N observations of i.i.d. binary data
 
 The :class:`CmdStanModel` class manages the Stan program and its corresponding compiled executable.
 It provides properties and functions to inspect the model code and filepaths.
-CmdStanPy, manages the environment variable ``CMDSTAN`` which specifies the path to
-the local CmdStan installation.
-The function :func:`~cmdstan_path` returns the value of this environment variable.
 
 .. ipython:: python
 
     # import packages
     import os
-    from cmdstanpy import cmdstan_path, CmdStanModel
+    from cmdstanpy import CmdStanModel
 
     # specify Stan program file
-    stan_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.stan')
+    stan_file = os.path.join('examples', 'bernoulli.stan')
 
     # instantiate the model; compiles the Stan program as needed.
     model = CmdStanModel(stan_file=stan_file)
@@ -103,7 +101,7 @@ to a temporary directory which is deleted when the current Python session is ter
 .. ipython:: python
 
     # specify data file
-    data_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.data.json')
+    data_file = os.path.join('examples', 'bernoulli.data.json')
 
     # fit the model
     fit = model.sample(data=data_file)
@@ -161,6 +159,7 @@ all model parameters and quantities of interest in a pandas.DataFrame:
 
     fit.summary()
 
+
 CmdStan is distributed with a second posterior analysis utility
 `diagnose <https://mc-stan.org/docs/cmdstan-guide/diagnose.html>`__
 which analyzes the per-draw sampler parameters across all chains
@@ -171,6 +170,8 @@ The :meth:`~CmdStanMCMC.diagnose` method runs this utility and prints the output
 .. ipython:: python
 
     print(fit.diagnose())
+
+
 
 Managing Stan CSV files
 ^^^^^^^^^^^^^^^^^^^^^^^

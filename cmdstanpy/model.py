@@ -49,6 +49,8 @@ from cmdstanpy.utils import (
 
 from . import progress as progbar
 
+OptionalPath = Union[str, os.PathLike, None]
+
 
 class CmdStanModel:
     # overview, omitted from doc comment in order to improve Sphinx docs.
@@ -91,13 +93,13 @@ class CmdStanModel:
     def __init__(
         self,
         model_name: Optional[str] = None,
-        stan_file: Optional[str] = None,
-        exe_file: Optional[str] = None,
+        stan_file: OptionalPath = None,
+        exe_file: OptionalPath = None,
         # TODO should be Literal['force'] not str
         compile: Union[bool, str] = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
-        user_header: Optional[str] = None,
+        user_header: OptionalPath = None,
     ) -> None:
         """
         Initialize object given constructor args.
@@ -232,12 +234,12 @@ class CmdStanModel:
         return self._name
 
     @property
-    def stan_file(self) -> Optional[str]:
+    def stan_file(self) -> OptionalPath:
         """Full path to Stan program file."""
         return self._stan_file
 
     @property
-    def exe_file(self) -> Optional[str]:
+    def exe_file(self) -> OptionalPath:
         """Full path to Stan exe file."""
         return self._exe_file
 
@@ -253,7 +255,7 @@ class CmdStanModel:
             return result
         try:
             info = StringIO()
-            do_command(cmd=[self.exe_file, 'info'], fd_out=info)
+            do_command(cmd=[str(self.exe_file), 'info'], fd_out=info)
             lines = info.getvalue().split('\n')
             for line in lines:
                 kv_pair = [x.strip() for x in line.split('=')]
@@ -282,7 +284,7 @@ class CmdStanModel:
                 + self._compiler_options.compose_stanc()
                 + [
                     '--info',
-                    self.stan_file,
+                    str(self.stan_file),
                 ]
             )
             proc = subprocess.run(
@@ -331,7 +333,7 @@ class CmdStanModel:
                 [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
                 # handle include-paths, allow-undefined etc
                 + self._compiler_options.compose_stanc()
-                + [self.stan_file]
+                + [str(self.stan_file)]
             )
 
             if canonicalize:
@@ -379,7 +381,7 @@ class CmdStanModel:
                     if backup:
                         shutil.copyfile(
                             self.stan_file,
-                            self.stan_file
+                            str(self.stan_file)
                             + '.bak-'
                             + datetime.now().strftime("%Y%m%d%H%M%S"),
                         )
@@ -426,7 +428,7 @@ class CmdStanModel:
         force: bool = False,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
-        user_header: Optional[str] = None,
+        user_header: OptionalPath = None,
         override_options: bool = False,
     ) -> None:
         """
@@ -569,10 +571,10 @@ class CmdStanModel:
 
     def optimize(
         self,
-        data: Union[Mapping[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         seed: Optional[int] = None,
-        inits: Union[Dict[str, float], float, str, None] = None,
-        output_dir: Optional[str] = None,
+        inits: Union[Dict[str, float], float, str, os.PathLike, None] = None,
+        output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
         save_profile: bool = False,
         algorithm: Optional[str] = None,
@@ -733,7 +735,7 @@ class CmdStanModel:
     # pylint: disable=too-many-arguments
     def sample(
         self,
-        data: Union[Mapping[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         chains: Optional[int] = None,
         parallel_chains: Optional[int] = None,
         threads_per_chain: Optional[int] = None,
@@ -755,7 +757,7 @@ class CmdStanModel:
         adapt_metric_window: Optional[int] = None,
         adapt_step_size: Optional[int] = None,
         fixed_param: bool = False,
-        output_dir: Optional[str] = None,
+        output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
         save_profile: bool = False,
@@ -1197,10 +1199,10 @@ class CmdStanModel:
 
     def generate_quantities(
         self,
-        data: Union[Mapping[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
         seed: Optional[int] = None,
-        gq_output_dir: Optional[str] = None,
+        gq_output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
         show_console: bool = False,
         refresh: Optional[int] = None,
@@ -1341,10 +1343,10 @@ class CmdStanModel:
 
     def variational(
         self,
-        data: Union[Mapping[str, Any], str, None] = None,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         seed: Optional[int] = None,
         inits: Optional[float] = None,
-        output_dir: Optional[str] = None,
+        output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
         save_latent_dynamics: bool = False,
         save_profile: bool = False,

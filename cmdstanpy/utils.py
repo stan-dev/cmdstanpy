@@ -68,7 +68,12 @@ def get_logger() -> logging.Logger:
         # add a default handler to the logger to INFO and higher
         handler = logging.StreamHandler()
         handler.setLevel(logging.INFO)
-        handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        handler.setFormatter(
+            logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                "%H:%M:%S",
+            )
+        )
         logger.addHandler(handler)
     return logger
 
@@ -172,7 +177,7 @@ def cmdstan_path() -> str:
     Validate, then return CmdStan directory path.
     """
     cmdstan = ''
-    if 'CMDSTAN' in os.environ:
+    if 'CMDSTAN' in os.environ and len(os.environ['CMDSTAN']) > 0:
         cmdstan = os.environ['CMDSTAN']
     else:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
@@ -291,7 +296,7 @@ def cxx_toolchain_path(
         if os.path.exists(os.path.join(toolchain_root, 'mingw64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -315,7 +320,7 @@ def cxx_toolchain_path(
         elif os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -367,7 +372,7 @@ def cxx_toolchain_path(
                 if version not in ('35', '3.5', '3'):
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                        'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
@@ -392,7 +397,7 @@ def cxx_toolchain_path(
                 else:
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                        'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
@@ -649,7 +654,7 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
             if not is_fixed_param:
                 lineno = scan_warmup_iters(fd, dict, lineno)
                 lineno = scan_hmc_params(fd, dict, lineno)
-            lineno = scan_sampling_iters(fd, dict, lineno)
+            lineno = scan_sampling_iters(fd, dict, lineno, is_fixed_param)
         except ValueError as e:
             raise ValueError("Error in reading csv file: " + path) from e
     return dict
@@ -952,13 +957,21 @@ def scan_hmc_params(
 
 
 def scan_sampling_iters(
-    fd: TextIO, config_dict: Dict[str, Any], lineno: int
+    fd: TextIO, config_dict: Dict[str, Any], lineno: int, is_fixed_param: bool
 ) -> int:
     """
     Parse sampling iteration, save number of iterations to config_dict.
+    Also save number of divergences, max_treedepth hits
     """
     draws_found = 0
     num_cols = len(config_dict['column_names'])
+    if not is_fixed_param:
+        idx_divergent = config_dict['column_names'].index('divergent__')
+        idx_treedepth = config_dict['column_names'].index('treedepth__')
+        max_treedepth = config_dict['max_depth']
+        ct_divergences = 0
+        ct_max_treedepth = 0
+
     cur_pos = fd.tell()
     line = fd.readline().strip()
     while len(line) > 0 and not line.startswith('#'):
@@ -976,8 +989,16 @@ def scan_sampling_iters(
             )
         cur_pos = fd.tell()
         line = fd.readline().strip()
-    config_dict['draws_sampling'] = draws_found
+        if not is_fixed_param:
+            ct_divergences += int(data[idx_divergent])  # type: ignore
+            if int(data[idx_treedepth]) == max_treedepth:  # type: ignore
+                ct_max_treedepth += 1
+
     fd.seek(cur_pos)
+    config_dict['draws_sampling'] = draws_found
+    if not is_fixed_param:
+        config_dict['ct_divergences'] = ct_divergences
+        config_dict['ct_max_treedepth'] = ct_max_treedepth
     return lineno
 
 
@@ -1381,7 +1402,9 @@ class MaybeDictToFilePath:
 
     def __init__(
         self,
-        *objs: Union[str, Mapping[str, Any], List[Any], int, float, None],
+        *objs: Union[
+            str, Mapping[str, Any], List[Any], int, float, os.PathLike, None
+        ],
     ):
         self._unlink = [False] * len(objs)
         self._paths: List[Any] = [''] * len(objs)
@@ -1396,7 +1419,7 @@ class MaybeDictToFilePath:
                 write_stan_json(data_file, obj)
                 self._paths[i] = data_file
                 self._unlink[i] = True
-            elif isinstance(obj, str):
+            elif isinstance(obj, (str, os.PathLike)):
                 if not os.path.exists(obj):
                     raise ValueError("File doesn't exist {}".format(obj))
                 self._paths[i] = obj
