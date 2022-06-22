@@ -16,7 +16,7 @@ There are several ways to install CmdStanPy and the underlying CmdStan component
   GitHub `CmdStanPy <https://github.com/stan-dev/cmdstanpy>`_ repository.
 
 If you install CmdStanPy from PyPI or GitHub you will need to
-install CmdStan as well, see section :ref:`CmdStan Installation<cmdstan-install>`_ below.
+install CmdStan as well, see section :ref:`CmdStan Installation<cmdstan-install>` below.
 
   
 Conda: install CmdStanPy, CmdStan, C++ toolchain
@@ -33,10 +33,10 @@ via the following command:
     conda create -n stan -c conda-forge cmdstanpy
 
 
-This command creates a new conda environment named `stan` and 
-downloads and installs the `cmdstanpy` package from conda-forge.
+This command creates a new conda environment named ``stan`` and 
+downloads and installs the ``cmdstanpy`` package from conda-forge.
 
-To install into an existing environment, use the `install` command instead of `create`:
+To install into an existing environment, use the conda ``install`` command instead of ``create``:
 
 
 .. code-block:: bash
@@ -45,7 +45,7 @@ To install into an existing environment, use the `install` command instead of `c
 
 Whichever installation method you use, afterwards you must
 activate the new environment or deactivate/activate the existing one.
-For example, if you installed cmdstanpy into a new environment `stan`,
+For example, if you installed cmdstanpy into a new environment ``stan``,
 run the command
 
 .. code-block:: bash
@@ -98,8 +98,8 @@ To install CmdStanPy with all the optional packages:
 
 
 
-GitHub: install CmdStanPy repository
-------------------------------------
+GitHub: install from the CmdStanPy repository
+---------------------------------------------
 
     
 To install the current develop branch from GitHub:
@@ -108,22 +108,6 @@ To install the current develop branch from GitHub:
 
     pip install -e git+https://github.com/stan-dev/cmdstanpy@/develop#egg=cmdstanpy
 
-
-
-.. _cmdstan-install:
-
-CmdStan Installation
---------------------
-
-If you are using conda, CmdStan and the C++ toolchain,
-both CmdStan and the C++ toolchain are installed into the
-`bin` subdirectory of the conda environment directory,
-and you can skip these instructions.
-
-If you have installed CmdStanPy from PyPI or Github,
-**you must install CmdStan**.
-The recommended way to do so is via the ``install_cmdstan`` function
-:ref:`described below<install-cmdstan-fun>`
 
 .. note::
 
@@ -143,25 +127,45 @@ The recommended way to do so is via the ``install_cmdstan`` function
   and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.
 
 
+.. _cmdstan-install:
 
-Prerequisites
-^^^^^^^^^^^^^
+CmdStan Installation
+--------------------
 
-CmdStan requires an installed C++ toolchain
-consisting of a modern C++ compiler and the GNU-Make utility.
+If you have installed CmdStanPy from PyPI or Github,
+**you must install CmdStan**.
+The recommended way to do so is via the ``install_cmdstan`` function
+:ref:`described below<install-cmdstan-fun>`.
 
-* Windows: CmdStanPy provides the function ``install_cxx_toolchain``
+If you installed CmdStanPy with conda, CmdStan and the C++ toolchain,
+both CmdStan and the C++ toolchain are installed into directory ``$CONDA_PREFIX/bin``
+and you don't need to do any further installs.
 
-* Linux: install g++ 4.9.3 or clang 6.0.  (GNU-Make is the default ``make`` utility)
 
-* maxOS:  install XCode and Xcode command line tools via command: `xcode-select --install`.
+C++ Toolchain Requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To compile a Stan program requires a modern C++ compiler and the GNU-Make build utility.
+These vary by operating system.
+
+**Linux** The required C++ compiler is ``g++ 4.9 3``.
+On most systems the GNU-Make utility is pre-installed and is the default ``make`` utility.
+There is usually a pre-installed C++ compiler as well, but not necessarily new enough.
+
+**MacOS** The Xcode and Xcode command line tools must be installed.  Xcode is available for free from the Mac App Store.
+To install the Xcode command line tools, run the shell command: ``xcode-select --install``.
+
+**Windows**  We recommend using the `RTools 4.0 <https://cran.r-project.org/bin/windows/Rtools/rtools40.html>`_ toolchain
+which contains a ``g++ 8`` compiler and ``Mingw``, the native Windows equivalent of the GNU-Make utility.
+If it is not found on your system, the :meth:`cmdstanpy.install_cmdstan` function will install it automatically.
+
 
 .. _install-cmdstan-fun:
 
 Function ``install_cmdstan``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CmdStanPy provides the function :func:`~cmdstanpy.install_cmdstan` which
+CmdStanPy provides the function :meth:`cmdstanpy.install_cmdstan` which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
 
@@ -189,7 +193,7 @@ named ``.cmdstan``.  This directory will be created by the install script.
     python -m cmdstanpy.install_cmdstan
     dir "%HOME%/.cmdstan"
 
-The named arguments: `-d <directory>` and  `-v <version>`
+The named arguments: ``-d <directory>`` and  ``-v <version>``
 can be used to override these defaults:
 
 .. code-block:: bash
@@ -203,10 +207,10 @@ DIY Installation
 If you with to install CmdStan yourself, follow the instructions
 in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`__.
 
-Specifying the CmdStan home directory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Locating the CmdStan installation directory
+-------------------------------------------
 
-CmdStanPy uses the environment variable ``CMDSTAN`` to registers the CmdStan installation location.
+CmdStanPy uses the environment variable ``CMDSTAN`` to register the CmdStan installation location.
 
 + If you use conda to install CmdStanPy, CmdStan is installed into location
   ``$CONDA_PREFIX/bin/cmdstan`` (Linux, MacOS), ``%CONDA_PREFIX%\bin\cmdstan`` (Windows)
