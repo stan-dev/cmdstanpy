@@ -229,8 +229,7 @@ class InteractiveSettings:
         answer = input("Enter a number or hit enter to continue: ")
         try:
             return min(max_cpus, max(int(answer), 1))
-        # pylint: disable=broad-except
-        except Exception:
+        except ValueError:
             return 1
 
 
@@ -614,12 +613,13 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
 
 
 def parse_cmdline_args() -> Dict[str, Any]:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser("install_cmdstan")
     parser.add_argument(
         '--interactive',
         '-i',
         action='store_true',
-        help="Run the installation in interactive mode",
+        help="Ignore other arguments and run the installation in "
+        + "interactive mode",
     )
     parser.add_argument(
         '--version', '-v', help="version, defaults to latest release version"

@@ -1252,6 +1252,8 @@ def install_cmdstan(
     progress: bool = False,
     verbose: bool = False,
     cores: int = 1,
+    *,
+    interactive: bool = False,
 ) -> bool:
     """
     Download and install a CmdStan release from GitHub. Downloads the release
@@ -1283,35 +1285,60 @@ def install_cmdstan(
     :param cores: Integer, number of cores to use in the ``make`` command.
         Default is 1 core.
 
+    :param interactive: Boolean value; if true, ignore all other arguments
+        to this function and run in an interactive mode, prompting the user
+        to provide the other information manually through the standard input.
+
+        This flag should only be used in interactive environments,
+        e.g. on the command line.
+
     :return: Boolean value; ``True`` for success.
     """
+    logger = get_logger()
     try:
-        from .install_cmdstan import InstallationSettings, run_install
-
-        args = InstallationSettings(
-            version=version,
-            overwrite=overwrite,
-            verbose=verbose,
-            compiler=compiler,
-            progress=progress,
-            dir=dir,
-            cores=cores,
+        from .install_cmdstan import (
+            InstallationSettings,
+            InteractiveSettings,
+            run_install,
         )
+
+        args: Union[InstallationSettings, InteractiveSettings]
+
+        if interactive:
+            if any(
+                [
+                    version,
+                    dir,
+                    overwrite,
+                    compiler,
+                    progress,
+                    verbose,
+                    cores != 1,
+                ]
+            ):
+                logger.warning(
+                    "Interactive installation requested but other arguments"
+                    " were used.\n\tThese values will be ignored!"
+                )
+            args = InteractiveSettings()
+        else:
+            args = InstallationSettings(
+                version=version,
+                overwrite=overwrite,
+                verbose=verbose,
+                compiler=compiler,
+                progress=progress,
+                dir=dir,
+                cores=cores,
+            )
         run_install(args)
     # pylint: disable=broad-except
     except Exception as e:
-        logger = get_logger()
-        logger.warning('CmdStan installation failed.')
-        logger.warning(str(e))
+        logger.warning('CmdStan installation failed.\n%s', str(e))
         return False
 
-    if dir is not None:
-        if version is not None:
-            set_cmdstan_path(os.path.join(dir, 'cmdstan-' + version))
-        else:
-            set_cmdstan_path(
-                os.path.join(dir, get_latest_cmdstan(dir))  # type: ignore
-            )
+    set_cmdstan_path(args.dir)
+
     return True
 
 
