@@ -866,7 +866,7 @@ class InstallCmdstanFunctionTest(CustomTestCase):
 
     def test_interactive_extra_args(self):
         with LogCapture() as log:
-            with self.replace_stdin(io.StringIO("9.99.9\n")):
+            with self.replace_stdin("9.99.9\n"):
                 res = install_cmdstan(version="2.29.2", interactive=True)
         log.check_present(
             (

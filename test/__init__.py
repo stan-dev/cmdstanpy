@@ -5,6 +5,7 @@ import os
 import sys
 import unittest
 from importlib import reload
+from io import StringIO
 
 
 class CustomTestCase(unittest.TestCase):
@@ -32,10 +33,11 @@ class CustomTestCase(unittest.TestCase):
             yield
         reload(module)
 
+    # recipe modified from https://stackoverflow.com/a/36491341
     @contextlib.contextmanager
-    def replace_stdin(self, target):
+    def replace_stdin(self, target: str):
         orig = sys.stdin
-        sys.stdin = target
+        sys.stdin = StringIO(target)
         yield
         sys.stdin = orig
 
