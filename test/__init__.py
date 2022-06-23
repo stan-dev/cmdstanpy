@@ -2,6 +2,7 @@
 
 import contextlib
 import os
+import sys
 import unittest
 from importlib import reload
 
@@ -30,6 +31,13 @@ class CustomTestCase(unittest.TestCase):
             reload(module)
             yield
         reload(module)
+
+    @contextlib.contextmanager
+    def replace_stdin(self, target):
+        orig = sys.stdin
+        sys.stdin = target
+        yield
+        sys.stdin = orig
 
     # recipe from https://stackoverflow.com/a/34333710
     @contextlib.contextmanager

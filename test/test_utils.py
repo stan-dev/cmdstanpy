@@ -19,7 +19,7 @@ from test import CustomTestCase
 import numpy as np
 import pandas as pd
 import pytest
-from testfixtures import LogCapture
+from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy import _DOT_CMDSTAN, _TMPDIR
 from cmdstanpy.model import CmdStanModel
@@ -36,6 +36,7 @@ from cmdstanpy.utils import (
     do_command,
     flatten_chains,
     get_latest_cmdstan,
+    install_cmdstan,
     parse_method_vars,
     parse_rdump_value,
     parse_stan_vars,
@@ -848,6 +849,34 @@ class FlattenTest(unittest.TestCase):
         array_2d = np.empty((200, 4))
         with self.assertRaisesRegex(ValueError, 'Expecting 3D array'):
             flatten_chains(array_2d)
+
+
+class InstallCmdstanFunctionTest(CustomTestCase):
+    def test_bad_version(self):
+        with LogCapture() as log:
+            res = install_cmdstan(version="0.00.0")
+        log.check_present(
+            (
+                "cmdstanpy",
+                "WARNING",
+                StringComparison("CmdStan installation failed.\nVersion*"),
+            )
+        )
+        self.assertFalse(res)
+
+    def test_interactive_extra_args(self):
+        with LogCapture() as log:
+            with self.replace_stdin(io.StringIO("9.99.9\n")):
+                res = install_cmdstan(version="2.29.2", interactive=True)
+        log.check_present(
+            (
+                "cmdstanpy",
+                "WARNING",
+                "Interactive installation requested but other arguments"
+                " were used.\n\tThese values will be ignored!",
+            )
+        )
+        self.assertFalse(res)
 
 
 @pytest.mark.order(-1)
