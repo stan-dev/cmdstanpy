@@ -480,7 +480,7 @@ class CmdStanModel:
             src_time = os.path.getmtime(self._stan_file)
             exe_time = os.path.getmtime(exe_target)
             if exe_time > src_time and not force:
-                get_logger().info('found newer exe file, not recompiling')
+                get_logger().debug('found newer exe file, not recompiling')
                 if self._exe_file is None:  # called from constructor
                     self._exe_file = exe_target
                 return

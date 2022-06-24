@@ -2,8 +2,8 @@ Installation
 ============
 
 CmdStanPy is a pure-Python3 package which wraps CmdStan,
-the command-line interface to Stan which is written in C++,
-therefore, in addition to Python3,
+the command-line interface to Stan which is written in C++.
+Therefore, in addition to Python3,
 CmdStanPy requires a modern C++ toolchain in order to build and run Stan models.
 There are several ways to install CmdStanPy and the underlying CmdStan components.
 
@@ -34,7 +34,8 @@ via the following command:
 
 
 This command creates a new conda environment named ``stan`` and 
-downloads and installs the ``cmdstanpy`` package from conda-forge.
+downloads and installs the ``cmdstanpy`` package
+as well as CmdStan and the required C++ toolchain.
 
 To install into an existing environment, use the conda ``install`` command instead of ``create``:
 
@@ -53,12 +54,12 @@ run the command
     conda activate stan
 
 
-The conda package manager will install CmdStan and the C++ toolchain.
 By default, the latest release of CmdStan is installed.
 If you require a specific release of CmdStan, CmdStan versions
 2.26.1 and *newer* can be installed by specifying
 ``cmdstan==VERSION`` in the install command.
-Versions before 2.26.1 can be downloaded from the CmdStan
+Versions before 2.26.1 are not available from conda
+but can be downloaded from the CmdStan
 `releases <https://github.com/stan-dev/cmdstan/releases>`_ page.
 
 A Conda environment is a directory that contains a specific collection of Conda packages.
@@ -128,6 +129,7 @@ To install the current develop branch from GitHub:
 
 
 .. _cmdstan-install:
+
 CmdStan Installation
 --------------------
 
@@ -156,7 +158,8 @@ To install the Xcode command line tools, run the shell command: ``xcode-select -
 
 **Windows**  We recommend using the `RTools 4.0 <https://cran.r-project.org/bin/windows/Rtools/rtools40.html>`_ toolchain
 which contains a ``g++ 8`` compiler and ``Mingw``, the native Windows equivalent of the GNU-Make utility.
-If it is not found on your system, the :meth:`cmdstanpy.install_cmdstan` function will install it automatically.
+This can be installed allong with CmdStan when you invoke the function :meth:`cmdstanpy.install_cmdstan`
+with argument ``compiler=True``.
 
 
 .. _install-cmdstan-fun:
@@ -167,7 +170,6 @@ Function ``install_cmdstan``
 CmdStanPy provides the function :meth:`cmdstanpy.install_cmdstan` which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
-
 The default install location is a hidden directory in the user ``$HOME`` directory
 named ``.cmdstan``.  This directory will be created by the install script.
 
@@ -177,6 +179,7 @@ named ``.cmdstan``.  This directory will be created by the install script.
 
     import cmdstanpy
     cmdstanpy.install_cmdstan()
+    cmdstanpy.install_cmdstan(compiler=True)  # only valid on Windows
 
 + From the command line on Linux or MacOSX
 
@@ -189,7 +192,7 @@ named ``.cmdstan``.  This directory will be created by the install script.
 
 .. code-block:: bash
 
-    python -m cmdstanpy.install_cmdstan
+    install_cmdstan --compiler True
     dir "%HOME%/.cmdstan"
 
 The named arguments: ``-d <directory>`` and  ``-v <version>``

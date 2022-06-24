@@ -43,12 +43,7 @@ given a set of N observations of i.i.d. binary data
 
 The :class:`CmdStanModel` class manages the Stan program and its corresponding compiled executable.
 It provides properties and functions to inspect the model code and filepaths.
-
 A `CmdStanModel` can be instantiated from a Stan file or its corresponding compiled executable file.
-When instantiated from a Stan file, the default behavior is to compile the Stan file,
-unless a newer executable file exists, in which case, an INFO message is logged.
-This is to avoid unnecessary C++ compilation
-which may take anywhere from several seconds to a few minutes.
 
 .. ipython:: python
 
@@ -114,6 +109,10 @@ Underlyingly, the CmdStan outputs are a set of per-chain
 The filenames follow the template '<model_name>-<YYYYMMDDHHMMSS>-<chain_id>'
 plus the file suffix '.csv'.
 CmdStanPy also captures the per-chain console and error messages.
+The ``output_dir`` argument is an optional argument which specifies
+the path to the output directory used by CmdStan.
+If this argument is omitted, the output files are written
+to a temporary directory which is deleted when the current Python session is terminated.
     
 .. ipython:: python
 
@@ -121,20 +120,19 @@ CmdStanPy also captures the per-chain console and error messages.
     print(fit)
 
 
-Accessing the sample
-^^^^^^^^^^^^^^^^^^^^
+Accessing the results
+^^^^^^^^^^^^^^^^^^^^^
 
-The `sample` method returns a :class:`CmdStanMCMC` object,
+The ``sample`` method returns a :class:`CmdStanMCMC` object,
 which provides access to the information from the Stan CSV files.
 The CSV header and data rows contain the outputs from each iteration of the sampler.
 CSV comment blocks are used to report the inference engine configuration and timing information.
 The NUTS-HMC adaptive sampler algorithm also outputs the per-chain HMC tuning parameters step_size and metric.
 
-The `CmdStanMCMC` object parses the set of Stan CSV files into separate in-memory data structures for
+The ``CmdStanMCMC`` object parses the set of Stan CSV files into separate in-memory data structures for
 the set of sampler iterations, the metadata, and the step_size and metric and provides accessor methods for each.
-
 The primary object of interest are the draws from all iterations of the sampler, i.e., the CSV data rows.
-The `CmdStanMCMC` methods allow the user to extract the sample in whatever data format is needed for their analysis.
+The ``CmdStanMCMC`` methods allow the user to extract the sample in whatever data format is needed for their analysis.
 The sample can be extracted in tabular format, either as
 
 + a numpy.ndarray: :meth:`~CmdStanMCMC.draws`
@@ -146,8 +144,6 @@ The sample can be extracted in tabular format, either as
     fit.draws().shape
     fit.draws(concat_chains=True).shape
     fit.draws_pd()
-
-
 
 The sample can be treated as a collection of named, structured variables.
 CmdStanPy makes a distinction between the per-iteration model outputs
@@ -183,9 +179,34 @@ Accessor functions extract these as:
         print(f'{k}\t{v.shape}')
 
 
+In addition to the MCMC sample itself, the CmdStanMCMC object provides
+access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sampler,
+(if present).
 
-CmdStan utilities:  `stansummary`, `diagnose`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. ipython:: python
+
+    fit.metric_type
+    fit.metric
+    fit.step_size
+
+
+
+The CmdStanMCMC object also provides access to metadata about the model and the sampler run.
+
+.. ipython:: python
+
+    fit.metadata.cmdstan_config.keys()
+    fit.metadata.cmdstan_config['num_samples']
+    fit.metadata.cmdstan_config['seed']
+
+    fit.metadata.stan_vars_cols.keys()
+    fit.metadata.method_vars_cols.keys()
+
+
+
+
+CmdStan utilities:  ``stansummary``, ``diagnose``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CmdStan is distributed with a posterior analysis utility
 `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__
