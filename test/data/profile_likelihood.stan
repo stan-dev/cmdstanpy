@@ -6,3 +6,4 @@ model {
     x ~ normal(0, 1);
   }
 }
+
