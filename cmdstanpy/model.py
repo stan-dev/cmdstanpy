@@ -549,7 +549,7 @@ class CmdStanModel:
                     get_logger().error('Stan program failed to compile:')
                     get_logger().warning(console)
                 elif len(warnings) > 0:
-                    get_logger().info(
+                    get_logger().warning(
                         'Stan compiler has produced %d warnings:',
                         len(warnings),
                     )

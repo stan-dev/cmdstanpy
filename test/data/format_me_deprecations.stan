@@ -1,6 +1,5 @@
-// pound-sign comment
+# pound-sign comment
 generated quantities {
-  int x;
-  x = 3;
+   int x;
+   x <- (((((3)))));
 }
-
