@@ -148,7 +148,10 @@ def validate_cmdstan_path(path: str) -> None:
         raise ValueError(f'No CmdStan directory, path {path} does not exist.')
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'CmdStan installataion missing binaries, run "install_cmdstan"'
+            'CmdStan installataion missing binaries. '
+            'Re-install cmdstan by running command "install_cmdstan '
+            '--overwrite", or Python code "import cmdstanpy; '
+            'cmdstanpy.install_cmdstan(overwrite=True)"'
         )
 
 
@@ -178,14 +181,14 @@ def cmdstan_path() -> str:
         cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
         if not os.path.exists(cmdstan_dir):
             raise ValueError(
-                'No CmdStan installation found, run "install_cmdstan" or'
-                ' (re)activate your conda environment!'
+                'No CmdStan installation found, run command "install_cmdstan"'
+                'or (re)activate your conda environment!'
             )
         latest_cmdstan = get_latest_cmdstan(cmdstan_dir)
         if latest_cmdstan is None:
             raise ValueError(
-                'No CmdStan installation found, run "install_cmdstan" or'
-                ' (re)activate your conda environment!'
+                'No CmdStan installation found, run command "install_cmdstan"'
+                'or (re)activate your conda environment!'
             )
         cmdstan = os.path.join(cmdstan_dir, latest_cmdstan)
         os.environ['CMDSTAN'] = cmdstan
