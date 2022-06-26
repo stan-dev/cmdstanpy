@@ -141,8 +141,8 @@ The sample can be extracted in tabular format, either as
 
 .. ipython:: python
 
-    fit.draws().shape
-    fit.draws(concat_chains=True).shape
+    print(fit.draws().shape)
+    print(fit.draws(concat_chains=True).shape)
     fit.draws_pd()
 
 The sample can be treated as a collection of named, structured variables.
@@ -171,8 +171,8 @@ Accessor functions extract these as:
 
 .. ipython:: python
 
-    fit.stan_variable('theta')
-    fit.draws_xr('theta')
+    print(fit.stan_variable('theta'))
+    print(fit.draws_xr('theta'))
     for k, v in fit.stan_variables().items():
         print(f'{k}\t{v.shape}')
     for k, v in fit.method_variables().items():
@@ -185,9 +185,9 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
 
 .. ipython:: python
 
-    fit.metric_type
-    fit.metric
-    fit.step_size
+    print(fit.metric_type)
+    print(fit.metric)
+    print(fit.step_size)
 
 
 
@@ -195,12 +195,11 @@ The CmdStanMCMC object also provides access to metadata about the model and the 
 
 .. ipython:: python
 
-    fit.metadata.cmdstan_config.keys()
-    fit.metadata.cmdstan_config['num_samples']
-    fit.metadata.cmdstan_config['seed']
+    print(fit.metadata.cmdstan_config['model'])
+    print(fit.metadata.cmdstan_config['seed'])
 
-    fit.metadata.stan_vars_cols.keys()
-    fit.metadata.method_vars_cols.keys()
+    print(fit.metadata.stan_vars_cols.keys())
+    print(fit.metadata.method_vars_cols.keys())
 
 
 
