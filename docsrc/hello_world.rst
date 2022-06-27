@@ -17,19 +17,19 @@ the StanC compiler, and the C++ toolchain have all been properly installed.
 
 For substantive example models and
 guidance on coding statistical models in Stan, see
-the `CmdStan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`_.
+the `Stan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`_.
 
 
 The Stan model
 ^^^^^^^^^^^^^^
 
-The model ``bernoulli.stan``  is a simple model for binary data:
+The model ``bernoulli.stan``  is a trivial model:
 given a set of N observations of i.i.d. binary data
 `y[1] ... y[N]`, it calculates the Bernoulli chance-of-success `theta`.
 
 .. code:: stan
 
-   data {
+    data {
       int<lower=0> N;
       int<lower=0,upper=1> y[N];
     }
@@ -43,6 +43,7 @@ given a set of N observations of i.i.d. binary data
 
 The :class:`CmdStanModel` class manages the Stan program and its corresponding compiled executable.
 It provides properties and functions to inspect the model code and filepaths.
+A `CmdStanModel` can be instantiated from a Stan file or its corresponding compiled executable file.
 
 .. ipython:: python
 
@@ -53,7 +54,7 @@ It provides properties and functions to inspect the model code and filepaths.
     # specify Stan program file
     stan_file = os.path.join('examples', 'bernoulli.stan')
 
-    # instantiate the model; compiles the Stan program as needed.
+    # instantiate the model object
     model = CmdStanModel(stan_file=stan_file)
 
     # inspect model object
@@ -62,6 +63,8 @@ It provides properties and functions to inspect the model code and filepaths.
     # inspect compiled model
     print(model.exe_info())
 
+
+    
 Data inputs
 ^^^^^^^^^^^
 
@@ -90,12 +93,7 @@ over the model conditioned on data using  using Hamiltonian Monte Carlo
 returns a :class:`CmdStanMCMC` object.  The data can be specified
 either as a filepath or a Python dictionary; in this example, we use the
 example datafile `bernoulli.data.json`:
-
-By default, the :meth:`~CmdStanModel.sample` method runs 4 sampler chains.
-The ``output_dir`` argument is an optional argument which specifies
-the path to the output directory used by CmdStan.
-If this argument is omitted, the output files are written
-to a temporary directory which is deleted when the current Python session is terminated.
+By default, the `sample` method runs 4 sampler chains.
 
 
 .. ipython:: python
@@ -106,46 +104,108 @@ to a temporary directory which is deleted when the current Python session is ter
     # fit the model
     fit = model.sample(data=data_file)
 
+Underlyingly, the CmdStan outputs are a set of per-chain
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__.
+The filenames follow the template '<model_name>-<YYYYMMDDHHMMSS>-<chain_id>'
+plus the file suffix '.csv'.
+CmdStanPy also captures the per-chain console and error messages.
+The ``output_dir`` argument is an optional argument which specifies
+the path to the output directory used by CmdStan.
+If this argument is omitted, the output files are written
+to a temporary directory which is deleted when the current Python session is terminated.
+    
+.. ipython:: python
+
     # printing the object reports sampler commands, output files
     print(fit)
 
 
-Accessing the sample
-^^^^^^^^^^^^^^^^^^^^
+Accessing the results
+^^^^^^^^^^^^^^^^^^^^^
 
-The :meth:`~CmdStanModel.sample` method outputs are a set of per-chain
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__.
-The filenames follow the template '<model_name>-<YYYYMMDDHHMM>-<chain_id>'
-plus the file suffix '.csv'.
-The :class:`CmdStanMCMC` class provides methods to assemble the contents
-of these files in memory as well as methods to manage the disk files.
+The ``sample`` method returns a :class:`CmdStanMCMC` object,
+which provides access to the information from the Stan CSV files.
+The CSV header and data rows contain the outputs from each iteration of the sampler.
+CSV comment blocks are used to report the inference engine configuration and timing information.
+The NUTS-HMC adaptive sampler algorithm also outputs the per-chain HMC tuning parameters step_size and metric.
 
-Underlyingly, the draws from all chains are stored as an
-a numpy.ndarray with dimensions: draws, chains, columns.
-CmdStanPy provides accessor methods which return the sample
-either in terms of the CSV file columns or in terms of the
-sampler and Stan program variables.
-The :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd` methods return the sample contents
-in columnar format.
+The ``CmdStanMCMC`` object parses the set of Stan CSV files into separate in-memory data structures for
+the set of sampler iterations, the metadata, and the step_size and metric and provides accessor methods for each.
+The primary object of interest are the draws from all iterations of the sampler, i.e., the CSV data rows.
+The ``CmdStanMCMC`` methods allow the user to extract the sample in whatever data format is needed for their analysis.
+The sample can be extracted in tabular format, either as
 
-The :meth:`~CmdStanMCMC.stan_variable` method to returns a numpy.ndarray object
-which contains the set of all draws in the sample for the named Stan program variable.
-The draws from all chains are flattened into a single drawset.
-The first ndarray dimension is the number of draws X number of chains.
-The remaining ndarray dimensions correspond to the Stan program variable dimension.
-The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all Stan model variables.
++ a numpy.ndarray: :meth:`~CmdStanMCMC.draws`
+
++ a pandas.DataFrame: :meth:`~CmdStanMCMC.draws_pd`
 
 .. ipython:: python
 
-    fit.draws().shape
-    fit.draws(concat_chains=True).shape
+    print(fit.draws().shape)
+    print(fit.draws(concat_chains=True).shape)
+    fit.draws_pd()
 
-    draws_theta = fit.stan_variable(var='theta')
-    draws_theta.shape
+The sample can be treated as a collection of named, structured variables.
+CmdStanPy makes a distinction between the per-iteration model outputs
+and the per-iteration algorithm outputs:  the former are 'stan_variables'
+and the information reported by the sampler are 'method_variables'.
+Accessor functions extract these as:
+
++ a structured numpy.ndarray: :meth:`~CmdStanMCMC.stan_variable` 
+  which contains the set of all draws in the sample for the named Stan program variable.
+  The draws from all chains are flattened, i.e.,
+  the first ndarray dimension is the number of draws X number of chains.
+  The remaining ndarray dimensions correspond to the Stan program variable dimension.
+
++ an xarray.Dataset: :meth:`~CmdStanMCMC.draws_xr`
+  
++ a Python dict mapping Stan variable names to numpy.ndarray objects, where the
+  chains are flattened, as above:
+  :meth:`~CmdStanMCMC.stan_variables`.
+
++ a Python dict mapping the algorithm outputs to numpy.ndarray objects.
+  Because these outputs are used for within-chain and cross-chain diagnostics,
+  they are not flattened.
+  :meth:`~CmdStanMCMC.stan_variables`.
+	
+
+.. ipython:: python
+
+    print(fit.stan_variable('theta'))
+    print(fit.draws_xr('theta'))
+    for k, v in fit.stan_variables().items():
+        print(f'{k}\t{v.shape}')
+    for k, v in fit.method_variables().items():
+        print(f'{k}\t{v.shape}')
 
 
-CmdStan utilities:  `stansummary`, `diagnose`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In addition to the MCMC sample itself, the CmdStanMCMC object provides
+access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sampler,
+(if present).
+
+.. ipython:: python
+
+    print(fit.metric_type)
+    print(fit.metric)
+    print(fit.step_size)
+
+
+
+The CmdStanMCMC object also provides access to metadata about the model and the sampler run.
+
+.. ipython:: python
+
+    print(fit.metadata.cmdstan_config['model'])
+    print(fit.metadata.cmdstan_config['seed'])
+
+    print(fit.metadata.stan_vars_cols.keys())
+    print(fit.metadata.method_vars_cols.keys())
+
+
+
+
+CmdStan utilities:  ``stansummary``, ``diagnose``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CmdStan is distributed with a posterior analysis utility
 `stansummary <https://mc-stan.org/docs/cmdstan-guide/stansummary.html>`__
@@ -185,67 +245,3 @@ to a specified directory.
     :verbatim:
 
     fit.save_csvfiles(dir='some/path')
-
-
-Parallelization
-^^^^^^^^^^^^^^^
-
-The Stan language
-`reduce_sum <https://mc-stan.org/docs/stan-users-guide/reduce-sum.html>`__
-function provides within-chain parallelization.
-For models which require computing the sum of a number of independent function evaluations,
-e.g., when evaluating a number of conditionally independent terms in a log-likelihood,
-the ``reduce_sum`` function is used to parallelize this computation.
-
-As of version CmdStan 2.28, it is possible to run the
-NUTS-HMC sampler on
-multiple chains from within a single executable using threads.
-This has the potential to speed up sampling.  It also
-reduces the overall memory footprint required for sampling as
-all chains share the same copy of data.the input data.
-When using within-chain parallelization all chains started within a single executable can share all the available threads and once a chain finishes the threads will be reused.
-
-Both within-chain and cross-chain parallelization use the
-Intel Threading Building Blocks (TBB) library.
-In order to do either, the Stan model must be compiled with
-C++ compiler flag ``STAN_THREADS``.  While any value can be used,
-we recommend the value ``TRUE``.
-
-
-Progress bar
-^^^^^^^^^^^^
-
-By default, CmdStanPy displays a progress bar during sampling.
-
-.. ipython:: python
-    :verbatim:
-
-    fit = model.sample(data=data_file)
-
-To suppress the progress bar, specify argument ``show_progress=False``.
-
-.. ipython:: python
-    :verbatim:
-
-    fit = model.sample(data=data_file, show_progress=False)
-
-To see the CmdStan console outputs instead of progress bars, specify ``show_console=True``.
-
-.. ipython:: python
-    :verbatim:
-
-    fit = model.sample(data=data_file, show_console=True)
-
-This will stream all sampler messages to the console.
-It provides an alternative way of monitoring progress.
-In conjunction with Stan programs which contain `print` statments,
-this provides a way to inspect and debug model behavoir.
-
-
-Jupyter Lab Notebook requirements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In a Jupyter notebook, this package requires the `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_ package.
-For help on installation and configuration, see
-`ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
-and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.

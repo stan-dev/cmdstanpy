@@ -7,3 +7,4 @@ generated quantities {
    else
     y=2;
 }
+

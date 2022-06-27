@@ -1280,7 +1280,7 @@ def install_cmdstan(
     to allow for transient network outages. Builds CmdStan executables
     and tests the compiler by building example model ``bernoulli.stan``.
 
-    :param version: CmdStan version string, e.g. "2.24.1".
+    :param version: CmdStan version string, e.g. "2.29.2".
         Defaults to latest CmdStan release.
 
     :param dir: Path to install directory.  Defaults to hidden directory
