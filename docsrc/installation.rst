@@ -172,6 +172,7 @@ downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
 The default install location is a hidden directory in the user ``$HOME`` directory
 named ``.cmdstan``.  This directory will be created by the install script.
+On Windows, the ``compiler`` option will install the C++ toolchain.
 
 + From Python
 
@@ -192,7 +193,7 @@ named ``.cmdstan``.  This directory will be created by the install script.
 
 .. code-block:: bash
 
-    install_cmdstan --compiler True
+    install_cmdstan --compiler
     dir "%HOME%/.cmdstan"
 
 The named arguments: ``-d <directory>`` and  ``-v <version>``
