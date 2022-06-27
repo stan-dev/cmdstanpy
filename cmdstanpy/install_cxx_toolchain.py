@@ -258,7 +258,7 @@ def get_toolchain_version(name: str, version: str) -> str:
     return toolchain_folder
 
 
-def main(args: Dict[str, Any]) -> None:
+def run_rtools_install(args: Dict[str, Any]) -> None:
     """Main."""
     if platform.system() not in {'Windows'}:
         raise NotImplementedError(
@@ -361,7 +361,7 @@ def parse_cmdline_args() -> Dict[str, Any]:
 
 
 def __main__() -> None:
-    main(parse_cmdline_args())
+    run_rtools_install(parse_cmdline_args())
 
 
 if __name__ == '__main__':
