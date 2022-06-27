@@ -26,7 +26,7 @@ import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 from time import sleep
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Union
 
 from tqdm.auto import tqdm
 
@@ -41,10 +41,27 @@ from cmdstanpy.utils import (
 
 from . import progress as progbar
 
-MAKE = os.getenv(
-    'MAKE', 'make' if platform.system() != 'Windows' else 'mingw32-make'
-)
-EXTENSION = '.exe' if platform.system() == 'Windows' else ''
+if sys.version_info >= (3, 8) or TYPE_CHECKING:
+    # mypy only knows about the new built-in cached_property
+    from functools import cached_property
+else:
+    # on older Python versions, this is the recommended
+    # way to get the same effect
+    from functools import lru_cache
+
+    def cached_property(fun):
+        return property(lru_cache(maxsize=None)(fun))
+
+
+try:
+    # on MacOS and Linux, importing this
+    # improves the UX of the input() function
+    import readline
+
+    # dummy statement to use import for flake8/pylint
+    _ = readline.__doc__
+except ImportError:
+    pass
 
 
 class CmdStanRetrieveError(RuntimeError):
@@ -55,23 +72,165 @@ class CmdStanInstallError(RuntimeError):
     pass
 
 
-def usage() -> None:
-    """Print usage."""
-    msg = """
-    Arguments:
-        -v (--version) : CmdStan version
-        -d (--dir) : install directory
-        --overwrite : replace installed version
-        --progress : show progress bar for CmdStan download
-        --verbose : show outputs from installation processes
-        """
+def is_windows() -> bool:
+    return platform.system() == 'Windows'
 
-    if platform.system() == "Windows":
-        msg += "-c (--compiler) : add C++ compiler to path (Windows only)\n"
 
-    msg += "        -h (--help) : this message"
+MAKE = os.getenv('MAKE', 'make' if not is_windows() else 'mingw32-make')
+EXTENSION = '.exe' if is_windows() else ''
 
-    print(msg)
+
+def get_headers() -> Dict[str, str]:
+    """Create headers dictionary."""
+    headers = {}
+    GITHUB_PAT = os.environ.get("GITHUB_PAT")  # pylint:disable=invalid-name
+    if GITHUB_PAT is not None:
+        headers["Authorization"] = "token {}".format(GITHUB_PAT)
+    return headers
+
+
+def latest_version() -> str:
+    """Report latest CmdStan release version."""
+    url = 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
+    request = urllib.request.Request(url, headers=get_headers())
+    for i in range(6):
+        try:
+            response = urllib.request.urlopen(request).read()
+            break
+        except urllib.error.URLError as e:
+            print('Cannot connect to github.')
+            print(e)
+            if i < 5:
+                print('retry ({}/5)'.format(i + 1))
+                sleep(1)
+                continue
+            raise CmdStanRetrieveError(
+                'Cannot connect to CmdStan github repo.'
+            ) from e
+    content = json.loads(response.decode('utf-8'))
+    tag = content['tag_name']
+    match = re.search(r'v?(.+)', tag)
+    if match is not None:
+        tag = match.group(1)
+    return tag  # type: ignore
+
+
+def home_cmdstan() -> str:
+    return os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
+
+
+# pylint: disable=too-few-public-methods
+class InstallationSettings:
+    """
+    A static installation settings object
+    """
+
+    def __init__(
+        self,
+        *,
+        version: Optional[str] = None,
+        dir: Optional[str] = None,
+        progress: bool = False,
+        verbose: bool = False,
+        overwrite: bool = False,
+        cores: int = 1,
+        compiler: bool = False,
+        **kwargs: Any,
+    ):
+        self.version = version if version else latest_version()
+        self.dir = dir if dir else home_cmdstan()
+        self.progress = progress
+        self.verbose = verbose
+        self.overwrite = overwrite
+        self.cores = cores
+        self.compiler = compiler and is_windows()
+
+        _ = kwargs  # ignore all other inputs.
+        # Useful if initialized from a dictionary like **dict
+
+
+def yes_no(answer: str, default: bool) -> bool:
+    answer = answer.lower()
+    if answer in ('y', 'yes'):
+        return True
+    if answer in ('n', 'no'):
+        return False
+    return default
+
+
+class InteractiveSettings:
+    """
+    Installation settings provided on-demand in an interactive format.
+
+    This provides the same set of properties as the ``InstallationSettings``
+    object, but rather than them being fixed by the constructor the user is
+    asked for input whenever they are accessed for the first time.
+    """
+
+    @cached_property
+    def version(self) -> str:
+        latest = latest_version()
+        print("Which version would you like to install?")
+        print(f"Default: {latest}")
+        answer = input("Type version or hit enter to continue: ")
+        return answer if answer else latest
+
+    @cached_property
+    def dir(self) -> str:
+        directory = home_cmdstan()
+        print("Where would you like to install CmdStan?")
+        print(f"Default: {directory}")
+        answer = input("Type full path or hit enter to continue: ")
+        return os.path.expanduser(answer) if answer else directory
+
+    @cached_property
+    def progress(self) -> bool:
+        print("Show installation progress bars?")
+        print("Default: y")
+        answer = input("[y/n]: ")
+        return yes_no(answer, True)
+
+    @cached_property
+    def verbose(self) -> bool:
+        print("Show verbose output of the installation process?")
+        print("Default: n")
+        answer = input("[y/n]: ")
+        return yes_no(answer, False)
+
+    @cached_property
+    def overwrite(self) -> bool:
+        print("Overwrite existing CmdStan installation?")
+        print("Default: n")
+        answer = input("[y/n]: ")
+        return yes_no(answer, False)
+
+    @cached_property
+    def compiler(self) -> bool:
+        if not is_windows():
+            return False
+        print("Would you like to install the RTools40 C++ toolchain?")
+        print("A C++ toolchain is required for CmdStan.")
+        print(
+            "If you are not sure if you need the toolchain or not, "
+            "the most likely case is you do need it, and should answer 'y'."
+        )
+        print("Default: n")
+        answer = input("[y/n]: ")
+        return yes_no(answer, False)
+
+    @cached_property
+    def cores(self) -> int:
+        max_cpus = os.cpu_count() or 1
+        print(
+            "How many CPU cores would you like to use for installing "
+            "and compiling CmdStan?"
+        )
+        print(f"Default: 1, Max: {max_cpus}")
+        answer = input("Enter a number or hit enter to continue: ")
+        try:
+            return min(max_cpus, max(int(answer), 1))
+        except ValueError:
+            return 1
 
 
 def clean_all(verbose: bool = False) -> None:
@@ -132,7 +291,7 @@ def build(verbose: bool = False, progress: bool = True, cores: int = 1) -> None:
             ', please rebuild or report a bug!'
         )
 
-    if platform.system() == 'Windows':
+    if is_windows():
         # Add tbb to the $PATH on Windows
         libtbb = os.path.join(
             os.getcwd(), 'stan', 'lib', 'stan_math', 'lib', 'tbb'
@@ -249,7 +408,7 @@ def install_version(
             'Building version {}, may take several minutes, '
             'depending on your system.'.format(cmdstan_version)
         )
-        if overwrite:
+        if overwrite and os.path.exists('.'):
             print(
                 'Overwrite requested, remove existing build of version '
                 '{}'.format(cmdstan_version)
@@ -289,41 +448,6 @@ def is_version_available(version: str) -> bool:
             print('URLError: {}'.format(e.reason))
             is_available = False
     return is_available
-
-
-def get_headers() -> Dict[str, str]:
-    """Create headers dictionary."""
-    headers = {}
-    GITHUB_PAT = os.environ.get("GITHUB_PAT")  # pylint:disable=invalid-name
-    if GITHUB_PAT is not None:
-        headers["Authorization"] = "token {}".format(GITHUB_PAT)
-    return headers
-
-
-def latest_version() -> str:
-    """Report latest CmdStan release version."""
-    url = 'https://api.github.com/repos/stan-dev/cmdstan/releases/latest'
-    request = urllib.request.Request(url, headers=get_headers())
-    for i in range(6):
-        try:
-            response = urllib.request.urlopen(request).read()
-            break
-        except urllib.error.URLError as e:
-            print('Cannot connect to github.')
-            print(e)
-            if i < 5:
-                print('retry ({}/5)'.format(i + 1))
-                sleep(1)
-                continue
-            raise CmdStanRetrieveError(
-                'Cannot connect to CmdStan github repo.'
-            ) from e
-    content = json.loads(response.decode('utf-8'))
-    tag = content['tag_name']
-    match = re.search(r'v?(.+)', tag)
-    if match is not None:
-        tag = match.group(1)
-    return tag  # type: ignore
 
 
 def retrieve_version(version: str, progress: bool = True) -> None:
@@ -383,7 +507,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
                 'but found dir {} instead.'.format(cmdstan_dir, top_dir)
             )
         target = os.getcwd()
-        if platform.system() == 'Windows':
+        if is_windows():
             # fixes long-path limitation on Windows
             target = r'\\?\{}'.format(target)
 
@@ -406,8 +530,97 @@ def retrieve_version(version: str, progress: bool = True) -> None:
     print(f'Unpacked download as {cmdstan_dir}')
 
 
+def run_compiler_install(dir: str, verbose: bool, progress: bool) -> None:
+    from .install_cxx_toolchain import is_installed as _is_installed_cxx
+    from .install_cxx_toolchain import run_rtools_install as _main_cxx
+    from .utils import cxx_toolchain_path
+
+    compiler_found = False
+    rtools40_home = os.environ.get('RTOOLS40_HOME')
+    for cxx_loc in ([rtools40_home] if rtools40_home is not None else []) + [
+        home_cmdstan(),
+        os.path.join(os.path.abspath("/"), "RTools40"),
+        os.path.join(os.path.abspath("/"), "RTools"),
+        os.path.join(os.path.abspath("/"), "RTools35"),
+        os.path.join(os.path.abspath("/"), "RBuildTools"),
+    ]:
+        for cxx_version in ['40', '35']:
+            if _is_installed_cxx(cxx_loc, cxx_version):
+                compiler_found = True
+                break
+        if compiler_found:
+            break
+    if not compiler_found:
+        print('Installing RTools40')
+        # copy argv and clear sys.argv
+        _main_cxx(
+            {
+                'dir': dir,
+                'progress': progress,
+                'version': None,
+                'verbose': verbose,
+            }
+        )
+        cxx_version = '40'
+    # Add toolchain to $PATH
+    cxx_toolchain_path(cxx_version, dir)
+
+
+def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
+    """
+    Run a (potentially interactive) installation
+    """
+    if is_version_available(args.version):
+        print('Installing CmdStan version: {}'.format(args.version))
+    else:
+        raise ValueError(
+            f'Version {args.version} cannot be downloaded. '
+            'Connection to GitHub failed. '
+            'Check firewall settings or ensure this version exists.'
+        )
+    validate_dir(args.dir)
+    print('Install directory: {}'.format(args.dir))
+
+    # these accesses just 'warm up' the interactive install
+    _ = args.progress
+    _ = args.verbose
+
+    if args.compiler:
+        run_compiler_install(args.dir, args.verbose, args.progress)
+
+    cmdstan_version = f'cmdstan-{args.version}'
+    with pushd(args.dir):
+
+        already_installed = os.path.exists(cmdstan_version) and os.path.exists(
+            os.path.join(
+                cmdstan_version,
+                'examples',
+                'bernoulli',
+                'bernoulli' + EXTENSION,
+            )
+        )
+        if not already_installed or args.overwrite:
+            retrieve_version(args.version, args.progress)
+            install_version(
+                cmdstan_version=cmdstan_version,
+                overwrite=already_installed and args.overwrite,
+                verbose=args.verbose,
+                progress=args.progress,
+                cores=args.cores,
+            )
+        else:
+            print('CmdStan version {} already installed'.format(args.version))
+
+
 def parse_cmdline_args() -> Dict[str, Any]:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser("install_cmdstan")
+    parser.add_argument(
+        '--interactive',
+        '-i',
+        action='store_true',
+        help="Ignore other arguments and run the installation in "
+        + "interactive mode",
+    )
     parser.add_argument(
         '--version', '-v', help="version, defaults to latest release version"
     )
@@ -435,7 +648,7 @@ def parse_cmdline_args() -> Dict[str, Any]:
         type=int,
         help="number of cores to use while building",
     )
-    if platform.system() == 'Windows':
+    if is_windows():
         # use compiler installed with install_cxx_toolchain
         # Install a new compiler if compiler not found
         # Search order is RTools40, RTools35
@@ -449,99 +662,12 @@ def parse_cmdline_args() -> Dict[str, Any]:
     return vars(parser.parse_args(sys.argv[1:]))
 
 
-def main(args: Dict[str, Any]) -> None:
-    """Main."""
-
-    version = latest_version()
-    if args['version']:
-        version = args['version']
-
-    if is_version_available(version):
-        print('Installing CmdStan version: {}'.format(version))
-    else:
-        raise ValueError(
-            f'Version {version} cannot be downloaded. '
-            'Connection to GitHub failed. '
-            'Check firewall settings or ensure this version exists.'
-        )
-
-    cmdstan_dir = os.path.expanduser(os.path.join('~', _DOT_CMDSTAN))
-
-    install_dir = cmdstan_dir
-    if args['dir']:
-        install_dir = args['dir']
-
-    validate_dir(install_dir)
-    print('Install directory: {}'.format(install_dir))
-
-    if args['progress']:
-        progress = args['progress']
-    else:
-        progress = False
-
-    if platform.system() == 'Windows' and args['compiler']:
-        from .install_cxx_toolchain import is_installed as _is_installed_cxx
-        from .install_cxx_toolchain import main as _main_cxx
-        from .utils import cxx_toolchain_path
-
-        cxx_loc = cmdstan_dir
-        compiler_found = False
-        rtools40_home = os.environ.get('RTOOLS40_HOME')
-        for cxx_loc in (
-            [rtools40_home] if rtools40_home is not None else []
-        ) + [
-            cmdstan_dir,
-            os.path.join(os.path.abspath("/"), "RTools40"),
-            os.path.join(os.path.abspath("/"), "RTools"),
-            os.path.join(os.path.abspath("/"), "RTools35"),
-            os.path.join(os.path.abspath("/"), "RBuildTools"),
-        ]:
-            for cxx_version in ['40', '35']:
-                if _is_installed_cxx(cxx_loc, cxx_version):
-                    compiler_found = True
-                    break
-            if compiler_found:
-                break
-        if not compiler_found:
-            print('Installing RTools40')
-            # copy argv and clear sys.argv
-            cxx_args = {k: v for k, v in args.items() if k != 'compiler'}
-            _main_cxx(cxx_args)
-            cxx_version = '40'
-        # Add toolchain to $PATH
-        cxx_toolchain_path(cxx_version, args['dir'])
-
-    cmdstan_version = f'cmdstan-{version}'
-    with pushd(install_dir):
-        if args['overwrite'] or not (
-            os.path.exists(cmdstan_version)
-            and os.path.exists(
-                os.path.join(
-                    cmdstan_version,
-                    'examples',
-                    'bernoulli',
-                    'bernoulli' + EXTENSION,
-                )
-            )
-        ):
-            try:
-                retrieve_version(version, progress)
-                install_version(
-                    cmdstan_version=cmdstan_version,
-                    overwrite=args['overwrite'],
-                    verbose=args['verbose'],
-                    progress=progress,
-                    cores=args['cores'],
-                )
-            except RuntimeError as e:
-                print(e)
-                sys.exit(3)
-        else:
-            print('CmdStan version {} already installed'.format(version))
-
-
 def __main__() -> None:
-    main(parse_cmdline_args())
+    args = parse_cmdline_args()
+    if args.get('interactive', False):
+        run_install(InteractiveSettings())
+    else:
+        run_install(InstallationSettings(**args))
 
 
 if __name__ == '__main__':

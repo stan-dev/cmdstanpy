@@ -2,8 +2,10 @@
 
 import contextlib
 import os
+import sys
 import unittest
 from importlib import reload
+from io import StringIO
 
 
 class CustomTestCase(unittest.TestCase):
@@ -30,6 +32,14 @@ class CustomTestCase(unittest.TestCase):
             reload(module)
             yield
         reload(module)
+
+    # recipe modified from https://stackoverflow.com/a/36491341
+    @contextlib.contextmanager
+    def replace_stdin(self, target: str):
+        orig = sys.stdin
+        sys.stdin = StringIO(target)
+        yield
+        sys.stdin = orig
 
     # recipe from https://stackoverflow.com/a/34333710
     @contextlib.contextmanager

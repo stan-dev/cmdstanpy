@@ -1,7 +1,8 @@
-transformed data{
+transformed data {
   real x_;
   x_ = std_normal_rng();
 }
-generated quantities{
+generated quantities {
   real x = x_;
 }
+

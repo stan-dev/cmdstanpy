@@ -12,3 +12,4 @@ model {
   theta ~ normal(mu, tau);
   y ~ normal(theta, sigma);
 }
+
