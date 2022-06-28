@@ -6,29 +6,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.2 documentation</title>
     
-    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -38,7 +36,7 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API Reference" href="../api.html" />
+    <link rel="next" title="Community" href="../community.html" />
     <link rel="prev" title="Generating new quantities of interest." href="Run%20Generated%20Quantities.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -50,7 +48,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -61,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.2</a>
     
   </div>
 
@@ -89,7 +87,7 @@
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="../hello_world.html">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -102,6 +100,12 @@
 <li class="toctree-l1 current active nav-item">
  <a class="reference internal nav-link" href="../examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../community.html">
+  Community
  </a>
 </li>
 
@@ -407,6 +411,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -415,10 +420,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -430,18 +439,21 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
 <section id="Advanced-Topic:-Using-External-C++-Functions">
-<h1>Advanced Topic: Using External C++ Functions<a class="headerlink" href="#Advanced-Topic:-Using-External-C++-Functions" title="Permalink to this headline">¶</a></h1>
+<h1>Advanced Topic: Using External C++ Functions<a class="headerlink" href="#Advanced-Topic:-Using-External-C++-Functions" title="Permalink to this headline">#</a></h1>
 <p>This is based on the relevant portion of the CmdStan documentation <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/using-external-cpp-code.html">here</a></p>
 <p>Consider the following Stan model, based on the bernoulli example.</p>
 <div class="nbinput docutils container">
@@ -454,29 +466,21 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.9.13/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-functions {
-  real make_odds(real theta);
-}
-data {
-  int&lt;lower=0&gt; N;
-  array[N] int&lt;lower=0, upper=1&gt; y;
-}
-parameters {
-  real&lt;lower=0, upper=1&gt; theta;
-}
-model {
-  theta ~ beta(1, 1); // uniform prior on interval 0, 1
-  y ~ bernoulli(theta);
-}
-generated quantities {
-  real odds;
-  odds = make_odds(theta);
-}
+
 </pre></div></div>
 </div>
 <p>As you can see, it features a function declaration for <code class="docutils literal notranslate"><span class="pre">make_odds</span></code>, but no definition. If we try to compile this, we will get an error.</p>
@@ -493,27 +497,22 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
-ERROR:cmdstanpy:Stan program failed to compile:
-WARNING:cmdstanpy:make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.28.2&#39;
+18:33:51 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+18:33:57 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+18:33:57 - cmdstanpy - WARNING - Stan compiler has produced 1 warnings:
+18:33:57 - cmdstanpy - WARNING - make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.29.2&#39;
 
 --- Translating Stan model to C++ code ---
 bin/stanc  --o=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan
-Semantic error in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan&#39;, line 2, column 2 to column 29:
-   -------------------------------------------------
-     1:  functions {
-     2:    real make_odds(real theta);
-           ^
-     3:  }
-     4:  data {
-   -------------------------------------------------
+Warning: Empty file
+    &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan&#39;
+    detected; this is a valid stan model but likely unintended!
 
-Some function is declared without specifying a definition.
-make[2]: *** [make/program:50: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp] Error 1
-make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.28.2&#39;
-
-Command [&#39;make&#39;, &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external&#39;]
-        error during processing No such file or directory
+--- Compiling, linking C++ code ---
+g++ -std=c++1y -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes      -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0 -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/sundials_6.0.0/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -x c++ -o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp
+g++ -std=c++1y -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes      -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0 -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/sundials_6.0.0/src/sundials    -DBOOST_DISABLE_ASSERTS                -Wl,-L,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34; -Wl,-rpath,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34;      /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.o src/cmdstan/main.o        -Wl,-L,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34; -Wl,-rpath,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34;   stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+rm -f /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.o
+make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.29.2&#39;
 
 </pre></div></div>
 </div>
@@ -531,7 +530,26 @@ Command [&#39;make&#39;, &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examp
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+18:33:57 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+18:33:58 - cmdstanpy - WARNING - Stan compiler has produced 1 warnings:
+18:33:58 - cmdstanpy - WARNING - make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.29.2&#39;
+
+--- Translating Stan model to C++ code ---
+bin/stanc --allow-undefined --o=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan
+Warning: Empty file
+    &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan&#39;
+    detected; this is a valid stan model but likely unintended!
+
+--- Compiling, linking C++ code ---
+g++ -std=c++1y -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes      -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0 -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/sundials_6.0.0/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -include /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/user_header.hpp -x c++ -o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp
+cc1plus: fatal error: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/user_header.hpp: No such file or directory
+compilation terminated.
+make[2]: *** [make/program:58: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external] Error 1
+make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.29.2&#39;
+
+Command [&#39;make&#39;, &#39;STANCFLAGS+=--allow-undefined&#39;, &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external&#39;]
+        error during processing No such file or directory
+
 </pre></div></div>
 </div>
 <p>To resolve this, we need to both tell the Stan compiler an undefined function is okay <strong>and</strong> let C++ know what it should be.</p>
@@ -550,8 +568,23 @@ INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
-INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+18:33:58 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+18:34:14 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+18:34:14 - cmdstanpy - WARNING - Stan compiler has produced 1 warnings:
+18:34:14 - cmdstanpy - WARNING - make[2]: Entering directory &#39;/home/runner/.cmdstan/cmdstan-2.29.2&#39;
+
+--- Translating Stan model to C++ code ---
+bin/stanc --allow-undefined --o=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan
+Warning: Empty file
+    &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.stan&#39;
+    detected; this is a valid stan model but likely unintended!
+
+--- Compiling, linking C++ code ---
+g++ -std=c++1y -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes      -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0 -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/sundials_6.0.0/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -include /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/make_odds.hpp -x c++ -o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.hpp
+g++ -std=c++1y -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes      -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.3.9 -I stan/lib/stan_math/lib/boost_1.75.0 -I stan/lib/stan_math/lib/sundials_6.0.0/include -I stan/lib/stan_math/lib/sundials_6.0.0/src/sundials    -DBOOST_DISABLE_ASSERTS                -Wl,-L,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34; -Wl,-rpath,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34;      /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.o src/cmdstan/main.o        -Wl,-L,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34; -Wl,-rpath,&#34;/home/runner/.cmdstan/cmdstan-2.29.2/stan/lib/stan_math/lib/tbb&#34;   stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_nvecserial.a stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_cvodes.a stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_idas.a stan/lib/stan_math/lib/sundials_6.0.0/lib/libsundials_kinsol.a  stan/lib/stan_math/lib/tbb/libtbb.so.2 -o /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external
+rm -f /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_external.o
+make[2]: Leaving directory &#39;/home/runner/.cmdstan/cmdstan-2.29.2&#39;
+
 </pre></div></div>
 </div>
 <p>We can then run this model and inspect the output</p>
@@ -569,17 +602,17 @@ INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan start processing
-ERROR:cmdstanpy:Error in progress bar initialization:
-        IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f7a40d94040&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-    self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-    self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+18:34:14 - cmdstanpy - INFO - CmdStan start processing
+chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+
+chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -595,7 +628,8 @@ AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan done processing.
+
+18:34:14 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -607,13 +641,34 @@ INFO:cmdstanpy:CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([0.350489 , 0.0994315, 0.335836 , ..., 0.638242 , 0.219138 ,
-       0.267757 ])
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
+Input <span class="ansi-green-fg">In [6]</span>, in <span class="ansi-cyan-fg">&lt;cell line: 2&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">      1</span> fit <span style="color: rgb(98,98,98)">=</span> model_external<span style="color: rgb(98,98,98)">.</span>sample(data<span style="color: rgb(98,98,98)">=</span>{<span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">N</span><span style="color: rgb(175,0,0)">&#39;</span>:<span style="color: rgb(98,98,98)">10</span>, <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">y</span><span style="color: rgb(175,0,0)">&#39;</span>:[<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">1</span>,<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">0</span>,<span style="color: rgb(98,98,98)">1</span>]})
+<span class="ansi-green-fg">----&gt; 2</span> <span class="ansi-yellow-bg">fit</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">stan_variable</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">odds</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg">)</span>
+
+File <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/stanfit/mcmc.py:726</span>, in <span class="ansi-cyan-fg">CmdStanMCMC.stan_variable</span><span class="ansi-blue-fg">(self, var, inc_warmup)</span>
+<span class="ansi-green-intense-fg ansi-bold">    684</span> <span style="color: rgb(175,0,0)">&#34;&#34;&#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">    685</span> <span style="color: rgb(175,0,0)">Return a numpy.ndarray which contains the set of draws</span>
+<span class="ansi-green-intense-fg ansi-bold">    686</span> <span style="color: rgb(175,0,0)">for the named Stan program variable.  Flattens the chains,</span>
+<span class="ansi-green-fg">   (...)</span>
+<span class="ansi-green-intense-fg ansi-bold">    723</span> <span style="color: rgb(175,0,0)">CmdStanGQ.stan_variable</span>
+<span class="ansi-green-intense-fg ansi-bold">    724</span> <span style="color: rgb(175,0,0)">&#34;&#34;&#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">    725</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> var <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_metadata<span style="color: rgb(98,98,98)">.</span>stan_vars_dims:
+<span class="ansi-green-fg">--&gt; 726</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">ValueError</span>(
+<span class="ansi-green-intense-fg ansi-bold">    727</span>         <span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Unknown variable name: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>var<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">    728</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Available variables are </span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">    729</span>         <span style="color: rgb(98,98,98)">+</span> <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">, </span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(98,98,98)">.</span>join(<span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_metadata<span style="color: rgb(98,98,98)">.</span>stan_vars_dims)
+<span class="ansi-green-intense-fg ansi-bold">    730</span>     )
+<span class="ansi-green-intense-fg ansi-bold">    731</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_draws<span style="color: rgb(98,98,98)">.</span>shape <span style="color: rgb(98,98,98)">==</span> (<span style="color: rgb(98,98,98)">0</span>,):
+<span class="ansi-green-intense-fg ansi-bold">    732</span>     <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_assemble_draws()
+
+<span class="ansi-red-fg">ValueError</span>: Unknown variable name: odds
+Available variables are
 </pre></div></div>
 </div>
 <p>The contents of this header file are a bit complicated unless you are familiar with the C++ internals of Stan, so they are presented without comment:</p>
@@ -644,10 +699,10 @@ array([0.350489 , 0.0994315, 0.335836 , ..., 0.638242 , 0.219138 ,
             <p class="prev-next-title">Generating new quantities of interest.</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="../api.html" title="next page">
+    <a class='right-next' id="next-link" href="../community.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">API Reference</p>
+        <p class="prev-next-title">Community</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
@@ -659,8 +714,9 @@ array([0.350489 , 0.0994315, 0.335836 , ..., 0.638242 , 0.219138 ,
       </div>
     </div>
   
-    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -671,7 +727,7 @@ array([0.350489 , 0.0994315, 0.335836 , ..., 0.638242 , 0.219138 ,
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

@@ -6,29 +6,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>MCMC Sampling &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>MCMC Sampling &#8212; CmdStanPy 1.0.2 documentation</title>
     
-    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -50,7 +48,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -61,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.2</a>
     
   </div>
 
@@ -89,7 +87,7 @@
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="../hello_world.html">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -102,6 +100,12 @@
 <li class="toctree-l1 current active nav-item">
  <a class="reference internal nav-link" href="../examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../community.html">
+  Community
  </a>
 </li>
 
@@ -163,20 +167,27 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Prerequisites">
-   Prerequisites
+  <a class="reference internal nav-link" href="#Overview">
+   Overview
   </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Notebook-prerequisites">
+     Notebook prerequisites
+    </a>
+   </li>
+  </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Fitting-a-model-to-data">
-   Fitting a model to data
+  <a class="reference internal nav-link" href="#Fitting-the-model-and-data">
+   Fitting the model and data
   </a>
   <ul class="visible nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
@@ -187,9 +198,75 @@
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#Running-a-data-generating-model">
-   Running a data-generating model
+  <a class="reference internal nav-link" href="#Checking-the-fit">
+   Checking the fit
   </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Summarizing-the-sample">
+     Summarizing the sample
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Sampler-Diagnostics">
+     Sampler Diagnostics
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Accessing-the-sampler-outputs">
+   Accessing the sampler outputs
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Extracting-the-draws-in-tabular-format">
+     Extracting the draws in tabular format
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Extracting-the-draws-as-structured-Stan-program-variables">
+     Extracting the draws as structured Stan program variables
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Extracting-sampler-method-diagnostics">
+     Extracting sampler method diagnostics
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Extracting-the-per-chain-HMC-tuning-parameters">
+     Extracting the per-chain HMC tuning parameters
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Extracting-the-sample-meta-data">
+     Extracting the sample meta-data
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Saving-the-sampler-output-files">
+   Saving the sampler output files
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Parallelization-via-multi-threaded-processing">
+   Parallelization via multi-threaded processing
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Cross-chain-multi-threading">
+     Cross-chain multi-threading
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#Within-chain-multi-threading">
+     Within-chain multi-threading
+    </a>
+   </li>
+  </ul>
  </li>
 </ul>
 
@@ -434,6 +511,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -442,10 +520,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -457,23 +539,51 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
 <section id="MCMC-Sampling">
-<h1>MCMC Sampling<a class="headerlink" href="#MCMC-Sampling" title="Permalink to this headline">¶</a></h1>
-<p>The <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> class method <code class="docutils literal notranslate"><span class="pre">sample</span></code> invokes Stan’s adaptive HMC-NUTS sampler which uses the Hamiltonian Monte Carlo (HMC) algorithm and its adaptive variant the no-U-turn sampler (NUTS) to produce a set of draws from the posterior distribution of the model parameters conditioned on the data. It returns a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object which provides properties to retrieve information about the sample, as well as methods to run CmdStan’s summary and diagnostics tools.</p>
-<p>In order to evaluate the fit of the model to the data, it is necessary to run several Monte Carlo chains and compare the set of draws returned by each. By default, the <code class="docutils literal notranslate"><span class="pre">sample</span></code> command runs 4 sampler chains, i.e., CmdStanPy invokes CmdStan 4 times. CmdStanPy uses Python’s <code class="docutils literal notranslate"><span class="pre">subprocess</span></code> and <code class="docutils literal notranslate"><span class="pre">multiprocessing</span></code> libraries to run these chains in separate processes. This processing can be done in parallel, up to the number of processor cores available.</p>
-<section id="Prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#Prerequisites" title="Permalink to this headline">¶</a></h2>
-<p>CmdStanPy displays progress bars during sampling via use of package <a class="reference external" href="https://github.com/tqdm/tqdm">tqdm</a>. In order for these to display properly, you must have the <a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/index.html">ipywidgets</a> package installed, and depending on your version of Jupyter or JupyterLab, you must enable it via command:</p>
+<h1>MCMC Sampling<a class="headerlink" href="#MCMC-Sampling" title="Permalink to this headline">#</a></h1>
+<section id="Overview">
+<h2>Overview<a class="headerlink" href="#Overview" title="Permalink to this headline">#</a></h2>
+<p>Stan’s MCMC sampler implements the Hamiltonian Monte Carlo (HMC) algorithm and its adaptive variant the no-U-turn sampler (NUTS). It creates a set of draws from the posterior distribution of the model conditioned on the data, allowing for exact Bayesian inference of the model parameters. Each draw consists of the values for all parameter, transformed parameter, and generated quantities variables, reported on the constrained scale.</p>
+<p>The <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.sample">CmdStanModel sample</a> method wraps the CmdStan <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/mcmc-config.html">sample</a> method. Underlyingly, the CmdStan outputs are a set of per-chain Stan CSV files. In addition to the resulting sample, reported as one row per draw, the Stan CSV files encode information about the inference engine configuration and the sampler state. The NUTS-HMC adaptive sampler algorithm also outputs the
+per-chain HMC tuning parameters <code class="docutils literal notranslate"><span class="pre">step_size</span></code> and <code class="docutils literal notranslate"><span class="pre">metric</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">sample</span></code> method returns a <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanmcmc">CmdStanMCMC</a> object, which provides access to the disparate information from the Stan CSV files. Accessor functions allow the user to access the sample in whatever data format is needed for further analysis.</p>
+<ul class="simple">
+<li><p>The sample can be extracted in tabular format, either as</p>
+<ul>
+<li><p>an <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray">numpy.ndarray</a></p></li>
+<li><p>a <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html#pandas.DataFrame">pandas.DataFrame</a></p></li>
+</ul>
+</li>
+<li><p>The sample can be treated as a collection of named, structured variables, and extracted as</p>
+<ul>
+<li><p>a Python <code class="docutils literal notranslate"><span class="pre">dict</span></code> mapping names to <code class="docutils literal notranslate"><span class="pre">numpy.ndarray</span></code> objects</p></li>
+<li><p>an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html">xarray.Dataset</a></p></li>
+</ul>
+</li>
+</ul>
+<p>In addition, the <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object has accessor methods for</p>
+<ul class="simple">
+<li><p>The per-chain HMC tuning parameters <code class="docutils literal notranslate"><span class="pre">step_size</span></code> and <code class="docutils literal notranslate"><span class="pre">metric</span></code></p></li>
+<li><p>The CmdStan run configuration and console outputs</p></li>
+<li><p>The sampler algorithm diagnostics</p></li>
+<li><p>The mapping between the Stan model variables and the corresponding CSV file columns.</p></li>
+</ul>
+<section id="Notebook-prerequisites">
+<h3>Notebook prerequisites<a class="headerlink" href="#Notebook-prerequisites" title="Permalink to this headline">#</a></h3>
+<p>CmdStanPy displays progress bars during sampling via use of package <a class="reference external" href="https://github.com/tqdm/tqdm">tqdm</a>. In order for these to display properly in a Jupyter notebook, you must have the <a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/index.html">ipywidgets</a> package installed, and depending on your version of Jupyter or JupyterLab, you must enable it via command:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -487,61 +597,28 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-usage: jupyter [-h] [--version] [--config-dir] [--data-dir] [--runtime-dir]
-               [--paths] [--json] [--debug]
-               [subcommand]
-
-Jupyter: Interactive Computing
-
-positional arguments:
-  subcommand     the subcommand to launch
-
-optional arguments:
-  -h, --help     show this help message and exit
-  --version      show the versions of core jupyter packages and exit
-  --config-dir   show Jupyter config dir
-  --data-dir     show Jupyter data dir
-  --runtime-dir  show Jupyter runtime dir
-  --paths        show all Jupyter paths. Add --json for machine-readable
-                 format.
-  --json         output paths as machine-readable json
-  --debug        output debug information about paths
-
-Available subcommands: dejavu execute kernel kernelspec migrate nbconvert run
-troubleshoot trust
-
-Jupyter command `jupyter-nbextension` not found.
+Enabling notebook extension jupyter-js-widgets/extension...
+      - Validating: <span class="ansi-green-fg">OK</span>
 </pre></div></div>
 </div>
 <p>For more information, see the the <a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/user_install.html#">installation instructions</a>, also <a class="reference external" href="https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637">this tqdm GitHub issue</a>.</p>
 </section>
-<section id="Fitting-a-model-to-data">
-<h2>Fitting a model to data<a class="headerlink" href="#Fitting-a-model-to-data" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="Fitting-the-model-and-data">
+<h2>Fitting the model and data<a class="headerlink" href="#Fitting-the-model-and-data" title="Permalink to this headline">#</a></h2>
 <p>In this example we use the CmdStan example model <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan">bernoulli.stan</a> and data file <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json%3E">bernoulli.data.json</a>.</p>
 <p>We instantiate a <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> from the Stan program file</p>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span><span class="p">,</span> <span class="n">cmdstan_path</span>
-
-<span class="n">bernoulli_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">)</span>
-<span class="n">stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
-<span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
 
 <span class="c1"># instantiate, compile bernoulli model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-INFO:cmdstanpy:found newer exe file, not recompiling
-</pre></div></div>
 </div>
 <p>By default, the model is compiled during instantiation. The compiled executable is created in the same directory as the program file. If the directory already contains an executable file with a newer timestamp, the model is not recompiled.</p>
 <p>We run the sampler on the data using all default settings: 4 chains, each of which runs 1000 warmup and sampling iterations.</p>
@@ -550,7 +627,7 @@ INFO:cmdstanpy:found newer exe file, not recompiling
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># run CmdStan&#39;s sample method, returns object `CmdStanMCMC`</span>
-<span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
+<span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -559,18 +636,32 @@ INFO:cmdstanpy:found newer exe file, not recompiling
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan start processing
-ERROR:cmdstanpy:Error in progress bar initialization:
-        IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7fa15042fee0&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-    self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-    self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+17:32:09 - cmdstanpy - INFO - CmdStan start processing
 </pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "651da295dcfe4ee2837f9d61d1371b1c", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "75265e5c3d1f4f028ef623cbbaf0c07c", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "763a5fa099bf4b178791a59fde6e1a9d", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "05091cf113994122bf42b361c9011d5b", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
@@ -585,7 +676,7 @@ AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan done processing.
+17:32:09 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -596,13 +687,250 @@ INFO:cmdstanpy:CmdStan done processing.
 
 </pre></div></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">sample</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object, which contains: - metadata - draws - HMC tuning parameters <code class="docutils literal notranslate"><span class="pre">metric</span></code>, <code class="docutils literal notranslate"><span class="pre">step_size</span></code></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object records the command, the return code, and the paths to the sampler output csv and console files. The sample is lazily instantiated on first access of either the draws or the HMC tuning parameters, i.e., the step size and metric.</p>
+<p>The string representation of this object displays the CmdStan commands and the location of the output files. Output filenames are composed of the model name, a timestamp in the form YYYYMMDDhhmmss and the chain id, plus the corresponding filetype suffix, either ‘.csv’ for the CmdStan output or ‘.txt’ for the console messages, e.g. bernoulli-20220617170100_1.csv.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sampler diagnostic variables:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">method_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;stan model variables:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
+ csv_files:
+        /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/bernoullibqw94rqo/bernoulli-20220626173209_1.csv
+        /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/bernoullibqw94rqo/bernoulli-20220626173209_2.csv
+        /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/bernoullibqw94rqo/bernoulli-20220626173209_3.csv
+        /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/bernoullibqw94rqo/bernoulli-20220626173209_4.csv
+ output_files:
+        /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/bernoullibqw94rqo/bernoulli-20220626173209-stdout.txt
+</pre></div></div>
+</div>
+<section id="Sampler-Progress">
+<h3>Sampler Progress<a class="headerlink" href="#Sampler-Progress" title="Permalink to this headline">#</a></h3>
+<p>Your model make take a long time to fit. The <code class="docutils literal notranslate"><span class="pre">sample</span></code> method provides two arguments:</p>
+<ul class="simple">
+<li><p>visual progress bar: <code class="docutils literal notranslate"><span class="pre">show_progress=True</span></code></p></li>
+<li><p>stream CmdStan output to the console - <code class="docutils literal notranslate"><span class="pre">show_console=True</span></code></p></li>
+</ul>
+<p>By default, CmdStanPy displays a progress bar during sampling, as seen above. Since the progress bars are only visible while the sampler is running and the bernoulli example model takes no time at all to fit, we run this model for 200K iterations, in order to see the progress bars in action.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">,</span> <span class="n">iter_warmup</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">iter_sampling</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:09 - cmdstanpy - INFO - CmdStan start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7632c8699a6749ef9026a685d925bdfe", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "e1146aac65b1454f915707172c44f032", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b35dea89a8ea4629875d6c003ae83054", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "13fe8e29dd624f6b80309b3b6c77ed04", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:11 - cmdstanpy - INFO - CmdStan done processing.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>To see the CmdStan console outputs instead of progress bars, specify <code class="docutils literal notranslate"><span class="pre">show_console=True</span></code> This will stream all CmdStan messages to the terminal while the sampler is running. This option will allow you to debug a Stan program using the Stan language <code class="docutils literal notranslate"><span class="pre">print</span></code> statement.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parallel_chains</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">show_console</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<br/><br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:13 - cmdstanpy - INFO - CmdStan start processing
+17:32:13 - cmdstanpy - INFO - CmdStan done processing
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+method = sample (Default)
+sample
+num_samples = 1000 (Default)
+num_warmup = 1000 (Default)
+save_warmup = 0 (Default)
+thin = 1 (Default)
+adapt
+engaged = 1 (Default)
+gamma = 0.050000000000000003 (Default)
+delta = 0.80000000000000004 (Default)
+kappa = 0.75 (Default)
+t0 = 10 (Default)
+init_buffer = 75 (Default)
+term_buffer = 50 (Default)
+window = 25 (Default)
+algorithm = hmc (Default)
+hmc
+engine = nuts (Default)
+nuts
+max_depth = 10 (Default)
+metric = diag_e (Default)
+metric_file =  (Default)
+stepsize = 1 (Default)
+stepsize_jitter = 0 (Default)
+num_chains = 2
+id = 1 (Default)
+data
+file = bernoulli.data.json
+init = 2 (Default)
+random
+seed = 51542
+output
+file = /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/bernoullix2pr1fwg/bernoulli-20220626173213.csv
+diagnostic_file =  (Default)
+refresh = 100 (Default)
+sig_figs = -1 (Default)
+profile_file = profile.csv (Default)
+num_threads = 1 (Default)
+
+
+Gradient evaluation took 5e-06 seconds
+1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
+Adjust your expectations accordingly!
+
+
+
+Gradient evaluation took 1e-06 seconds
+1000 transitions using 10 leapfrog steps per transition would take 0.01 seconds.
+Adjust your expectations accordingly!
+
+
+Chain [1] Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain [1] Iteration:  100 / 2000 [  5%]  (Warmup)
+Chain [1] Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain [1] Iteration:  300 / 2000 [ 15%]  (Warmup)
+Chain [1] Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain [1] Iteration:  500 / 2000 [ 25%]  (Warmup)
+Chain [1] Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain [1] Iteration:  700 / 2000 [ 35%]  (Warmup)
+Chain [1] Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain [1] Iteration:  900 / 2000 [ 45%]  (Warmup)
+Chain [1] Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain [1] Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain [1] Iteration: 1100 / 2000 [ 55%]  (Sampling)
+Chain [1] Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain [1] Iteration: 1300 / 2000 [ 65%]  (Sampling)
+Chain [1] Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain [1] Iteration: 1500 / 2000 [ 75%]  (Sampling)
+Chain [1] Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain [1] Iteration: 1700 / 2000 [ 85%]  (Sampling)
+Chain [1] Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain [1] Iteration: 1900 / 2000 [ 95%]  (Sampling)
+Chain [1] Iteration: 2000 / 2000 [100%]  (Sampling)
+
+Elapsed Time: 0.004 seconds (Warm-up)
+0.011 seconds (Sampling)
+0.015 seconds (Total)
+
+Chain [2] Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain [2] Iteration:  100 / 2000 [  5%]  (Warmup)
+Chain [2] Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain [2] Iteration:  300 / 2000 [ 15%]  (Warmup)
+Chain [2] Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain [2] Iteration:  500 / 2000 [ 25%]  (Warmup)
+Chain [2] Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain [2] Iteration:  700 / 2000 [ 35%]  (Warmup)
+Chain [2] Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain [2] Iteration:  900 / 2000 [ 45%]  (Warmup)
+Chain [2] Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain [2] Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain [2] Iteration: 1100 / 2000 [ 55%]  (Sampling)
+Chain [2] Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain [2] Iteration: 1300 / 2000 [ 65%]  (Sampling)
+Chain [2] Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain [2] Iteration: 1500 / 2000 [ 75%]  (Sampling)
+Chain [2] Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain [2] Iteration: 1700 / 2000 [ 85%]  (Sampling)
+Chain [2] Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain [2] Iteration: 1900 / 2000 [ 95%]  (Sampling)
+Chain [2] Iteration: 2000 / 2000 [100%]  (Sampling)
+
+Elapsed Time: 0.004 seconds (Warm-up)
+0.01 seconds (Sampling)
+0.014 seconds (Total)
+
+
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Checking-the-fit">
+<h2>Checking the fit<a class="headerlink" href="#Checking-the-fit" title="Permalink to this headline">#</a></h2>
+<p>The first question to ask of the <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object is: <em>is this a valid sample from the posterior?</em></p>
+<p>It is important to check whether or not the sampler was able to fit the model given the data. Often, this is not possible, for any number of reasons. To appreciate the sampler diagnostics, we use a hierarchical model which, given a small amount of data, encounters difficulty: the centered parameterization of the “8-schools” model (Rubin, 1981). The “8-schools” model is a simple hierarchical model, first developed on a dataset taken from an experiment was conducted in 8 schools, with only
+treatment effects and their standard errors reported.</p>
+<p>The Stan model and the original dataset are in files <code class="docutils literal notranslate"><span class="pre">eight_schools.stan</span></code> and <code class="docutils literal notranslate"><span class="pre">eight_schools.data.json</span></code>.</p>
+<p><strong>eight_schools.stan</strong></p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;eight_schools.stan&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -611,22 +939,156 @@ INFO:cmdstanpy:CmdStan done processing.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-sampler diagnostic variables:
-dict_keys([&#39;lp__&#39;, &#39;accept_stat__&#39;, &#39;stepsize__&#39;, &#39;treedepth__&#39;, &#39;n_leapfrog__&#39;, &#39;divergent__&#39;, &#39;energy__&#39;])
-stan model variables:
-dict_keys([&#39;theta&#39;])
+data {
+  int&lt;lower=0&gt; J; // number of schools
+  array[J] real y; // estimated treatment effect (school j)
+  array[J] real&lt;lower=0&gt; sigma; // std err of effect estimate (school j)
+}
+parameters {
+  real mu;
+  array[J] real theta;
+  real&lt;lower=0&gt; tau;
+}
+model {
+  theta ~ normal(mu, tau);
+  y ~ normal(theta, sigma);
+}
+
+
 </pre></div></div>
 </div>
+<p><strong>eight_schools.data.json</strong></p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;eight_schools.data.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{
+    &#34;J&#34; : 8,
+    &#34;y&#34; : [28,8,-3,7,-1,1,18,12],
+    &#34;sigma&#34; : [15,10,16,11,9,11,10,18],
+    &#34;tau&#34; : 25
+}
+
+</pre></div></div>
+</div>
+<p>Because there is not much data, the geometry of posterior distribution is highly curved, thus the sampler may encounter difficulty in fitting the model. By specifying the initial seed for the pseudo-random number generator, we insure that the sampler will have difficulty in fitting this model. In particular, some post-warmup iterations diverge, resulting in a biased sample. In addition, some post-warmup iterations hit the maximum allowed treedepth before the trajectory hits the “U-turn”
+condition of the NUTS algorithm, in which case the sampler may fail to properly explore the entire posterior.</p>
+<p>These diagnostics are checked for automatically at the end of each run; if problems are detected, a WARNING message is logged.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eight_schools_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;eight_schools.stan&#39;</span><span class="p">)</span>
+<span class="n">eight_schools_fit</span> <span class="o">=</span> <span class="n">eight_schools_model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s1">&#39;eight_schools.data.json&#39;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">55157</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:14 - cmdstanpy - INFO - CmdStan start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "491b067b56d14aeca913cfdaef312604", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "62b978a8d1174a739ff2e856fd54517e", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "7666140713c2435cbd513cf074cca77d", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9c340b27b646407cadccb7f831cdf213", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:14 - cmdstanpy - INFO - CmdStan done processing.
+17:32:14 - cmdstanpy - WARNING - Some chains may have failed to converge.
+        Chain 1 had 10 divergent transitions (1.0%)
+        Chain 2 had 143 divergent transitions (14.3%)
+        Chain 3 had 5 divergent transitions (0.5%)
+        Chain 4 had 4 divergent transitions (0.4%)
+        Chain 4 had 6 iterations at max treedepth (0.6%)
+        Use function &#34;diagnose()&#34; to see further information.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>The number of post-warmup divergences and iterations which hit the maximum treedepth can be inspected directly via properties <code class="docutils literal notranslate"><span class="pre">divergences</span></code> and <code class="docutils literal notranslate"><span class="pre">max_treedepths</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;divergences:</span><span class="se">\n</span><span class="si">{</span><span class="n">eight_schools_fit</span><span class="o">.</span><span class="n">divergences</span><span class="si">}</span><span class="se">\n</span><span class="s1">iterations at max_treedepth:</span><span class="se">\n</span><span class="si">{</span><span class="n">eight_schools_fit</span><span class="o">.</span><span class="n">max_treedepths</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+divergences:
+[ 10 143   5   4]
+iterations at max_treedepth:
+[0 0 0 6]
+</pre></div></div>
+</div>
+<section id="Summarizing-the-sample">
+<h3>Summarizing the sample<a class="headerlink" href="#Summarizing-the-sample" title="Permalink to this headline">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">summary</span></code> method reports the R-hat statistic, a measure of how well the sampler chains have converged.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eight_schools_fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -674,52 +1136,284 @@ dict_keys([&#39;theta&#39;])
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-7.30</td>
-      <td>0.0190</td>
-      <td>0.76</td>
-      <td>-8.800</td>
-      <td>-7.00</td>
-      <td>-6.80</td>
-      <td>1600.0</td>
-      <td>32000.0</td>
-      <td>1.0</td>
+      <td>-16.47510</td>
+      <td>1.393830</td>
+      <td>7.33884</td>
+      <td>-26.342300</td>
+      <td>-17.71920</td>
+      <td>-5.82214</td>
+      <td>27.72280</td>
+      <td>44.14460</td>
+      <td>1.12057</td>
     </tr>
     <tr>
-      <th>theta</th>
-      <td>0.25</td>
-      <td>0.0033</td>
-      <td>0.12</td>
-      <td>0.079</td>
-      <td>0.24</td>
-      <td>0.48</td>
-      <td>1400.0</td>
-      <td>28000.0</td>
-      <td>1.0</td>
+      <th>mu</th>
+      <td>7.36580</td>
+      <td>0.358441</td>
+      <td>5.36980</td>
+      <td>-0.090157</td>
+      <td>6.98708</td>
+      <td>16.39460</td>
+      <td>224.43000</td>
+      <td>357.37300</td>
+      <td>1.03328</td>
+    </tr>
+    <tr>
+      <th>theta[1]</th>
+      <td>11.02040</td>
+      <td>0.693969</td>
+      <td>8.59668</td>
+      <td>0.398902</td>
+      <td>9.67094</td>
+      <td>27.12670</td>
+      <td>153.45500</td>
+      <td>244.35500</td>
+      <td>1.03967</td>
+    </tr>
+    <tr>
+      <th>theta[2]</th>
+      <td>7.44547</td>
+      <td>0.222970</td>
+      <td>6.32424</td>
+      <td>-2.193170</td>
+      <td>6.77458</td>
+      <td>18.33640</td>
+      <td>804.49900</td>
+      <td>1281.05000</td>
+      <td>1.01501</td>
+    </tr>
+    <tr>
+      <th>theta[3]</th>
+      <td>5.46814</td>
+      <td>0.230146</td>
+      <td>7.65499</td>
+      <td>-7.436710</td>
+      <td>5.20094</td>
+      <td>17.52600</td>
+      <td>1106.33000</td>
+      <td>1761.67000</td>
+      <td>1.00842</td>
+    </tr>
+    <tr>
+      <th>theta[4]</th>
+      <td>7.07208</td>
+      <td>0.257662</td>
+      <td>6.80149</td>
+      <td>-3.296620</td>
+      <td>6.58401</td>
+      <td>18.50130</td>
+      <td>696.79800</td>
+      <td>1109.55000</td>
+      <td>1.01756</td>
+    </tr>
+    <tr>
+      <th>theta[5]</th>
+      <td>4.59664</td>
+      <td>0.193292</td>
+      <td>6.13195</td>
+      <td>-6.067650</td>
+      <td>4.04537</td>
+      <td>14.53360</td>
+      <td>1006.39000</td>
+      <td>1602.54000</td>
+      <td>1.00407</td>
+    </tr>
+    <tr>
+      <th>theta[6]</th>
+      <td>5.69326</td>
+      <td>0.199079</td>
+      <td>6.77053</td>
+      <td>-5.402900</td>
+      <td>5.30265</td>
+      <td>16.48680</td>
+      <td>1156.63000</td>
+      <td>1841.76000</td>
+      <td>1.00729</td>
+    </tr>
+    <tr>
+      <th>theta[7]</th>
+      <td>10.04950</td>
+      <td>0.628118</td>
+      <td>7.10079</td>
+      <td>0.675246</td>
+      <td>9.17402</td>
+      <td>23.36110</td>
+      <td>127.80000</td>
+      <td>203.50400</td>
+      <td>1.03588</td>
+    </tr>
+    <tr>
+      <th>theta[8]</th>
+      <td>7.84009</td>
+      <td>0.291526</td>
+      <td>8.04207</td>
+      <td>-4.016420</td>
+      <td>7.00731</td>
+      <td>21.58680</td>
+      <td>760.99400</td>
+      <td>1211.77000</td>
+      <td>1.01463</td>
+    </tr>
+    <tr>
+      <th>tau</th>
+      <td>6.60333</td>
+      <td>0.557360</td>
+      <td>5.77492</td>
+      <td>1.019850</td>
+      <td>5.21419</td>
+      <td>17.68580</td>
+      <td>107.35287</td>
+      <td>170.94406</td>
+      <td>1.04858</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>The sampling data from the fit can be accessed either as a <code class="docutils literal notranslate"><span class="pre">numpy</span></code> array or a pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>:</p>
+</section>
+<section id="Sampler-Diagnostics">
+<h3>Sampler Diagnostics<a class="headerlink" href="#Sampler-Diagnostics" title="Permalink to this headline">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">diagnose()</span></code> method provides more information about the sample.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-<span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">eight_schools_fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Processing csv files: /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/eight_schoolssk9k0rkd/eight_schools-20220626173214_1.csv, /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/eight_schoolssk9k0rkd/eight_schools-20220626173214_2.csv, /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/eight_schoolssk9k0rkd/eight_schools-20220626173214_3.csv, /var/folders/db/4jnggnf549s42z50bd61jskm0000gq/T/tmp86q_w0yg/eight_schoolssk9k0rkd/eight_schools-20220626173214_4.csv
+
+Checking sampler transitions treedepth.
+6 of 4000 (0.15%) transitions hit the maximum treedepth limit of 10, or 2^10 leapfrog steps.
+Trajectories that are prematurely terminated due to this limit will result in slow exploration.
+For optimal performance, increase this limit.
+
+Checking sampler transitions for divergences.
+162 of 4000 (4.05%) transitions ended with a divergence.
+These divergent transitions indicate that HMC is not fully able to explore the posterior distribution.
+Try increasing adapt delta closer to 1.
+If this doesn&#39;t remove all divergences, try to reparameterize the model.
+
+Checking E-BFMI - sampler transitions HMC potential energy.
+The E-BFMI, 0.18, is below the nominal threshold of 0.30 which suggests that HMC may have trouble exploring the target distribution.
+If possible, try to reparameterize the model.
+
+Effective sample size satisfactory.
+
+Split R-hat values satisfactory all parameters.
+
+Processing complete.
+
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Accessing-the-sampler-outputs">
+<h2>Accessing the sampler outputs<a class="headerlink" href="#Accessing-the-sampler-outputs" title="Permalink to this headline">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:14 - cmdstanpy - INFO - CmdStan start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "d8b1b00ac74841c1a01921fc27572779", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "05ddbd31dfde476bb27830da1b7f0189", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "68389896d81c413d9c1476f839fb1bef", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a335f49a39704eee8a8d8141d29dcfb3", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-(1000, 4, 8)
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:15 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<section id="Extracting-the-draws-in-tabular-format">
+<h3>Extracting the draws in tabular format<a class="headerlink" href="#Extracting-the-draws-in-tabular-format" title="Permalink to this headline">#</a></h3>
+<p>The sample can be accessed either as a <code class="docutils literal notranslate"><span class="pre">numpy</span></code> array or a pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sample as ndarray: </span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="se">\n</span><span class="s1">first 2 draws, chain 1:</span><span class="se">\n</span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()[:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+sample as ndarray: (1000, 4, 8)
+first 2 draws, chain 1:
+[[-6.75944   1.        1.13928   2.        3.        0.        6.77954
+   0.2692  ]
+ [-7.09693   0.867647  1.13928   1.        1.        0.        7.09717
+   0.36266 ]]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -754,69 +1448,72 @@ dict_keys([&#39;theta&#39;])
   <tbody>
     <tr>
       <th>0</th>
-      <td>-8.70845</td>
+      <td>-6.75944</td>
       <td>1.000000</td>
-      <td>1.02096</td>
-      <td>1.0</td>
-      <td>1.0</td>
+      <td>1.13928</td>
+      <td>2.0</td>
+      <td>3.0</td>
       <td>0.0</td>
-      <td>10.20120</td>
-      <td>0.530638</td>
+      <td>6.77954</td>
+      <td>0.269200</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-6.92526</td>
-      <td>0.859618</td>
-      <td>1.02096</td>
-      <td>2.0</td>
-      <td>3.0</td>
+      <td>-7.09693</td>
+      <td>0.867647</td>
+      <td>1.13928</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>9.72308</td>
-      <td>0.180920</td>
+      <td>7.09717</td>
+      <td>0.362660</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-7.43991</td>
-      <td>0.869516</td>
-      <td>1.02096</td>
+      <td>-7.23328</td>
+      <td>0.937972</td>
+      <td>1.13928</td>
       <td>1.0</td>
-      <td>3.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>7.83440</td>
-      <td>0.412057</td>
+      <td>7.38250</td>
+      <td>0.384201</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>-6.75890</td>
-      <td>0.852558</td>
-      <td>1.02096</td>
+      <td>-7.05500</td>
+      <td>1.000000</td>
+      <td>1.13928</td>
       <td>2.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>8.11689</td>
-      <td>0.231873</td>
+      <td>7.16122</td>
+      <td>0.161502</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>-6.92834</td>
-      <td>0.953785</td>
-      <td>1.02096</td>
+      <td>-7.28793</td>
+      <td>0.941969</td>
+      <td>1.13928</td>
       <td>1.0</td>
-      <td>3.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>6.98171</td>
-      <td>0.329552</td>
+      <td>7.33886</td>
+      <td>0.137127</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>Additionally, if <code class="docutils literal notranslate"><span class="pre">xarray</span></code> is installed, this data can be accessed another way:</p>
+</section>
+<section id="Extracting-the-draws-as-structured-Stan-program-variables">
+<h3>Extracting the draws as structured Stan program variables<a class="headerlink" href="#Extracting-the-draws-as-structured-Stan-program-variables" title="Permalink to this headline">#</a></h3>
+<p>Per-variable draws can be accessed as either a numpy.ndarray object via method <code class="docutils literal notranslate"><span class="pre">stan_variable</span></code> or as an xarray.Dataset object via <code class="docutils literal notranslate"><span class="pre">draws_xr</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span><span class="o">.</span><span class="n">draws_xr</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -825,279 +1522,147 @@ dict_keys([&#39;theta&#39;])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">RuntimeError</span>                              Traceback (most recent call last)
-Input <span class="ansi-green-fg">In [7]</span>, in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">----&gt; 1</span> <span class="ansi-yellow-bg">fit</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">draws_xr</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">)</span>
-
-File <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/stanfit/mcmc.py:570</span>, in <span class="ansi-cyan-fg">CmdStanMCMC.draws_xr</span><span class="ansi-blue-fg">(self, vars, inc_warmup)</span>
-<span class="ansi-green-intense-fg ansi-bold">    554</span> <span style="color: rgb(175,0,0)">&#34;&#34;&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">    555</span> <span style="color: rgb(175,0,0)">Returns the sampler draws as a xarray Dataset.</span>
-<span class="ansi-green-intense-fg ansi-bold">    556</span>
-<span class="ansi-green-fg">   (...)</span>
-<span class="ansi-green-intense-fg ansi-bold">    567</span> <span style="color: rgb(175,0,0)">CmdStanGQ.draws_xr</span>
-<span class="ansi-green-intense-fg ansi-bold">    568</span> <span style="color: rgb(175,0,0)">&#34;&#34;&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">    569</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> XARRAY_INSTALLED:
-<span class="ansi-green-fg">--&gt; 570</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">RuntimeError</span>(
-<span class="ansi-green-intense-fg ansi-bold">    571</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Package </span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">xarray</span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)"> is not installed, cannot produce draws array.</span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">    572</span>     )
-<span class="ansi-green-intense-fg ansi-bold">    573</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> inc_warmup <span class="ansi-bold" style="color: rgb(175,0,255)">and</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_save_warmup:
-<span class="ansi-green-intense-fg ansi-bold">    574</span>     get_logger()<span style="color: rgb(98,98,98)">.</span>warning(
-<span class="ansi-green-intense-fg ansi-bold">    575</span>         <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Draws from warmup iterations not available,</span><span style="color: rgb(175,0,0)">&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">    576</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)"> must run sampler with </span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">save_warmup=True</span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">.</span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">    577</span>     )
-
-<span class="ansi-red-fg">RuntimeError</span>: Package &#34;xarray&#34; is not installed, cannot produce draws array.
+[0.2692   0.36266  0.384201 ... 0.277657 0.277316 0.101517]
 </pre></div></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">fit</span></code> object records the command, the return code, and the paths to the sampler output csv and console files. The string representation of this object displays the CmdStan commands and the location of the output files.</p>
-<p>Output filenames are composed of the model name, a timestamp in the form YYYYMMDDhhmm and the chain id, plus the corresponding filetype suffix, either ‘.csv’ for the CmdStan output or ‘.txt’ for the console messages, e.g. <code class="docutils literal notranslate"><span class="pre">bernoulli-201912081451-1.csv</span></code>. Output files written to the temporary directory contain an additional 8-character random string, e.g. <code class="docutils literal notranslate"><span class="pre">bernoulli-201912081451-1-5nm6as7u.csv</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws_xr</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]
- csv_files:
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_1.csv
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_2.csv
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_3.csv
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_4.csv
- output_files:
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_0-stdout.txt
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_1-stdout.txt
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_2-stdout.txt
-        /tmp/tmpaj8pofet/bernoulli-20220214155915_3-stdout.txt
+&lt;xarray.Dataset&gt;
+Dimensions:  (draw: 1000, chain: 4)
+Coordinates:
+  * chain    (chain) int64 1 2 3 4
+  * draw     (draw) int64 0 1 2 3 4 5 6 7 8 ... 992 993 994 995 996 997 998 999
+Data variables:
+    theta    (chain, draw) float64 0.2692 0.3627 0.3842 ... 0.2777 0.2773 0.1015
+Attributes:
+    stan_version:        2.29.2
+    model:               bernoulli_model
+    num_draws_sampling:  1000
 </pre></div></div>
 </div>
+<p>The <code class="docutils literal notranslate"><span class="pre">stan_variables</span></code> method returns a Python <code class="docutils literal notranslate"><span class="pre">dict</span></code> over all Stan variables in the output.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;name: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">, shape: </span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+name: theta, shape: (4000,)
+</pre></div></div>
+</div>
+</section>
+<section id="Extracting-sampler-method-diagnostics">
+<h3>Extracting sampler method diagnostics<a class="headerlink" href="#Extracting-sampler-method-diagnostics" title="Permalink to this headline">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">method_variables</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;name: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">, shape: </span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+name: lp__, shape: (1000, 4)
+name: accept_stat__, shape: (1000, 4)
+name: stepsize__, shape: (1000, 4)
+name: treedepth__, shape: (1000, 4)
+name: n_leapfrog__, shape: (1000, 4)
+name: divergent__, shape: (1000, 4)
+name: energy__, shape: (1000, 4)
+</pre></div></div>
+</div>
+</section>
+<section id="Extracting-the-per-chain-HMC-tuning-parameters">
+<h3>Extracting the per-chain HMC tuning parameters<a class="headerlink" href="#Extracting-the-per-chain-HMC-tuning-parameters" title="Permalink to this headline">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;adapted step_size per chain</span><span class="se">\n</span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">step_size</span><span class="si">}</span><span class="se">\n</span><span class="s1">metric_type: </span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">metric_type</span><span class="si">}</span><span class="se">\n</span><span class="s1">metric:</span><span class="se">\n</span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">metric</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+adapted step_size per chain
+[1.13928  1.02295  1.13435  0.993666]
+metric_type: diag_e
+metric:
+[[0.515798]
+ [0.456194]
+ [0.588636]
+ [0.474007]]
+</pre></div></div>
+</div>
+</section>
+<section id="Extracting-the-sample-meta-data">
+<h3>Extracting the sample meta-data<a class="headerlink" href="#Extracting-the-sample-meta-data" title="Permalink to this headline">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sample method variables:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">method_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;stan model variables:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+sample method variables:
+dict_keys([&#39;lp__&#39;, &#39;accept_stat__&#39;, &#39;stepsize__&#39;, &#39;treedepth__&#39;, &#39;n_leapfrog__&#39;, &#39;divergent__&#39;, &#39;energy__&#39;])
+
+stan model variables:
+dict_keys([&#39;theta&#39;])
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Saving-the-sampler-output-files">
+<h2>Saving the sampler output files<a class="headerlink" href="#Saving-the-sampler-output-files" title="Permalink to this headline">#</a></h2>
 <p>The sampler output files are written to a temporary directory which is deleted upon session exit unless the <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is specified. The <code class="docutils literal notranslate"><span class="pre">save_csvfiles</span></code> function moves the CmdStan CSV output files to a specified directory without having to re-run the sampler. The console output files are not saved. These files are treated as ephemeral; if the sample is valid, all relevant information is recorded in the CSV files.</p>
-<section id="Sampler-Progress">
-<h3>Sampler Progress<a class="headerlink" href="#Sampler-Progress" title="Permalink to this headline">¶</a></h3>
-<p>Your model make take a long time to fit. The <code class="docutils literal notranslate"><span class="pre">sample</span></code> method provides two arguments:</p>
-<ul class="simple">
-<li><p>visual progress bar: <code class="docutils literal notranslate"><span class="pre">show_progress=True</span></code></p></li>
-<li><p>stream CmdStan ouput to the console - <code class="docutils literal notranslate"><span class="pre">show_console=True</span></code></p></li>
-</ul>
-<p>To illustrate how progress bars work, we will run the bernoulli model. Since the progress bars are only visible while the sampler is running and the bernoulli model takes no time at all to fit, we run this model for 200K iterations, in order to see the progress bars in action.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">iter_warmup</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">iter_sampling</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<br/></pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan start processing
-INFO:cmdstanpy:Chain [1] start processing
-INFO:cmdstanpy:Chain [2] start processing
-INFO:cmdstanpy:Chain [1] done processing
-INFO:cmdstanpy:Chain [2] done processing
-INFO:cmdstanpy:Chain [4] start processing
-INFO:cmdstanpy:Chain [3] start processing
-INFO:cmdstanpy:Chain [4] done processing
-INFO:cmdstanpy:Chain [3] done processing
-</pre></div></div>
-</div>
-<p>The Stan language <code class="docutils literal notranslate"><span class="pre">print</span></code> statement can be use to monitor the Stan program state. In order to see this information as the sampler is running, use the <code class="docutils literal notranslate"><span class="pre">show_console=True</span></code> argument. This will stream all CmdStan messages to the terminal while the sampler is running.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">parallel_chains</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">show_console</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<br/><br/></pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-INFO:cmdstanpy:Chain [1] start processing
-INFO:cmdstanpy:Chain [1] done processing
-INFO:cmdstanpy:Chain [2] start processing
-INFO:cmdstanpy:Chain [2] done processing
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Chain [1] method = sample (Default)
-Chain [1] sample
-Chain [1] num_samples = 1000 (Default)
-Chain [1] num_warmup = 1000 (Default)
-Chain [1] save_warmup = 0 (Default)
-Chain [1] thin = 1 (Default)
-Chain [1] adapt
-Chain [1] engaged = 1 (Default)
-Chain [1] gamma = 0.050000000000000003 (Default)
-Chain [1] delta = 0.80000000000000004 (Default)
-Chain [1] kappa = 0.75 (Default)
-Chain [1] t0 = 10 (Default)
-Chain [1] init_buffer = 75 (Default)
-Chain [1] term_buffer = 50 (Default)
-Chain [1] window = 25 (Default)
-Chain [1] algorithm = hmc (Default)
-Chain [1] hmc
-Chain [1] engine = nuts (Default)
-Chain [1] nuts
-Chain [1] max_depth = 10 (Default)
-Chain [1] metric = diag_e (Default)
-Chain [1] metric_file =  (Default)
-Chain [1] stepsize = 1 (Default)
-Chain [1] stepsize_jitter = 0 (Default)
-Chain [1] num_chains = 1 (Default)
-Chain [1] id = 1 (Default)
-Chain [1] data
-Chain [1] file = /home/runner/.cmdstan/cmdstan-2.28.2/examples/bernoulli/bernoulli.data.json
-Chain [1] init = 2 (Default)
-Chain [1] random
-Chain [1] seed = 35184
-Chain [1] output
-Chain [1] file = /tmp/tmpaj8pofet/bernoulli-20220214155922_1.csv
-Chain [1] diagnostic_file =  (Default)
-Chain [1] refresh = 100 (Default)
-Chain [1] sig_figs = -1 (Default)
-Chain [1] profile_file = profile.csv (Default)
-Chain [1] num_threads = 1 (Default)
-Chain [1]
-Chain [1]
-Chain [1] Gradient evaluation took 3e-06 seconds
-Chain [1] 1000 transitions using 10 leapfrog steps per transition would take 0.03 seconds.
-Chain [1] Adjust your expectations accordingly!
-Chain [1]
-Chain [1]
-Chain [1] Iteration:    1 / 2000 [  0%]  (Warmup)
-Chain [1] Iteration:  100 / 2000 [  5%]  (Warmup)
-Chain [1] Iteration:  200 / 2000 [ 10%]  (Warmup)
-Chain [1] Iteration:  300 / 2000 [ 15%]  (Warmup)
-Chain [1] Iteration:  400 / 2000 [ 20%]  (Warmup)
-Chain [1] Iteration:  500 / 2000 [ 25%]  (Warmup)
-Chain [1] Iteration:  600 / 2000 [ 30%]  (Warmup)
-Chain [1] Iteration:  700 / 2000 [ 35%]  (Warmup)
-Chain [1] Iteration:  800 / 2000 [ 40%]  (Warmup)
-Chain [1] Iteration:  900 / 2000 [ 45%]  (Warmup)
-Chain [1] Iteration: 1000 / 2000 [ 50%]  (Warmup)
-Chain [1] Iteration: 1001 / 2000 [ 50%]  (Sampling)
-Chain [1] Iteration: 1100 / 2000 [ 55%]  (Sampling)
-Chain [1] Iteration: 1200 / 2000 [ 60%]  (Sampling)
-Chain [1] Iteration: 1300 / 2000 [ 65%]  (Sampling)
-Chain [1] Iteration: 1400 / 2000 [ 70%]  (Sampling)
-Chain [1] Iteration: 1500 / 2000 [ 75%]  (Sampling)
-Chain [1] Iteration: 1600 / 2000 [ 80%]  (Sampling)
-Chain [1] Iteration: 1700 / 2000 [ 85%]  (Sampling)
-Chain [1] Iteration: 1800 / 2000 [ 90%]  (Sampling)
-Chain [1] Iteration: 1900 / 2000 [ 95%]  (Sampling)
-Chain [1] Iteration: 2000 / 2000 [100%]  (Sampling)
-Chain [1]
-Chain [1]  Elapsed Time: 0.007 seconds (Warm-up)
-Chain [1]                0.014 seconds (Sampling)
-Chain [1]                0.021 seconds (Total)
-Chain [1]
-Chain [1]
-Chain [2] method = sample (Default)
-Chain [2] sample
-Chain [2] num_samples = 1000 (Default)
-Chain [2] num_warmup = 1000 (Default)
-Chain [2] save_warmup = 0 (Default)
-Chain [2] thin = 1 (Default)
-Chain [2] adapt
-Chain [2] engaged = 1 (Default)
-Chain [2] gamma = 0.050000000000000003 (Default)
-Chain [2] delta = 0.80000000000000004 (Default)
-Chain [2] kappa = 0.75 (Default)
-Chain [2] t0 = 10 (Default)
-Chain [2] init_buffer = 75 (Default)
-Chain [2] term_buffer = 50 (Default)
-Chain [2] window = 25 (Default)
-Chain [2] algorithm = hmc (Default)
-Chain [2] hmc
-Chain [2] engine = nuts (Default)
-Chain [2] nuts
-Chain [2] max_depth = 10 (Default)
-Chain [2] metric = diag_e (Default)
-Chain [2] metric_file =  (Default)
-Chain [2] stepsize = 1 (Default)
-Chain [2] stepsize_jitter = 0 (Default)
-Chain [2] num_chains = 1 (Default)
-Chain [2] id = 2
-Chain [2] data
-Chain [2] file = /home/runner/.cmdstan/cmdstan-2.28.2/examples/bernoulli/bernoulli.data.json
-Chain [2] init = 2 (Default)
-Chain [2] random
-Chain [2] seed = 35184
-Chain [2] output
-Chain [2] file = /tmp/tmpaj8pofet/bernoulli-20220214155922_2.csv
-Chain [2] diagnostic_file =  (Default)
-Chain [2] refresh = 100 (Default)
-Chain [2] sig_figs = -1 (Default)
-Chain [2] profile_file = profile.csv (Default)
-Chain [2] num_threads = 1 (Default)
-Chain [2]
-Chain [2]
-Chain [2] Gradient evaluation took 2e-06 seconds
-Chain [2] 1000 transitions using 10 leapfrog steps per transition would take 0.02 seconds.
-Chain [2] Adjust your expectations accordingly!
-Chain [2]
-Chain [2]
-Chain [2] Iteration:    1 / 2000 [  0%]  (Warmup)
-Chain [2] Iteration:  100 / 2000 [  5%]  (Warmup)
-Chain [2] Iteration:  200 / 2000 [ 10%]  (Warmup)
-Chain [2] Iteration:  300 / 2000 [ 15%]  (Warmup)
-Chain [2] Iteration:  400 / 2000 [ 20%]  (Warmup)
-Chain [2] Iteration:  500 / 2000 [ 25%]  (Warmup)
-Chain [2] Iteration:  600 / 2000 [ 30%]  (Warmup)
-Chain [2] Iteration:  700 / 2000 [ 35%]  (Warmup)
-Chain [2] Iteration:  800 / 2000 [ 40%]  (Warmup)
-Chain [2] Iteration:  900 / 2000 [ 45%]  (Warmup)
-Chain [2] Iteration: 1000 / 2000 [ 50%]  (Warmup)
-Chain [2] Iteration: 1001 / 2000 [ 50%]  (Sampling)
-Chain [2] Iteration: 1100 / 2000 [ 55%]  (Sampling)
-Chain [2] Iteration: 1200 / 2000 [ 60%]  (Sampling)
-Chain [2] Iteration: 1300 / 2000 [ 65%]  (Sampling)
-Chain [2] Iteration: 1400 / 2000 [ 70%]  (Sampling)
-Chain [2] Iteration: 1500 / 2000 [ 75%]  (Sampling)
-Chain [2] Iteration: 1600 / 2000 [ 80%]  (Sampling)
-Chain [2] Iteration: 1700 / 2000 [ 85%]  (Sampling)
-Chain [2] Iteration: 1800 / 2000 [ 90%]  (Sampling)
-Chain [2] Iteration: 1900 / 2000 [ 95%]  (Sampling)
-Chain [2] Iteration: 2000 / 2000 [100%]  (Sampling)
-Chain [2]
-Chain [2] Elapsed Time: 0.004 seconds (Warm-up)
-Chain [2] 0.012 seconds (Sampling)
-Chain [2] 0.016 seconds (Total)
-Chain [2]
-Chain [2]
-</pre></div></div>
-</div>
 </section>
-</section>
-<section id="Running-a-data-generating-model">
-<h2>Running a data-generating model<a class="headerlink" href="#Running-a-data-generating-model" title="Permalink to this headline">¶</a></h2>
-<p>In this example we use the CmdStan example model <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/docs/notebooks/data_filegen.stan">data_filegen.stan</a> to generate a simulated dataset given fixed data values.</p>
+<section id="Parallelization-via-multi-threaded-processing">
+<h2>Parallelization via multi-threaded processing<a class="headerlink" href="#Parallelization-via-multi-threaded-processing" title="Permalink to this headline">#</a></h2>
+<p>Stan’s multi-threaded processing is based on the Intel Threading Building Blocks (TBB) library, which must be linked to by the C++ compiler. To take advantage of this option, you must compile (or recompile) the program with the the C++ compiler option <code class="docutils literal notranslate"><span class="pre">STAN_THREADS</span></code>. The CmdStanModel object constructor and its <code class="docutils literal notranslate"><span class="pre">compile</span></code> method both have argument <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code> which takes as its value a dictionary of compiler flags.</p>
+<p>We compile the example model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code>, this time with arguments <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code> and <code class="docutils literal notranslate"><span class="pre">compile</span></code>, and use the function <code class="docutils literal notranslate"><span class="pre">exe_info()</span></code> to check that the model has been compiled for multi-threading.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_datagen</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_datagen.stan&#39;</span><span class="p">)</span>
-<span class="n">datagen_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;N&#39;</span><span class="p">:</span><span class="mi">300</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span><span class="p">:</span><span class="mf">0.3</span><span class="p">}</span>
-<span class="n">fit_sim</span> <span class="o">=</span> <span class="n">model_datagen</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">datagen_data</span><span class="p">,</span> <span class="n">fixed_param</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">fit_sim</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">,</span>
+                     <span class="n">cpp_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;STAN_THREADS&#39;</span><span class="p">:</span> <span class="s1">&#39;TRUE&#39;</span><span class="p">},</span>
+                     <span class="nb">compile</span><span class="o">=</span><span class="s1">&#39;force&#39;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">exe_info</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -1106,102 +1671,105 @@ Chain [2]
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
-INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_datagen
-INFO:cmdstanpy:CmdStan start processing
-INFO:cmdstanpy:Chain [1] start processing
-INFO:cmdstanpy:Chain [1] done processing
+17:32:15 - cmdstanpy - INFO - compiling stan file /Users/mitzi/github/stan-dev/cmdstanpy/docsrc/examples/bernoulli.stan to exe file /Users/mitzi/github/stan-dev/cmdstanpy/docsrc/examples/bernoulli
+17:32:24 - cmdstanpy - INFO - compiled model executable: /Users/mitzi/github/stan-dev/cmdstanpy/docsrc/examples/bernoulli
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="output_area rendered_html docutils container">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Mean</th>
-      <th>MCSE</th>
-      <th>StdDev</th>
-      <th>5%</th>
-      <th>50%</th>
-      <th>95%</th>
-      <th>N_Eff</th>
-      <th>N_Eff/s</th>
-      <th>R_hat</th>
-    </tr>
-    <tr>
-      <th>name</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>lp__</th>
-      <td>0</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0.0</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>theta_rep</th>
-      <td>90</td>
-      <td>0.24</td>
-      <td>7.7</td>
-      <td>78</td>
-      <td>90</td>
-      <td>100.0</td>
-      <td>1100.0</td>
-      <td>130000.0</td>
-      <td>1.0</td>
-    </tr>
-  </tbody>
-</table>
-</div></div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;stan_version_major&#39;: &#39;2&#39;,
+ &#39;stan_version_minor&#39;: &#39;29&#39;,
+ &#39;stan_version_patch&#39;: &#39;2&#39;,
+ &#39;STAN_THREADS&#39;: &#39;true&#39;,
+ &#39;STAN_MPI&#39;: &#39;false&#39;,
+ &#39;STAN_OPENCL&#39;: &#39;false&#39;,
+ &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;,
+ &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}
+</pre></div></div>
 </div>
-<p>Compute, plot histogram of total successes for <code class="docutils literal notranslate"><span class="pre">N</span></code> Bernoulli trials with chance of success <code class="docutils literal notranslate"><span class="pre">theta</span></code>:</p>
+<section id="Cross-chain-multi-threading">
+<h3>Cross-chain multi-threading<a class="headerlink" href="#Cross-chain-multi-threading" title="Permalink to this headline">#</a></h3>
+<p>As of version CmdStan 2.28, it is possible to run the NUTS-HMC sampler on multiple chains from within a single executable using threads. This has the potential to speed up sampling. It also reduces the overall memory footprint required for sampling as all chains share the same copy of data.the input data. When using within-chain parallelization all chains started within a single executable can share all the available threads and once a chain finishes the threads will be reused.</p>
+<p>The sample program argument <code class="docutils literal notranslate"><span class="pre">parallel_chains</span></code> takes an integer value which specifies how many chains to run in parallel. For models which have been compiled with option <code class="docutils literal notranslate"><span class="pre">STAN_THREADS</span></code> set, all chains are run from within a single process and the value of the <code class="docutils literal notranslate"><span class="pre">parallel_chains</span></code> argument specifies the total number of threads.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">drawset_pd</span> <span class="o">=</span> <span class="n">fit_sim</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">()</span>
-<span class="n">drawset_pd</span><span class="o">.</span><span class="n">columns</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">,</span> <span class="n">parallel_chains</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:24 - cmdstanpy - INFO - CmdStan start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "d5130a746f2c4482a1790dab3d439e52", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ec623a1822e74e36a5ca1c44a488a541", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "4e679ec3c0cb48199102c702b72393e1", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "46de1452500e4847813d9635509574e0", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
 
-<span class="c1"># restrict to columns over new outcomes of N Bernoulli trials</span>
-<span class="n">y_sims</span> <span class="o">=</span> <span class="n">drawset_pd</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;lp__&#39;</span><span class="p">,</span> <span class="s1">&#39;accept_stat__&#39;</span><span class="p">])</span>
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:24 - cmdstanpy - INFO - CmdStan done processing.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
 
-<span class="c1"># plot total number of successes per draw</span>
-<span class="n">y_sums</span> <span class="o">=</span> <span class="n">y_sims</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">y_sums</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">datagen_data</span><span class="p">[</span><span class="s1">&#39;N&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+</pre></div></div>
+</div>
+</section>
+<section id="Within-chain-multi-threading">
+<h3>Within-chain multi-threading<a class="headerlink" href="#Within-chain-multi-threading" title="Permalink to this headline">#</a></h3>
+<p>The Stan language <a class="reference external" href="https://mc-stan.org/docs/stan-users-guide/reduce-sum.html">reduce_sum</a> function provides within-chain parallelization. For models which require computing the sum of a number of independent function evaluations, e.g., when evaluating a number of conditionally independent terms in a log-likelihood, the <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code> function is used to parallelize this computation.</p>
+<p>To see how this works, we run the “reflag” model, used in the <a class="reference external" href="https://mc-stan.org/users/documentation/case-studies/reduce_sum_tutorial.html">reduce_sum minimal example</a> case study. The Stan model and the original dataset are in files “redcard_reduce_sum.stan” and “redcard.json”.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;redcard_reduce_sum.stan&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -1210,135 +1778,165 @@ INFO:cmdstanpy:Chain [1] done processing
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
-Input <span class="ansi-green-fg">In [12]</span>, in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-intense-fg ansi-bold">      7</span> <span style="color: rgb(95,135,135)"># plot total number of successes per draw</span>
-<span class="ansi-green-intense-fg ansi-bold">      8</span> y_sums <span style="color: rgb(98,98,98)">=</span> y_sims<span style="color: rgb(98,98,98)">.</span>sum(axis<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(98,98,98)">1</span>)
-<span class="ansi-green-fg">----&gt; 9</span> <span class="ansi-yellow-bg">y_sums</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">astype</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">int32</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg">)</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">plot</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">hist</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">range</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">0</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg">datagen_data</span><span class="ansi-yellow-bg">[</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">N</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#39;</span><span class="ansi-yellow-bg">]</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">+</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">1</span><span class="ansi-yellow-bg">)</span><span class="ansi-yellow-bg">)</span>
+functions {
+  real partial_sum(array[] int slice_n_redcards, int start, int end,
+                   array[] int n_games, vector rating, vector beta) {
+    return binomial_logit_lpmf(slice_n_redcards | n_games[start : end], beta[1]
+                                                                    + beta[2]
+                                                                    * rating[start : end]);
+  }
+}
+data {
+  int&lt;lower=0&gt; N;
+  array[N] int&lt;lower=0&gt; n_redcards;
+  array[N] int&lt;lower=0&gt; n_games;
+  vector[N] rating;
+  int&lt;lower=1&gt; grainsize;
+}
+parameters {
+  vector[2] beta;
+}
+model {
+  beta[1] ~ normal(0, 10);
+  beta[2] ~ normal(0, 1);
 
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/plotting/_core.py:1346</span>, in <span class="ansi-cyan-fg">PlotAccessor.hist</span><span class="ansi-blue-fg">(self, by, bins, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1286</span> <span class="ansi-bold" style="color: rgb(0,135,0)">def</span> <span style="color: rgb(0,0,255)">hist</span>(<span style="color: rgb(0,135,0)">self</span>, by<span style="color: rgb(98,98,98)">=</span><span class="ansi-bold" style="color: rgb(0,135,0)">None</span>, bins<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(98,98,98)">10</span>, <span style="color: rgb(98,98,98)">*</span><span style="color: rgb(98,98,98)">*</span>kwargs):
-<span class="ansi-green-intense-fg ansi-bold">   1287</span>     <span style="color: rgb(175,0,0)">&#34;&#34;&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1288</span> <span style="color: rgb(175,0,0)">    Draw one histogram of the DataFrame&#39;s columns.</span>
-<span class="ansi-green-intense-fg ansi-bold">   1289</span>
-<span class="ansi-green-fg">   (...)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1344</span> <span style="color: rgb(175,0,0)">        &gt;&gt;&gt; ax = df.plot.hist(column=[&#34;age&#34;], by=&#34;gender&#34;, figsize=(10, 8))</span>
-<span class="ansi-green-intense-fg ansi-bold">   1345</span> <span style="color: rgb(175,0,0)">    &#34;&#34;&#34;</span>
-<span class="ansi-green-fg">-&gt; 1346</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> <span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">kind</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#34;</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">hist</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">&#34;</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">by</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">by</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">bins</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">bins</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg">kwargs</span><span class="ansi-yellow-bg">)</span>
+  target += reduce_sum(partial_sum, n_redcards, grainsize, n_games, rating,
+                       beta);
+}
 
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/plotting/_core.py:972</span>, in <span class="ansi-cyan-fg">PlotAccessor.__call__</span><span class="ansi-blue-fg">(self, *args, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">    969</span>             label_name <span style="color: rgb(98,98,98)">=</span> label_kw <span class="ansi-bold" style="color: rgb(175,0,255)">or</span> data<span style="color: rgb(98,98,98)">.</span>columns
-<span class="ansi-green-intense-fg ansi-bold">    970</span>             data<span style="color: rgb(98,98,98)">.</span>columns <span style="color: rgb(98,98,98)">=</span> label_name
-<span class="ansi-green-fg">--&gt; 972</span> <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> <span class="ansi-yellow-bg">plot_backend</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">plot</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">data</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">kind</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">kind</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg">kwargs</span><span class="ansi-yellow-bg">)</span>
 
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/plotting/_matplotlib/__init__.py:70</span>, in <span class="ansi-cyan-fg">plot</span><span class="ansi-blue-fg">(data, kind, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">     68</span>             ax <span style="color: rgb(98,98,98)">=</span> plt<span style="color: rgb(98,98,98)">.</span>gca()
-<span class="ansi-green-intense-fg ansi-bold">     69</span>         kwargs[<span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">ax</span><span style="color: rgb(175,0,0)">&#34;</span>] <span style="color: rgb(98,98,98)">=</span> <span style="color: rgb(0,135,0)">getattr</span>(ax, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">left_ax</span><span style="color: rgb(175,0,0)">&#34;</span>, ax)
-<span class="ansi-green-fg">---&gt; 70</span> plot_obj <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">PLOT_CLASSES</span><span class="ansi-yellow-bg">[</span><span class="ansi-yellow-bg">kind</span><span class="ansi-yellow-bg">]</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">data</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg">kwargs</span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">     71</span> plot_obj<span style="color: rgb(98,98,98)">.</span>generate()
-<span class="ansi-green-intense-fg ansi-bold">     72</span> plot_obj<span style="color: rgb(98,98,98)">.</span>draw()
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/plotting/_matplotlib/hist.py:49</span>, in <span class="ansi-cyan-fg">HistPlot.__init__</span><span class="ansi-blue-fg">(self, data, bins, bottom, **kwargs)</span>
-<span class="ansi-green-intense-fg ansi-bold">     47</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>bottom <span style="color: rgb(98,98,98)">=</span> bottom
-<span class="ansi-green-intense-fg ansi-bold">     48</span> <span style="color: rgb(95,135,135)"># Do not call LinePlot.__init__ which may fill nan</span>
-<span class="ansi-green-fg">---&gt; 49</span> <span class="ansi-yellow-bg">MPLPlot</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg" style="color: rgb(0,0,255)">__init__</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">data</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">*</span><span class="ansi-yellow-bg">kwargs</span><span class="ansi-yellow-bg">)</span>
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/plotting/_matplotlib/core.py:165</span>, in <span class="ansi-cyan-fg">MPLPlot.__init__</span><span class="ansi-blue-fg">(self, data, kind, by, subplots, sharex, sharey, use_index, figsize, grid, legend, rot, ax, fig, title, xlim, ylim, xticks, yticks, xlabel, ylabel, sort_columns, fontsize, secondary_y, colormap, table, layout, include_bool, column, **kwds)</span>
-<span class="ansi-green-intense-fg ansi-bold">    162</span> <span style="color: rgb(95,135,135)"># For `hist` plot, need to get grouped original data before `self.data` is</span>
-<span class="ansi-green-intense-fg ansi-bold">    163</span> <span style="color: rgb(95,135,135)"># updated later</span>
-<span class="ansi-green-intense-fg ansi-bold">    164</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>by <span class="ansi-bold" style="color: rgb(175,0,255)">is</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span class="ansi-bold" style="color: rgb(0,135,0)">None</span> <span class="ansi-bold" style="color: rgb(175,0,255)">and</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_kind <span style="color: rgb(98,98,98)">==</span> <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">hist</span><span style="color: rgb(175,0,0)">&#34;</span>:
-<span class="ansi-green-fg">--&gt; 165</span>     <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_grouped <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">data</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">groupby</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">by</span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    167</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>kind <span style="color: rgb(98,98,98)">=</span> kind
-<span class="ansi-green-intense-fg ansi-bold">    169</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>sort_columns <span style="color: rgb(98,98,98)">=</span> sort_columns
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/core/series.py:1922</span>, in <span class="ansi-cyan-fg">Series.groupby</span><span class="ansi-blue-fg">(self, by, axis, level, as_index, sort, group_keys, squeeze, observed, dropna)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1918</span> axis <span style="color: rgb(98,98,98)">=</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>_get_axis_number(axis)
-<span class="ansi-green-intense-fg ansi-bold">   1920</span> <span style="color: rgb(95,135,135)"># error: Argument &#34;squeeze&#34; to &#34;SeriesGroupBy&#34; has incompatible type</span>
-<span class="ansi-green-intense-fg ansi-bold">   1921</span> <span style="color: rgb(95,135,135)"># &#34;Union[bool, NoDefault]&#34;; expected &#34;bool&#34;</span>
-<span class="ansi-green-fg">-&gt; 1922</span> <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> <span class="ansi-yellow-bg">SeriesGroupBy</span><span class="ansi-yellow-bg">(</span>
-<span class="ansi-green-intense-fg ansi-bold">   1923</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">obj</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1924</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">keys</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">by</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1925</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">axis</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">axis</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1926</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">level</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">level</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1927</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">as_index</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">as_index</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1928</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">sort</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">sort</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1929</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">group_keys</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">group_keys</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1930</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">squeeze</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">squeeze</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg">  </span><span class="ansi-yellow-bg" style="color: rgb(95,135,135)"># type: ignore[arg-type]</span>
-<span class="ansi-green-intense-fg ansi-bold">   1931</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">observed</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">observed</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1932</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">dropna</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">dropna</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">   1933</span> <span class="ansi-yellow-bg">)</span>
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/core/groupby/groupby.py:882</span>, in <span class="ansi-cyan-fg">GroupBy.__init__</span><span class="ansi-blue-fg">(self, obj, keys, axis, level, grouper, exclusions, selection, as_index, sort, group_keys, squeeze, observed, mutated, dropna)</span>
-<span class="ansi-green-intense-fg ansi-bold">    879</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> grouper <span class="ansi-bold" style="color: rgb(175,0,255)">is</span> <span class="ansi-bold" style="color: rgb(0,135,0)">None</span>:
-<span class="ansi-green-intense-fg ansi-bold">    880</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">from</span> <span class="ansi-bold" style="color: rgb(0,0,255)">pandas</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">core</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">groupby</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">grouper</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span> get_grouper
-<span class="ansi-green-fg">--&gt; 882</span>     grouper, exclusions, obj <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">get_grouper</span><span class="ansi-yellow-bg">(</span>
-<span class="ansi-green-intense-fg ansi-bold">    883</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">obj</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    884</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">keys</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    885</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">axis</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">axis</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    886</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">level</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">level</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    887</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">sort</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">sort</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    888</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">observed</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">observed</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    889</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">mutated</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">mutated</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    890</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">dropna</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">dropna</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    891</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    893</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>obj <span style="color: rgb(98,98,98)">=</span> obj
-<span class="ansi-green-intense-fg ansi-bold">    894</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>axis <span style="color: rgb(98,98,98)">=</span> obj<span style="color: rgb(98,98,98)">.</span>_get_axis_number(axis)
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/core/groupby/grouper.py:893</span>, in <span class="ansi-cyan-fg">get_grouper</span><span class="ansi-blue-fg">(obj, key, axis, level, sort, observed, mutated, validate, dropna)</span>
-<span class="ansi-green-intense-fg ansi-bold">    888</span>         in_axis <span style="color: rgb(98,98,98)">=</span> <span class="ansi-bold" style="color: rgb(0,135,0)">False</span>
-<span class="ansi-green-intense-fg ansi-bold">    890</span>     <span style="color: rgb(95,135,135)"># create the Grouping</span>
-<span class="ansi-green-intense-fg ansi-bold">    891</span>     <span style="color: rgb(95,135,135)"># allow us to passing the actual Grouping as the gpr</span>
-<span class="ansi-green-intense-fg ansi-bold">    892</span>     ping <span style="color: rgb(98,98,98)">=</span> (
-<span class="ansi-green-fg">--&gt; 893</span>         <span class="ansi-yellow-bg">Grouping</span><span class="ansi-yellow-bg">(</span>
-<span class="ansi-green-intense-fg ansi-bold">    894</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">group_axis</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    895</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">gpr</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    896</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">obj</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">obj</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    897</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">level</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">level</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    898</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">sort</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">sort</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    899</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">observed</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">observed</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    900</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">in_axis</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">in_axis</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    901</span> <span class="ansi-yellow-bg">            </span><span class="ansi-yellow-bg">dropna</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">dropna</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-intense-fg ansi-bold">    902</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    903</span>         <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span style="color: rgb(0,135,0)">isinstance</span>(gpr, Grouping)
-<span class="ansi-green-intense-fg ansi-bold">    904</span>         <span class="ansi-bold" style="color: rgb(0,135,0)">else</span> gpr
-<span class="ansi-green-intense-fg ansi-bold">    905</span>     )
-<span class="ansi-green-intense-fg ansi-bold">    907</span>     groupings<span style="color: rgb(98,98,98)">.</span>append(ping)
-<span class="ansi-green-intense-fg ansi-bold">    909</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span style="color: rgb(0,135,0)">len</span>(groupings) <span style="color: rgb(98,98,98)">==</span> <span style="color: rgb(98,98,98)">0</span> <span class="ansi-bold" style="color: rgb(175,0,255)">and</span> <span style="color: rgb(0,135,0)">len</span>(obj):
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/core/groupby/grouper.py:545</span>, in <span class="ansi-cyan-fg">Grouping.__init__</span><span class="ansi-blue-fg">(self, index, grouper, obj, level, sort, observed, in_axis, dropna)</span>
-<span class="ansi-green-intense-fg ansi-bold">    542</span>     t <span style="color: rgb(98,98,98)">=</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>name <span class="ansi-bold" style="color: rgb(175,0,255)">or</span> <span style="color: rgb(0,135,0)">str</span>(<span style="color: rgb(0,135,0)">type</span>(<span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>grouping_vector))
-<span class="ansi-green-intense-fg ansi-bold">    543</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">ValueError</span>(<span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">Grouper for </span><span style="color: rgb(175,0,0)">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>t<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)"> not 1-dimensional</span><span style="color: rgb(175,0,0)">&#34;</span>)
-<span class="ansi-green-fg">--&gt; 545</span> <span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>grouping_vector <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">index</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">map</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">grouping_vector</span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    547</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> (
-<span class="ansi-green-intense-fg ansi-bold">    548</span>     <span style="color: rgb(0,135,0)">hasattr</span>(<span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>grouping_vector, <span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">__len__</span><span style="color: rgb(175,0,0)">&#34;</span>)
-<span class="ansi-green-intense-fg ansi-bold">    549</span>     <span class="ansi-bold" style="color: rgb(175,0,255)">and</span> <span style="color: rgb(0,135,0)">len</span>(<span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>grouping_vector) <span style="color: rgb(98,98,98)">==</span> <span style="color: rgb(0,135,0)">len</span>(index)
-<span class="ansi-green-intense-fg ansi-bold">    550</span> ):
-<span class="ansi-green-intense-fg ansi-bold">    551</span>     grper <span style="color: rgb(98,98,98)">=</span> pprint_thing(<span style="color: rgb(0,135,0)">self</span><span style="color: rgb(98,98,98)">.</span>grouping_vector)
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/core/indexes/base.py:6076</span>, in <span class="ansi-cyan-fg">Index.map</span><span class="ansi-blue-fg">(self, mapper, na_action)</span>
-<span class="ansi-green-intense-fg ansi-bold">   6056</span> <span style="color: rgb(175,0,0)">&#34;&#34;&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">   6057</span> <span style="color: rgb(175,0,0)">Map values using an input mapping or function.</span>
-<span class="ansi-green-intense-fg ansi-bold">   6058</span>
-<span class="ansi-green-fg">   (...)</span>
-<span class="ansi-green-intense-fg ansi-bold">   6072</span> <span style="color: rgb(175,0,0)">    a MultiIndex will be returned.</span>
-<span class="ansi-green-intense-fg ansi-bold">   6073</span> <span style="color: rgb(175,0,0)">&#34;&#34;&#34;</span>
-<span class="ansi-green-intense-fg ansi-bold">   6074</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span> <span class="ansi-bold" style="color: rgb(0,0,255)">pandas</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">core</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">indexes</span><span class="ansi-bold" style="color: rgb(0,0,255)">.</span><span class="ansi-bold" style="color: rgb(0,0,255)">multi</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span> MultiIndex
-<span class="ansi-green-fg">-&gt; 6076</span> new_values <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">_map_values</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">mapper</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">na_action</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">na_action</span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">   6078</span> <span style="color: rgb(95,135,135)"># we can return a MultiIndex</span>
-<span class="ansi-green-intense-fg ansi-bold">   6079</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> new_values<span style="color: rgb(98,98,98)">.</span>size <span class="ansi-bold" style="color: rgb(175,0,255)">and</span> <span style="color: rgb(0,135,0)">isinstance</span>(new_values[<span style="color: rgb(98,98,98)">0</span>], <span style="color: rgb(0,135,0)">tuple</span>):
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/core/base.py:880</span>, in <span class="ansi-cyan-fg">IndexOpsMixin._map_values</span><span class="ansi-blue-fg">(self, mapper, na_action)</span>
-<span class="ansi-green-intense-fg ansi-bold">    877</span>         <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">ValueError</span>(msg)
-<span class="ansi-green-intense-fg ansi-bold">    879</span> <span style="color: rgb(95,135,135)"># mapper is a function</span>
-<span class="ansi-green-fg">--&gt; 880</span> new_values <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">map_f</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">values</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">mapper</span><span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-intense-fg ansi-bold">    882</span> <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> new_values
-
-File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/pandas/_libs/lib.pyx:2870</span>, in <span class="ansi-cyan-fg">pandas._libs.lib.map_infer</span><span class="ansi-blue-fg">()</span>
-
-<span class="ansi-red-fg">TypeError</span>: &#39;range&#39; object is not callable
 </pre></div></div>
 </div>
+<p>As before, we compile the model specifying argument <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">redcard_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;redcard_reduce_sum.stan&#39;</span><span class="p">,</span>
+                     <span class="n">cpp_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;STAN_THREADS&#39;</span><span class="p">:</span> <span class="s1">&#39;TRUE&#39;</span><span class="p">},</span>
+                     <span class="nb">compile</span><span class="o">=</span><span class="s1">&#39;force&#39;</span><span class="p">)</span>
+<span class="n">redcard_model</span><span class="o">.</span><span class="n">exe_info</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:32:24 - cmdstanpy - INFO - compiling stan file /Users/mitzi/github/stan-dev/cmdstanpy/docsrc/examples/redcard_reduce_sum.stan to exe file /Users/mitzi/github/stan-dev/cmdstanpy/docsrc/examples/redcard_reduce_sum
+17:32:33 - cmdstanpy - INFO - compiled model executable: /Users/mitzi/github/stan-dev/cmdstanpy/docsrc/examples/redcard_reduce_sum
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;stan_version_major&#39;: &#39;2&#39;,
+ &#39;stan_version_minor&#39;: &#39;29&#39;,
+ &#39;stan_version_patch&#39;: &#39;2&#39;,
+ &#39;STAN_THREADS&#39;: &#39;true&#39;,
+ &#39;STAN_MPI&#39;: &#39;false&#39;,
+ &#39;STAN_OPENCL&#39;: &#39;false&#39;,
+ &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;,
+ &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}
+</pre></div></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">sample</span></code> method argument <code class="docutils literal notranslate"><span class="pre">threads_per_chain</span></code> specifies the number of threads allotted to each chain; this corresponds to CmdStan’s <code class="docutils literal notranslate"><span class="pre">num_threads</span></code> argument.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">redcard_fit</span> <span class="o">=</span> <span class="n">redcard_model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="s1">&#39;redcard.json&#39;</span><span class="p">,</span> <span class="n">threads_per_chain</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:33:36 - cmdstanpy - INFO - CmdStan start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "cea84d11a152410b85d810ef7a9b4a02", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "33bfb433c8694d5b849c5fc83e49a477", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "218b38e1bb9a4fa98bae32b9f5b6d337", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "98f6292162a74fd5b0b0430c4d235ca5", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+17:34:21 - cmdstanpy - INFO - CmdStan done processing.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>The number of threads to use is passed to the model exe file by means of the shell environment variable <code class="docutils literal notranslate"><span class="pre">STAN_NUM_THREADS</span></code>.</p>
+<p>On my machine, which has 4 cores, all 4 chains are run in parallel from within a single process. Therefore, the total number of threads used by this process will be <code class="docutils literal notranslate"><span class="pre">threads_per_chain</span></code> * <code class="docutils literal notranslate"><span class="pre">chains</span></code>. To check this, we examine the shell environment variable <code class="docutils literal notranslate"><span class="pre">STAN_NUM_THREADS</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;STAN_NUM_THREADS&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;16&#39;
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
 </section>
 </section>
 
@@ -1370,8 +1968,9 @@ File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/pyth
       </div>
     </div>
   
-    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -1382,7 +1981,7 @@ File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.9.10/x64/lib/pyth
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

@@ -1,0 +1,27 @@
+Community
+=========
+
+This page highlights community projects that involve CmdStanPy. Check them out!
+
+Project templates
+-----------------
+
+Templates are a great way to piggy back on other users' work, saving you time
+when you start a new project.
+
+- `cookiecutter-cmdstanpy-analysis
+  <https://github.com/teddygroves/cookiecutter-cmdstanpy-analysis>`_ A
+  cookiecutter template for cmdstanpy-based statistical analysis projects.
+
+Software
+--------
+
+- `Prophet <https://github.com/facebook/prophet>`_ A procedure for forecasting
+  time series data based on an additive model where non-linear trends are fit
+  with yearly, weekly, and daily seasonality, plus holiday effects.
+
+- `ArviZ <https://github.com/arviz-devs/arviz>`_ A Python package (with a `Julia
+  interface <https://julia.arviz.org/stable/>`_) for exploratory analysis of
+  Bayesian models. Includes functions for posterior analysis, data storage,
+  model checking, comparison and diagnostics.
+
