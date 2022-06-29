@@ -6,29 +6,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.0.2 documentation</title>
     
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -39,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="CmdStanPy Examples" href="examples.html" />
-    <link rel="prev" title="“Hello, World”" href="hello_world.html" />
+    <link rel="prev" title="“Hello, World!”" href="hello_world.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -50,7 +48,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -61,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.2</a>
     
   </div>
 
@@ -89,7 +87,7 @@
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="hello_world.html">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -102,6 +100,12 @@
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="community.html">
+  Community
  </a>
 </li>
 
@@ -163,7 +167,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -230,7 +234,7 @@
               <div>
                 
   <section id="cmdstanpy-workflow">
-<h1>CmdStanPy Workflow<a class="headerlink" href="#cmdstanpy-workflow" title="Permalink to this headline">¶</a></h1>
+<h1>CmdStanPy Workflow<a class="headerlink" href="#cmdstanpy-workflow" title="Permalink to this headline">#</a></h1>
 <p>The statistical modeling enterprise has two principal modalities:
 development and production.
 The focus of development is model building, comparison, and validation.
@@ -260,7 +264,7 @@ also applies to monitoring model performance in production.
 The following sections describe the process of building, running, and
 managing the resulting inference for a single model and set of inputs.</p>
 <section id="compile-the-stan-model">
-<span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Permalink to this headline">¶</a></h2>
+<span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Permalink to this headline">#</a></h2>
 <p>The: <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class provides methods
 to compile and run the Stan program.
 A CmdStanModel object can be instantiated by specifying
@@ -322,7 +326,7 @@ we recommend the value <code class="docutils literal notranslate"><span class="p
 </div>
 </section>
 <section id="assemble-input-and-initialization-data">
-<h2>Assemble input and initialization data<a class="headerlink" href="#assemble-input-and-initialization-data" title="Permalink to this headline">¶</a></h2>
+<h2>Assemble input and initialization data<a class="headerlink" href="#assemble-input-and-initialization-data" title="Permalink to this headline">#</a></h2>
 <p>CmdStan is file-based interface, therefore all model input and
 initialization data must be supplied as JSON files, as described in the
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/json.html">CmdStan User’s Guide</a>.</p>
@@ -334,7 +338,7 @@ these inputs contain either a collection compatible with
 numpy arrays or pandas.Series.</p>
 </section>
 <section id="run-the-cmdstan-inference-engine">
-<h2>Run the CmdStan inference engine<a class="headerlink" href="#run-the-cmdstan-inference-engine" title="Permalink to this headline">¶</a></h2>
+<h2>Run the CmdStan inference engine<a class="headerlink" href="#run-the-cmdstan-inference-engine" title="Permalink to this headline">#</a></h2>
 <p>For each CmdStan inference method, there is a corresponding method on the <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class.
 An example of each is provided in the <a class="reference internal" href="examples.html"><span class="doc">next section</span></a></p>
 <ul>
@@ -362,7 +366,7 @@ uses the parameter estimates in the sample to run the Stan program’s <a class=
 </ul>
 </section>
 <section id="validate-view-export-the-inference-engine-outputs">
-<h2>Validate, view, export the inference engine outputs<a class="headerlink" href="#validate-view-export-the-inference-engine-outputs" title="Permalink to this headline">¶</a></h2>
+<h2>Validate, view, export the inference engine outputs<a class="headerlink" href="#validate-view-export-the-inference-engine-outputs" title="Permalink to this headline">#</a></h2>
 <p>The inference engine results objects
 <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a>, <a class="reference internal" href="api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a>, <a class="reference internal" href="api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ,</span></code>
 contain the CmdStan method configuration information
@@ -370,7 +374,7 @@ and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
 as well as method-specific informational properties and methods.objects</p>
 <section id="metadata">
-<h3>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h3>
+<h3>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">#</a></h3>
 <p>By <cite>metadata</cite> we mean the information parsed from the header comments and header row of the
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html">Stan CSV files</a>
 into a <a class="reference internal" href="internal_api.html#cmdstanpy.InferenceMetadata" title="cmdstanpy.InferenceMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceMetadata</span></code></a> object which is exposed via
@@ -392,7 +396,7 @@ property specifies the names, dimensions of the Stan model variables.</p></li>
 </ul>
 </section>
 <section id="output-data">
-<h3>Output data<a class="headerlink" href="#output-data" title="Permalink to this headline">¶</a></h3>
+<h3>Output data<a class="headerlink" href="#output-data" title="Permalink to this headline">#</a></h3>
 <p>The CSV data is assembled into the inference result object.
 CmdStanPy provides accessor methods which return this information
 either as columnar data (i.e., in terms of the CSV file columns),
@@ -401,7 +405,7 @@ or as method and model variables.</p>
 for both <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> and <a class="reference internal" href="api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a> return the sample contents
 in columnar format, as a numpy.ndarray or pandas.DataFrame, respectively. Similarly,
 the <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws_xr" title="cmdstanpy.CmdStanMCMC.draws_xr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_xr()</span></code></a> method  of these two objects returns the sample
-contents as an <a class="reference external" href="https://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.21.2.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which maps the method and model variable
+contents as an <a class="reference external" href="https://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2022.3.1.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which maps the method and model variable
 names to their respective values.</p>
 <p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.method_variables" title="cmdstanpy.CmdStanMCMC.method_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">method_variables()</span></code></a> method returns a Python dict over all inference
 method variables.</p>
@@ -426,7 +430,7 @@ The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_vari
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">“Hello, World”</p>
+            <p class="prev-next-title">“Hello, World!”</p>
         </div>
     </a>
     <a class='right-next' id="next-link" href="examples.html" title="next page">
@@ -444,8 +448,9 @@ The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_vari
       </div>
     </div>
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -456,7 +461,7 @@ The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_vari
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

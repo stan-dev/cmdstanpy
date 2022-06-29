@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Overview &#8212; CmdStanPy 1.0.2 documentation</title>
+    <title>Community &#8212; CmdStanPy 1.0.2 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -36,8 +36,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
-    <link rel="prev" title="cmdstanpy – Python interface to CmdStan" href="index.html" />
+    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="prev" title="Advanced Topic: Using External C++ Functions" href="examples/Using%20External%20C%2B%2B.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -73,8 +73,8 @@
       
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 current active nav-item">
- <a class="current reference internal nav-link" href="#">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="overview.html">
   Overview
  </a>
 </li>
@@ -103,8 +103,8 @@
  </a>
 </li>
 
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="community.html">
+<li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
   Community
  </a>
 </li>
@@ -150,15 +150,7 @@
       <div class="row">
           
             
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><div class="text-center">
-    <img src="_static/images/logo_tm.png" alt="The Stan Logo" width="120">
-</div>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
+            <div class="col-12 col-md-1 col-xl-2 bd-sidebar no-sidebar"></div>
             
           
 
@@ -175,9 +167,24 @@
               
               <div class="toc-item">
                 
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
 
 <nav id="bd-toc-nav">
-    
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#project-templates">
+   Project templates
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#software">
+   Software
+  </a>
+ </li>
+</ul>
+
 </nav>
               </div>
               
@@ -185,7 +192,7 @@
                 
 
 <div class="tocsection editthispage">
-    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/overview.rst">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/community.rst">
         <i class="fas fa-pencil-alt"></i> Edit this page
     </a>
 </div>
@@ -200,43 +207,34 @@
           
             
           
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <main class="col-12 col-md-11 col-xl-8 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
               <div>
                 
-  <section id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h1>
-<p>CmdStanPy is a lightweight interface to <a class="reference external" href="https://mc-stan.org/docs/stan-users-guide/index.html">Stan</a> for Python.
-It provides a small set of classes and methods for doing Bayesian inference
-given a probability model and data.
-With CmdStanPy, you can:</p>
-<ul>
-<li><p>Compile a Stan model.</p></li>
-<li><p>Do inference on the model conditioned on the data, using one of Stan inference algorithms</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Exact Bayesian estimation using the <a class="reference external" href="https://mc-stan.org/docs/reference-manual/hmc.html">NUTS-HMC sampler</a>.</p></li>
-<li><p>Approximate Bayesian estimation using <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms.html">ADVI</a>.</p></li>
-<li><p>MAP estimation by <a class="reference external" href="https://mc-stan.org/docs/reference-manual/optimization-algorithms.html">optimization</a>.</p></li>
+  <section id="community">
+<h1>Community<a class="headerlink" href="#community" title="Permalink to this headline">#</a></h1>
+<p>This page highlights community projects that involve CmdStanPy. Check them out!</p>
+<section id="project-templates">
+<h2>Project templates<a class="headerlink" href="#project-templates" title="Permalink to this headline">#</a></h2>
+<p>Templates are a great way to piggy back on other users’ work, saving you time
+when you start a new project.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/teddygroves/cookiecutter-cmdstanpy-analysis">cookiecutter-cmdstanpy-analysis</a> A
+cookiecutter template for cmdstanpy-based statistical analysis projects.</p></li>
 </ul>
-</div></blockquote>
-</li>
-<li><p>Generate new quantities of interest from a model given an existing sample.</p></li>
-<li><p>Manage the resulting inference engine outputs:  extract information, summarize results, and save the outputs.</p></li>
+</section>
+<section id="software">
+<h2>Software<a class="headerlink" href="#software" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/facebook/prophet">Prophet</a> A procedure for forecasting
+time series data based on an additive model where non-linear trends are fit
+with yearly, weekly, and daily seasonality, plus holiday effects.</p></li>
+<li><p><a class="reference external" href="https://github.com/arviz-devs/arviz">ArviZ</a> A Python package (with a <a class="reference external" href="https://julia.arviz.org/stable/">Julia
+interface</a>) for exploratory analysis of
+Bayesian models. Includes functions for posterior analysis, data storage,
+model checking, comparison and diagnostics.</p></li>
 </ul>
-<p>CmdStanPy wraps the
-<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan</a>
-file-based command line interface.
-It is lightweight in that it uses minimal memory beyond the memory used by CmdStan,
-thus CmdStanPy has the potential to fit more complex models
-to larger datasets than might be possible in PyStan or RStan.</p>
-<p>CmdStanPy is designed to support the development, testing, and deployment of a Stan model.
-CmdStanPy manages the Stan program files, data files, and CmdStan output files.
-By default, output files are written to a temporary filesystem which persists
-throughout the session.  This is appropriate behavior during model development
-because it allows the user to test many models without filsystem clutter or worse.
-Once deployed into production,
-the user can specify the output directory for the CmdStan outputs.</p>
+</section>
 </section>
 
 
@@ -245,17 +243,17 @@ the user can specify the output directory for the CmdStan outputs.</p>
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="index.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="examples/Using%20External%20C%2B%2B.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmdstanpy</span></code> – Python interface to CmdStan</p>
+            <p class="prev-next-title">Advanced Topic: Using External C++ Functions</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="installation.html" title="next page">
+    <a class='right-next' id="next-link" href="api.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
+        <p class="prev-next-title">API Reference</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>

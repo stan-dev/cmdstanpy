@@ -5,29 +5,27 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.mcmc &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>cmdstanpy.stanfit.mcmc &#8212; CmdStanPy 1.0.2 documentation</title>
     
-    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -47,7 +45,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -58,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.2</a>
     
   </div>
 
@@ -86,7 +84,7 @@
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="../../../hello_world.html">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -99,6 +97,12 @@
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="../../../examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../community.html">
+  Community
  </a>
 </li>
 
@@ -178,6 +182,7 @@
     <span class="n">List</span><span class="p">,</span>
     <span class="n">MutableMapping</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
@@ -206,7 +211,6 @@
     <span class="n">get_logger</span><span class="p">,</span>
     <span class="n">scan_generated_quantities_csv</span><span class="p">,</span>
 <span class="p">)</span>
-
 <span class="kn">from</span> <span class="nn">.metadata</span> <span class="kn">import</span> <span class="n">InferenceMetadata</span>
 <span class="kn">from</span> <span class="nn">.runset</span> <span class="kn">import</span> <span class="n">RunSet</span>
 
@@ -241,31 +245,34 @@
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="n">sampler_args</span><span class="p">,</span> <span class="n">SamplerArgs</span>
         <span class="p">)</span>  <span class="c1"># make the typechecker happy</span>
-        <span class="n">iter_sampling</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_sampling</span>
-        <span class="k">if</span> <span class="n">iter_sampling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span> <span class="o">=</span> <span class="n">_CMDSTAN_SAMPLING</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span> <span class="o">=</span> <span class="n">iter_sampling</span>
-        <span class="n">iter_warmup</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_warmup</span>
-        <span class="k">if</span> <span class="n">iter_warmup</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span> <span class="o">=</span> <span class="n">_CMDSTAN_WARMUP</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span> <span class="o">=</span> <span class="n">iter_warmup</span>
-        <span class="n">thin</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">thin</span>
-        <span class="k">if</span> <span class="n">thin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_CMDSTAN_THIN</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span> <span class="o">=</span> <span class="n">thin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_CMDSTAN_SAMPLING</span>
+        <span class="k">if</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_sampling</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_sampling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_CMDSTAN_WARMUP</span>
+        <span class="k">if</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_warmup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_CMDSTAN_THIN</span>
+        <span class="k">if</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">thin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">thin</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">fixed_param</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">save_warmup</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sig_figs</span> <span class="o">=</span> <span class="n">runset</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">sig_figs</span>
+
         <span class="c1"># info from CSV values, instantiated lazily</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
+        <span class="c1"># only valid when not is_fixed_param</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span>
+        <span class="p">)</span>
+
         <span class="c1"># info from CSV initial comments and header</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_csv_files</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="p">:</span> <span class="n">InferenceMetadata</span> <span class="o">=</span> <span class="n">InferenceMetadata</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_sampler_diagnostics</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanMCMC: model=</span><span class="si">{}</span><span class="s1"> chains=</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -280,6 +287,14 @@
         <span class="p">)</span>
         <span class="c1"># TODO - hamiltonian, profiling files</span>
         <span class="k">return</span> <span class="nb">repr</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Synonymous with ``fit.stan_variable(attr)&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># pylint: disable=raise-missing-from</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -326,13 +341,15 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">metric_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Metric type used for adaptation, either &#39;diag_e&#39; or &#39;dense_e&#39;.</span>
+<span class="sd">        Metric type used for adaptation, either &#39;diag_e&#39; or &#39;dense_e&#39;, according</span>
+<span class="sd">        to CmdStan arg &#39;metric&#39;.</span>
 <span class="sd">        When sampler algorithm &#39;fixed_param&#39; is specified, metric_type is None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="c1"># cmdstan arg name</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
@@ -347,8 +364,7 @@
                 <span class="s1">&#39;Unit diagnonal metric, inverse mass matrix size unknown.&#39;</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span>
 
     <span class="nd">@property</span>
@@ -357,11 +373,8 @@
 <span class="sd">        Step size used by sampler for each chain.</span>
 <span class="sd">        When sampler algorithm &#39;fixed_param&#39; is specified, step size is None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -369,6 +382,23 @@
 <span class="sd">        Period between recorded iterations.  (Default is 1).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">divergences</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Per-chain total number of post-warmup divergent iterations.</span>
+<span class="sd">        When sampler algorithm &#39;fixed_param&#39; is specified, returns None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">max_treedepths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Per-chain total number of post-warmup iterations where the NUTS sampler</span>
+<span class="sd">        reached the maximum allowed treedepth.</span>
+<span class="sd">        When sampler algorithm &#39;fixed_param&#39; is specified, returns None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="k">else</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="CmdStanMCMC.draws"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.draws">[docs]</a>    <span class="k">def</span> <span class="nf">draws</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">concat_chains</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -418,6 +448,7 @@
 <span class="sd">        Checks that Stan CSV output files for all chains are consistent</span>
 <span class="sd">        and returns dict containing config and column names.</span>
 
+<span class="sd">        Tabulates sampling iters which are divergent or at max treedepth</span>
 <span class="sd">        Raises exception when inconsistencies detected.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dzero</span> <span class="o">=</span> <span class="p">{}</span>
@@ -431,6 +462,9 @@
                     <span class="n">save_warmup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">,</span>
                     <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">,</span>
                 <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dzero</span><span class="p">[</span><span class="s1">&#39;ct_divergences&#39;</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dzero</span><span class="p">[</span><span class="s1">&#39;ct_max_treedepth&#39;</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">drest</span> <span class="o">=</span> <span class="n">check_sampler_csv</span><span class="p">(</span>
                     <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
@@ -467,13 +501,43 @@
                                 <span class="n">drest</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
                             <span class="p">)</span>
                         <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">drest</span><span class="p">[</span><span class="s1">&#39;ct_divergences&#39;</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">drest</span><span class="p">[</span><span class="s1">&#39;ct_max_treedepth&#39;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">dzero</span>
+
+    <span class="k">def</span> <span class="nf">_check_sampler_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Warn if any iterations ended in divergences or hit maxtreedepth.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">):</span>
+            <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Some chains may have failed to converge.&#39;</span><span class="p">]</span>
+            <span class="n">ct_iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;num_samples&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_chains</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">diagnostics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s1">&#39;Chain </span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s1"> had </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1"> &#39;</span>
+                        <span class="s1">&#39;divergent transitions &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">ct_iters</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">%)&#39;</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">diagnostics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s1">&#39;Chain </span><span class="si">{</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s1"> had </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1"> &#39;</span>
+                        <span class="s1">&#39;iterations at max treedepth &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">ct_iters</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1">%)&#39;</span>
+                    <span class="p">)</span>
+            <span class="n">diagnostics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="s1">&#39;Use function &quot;diagnose()&quot; to see further information.&#39;</span>
+            <span class="p">)</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_assemble_draws</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Allocates and populates the step size, metric, and sample arrays</span>
 <span class="sd">        by parsing the validated stan_csv files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
+            <span class="k">return</span>
         <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_draws_sampling</span>
         <span class="n">sampling_iter_start</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
@@ -546,8 +610,8 @@
 
 <div class="viewcode-block" id="CmdStanMCMC.summary"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">percentiles</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">sig_figs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">95</span><span class="p">),</span>
+        <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run cmdstan/bin/stansummary over all output CSV files, assemble</span>
@@ -557,8 +621,9 @@
 <span class="sd">        quantities variables listed in the order in which they were declared</span>
 <span class="sd">        in the Stan program.</span>
 
-<span class="sd">        :param percentiles: Ordered non-empty list of percentiles to report.</span>
-<span class="sd">            Must be integers from (1, 99), inclusive.</span>
+<span class="sd">        :param percentiles: Ordered non-empty sequence of percentiles to report.</span>
+<span class="sd">            Must be integers from (1, 99), inclusive. Defaults to</span>
+<span class="sd">            ``(5, 50, 95)``</span>
 
 <span class="sd">        :param sig_figs: Number of significant figures to report.</span>
 <span class="sd">            Must be an integer between 1 and 18.  If unspecified, the default</span>
@@ -569,40 +634,38 @@
 
 <span class="sd">        :return: pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">percentiles_str</span> <span class="o">=</span> <span class="s1">&#39;--percentiles=5,50,95&#39;</span>
-        <span class="k">if</span> <span class="n">percentiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">percentiles</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">percentiles</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid percentiles argument, must be ordered&#39;</span>
+                <span class="s1">&#39; non-empty list from (1, 99), inclusive.&#39;</span>
+            <span class="p">)</span>
+        <span class="n">cur_pct</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">pct</span> <span class="ow">in</span> <span class="n">percentiles</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pct</span> <span class="o">&gt;</span> <span class="mi">99</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pct</span> <span class="o">&gt;</span> <span class="n">cur_pct</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Invalid percentiles argument, must be ordered&#39;</span>
+                    <span class="s1">&#39;Invalid percentiles spec, must be ordered&#39;</span>
                     <span class="s1">&#39; non-empty list from (1, 99), inclusive.&#39;</span>
                 <span class="p">)</span>
-            <span class="n">cur_pct</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">for</span> <span class="n">pct</span> <span class="ow">in</span> <span class="n">percentiles</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">pct</span> <span class="o">&gt;</span> <span class="mi">99</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pct</span> <span class="o">&gt;</span> <span class="n">cur_pct</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s1">&#39;Invalid percentiles spec, must be ordered&#39;</span>
-                        <span class="s1">&#39; non-empty list from (1, 99), inclusive.&#39;</span>
-                    <span class="p">)</span>
-                <span class="n">cur_pct</span> <span class="o">=</span> <span class="n">pct</span>
-            <span class="n">percentiles_str</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="p">[</span><span class="s1">&#39;--percentiles&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">percentiles</span><span class="p">])]</span>
+            <span class="n">cur_pct</span> <span class="o">=</span> <span class="n">pct</span>
+        <span class="n">percentiles_str</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;--percentiles= </span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">percentiles</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sig_figs</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">sig_figs</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">sig_figs</span> <span class="o">&gt;</span> <span class="mi">18</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Keyword &quot;sig_figs&quot; must be an integer between 1 and 18,&#39;</span>
+                <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sig_figs</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="n">sig_figs_str</span> <span class="o">=</span> <span class="s1">&#39;--sig_figs=2&#39;</span>
-        <span class="k">if</span> <span class="n">sig_figs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sig_figs</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">sig_figs</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">sig_figs</span> <span class="o">&gt;</span> <span class="mi">18</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Keyword &quot;sig_figs&quot; must be an integer between 1 and 18,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sig_figs</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="n">csv_sig_figs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_figs</span> <span class="ow">or</span> <span class="mi">6</span>
-            <span class="k">if</span> <span class="n">sig_figs</span> <span class="o">&gt;</span> <span class="n">csv_sig_figs</span><span class="p">:</span>
-                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s1">&#39;Requesting </span><span class="si">%d</span><span class="s1"> significant digits of output, but CSV files&#39;</span>
-                    <span class="s1">&#39; only have </span><span class="si">%d</span><span class="s1"> digits of precision.&#39;</span><span class="p">,</span>
-                    <span class="n">sig_figs</span><span class="p">,</span>
-                    <span class="n">csv_sig_figs</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">sig_figs_str</span> <span class="o">=</span> <span class="s1">&#39;--sig_figs=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sig_figs</span><span class="p">)</span>
+        <span class="n">csv_sig_figs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_figs</span> <span class="ow">or</span> <span class="mi">6</span>
+        <span class="k">if</span> <span class="n">sig_figs</span> <span class="o">&gt;</span> <span class="n">csv_sig_figs</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Requesting </span><span class="si">%d</span><span class="s1"> significant digits of output, but CSV files&#39;</span>
+                <span class="s1">&#39; only have </span><span class="si">%d</span><span class="s1"> digits of precision.&#39;</span><span class="p">,</span>
+                <span class="n">sig_figs</span><span class="p">,</span>
+                <span class="n">csv_sig_figs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">sig_figs_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;--sig_figs=</span><span class="si">{</span><span class="n">sig_figs</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="n">cmd_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;stansummary&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span>
         <span class="p">)</span>
@@ -783,7 +846,7 @@
 
 <div class="viewcode-block" id="CmdStanMCMC.stan_variable"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -811,6 +874,9 @@
 <span class="sd">        and the sample consists of 4 chains with 1000 post-warmup draws,</span>
 <span class="sd">        this function will return a numpy.ndarray with shape (4000,3,3).</span>
 
+<span class="sd">        This functionaltiy is also available via a shortcut using ``.`` -</span>
+<span class="sd">        writing ``fit.a`` is a synonym for ``fit.stan_variable(&quot;a&quot;)``</span>
+
 <span class="sd">        :param var: variable name</span>
 
 <span class="sd">        :param inc_warmup: When ``True`` and the warmup draws are present in</span>
@@ -824,10 +890,12 @@
 <span class="sd">        CmdStanVB.stan_variable</span>
 <span class="sd">        CmdStanGQ.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No variable name specified.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;Available variables are &#39;</span>
+                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
         <span class="n">draw1</span> <span class="o">=</span> <span class="mi">0</span>
@@ -930,6 +998,14 @@
             <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="nb">repr</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Synonymous with ``fit.stan_variable(attr)&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># pylint: disable=raise-missing-from</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_validate_csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1294,7 +1370,7 @@
 
 <div class="viewcode-block" id="CmdStanGQ.stan_variable"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">var</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1322,6 +1398,9 @@
 <span class="sd">        and the sample consists of 4 chains with 1000 post-warmup draws,</span>
 <span class="sd">        this function will return a numpy.ndarray with shape (4000,3,3).</span>
 
+<span class="sd">        This functionaltiy is also available via a shortcut using ``.`` -</span>
+<span class="sd">        writing ``fit.a`` is a synonym for ``fit.stan_variable(&quot;a&quot;)``</span>
+
 <span class="sd">        :param var: variable name</span>
 
 <span class="sd">        :param inc_warmup: When ``True`` and the warmup draws are present in</span>
@@ -1335,12 +1414,14 @@
 <span class="sd">        CmdStanMLE.stan_variable</span>
 <span class="sd">        CmdStanVB.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No variable name specified.&#39;</span><span class="p">)</span>
         <span class="n">model_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="n">gq_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">var</span> <span class="ow">in</span> <span class="n">model_var_names</span> <span class="ow">or</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;Available variables are &#39;</span>
+                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_var_names</span> <span class="o">|</span> <span class="n">gq_var_names</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># is gq variable</span>
@@ -1477,8 +1558,9 @@
       </div>
     </div>
   
-    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -1489,7 +1571,7 @@
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     
