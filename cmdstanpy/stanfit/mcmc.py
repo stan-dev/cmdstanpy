@@ -43,6 +43,7 @@ from cmdstanpy.utils import (
     get_logger,
     scan_generated_quantities_csv,
 )
+
 from .metadata import InferenceMetadata
 from .runset import RunSet
 
@@ -122,6 +123,8 @@ class CmdStanMCMC:
 
     def __getattr__(self, attr: str) -> np.ndarray:
         """Synonymous with ``fit.stan_variable(attr)"""
+        if attr.startswith("_"):
+            raise AttributeError(f"Unknown variable name {attr}")
         try:
             return self.stan_variable(attr)
         except ValueError as e:
@@ -833,6 +836,8 @@ class CmdStanGQ:
 
     def __getattr__(self, attr: str) -> np.ndarray:
         """Synonymous with ``fit.stan_variable(attr)"""
+        if attr.startswith("_"):
+            raise AttributeError(f"Unknown variable name {attr}")
         try:
             return self.stan_variable(attr)
         except ValueError as e:

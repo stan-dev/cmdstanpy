@@ -627,6 +627,28 @@ class OptimizeTest(unittest.TestCase):
         with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
             dummy = fit.c
 
+    def test_pickle_ability(self):
+        """Ensure fit objects are pickle-able and copy-able"""
+
+        import pickle
+
+        csvfiles_path = os.path.join(
+            DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv'
+        )
+        fit = from_csv(path=csvfiles_path)
+        pickled = pickle.dumps(fit)
+        unpickled = pickle.loads(pickled)
+        self.assertSequenceEqual(
+            fit.stan_variables().keys(), unpickled.stan_variables().keys()
+        )
+
+        import copy
+
+        fit2 = copy.deepcopy(fit)
+        self.assertSequenceEqual(
+            fit.stan_variables().keys(), fit2.stan_variables().keys()
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
