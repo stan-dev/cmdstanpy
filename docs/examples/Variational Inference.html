@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Variational Inference in Stan &#8212; CmdStanPy 1.0.2 documentation</title>
+    <title>Variational Inference in Stan &#8212; CmdStanPy 1.0.3 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.2</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.3</a>
     
   </div>
 
@@ -500,8 +500,8 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 <div class="highlight"><pre>
 /opt/hostedtoolcache/Python/3.9.13/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-18:34:30 - cmdstanpy - INFO - Chain [1] start processing
-18:34:30 - cmdstanpy - INFO - Chain [1] done processing
+20:13:31 - cmdstanpy - INFO - Chain [1] start processing
+20:13:31 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <p>The class <code class="docutils literal notranslate"><span class="pre">`CmdStanVB</span></code> &lt;<a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html#stanvariational">https://cmdstanpy.readthedocs.io/en/latest/api.html#stanvariational</a>&gt;`__ provides the following properties to access information about the parameter names, estimated means, and the sample: + <code class="docutils literal notranslate"><span class="pre">column_names</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_params_dict</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_params_np</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_params_pd</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_sample</span></code></p>
@@ -534,7 +534,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.258785
+0.235187
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -568,10 +568,10 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-18:34:30 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail
-18:34:42 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail
-18:34:42 - cmdstanpy - INFO - Chain [1] start processing
-18:34:42 - cmdstanpy - INFO - Chain [1] done processing
+20:13:31 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail
+20:13:43 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/eta_should_fail
+20:13:43 - cmdstanpy - INFO - Chain [1] start processing
+20:13:43 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -618,9 +618,9 @@ If you would like to inspect the output, re-call with require_converged=False
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-18:34:43 - cmdstanpy - INFO - Chain [1] start processing
-18:34:43 - cmdstanpy - INFO - Chain [1] done processing
-18:34:43 - cmdstanpy - WARNING - The algorithm may not have converged.
+20:13:43 - cmdstanpy - INFO - Chain [1] start processing
+20:13:43 - cmdstanpy - INFO - Chain [1] done processing
+20:13:43 - cmdstanpy - WARNING - The algorithm may not have converged.
 Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
@@ -642,8 +642,8 @@ Proceeding because require_converged is set to False
 OrderedDict([(&#39;lp__&#39;, 0.0),
              (&#39;log_p__&#39;, 0.0),
              (&#39;log_g__&#39;, 0.0),
-             (&#39;mu[1]&#39;, 0.0234436),
-             (&#39;mu[2]&#39;, 0.0315916)])
+             (&#39;mu[1]&#39;, -0.0121814),
+             (&#39;mu[2]&#39;, 0.00588793)])
 </pre></div></div>
 </div>
 <p>See the <a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html">api docs</a>, section <code class="docutils literal notranslate"><span class="pre">`CmdStanModel.variational</span></code> &lt;<a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational">https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational</a>&gt;`__ for a full description of all arguments.</p>
