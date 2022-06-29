@@ -14,11 +14,11 @@ class SampleCompliance(unittest.TestCase):
     def test_sample_pickle_ability(self):
         csvfiles_path = DATAFILES_PATH / 'lotka-volterra.csv'
         fit = cmdstanpy.from_csv(path=csvfiles_path)
+        keys = fit.stan_variables().keys()
         pickled = pickle.dumps(fit)
+        del fit
         unpickled = pickle.loads(pickled)
-        self.assertSequenceEqual(
-            fit.stan_variables().keys(), unpickled.stan_variables().keys()
-        )
+        self.assertSequenceEqual(keys, unpickled.stan_variables().keys())
 
     def test_sample_copy_ability(self):
         csvfiles_path = DATAFILES_PATH / 'lotka-volterra.csv'
@@ -33,11 +33,11 @@ class OptimizeCompliance(unittest.TestCase):
     def test_optimize_pickle_ability(self):
         csvfiles_path = DATAFILES_PATH / 'optimize' / 'rosenbrock_mle.csv'
         fit = cmdstanpy.from_csv(path=csvfiles_path)
+        keys = fit.stan_variables().keys()
         pickled = pickle.dumps(fit)
+        del fit
         unpickled = pickle.loads(pickled)
-        self.assertSequenceEqual(
-            fit.stan_variables().keys(), unpickled.stan_variables().keys()
-        )
+        self.assertSequenceEqual(keys, unpickled.stan_variables().keys())
 
     def test_optimize_copy_ability(self):
         csvfiles_path = DATAFILES_PATH / 'optimize' / 'rosenbrock_mle.csv'
@@ -52,11 +52,11 @@ class VariationalCompliance(unittest.TestCase):
     def test_variational_pickle_ability(self):
         csvfiles_path = DATAFILES_PATH / 'variational' / 'eta_big_output.csv'
         fit = cmdstanpy.from_csv(path=csvfiles_path)
+        keys = fit.stan_variables().keys()
         pickled = pickle.dumps(fit)
+        del fit
         unpickled = pickle.loads(pickled)
-        self.assertSequenceEqual(
-            fit.stan_variables().keys(), unpickled.stan_variables().keys()
-        )
+        self.assertSequenceEqual(keys, unpickled.stan_variables().keys())
 
     def test_variational_copy_ability(self):
         csvfiles_path = DATAFILES_PATH / 'variational' / 'eta_big_output.csv'
