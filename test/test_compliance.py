@@ -50,7 +50,7 @@ class OptimizeCompliance(unittest.TestCase):
 
 class VariationalCompliance(unittest.TestCase):
     def test_variational_pickle_ability(self):
-        csvfiles_path = DATAFILES_PATH / 'variational' / 'eta_big_output.csv'
+        csvfiles_path = DATAFILES_PATH / 'variational'
         fit = cmdstanpy.from_csv(path=csvfiles_path)
         keys = fit.stan_variables().keys()
         pickled = pickle.dumps(fit)
@@ -59,7 +59,7 @@ class VariationalCompliance(unittest.TestCase):
         self.assertSequenceEqual(keys, unpickled.stan_variables().keys())
 
     def test_variational_copy_ability(self):
-        csvfiles_path = DATAFILES_PATH / 'variational' / 'eta_big_output.csv'
+        csvfiles_path = DATAFILES_PATH / 'variational'
         fit = cmdstanpy.from_csv(path=csvfiles_path)
         fit2 = copy.deepcopy(fit)
         self.assertSequenceEqual(

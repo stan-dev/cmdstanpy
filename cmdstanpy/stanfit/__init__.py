@@ -74,7 +74,7 @@ def from_csv(
     elif isinstance(path, (str, os.PathLike)):
         if os.path.exists(path) and os.path.isdir(path):
             for file in os.listdir(path):
-                if os.path.splitext(path)[1] == ".csv":
+                if os.path.splitext(file)[1] == ".csv":
                     csvfiles.append(os.path.join(path, file))
         elif os.path.exists(path):
             csvfiles.append(str(path))
