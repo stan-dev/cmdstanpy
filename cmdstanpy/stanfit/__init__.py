@@ -29,7 +29,8 @@ __all__ = [
 
 
 def from_csv(
-    path: Union[str, List[str], None] = None, method: Optional[str] = None
+    path: Union[str, List[str], os.PathLike, None] = None,
+    method: Optional[str] = None,
 ) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB, None]:
     """
     Instantiate a CmdStan object from a the Stan CSV files from a CmdStan run.
@@ -61,22 +62,22 @@ def from_csv(
     csvfiles = []
     if isinstance(path, list):
         csvfiles = path
-    elif isinstance(path, str):
-        if '*' in path:
-            splits = os.path.split(path)
-            if splits[0] is not None:
-                if not (os.path.exists(splits[0]) and os.path.isdir(splits[0])):
-                    raise ValueError(
-                        'Invalid path specification, {} '
-                        ' unknown directory: {}'.format(path, splits[0])
-                    )
-            csvfiles = glob.glob(path)
-        elif os.path.exists(path) and os.path.isdir(path):
+    elif isinstance(path, str) and '*' in path:
+        splits = os.path.split(path)
+        if splits[0] is not None:
+            if not (os.path.exists(splits[0]) and os.path.isdir(splits[0])):
+                raise ValueError(
+                    'Invalid path specification, {} '
+                    ' unknown directory: {}'.format(path, splits[0])
+                )
+        csvfiles = glob.glob(path)
+    elif isinstance(path, (str, os.PathLike)):
+        if os.path.exists(path) and os.path.isdir(path):
             for file in os.listdir(path):
-                if file.endswith(".csv"):
+                if os.path.splitext(path)[1] == ".csv":
                     csvfiles.append(os.path.join(path, file))
         elif os.path.exists(path):
-            csvfiles.append(path)
+            csvfiles.append(str(path))
         else:
             raise ValueError('Invalid path specification: {}'.format(path))
     else:
@@ -85,7 +86,7 @@ def from_csv(
     if len(csvfiles) == 0:
         raise ValueError('No CSV files found in directory {}'.format(path))
     for file in csvfiles:
-        if not (os.path.exists(file) and file.endswith('.csv')):
+        if not (os.path.exists(file) and os.path.splitext(file)[1] == ".csv"):
             raise ValueError(
                 'Bad CSV file path spec,'
                 ' includes non-csv file: {}'.format(file)

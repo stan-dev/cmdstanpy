@@ -1881,26 +1881,6 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertEqual(fit.max_treedepths, None)
         self.assertEqual(fit.divergences, None)
 
-    def test_pickle_ability(self):
-        """Ensure fit objects are pickle-able and copy-able"""
-
-        import pickle
-
-        csvfiles_path = os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')
-        fit = from_csv(path=csvfiles_path)
-        pickled = pickle.dumps(fit)
-        unpickled = pickle.loads(pickled)
-        self.assertSequenceEqual(
-            fit.stan_variables().keys(), unpickled.stan_variables().keys()
-        )
-
-        import copy
-
-        fit2 = copy.deepcopy(fit)
-        self.assertSequenceEqual(
-            fit.stan_variables().keys(), fit2.stan_variables().keys()
-        )
-
 
 if __name__ == '__main__':
     unittest.main()
