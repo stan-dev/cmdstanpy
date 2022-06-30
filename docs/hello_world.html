@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>“Hello, World!” &#8212; CmdStanPy 1.0.3 documentation</title>
+    <title>“Hello, World!” &#8212; CmdStanPy 1.0.4 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.3</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
     
   </div>
 
@@ -357,15 +357,15 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="gp">In [9]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_1.csv</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_2.csv</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_3.csv</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_4.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_1.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_2.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_3.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_4.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_0-stdout.txt</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_1-stdout.txt</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_2-stdout.txt</span>
-<span class="go">	/tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_3-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_0-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_1-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_2-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_3-stdout.txt</span>
 </pre></div>
 </div>
 </section>
@@ -394,17 +394,17 @@ The sample can be extracted in tabular format, either as</p>
 <span class="gp">In [12]: </span><span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">()</span>
 <span class="gh">Out[12]: </span><span class="go"></span>
 <span class="go">         lp__  accept_stat__  stepsize__  ...  divergent__  energy__     theta</span>
-<span class="go">0    -6.93083       1.000000    0.986474  ...          0.0   7.02481  0.179934</span>
-<span class="go">1    -6.87768       1.000000    0.986474  ...          0.0   6.94025  0.190214</span>
-<span class="go">2    -6.76757       0.988210    0.986474  ...          0.0   6.92135  0.275241</span>
-<span class="go">3    -6.76006       0.949389    0.986474  ...          0.0   7.00856  0.230946</span>
-<span class="go">4    -6.92111       0.965487    0.986474  ...          0.0   6.92844  0.181667</span>
+<span class="go">0    -9.52677       0.974932    0.946318  ...          0.0   9.68846  0.048486</span>
+<span class="go">1    -9.93446       0.976711    0.946318  ...          0.0  10.10770  0.041392</span>
+<span class="go">2    -7.60679       0.921699    0.946318  ...          0.0   9.97710  0.113828</span>
+<span class="go">3    -7.94949       0.985838    0.946318  ...          0.0   8.00264  0.095488</span>
+<span class="go">4    -9.00785       0.898632    0.946318  ...          0.0   9.00785  0.059735</span>
 <span class="go">...       ...            ...         ...  ...          ...       ...       ...</span>
-<span class="go">3995 -7.69347       0.494470    1.054920  ...          0.0   8.94842  0.441310</span>
-<span class="go">3996 -6.79279       0.676187    1.054920  ...          0.0   9.07317  0.213897</span>
-<span class="go">3997 -6.85602       0.982761    1.054920  ...          0.0   6.86027  0.195111</span>
-<span class="go">3998 -6.75268       1.000000    1.054920  ...          0.0   6.82978  0.238063</span>
-<span class="go">3999 -6.77032       0.997437    1.054920  ...          0.0   6.77322  0.276997</span>
+<span class="go">3995 -7.70810       1.000000    0.863541  ...          0.0   7.99523  0.107852</span>
+<span class="go">3996 -7.72395       0.993969    0.863541  ...          0.0   7.76126  0.444559</span>
+<span class="go">3997 -8.66198       0.763569    0.863541  ...          0.0   8.78569  0.527178</span>
+<span class="go">3998 -8.66198       0.431286    0.863541  ...          0.0  11.00170  0.527178</span>
+<span class="go">3999 -6.76854       0.925959    0.863541  ...          0.0   9.21770  0.275873</span>
 
 <span class="go">[4000 rows x 8 columns]</span>
 </pre></div>
@@ -430,7 +430,7 @@ they are not flattened.
 <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_variables" title="cmdstanpy.CmdStanMCMC.stan_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stan_variables()</span></code></a>.</p></li>
 </ul>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
-<span class="go">[0.179934 0.190214 0.275241 ... 0.195111 0.238063 0.276997]</span>
+<span class="go">[0.0484856 0.0413921 0.113828  ... 0.527178  0.527178  0.275873 ]</span>
 
 <span class="gp">In [14]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws_xr</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
 <span class="go">&lt;xarray.Dataset&gt;</span>
@@ -439,7 +439,7 @@ they are not flattened.
 <span class="go">  * chain    (chain) int64 1 2 3 4</span>
 <span class="go">  * draw     (draw) int64 0 1 2 3 4 5 6 7 8 ... 992 993 994 995 996 997 998 999</span>
 <span class="go">Data variables:</span>
-<span class="go">    theta    (chain, draw) float64 0.1799 0.1902 0.2752 ... 0.1951 0.2381 0.277</span>
+<span class="go">    theta    (chain, draw) float64 0.04849 0.04139 0.1138 ... 0.5272 0.2759</span>
 <span class="go">Attributes:</span>
 <span class="go">    stan_version:        2.29.2</span>
 <span class="go">    model:               bernoulli_model</span>
@@ -469,13 +469,13 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
 <span class="go">diag_e</span>
 
 <span class="gp">In [18]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
-<span class="go">[[0.537747]</span>
-<span class="go"> [0.441489]</span>
-<span class="go"> [0.503126]</span>
-<span class="go"> [0.503503]]</span>
+<span class="go">[[0.498726]</span>
+<span class="go"> [0.652659]</span>
+<span class="go"> [0.573764]</span>
+<span class="go"> [0.51613 ]]</span>
 
 <span class="gp">In [19]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">step_size</span><span class="p">)</span>
-<span class="go">[0.986474 1.00091  0.782393 1.05492 ]</span>
+<span class="go">[0.946318 0.843597 1.02276  0.863541]</span>
 </pre></div>
 </div>
 <p>The CmdStanMCMC object also provides access to metadata about the model and the sampler run.</p>
@@ -483,7 +483,7 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
 <span class="go">bernoulli_model</span>
 
 <span class="gp">In [21]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">])</span>
-<span class="go">99063</span>
+<span class="go">53568</span>
 
 <span class="gp">In [22]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 <span class="go">dict_keys([&#39;theta&#39;])</span>
@@ -506,8 +506,8 @@ all model parameters and quantities of interest in a pandas.DataFrame:</p>
 <span class="gh">Out[24]: </span><span class="go"></span>
 <span class="go">           Mean      MCSE    StdDev  ...    N_Eff  N_Eff/s    R_hat</span>
 <span class="go">name                                 ...                           </span>
-<span class="go">lp__  -7.310550  0.021068  0.785750  ...  1391.01  33927.1  1.00254</span>
-<span class="go">theta  0.247064  0.003543  0.122319  ...  1191.90  29070.8  1.00485</span>
+<span class="go">lp__  -7.257340  0.019566  0.711852  ...  1323.70  32285.3  1.00287</span>
+<span class="go">theta  0.246969  0.003175  0.117468  ...  1368.77  33384.7  1.00346</span>
 
 <span class="go">[2 rows x 9 columns]</span>
 </pre></div>
@@ -519,7 +519,7 @@ looking for potential problems which indicate that the sample
 isn’t a representative sample from the posterior.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose" title="cmdstanpy.CmdStanMCMC.diagnose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnose()</span></code></a> method runs this utility and prints the output to the console.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
-<span class="go">Processing csv files: /tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_1.csv, /tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_2.csv, /tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_3.csv, /tmp/tmp9tr8rdkd/bernoullizk5ego8t/bernoulli-20220629201354_4.csv</span>
+<span class="go">Processing csv files: /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_1.csv, /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_2.csv, /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_3.csv, /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_4.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>

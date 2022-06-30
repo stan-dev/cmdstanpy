@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.3 documentation</title>
+    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.4 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.3</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
     
   </div>
 
@@ -498,8 +498,8 @@ conveince, we have copied the posteriordb model and data to this directory, in f
 <div class="highlight"><pre>
 /opt/hostedtoolcache/Python/3.9.13/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-20:13:15 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
-20:13:27 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
+20:25:42 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
+20:25:51 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -545,9 +545,9 @@ model {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:13:27 - cmdstanpy - INFO - Chain [1] start processing
-20:13:27 - cmdstanpy - INFO - Chain [1] done processing
-20:13:27 - cmdstanpy - WARNING - The algorithm may not have converged.
+20:25:51 - cmdstanpy - INFO - Chain [1] start processing
+20:25:51 - cmdstanpy - INFO - Chain [1] done processing
+20:25:51 - cmdstanpy - WARNING - The algorithm may not have converged.
 Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
@@ -589,23 +589,23 @@ Therefore, using the estimates from ADVI to initialize the parameter values for 
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:13:27 - cmdstanpy - INFO - CmdStan start processing
+20:25:51 - cmdstanpy - INFO - CmdStan start processing
 chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
 chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
 
-chain 1 |<span class="ansi-blue-fg">██████▋   </span>| 00:00 Iteration:  575 / 1075 [ 53%]  (Sampling)
-chain 2 |<span class="ansi-blue-fg">██████▋   </span>| 00:00 Iteration:  575 / 1075 [ 53%]  (Sampling)
+chain 4 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 1 |<span class="ansi-blue-fg">████████▎ </span>| 00:00 Iteration:  775 / 1075 [ 72%]  (Sampling)
 
 chain 3 |<span class="ansi-yellow-fg">▊         </span>| 00:00 Status
 
 
 chain 4 |<span class="ansi-yellow-fg">▊         </span>| 00:00 Status
 
+chain 3 |<span class="ansi-blue-fg">████████▎ </span>| 00:00 Iteration:  775 / 1075 [ 72%]  (Sampling)
 
-chain 4 |<span class="ansi-blue-fg">████████▎ </span>| 00:00 Iteration:  775 / 1075 [ 72%]  (Sampling)
 
 chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
@@ -627,8 +627,8 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-20:13:27 - cmdstanpy - INFO - CmdStan done processing.
-20:13:27 - cmdstanpy - WARNING - Non-fatal error during sampling:
+20:25:52 - cmdstanpy - INFO - CmdStan done processing.
+20:25:52 - cmdstanpy - WARNING - Non-fatal error during sampling:
 Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
 Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
 Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
@@ -708,7 +708,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>-156.532000</td>
       <td>-154.64600</td>
       <td>938.42000</td>
-      <td>1822.180000</td>
+      <td>1983.980000</td>
       <td>1.001480</td>
     </tr>
     <tr>
@@ -720,7 +720,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>0.999461</td>
       <td>1.00107</td>
       <td>4863.49000</td>
-      <td>9443.670000</td>
+      <td>10282.200000</td>
       <td>1.000320</td>
     </tr>
     <tr>
@@ -732,7 +732,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.000210</td>
       <td>1.00210</td>
       <td>4344.92000</td>
-      <td>8436.740000</td>
+      <td>9185.880000</td>
       <td>0.999725</td>
     </tr>
     <tr>
@@ -744,7 +744,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.000430</td>
       <td>1.00200</td>
       <td>4385.54000</td>
-      <td>8515.610000</td>
+      <td>9271.760000</td>
       <td>0.999669</td>
     </tr>
     <tr>
@@ -756,7 +756,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.001150</td>
       <td>1.00292</td>
       <td>4664.71000</td>
-      <td>9057.690000</td>
+      <td>9861.970000</td>
       <td>0.999536</td>
     </tr>
     <tr>
@@ -768,7 +768,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.001540</td>
       <td>1.00321</td>
       <td>4786.98000</td>
-      <td>9295.110000</td>
+      <td>10120.500000</td>
       <td>0.999197</td>
     </tr>
     <tr>
@@ -780,7 +780,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>0.961783</td>
       <td>1.09259</td>
       <td>256.47117</td>
-      <td>498.002272</td>
+      <td>542.222346</td>
       <td>1.011019</td>
     </tr>
   </tbody>
@@ -801,7 +801,7 @@ Consider re-running with show_console=True if the above output is unclear!
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmper9sf4b9/blryycuncaq/blr-20220629201327_1.csv, /tmp/tmper9sf4b9/blryycuncaq/blr-20220629201327_2.csv, /tmp/tmper9sf4b9/blryycuncaq/blr-20220629201327_3.csv, /tmp/tmper9sf4b9/blryycuncaq/blr-20220629201327_4.csv
+Processing csv files: /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_1.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_2.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_3.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
@@ -834,7 +834,7 @@ Processing complete, no problems detected.
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:13:28 - cmdstanpy - INFO - CmdStan start processing
+20:25:52 - cmdstanpy - INFO - CmdStan start processing
 chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
@@ -842,14 +842,14 @@ chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
 
 chain 4 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
-chain 2 |<span class="ansi-blue-fg">██████▋   </span>| 00:00 Iteration:  575 / 1075 [ 53%]  (Sampling)
-
-
 chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 
 
 chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+
+
+
 chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 </pre></div></div>
 </div>
@@ -867,8 +867,8 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-20:13:28 - cmdstanpy - INFO - CmdStan done processing.
-20:13:28 - cmdstanpy - WARNING - Some chains may have failed to converge.
+20:25:52 - cmdstanpy - INFO - CmdStan done processing.
+20:25:52 - cmdstanpy - WARNING - Some chains may have failed to converge.
         Chain 1 had 161 divergent transitions (16.1%)
         Chain 3 had 147 divergent transitions (14.7%)
         Chain 4 had 244 divergent transitions (24.4%)
@@ -947,7 +947,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>-165.541000</td>
       <td>-154.33900</td>
       <td>2.03097</td>
-      <td>11.22090</td>
+      <td>12.69360</td>
       <td>11.37150</td>
     </tr>
     <tr>
@@ -959,7 +959,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>0.999494</td>
       <td>1.00252</td>
       <td>232.18100</td>
-      <td>1282.77000</td>
+      <td>1451.13000</td>
       <td>1.01286</td>
     </tr>
     <tr>
@@ -971,7 +971,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.000410</td>
       <td>1.00459</td>
       <td>110.88200</td>
-      <td>612.60900</td>
+      <td>693.01400</td>
       <td>1.04571</td>
     </tr>
     <tr>
@@ -983,7 +983,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.000480</td>
       <td>1.00442</td>
       <td>62.47110</td>
-      <td>345.14400</td>
+      <td>390.44400</td>
       <td>1.04607</td>
     </tr>
     <tr>
@@ -995,7 +995,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.001690</td>
       <td>1.00512</td>
       <td>103.34500</td>
-      <td>570.96500</td>
+      <td>645.90400</td>
       <td>1.09049</td>
     </tr>
     <tr>
@@ -1007,7 +1007,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.001290</td>
       <td>1.00443</td>
       <td>180.70500</td>
-      <td>998.37200</td>
+      <td>1129.41000</td>
       <td>1.03165</td>
     </tr>
     <tr>
@@ -1019,7 +1019,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>2.708830</td>
       <td>3.17346</td>
       <td>2.03514</td>
-      <td>11.24387</td>
+      <td>12.71963</td>
       <td>10.50420</td>
     </tr>
   </tbody>
@@ -1039,7 +1039,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmper9sf4b9/blr7gh4dzp0/blr-20220629201328_1.csv, /tmp/tmper9sf4b9/blr7gh4dzp0/blr-20220629201328_2.csv, /tmp/tmper9sf4b9/blr7gh4dzp0/blr-20220629201328_3.csv, /tmp/tmper9sf4b9/blr7gh4dzp0/blr-20220629201328_4.csv
+Processing csv files: /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_1.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_2.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_3.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
