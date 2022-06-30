@@ -218,15 +218,9 @@ def cmdstan_version() -> Optional[Tuple[int, ...]]:
     """
     try:
         makefile = os.path.join(cmdstan_path(), 'makefile')
-    except ValueError:
+    except ValueError as e:
         get_logger().info('No CmdStan installation found.')
-        return None
-
-    if not os.path.exists(makefile):
-        get_logger().info(
-            'CmdStan installation %s missing makefile, cannot get version.',
-            cmdstan_path(),
-        )
+        get_logger().debug("%s", e)
         return None
 
     with open(makefile, 'r') as fd:
