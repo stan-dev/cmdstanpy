@@ -151,9 +151,14 @@ def validate_cmdstan_path(path: str) -> None:
     """
     if not os.path.isdir(path):
         raise ValueError(f'No CmdStan directory, path {path} does not exist.')
+    if not os.path.isfile(os.path.join(path, "makefile")):
+        raise ValueError(
+            'CmdStan folder does not contain "makefile". '
+            f'Are you sure this is the correct path: {path}?'
+        )
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
-            'CmdStan installataion missing binaries. '
+            f'CmdStan installataion missing binaries in {path}/bin. '
             'Re-install cmdstan by running command "install_cmdstan '
             '--overwrite", or Python code "import cmdstanpy; '
             'cmdstanpy.install_cmdstan(overwrite=True)"'
@@ -299,7 +304,7 @@ def cxx_toolchain_path(
         if os.path.exists(os.path.join(toolchain_root, 'mingw64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
+                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -323,7 +328,7 @@ def cxx_toolchain_path(
         elif os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
+                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -375,7 +380,7 @@ def cxx_toolchain_path(
                 if version not in ('35', '3.5', '3'):
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
+                        'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
@@ -400,7 +405,7 @@ def cxx_toolchain_path(
                 else:
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
+                        'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
@@ -1361,7 +1366,7 @@ def install_cmdstan(
         logger.warning('CmdStan installation failed.\n%s', str(e))
         return False
 
-    set_cmdstan_path(args.dir)
+    set_cmdstan_path(os.path.join(args.dir, f"cmdstan-{args.version}"))
 
     return True
 

@@ -6,6 +6,7 @@ import io
 import json
 import logging
 import os
+import pathlib
 import platform
 import random
 import shutil
@@ -137,6 +138,12 @@ class CmdStanPathTest(CustomTestCase):
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
         with self.assertRaisesRegex(ValueError, 'No CmdStan directory'):
             validate_cmdstan_path(path_foo)
+
+        with self.assertRaisesRegex(
+            ValueError, ".*Are you sure this is the correct path.*"
+        ):
+            set_cmdstan_path(str(DATAFILES_PATH))
+
         folder_name = ''.join(
             random.choice(string.ascii_letters) for _ in range(10)
         )
@@ -144,11 +151,12 @@ class CmdStanPathTest(CustomTestCase):
             folder_name = ''.join(
                 random.choice(string.ascii_letters) for _ in range(10)
             )
-        os.makedirs(folder_name)
-        path_test = os.path.abspath(folder_name)
+        folder = pathlib.Path(folder_name)
+        folder.mkdir(parents=True)
+        (folder / "makefile").touch()
         with self.assertRaisesRegex(ValueError, 'missing binaries'):
-            validate_cmdstan_path(path_test)
-        shutil.rmtree(folder_name)
+            validate_cmdstan_path(str(folder.absolute()))
+        shutil.rmtree(folder)
 
     def test_validate_dir(self):
         with tempfile.TemporaryDirectory(
