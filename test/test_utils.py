@@ -138,11 +138,6 @@ class CmdStanPathTest(CustomTestCase):
         with self.assertRaisesRegex(ValueError, 'No CmdStan directory'):
             validate_cmdstan_path(path_foo)
 
-        with self.assertRaisesRegex(
-            ValueError, ".*Are you sure this is the correct path.*"
-        ):
-            set_cmdstan_path(str(DATAFILES_PATH))
-
         folder_name = ''.join(
             random.choice(string.ascii_letters) for _ in range(10)
         )
@@ -153,6 +148,7 @@ class CmdStanPathTest(CustomTestCase):
         folder = pathlib.Path(folder_name)
         folder.mkdir(parents=True)
         (folder / "makefile").touch()
+
         with self.assertRaisesRegex(ValueError, 'missing binaries'):
             validate_cmdstan_path(str(folder.absolute()))
         shutil.rmtree(folder)
@@ -216,16 +212,17 @@ class CmdStanPathTest(CustomTestCase):
                     'found: "dont_need_no_mmp".'
                 )
                 with LogCapture() as log:
-                    logging.getLogger()
                     cmdstan_version()
                 log.check_present(('cmdstanpy', 'INFO', expect))
 
                 fake_makefile.unlink()
-                expect = StringComparison('.*does not contain "makefile".*')
+                expect = (
+                    'CmdStan installation {} missing makefile, '
+                    'cannot get version.'.format(fake_path)
+                )
                 with LogCapture() as log:
-                    logging.getLogger()
                     cmdstan_version()
-                log.check_present(('cmdstanpy', 'DEBUG', expect))
+                log.check_present(('cmdstanpy', 'INFO', expect))
         cmdstan_path()
 
 

@@ -151,11 +151,6 @@ def validate_cmdstan_path(path: str) -> None:
     """
     if not os.path.isdir(path):
         raise ValueError(f'No CmdStan directory, path {path} does not exist.')
-    if not os.path.isfile(os.path.join(path, "makefile")):
-        raise ValueError(
-            'CmdStan folder does not contain "makefile". '
-            f'Are you sure this is the correct path: {path}?'
-        )
     if not os.path.exists(os.path.join(path, 'bin', 'stanc' + EXTENSION)):
         raise ValueError(
             f'CmdStan installataion missing binaries in {path}/bin. '
@@ -221,6 +216,13 @@ def cmdstan_version() -> Optional[Tuple[int, ...]]:
     except ValueError as e:
         get_logger().info('No CmdStan installation found.')
         get_logger().debug("%s", e)
+        return None
+
+    if not os.path.exists(makefile):
+        get_logger().info(
+            'CmdStan installation %s missing makefile, cannot get version.',
+            cmdstan_path(),
+        )
         return None
 
     with open(makefile, 'r') as fd:
