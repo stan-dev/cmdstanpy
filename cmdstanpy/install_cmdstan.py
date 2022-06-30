@@ -7,11 +7,14 @@ Builds CmdStan executables and tests the compiler by building
 example model ``bernoulli.stan``.
 
 Optional command line arguments:
+   -i, --interactive: flag, when specified ignore other arguments and
+                      ask user for settings on STDIN
    -v, --version <release> : version, defaults to latest release version
    -d, --dir <path> : install directory, defaults to '$HOME/.cmdstan
    --overwrite: flag, when specified re-installs existing version
    --progress: flag, when specified show progress bar for CmdStan download
    --verbose: flag, when specified prints output from CmdStan build process
+   --cores: int, number of cores to use when building, defaults to 1
    -c, --compiler : flag, add C++ compiler to path (Windows only)
 """
 import argparse

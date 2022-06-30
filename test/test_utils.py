@@ -6,6 +6,7 @@ import io
 import json
 import logging
 import os
+import pathlib
 import platform
 import random
 import shutil
@@ -13,7 +14,6 @@ import stat
 import string
 import tempfile
 import unittest
-from pathlib import Path
 from test import CustomTestCase
 
 import numpy as np
@@ -137,6 +137,7 @@ class CmdStanPathTest(CustomTestCase):
         path_foo = os.path.abspath(os.path.join('releases', 'foo'))
         with self.assertRaisesRegex(ValueError, 'No CmdStan directory'):
             validate_cmdstan_path(path_foo)
+
         folder_name = ''.join(
             random.choice(string.ascii_letters) for _ in range(10)
         )
@@ -144,11 +145,13 @@ class CmdStanPathTest(CustomTestCase):
             folder_name = ''.join(
                 random.choice(string.ascii_letters) for _ in range(10)
             )
-        os.makedirs(folder_name)
-        path_test = os.path.abspath(folder_name)
+        folder = pathlib.Path(folder_name)
+        folder.mkdir(parents=True)
+        (folder / "makefile").touch()
+
         with self.assertRaisesRegex(ValueError, 'missing binaries'):
-            validate_cmdstan_path(path_test)
-        shutil.rmtree(folder_name)
+            validate_cmdstan_path(str(folder.absolute()))
+        shutil.rmtree(folder)
 
     def test_validate_dir(self):
         with tempfile.TemporaryDirectory(
@@ -193,24 +196,15 @@ class CmdStanPathTest(CustomTestCase):
         with tempfile.TemporaryDirectory(
             prefix="cmdstan_tests", dir=_TMPDIR
         ) as tmpdir:
-            tdir = os.path.join(tmpdir, 'tmpdir_xxx')
-            os.makedirs(tdir)
-            fake_path = os.path.join(tdir, 'cmdstan-2.22.0')
-            os.makedirs(os.path.join(fake_path))
-            fake_bin = os.path.join(fake_path, 'bin')
-            os.makedirs(fake_bin)
-            Path(os.path.join(fake_bin, 'stanc' + EXTENSION)).touch()
-            with self.modified_environ(CMDSTAN=fake_path):
-                self.assertTrue(fake_path == cmdstan_path())
-                expect = (
-                    'CmdStan installation {} missing makefile, '
-                    'cannot get version.'.format(fake_path)
-                )
-                with LogCapture() as log:
-                    logging.getLogger()
-                    cmdstan_version()
-                log.check_present(('cmdstanpy', 'INFO', expect))
-                fake_makefile = os.path.join(fake_path, 'makefile')
+            tdir = pathlib.Path(tmpdir) / 'tmpdir_xxx'
+            fake_path = tdir / 'cmdstan-2.22.0'
+            fake_bin = fake_path / 'bin'
+            fake_bin.mkdir(parents=True)
+            fake_makefile = fake_path / 'makefile'
+            fake_makefile.touch()
+            (fake_bin / f'stanc{EXTENSION}').touch()
+            with self.modified_environ(CMDSTAN=str(fake_path)):
+                self.assertTrue(str(fake_path) == cmdstan_path())
                 with open(fake_makefile, 'w') as fd:
                     fd.write('...  CMDSTAN_VERSION := dont_need_no_mmp\n\n')
                 expect = (
@@ -218,7 +212,15 @@ class CmdStanPathTest(CustomTestCase):
                     'found: "dont_need_no_mmp".'
                 )
                 with LogCapture() as log:
-                    logging.getLogger()
+                    cmdstan_version()
+                log.check_present(('cmdstanpy', 'INFO', expect))
+
+                fake_makefile.unlink()
+                expect = (
+                    'CmdStan installation {} missing makefile, '
+                    'cannot get version.'.format(fake_path)
+                )
+                with LogCapture() as log:
                     cmdstan_version()
                 log.check_present(('cmdstanpy', 'INFO', expect))
         cmdstan_path()
