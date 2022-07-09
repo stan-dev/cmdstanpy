@@ -1530,3 +1530,16 @@ class SanitizedOrTmpFilePath:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         if self._tmpdir:
             shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+
+def macos_make_arch() -> List[str]:
+    """Determine what `arch -arm64` prefix required for `make` invocations."""
+    if sys.platform != 'darwin':
+        return []
+    cmd = ['file', cmdstan_path() + '/bin/stansummary']
+    out = subprocess.check_output(cmd).decode('ascii').strip()
+    match = re.search(r"Mach-O 64-bit executable (.*?)$", out)
+    if match:
+        arch, = match.groups()
+        return ['arch', '-' + arch]
+    return []
