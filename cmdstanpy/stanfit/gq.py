@@ -1,6 +1,6 @@
 """
-Container for the result of running the sample (MCMC) method
-or generate quantities (GQ) method
+Container for the result of running the
+generate quantities (GQ) method
 """
 
 from collections import Counter

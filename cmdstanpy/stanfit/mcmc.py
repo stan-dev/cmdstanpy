@@ -1,6 +1,5 @@
 """
 Container for the result of running the sample (MCMC) method
-or generate quantities (GQ) method
 """
 
 import math
