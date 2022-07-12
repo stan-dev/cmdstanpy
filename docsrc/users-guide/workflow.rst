@@ -52,7 +52,7 @@ the constructor will compile the model as needed.
 The constructor argument `compile` controls this behavior.
 
 * ``compile=False``: never compile the Stan file.
-* ``compile=Force``: always compile the Stan file.
+* ``compile="Force"``: always compile the Stan file.
 * ``compile=True``: (default) compile the Stan file as needed, i.e., if no exe file exists or if the Stan file is newer than the exe file.
 
 .. code-block:: python
