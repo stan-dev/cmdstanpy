@@ -445,7 +445,10 @@ class CmdStanModelTest(CustomTestCase):
         self.assertEqual(formatted.count('{'), 3)
         self.assertEqual(formatted.count('('), 1)
 
-    @patch('cmdstanpy.utils.cmdstan_version', MagicMock(return_value=(2, 27)))
+    @patch(
+        'cmdstanpy.utils.cmdstan.cmdstan_version',
+        MagicMock(return_value=(2, 27)),
+    )
     def test_format_old_version(self):
         self.assertTrue(cmdstan_version_before(2, 28))
 

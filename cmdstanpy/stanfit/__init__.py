@@ -12,7 +12,8 @@ from cmdstanpy.cmdstan_args import (
 )
 from cmdstanpy.utils import check_sampler_csv, get_logger, scan_config
 
-from .mcmc import CmdStanGQ, CmdStanMCMC
+from .gq import CmdStanGQ
+from .mcmc import CmdStanMCMC
 from .metadata import InferenceMetadata
 from .mle import CmdStanMLE
 from .runset import RunSet
