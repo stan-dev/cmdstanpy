@@ -133,7 +133,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'CmdStanPy'
-copyright = '2021, Stan Development Team'
+copyright = '2022, Stan Development Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -192,7 +192,6 @@ html_style = 'css/project-template.css'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# html_theme = 'sphinx_rtd_theme'
 html_theme = 'pydata_sphinx_theme'  # https://pydata-sphinx-theme.readthedocs.io/en/latest/index.html
 # theme is customized via _templates/
 
@@ -225,7 +224,7 @@ html_theme_options = {
     "show_toc_level": 2,
 }
 
-html_sidebars = {"**": [], "index": ['logo'], "overview": ['logo']}
+html_sidebars = {"**": [], "index": ['logo'], "users-guide/overview": ['logo']}
 
 html_context = {
     "github_user": "stan-dev",
@@ -426,7 +425,7 @@ intersphinx_mapping = {
         'https://docs.python.org/{.major}'.format(sys.version_info),
         None,
     ),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
     'xarray': ('https://xarray.pydata.org/en/stable/', None),
 }
