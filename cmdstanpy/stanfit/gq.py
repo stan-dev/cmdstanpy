@@ -339,7 +339,7 @@ class CmdStanGQ(Generic[Fit]):
             if gq_cols:
                 return pd.concat(
                     [
-                        previous_draws_pd.reset_index(drop=True),
+                        previous_draws_pd,
                         pd.DataFrame(
                             data=flatten_chains(
                                 self.draws(inc_warmup=inc_warmup)
@@ -347,7 +347,7 @@ class CmdStanGQ(Generic[Fit]):
                             columns=self.column_names,
                         )[gq_cols],
                     ],
-                    axis='columns',
+                    axis=1,
                 )
             else:
                 return previous_draws_pd
@@ -367,8 +367,7 @@ class CmdStanGQ(Generic[Fit]):
                         columns=self.column_names,
                     ),
                 ],
-                axis='columns',
-                ignore_index=True,
+                axis=1,
             )
         elif gq_cols:
             return pd.DataFrame(
