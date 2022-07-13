@@ -80,7 +80,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         self.assertEqual(bern_gqs.draws_pd().shape, (400, 10))
         self.assertEqual(
             bern_gqs.draws_pd(inc_sample=True).shape[1],
-            bern_gqs.mcmc_sample.draws_pd().shape[1]
+            bern_gqs.previous_fit.draws_pd().shape[1]
             + bern_gqs.draws_pd().shape[1],
         )
 
@@ -107,6 +107,76 @@ class GenerateQuantitiesTest(CustomTestCase):
         ):
             model.generate_quantities(data=jdata, previous_fit=csv_files)
 
+    def test_show_console(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=4,
+            parallel_chains=2,
+            seed=12345,
+            iter_sampling=100,
+        )
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+
+        sys_stdout = io.StringIO()
+        with contextlib.redirect_stdout(sys_stdout):
+            model.generate_quantities(
+                data=jdata,
+                previous_fit=bern_fit,
+                show_console=True,
+            )
+        console = sys_stdout.getvalue()
+        self.assertIn('Chain [1] method = generate', console)
+        self.assertIn('Chain [2] method = generate', console)
+        self.assertIn('Chain [3] method = generate', console)
+        self.assertIn('Chain [4] method = generate', console)
+
+    def test_complex_output(self):
+        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model_bern = CmdStanModel(stan_file=stan_bern)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
+
+        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.generate_quantities(previous_fit=fit_sampling)
+
+        self.assertEqual(fit.stan_variable('zs').shape, (10, 2, 3))
+        self.assertEqual(fit.stan_variable('z')[0], 3 + 4j)
+        # make sure the name 'imag' isn't magic
+        self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
+
+        self.assertNotIn("zs_dim_2", fit.draws_xr())
+        # getting a raw scalar out of xarray is heavy
+        self.assertEqual(
+            fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+        )
+
+    def test_attrs(self):
+        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model_bern = CmdStanModel(stan_file=stan_bern)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
+
+        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit = model.generate_quantities(data=jdata, previous_fit=fit_sampling)
+
+        self.assertEqual(fit.a[0], 4.5)
+        self.assertEqual(fit.b.shape, (10, 3))
+        self.assertEqual(fit.theta.shape, (10,))
+
+        fit.draws()
+        self.assertEqual(fit.stan_variable('draws')[0], 0)
+
+        with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
+            dummy = fit.c
+
+
+class GQAfterMCMCTest(CustomTestCase):
     def test_from_mcmc_sample(self):
         # fitted_params sample
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
@@ -155,7 +225,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         self.assertEqual(bern_gqs.draws_pd().shape, (400, 10))
         self.assertEqual(
             bern_gqs.draws_pd(inc_sample=True).shape[1],
-            bern_gqs.mcmc_sample.draws_pd().shape[1]
+            bern_gqs.previous_fit.draws_pd().shape[1]
             + bern_gqs.draws_pd().shape[1],
         )
         row1_sample_pd = bern_fit.draws_pd().iloc[0]
@@ -214,7 +284,7 @@ class GenerateQuantitiesTest(CustomTestCase):
 
         vars_dict = bern_gqs.stan_variables()
         var_names = list(
-            bern_gqs.mcmc_sample.metadata.stan_vars_cols.keys()
+            bern_gqs.previous_fit.metadata.stan_vars_cols.keys()
         ) + list(bern_gqs.metadata.stan_vars_cols.keys())
         self.assertEqual(set(var_names), set(list(vars_dict.keys())))
 
@@ -290,7 +360,7 @@ class GenerateQuantitiesTest(CustomTestCase):
 
         vars_dict = bern_gqs.stan_variables()
         var_names = list(
-            bern_gqs.mcmc_sample.metadata.stan_vars_cols.keys()
+            bern_gqs.previous_fit.metadata.stan_vars_cols.keys()
         ) + list(bern_gqs.metadata.stan_vars_cols.keys())
         self.assertEqual(set(var_names), set(list(vars_dict.keys())))
 
@@ -396,73 +466,264 @@ class GenerateQuantitiesTest(CustomTestCase):
                 self.assertEqual(int(z_as_ndarray[0, i, j]), i + 1)
                 self.assertEqual(int(z_as_xr.z.data[0, 0, i, j]), i + 1)
 
-    def test_show_console(self):
+
+class GQAfterMLETest(CustomTestCase):
+    def test_from_optimization(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
         bern_model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        bern_fit = bern_model.sample(
+        bern_fit = bern_model.optimize(
             data=jdata,
-            chains=4,
-            parallel_chains=2,
             seed=12345,
-            iter_sampling=100,
         )
+        # gq_model
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
 
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            model.generate_quantities(
-                data=jdata,
-                previous_fit=bern_fit,
-                show_console=True,
-            )
-        console = sys_stdout.getvalue()
-        self.assertIn('Chain [1] method = generate', console)
-        self.assertIn('Chain [2] method = generate', console)
-        self.assertIn('Chain [3] method = generate', console)
-        self.assertIn('Chain [4] method = generate', console)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
-    def test_complex_output(self):
-        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
-        model_bern = CmdStanModel(stan_file=stan_bern)
-        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
-
-        stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
-        model = CmdStanModel(stan_file=stan)
-        fit = model.generate_quantities(previous_fit=fit_sampling)
-
-        self.assertEqual(fit.stan_variable('zs').shape, (10, 2, 3))
-        self.assertEqual(fit.stan_variable('z')[0], 3 + 4j)
-        # make sure the name 'imag' isn't magic
-        self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
-
-        self.assertNotIn("zs_dim_2", fit.draws_xr())
-        # getting a raw scalar out of xarray is heavy
         self.assertEqual(
-            fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+            bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
+        )
+        self.assertIn('CmdStanGQ: model=bernoulli_ppc', repr(bern_gqs))
+        self.assertIn('method=generate_quantities', repr(bern_gqs))
+        self.assertEqual(bern_gqs.runset.chains, 1)
+        self.assertEqual(bern_gqs.runset._retcode(0), 0)
+        csv_file = bern_gqs.runset.csv_files[0]
+        self.assertTrue(os.path.exists(csv_file))
+
+        self.assertEqual(bern_gqs.draws().shape, (1, 1, 10))
+        self.assertEqual(bern_gqs.draws(inc_sample=True).shape, (1, 1, 12))
+
+        # draws_pd()
+        self.assertEqual(bern_gqs.draws_pd().shape, (1, 10))
+        self.assertEqual(
+            bern_gqs.draws_pd(inc_sample=True).shape[1],
+            bern_gqs.previous_fit.optimized_params_pd.shape[1]
+            + bern_gqs.draws_pd().shape[1],
         )
 
-    def test_attrs(self):
-        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
-        model_bern = CmdStanModel(stan_file=stan_bern)
+        # stan_variable
+        theta = bern_gqs.stan_variable(var='theta')
+        self.assertEqual(theta.shape, (1,))
+        y_rep = bern_gqs.stan_variable(var='y_rep')
+        self.assertEqual(y_rep.shape, (1, 10))
+
+    def test_save_iterations(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
+        bern_fit = bern_model.optimize(
+            data=jdata, seed=12345, save_iterations=True
+        )
+        iters = bern_fit.optimized_iterations_np.shape[0]
 
-        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        # gq_model
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
-        fit = model.generate_quantities(data=jdata, previous_fit=fit_sampling)
 
-        self.assertEqual(fit.a[0], 4.5)
-        self.assertEqual(fit.b.shape, (10, 3))
-        self.assertEqual(fit.theta.shape, (10,))
+        with LogCapture() as log:
+            bern_gqs = model.generate_quantities(
+                data=jdata, previous_fit=bern_fit
+            )
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                'MLE contains saved iterations which will be used to '
+                'generate additional quantities of interest.',
+            )
+        )
 
-        fit.draws()
-        self.assertEqual(fit.stan_variable('draws')[0], 0)
+        self.assertEqual(bern_gqs.draws().shape, (1, 1, 10))
+        self.assertEqual(bern_gqs.draws(inc_warmup=True).shape, (iters, 1, 10))
+        self.assertEqual(
+            bern_gqs.draws(inc_warmup=True, inc_sample=True).shape,
+            (iters, 1, 12),
+        )
 
-        with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
-            dummy = fit.c
+        self.assertEqual(bern_gqs.draws(concat_chains=True).shape, (1, 10))
+        self.assertEqual(
+            bern_gqs.draws(concat_chains=True, inc_sample=True).shape, (1, 12)
+        )
+        self.assertEqual(
+            bern_gqs.draws(concat_chains=True, inc_warmup=True).shape,
+            (iters, 10),
+        )
+        self.assertEqual(
+            bern_gqs.draws(
+                concat_chains=True, inc_warmup=True, inc_sample=True
+            ).shape,
+            (iters, 12),
+        )
+
+        # stan_variable
+        theta = bern_gqs.stan_variable(var='theta')
+        self.assertEqual(theta.shape, (1,))
+        y_rep = bern_gqs.stan_variable(var='y_rep')
+        self.assertEqual(y_rep.shape, (1, 10))
+        theta = bern_gqs.stan_variable(var='theta', inc_warmup=True)
+        self.assertEqual(theta.shape, (iters,))
+        y_rep = bern_gqs.stan_variable(var='y_rep', inc_warmup=True)
+        self.assertEqual(y_rep.shape, (iters, 10))
+
+    def test_request_warmup_none(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.optimize(
+            data=jdata,
+            seed=12345,
+        )
+
+        # gq_model
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+
+        with LogCapture() as log:
+            bern_gqs.draws(inc_warmup=True)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                "MLE doesn't contain draws from pre-convergence iterations,"
+                ' rerun optimization with "save_iterations=True".',
+            )
+        )
+
+        with LogCapture() as log:
+            bern_gqs.draws_pd(inc_warmup=True)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                "MLE doesn't contain draws from pre-convergence iterations,"
+                ' rerun optimization with "save_iterations=True".',
+            )
+        )
+
+        self.assertEqual(bern_gqs.draws(inc_warmup=True).shape, (1, 1, 10))
+
+    def test_xarray(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.optimize(
+            data=jdata,
+            seed=12345,
+        )
+        # gq_model
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+        with self.assertRaisesRegex(RuntimeError, "via Sampling"):
+            _ = bern_gqs.draws_xr()
+
+
+class GQAfterVBTest(CustomTestCase):
+    def test_from_vb(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.variational(
+            data=jdata,
+            show_console=True,
+            require_converged=False,
+            seed=12345,
+        )
+
+        # gq_model
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+
+        self.assertEqual(
+            bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
+        )
+        self.assertIn('CmdStanGQ: model=bernoulli_ppc', repr(bern_gqs))
+        self.assertIn('method=generate_quantities', repr(bern_gqs))
+        self.assertEqual(bern_gqs.runset.chains, 1)
+        self.assertEqual(bern_gqs.runset._retcode(0), 0)
+        csv_file = bern_gqs.runset.csv_files[0]
+        self.assertTrue(os.path.exists(csv_file))
+
+        self.assertEqual(bern_gqs.draws().shape, (1000, 1, 10))
+        self.assertEqual(bern_gqs.draws(inc_sample=True).shape, (1000, 1, 14))
+
+        # draws_pd()
+        self.assertEqual(bern_gqs.draws_pd().shape, (1000, 10))
+        self.assertEqual(
+            bern_gqs.draws_pd(inc_sample=True).shape[1],
+            bern_gqs.previous_fit.variational_sample_pd.shape[1]
+            + bern_gqs.draws_pd().shape[1],
+        )
+
+        # stan_variable
+        theta = bern_gqs.stan_variable(var='theta')
+        # VB behavior is weird: it draws from mean by default?
+        self.assertEqual(theta.shape, (1,))
+        y_rep = bern_gqs.stan_variable(var='y_rep')
+        self.assertEqual(y_rep.shape, (1000, 10))
+
+    def test_request_warmup_none(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.variational(
+            data=jdata,
+            show_console=True,
+            require_converged=False,
+            seed=12345,
+        )
+
+        # gq_model
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+        with LogCapture() as log:
+            bern_gqs.draws(inc_warmup=True)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                "Variational fit doesn't make sense with argument "
+                '"inc_warmup=True"',
+            )
+        )
+
+        with LogCapture() as log:
+            bern_gqs.draws_pd(inc_warmup=True)
+        log.check_present(
+            (
+                'cmdstanpy',
+                'WARNING',
+                "Variational fit doesn't make sense with argument "
+                '"inc_warmup=True"',
+            )
+        )
+
+    def test_xarray(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        bern_model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit = bern_model.variational(
+            data=jdata,
+            show_console=True,
+            require_converged=False,
+            seed=12345,
+        )
+        # gq_model
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+        model = CmdStanModel(stan_file=stan)
+
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+        with self.assertRaisesRegex(RuntimeError, "via Sampling"):
+            _ = bern_gqs.draws_xr()
 
 
 if __name__ == '__main__':

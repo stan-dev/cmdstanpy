@@ -175,6 +175,13 @@ class CmdStanVB:
         """Returns the set of approximate posterior output draws."""
         return self._variational_sample
 
+    @property
+    def variational_sample_pd(self) -> pd.DataFrame:
+        """
+        Returns inferred parameter means as pandas DataFrame.
+        """
+        return pd.DataFrame(self._variational_sample, columns=self.column_names)
+
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
         Move output CSV files to specified directory.  If files were

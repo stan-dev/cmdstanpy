@@ -1329,7 +1329,7 @@ class CmdStanModel:
                 )
         elif isinstance(fit_object, CmdStanMLE):
             chains = 1
-            chain_ids = [0]
+            chain_ids = [1]
             if fit_object._save_iterations:
                 get_logger().warning(
                     'MLE contains saved iterations which will be used '
@@ -1337,7 +1337,7 @@ class CmdStanModel:
                 )
         else:  # isinstance(fit_object, CmdStanVB)
             chains = 1
-            chain_ids = [0]
+            chain_ids = [1]
 
         generate_quantities_args = GenerateQuantitiesArgs(
             csv_files=fit_csv_files

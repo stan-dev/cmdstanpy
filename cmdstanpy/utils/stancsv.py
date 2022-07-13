@@ -185,7 +185,7 @@ def scan_variational_csv(path: str) -> Dict[str, Any]:
             skiprows=lineno,
             header=None,
             float_precision='high',
-        )
+        ).to_numpy()
     return dict
 
 
