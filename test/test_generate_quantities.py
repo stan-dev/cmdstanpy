@@ -34,7 +34,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         model = CmdStanModel(stan_file=stan)
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=csv_files)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=csv_files)
 
         self.assertEqual(
             bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
@@ -92,7 +92,7 @@ class GenerateQuantitiesTest(CustomTestCase):
 
         # no filename
         with self.assertRaises(ValueError):
-            model.generate_quantities(data=jdata, mcmc_sample=[])
+            model.generate_quantities(data=jdata, previous_fit=[])
 
         # Stan CSV flles corrupted
         goodfiles_path = os.path.join(
@@ -105,7 +105,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         with self.assertRaisesRegex(
             Exception, 'Invalid sample from Stan CSV files'
         ):
-            model.generate_quantities(data=jdata, mcmc_sample=csv_files)
+            model.generate_quantities(data=jdata, previous_fit=csv_files)
 
     def test_from_mcmc_sample(self):
         # fitted_params sample
@@ -123,7 +123,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
 
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
         self.assertEqual(
             bern_gqs.runset._args.method, Method.GENERATE_QUANTITIES
@@ -150,7 +150,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
 
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
         self.assertEqual(bern_gqs.draws_pd().shape, (400, 10))
         self.assertEqual(
@@ -201,7 +201,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
 
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
         theta = bern_gqs.stan_variable(var='theta')
         self.assertEqual(theta.shape, (400,))
@@ -239,7 +239,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         with LogCapture() as log:
             logging.getLogger()
             bern_gqs = model.generate_quantities(
-                data=jdata, mcmc_sample=bern_fit
+                data=jdata, previous_fit=bern_fit
             )
         log.check_present(
             (
@@ -333,7 +333,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         # gq_model - y_rep[n] == y[n]
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc_dup.stan')
         model = CmdStanModel(stan_file=stan)
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
         # check that models have different y_rep values
         assert_raises(
             AssertionError,
@@ -368,7 +368,7 @@ class GenerateQuantitiesTest(CustomTestCase):
             model = CmdStanModel(stan_file=stan)
 
             bern_gqs = model.generate_quantities(
-                data=jdata, mcmc_sample=bern_fit
+                data=jdata, previous_fit=bern_fit
             )
 
             with self.assertRaises(RuntimeError):
@@ -386,7 +386,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         )
         stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
         model = CmdStanModel(stan_file=stan)
-        gqs = model.generate_quantities(mcmc_sample=bern_fit)
+        gqs = model.generate_quantities(previous_fit=bern_fit)
         z_as_ndarray = gqs.stan_variable(var="z")
         self.assertEqual(z_as_ndarray.shape, (1, 4, 3))  # flattens chains
         z_as_xr = gqs.draws_xr(vars="z")
@@ -414,7 +414,7 @@ class GenerateQuantitiesTest(CustomTestCase):
         with contextlib.redirect_stdout(sys_stdout):
             model.generate_quantities(
                 data=jdata,
-                mcmc_sample=bern_fit,
+                previous_fit=bern_fit,
                 show_console=True,
             )
         console = sys_stdout.getvalue()
@@ -431,7 +431,7 @@ class GenerateQuantitiesTest(CustomTestCase):
 
         stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
         model = CmdStanModel(stan_file=stan)
-        fit = model.generate_quantities(mcmc_sample=fit_sampling)
+        fit = model.generate_quantities(previous_fit=fit_sampling)
 
         self.assertEqual(fit.stan_variable('zs').shape, (10, 2, 3))
         self.assertEqual(fit.stan_variable('z')[0], 3 + 4j)
@@ -452,7 +452,7 @@ class GenerateQuantitiesTest(CustomTestCase):
 
         stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
         model = CmdStanModel(stan_file=stan)
-        fit = model.generate_quantities(data=jdata, mcmc_sample=fit_sampling)
+        fit = model.generate_quantities(data=jdata, previous_fit=fit_sampling)
 
         self.assertEqual(fit.a[0], 4.5)
         self.assertEqual(fit.b.shape, (10, 3))

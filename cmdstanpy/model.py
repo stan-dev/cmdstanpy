@@ -13,7 +13,17 @@ from datetime import datetime
 from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 import ujson as json
 from tqdm.auto import tqdm
@@ -50,6 +60,7 @@ from cmdstanpy.utils import (
 from . import progress as progbar
 
 OptionalPath = Union[str, os.PathLike, None]
+Fit = TypeVar('Fit', CmdStanMCMC, CmdStanMLE, CmdStanVB)
 
 
 class CmdStanModel:
@@ -1200,9 +1211,7 @@ class CmdStanModel:
     def generate_quantities(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
-        previous_fit: Union[
-            CmdStanMCMC, CmdStanVB, CmdStanMLE, List[str], None
-        ] = None,
+        previous_fit: Union[Fit, List[str], None] = None,
         seed: Optional[int] = None,
         gq_output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
@@ -1211,7 +1220,7 @@ class CmdStanModel:
         time_fmt: str = "%Y%m%d%H%M%S",
         *,
         mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
-    ) -> CmdStanGQ:
+    ) -> CmdStanGQ[Fit]:
         """
         Run CmdStan's generate_quantities method which runs the generated
         quantities block of a model given an existing sample.
@@ -1275,11 +1284,17 @@ class CmdStanModel:
         :return: CmdStanGQ object
         """
         if mcmc_sample is not None:
+            if previous_fit:
+                raise ValueError(
+                    "Cannot supply both 'previous_fit' and "
+                    "deprecated argument 'mcmc_sample'"
+                )
             get_logger().warning(
                 "Argument name `mcmc_sample` is deprecated, please "
                 "rename to `previous_fit`."
             )
-            previous_fit = mcmc_sample
+
+            previous_fit = mcmc_sample  # type: ignore
 
         if isinstance(previous_fit, (CmdStanMCMC, CmdStanMLE, CmdStanVB)):
             fit_object = previous_fit
