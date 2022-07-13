@@ -52,7 +52,7 @@ A `CmdStanModel` can be instantiated from a Stan file or its corresponding compi
     from cmdstanpy import CmdStanModel
 
     # specify Stan program file
-    stan_file = os.path.join('examples', 'bernoulli.stan')
+    stan_file = os.path.join('users-guide', 'examples', 'bernoulli.stan')
 
     # instantiate the model object
     model = CmdStanModel(stan_file=stan_file)
@@ -64,7 +64,7 @@ A `CmdStanModel` can be instantiated from a Stan file or its corresponding compi
     print(model.exe_info())
 
 
-    
+
 Data inputs
 ^^^^^^^^^^^
 
@@ -99,7 +99,7 @@ By default, the `sample` method runs 4 sampler chains.
 .. ipython:: python
 
     # specify data file
-    data_file = os.path.join('examples', 'bernoulli.data.json')
+    data_file = os.path.join('users-guide', 'examples', 'bernoulli.data.json')
 
     # fit the model
     fit = model.sample(data=data_file)
@@ -113,7 +113,7 @@ The ``output_dir`` argument is an optional argument which specifies
 the path to the output directory used by CmdStan.
 If this argument is omitted, the output files are written
 to a temporary directory which is deleted when the current Python session is terminated.
-    
+
 .. ipython:: python
 
     # printing the object reports sampler commands, output files
@@ -151,14 +151,14 @@ and the per-iteration algorithm outputs:  the former are 'stan_variables'
 and the information reported by the sampler are 'method_variables'.
 Accessor functions extract these as:
 
-+ a structured numpy.ndarray: :meth:`~CmdStanMCMC.stan_variable` 
++ a structured numpy.ndarray: :meth:`~CmdStanMCMC.stan_variable`
   which contains the set of all draws in the sample for the named Stan program variable.
   The draws from all chains are flattened, i.e.,
   the first ndarray dimension is the number of draws X number of chains.
   The remaining ndarray dimensions correspond to the Stan program variable dimension.
 
 + an xarray.Dataset: :meth:`~CmdStanMCMC.draws_xr`
-  
+
 + a Python dict mapping Stan variable names to numpy.ndarray objects, where the
   chains are flattened, as above:
   :meth:`~CmdStanMCMC.stan_variables`.
@@ -167,7 +167,7 @@ Accessor functions extract these as:
   Because these outputs are used for within-chain and cross-chain diagnostics,
   they are not flattened.
   :meth:`~CmdStanMCMC.stan_variables`.
-	
+
 
 .. ipython:: python
 
