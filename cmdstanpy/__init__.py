@@ -6,18 +6,6 @@ import logging
 import shutil
 import tempfile
 
-_STANSUMMARY_STATS = [
-    'Mean',
-    'MCSE',
-    'StdDev',
-    '5%',
-    '50%',
-    '95%',
-    'N_Eff',
-    'N_Eff/s',
-    'R_hat',
-]
-
 _TMPDIR = tempfile.mkdtemp()
 _CMDSTAN_WARMUP = 1000
 _CMDSTAN_SAMPLING = 1000
@@ -38,8 +26,8 @@ atexit.register(_cleanup_tmpdir)
 
 from ._version import __version__  # noqa
 from .install_cmdstan import rebuild_cmdstan
-from .model import CmdStanModel  # noqa
-from .stanfit import (  # noqa
+from .model import CmdStanModel
+from .stanfit import (
     CmdStanGQ,
     CmdStanMCMC,
     CmdStanMLE,
@@ -47,11 +35,11 @@ from .stanfit import (  # noqa
     InferenceMetadata,
     from_csv,
 )
-from .utils import set_cmdstan_path  # noqa
 from .utils import (
     cmdstan_path,
     cmdstan_version,
     install_cmdstan,
+    set_cmdstan_path,
     set_make_env,
     show_versions,
     write_stan_json,
