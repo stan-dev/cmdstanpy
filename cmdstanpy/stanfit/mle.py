@@ -52,6 +52,8 @@ class CmdStanMLE:
 
     def __getattr__(self, attr: str) -> Union[np.ndarray, float]:
         """Synonymous with ``fit.stan_variable(attr)"""
+        if attr.startswith("_"):
+            raise AttributeError(f"Unknown variable name {attr}")
         try:
             return self.stan_variable(attr)
         except ValueError as e:

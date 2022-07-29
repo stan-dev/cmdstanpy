@@ -6,29 +6,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.0.4 documentation</title>
     
-    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -50,7 +48,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -61,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
     
   </div>
 
@@ -89,7 +87,7 @@
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="../hello_world.html">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -102,6 +100,12 @@
 <li class="toctree-l1 current active nav-item">
  <a class="reference internal nav-link" href="../examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../community.html">
+  Community
  </a>
 </li>
 
@@ -163,7 +167,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -422,6 +426,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -430,10 +435,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -445,18 +454,21 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
 <section id="Generating-new-quantities-of-interest.">
-<h1>Generating new quantities of interest.<a class="headerlink" href="#Generating-new-quantities-of-interest." title="Permalink to this headline">¶</a></h1>
+<h1>Generating new quantities of interest.<a class="headerlink" href="#Generating-new-quantities-of-interest." title="Permalink to this headline">#</a></h1>
 <p>The <a class="reference external" href="https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html">generated quantities block</a> computes quantities of interest based on the data, transformed data, parameters, and transformed parameters. It can be used to:</p>
 <ul class="simple">
 <li><p>generate simulated data for model testing by forward sampling</p></li>
@@ -468,7 +480,7 @@ div.rendered_html tbody tr:hover {
 <li><p>calculate log likelihoods, deviances, etc. for model comparison</p></li>
 </ul>
 <section id="Example:-add-posterior-predictive-checks-to-bernoulli.stan">
-<h2>Example: add posterior predictive checks to <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-add-posterior-predictive-checks-to-bernoulli.stan" title="Permalink to this headline">¶</a></h2>
+<h2>Example: add posterior predictive checks to <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-add-posterior-predictive-checks-to-bernoulli.stan" title="Permalink to this headline">#</a></h2>
 <p>In this example we use the CmdStan example model <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan">bernoulli.stan</a> and data file <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json">bernoulli.data.json</a> as our existing model and data.</p>
 <p>We instantiate the model <code class="docutils literal notranslate"><span class="pre">bernoulli</span></code>, as in the “Hello World” section of the CmdStanPy <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/develop/cmdstanpy_tutorial.ipynb">tutorial</a> notebook.</p>
 <div class="nbinput docutils container">
@@ -493,7 +505,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:found newer exe file, not recompiling
+/opt/hostedtoolcache/Python/3.9.13/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -554,17 +567,17 @@ mean of y: 0.2
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan start processing
-ERROR:cmdstanpy:Error in progress bar initialization:
-        IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7fb918cdbee0&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-    self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-    self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+20:25:08 - cmdstanpy - INFO - CmdStan start processing
+chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+
+chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -580,7 +593,8 @@ AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan done processing.
+
+20:25:08 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -649,27 +663,27 @@ INFO:cmdstanpy:CmdStan done processing.
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-7.20</td>
-      <td>0.017</td>
-      <td>0.71</td>
-      <td>-8.600</td>
-      <td>-7.00</td>
-      <td>-6.70</td>
-      <td>1700.0</td>
-      <td>34000.0</td>
-      <td>1.0</td>
+      <td>-7.260720</td>
+      <td>0.022123</td>
+      <td>0.736798</td>
+      <td>-8.742380</td>
+      <td>-6.972570</td>
+      <td>-6.749730</td>
+      <td>1109.23</td>
+      <td>27054.3</td>
+      <td>1.00382</td>
     </tr>
     <tr>
       <th>theta</th>
-      <td>0.25</td>
-      <td>0.003</td>
-      <td>0.12</td>
-      <td>0.084</td>
-      <td>0.24</td>
-      <td>0.46</td>
-      <td>1600.0</td>
-      <td>30000.0</td>
-      <td>1.0</td>
+      <td>0.249722</td>
+      <td>0.003571</td>
+      <td>0.117704</td>
+      <td>0.077449</td>
+      <td>0.235427</td>
+      <td>0.464915</td>
+      <td>1086.60</td>
+      <td>26502.6</td>
+      <td>1.00198</td>
     </tr>
   </tbody>
 </table>
@@ -690,8 +704,8 @@ INFO:cmdstanpy:CmdStan done processing.
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc
-INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc
+20:25:09 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc
+20:25:16 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli_ppc
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -701,20 +715,22 @@ INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/
 <div class="highlight"><pre>
 data {
   int&lt;lower=0&gt; N;
-  int&lt;lower=0,upper=1&gt; y[N];
+  array[N] int&lt;lower=0, upper=1&gt; y;
 }
 parameters {
-  real&lt;lower=0,upper=1&gt; theta;
+  real&lt;lower=0, upper=1&gt; theta;
 }
 model {
-  theta ~ beta(1,1);
+  theta ~ beta(1, 1);
   y ~ bernoulli(theta);
 }
 generated quantities {
-  int y_rep[N];
-  for (n in 1:N)
+  array[N] int y_rep;
+  for (n in 1 : N) {
     y_rep[n] = bernoulli_rng(theta);
+  }
 }
+
 
 </pre></div></div>
 </div>
@@ -733,14 +749,14 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:Chain [1] start processing
-INFO:cmdstanpy:Chain [1] done processing
-INFO:cmdstanpy:Chain [2] start processing
-INFO:cmdstanpy:Chain [2] done processing
-INFO:cmdstanpy:Chain [3] start processing
-INFO:cmdstanpy:Chain [3] done processing
-INFO:cmdstanpy:Chain [4] start processing
-INFO:cmdstanpy:Chain [4] done processing
+20:25:16 - cmdstanpy - INFO - Chain [1] start processing
+20:25:16 - cmdstanpy - INFO - Chain [1] done processing
+20:25:16 - cmdstanpy - INFO - Chain [2] start processing
+20:25:16 - cmdstanpy - INFO - Chain [2] done processing
+20:25:16 - cmdstanpy - INFO - Chain [3] start processing
+20:25:16 - cmdstanpy - INFO - Chain [3] done processing
+20:25:16 - cmdstanpy - INFO - Chain [4] start processing
+20:25:16 - cmdstanpy - INFO - Chain [4] done processing
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code> object which contains the values for all variables in the generated quantitites block of the program <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc.stan</span></code>. Unlike the output from the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, it doesn’t contain any information on the joint log probability density, sampler state, or parameters or transformed parameter values.</p>
@@ -761,18 +777,18 @@ INFO:cmdstanpy:Chain [4] done processing
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (1000, 4, 10) (&#39;y_rep[1]&#39;, &#39;y_rep[2]&#39;, &#39;y_rep[3]&#39;, &#39;y_rep[4]&#39;, &#39;y_rep[5]&#39;, &#39;y_rep[6]&#39;, &#39;y_rep[7]&#39;, &#39;y_rep[8]&#39;, &#39;y_rep[9]&#39;, &#39;y_rep[10]&#39;)
-[[0. 0. 1. 0. 0. 0. 1. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]]
-[[1. 0. 0. 0. 1. 0. 1. 0. 0. 0.]
- [1. 0. 0. 0. 1. 0. 1. 0. 1. 0.]
- [1. 0. 0. 0. 1. 0. 1. 0. 0. 0.]
- [1. 0. 0. 0. 1. 0. 1. 0. 0. 0.]]
-[[0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
- [0. 0. 0. 0. 1. 0. 0. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 1. 0. 0. 1. 0. 0. 1. 0. 0.]]
+[[0. 0. 0. 0. 0. 0. 0. 1. 0. 1.]
+ [0. 0. 0. 0. 1. 0. 0. 1. 0. 1.]
+ [0. 0. 0. 0. 0. 0. 0. 1. 0. 1.]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]]
+[[0. 0. 0. 0. 0. 0. 1. 0. 1. 1.]
+ [0. 0. 0. 0. 0. 0. 1. 0. 1. 1.]
+ [0. 0. 0. 0. 0. 0. 1. 0. 1. 1.]
+ [0. 0. 0. 0. 0. 0. 1. 0. 1. 1.]]
+[[1. 0. 0. 0. 1. 0. 0. 1. 0. 1.]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+ [1. 0. 0. 0. 1. 0. 0. 1. 0. 1.]
+ [1. 0. 0. 0. 1. 0. 0. 1. 0. 1.]]
 </pre></div></div>
 </div>
 <p>We can also use <code class="docutils literal notranslate"><span class="pre">draws_pd(inc_sample=True)</span></code> to get a pandas DataFrame which combines the input drawset with the generated quantities.</p>
@@ -841,66 +857,66 @@ INFO:cmdstanpy:Chain [4] done processing
   <tbody>
     <tr>
       <th>0</th>
-      <td>-6.81210</td>
-      <td>0.985053</td>
-      <td>0.71895</td>
-      <td>1.0</td>
+      <td>-6.91697</td>
+      <td>0.957788</td>
+      <td>0.915452</td>
+      <td>2.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>6.85829</td>
-      <td>0.296422</td>
+      <td>7.52824</td>
+      <td>0.326879</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
       <td>1.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-6.97002</td>
-      <td>0.980419</td>
-      <td>0.71895</td>
-      <td>2.0</td>
-      <td>7.0</td>
-      <td>0.0</td>
-      <td>6.99879</td>
-      <td>0.173455</td>
+      <td>-6.77774</td>
+      <td>1.000000</td>
+      <td>0.915452</td>
+      <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
+      <td>6.87357</td>
+      <td>0.281265</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>1.0</td>
       <td>0.0</td>
       <td>1.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-6.78055</td>
-      <td>0.967450</td>
-      <td>0.71895</td>
-      <td>2.0</td>
-      <td>3.0</td>
+      <td>-6.85270</td>
+      <td>0.976990</td>
+      <td>0.915452</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>7.34204</td>
-      <td>0.219057</td>
-      <td>0.0</td>
+      <td>6.85450</td>
+      <td>0.309875</td>
+      <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
     </tr>
   </tbody>
 </table>
@@ -938,8 +954,9 @@ INFO:cmdstanpy:Chain [4] done processing
       </div>
     </div>
   
-    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -950,7 +967,7 @@ INFO:cmdstanpy:Chain [4] done processing
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

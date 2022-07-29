@@ -830,7 +830,7 @@ class CmdStanArgs:
                     '0 and 2**32-1, found {}.'.format(self.seed)
                 )
             if isinstance(self.seed, int):
-                if self.seed < 0 or self.seed > 2**32 - 1:
+                if self.seed < 0 or self.seed > 2 ** 32 - 1:
                     raise ValueError(
                         'Argument "seed" must be an integer between '
                         '0 and 2**32-1, found {}.'.format(self.seed)
@@ -849,7 +849,7 @@ class CmdStanArgs:
                         )
                     )
                 for seed in self.seed:
-                    if seed < 0 or seed > 2**32 - 1:
+                    if seed < 0 or seed > 2 ** 32 - 1:
                         raise ValueError(
                             'Argument "seed" must be an integer value'
                             ' between 0 and 2**32-1,'

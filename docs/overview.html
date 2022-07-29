@@ -6,29 +6,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Overview &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>Overview &#8212; CmdStanPy 1.0.4 documentation</title>
     
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -50,7 +48,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -61,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
     
   </div>
 
@@ -89,7 +87,7 @@
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="hello_world.html">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -102,6 +100,12 @@
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="community.html">
+  Community
  </a>
 </li>
 
@@ -201,28 +205,38 @@
               <div>
                 
   <section id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
-<p>CmdStanPy is a lightweight interface to Stan for Python users which
-provides the necessary objects and functions to do Bayesian inference
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">#</a></h1>
+<p>CmdStanPy is a lightweight interface to <a class="reference external" href="https://mc-stan.org/docs/stan-users-guide/index.html">Stan</a> for Python.
+It provides a small set of classes and methods for doing Bayesian inference
 given a probability model and data.
-It wraps the
+With CmdStanPy, you can:</p>
+<ul>
+<li><p>Compile a Stan model.</p></li>
+<li><p>Do inference on the model conditioned on the data, using one of Stan inference algorithms</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Exact Bayesian estimation using the <a class="reference external" href="https://mc-stan.org/docs/reference-manual/hmc.html">NUTS-HMC sampler</a>.</p></li>
+<li><p>Approximate Bayesian estimation using <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms.html">ADVI</a>.</p></li>
+<li><p>MAP estimation by <a class="reference external" href="https://mc-stan.org/docs/reference-manual/optimization-algorithms.html">optimization</a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Generate new quantities of interest from a model given an existing sample.</p></li>
+<li><p>Manage the resulting inference engine outputs:  extract information, summarize results, and save the outputs.</p></li>
+</ul>
+<p>CmdStanPy wraps the
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan</a>
-command line interface in a small set of
-Python classes which provide methods to do analysis and manage the resulting
-set of model, data, and posterior estimates.
-It is lightweight in that it uses minimal
-memory beyond the memory used by CmdStan.
-CmdStanPy runs CmdStan, but only instantiates the resulting inference
-objects in memory upon request.
-Thus CmdStanPy has the potential to fit more complex models
+file-based command line interface.
+It is lightweight in that it uses minimal memory beyond the memory used by CmdStan,
+thus CmdStanPy has the potential to fit more complex models
 to larger datasets than might be possible in PyStan or RStan.</p>
-<p>CmdStan is a file-based interface.
-CmdStanPy manages the Stan program files and the CmdStan output files.
-The user can specify the output directory for the CmdStan outputs,
-otherwise the files will be written to a
-temporary filesystem which persists throughout the session.
-This allows the user to test and develop models prospectively,
-following the Bayesian workflow.</p>
+<p>CmdStanPy is designed to support the development, testing, and deployment of a Stan model.
+CmdStanPy manages the Stan program files, data files, and CmdStan output files.
+By default, output files are written to a temporary filesystem which persists
+throughout the session.  This is appropriate behavior during model development
+because it allows the user to test many models without filsystem clutter or worse.
+Once deployed into production,
+the user can specify the output directory for the CmdStan outputs.</p>
 </section>
 
 
@@ -253,8 +267,9 @@ following the Bayesian workflow.</p>
       </div>
     </div>
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -265,7 +280,7 @@ following the Bayesian workflow.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

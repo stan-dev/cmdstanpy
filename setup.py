@@ -73,7 +73,7 @@ setuptools.setup(
     author='Stan Dev Team',
     url='https://github.com/stan-dev/cmdstanpy',
     license_files=['LICENSE.md'],
-    packages=['cmdstanpy', 'cmdstanpy.stanfit'],
+    packages=['cmdstanpy', 'cmdstanpy.stanfit', 'cmdstanpy.utils'],
     package_data={
         'cmdstanpy': ['py.typed'],
     },

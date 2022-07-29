@@ -11,14 +11,14 @@ There are several ways to install CmdStanPy and the underlying CmdStan component
 
 * You can download the CmdStanPy package from `PyPI <https://pypi.org>`_
   using `pip <https://pip.pypa.io/en/stable/>`_.
-  
+
 * If you want the current development version, you can clone the
   GitHub `CmdStanPy <https://github.com/stan-dev/cmdstanpy>`_ repository.
 
 If you install CmdStanPy from PyPI or GitHub you will need to
 install CmdStan as well, see section :ref:`CmdStan Installation <cmdstan-install>` below.
 
-  
+
 Conda: install CmdStanPy, CmdStan, C++ toolchain
 ------------------------------------------------
 
@@ -33,7 +33,7 @@ via the following command:
     conda create -n stan -c conda-forge cmdstanpy
 
 
-This command creates a new conda environment named ``stan`` and 
+This command creates a new conda environment named ``stan`` and
 downloads and installs the ``cmdstanpy`` package
 as well as CmdStan and the required C++ toolchain.
 
@@ -102,7 +102,7 @@ To install CmdStanPy with all the optional packages:
 GitHub: install from the CmdStanPy repository
 ---------------------------------------------
 
-    
+
 To install the current develop branch from GitHub:
 
 .. code-block:: bash
@@ -196,6 +196,11 @@ On Windows, the ``compiler`` option will install the C++ toolchain.
     install_cmdstan --compiler
     dir "%HOME%/.cmdstan"
 
+The argument ``--interactive`` (or ``-i``) can be used to run
+the installation script in an interactive prompt. This will ask
+you about the various options to the installation script, with
+reasonable defaults set for all questions.
+
 The named arguments: ``-d <directory>`` and  ``-v <version>``
 can be used to override these defaults:
 
@@ -220,7 +225,7 @@ CmdStanPy uses the environment variable ``CMDSTAN`` to register the CmdStan inst
   and the environment variable ``CMDSTAN`` is set accordingly.
 
 + If no environment variable ``CMDSTAN`` is set, CmdStanPy will try to locate
-  a CmdStan installation in the default install location, which is a 
+  a CmdStan installation in the default install location, which is a
   directory named ``.cmdstan`` in your ``$HOME`` directory.
 
 If you have installed CmdStan from a GitHub release or by cloning the CmdStan repository,

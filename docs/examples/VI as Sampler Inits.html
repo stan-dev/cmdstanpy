@@ -6,29 +6,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.4 documentation</title>
     
-    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
@@ -50,7 +48,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -61,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
     
   </div>
 
@@ -89,7 +87,7 @@
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="../hello_world.html">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -102,6 +100,12 @@
 <li class="toctree-l1 current active nav-item">
  <a class="reference internal nav-link" href="../examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../community.html">
+  Community
  </a>
 </li>
 
@@ -163,7 +167,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -422,6 +426,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
 div.rendered_html table {
   border: none;
   border-collapse: collapse;
@@ -430,10 +435,14 @@ div.rendered_html table {
   font-size: 12px;
   table-layout: fixed;
 }
+.jp-RenderedHTMLCommon thead,
 div.rendered_html thead {
   border-bottom: 1px solid black;
   vertical-align: bottom;
 }
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
 div.rendered_html tr,
 div.rendered_html th,
 div.rendered_html td {
@@ -445,21 +454,24 @@ div.rendered_html td {
   max-width: none;
   border: none;
 }
+.jp-RenderedHTMLCommon th,
 div.rendered_html th {
   font-weight: bold;
 }
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
 div.rendered_html tbody tr:nth-child(odd) {
   background: #f5f5f5;
 }
+.jp-RenderedHTMLCommon tbody tr:hover,
 div.rendered_html tbody tr:hover {
   background: rgba(66, 165, 245, 0.2);
 }
 </style>
 <section id="Using-Variational-Estimates-to-Initialize-the-NUTS-HMC-Sampler">
-<h1>Using Variational Estimates to Initialize the NUTS-HMC Sampler<a class="headerlink" href="#Using-Variational-Estimates-to-Initialize-the-NUTS-HMC-Sampler" title="Permalink to this headline">¶</a></h1>
+<h1>Using Variational Estimates to Initialize the NUTS-HMC Sampler<a class="headerlink" href="#Using-Variational-Estimates-to-Initialize-the-NUTS-HMC-Sampler" title="Permalink to this headline">#</a></h1>
 <p>In this example we show how to use the parameter estimates return by Stan’s variational inference algorithm as the initial parameter values for Stan’s NUTS-HMC sampler. By default, the sampler algorithm randomly initializes all model parameters in the range uniform[-2, 2]. When the true parameter value is outside of this range, starting from the ADVI estimates will speed up and improve adaptation.</p>
 <section id="Model-and-data">
-<h2>Model and data<a class="headerlink" href="#Model-and-data" title="Permalink to this headline">¶</a></h2>
+<h2>Model and data<a class="headerlink" href="#Model-and-data" title="Permalink to this headline">#</a></h2>
 <p>The Stan model and data are taken from the <a class="reference external" href="https://github.com/stan-dev/posteriordb">posteriordb package</a>.</p>
 <p>We use the <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/models/stan/blr.stan">blr model</a>, a Bayesian standard linear regression model with noninformative priors, and its corresponding simulated dataset <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/data/data/sblri.json.zip">sblri.json</a>, which was simulated via script <a class="reference external" href="https://github.com/stan-dev/posteriordb/blob/master/posterior_database/data/data-raw/sblr/sblr.R">sblr.R</a>. For
 conveince, we have copied the posteriordb model and data to this directory, in files <code class="docutils literal notranslate"><span class="pre">blr.stan</span></code> and <code class="docutils literal notranslate"><span class="pre">sblri.json</span></code>.</p>
@@ -484,8 +496,10 @@ conveince, we have copied the posteriordb model and data to this directory, in f
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
-INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
+/opt/hostedtoolcache/Python/3.9.13/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+20:25:42 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
+20:25:51 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -494,14 +508,14 @@ INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 data {
-  int &lt;lower=0&gt; N;
-  int &lt;lower=0&gt; D;
-  matrix [N, D] X;
-  vector [N] y;
+  int&lt;lower=0&gt; N;
+  int&lt;lower=0&gt; D;
+  matrix[N, D] X;
+  vector[N] y;
 }
 parameters {
-  vector [D] beta;
-  real &lt;lower=0&gt; sigma;
+  vector[D] beta;
+  real&lt;lower=0&gt; sigma;
 }
 model {
   // prior
@@ -511,11 +525,12 @@ model {
   target += normal_lpdf(y | X * beta, sigma);
 }
 
+
 </pre></div></div>
 </div>
 </section>
 <section id="Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates">
-<h2>Run Stan’s variational inference algorithm, obtain fitted estimates<a class="headerlink" href="#Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates" title="Permalink to this headline">¶</a></h2>
+<h2>Run Stan’s variational inference algorithm, obtain fitted estimates<a class="headerlink" href="#Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates" title="Permalink to this headline">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> method <code class="docutils literal notranslate"><span class="pre">variational</span></code> runs CmdStan’s ADVI algorithm. Because this algorithm is unstable and may fail to converge, we run it with argument <code class="docutils literal notranslate"><span class="pre">require_converged</span></code> set to <code class="docutils literal notranslate"><span class="pre">False</span></code>. We also specify a seed, to avoid instabilities as well as for reproducibility.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -530,9 +545,9 @@ model {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:Chain [1] start processing
-INFO:cmdstanpy:Chain [1] done processing
-WARNING:cmdstanpy:The algorithm may not have converged.
+20:25:51 - cmdstanpy - INFO - Chain [1] start processing
+20:25:51 - cmdstanpy - INFO - Chain [1] done processing
+20:25:51 - cmdstanpy - WARNING - The algorithm may not have converged.
 Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
@@ -574,17 +589,28 @@ Therefore, using the estimates from ADVI to initialize the parameter values for 
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan start processing
-ERROR:cmdstanpy:Error in progress bar initialization:
-        IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-Disabling progress bars for this session
-Exception ignored in: &lt;function tqdm.__del__ at 0x7f87683f7ee0&gt;
-Traceback (most recent call last):
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/std.py&#34;, line 1147, in __del__
-    self.close()
-  File &#34;/opt/hostedtoolcache/Python/3.9.10/x64/lib/python3.9/site-packages/tqdm/notebook.py&#34;, line 286, in close
-    self.disp(bar_style=&#39;danger&#39;, check_delay=False)
-AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
+20:25:51 - cmdstanpy - INFO - CmdStan start processing
+chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+
+chain 4 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 1 |<span class="ansi-blue-fg">████████▎ </span>| 00:00 Iteration:  775 / 1075 [ 72%]  (Sampling)
+
+chain 3 |<span class="ansi-yellow-fg">▊         </span>| 00:00 Status
+
+
+chain 4 |<span class="ansi-yellow-fg">▊         </span>| 00:00 Status
+
+chain 3 |<span class="ansi-blue-fg">████████▎ </span>| 00:00 Iteration:  775 / 1075 [ 72%]  (Sampling)
+
+
+chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -600,7 +626,14 @@ AttributeError: &#39;tqdm&#39; object has no attribute &#39;disp&#39;
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan done processing.
+
+20:25:52 - cmdstanpy - INFO - CmdStan done processing.
+20:25:52 - cmdstanpy - WARNING - Non-fatal error during sampling:
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
+Consider re-running with show_console=True if the above output is unclear!
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -668,87 +701,87 @@ INFO:cmdstanpy:CmdStan done processing.
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-160.00</td>
-      <td>0.054000</td>
-      <td>1.70000</td>
-      <td>-160.00</td>
-      <td>-160.00</td>
-      <td>-150.00</td>
-      <td>1000.00</td>
-      <td>1800.00</td>
-      <td>1.00</td>
+      <td>-156.867000</td>
+      <td>0.056908</td>
+      <td>1.743290</td>
+      <td>-160.145000</td>
+      <td>-156.532000</td>
+      <td>-154.64600</td>
+      <td>938.42000</td>
+      <td>1983.980000</td>
+      <td>1.001480</td>
     </tr>
     <tr>
       <th>beta[1]</th>
-      <td>1.00</td>
-      <td>0.000013</td>
-      <td>0.00096</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>5094.00</td>
-      <td>8984.00</td>
-      <td>1.00</td>
+      <td>0.999474</td>
+      <td>0.000014</td>
+      <td>0.000952</td>
+      <td>0.997903</td>
+      <td>0.999461</td>
+      <td>1.00107</td>
+      <td>4863.49000</td>
+      <td>10282.200000</td>
+      <td>1.000320</td>
     </tr>
     <tr>
       <th>beta[2]</th>
-      <td>1.00</td>
+      <td>1.000230</td>
       <td>0.000018</td>
-      <td>0.00120</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>4139.00</td>
-      <td>7300.00</td>
-      <td>1.00</td>
+      <td>0.001160</td>
+      <td>0.998355</td>
+      <td>1.000210</td>
+      <td>1.00210</td>
+      <td>4344.92000</td>
+      <td>9185.880000</td>
+      <td>0.999725</td>
     </tr>
     <tr>
       <th>beta[3]</th>
-      <td>1.00</td>
-      <td>0.000013</td>
-      <td>0.00093</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>5196.00</td>
-      <td>9164.00</td>
-      <td>1.00</td>
+      <td>1.000440</td>
+      <td>0.000014</td>
+      <td>0.000938</td>
+      <td>0.998907</td>
+      <td>1.000430</td>
+      <td>1.00200</td>
+      <td>4385.54000</td>
+      <td>9271.760000</td>
+      <td>0.999669</td>
     </tr>
     <tr>
       <th>beta[4]</th>
-      <td>1.00</td>
-      <td>0.000015</td>
-      <td>0.00100</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>4664.00</td>
-      <td>8226.00</td>
-      <td>1.00</td>
+      <td>1.001160</td>
+      <td>0.000016</td>
+      <td>0.001064</td>
+      <td>0.999422</td>
+      <td>1.001150</td>
+      <td>1.00292</td>
+      <td>4664.71000</td>
+      <td>9861.970000</td>
+      <td>0.999536</td>
     </tr>
     <tr>
       <th>beta[5]</th>
-      <td>1.00</td>
-      <td>0.000014</td>
-      <td>0.00100</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>1.00</td>
-      <td>5161.00</td>
-      <td>9103.00</td>
-      <td>1.00</td>
+      <td>1.001540</td>
+      <td>0.000015</td>
+      <td>0.001033</td>
+      <td>0.999865</td>
+      <td>1.001540</td>
+      <td>1.00321</td>
+      <td>4786.98000</td>
+      <td>10120.500000</td>
+      <td>0.999197</td>
     </tr>
     <tr>
       <th>sigma</th>
-      <td>0.96</td>
-      <td>0.000000</td>
-      <td>0.07000</td>
-      <td>0.85</td>
-      <td>0.95</td>
-      <td>1.08</td>
-      <td>267.04</td>
-      <td>470.96</td>
-      <td>1.02</td>
+      <td>0.963840</td>
+      <td>0.004465</td>
+      <td>0.071505</td>
+      <td>0.849600</td>
+      <td>0.961783</td>
+      <td>1.09259</td>
+      <td>256.47117</td>
+      <td>542.222346</td>
+      <td>1.011019</td>
     </tr>
   </tbody>
 </table>
@@ -768,7 +801,7 @@ INFO:cmdstanpy:CmdStan done processing.
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmp213h0o4a/blr-20220214160033_1.csv, /tmp/tmp213h0o4a/blr-20220214160033_2.csv, /tmp/tmp213h0o4a/blr-20220214160033_3.csv, /tmp/tmp213h0o4a/blr-20220214160033_4.csv
+Processing csv files: /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_1.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_2.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_3.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
@@ -796,20 +829,58 @@ Processing complete, no problems detected.
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-INFO:cmdstanpy:CmdStan start processing
-INFO:cmdstanpy:Chain [1] start processing
-INFO:cmdstanpy:Chain [2] start processing
-INFO:cmdstanpy:Chain [1] done processing
-INFO:cmdstanpy:Chain [3] start processing
-INFO:cmdstanpy:Chain [3] done processing
-INFO:cmdstanpy:Chain [4] start processing
-INFO:cmdstanpy:Chain [4] done processing
-INFO:cmdstanpy:Chain [2] done processing
+20:25:52 - cmdstanpy - INFO - CmdStan start processing
+chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+
+chain 4 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+
+
+chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+
+
+
+chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+20:25:52 - cmdstanpy - INFO - CmdStan done processing.
+20:25:52 - cmdstanpy - WARNING - Some chains may have failed to converge.
+        Chain 1 had 161 divergent transitions (16.1%)
+        Chain 3 had 147 divergent transitions (14.7%)
+        Chain 4 had 244 divergent transitions (24.4%)
+        Use function &#34;diagnose()&#34; to see further information.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -869,87 +940,87 @@ INFO:cmdstanpy:Chain [2] done processing
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-190.0</td>
-      <td>25.00000</td>
-      <td>36.0000</td>
-      <td>-230.00</td>
-      <td>-170.0</td>
-      <td>-160.0</td>
-      <td>2.0</td>
-      <td>9.4</td>
-      <td>13.0</td>
+      <td>-191.333000</td>
+      <td>24.678800</td>
+      <td>35.170300</td>
+      <td>-231.560000</td>
+      <td>-165.541000</td>
+      <td>-154.33900</td>
+      <td>2.03097</td>
+      <td>12.69360</td>
+      <td>11.37150</td>
     </tr>
     <tr>
       <th>beta[1]</th>
-      <td>1.0</td>
-      <td>0.00012</td>
-      <td>0.0021</td>
-      <td>1.00</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>293.0</td>
-      <td>1358.0</td>
-      <td>1.0</td>
+      <td>0.999452</td>
+      <td>0.000119</td>
+      <td>0.001816</td>
+      <td>0.996272</td>
+      <td>0.999494</td>
+      <td>1.00252</td>
+      <td>232.18100</td>
+      <td>1451.13000</td>
+      <td>1.01286</td>
     </tr>
     <tr>
       <th>beta[2]</th>
-      <td>1.0</td>
-      <td>0.00020</td>
-      <td>0.0029</td>
-      <td>0.99</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>204.0</td>
-      <td>944.0</td>
-      <td>1.0</td>
+      <td>1.000560</td>
+      <td>0.000229</td>
+      <td>0.002416</td>
+      <td>0.996529</td>
+      <td>1.000410</td>
+      <td>1.00459</td>
+      <td>110.88200</td>
+      <td>693.01400</td>
+      <td>1.04571</td>
     </tr>
     <tr>
       <th>beta[3]</th>
-      <td>1.0</td>
-      <td>0.00013</td>
-      <td>0.0021</td>
-      <td>1.00</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>250.0</td>
-      <td>1157.0</td>
-      <td>1.0</td>
+      <td>1.000590</td>
+      <td>0.000259</td>
+      <td>0.002043</td>
+      <td>0.997326</td>
+      <td>1.000480</td>
+      <td>1.00442</td>
+      <td>62.47110</td>
+      <td>390.44400</td>
+      <td>1.04607</td>
     </tr>
     <tr>
       <th>beta[4]</th>
-      <td>1.0</td>
-      <td>0.00013</td>
-      <td>0.0022</td>
-      <td>1.00</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>279.0</td>
-      <td>1294.0</td>
-      <td>1.0</td>
+      <td>1.001380</td>
+      <td>0.000224</td>
+      <td>0.002279</td>
+      <td>0.997013</td>
+      <td>1.001690</td>
+      <td>1.00512</td>
+      <td>103.34500</td>
+      <td>645.90400</td>
+      <td>1.09049</td>
     </tr>
     <tr>
       <th>beta[5]</th>
-      <td>1.0</td>
-      <td>0.00017</td>
-      <td>0.0023</td>
-      <td>1.00</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>180.0</td>
-      <td>831.0</td>
-      <td>1.1</td>
+      <td>1.001200</td>
+      <td>0.000150</td>
+      <td>0.002013</td>
+      <td>0.997854</td>
+      <td>1.001290</td>
+      <td>1.00443</td>
+      <td>180.70500</td>
+      <td>1129.41000</td>
+      <td>1.03165</td>
     </tr>
     <tr>
       <th>sigma</th>
-      <td>2.0</td>
-      <td>0.70000</td>
-      <td>1.1000</td>
-      <td>0.90</td>
-      <td>2.7</td>
-      <td>3.2</td>
-      <td>2.0</td>
-      <td>9.4</td>
-      <td>11.3</td>
+      <td>1.962000</td>
+      <td>0.725020</td>
+      <td>1.034300</td>
+      <td>0.907470</td>
+      <td>2.708830</td>
+      <td>3.17346</td>
+      <td>2.03514</td>
+      <td>12.71963</td>
+      <td>10.50420</td>
     </tr>
   </tbody>
 </table>
@@ -968,27 +1039,27 @@ INFO:cmdstanpy:Chain [2] done processing
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmp213h0o4a/blr-20220214160034_1.csv, /tmp/tmp213h0o4a/blr-20220214160034_2.csv, /tmp/tmp213h0o4a/blr-20220214160034_3.csv, /tmp/tmp213h0o4a/blr-20220214160034_4.csv
+Processing csv files: /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_1.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_2.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_3.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
 
 Checking sampler transitions for divergences.
-544 of 4000 (14%) transitions ended with a divergence.
+552 of 4000 (13.80%) transitions ended with a divergence.
 These divergent transitions indicate that HMC is not fully able to explore the posterior distribution.
 Try increasing adapt delta closer to 1.
 If this doesn&#39;t remove all divergences, try to reparameterize the model.
 
 Checking E-BFMI - sampler transitions HMC potential energy.
-The E-BFMI, 0.008, is below the nominal threshold of 0.3 which suggests that HMC may have trouble exploring the target distribution.
+The E-BFMI, 0.01, is below the nominal threshold of 0.30 which suggests that HMC may have trouble exploring the target distribution.
 If possible, try to reparameterize the model.
 
 The following parameters had fewer than 0.001 effective draws per transition:
   sigma
 Such low values indicate that the effective sample size estimators may be biased high and actual performance may be substantially lower than quoted.
 
-The following parameters had split R-hat greater than 1.1:
-  beta[5], sigma
+The following parameters had split R-hat greater than 1.05:
+  beta[4], sigma
 Such high values indicate incomplete mixing and biased estimation.
 You should consider regularizating your model with additional prior information or a more effective parameterization.
 
@@ -1027,8 +1098,9 @@ Processing complete.
       </div>
     </div>
   
-    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -1039,7 +1111,7 @@ Processing complete.
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

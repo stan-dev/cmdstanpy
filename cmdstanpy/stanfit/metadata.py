@@ -3,7 +3,7 @@
 import copy
 from typing import Any, Dict, Tuple
 
-from cmdstanpy.utils import parse_method_vars, parse_stan_vars, BaseType
+from cmdstanpy.utils import BaseType, parse_method_vars, parse_stan_vars
 
 
 class InferenceMetadata:

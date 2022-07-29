@@ -6,29 +6,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>“Hello, World” &#8212; CmdStanPy 1.0.1 documentation</title>
+    <title>“Hello, World!” &#8212; CmdStanPy 1.0.4 documentation</title>
     
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -50,7 +48,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -61,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
     
   </div>
 
@@ -89,7 +87,7 @@
 
 <li class="toctree-l1 current active nav-item">
  <a class="current reference internal nav-link" href="#">
-  “Hello, World”
+  “Hello, World!”
  </a>
 </li>
 
@@ -102,6 +100,12 @@
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="examples.html">
   CmdStanPy Examples
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="community.html">
+  Community
  </a>
 </li>
 
@@ -163,7 +167,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -190,40 +194,29 @@
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#accessing-the-sample">
-     Accessing the sample
+    <a class="reference internal nav-link" href="#accessing-the-results">
+     Accessing the results
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#cmdstan-utilities-stansummary-diagnose">
      CmdStan utilities:
-     <cite>
-      stansummary
-     </cite>
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       stansummary
+      </span>
+     </code>
      ,
-     <cite>
-      diagnose
-     </cite>
+     <code class="docutils literal notranslate">
+      <span class="pre">
+       diagnose
+      </span>
+     </code>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#managing-stan-csv-files">
      Managing Stan CSV files
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#parallelization">
-     Parallelization
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#progress-bar">
-     Progress bar
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#jupyter-lab-notebook-requirements">
-     Jupyter Lab Notebook requirements
     </a>
    </li>
   </ul>
@@ -257,70 +250,69 @@
               <div>
                 
   <section id="hello-world">
-<h1>“Hello, World”<a class="headerlink" href="#hello-world" title="Permalink to this headline">¶</a></h1>
+<h1>“Hello, World!”<a class="headerlink" href="#hello-world" title="Permalink to this headline">#</a></h1>
 <section id="fitting-a-stan-model-using-the-nuts-hmc-sampler">
-<h2>Fitting a Stan model using the NUTS-HMC sampler<a class="headerlink" href="#fitting-a-stan-model-using-the-nuts-hmc-sampler" title="Permalink to this headline">¶</a></h2>
+<h2>Fitting a Stan model using the NUTS-HMC sampler<a class="headerlink" href="#fitting-a-stan-model-using-the-nuts-hmc-sampler" title="Permalink to this headline">#</a></h2>
 <p>In order to verify the installation and also to demonstrate
 the CmdStanPy workflow, we use CmdStanPy to fit the
 the example Stan model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code>
 to the dataset <code class="docutils literal notranslate"><span class="pre">bernoulli.data.json</span></code>.
-This model and data are included with the CmdStan distribution
-in subdirectory <code class="docutils literal notranslate"><span class="pre">examples/bernoulli</span></code>.
-This example allows the user to verify that CmdStanPy, CmdStan,
-the StanC compiler, and the C++ toolchain have all been properly installed.
-For substantive example models and
+The <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code> is a <a class="reference external" href="https://en.wikipedia.org/wiki/%22Hello,_World!%22_program">Hello, World!</a>
+program which illustrates the basic syntax of the Stan language.
+It allows the user to verify that CmdStanPy, CmdStan,
+the StanC compiler, and the C++ toolchain have all been properly installed.</p>
+<p>For substantive example models and
 guidance on coding statistical models in Stan, see
-the <a class="reference external" href="https://mc-stan.org/docs/stan-users-guide/index.html">CmdStan User’s Guide</a>.</p>
+the <a class="reference external" href="https://mc-stan.org/docs/stan-users-guide/index.html">Stan User’s Guide</a>.</p>
 <section id="the-stan-model">
-<h3>The Stan model<a class="headerlink" href="#the-stan-model" title="Permalink to this headline">¶</a></h3>
-<p>The model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code>  is a simple model for binary data:
+<h3>The Stan model<a class="headerlink" href="#the-stan-model" title="Permalink to this headline">#</a></h3>
+<p>The model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code>  is a trivial model:
 given a set of N observations of i.i.d. binary data
 <cite>y[1] … y[N]</cite>, it calculates the Bernoulli chance-of-success <cite>theta</cite>.</p>
 <div class="highlight-stan notranslate"><div class="highlight"><pre><span></span><span class="kn">data</span> <span class="p">{</span>
-   <span class="kt">int</span><span class="o">&lt;</span><span class="k">lower</span><span class="p">=</span><span class="mf">0</span><span class="o">&gt;</span> <span class="n">N</span><span class="p">;</span>
-   <span class="kt">int</span><span class="o">&lt;</span><span class="k">lower</span><span class="p">=</span><span class="mf">0</span><span class="p">,</span><span class="k">upper</span><span class="p">=</span><span class="mf">1</span><span class="o">&gt;</span> <span class="n">y</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
- <span class="p">}</span>
- <span class="kn">parameters</span> <span class="p">{</span>
-   <span class="kt">real</span><span class="o">&lt;</span><span class="k">lower</span><span class="p">=</span><span class="mf">0</span><span class="p">,</span><span class="k">upper</span><span class="p">=</span><span class="mf">1</span><span class="o">&gt;</span> <span class="n">theta</span><span class="p">;</span>
- <span class="p">}</span>
- <span class="kn">model</span> <span class="p">{</span>
-   <span class="n">theta</span> <span class="o">~</span><span class="w"> </span><span class="nb">beta</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="mf">1</span><span class="p">);</span>  <span class="c1">// uniform prior on interval 0,1</span>
-   <span class="n">y</span> <span class="o">~</span><span class="w"> </span><span class="nb">bernoulli</span><span class="p">(</span><span class="n">theta</span><span class="p">);</span>
- <span class="p">}</span>
+  <span class="kt">int</span><span class="o">&lt;</span><span class="k">lower</span><span class="p">=</span><span class="mf">0</span><span class="o">&gt;</span> <span class="n">N</span><span class="p">;</span>
+  <span class="kt">int</span><span class="o">&lt;</span><span class="k">lower</span><span class="p">=</span><span class="mf">0</span><span class="p">,</span><span class="k">upper</span><span class="p">=</span><span class="mf">1</span><span class="o">&gt;</span> <span class="n">y</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="kn">parameters</span> <span class="p">{</span>
+  <span class="kt">real</span><span class="o">&lt;</span><span class="k">lower</span><span class="p">=</span><span class="mf">0</span><span class="p">,</span><span class="k">upper</span><span class="p">=</span><span class="mf">1</span><span class="o">&gt;</span> <span class="n">theta</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kn">model</span> <span class="p">{</span>
+  <span class="n">theta</span> <span class="o">~</span><span class="w"> </span><span class="nb">beta</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="mf">1</span><span class="p">);</span>  <span class="c1">// uniform prior on interval 0,1</span>
+  <span class="n">y</span> <span class="o">~</span><span class="w"> </span><span class="nb">bernoulli</span><span class="p">(</span><span class="n">theta</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class manages the Stan program and its corresponding compiled executable.
 It provides properties and functions to inspect the model code and filepaths.
-CmdStanPy, manages the environment variable <code class="docutils literal notranslate"><span class="pre">CMDSTAN</span></code> which specifies the path to
-the local CmdStan installation.
-The function <a class="reference internal" href="api.html#cmdstanpy.cmdstan_path" title="cmdstanpy.cmdstan_path"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstan_path()</span></code></a> returns the value of this environment variable.</p>
+A <cite>CmdStanModel</cite> can be instantiated from a Stan file or its corresponding compiled executable file.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="go"># import packages</span>
 <span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">os</span>
 
-<span class="gp">In [2]: </span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">cmdstan_path</span><span class="p">,</span> <span class="n">CmdStanModel</span>
+<span class="gp">In [2]: </span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
 
 <span class="go"># specify Stan program file</span>
-<span class="gp">In [3]: </span><span class="n">stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
+<span class="gp">In [3]: </span><span class="n">stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
 
-<span class="go"># instantiate the model; compiles the Stan program as needed.</span>
+<span class="go"># instantiate the model object</span>
 <span class="gp">In [4]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
-<span class="go">INFO:cmdstanpy:found newer exe file, not recompiling</span>
+<span class="go">INFO:cmdstanpy:compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli</span>
+<span class="go">INFO:cmdstanpy:compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli</span>
 
 <span class="go"># inspect model object</span>
 <span class="gp">In [5]: </span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 <span class="go">CmdStanModel: name=bernoulli</span>
-<span class="go">	 stan_file=/home/runner/.cmdstan/cmdstan-2.28.2/examples/bernoulli/bernoulli.stan</span>
-<span class="go">	 exe_file=/home/runner/.cmdstan/cmdstan-2.28.2/examples/bernoulli/bernoulli</span>
+<span class="go">	 stan_file=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli.stan</span>
+<span class="go">	 exe_file=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/bernoulli</span>
 <span class="go">	 compiler_options=stanc_options={}, cpp_options={}</span>
 
 <span class="go"># inspect compiled model</span>
 <span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">exe_info</span><span class="p">())</span>
-<span class="go">{&#39;stan_version_major&#39;: &#39;2&#39;, &#39;stan_version_minor&#39;: &#39;28&#39;, &#39;stan_version_patch&#39;: &#39;2&#39;, &#39;STAN_THREADS&#39;: &#39;false&#39;, &#39;STAN_MPI&#39;: &#39;false&#39;, &#39;STAN_OPENCL&#39;: &#39;false&#39;, &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;, &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}</span>
+<span class="go">{&#39;stan_version_major&#39;: &#39;2&#39;, &#39;stan_version_minor&#39;: &#39;29&#39;, &#39;stan_version_patch&#39;: &#39;2&#39;, &#39;STAN_THREADS&#39;: &#39;false&#39;, &#39;STAN_MPI&#39;: &#39;false&#39;, &#39;STAN_OPENCL&#39;: &#39;false&#39;, &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;, &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}</span>
 </pre></div>
 </div>
 </section>
 <section id="data-inputs">
-<h3>Data inputs<a class="headerlink" href="#data-inputs" title="Permalink to this headline">¶</a></h3>
+<h3>Data inputs<a class="headerlink" href="#data-inputs" title="Permalink to this headline">#</a></h3>
 <p>CmdStanPy accepts input data either as a Python dictionary which maps data variable names
 to values, or as the corresponding JSON file.</p>
 <p>The bernoulli model requires two inputs: the number of observations <cite>N</cite>, and
@@ -334,79 +326,175 @@ The data file <cite>bernoulli.data.json</cite> contains the following inputs:</p
 </div>
 </section>
 <section id="fitting-the-model">
-<h3>Fitting the model<a class="headerlink" href="#fitting-the-model" title="Permalink to this headline">¶</a></h3>
+<h3>Fitting the model<a class="headerlink" href="#fitting-the-model" title="Permalink to this headline">#</a></h3>
 <p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method is used to do Bayesian inference
 over the model conditioned on data using  using Hamiltonian Monte Carlo
 (HMC) sampling. It runs Stan’s HMC-NUTS sampler on the model and data and
 returns a <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> object.  The data can be specified
 either as a filepath or a Python dictionary; in this example, we use the
-example datafile <cite>bernoulli.data.json</cite>:</p>
-<p>By default, the <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method runs 4 sampler chains.
-The <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is an optional argument which specifies
-the path to the output directory used by CmdStan.
-If this argument is omitted, the output files are written
-to a temporary directory which is deleted when the current Python session is terminated.</p>
+example datafile <cite>bernoulli.data.json</cite>:
+By default, the <cite>sample</cite> method runs 4 sampler chains.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="go"># specify data file</span>
-<span class="gp">In [7]: </span><span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
+<span class="gp">In [7]: </span><span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
 
 <span class="go"># fit the model</span>
 <span class="gp">In [8]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
 <span class="go">INFO:cmdstanpy:CmdStan start processing</span>
 <span class="go">                                                                                                                                                                                                                                                                                                                                </span>
 <span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
-
-<span class="go"># printing the object reports sampler commands, output files</span>
+</pre></div>
+</div>
+<p>Underlyingly, the CmdStan outputs are a set of per-chain
+<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output">Stan CSV files</a>.
+The filenames follow the template ‘&lt;model_name&gt;-&lt;YYYYMMDDHHMMSS&gt;-&lt;chain_id&gt;’
+plus the file suffix ‘.csv’.
+CmdStanPy also captures the per-chain console and error messages.
+The <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is an optional argument which specifies
+the path to the output directory used by CmdStan.
+If this argument is omitted, the output files are written
+to a temporary directory which is deleted when the current Python session is terminated.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="go"># printing the object reports sampler commands, output files</span>
 <span class="gp">In [9]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_1.csv</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_2.csv</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_3.csv</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_4.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_1.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_2.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_3.csv</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_4.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_0-stdout.txt</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_1-stdout.txt</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_2-stdout.txt</span>
-<span class="go">	/tmp/tmprhnl7x08/bernoulli-20220214160053_3-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_0-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_1-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_2-stdout.txt</span>
+<span class="go">	/tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_3-stdout.txt</span>
 </pre></div>
 </div>
 </section>
-<section id="accessing-the-sample">
-<h3>Accessing the sample<a class="headerlink" href="#accessing-the-sample" title="Permalink to this headline">¶</a></h3>
-<p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method outputs are a set of per-chain
-<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output">Stan CSV files</a>.
-The filenames follow the template ‘&lt;model_name&gt;-&lt;YYYYMMDDHHMM&gt;-&lt;chain_id&gt;’
-plus the file suffix ‘.csv’.
-The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> class provides methods to assemble the contents
-of these files in memory as well as methods to manage the disk files.</p>
-<p>Underlyingly, the draws from all chains are stored as an
-a numpy.ndarray with dimensions: draws, chains, columns.
-CmdStanPy provides accessor methods which return the sample
-either in terms of the CSV file columns or in terms of the
-sampler and Stan program variables.
-The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws" title="cmdstanpy.CmdStanMCMC.draws"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws()</span></code></a> and <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws_pd" title="cmdstanpy.CmdStanMCMC.draws_pd"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_pd()</span></code></a> methods return the sample contents
-in columnar format.</p>
-<p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_variable" title="cmdstanpy.CmdStanMCMC.stan_variable"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stan_variable()</span></code></a> method to returns a numpy.ndarray object
+<section id="accessing-the-results">
+<h3>Accessing the results<a class="headerlink" href="#accessing-the-results" title="Permalink to this headline">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">sample</span></code> method returns a <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> object,
+which provides access to the information from the Stan CSV files.
+The CSV header and data rows contain the outputs from each iteration of the sampler.
+CSV comment blocks are used to report the inference engine configuration and timing information.
+The NUTS-HMC adaptive sampler algorithm also outputs the per-chain HMC tuning parameters step_size and metric.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object parses the set of Stan CSV files into separate in-memory data structures for
+the set of sampler iterations, the metadata, and the step_size and metric and provides accessor methods for each.
+The primary object of interest are the draws from all iterations of the sampler, i.e., the CSV data rows.
+The <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> methods allow the user to extract the sample in whatever data format is needed for their analysis.
+The sample can be extracted in tabular format, either as</p>
+<ul class="simple">
+<li><p>a numpy.ndarray: <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws" title="cmdstanpy.CmdStanMCMC.draws"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws()</span></code></a></p></li>
+<li><p>a pandas.DataFrame: <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws_pd" title="cmdstanpy.CmdStanMCMC.draws_pd"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_pd()</span></code></a></p></li>
+</ul>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [10]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(1000, 4, 8)</span>
+
+<span class="gp">In [11]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">concat_chains</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(4000, 8)</span>
+
+<span class="gp">In [12]: </span><span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">()</span>
+<span class="gh">Out[12]: </span><span class="go"></span>
+<span class="go">         lp__  accept_stat__  stepsize__  ...  divergent__  energy__     theta</span>
+<span class="go">0    -9.52677       0.974932    0.946318  ...          0.0   9.68846  0.048486</span>
+<span class="go">1    -9.93446       0.976711    0.946318  ...          0.0  10.10770  0.041392</span>
+<span class="go">2    -7.60679       0.921699    0.946318  ...          0.0   9.97710  0.113828</span>
+<span class="go">3    -7.94949       0.985838    0.946318  ...          0.0   8.00264  0.095488</span>
+<span class="go">4    -9.00785       0.898632    0.946318  ...          0.0   9.00785  0.059735</span>
+<span class="go">...       ...            ...         ...  ...          ...       ...       ...</span>
+<span class="go">3995 -7.70810       1.000000    0.863541  ...          0.0   7.99523  0.107852</span>
+<span class="go">3996 -7.72395       0.993969    0.863541  ...          0.0   7.76126  0.444559</span>
+<span class="go">3997 -8.66198       0.763569    0.863541  ...          0.0   8.78569  0.527178</span>
+<span class="go">3998 -8.66198       0.431286    0.863541  ...          0.0  11.00170  0.527178</span>
+<span class="go">3999 -6.76854       0.925959    0.863541  ...          0.0   9.21770  0.275873</span>
+
+<span class="go">[4000 rows x 8 columns]</span>
+</pre></div>
+</div>
+<p>The sample can be treated as a collection of named, structured variables.
+CmdStanPy makes a distinction between the per-iteration model outputs
+and the per-iteration algorithm outputs:  the former are ‘stan_variables’
+and the information reported by the sampler are ‘method_variables’.
+Accessor functions extract these as:</p>
+<ul class="simple">
+<li><p>a structured numpy.ndarray: <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_variable" title="cmdstanpy.CmdStanMCMC.stan_variable"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stan_variable()</span></code></a>
 which contains the set of all draws in the sample for the named Stan program variable.
-The draws from all chains are flattened into a single drawset.
-The first ndarray dimension is the number of draws X number of chains.
-The remaining ndarray dimensions correspond to the Stan program variable dimension.
-The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_variables" title="cmdstanpy.CmdStanMCMC.stan_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stan_variables()</span></code></a> method returns a Python dict over all Stan model variables.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [10]: </span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span>
-<span class="gh">Out[10]: </span><span class="go">(1000, 4, 8)</span>
+The draws from all chains are flattened, i.e.,
+the first ndarray dimension is the number of draws X number of chains.
+The remaining ndarray dimensions correspond to the Stan program variable dimension.</p></li>
+<li><p>an xarray.Dataset: <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws_xr" title="cmdstanpy.CmdStanMCMC.draws_xr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_xr()</span></code></a></p></li>
+<li><p>a Python dict mapping Stan variable names to numpy.ndarray objects, where the
+chains are flattened, as above:
+<a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_variables" title="cmdstanpy.CmdStanMCMC.stan_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stan_variables()</span></code></a>.</p></li>
+<li><p>a Python dict mapping the algorithm outputs to numpy.ndarray objects.
+Because these outputs are used for within-chain and cross-chain diagnostics,
+they are not flattened.
+<a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.stan_variables" title="cmdstanpy.CmdStanMCMC.stan_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stan_variables()</span></code></a>.</p></li>
+</ul>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
+<span class="go">[0.0484856 0.0413921 0.113828  ... 0.527178  0.527178  0.275873 ]</span>
 
-<span class="gp">In [11]: </span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">concat_chains</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
-<span class="gh">Out[11]: </span><span class="go">(4000, 8)</span>
+<span class="gp">In [14]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws_xr</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:  (draw: 1000, chain: 4)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * chain    (chain) int64 1 2 3 4</span>
+<span class="go">  * draw     (draw) int64 0 1 2 3 4 5 6 7 8 ... 992 993 994 995 996 997 998 999</span>
+<span class="go">Data variables:</span>
+<span class="go">    theta    (chain, draw) float64 0.04849 0.04139 0.1138 ... 0.5272 0.2759</span>
+<span class="go">Attributes:</span>
+<span class="go">    stan_version:        2.29.2</span>
+<span class="go">    model:               bernoulli_model</span>
+<span class="go">    num_draws_sampling:  1000</span>
 
-<span class="gp">In [12]: </span><span class="n">draws_theta</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">var</span><span class="o">=</span><span class="s1">&#39;theta&#39;</span><span class="p">)</span>
+<span class="gp">In [15]: </span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">stan_variables</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="go">theta	(4000,)</span>
 
-<span class="gp">In [13]: </span><span class="n">draws_theta</span><span class="o">.</span><span class="n">shape</span>
-<span class="gh">Out[13]: </span><span class="go">(4000,)</span>
+<span class="gp">In [16]: </span><span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">method_variables</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="go">lp__	(1000, 4)</span>
+<span class="go">accept_stat__	(1000, 4)</span>
+<span class="go">stepsize__	(1000, 4)</span>
+<span class="go">treedepth__	(1000, 4)</span>
+<span class="go">n_leapfrog__	(1000, 4)</span>
+<span class="go">divergent__	(1000, 4)</span>
+<span class="go">energy__	(1000, 4)</span>
+</pre></div>
+</div>
+<p>In addition to the MCMC sample itself, the CmdStanMCMC object provides
+access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sampler,
+(if present).</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metric_type</span><span class="p">)</span>
+<span class="go">diag_e</span>
+
+<span class="gp">In [18]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
+<span class="go">[[0.498726]</span>
+<span class="go"> [0.652659]</span>
+<span class="go"> [0.573764]</span>
+<span class="go"> [0.51613 ]]</span>
+
+<span class="gp">In [19]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">step_size</span><span class="p">)</span>
+<span class="go">[0.946318 0.843597 1.02276  0.863541]</span>
+</pre></div>
+</div>
+<p>The CmdStanMCMC object also provides access to metadata about the model and the sampler run.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">])</span>
+<span class="go">bernoulli_model</span>
+
+<span class="gp">In [21]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">])</span>
+<span class="go">53568</span>
+
+<span class="gp">In [22]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">dict_keys([&#39;theta&#39;])</span>
+
+<span class="gp">In [23]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">method_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">dict_keys([&#39;lp__&#39;, &#39;accept_stat__&#39;, &#39;stepsize__&#39;, &#39;treedepth__&#39;, &#39;n_leapfrog__&#39;, &#39;divergent__&#39;, &#39;energy__&#39;])</span>
 </pre></div>
 </div>
 </section>
 <section id="cmdstan-utilities-stansummary-diagnose">
-<h3>CmdStan utilities:  <cite>stansummary</cite>, <cite>diagnose</cite><a class="headerlink" href="#cmdstan-utilities-stansummary-diagnose" title="Permalink to this headline">¶</a></h3>
+<h3>CmdStan utilities:  <code class="docutils literal notranslate"><span class="pre">stansummary</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnose</span></code><a class="headerlink" href="#cmdstan-utilities-stansummary-diagnose" title="Permalink to this headline">#</a></h3>
 <p>CmdStan is distributed with a posterior analysis utility
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stansummary.html">stansummary</a>
 that reads the outputs of all chains and computes summary statistics
@@ -414,12 +502,14 @@ for all sampler and model parameters and quantities of interest.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> method <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.summary" title="cmdstanpy.CmdStanMCMC.summary"><code class="xref py py-meth docutils literal notranslate"><span class="pre">summary()</span></code></a> runs this utility and returns
 summaries of the total joint log-probability density <strong>lp__</strong> plus
 all model parameters and quantities of interest in a pandas.DataFrame:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
-<span class="gh">Out[14]: </span><span class="go"></span>
-<span class="go">       Mean    MCSE  StdDev     5%   50%   95%   N_Eff  N_Eff/s  R_hat</span>
-<span class="go">name                                                                  </span>
-<span class="go">lp__  -7.30  0.0180    0.73 -8.700 -7.00 -6.70  1700.0  33000.0    1.0</span>
-<span class="go">theta  0.25  0.0031    0.12  0.079  0.24  0.46  1500.0  28000.0    1.0</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [24]: </span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="gh">Out[24]: </span><span class="go"></span>
+<span class="go">           Mean      MCSE    StdDev  ...    N_Eff  N_Eff/s    R_hat</span>
+<span class="go">name                                 ...                           </span>
+<span class="go">lp__  -7.257340  0.019566  0.711852  ...  1323.70  32285.3  1.00287</span>
+<span class="go">theta  0.246969  0.003175  0.117468  ...  1368.77  33384.7  1.00346</span>
+
+<span class="go">[2 rows x 9 columns]</span>
 </pre></div>
 </div>
 <p>CmdStan is distributed with a second posterior analysis utility
@@ -428,8 +518,8 @@ which analyzes the per-draw sampler parameters across all chains
 looking for potential problems which indicate that the sample
 isn’t a representative sample from the posterior.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose" title="cmdstanpy.CmdStanMCMC.diagnose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnose()</span></code></a> method runs this utility and prints the output to the console.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [15]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
-<span class="go">Processing csv files: /tmp/tmprhnl7x08/bernoulli-20220214160053_1.csv, /tmp/tmprhnl7x08/bernoulli-20220214160053_2.csv, /tmp/tmprhnl7x08/bernoulli-20220214160053_3.csv, /tmp/tmprhnl7x08/bernoulli-20220214160053_4.csv</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
+<span class="go">Processing csv files: /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_1.csv, /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_2.csv, /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_3.csv, /tmp/tmp0ag2g6wf/bernoulliwebt8dv_/bernoulli-20220630202616_4.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>
@@ -449,61 +539,14 @@ The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.diagnose"
 </div>
 </section>
 <section id="managing-stan-csv-files">
-<h3>Managing Stan CSV files<a class="headerlink" href="#managing-stan-csv-files" title="Permalink to this headline">¶</a></h3>
+<h3>Managing Stan CSV files<a class="headerlink" href="#managing-stan-csv-files" title="Permalink to this headline">#</a></h3>
 <p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> object keeps track of all output files produced
 by the sampler run.
 The <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.save_csvfiles" title="cmdstanpy.CmdStanMCMC.save_csvfiles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></a> function moves the CSV files
 to a specified directory.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">fit</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;some/path&#39;</span><span class="p">)</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [26]: </span><span class="n">fit</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;some/path&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="parallelization">
-<h3>Parallelization<a class="headerlink" href="#parallelization" title="Permalink to this headline">¶</a></h3>
-<p>The Stan language
-<a class="reference external" href="https://mc-stan.org/docs/stan-users-guide/reduce-sum.html">reduce_sum</a>
-function provides within-chain parallelization.
-For models which require computing the sum of a number of independent function evaluations,
-e.g., when evaluating a number of conditionally independent terms in a log-likelihood,
-the <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code> function is used to parallelize this computation.</p>
-<p>As of version CmdStan 2.28, it is possible to run the
-NUTS-HMC sampler on
-multiple chains from within a single executable using threads.
-This has the potential to speed up sampling.  It also
-reduces the overall memory footprint required for sampling as
-all chains share the same copy of data.the input data.
-When using within-chain parallelization all chains started within a single executable can share all the available threads and once a chain finishes the threads will be reused.</p>
-<p>Both within-chain and cross-chain parallelization use the
-Intel Threading Building Blocks (TBB) library.
-In order to do either, the Stan model must be compiled with
-C++ compiler flag <code class="docutils literal notranslate"><span class="pre">STAN_THREADS</span></code>.  While any value can be used,
-we recommend the value <code class="docutils literal notranslate"><span class="pre">TRUE</span></code>.</p>
-</section>
-<section id="progress-bar">
-<h3>Progress bar<a class="headerlink" href="#progress-bar" title="Permalink to this headline">¶</a></h3>
-<p>By default, CmdStanPy displays a progress bar during sampling.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>To suppress the progress bar, specify argument <code class="docutils literal notranslate"><span class="pre">show_progress=False</span></code>.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>To see the CmdStan console outputs instead of progress bars, specify <code class="docutils literal notranslate"><span class="pre">show_console=True</span></code>.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">show_console</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This will stream all sampler messages to the console.
-It provides an alternative way of monitoring progress.
-In conjunction with Stan programs which contain <cite>print</cite> statments,
-this provides a way to inspect and debug model behavoir.</p>
-</section>
-<section id="jupyter-lab-notebook-requirements">
-<h3>Jupyter Lab Notebook requirements<a class="headerlink" href="#jupyter-lab-notebook-requirements" title="Permalink to this headline">¶</a></h3>
-<p>In a Jupyter notebook, this package requires the <a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/index.html">ipywidgets</a> package.
-For help on installation and configuration, see
-<a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/user_install.html#">ipywidgets installation instructions</a>
-and <a class="reference external" href="https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637">this tqdm GitHub issue</a>.</p>
 </section>
 </section>
 </section>
@@ -536,8 +579,9 @@ and <a class="reference external" href="https://github.com/tqdm/tqdm/issues/394#
       </div>
     </div>
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -548,7 +592,7 @@ and <a class="reference external" href="https://github.com/tqdm/tqdm/issues/394#
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     
