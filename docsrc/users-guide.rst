@@ -10,4 +10,5 @@ usage of CmdStanPy.
     users-guide/overview
     users-guide/hello_world
     users-guide/workflow
+    users-guide/outputs
     users-guide/examples
