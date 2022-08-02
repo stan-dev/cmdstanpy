@@ -13,6 +13,11 @@ when you start a new project.
   <https://github.com/teddygroves/cookiecutter-cmdstanpy-analysis>`_ A
   cookiecutter template for cmdstanpy-based statistical analysis projects.
 
+- `cookiecutter-cmdstanpy-wrapper
+  <https://github.com/WardBrian/cookiecutter-cmdstanpy-wrapper>`_ A
+  cookiecutter template using Stan models in Python packages, including
+  the ability to pre-compile the model as part of the package distribution.
+
 Software
 --------
 
