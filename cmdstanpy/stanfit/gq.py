@@ -282,7 +282,7 @@ class CmdStanGQ:
         gq_cols = []
         mcmc_vars = []
         if vars is not None:
-            for var in set(vars_list):
+            for var in dict.fromkeys(vars_list):
                 if var in self.metadata.stan_vars_cols:
                     for idx in self.metadata.stan_vars_cols[var]:
                         gq_cols.append(self.column_names[idx])
