@@ -268,6 +268,7 @@ class CmdStanGQ:
                 vars_list = [vars]
             else:
                 vars_list = vars
+            vars_list = list(dict.fromkeys(vars_list))
         if (
             inc_warmup
             and not self.mcmc_sample.metadata.cmdstan_config['save_warmup']
@@ -282,7 +283,7 @@ class CmdStanGQ:
         gq_cols = []
         mcmc_vars = []
         if vars is not None:
-            for var in dict.fromkeys(vars_list):
+            for var in vars_list:
                 if var in self.metadata.stan_vars_cols:
                     for idx in self.metadata.stan_vars_cols[var]:
                         gq_cols.append(self.column_names[idx])
@@ -295,6 +296,7 @@ class CmdStanGQ:
                     raise ValueError('Unknown variable: {}'.format(var))
         else:
             gq_cols = list(self.column_names)
+            vars_list = gq_cols
 
         if inc_sample and mcmc_vars:
             if gq_cols:
@@ -311,7 +313,7 @@ class CmdStanGQ:
                         )[gq_cols],
                     ],
                     axis='columns',
-                )
+                )[vars_list]
             else:
                 return self.mcmc_sample.draws_pd(
                     vars=mcmc_vars, inc_warmup=inc_warmup
