@@ -83,6 +83,11 @@ class GenerateQuantitiesTest(CustomTestCase):
             bern_gqs.mcmc_sample.draws_pd().shape[1]
             + bern_gqs.draws_pd().shape[1],
         )
+        
+        self.assertEqual(
+            list(bern_gqs.draws_pd(vars=column_names).columns),
+            column_names,
+        )
 
     def test_from_csv_files_bad(self):
         # gq model
