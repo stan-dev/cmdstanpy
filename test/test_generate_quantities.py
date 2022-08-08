@@ -88,6 +88,23 @@ class GenerateQuantitiesTest(CustomTestCase):
             list(bern_gqs.draws_pd(vars=column_names).columns),
             column_names,
         )
+        self.assertEqual(
+            list(bern_gqs.draws_pd(vars=column_names[::-1]).columns),
+            column_names[::-1],
+        )
+        self.assertEqual(
+            list(bern_gqs.draws_pd(vars=column_names[:3]).columns),
+            column_names[:3],
+        )
+        self.assertEqual(
+            list(bern_gqs.draws_pd(vars=column_names[:3][::-1]).columns),
+            column_names[:3][::-1],
+        )
+        self.assertEqual(
+            list(bern_gqs.draws_pd(vars=['y_rep[3]', 'y_rep[6]', 'y_rep[2]']).columns),
+            ['y_rep[3]', 'y_rep[6]', 'y_rep[2]'],
+        )
+
 
     def test_from_csv_files_bad(self):
         # gq model
