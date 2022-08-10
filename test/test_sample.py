@@ -741,6 +741,15 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertEqual(fit.draws_pd(vars=['theta', 'lp__']).shape, (400, 2))
         self.assertEqual(fit.draws_pd(vars='theta').shape, (400, 1))
 
+        self.assertEqual(
+            list(fit.draws_pd(vars=['theta', 'lp__']).columns),
+            ['theta', 'lp__']
+        )
+        self.assertEqual(
+            list(fit.draws_pd(vars=['lp__', 'theta']).columns),
+            ['lp__', 'theta']
+        )
+
         summary = fit.summary()
         self.assertIn('5%', list(summary.columns))
         self.assertIn('50%', list(summary.columns))

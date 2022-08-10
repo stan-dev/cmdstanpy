@@ -589,7 +589,7 @@ class CmdStanMCMC:
             self._assemble_draws()
         cols = []
         if vars is not None:
-            for var in set(vars_list):
+            for var in dict.fromkeys(vars_list):
                 if (
                     var not in self.metadata.method_vars_cols
                     and var not in self.metadata.stan_vars_cols

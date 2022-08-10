@@ -104,21 +104,6 @@ By default, the `sample` method runs 4 sampler chains.
     # fit the model
     fit = model.sample(data=data_file)
 
-Underlyingly, the CmdStan outputs are a set of per-chain
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__.
-The filenames follow the template '<model_name>-<YYYYMMDDHHMMSS>-<chain_id>'
-plus the file suffix '.csv'.
-CmdStanPy also captures the per-chain console and error messages.
-The ``output_dir`` argument is an optional argument which specifies
-the path to the output directory used by CmdStan.
-If this argument is omitted, the output files are written
-to a temporary directory which is deleted when the current Python session is terminated.
-
-.. ipython:: python
-
-    # printing the object reports sampler commands, output files
-    print(fit)
-
 
 Accessing the results
 ^^^^^^^^^^^^^^^^^^^^^
@@ -230,18 +215,3 @@ The :meth:`~CmdStanMCMC.diagnose` method runs this utility and prints the output
 .. ipython:: python
 
     print(fit.diagnose())
-
-
-
-Managing Stan CSV files
-^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`CmdStanMCMC` object keeps track of all output files produced
-by the sampler run.
-The :meth:`~CmdStanMCMC.save_csvfiles` function moves the CSV files
-to a specified directory.
-
-.. ipython:: python
-    :verbatim:
-
-    fit.save_csvfiles(dir='some/path')

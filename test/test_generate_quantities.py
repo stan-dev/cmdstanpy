@@ -84,6 +84,11 @@ class GenerateQuantitiesTest(CustomTestCase):
             + bern_gqs.draws_pd().shape[1],
         )
 
+        self.assertEqual(
+            list(bern_gqs.draws_pd(vars=['y_rep']).columns),
+            column_names,
+        )
+
     def test_from_csv_files_bad(self):
         # gq model
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
