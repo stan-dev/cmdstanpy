@@ -2,7 +2,6 @@
 """CmdStanPy Module"""
 
 import atexit
-import logging
 import shutil
 import tempfile
 
@@ -16,9 +15,7 @@ _DOT_CMDSTAN = '.cmdstan'
 
 def _cleanup_tmpdir() -> None:
     """Force deletion of _TMPDIR."""
-    # logging.getLogger('cmdstanpy').info('deleting tmpfiles dir: %s', _TMPDIR)
     shutil.rmtree(_TMPDIR, ignore_errors=True)
-    # logging.getLogger('cmdstanpy').info('done')
 
 
 atexit.register(_cleanup_tmpdir)
