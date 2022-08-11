@@ -448,11 +448,11 @@ class CmdStanMCMC:
     ) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output CSV files, assemble
-        summary into DataFrame object; first row contains summary statistics
-        for total joint log probability `lp__`, remaining rows contain summary
+        summary into DataFrame object.  The first row contains statistics
+        for the total joint log probability `lp__`, but is omitted when the
+        Stan model has no parameters.  The remaining rows contain summary
         statistics for all parameters, transformed parameters, and generated
-        quantities variables listed in the order in which they were declared
-        in the Stan program.
+        quantities variables, in program declaration order.
 
         :param percentiles: Ordered non-empty sequence of percentiles to report.
             Must be integers from (1, 99), inclusive. Defaults to
@@ -467,7 +467,6 @@ class CmdStanMCMC:
 
         :return: pandas.DataFrame
         """
-
         if len(percentiles) == 0:
             raise ValueError(
                 'Invalid percentiles argument, must be ordered'
@@ -526,7 +525,14 @@ class CmdStanMCMC:
                 comment='#',
                 float_precision='high',
             )
-        mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
+        mask = (
+            [not x.endswith('__') for x in summary_data.index]
+            if self._is_fixed_param
+            else [
+                x == 'lp__' or not x.endswith('__') for x in summary_data.index
+            ]
+        )
+        summary_data.index.name = None
         return summary_data[mask]
 
     def diagnose(self) -> Optional[str]:
