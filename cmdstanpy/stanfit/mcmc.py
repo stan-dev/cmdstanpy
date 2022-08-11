@@ -467,7 +467,6 @@ class CmdStanMCMC:
 
         :return: pandas.DataFrame
         """
-
         if len(percentiles) == 0:
             raise ValueError(
                 'Invalid percentiles argument, must be ordered'
@@ -526,7 +525,14 @@ class CmdStanMCMC:
                 comment='#',
                 float_precision='high',
             )
-        mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
+        mask = (
+            [not x.endswith('__') for x in summary_data.index]
+            if self._is_fixed_param
+            else [
+                x == 'lp__' or not x.endswith('__') for x in summary_data.index
+            ]
+        )
+        summary_data.index.name = None
         return summary_data[mask]
 
     def diagnose(self) -> Optional[str]:
