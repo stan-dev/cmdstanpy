@@ -598,6 +598,8 @@ class SampleTest(unittest.TestCase):
             iter_sampling=100, show_progress=False
         )
         self.assertEqual(datagen_fit.step_size, None)
+        summary = datagen_fit.summary()
+        self.assertNotIn('lp__', list(summary.index))
 
         exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
         shutil.copyfile(datagen_model.exe_file, exe_only)
@@ -608,6 +610,8 @@ class SampleTest(unittest.TestCase):
         )
         self.assertEqual(datagen2_fit.chains, 4)
         self.assertEqual(datagen2_fit.step_size, None)
+        summary = datagen2_fit.summary()
+        self.assertNotIn('lp__', list(summary.index))
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
@@ -743,11 +747,11 @@ class CmdStanMCMCTest(CustomTestCase):
 
         self.assertEqual(
             list(fit.draws_pd(vars=['theta', 'lp__']).columns),
-            ['theta', 'lp__']
+            ['theta', 'lp__'],
         )
         self.assertEqual(
             list(fit.draws_pd(vars=['lp__', 'theta']).columns),
-            ['lp__', 'theta']
+            ['lp__', 'theta'],
         )
 
         summary = fit.summary()
@@ -756,6 +760,9 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertIn('95%', list(summary.columns))
         self.assertNotIn('1%', list(summary.columns))
         self.assertNotIn('99%', list(summary.columns))
+        self.assertEqual(summary.index.name, None)
+        self.assertIn('lp__', list(summary.index))
+        self.assertIn('theta', list(summary.index))
 
         summary = fit.summary(percentiles=[1, 45, 99])
         self.assertIn('1%', list(summary.columns))
