@@ -202,8 +202,9 @@ The resulting Stan CSV file or set of files are assembled into an inference resu
 
 
 The objects provide accessor methods which return this information
-either as columnar data (i.e., in terms of the CSV file columns),
-or as method and model variables.
+either as tabular data (i.e., in terms of the per-chain CSV file rows and columns),
+or as structured objects which correspond to the variables in the Stan model
+and the individual diagnostics produced by the inference method.
 
 The ``stan_variables`` method returns a Python dict over all Stan model variables,
 see :meth:`~CmdStanMCMC.stan_variables`.
