@@ -16,7 +16,7 @@ CmdStanPy 1.0.5
 - Reorganized a lot of internal code
 - Cleaned up the output of :meth:`CmdStanMCMC.draws_pd`
 - Cleaned up the output of :meth:`CmdStanMCMC.summary`
-- Removed the logging which occured when Python exited with cmdstanpy imported.
+- Removed the logging which occurred when Python exited with cmdstanpy imported.
 
 CmdStanPy 1.0.4
 ---------------
