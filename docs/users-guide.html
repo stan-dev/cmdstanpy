@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Python Module Index &#8212; CmdStanPy 1.0.5 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>User’s Guide &#8212; CmdStanPy 1.0.5 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -35,7 +36,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-
+    <link rel="next" title="Overview" href="users-guide/overview.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -44,12 +46,6 @@
     <!-- Google Analytics -->
     
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
-
-
-    <script>
-      DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true;
-    </script>
-
 
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
@@ -83,8 +79,8 @@
  </a>
 </li>
 
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="users-guide.html">
+<li class="toctree-l1 current active nav-item">
+ <a class="current reference internal nav-link" href="#">
   User’s Guide
  </a>
 </li>
@@ -149,7 +145,71 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
   <div class="bd-toc-item active">
-    
+    <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="users-guide/overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="users-guide/hello_world.html">
+   “Hello, World!”
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="users-guide/workflow.html">
+   CmdStanPy Workflow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="users-guide/outputs.html">
+   Controlling Outputs
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="users-guide/examples.html">
+   CmdStanPy Examples
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="users-guide/examples/MCMC%20Sampling.html">
+     MCMC Sampling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="users-guide/examples/Maximum%20Likelihood%20Estimation.html">
+     Maximum Likelihood Estimation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="users-guide/examples/Variational%20Inference.html">
+     Variational Inference in Stan
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="users-guide/examples/VI%20as%20Sampler%20Inits.html">
+     Using Variational Estimates to Initialize the NUTS-HMC Sampler
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="users-guide/examples/Run%20Generated%20Quantities.html">
+     Generating new quantities of interest.
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="users-guide/examples/Using%20External%20C%2B%2B.html">
+     Advanced Topic: Using External C++ Functions
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
   </div>
 </nav>
               </div>
@@ -162,6 +222,27 @@
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
             
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
           </div>
           
 
@@ -173,23 +254,28 @@
               
               <div>
                 
-
-   <h1>Python Module Index</h1>
-
-   <div class="modindex-jumpbox">
-   <a href="#cap-c"><strong>c</strong></a>
-   </div>
-
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-c"><td></td><td>
-       <strong>c</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="index.html#module-cmdstanpy"><code class="xref">cmdstanpy</code></a></td><td>
-       <em>A lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms.</em></td></tr>
-   </table>
+  <section id="user-s-guide">
+<h1>User’s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">#</a></h1>
+<p>This section provides examples and some narrative description about the
+usage of CmdStanPy.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="users-guide/overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="users-guide/hello_world.html">“Hello, World!”</a></li>
+<li class="toctree-l1"><a class="reference internal" href="users-guide/workflow.html">CmdStanPy Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="users-guide/outputs.html">Controlling Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="users-guide/examples.html">CmdStanPy Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="users-guide/examples/MCMC%20Sampling.html">MCMC Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-guide/examples/Maximum%20Likelihood%20Estimation.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-guide/examples/Variational%20Inference.html">Variational Inference in Stan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-guide/examples/VI%20as%20Sampler%20Inits.html">Using Variational Estimates to Initialize the NUTS-HMC Sampler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-guide/examples/Run%20Generated%20Quantities.html">Generating new quantities of interest.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="users-guide/examples/Using%20External%20C%2B%2B.html">Advanced Topic: Using External C++ Functions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
 
 
               </div>
@@ -197,6 +283,20 @@
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="installation.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Installation</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="users-guide/overview.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Overview</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
               
           </main>

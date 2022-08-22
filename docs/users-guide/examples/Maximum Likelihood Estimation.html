@@ -6,36 +6,36 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Maximum Likelihood Estimation &#8212; CmdStanPy 1.0.4 documentation</title>
+    <title>Maximum Likelihood Estimation &#8212; CmdStanPy 1.0.5 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
-    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
   <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Variational Inference in Stan" href="Variational%20Inference.html" />
     <link rel="prev" title="MCMC Sampling" href="MCMC%20Sampling.html" />
 
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.5</a>
     
   </div>
 
@@ -74,44 +74,32 @@
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
     <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../overview.html">
-  Overview
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../installation.html">
+ <a class="reference internal nav-link" href="../../installation.html">
   Installation
  </a>
 </li>
 
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../hello_world.html">
-  “Hello, World!”
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../workflow.html">
-  CmdStanPy Workflow
- </a>
-</li>
-
 <li class="toctree-l1 current active nav-item">
- <a class="reference internal nav-link" href="../examples.html">
-  CmdStanPy Examples
+ <a class="reference internal nav-link" href="../../users-guide.html">
+  User’s Guide
  </a>
 </li>
 
 <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../community.html">
-  Community
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../api.html">
+ <a class="reference internal nav-link" href="../../api.html">
   API Reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../changes.html">
+  What’s New
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../community.html">
+  Community
  </a>
 </li>
 
@@ -150,20 +138,90 @@
       <div class="row">
           
             
-            <div class="col-12 col-md-1 col-xl-2 bd-sidebar no-sidebar"></div>
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../hello_world.html">
+   “Hello, World!”
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../workflow.html">
+   CmdStanPy Workflow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../outputs.html">
+   Controlling Outputs
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../examples.html">
+   CmdStanPy Examples
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="MCMC%20Sampling.html">
+     MCMC Sampling
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Maximum Likelihood Estimation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Variational%20Inference.html">
+     Variational Inference in Stan
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="VI%20as%20Sampler%20Inits.html">
+     Using Variational Estimates to Initialize the NUTS-HMC Sampler
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Run%20Generated%20Quantities.html">
+     Generating new quantities of interest.
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Using%20External%20C%2B%2B.html">
+     Advanced Topic: Using External C++ Functions
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
             
           
 
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
             
-              
-              <div class="toc-item">
-                <form class="bd-search d-flex align-items-center" action="../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form>
-              </div>
               
               <div class="toc-item">
                 
@@ -177,7 +235,7 @@
                 
 
 <div class="tocsection editthispage">
-    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/examples/Maximum Likelihood Estimation.ipynb">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide/examples/Maximum Likelihood Estimation.ipynb">
         <i class="fas fa-pencil-alt"></i> Edit this page
     </a>
 </div>
@@ -192,7 +250,7 @@
           
             
           
-          <main class="col-12 col-md-11 col-xl-8 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
               <div>
                 
@@ -493,8 +551,8 @@ div.rendered_html tbody tr:hover {
 <div class="highlight"><pre>
 /opt/hostedtoolcache/Python/3.9.13/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-20:25:06 - cmdstanpy - INFO - Chain [1] start processing
-20:25:06 - cmdstanpy - INFO - Chain [1] done processing
+15:43:32 - cmdstanpy - INFO - Chain [1] start processing
+15:43:32 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -574,13 +632,13 @@ OrderedDict([(&#39;lp__&#39;, -5.00402), (&#39;theta&#39;, 0.2)])
     </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
 <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, Stan Development Team.<br>
+    &copy; Copyright 2022, Stan Development Team.<br>
 </p>
     </div>
     

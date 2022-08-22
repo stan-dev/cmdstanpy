@@ -1,0 +1,710 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cmdstanpy.utils.cmdstan &#8212; CmdStanPy 1.0.5 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/project-template.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<link rel="stylesheet" href="_static/basic.css" type="text/css" />
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+<nav id="navbar-main" class="navbar navbar-dark navbar-expand-lg fixed-top bd-navbar"
+    style="background-color: #222222;"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    <!-- This will display the version of the docs -->
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.5</a>
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../users-guide.html">
+  User’s Guide
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../api.html">
+  API Reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../changes.html">
+  What’s New
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../community.html">
+  Community
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter"></i></span>
+            <label class="sr-only">Twitter</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums"><span><i class="fas fa-users"></i></span>
+            <label class="sr-only">Forums</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+</nav>
+
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <h1>Source code for cmdstanpy.utils.cmdstan</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utilities for finding and installing CmdStan</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">_DOT_CMDSTAN</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">progress</span> <span class="k">as</span> <span class="n">progbar</span>
+<span class="kn">from</span> <span class="nn">.logging</span> <span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="n">EXTENSION</span> <span class="o">=</span> <span class="s1">&#39;.exe&#39;</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">validate_dir</span><span class="p">(</span><span class="n">install_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Check that specified install directory exists, can write.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">install_dir</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">PermissionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot create directory: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">install_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;File exists, should be a directory: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;tmp_test_w&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;tmp_test_w&#39;</span><span class="p">)</span>  <span class="c1"># cleanup</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot write files to directory </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+
+<span class="k">def</span> <span class="nf">get_latest_cmdstan</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a valid directory path, find all installed CmdStan versions</span>
+<span class="sd">    and return highest (i.e., latest) version number.</span>
+
+<span class="sd">    Assumes directory consists of CmdStan releases, created by</span>
+<span class="sd">    function `install_cmdstan`, and therefore dirnames have format</span>
+<span class="sd">    &quot;cmdstan-&lt;maj&gt;.&lt;min&gt;.&lt;patch&gt;&quot; or &quot;cmdstan-&lt;maj&gt;.&lt;min&gt;.&lt;patch&gt;-rc&lt;num&gt;&quot;,</span>
+<span class="sd">    which is CmdStan release practice as of v 2.24.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">versions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">name</span><span class="p">[</span><span class="mi">8</span><span class="p">:]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;cmdstan-&#39;</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="n">name</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="mi">8</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="mi">3</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">versions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># munge rc for sort, e.g. 2.25.0-rc1 -&gt; 2.25.-99</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">versions</span><span class="p">)):</span>  <span class="c1"># # pylint: disable=C0200</span>
+        <span class="k">if</span> <span class="s1">&#39;-rc&#39;</span> <span class="ow">in</span> <span class="n">versions</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">comps</span> <span class="o">=</span> <span class="n">versions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-rc&#39;</span><span class="p">)</span>
+            <span class="n">mmp</span> <span class="o">=</span> <span class="n">comps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">rc_num</span> <span class="o">=</span> <span class="n">comps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">patch</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">rc_num</span><span class="p">)</span> <span class="o">-</span> <span class="mi">100</span><span class="p">)</span>
+            <span class="n">versions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">mmp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mmp</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">patch</span><span class="p">])</span>
+
+    <span class="n">versions</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))))</span>
+    <span class="n">latest</span> <span class="o">=</span> <span class="n">versions</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">versions</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># unmunge as needed</span>
+    <span class="n">mmp</span> <span class="o">=</span> <span class="n">latest</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">mmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">rc_num</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">mmp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">mmp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0-rc&quot;</span> <span class="o">+</span> <span class="n">rc_num</span>
+        <span class="n">latest</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">mmp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;cmdstan-&#39;</span> <span class="o">+</span> <span class="n">latest</span>
+
+
+<span class="k">def</span> <span class="nf">validate_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate that CmdStan directory exists and binaries have been built.</span>
+<span class="sd">    Throws exception if specified path is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No CmdStan directory, path </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> does not exist.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;stanc&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;CmdStan installataion missing binaries in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">/bin. &#39;</span>
+            <span class="s1">&#39;Re-install cmdstan by running command &quot;install_cmdstan &#39;</span>
+            <span class="s1">&#39;--overwrite&quot;, or Python code &quot;import cmdstanpy; &#39;</span>
+            <span class="s1">&#39;cmdstanpy.install_cmdstan(overwrite=True)&quot;&#39;</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="set_cmdstan_path"><a class="viewcode-back" href="../../../api.html#cmdstanpy.set_cmdstan_path">[docs]</a><span class="k">def</span> <span class="nf">set_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate, then set CmdStan directory path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">validate_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CMDSTAN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span></div>
+
+
+<div class="viewcode-block" id="set_make_env"><a class="viewcode-back" href="../../../api.html#cmdstanpy.set_make_env">[docs]</a><span class="k">def</span> <span class="nf">set_make_env</span><span class="p">(</span><span class="n">make</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    set MAKE environmental variable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MAKE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">make</span></div>
+
+
+<div class="viewcode-block" id="cmdstan_path"><a class="viewcode-back" href="../../../api.html#cmdstanpy.cmdstan_path">[docs]</a><span class="k">def</span> <span class="nf">cmdstan_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate, then return CmdStan directory path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmdstan</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">if</span> <span class="s1">&#39;CMDSTAN&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CMDSTAN&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cmdstan</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CMDSTAN&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cmdstan_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">,</span> <span class="n">_DOT_CMDSTAN</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;No CmdStan installation found, run command &quot;install_cmdstan&quot;&#39;</span>
+                <span class="s1">&#39;or (re)activate your conda environment!&#39;</span>
+            <span class="p">)</span>
+        <span class="n">latest_cmdstan</span> <span class="o">=</span> <span class="n">get_latest_cmdstan</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">latest_cmdstan</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;No CmdStan installation found, run command &quot;install_cmdstan&quot;&#39;</span>
+                <span class="s1">&#39;or (re)activate your conda environment!&#39;</span>
+            <span class="p">)</span>
+        <span class="n">cmdstan</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="n">latest_cmdstan</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CMDSTAN&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cmdstan</span>
+    <span class="n">validate_cmdstan_path</span><span class="p">(</span><span class="n">cmdstan</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">cmdstan</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cmdstan_version"><a class="viewcode-back" href="../../../api.html#cmdstanpy.cmdstan_version">[docs]</a><span class="k">def</span> <span class="nf">cmdstan_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses version string out of CmdStan makefile variable CMDSTAN_VERSION,</span>
+<span class="sd">    returns Tuple(Major, minor).</span>
+
+<span class="sd">    If CmdStan installation is not found or cannot parse version from makefile</span>
+<span class="sd">    logs warning and returns None.  Lenient behavoir required for CI tests,</span>
+<span class="sd">    per comment:</span>
+<span class="sd">    https://github.com/stan-dev/cmdstanpy/pull/321#issuecomment-733817554</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">makefile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;makefile&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;No CmdStan installation found.&#39;</span><span class="p">)</span>
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">makefile</span><span class="p">):</span>
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;CmdStan installation </span><span class="si">%s</span><span class="s1"> missing makefile, cannot get version.&#39;</span><span class="p">,</span>
+            <span class="n">cmdstan_path</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">makefile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+        <span class="n">contents</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="n">start_idx</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;CMDSTAN_VERSION := &#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">start_idx</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;Cannot parse version from makefile: </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="p">,</span>
+            <span class="n">makefile</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">start_idx</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="s1">&#39;CMDSTAN_VERSION := &#39;</span><span class="p">)</span>
+    <span class="n">end_idx</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">)</span>
+
+    <span class="n">version</span> <span class="o">=</span> <span class="n">contents</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span><span class="n">end_idx</span><span class="p">]</span>
+    <span class="n">splits</span> <span class="o">=</span> <span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;Cannot parse version, expected &quot;&lt;major&gt;.&lt;minor&gt;.&lt;patch&gt;&quot;, &#39;</span>
+            <span class="s1">&#39;found: &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span><span class="p">,</span>
+            <span class="n">version</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span></div>
+
+
+<span class="k">def</span> <span class="nf">cmdstan_version_before</span><span class="p">(</span>
+    <span class="n">major</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">minor</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check that CmdStan version is less than Major.minor version.</span>
+
+<span class="sd">    :param major: Major version number</span>
+<span class="sd">    :param minor: Minor version number</span>
+
+<span class="sd">    :return: True if version at or above major.minor, else False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cur_version</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="s1">&#39;stan_version_major&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">info</span><span class="p">:</span>
+        <span class="n">cur_version</span> <span class="o">=</span> <span class="n">cmdstan_version</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cur_version</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;stan_version_major&#39;</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;stan_version_minor&#39;</span><span class="p">]),</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">cur_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;Cannot determine whether version is before </span><span class="si">%d</span><span class="s1">.</span><span class="si">%d</span><span class="s1">.&#39;</span><span class="p">,</span> <span class="n">major</span><span class="p">,</span> <span class="n">minor</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">cur_version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">major</span> <span class="ow">or</span> <span class="p">(</span>
+        <span class="n">cur_version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">major</span> <span class="ow">and</span> <span class="n">cur_version</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">minor</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">cxx_toolchain_path</span><span class="p">(</span>
+    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">install_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate, then activate C++ toolchain directory path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s1">&#39;Functionality is currently only supported on Windows&#39;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Format version number as a string&#39;</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;CMDSTAN_TOOLCHAIN&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+        <span class="n">toolchain_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CMDSTAN_TOOLCHAIN&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;mingw64&#39;</span><span class="p">)):</span>
+            <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">toolchain_root</span><span class="p">,</span>
+                <span class="s1">&#39;mingw64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw32&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
+                <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
+                    <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s1">&#39;Found invalid installion for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="n">toolchain_root</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">&#39;Found invalid installion for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="n">toolchain_root</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;mingw_64&#39;</span><span class="p">)):</span>
+            <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">toolchain_root</span><span class="p">,</span>
+                <span class="s1">&#39;mingw_64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw_32&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
+                <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
+                    <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s1">&#39;Found invalid installion for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="n">toolchain_root</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">&#39;Found invalid installion for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="n">toolchain_root</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rtools40_home</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;RTOOLS40_HOME&#39;</span><span class="p">)</span>
+        <span class="n">cmdstan_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">,</span> <span class="n">_DOT_CMDSTAN</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">toolchain_root</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">([</span><span class="n">rtools40_home</span><span class="p">]</span> <span class="k">if</span> <span class="n">rtools40_home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[])</span>
+            <span class="o">+</span> <span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools40&#39;</span><span class="p">),</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools35&#39;</span><span class="p">),</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools30&#39;</span><span class="p">),</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools&#39;</span><span class="p">),</span>
+                <span class="p">]</span>
+                <span class="k">if</span> <span class="n">install_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="p">[]</span>
+            <span class="p">)</span>
+            <span class="o">+</span> <span class="p">[</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="s1">&#39;RTools40&#39;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RTools40&quot;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="s1">&#39;RTools35&#39;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RTools35&quot;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="s1">&#39;RTools&#39;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RTools&quot;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RBuildTools&quot;</span><span class="p">),</span>
+            <span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;35&#39;</span><span class="p">,</span> <span class="s1">&#39;3.5&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">):</span>
+                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">toolchain_root</span><span class="p">,</span>
+                        <span class="s1">&#39;mingw64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw32&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
+                        <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
+                            <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                            <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="s1">&#39;Found invalid installation for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                                <span class="n">toolchain_root</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="s1">&#39;Found invalid installation for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                            <span class="n">toolchain_root</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">toolchain_root</span><span class="p">,</span>
+                        <span class="s1">&#39;mingw_64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw_32&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
+                        <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
+                            <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                            <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="s1">&#39;Found invalid installation for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                                <span class="n">toolchain_root</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="s1">&#39;Found invalid installation for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                            <span class="n">toolchain_root</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">toolchain_root</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;no RTools toolchain installation found, &#39;</span>
+            <span class="s1">&#39;run command line script &#39;</span>
+            <span class="s1">&#39;&quot;python -m cmdstanpy.install_cxx_toolchain&quot;&#39;</span>
+        <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Add C++ toolchain to $PATH: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">toolchain_root</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="nb">list</span><span class="p">(</span>
+            <span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">compiler_path</span><span class="p">,</span> <span class="n">tool_path</span><span class="p">]</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;PATH&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">compiler_path</span><span class="p">,</span> <span class="n">tool_path</span>
+
+
+<div class="viewcode-block" id="install_cmdstan"><a class="viewcode-back" href="../../../api.html#cmdstanpy.install_cmdstan">[docs]</a><span class="k">def</span> <span class="nf">install_cmdstan</span><span class="p">(</span>
+    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">compiler</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">cores</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Download and install a CmdStan release from GitHub. Downloads the release</span>
+<span class="sd">    tar.gz file to temporary storage.  Retries GitHub requests in order</span>
+<span class="sd">    to allow for transient network outages. Builds CmdStan executables</span>
+<span class="sd">    and tests the compiler by building example model ``bernoulli.stan``.</span>
+
+<span class="sd">    :param version: CmdStan version string, e.g. &quot;2.29.2&quot;.</span>
+<span class="sd">        Defaults to latest CmdStan release.</span>
+
+<span class="sd">    :param dir: Path to install directory.  Defaults to hidden directory</span>
+<span class="sd">        ``$HOME/.cmdstan``.</span>
+<span class="sd">        If no directory is specified and the above directory does not</span>
+<span class="sd">        exist, directory ``$HOME/.cmdstan`` will be created and populated.</span>
+
+<span class="sd">    :param overwrite:  Boolean value; when ``True``, will overwrite and</span>
+<span class="sd">        rebuild an existing CmdStan installation.  Default is ``False``.</span>
+
+<span class="sd">    :param compiler: Boolean value; when ``True`` on WINDOWS ONLY, use the</span>
+<span class="sd">        C++ compiler from the ``install_cxx_toolchain`` command or install</span>
+<span class="sd">        one if none is found.</span>
+
+<span class="sd">    :param progress: Boolean value; when ``True``, show a progress bar for</span>
+<span class="sd">        downloading and unpacking CmdStan.  Default is ``False``.</span>
+
+<span class="sd">    :param verbose: Boolean value; when ``True``, show console output from all</span>
+<span class="sd">        intallation steps, i.e., download, build, and test CmdStan release.</span>
+<span class="sd">        Default is ``False``.</span>
+<span class="sd">    :param cores: Integer, number of cores to use in the ``make`` command.</span>
+<span class="sd">        Default is 1 core.</span>
+
+<span class="sd">    :param interactive: Boolean value; if true, ignore all other arguments</span>
+<span class="sd">        to this function and run in an interactive mode, prompting the user</span>
+<span class="sd">        to provide the other information manually through the standard input.</span>
+
+<span class="sd">        This flag should only be used in interactive environments,</span>
+<span class="sd">        e.g. on the command line.</span>
+
+<span class="sd">    :return: Boolean value; ``True`` for success.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">..install_cmdstan</span> <span class="kn">import</span> <span class="p">(</span>
+            <span class="n">InstallationSettings</span><span class="p">,</span>
+            <span class="n">InteractiveSettings</span><span class="p">,</span>
+            <span class="n">run_install</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">InstallationSettings</span><span class="p">,</span> <span class="n">InteractiveSettings</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">version</span><span class="p">,</span>
+                    <span class="nb">dir</span><span class="p">,</span>
+                    <span class="n">overwrite</span><span class="p">,</span>
+                    <span class="n">compiler</span><span class="p">,</span>
+                    <span class="n">progress</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="p">,</span>
+                    <span class="n">cores</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Interactive installation requested but other arguments&quot;</span>
+                    <span class="s2">&quot; were used.</span><span class="se">\n\t</span><span class="s2">These values will be ignored!&quot;</span>
+                <span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">InteractiveSettings</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">InstallationSettings</span><span class="p">(</span>
+                <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+                <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="n">compiler</span><span class="o">=</span><span class="n">compiler</span><span class="p">,</span>
+                <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+                <span class="nb">dir</span><span class="o">=</span><span class="nb">dir</span><span class="p">,</span>
+                <span class="n">cores</span><span class="o">=</span><span class="n">cores</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">run_install</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="c1"># pylint: disable=broad-except</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;CmdStan installation failed.</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">set_cmdstan_path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;cmdstan-</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<span class="nd">@progbar</span><span class="o">.</span><span class="n">wrap_callback</span>
+<span class="k">def</span> <span class="nf">wrap_url_progress_hook</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Sets up tqdm callback for url downloads.&quot;&quot;&quot;</span>
+    <span class="n">pbar</span><span class="p">:</span> <span class="n">tqdm</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span>
+        <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
+        <span class="n">unit_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">unit_divisor</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+        <span class="n">colour</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+        <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">download_progress_hook</span><span class="p">(</span>
+        <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pbar</span><span class="o">.</span><span class="n">total</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">total</span> <span class="o">=</span> <span class="n">total_size</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">downloaded_size</span> <span class="o">=</span> <span class="n">count</span> <span class="o">*</span> <span class="n">block_size</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">downloaded_size</span> <span class="o">-</span> <span class="n">pbar</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pbar</span><span class="o">.</span><span class="n">n</span> <span class="o">&gt;=</span> <span class="n">total_size</span><span class="p">:</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">download_progress_hook</span>
+</pre></div>
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Stan Development Team.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Installation &#8212; CmdStanPy 1.0.4 documentation</title>
+    <title>Installation &#8212; CmdStanPy 1.0.5 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -36,8 +36,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="“Hello, World!”" href="hello_world.html" />
-    <link rel="prev" title="Overview" href="overview.html" />
+    <link rel="next" title="User’s Guide" href="users-guide.html" />
+    <link rel="prev" title="cmdstanpy – Python interface to CmdStan" href="index.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.5</a>
     
   </div>
 
@@ -73,45 +73,33 @@
       
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="overview.html">
-  Overview
- </a>
-</li>
-
-<li class="toctree-l1 current active nav-item">
+    <li class="toctree-l1 current active nav-item">
  <a class="current reference internal nav-link" href="#">
   Installation
  </a>
 </li>
 
 <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="hello_world.html">
-  “Hello, World!”
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="workflow.html">
-  CmdStanPy Workflow
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="examples.html">
-  CmdStanPy Examples
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="community.html">
-  Community
+ <a class="reference internal nav-link" href="users-guide.html">
+  User’s Guide
  </a>
 </li>
 
 <li class="toctree-l1 nav-item">
  <a class="reference internal nav-link" href="api.html">
   API Reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="changes.html">
+  What’s New
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="community.html">
+  Community
  </a>
 </li>
 
@@ -150,20 +138,26 @@
       <div class="row">
           
             
-            <div class="col-12 col-md-1 col-xl-2 bd-sidebar no-sidebar"></div>
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
             
           
 
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
             
-              
-              <div class="toc-item">
-                <form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form>
-              </div>
               
               <div class="toc-item">
                 
@@ -244,7 +238,7 @@
           
             
           
-          <main class="col-12 col-md-11 col-xl-8 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
               <div>
                 
@@ -441,17 +435,17 @@ or via the CmdStanPy command <code class="docutils literal notranslate"><span cl
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="overview.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="index.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Overview</p>
+            <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmdstanpy</span></code> – Python interface to CmdStan</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="hello_world.html" title="next page">
+    <a class='right-next' id="next-link" href="users-guide.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">“Hello, World!”</p>
+        <p class="prev-next-title">User’s Guide</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
@@ -470,7 +464,7 @@ or via the CmdStanPy command <code class="docutils literal notranslate"><span cl
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, Stan Development Team.<br>
+    &copy; Copyright 2022, Stan Development Team.<br>
 </p>
     </div>
     

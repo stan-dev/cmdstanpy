@@ -1,0 +1,685 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# MCMC Sampling"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Overview\n",
+    "\n",
+    "Stan's MCMC sampler implements the Hamiltonian Monte Carlo (HMC) algorithm and its adaptive variant\n",
+    "the no-U-turn sampler (NUTS).\n",
+    "It creates a set of draws from the posterior distribution of the model conditioned on the data,\n",
+    "allowing for exact Bayesian inference of the model parameters.\n",
+    "Each draw consists of the values for all parameter, transformed parameter, and\n",
+    "generated quantities variables, reported on the constrained scale.\n",
+    "\n",
+    "The [CmdStanModel sample](https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.sample) method\n",
+    "wraps the CmdStan [sample](https://mc-stan.org/docs/cmdstan-guide/mcmc-config.html) method.\n",
+    "Underlyingly, the CmdStan outputs are a set of per-chain Stan CSV files.\n",
+    "In addition to the resulting sample, reported as one row per draw,\n",
+    "the Stan CSV files encode information about the inference engine configuration\n",
+    "and the sampler state.\n",
+    "The NUTS-HMC adaptive sampler algorithm also outputs the per-chain\n",
+    "HMC tuning parameters `step_size` and `metric`.\n",
+    "\n",
+    "The `sample` method returns a [CmdStanMCMC](https://mc-stan.org/cmdstanpy/api.html#cmdstanmcmc) object,\n",
+    "which provides access to the disparate information from the Stan CSV files.\n",
+    "Accessor functions allow the user\n",
+    "to access the sample in whatever data format is needed for further analysis,\n",
+    "either as tabular data (i.e., in terms of the per-chain CSV file rows and columns),\n",
+    "or as structured objects which correspond to the variables in the Stan model\n",
+    "and the individual diagnostics produced by the inference method.\n",
+    "\n",
+    "\n",
+    "- The [stan_variable](https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanMCMC.stan_variable) and\n",
+    "[stan_variables](https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanMCMC.stan_variables) methods \n",
+    "return a Python [numpy.ndarray](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray)\n",
+    "containing all draws from the sample where the structure of each draw corresponds to the structure of the\n",
+    "Stan variable.\n",
+    "\n",
+    "- The [draws](https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanMCMC.draws) method returns the sample as either a 2-D or 3-D numpy.ndarray.\n",
+    "\n",
+    "- The [draws_pd](https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanMCMC.draws) method returns the entire sample or selected variables as a pandas.DataFrame.\n",
+    "\n",
+    "- The [draws_xr](https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanMCMC.draws_xr) method returns a structured Xarray dataset over the Stan model variables.\n",
+    "\n",
+    "- The [method_variables](https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanMCMC.method_variables) returns a\n",
+    "Python dict over all sampler method variables.\n",
+    "\n",
+    "\n",
+    "In addition, the `CmdStanMCMC` object has accessor methods for\n",
+    "\n",
+    "- The per-chain HMC tuning parameters `step_size` and `metric` \n",
+    "\n",
+    "- The CmdStan run configuration and console outputs\n",
+    "\n",
+    "- The mapping between the Stan model variables and the corresponding CSV file columns."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Notebook prerequisites\n",
+    "\n",
+    "\n",
+    "CmdStanPy displays progress bars during sampling via use of package [tqdm](https://github.com/tqdm/tqdm).\n",
+    "In order for these to display properly in a Jupyter notebook, you must have the \n",
+    "[ipywidgets](https://ipywidgets.readthedocs.io/en/latest/index.html) package installed,\n",
+    "and depending on your version of Jupyter or JupyterLab, you must enable it via command:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "!jupyter nbextension enable --py widgetsnbextension"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For more information, see the the\n",
+    "[installation instructions](https://ipywidgets.readthedocs.io/en/latest/user_install.html#), \n",
+    "also [this tqdm GitHub issue](https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637).\n",
+    "\n",
+    "\n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Fitting the model and data\n",
+    "\n",
+    "In this example we use the CmdStan example model\n",
+    "[bernoulli.stan](https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan)\n",
+    "and data file\n",
+    "[bernoulli.data.json](https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json>).\n",
+    "\n",
+    "We instantiate a `CmdStanModel` from the Stan program file"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "from cmdstanpy import CmdStanModel\n",
+    "\n",
+    "# instantiate, compile bernoulli model\n",
+    "model = CmdStanModel(stan_file='bernoulli.stan')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "By default, the model is compiled during instantiation.  The compiled executable is created in the same directory as the program file.  If the directory already contains an executable file with a newer timestamp, the model is not recompiled.\n",
+    "\n",
+    "We run the sampler on the data using all default settings:  4 chains, each of which runs 1000 warmup and sampling iterations."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# run CmdStan's sample method, returns object `CmdStanMCMC`\n",
+    "fit = model.sample(data='bernoulli.data.json')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The `CmdStanMCMC` object records the command, the return code, and the paths to the sampler output csv and console files.  The sample is lazily instantiated on first access of either the draws or the HMC tuning parameters, i.e., the step size and metric.\n",
+    "\n",
+    "The string representation of this object displays the CmdStan commands and the location of the output files.\n",
+    "Output filenames are composed of the model name, a timestamp in the form YYYYMMDDhhmmss and the chain id, plus the corresponding filetype suffix, either '.csv' for the CmdStan output or '.txt' for the console messages, e.g. bernoulli-20220617170100_1.csv."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "fit"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(f'draws as array:  {fit.draws().shape}')\n",
+    "print(f'draws as structured object:\\n\\t{fit.stan_variables().keys()}')\n",
+    "print(f'sampler diagnostics:\\n\\t{fit.method_variables().keys()}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Sampler Progress\n",
+    "\n",
+    "Your model make take a long time to fit.  The `sample` method provides two arguments:\n",
+    "    \n",
+    "- visual progress bar:  `show_progress=True`\n",
+    "- stream CmdStan output to the console - `show_console=True`\n",
+    "\n",
+    "By default, CmdStanPy displays a progress bar during sampling, as seen above.\n",
+    "Since the progress bars are only visible while the sampler is running and the bernoulli example model takes no time at all to fit, we run this model for 200K iterations, in order to see the progress bars in action."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fit = model.sample(data='bernoulli.data.json', iter_warmup=100000, iter_sampling=100000, show_progress=True)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "To see the CmdStan console outputs instead of progress bars, specify ``show_console=True``\n",
+    "This will stream all CmdStan messages to the terminal while the sampler is running.\n",
+    "This option will allow you to debug a Stan program using the Stan language `print` statement."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "fit = model.sample(data='bernoulli.data.json', chains=2, parallel_chains=1, show_console=True)\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Checking the fit\n",
+    "\n",
+    "The first question to ask of the `CmdStanMCMC` object is:  _is this a valid sample from the posterior?_"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "It is important to check whether or not the sampler was able to fit the model given the data.  Often, this is not possible, for any number of reasons.\n",
+    "To appreciate the sampler diagnostics, we use a hierarchical model which, given a small amount of data, encounters difficulty: the centered parameterization of the \n",
+    "\"8-schools\" model (Rubin, 1981).\n",
+    "The \"8-schools\" model is a simple hierarchical model, first developed on a dataset taken from\n",
+    "an experiment was conducted in 8 schools, with only treatment effects and their standard errors reported.\n",
+    "\n",
+    "The Stan model and the original dataset are in files `eight_schools.stan` and `eight_schools.data.json`."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "**eight_schools.stan**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with open('eight_schools.stan', 'r') as fd:\n",
+    "    print(fd.read())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**eight_schools.data.json**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with open('eight_schools.data.json', 'r') as fd:\n",
+    "    print(fd.read())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Because there is not much data, the geometry of posterior distribution is highly curved, \n",
+    "thus the sampler may encounter difficulty in fitting the model.\n",
+    "By specifying the initial seed for the pseudo-random number generator,\n",
+    "we insure that the sampler will have difficulty in fitting this model.\n",
+    "In particular, some post-warmup iterations diverge, resulting in a biased sample.\n",
+    "In addition, some post-warmup iterations hit the maximum allowed treedepth before\n",
+    "the trajectory hits the \"U-turn\" condition of the NUTS algorithm,\n",
+    "in which case the sampler may fail to properly explore the entire posterior.\n",
+    "\n",
+    "These diagnostics are checked for automatically at the end of each run; if problems are detected, a WARNING message is logged."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "eight_schools_model = CmdStanModel(stan_file='eight_schools.stan')\n",
+    "eight_schools_fit = eight_schools_model.sample(data='eight_schools.data.json', seed=55157)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "More information on how to address convergence problems can be found at https://mc-stan.org/misc/warnings\n",
+    "\n",
+    "The number of post-warmup divergences and iterations which hit the maximum treedepth can be inspected directly via properties `divergences` and `max_treedepths`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(f'divergences:\\n{eight_schools_fit.divergences}\\niterations at max_treedepth:\\n{eight_schools_fit.max_treedepths}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Summarizing the sample\n",
+    "\n",
+    "The `summary` method reports the R-hat statistic, a measure of how well the sampler chains have converged."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "eight_schools_fit.summary()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Sampler Diagnostics\n",
+    "\n",
+    "The `diagnose()` method provides more information about the sample."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(eight_schools_fit.diagnose())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Accessing the sampler outputs"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fit = model.sample(data='bernoulli.data.json')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Extracting the draws as structured Stan program variables\n",
+    "\n",
+    "Per-variable draws can be accessed as either a numpy.ndarray object\n",
+    "via method `stan_variable` or as an xarray.Dataset object via `draws_xr`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(fit.stan_variable('theta'))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The `stan_variables` method returns a Python `dict` over all Stan variables in the output."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "for k, v in fit.stan_variables().items():\n",
+    "    print(f'name: {k}, shape: {v.shape}')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(fit.draws_xr('theta'))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Extracting the draws in tabular format\n",
+    "\n",
+    "The sample can be accessed either as a `numpy` array or a pandas `DataFrame`:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(f'sample as ndarray: {fit.draws().shape}\\nfirst 2 draws, chain 1:\\n{fit.draws()[:2, 0, :]}')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fit.draws_pd().head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Extracting sampler method diagnostics"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "for k, v in fit.method_variables().items():\n",
+    "    print(f'name: {k}, shape: {v.shape}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Extracting the per-chain HMC tuning parameters"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(f'adapted step_size per chain\\n{fit.step_size}\\nmetric_type: {fit.metric_type}\\nmetric:\\n{fit.metric}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Extracting the sample meta-data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print('sample method variables:\\n{}\\n'.format(fit.metadata.method_vars_cols.keys()))\n",
+    "print('stan model variables:\\n{}'.format(fit.metadata.stan_vars_cols.keys()))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Saving the sampler output files\n",
+    "\n",
+    "The sampler output files are written to a temporary directory which\n",
+    "is deleted upon session exit unless the ``output_dir`` argument is specified.\n",
+    "The ``save_csvfiles`` function moves the CmdStan CSV output files\n",
+    "to a specified directory without having to re-run the sampler.\n",
+    "The console output files are not saved. These files are treated as ephemeral; if the sample is valid, all relevant information is recorded in the CSV files."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Parallelization via multi-threaded processing\n",
+    "\n",
+    "Stan's multi-threaded processing is based on the Intel Threading Building Blocks (TBB) library, which must be linked to by the C++ compiler.   To take advantage of this option, you must compile (or recompile) the program with the the C++ compiler option `STAN_THREADS`.\n",
+    "The CmdStanModel object constructor and its `compile` method both have argument `cpp_options`\n",
+    "which takes as its value a dictionary of compiler flags.\n",
+    "\n",
+    "We compile the example model `bernoulli.stan`, this time with arguments `cpp_options` and `compile`, and use the function `exe_info()` to check that the model has been compiled for multi-threading."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model = CmdStanModel(stan_file='bernoulli.stan',\n",
+    "                     cpp_options={'STAN_THREADS': 'TRUE'},\n",
+    "                     compile='force')\n",
+    "model.exe_info()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Cross-chain multi-threading\n",
+    "\n",
+    "As of version CmdStan 2.28, it is possible to run the NUTS-HMC sampler on\n",
+    "multiple chains from within a single executable using threads.\n",
+    "This has the potential to speed up sampling.  It also\n",
+    "reduces the overall memory footprint required for sampling as\n",
+    "all chains share the same copy of data.the input data.\n",
+    "When using within-chain parallelization all chains started\n",
+    "within a single executable can share all the available threads\n",
+    "and once a chain finishes the threads will be reused.\n",
+    "\n",
+    "The sample program argument ``parallel_chains`` takes an integer value which\n",
+    "specifies how many chains to run in parallel.\n",
+    "For models which have been compiled with option `STAN_THREADS` set, all chains are run from\n",
+    "within a single process and the value of the ``parallel_chains`` argument specifies the total number of threads."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fit = model.sample(data='bernoulli.data.json', parallel_chains=4)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Within-chain multi-threading\n",
+    "\n",
+    "The Stan language\n",
+    "[reduce_sum](https://mc-stan.org/docs/stan-users-guide/reduce-sum.html)\n",
+    "function provides within-chain parallelization.\n",
+    "For models which require computing the sum of a number of independent function evaluations,\n",
+    "e.g., when evaluating a number of conditionally independent terms in a log-likelihood,\n",
+    "the `reduce_sum` function is used to parallelize this computation.\n",
+    "\n",
+    "To see how this works, we run the \"reflag\" model, used in the \n",
+    "[reduce_sum minimal example](https://mc-stan.org/users/documentation/case-studies/reduce_sum_tutorial.html) case study.\n",
+    "The Stan model and the original dataset are in files \"redcard_reduce_sum.stan\" and \"redcard.json\"."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with open('redcard_reduce_sum.stan', 'r') as fd:\n",
+    "    print(fd.read())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As before, we compile the model specifying argument `cpp_options`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "redcard_model = CmdStanModel(stan_file='redcard_reduce_sum.stan',\n",
+    "                     cpp_options={'STAN_THREADS': 'TRUE'},\n",
+    "                     compile='force')\n",
+    "redcard_model.exe_info()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The `sample` method argument `threads_per_chain` specifies the number of threads allotted to each chain; this corresponds to CmdStan's `num_threads` argument."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "redcard_fit = redcard_model.sample(data='redcard.json', threads_per_chain=4)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The number of threads to use is passed to the model exe file by means of the shell environment variable `STAN_NUM_THREADS`.\n",
+    "\n",
+    "On my machine, which has 4 cores, all 4 chains are run in parallel from within a single process.\n",
+    "Therefore, the total number of threads used by this process will be `threads_per_chain` * `chains`.\n",
+    "To check this, we examine the shell environment variable `STAN_NUM_THREADS`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "os.environ['STAN_NUM_THREADS']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

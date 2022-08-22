@@ -1,0 +1,634 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Controlling Outputs &#8212; CmdStanPy 1.0.5 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CmdStanPy Examples" href="examples.html" />
+    <link rel="prev" title="CmdStanPy Workflow" href="workflow.html" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<link rel="stylesheet" href="_static/basic.css" type="text/css" />
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+<nav id="navbar-main" class="navbar navbar-dark navbar-expand-lg fixed-top bd-navbar"
+    style="background-color: #222222;"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    <!-- This will display the version of the docs -->
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.0.5</a>
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../users-guide.html">
+  User’s Guide
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../api.html">
+  API Reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../changes.html">
+  What’s New
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../community.html">
+  Community
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter"></i></span>
+            <label class="sr-only">Twitter</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums"><span><i class="fas fa-users"></i></span>
+            <label class="sr-only">Forums</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+</nav>
+
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="hello_world.html">
+   “Hello, World!”
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="workflow.html">
+   CmdStanPy Workflow
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Controlling Outputs
+  </a>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="examples.html">
+   CmdStanPy Examples
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/MCMC%20Sampling.html">
+     MCMC Sampling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Maximum%20Likelihood%20Estimation.html">
+     Maximum Likelihood Estimation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Variational%20Inference.html">
+     Variational Inference in Stan
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html">
+     Using Variational Estimates to Initialize the NUTS-HMC Sampler
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Run%20Generated%20Quantities.html">
+     Generating new quantities of interest.
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Using%20External%20C%2B%2B.html">
+     Advanced Topic: Using External C++ Functions
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#csv-file-outputs">
+   CSV File Outputs
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#logging">
+   Logging
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide/outputs.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="controlling-outputs">
+<h1>Controlling Outputs<a class="headerlink" href="#controlling-outputs" title="Permalink to this headline">#</a></h1>
+<section id="csv-file-outputs">
+<h2>CSV File Outputs<a class="headerlink" href="#csv-file-outputs" title="Permalink to this headline">#</a></h2>
+<p>Underlyingly, the CmdStan outputs are a set of per-chain
+<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output">Stan CSV files</a>.
+The filenames follow the template ‘&lt;model_name&gt;-&lt;YYYYMMDDHHMMSS&gt;-&lt;chain_id&gt;’
+plus the file suffix ‘.csv’.
+CmdStanPy also captures the per-chain console and error messages.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="gp">In [2]: </span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
+
+<span class="gp">In [3]: </span><span class="n">stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;users-guide&#39;</span><span class="p">,</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
+
+<span class="gp">In [4]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
+
+<span class="gp">In [5]: </span><span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;users-guide&#39;</span><span class="p">,</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
+
+<span class="gp">In [6]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
+<span class="go">INFO:cmdstanpy:CmdStan start processing</span>
+<span class="go">                                                                                                                                                                                                                                                                                                                                </span>
+<span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
+
+<span class="go"># printing the object reports sampler commands, output files</span>
+<span class="gp">In [7]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
+<span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go"> csv_files:</span>
+<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_1.csv</span>
+<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_2.csv</span>
+<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_3.csv</span>
+<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_4.csv</span>
+<span class="go"> output_files:</span>
+<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448-stdout.txt</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is an optional argument which specifies
+the path to the output directory used by CmdStan.
+If this argument is omitted, the output files are written
+to a temporary directory which is deleted when the current Python session is terminated.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [8]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./outputs/&quot;</span><span class="p">)</span>
+<span class="go">INFO:cmdstanpy:created output directory: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/outputs</span>
+<span class="go">INFO:cmdstanpy:CmdStan start processing</span>
+<span class="go">                                                                                                                                                                                                                                                                                                                                </span>
+<span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
+
+<span class="gp">In [9]: </span><span class="o">!</span>ls outputs/
+<span class="go">bernoulli-20220822154448-stdout.txt  bernoulli-20220822154448_3.csv</span>
+<span class="go">bernoulli-20220822154448_1.csv	     bernoulli-20220822154448_4.csv</span>
+<span class="go">bernoulli-20220822154448_2.csv</span>
+</pre></div>
+</div>
+<p>Alternatively, the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.save_csvfiles" title="cmdstanpy.CmdStanMCMC.save_csvfiles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></a> function moves the CSV files
+to a specified directory.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [10]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
+<span class="go">INFO:cmdstanpy:CmdStan start processing</span>
+<span class="go">                                                                                                                                                                                                                                                                                                                                </span>
+<span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
+
+<span class="gp">In [11]: </span><span class="n">fit</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;some/path&#39;</span><span class="p">)</span>
+
+<span class="gp">In [12]: </span><span class="o">!</span>ls some/path
+<span class="go">bernoulli-20220822154448_1.csv	bernoulli-20220822154448_3.csv</span>
+<span class="go">bernoulli-20220822154448_2.csv	bernoulli-20220822154448_4.csv</span>
+</pre></div>
+</div>
+</section>
+<section id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">#</a></h2>
+<p>You may notice CmdStanPy can produce a lot of output when it is running:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">INFO:cmdstanpy:CmdStan start processing</span>
+<span class="go">INFO:cmdstanpy:CmdStan start processing</span>
+<span class="go">INFO:cmdstanpy:CmdStan done processing</span>
+</pre></div>
+</div>
+<p>This output is managed through the built-in <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.10)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module. For example, it can be disabled entirely:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="gp">In [15]: </span><span class="n">cmdstanpy_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;cmdstanpy&quot;</span><span class="p">)</span>
+
+<span class="gp">In [16]: </span><span class="n">cmdstanpy_logger</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="go"># look, no output!</span>
+<span class="gp">In [17]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or one can remove the logging handler that CmdStanPy installs by default and install their own for more
+fine-grained control. For example, the following code sends all logs (including the <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code> logs, which are hidden by default),
+to a file.</p>
+<p>DEBUG logging is useful primarily to developers or when trying to hunt down an issue.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="n">cmdstanpy_logger</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="go"># remove all existing handlers</span>
+<span class="gp">In [19]: </span><span class="n">cmdstanpy_logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="gp">In [20]: </span><span class="n">cmdstanpy_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+<span class="gp">In [21]: </span><span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="s1">&#39;all.log&#39;</span><span class="p">)</span>
+
+<span class="gp">In [22]: </span><span class="n">handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+<span class="gp">In [23]: </span><span class="n">handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> - </span><span class="si">%(name)s</span><span class="s1"> - </span><span class="si">%(levelname)s</span><span class="s1"> - </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="p">)</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [24]: </span><span class="n">cmdstanpy_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now, if we run the model and check the contents of the file, we will see all the possible logging.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="gp">In [26]: </span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;all.log&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logs</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+<span class="gp">   ....: </span>        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<span class="gp">   ....: </span>
+<span class="go">15:44:49 - cmdstanpy - DEBUG - cmd: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli info</span>
+<span class="go">cwd: None</span>
+<span class="go">15:44:49 - cmdstanpy - INFO - CmdStan start processing</span>
+<span class="go">15:44:49 - cmdstanpy - DEBUG - idx 0</span>
+<span class="go">15:44:49 - cmdstanpy - DEBUG - running CmdStan, num_threads: 2</span>
+<span class="go">15:44:49 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=97506&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;, &#39;num_chains=4&#39;]</span>
+<span class="go">15:44:49 - cmdstanpy - INFO - CmdStan start processing</span>
+<span class="go">15:44:49 - cmdstanpy - INFO - CmdStan done processing</span>
+<span class="go">15:44:49 - cmdstanpy - DEBUG - runset</span>
+<span class="go">RunSet: chains=4, chain_ids=[1, 2, 3, 4], num_processes=1</span>
+<span class="go">cmd (chain 1):</span>
+<span class="go">[&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=97506&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;, &#39;num_chains=4&#39;]</span>
+<span class="go">retcodes=[0]</span>
+<span class="go">per-chain output files (showing chain 1 only):</span>
+<span class="go">csv_file:</span>
+<span class="go">/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449_1.csv</span>
+<span class="go">console_msgs (if any):</span>
+<span class="go">/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449-stdout.txt</span>
+<span class="go">15:44:49 - cmdstanpy - DEBUG - Chain 1 console:</span>
+<span class="go">method = sample (Default)</span>
+<span class="go">sample</span>
+<span class="go">num_samples = 1000 (Default)</span>
+<span class="go">num_warmup = 1000 (Default)</span>
+<span class="go">save_warmup = 0 (Default)</span>
+<span class="go">thin = 1 (Default)</span>
+<span class="go">adapt</span>
+<span class="go">engaged = 1 (Default)</span>
+<span class="go">gamma = 0.050000000000000003 (Default)</span>
+<span class="go">delta = 0.80000000000000004 (Default)</span>
+<span class="go">kappa = 0.75 (Default)</span>
+<span class="go">t0 = 10 (Default)</span>
+<span class="go">init_buffer = 75 (Default)</span>
+<span class="go">term_buffer = 50 (Default)</span>
+<span class="go">window = 25 (Default)</span>
+<span class="go">algorithm = hmc (Default)</span>
+<span class="go">hmc</span>
+<span class="go">engine = nuts (Default)</span>
+<span class="go">nuts</span>
+<span class="go">max_depth = 10 (Default)</span>
+<span class="go">metric = diag_e (Default)</span>
+<span class="go">metric_file =  (Default)</span>
+<span class="go">stepsize = 1 (Default)</span>
+<span class="go">stepsize_jitter = 0 (Default)</span>
+<span class="go">num_chains = 4</span>
+<span class="go">id = 1 (Default)</span>
+<span class="go">data</span>
+<span class="go">file = users-guide/examples/bernoulli.data.json</span>
+<span class="go">init = 2 (Default)</span>
+<span class="go">random</span>
+<span class="go">seed = 97506</span>
+<span class="go">output</span>
+<span class="go">file = /tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449.csv</span>
+<span class="go">diagnostic_file =  (Default)</span>
+<span class="go">refresh = 100 (Default)</span>
+<span class="go">sig_figs = -1 (Default)</span>
+<span class="go">profile_file = profile.csv (Default)</span>
+<span class="go">num_threads = 2 (Default)</span>
+
+
+<span class="go">Gradient evaluation took 3e-06 seconds</span>
+<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0.03 seconds.</span>
+<span class="go">Adjust your expectations accordingly!</span>
+
+
+
+<span class="go">Gradient evaluation took 0 seconds</span>
+<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0 seconds.</span>
+<span class="go">Adjust your expectations accordingly!</span>
+
+
+
+<span class="go">Gradient evaluation took 0 seconds</span>
+<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0 seconds.</span>
+<span class="go">Adjust your expectations accordingly!</span>
+
+
+
+<span class="go">Gradient evaluation took 0 seconds</span>
+<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0 seconds.</span>
+<span class="go">Adjust your expectations accordingly!</span>
+
+
+<span class="go">Chain [1] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
+<span class="go">Chain [3] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
+<span class="go">Chain [1] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
+<span class="go">Chain [3] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
+
+<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
+<span class="go">0.01 seconds (Sampling)</span>
+<span class="go">0.015 seconds (Total)</span>
+
+<span class="go">Chain [4] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
+<span class="go">Chain [1] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
+
+<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
+<span class="go">0.011 seconds (Sampling)</span>
+<span class="go">0.016 seconds (Total)</span>
+
+<span class="go">Chain [2] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
+<span class="go">Chain [4] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
+<span class="go">Chain [2] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
+<span class="go">Chain [4] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
+<span class="go">Chain [2] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
+
+<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
+<span class="go">0.01 seconds (Sampling)</span>
+<span class="go">0.015 seconds (Total)</span>
+
+<span class="go">Chain [4] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
+
+<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
+<span class="go">0.012 seconds (Sampling)</span>
+<span class="go">0.017 seconds (Total)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="workflow.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">CmdStanPy Workflow</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="examples.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">CmdStanPy Examples</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2022, Stan Development Team.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
