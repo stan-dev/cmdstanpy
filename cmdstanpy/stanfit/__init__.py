@@ -217,5 +217,5 @@ def from_csv(
             return None
     except (IOError, OSError, PermissionError) as e:
         raise ValueError(
-            'An error occured processing the CSV files:\n\t{}'.format(str(e))
+            'An error occurred processing the CSV files:\n\t{}'.format(str(e))
         ) from e
