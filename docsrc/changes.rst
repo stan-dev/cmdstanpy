@@ -7,6 +7,17 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`__ on GitHub.
 
+
+CmdStanPy 1.0.5
+---------------
+
+- Fixed a typo in :func:`cmdstanpy.show_versions()`
+- Reorganized and updated the documentation
+- Reorganized a lot of internal code
+- Cleaned up the output of :meth:`CmdStanMCMC.draws_pd`
+- Cleaned up the output of :meth:`CmdStanMCMC.summary`
+- Removed the logging which occurred when Python exited with cmdstanpy imported.
+
 CmdStanPy 1.0.4
 ---------------
 

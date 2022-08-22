@@ -202,7 +202,7 @@ html_theme = 'pydata_sphinx_theme'  # https://pydata-sphinx-theme.readthedocs.io
 
 html_theme_options = {
     "navbar_start": ["title"],
-    "page_sidebar_items": ["search-field", "page-toc", "edit-this-page"],
+    "page_sidebar_items": ["page-toc", "edit-this-page"],
     "icon_links": [
         {
             "name": "Twitter",
@@ -224,7 +224,7 @@ html_theme_options = {
     "show_toc_level": 2,
 }
 
-html_sidebars = {"**": [], "index": ['logo'], "users-guide/overview": ['logo']}
+html_sidebars = {"index": ["search-field", 'logo']}
 
 html_context = {
     "github_user": "stan-dev",
