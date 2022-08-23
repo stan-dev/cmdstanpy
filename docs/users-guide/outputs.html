@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Controlling Outputs &#8212; CmdStanPy 1.0.5 documentation</title>
+    <title>Controlling Outputs &#8212; CmdStanPy 1.0.6 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.0.5</a>
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.0.6</a>
     
   </div>
 
@@ -297,12 +297,15 @@ CmdStanPy also captures the per-chain console and error messages.</p>
 <span class="gp">In [7]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_1.csv</span>
-<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_2.csv</span>
-<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_3.csv</span>
-<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448_4.csv</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_1.csv</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_2.csv</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_3.csv</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_4.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmp84qej75o/bernoulli4z019d3v/bernoulli-20220822154448-stdout.txt</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_0-stdout.txt</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_1-stdout.txt</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_2-stdout.txt</span>
+<span class="go">	/tmp/tmpcmi54clh/bernoulli3m8g8fsb/bernoulli-20220823185919_3-stdout.txt</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is an optional argument which specifies
@@ -316,9 +319,10 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
 
 <span class="gp">In [9]: </span><span class="o">!</span>ls outputs/
-<span class="go">bernoulli-20220822154448-stdout.txt  bernoulli-20220822154448_3.csv</span>
-<span class="go">bernoulli-20220822154448_1.csv	     bernoulli-20220822154448_4.csv</span>
-<span class="go">bernoulli-20220822154448_2.csv</span>
+<span class="go">bernoulli-20220823185919_0-stdout.txt  bernoulli-20220823185919_2.csv</span>
+<span class="go">bernoulli-20220823185919_1-stdout.txt  bernoulli-20220823185919_3-stdout.txt</span>
+<span class="go">bernoulli-20220823185919_1.csv	       bernoulli-20220823185919_3.csv</span>
+<span class="go">bernoulli-20220823185919_2-stdout.txt  bernoulli-20220823185919_4.csv</span>
 </pre></div>
 </div>
 <p>Alternatively, the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.save_csvfiles" title="cmdstanpy.CmdStanMCMC.save_csvfiles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></a> function moves the CSV files
@@ -331,8 +335,8 @@ to a specified directory.</p>
 <span class="gp">In [11]: </span><span class="n">fit</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;some/path&#39;</span><span class="p">)</span>
 
 <span class="gp">In [12]: </span><span class="o">!</span>ls some/path
-<span class="go">bernoulli-20220822154448_1.csv	bernoulli-20220822154448_3.csv</span>
-<span class="go">bernoulli-20220822154448_2.csv	bernoulli-20220822154448_4.csv</span>
+<span class="go">bernoulli-20220823185920_1.csv	bernoulli-20220823185920_3.csv</span>
+<span class="go">bernoulli-20220823185920_2.csv	bernoulli-20220823185920_4.csv</span>
 </pre></div>
 </div>
 </section>
@@ -341,8 +345,14 @@ to a specified directory.</p>
 <p>You may notice CmdStanPy can produce a lot of output when it is running:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">INFO:cmdstanpy:CmdStan start processing</span>
-<span class="go">INFO:cmdstanpy:CmdStan start processing</span>
-<span class="go">INFO:cmdstanpy:CmdStan done processing</span>
+<span class="go">INFO:cmdstanpy:Chain [1] start processing</span>
+<span class="go">INFO:cmdstanpy:Chain [2] start processing</span>
+<span class="go">INFO:cmdstanpy:Chain [1] done processing</span>
+<span class="go">INFO:cmdstanpy:Chain [3] start processing</span>
+<span class="go">INFO:cmdstanpy:Chain [2] done processing</span>
+<span class="go">INFO:cmdstanpy:Chain [4] start processing</span>
+<span class="go">INFO:cmdstanpy:Chain [3] done processing</span>
+<span class="go">INFO:cmdstanpy:Chain [4] done processing</span>
 </pre></div>
 </div>
 <p>This output is managed through the built-in <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.10)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module. For example, it can be disabled entirely:</p>
@@ -389,25 +399,40 @@ to a file.</p>
 <span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
 <span class="gp">   ....: </span>        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 <span class="gp">   ....: </span>
-<span class="go">15:44:49 - cmdstanpy - DEBUG - cmd: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli info</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - cmd: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli info</span>
 <span class="go">cwd: None</span>
-<span class="go">15:44:49 - cmdstanpy - INFO - CmdStan start processing</span>
-<span class="go">15:44:49 - cmdstanpy - DEBUG - idx 0</span>
-<span class="go">15:44:49 - cmdstanpy - DEBUG - running CmdStan, num_threads: 2</span>
-<span class="go">15:44:49 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=97506&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;, &#39;num_chains=4&#39;]</span>
-<span class="go">15:44:49 - cmdstanpy - INFO - CmdStan start processing</span>
-<span class="go">15:44:49 - cmdstanpy - INFO - CmdStan done processing</span>
-<span class="go">15:44:49 - cmdstanpy - DEBUG - runset</span>
-<span class="go">RunSet: chains=4, chain_ids=[1, 2, 3, 4], num_processes=1</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - CmdStan start processing</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - idx 0</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=11847&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [1] start processing</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - idx 1</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=2&#39;, &#39;random&#39;, &#39;seed=11847&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_2.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [2] start processing</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [1] done processing</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - idx 2</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=3&#39;, &#39;random&#39;, &#39;seed=11847&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_3.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [3] start processing</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [2] done processing</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - idx 3</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=4&#39;, &#39;random&#39;, &#39;seed=11847&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_4.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [4] start processing</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [3] done processing</span>
+<span class="go">18:59:20 - cmdstanpy - INFO - Chain [4] done processing</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - runset</span>
+<span class="go">RunSet: chains=4, chain_ids=[1, 2, 3, 4], num_processes=4</span>
 <span class="go">cmd (chain 1):</span>
-<span class="go">[&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=97506&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;, &#39;num_chains=4&#39;]</span>
-<span class="go">retcodes=[0]</span>
+<span class="go">[&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=11847&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">retcodes=[0, 0, 0, 0]</span>
 <span class="go">per-chain output files (showing chain 1 only):</span>
 <span class="go">csv_file:</span>
-<span class="go">/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449_1.csv</span>
+<span class="go">/tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_1.csv</span>
 <span class="go">console_msgs (if any):</span>
-<span class="go">/tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449-stdout.txt</span>
-<span class="go">15:44:49 - cmdstanpy - DEBUG - Chain 1 console:</span>
+<span class="go">/tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_0-stdout.txt</span>
+<span class="go">18:59:20 - cmdstanpy - DEBUG - Chain 1 console:</span>
 <span class="go">method = sample (Default)</span>
 <span class="go">sample</span>
 <span class="go">num_samples = 1000 (Default)</span>
@@ -432,152 +457,53 @@ to a file.</p>
 <span class="go">metric_file =  (Default)</span>
 <span class="go">stepsize = 1 (Default)</span>
 <span class="go">stepsize_jitter = 0 (Default)</span>
-<span class="go">num_chains = 4</span>
+<span class="go">num_chains = 1 (Default)</span>
 <span class="go">id = 1 (Default)</span>
 <span class="go">data</span>
 <span class="go">file = users-guide/examples/bernoulli.data.json</span>
 <span class="go">init = 2 (Default)</span>
 <span class="go">random</span>
-<span class="go">seed = 97506</span>
+<span class="go">seed = 11847</span>
 <span class="go">output</span>
-<span class="go">file = /tmp/tmp84qej75o/bernoulli33u_vgt0/bernoulli-20220822154449.csv</span>
+<span class="go">file = /tmp/tmpcmi54clh/bernoullibaz_rbid/bernoulli-20220823185920_1.csv</span>
 <span class="go">diagnostic_file =  (Default)</span>
 <span class="go">refresh = 100 (Default)</span>
 <span class="go">sig_figs = -1 (Default)</span>
 <span class="go">profile_file = profile.csv (Default)</span>
-<span class="go">num_threads = 2 (Default)</span>
+<span class="go">num_threads = 1 (Default)</span>
 
 
-<span class="go">Gradient evaluation took 3e-06 seconds</span>
-<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0.03 seconds.</span>
+<span class="go">Gradient evaluation took 2e-06 seconds</span>
+<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0.02 seconds.</span>
 <span class="go">Adjust your expectations accordingly!</span>
 
 
+<span class="go">Iteration:    1 / 2000 [  0%]  (Warmup)</span>
+<span class="go">Iteration:  100 / 2000 [  5%]  (Warmup)</span>
+<span class="go">Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
+<span class="go">Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
+<span class="go">Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
+<span class="go">Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
+<span class="go">Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
+<span class="go">Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
+<span class="go">Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
+<span class="go">Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
+<span class="go">Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
+<span class="go">Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
+<span class="go">Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
+<span class="go">Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
+<span class="go">Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
+<span class="go">Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
+<span class="go">Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
+<span class="go">Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
+<span class="go">Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
+<span class="go">Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
+<span class="go">Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
+<span class="go">Iteration: 2000 / 2000 [100%]  (Sampling)</span>
 
-<span class="go">Gradient evaluation took 0 seconds</span>
-<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0 seconds.</span>
-<span class="go">Adjust your expectations accordingly!</span>
-
-
-
-<span class="go">Gradient evaluation took 0 seconds</span>
-<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0 seconds.</span>
-<span class="go">Adjust your expectations accordingly!</span>
-
-
-
-<span class="go">Gradient evaluation took 0 seconds</span>
-<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0 seconds.</span>
-<span class="go">Adjust your expectations accordingly!</span>
-
-
-<span class="go">Chain [1] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
-<span class="go">Chain [3] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
-<span class="go">Chain [1] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
-<span class="go">Chain [3] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
-
-<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
-<span class="go">0.01 seconds (Sampling)</span>
-<span class="go">0.015 seconds (Total)</span>
-
-<span class="go">Chain [4] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
-<span class="go">Chain [1] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
-
-<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
+<span class="go">Elapsed Time: 0.004 seconds (Warm-up)</span>
 <span class="go">0.011 seconds (Sampling)</span>
-<span class="go">0.016 seconds (Total)</span>
-
-<span class="go">Chain [2] Iteration:    1 / 2000 [  0%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  100 / 2000 [  5%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  200 / 2000 [ 10%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  300 / 2000 [ 15%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  400 / 2000 [ 20%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  500 / 2000 [ 25%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  600 / 2000 [ 30%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  700 / 2000 [ 35%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration:  800 / 2000 [ 40%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
-<span class="go">Chain [4] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration:  900 / 2000 [ 45%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration: 1000 / 2000 [ 50%]  (Warmup)</span>
-<span class="go">Chain [2] Iteration: 1001 / 2000 [ 50%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1100 / 2000 [ 55%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1200 / 2000 [ 60%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1300 / 2000 [ 65%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1400 / 2000 [ 70%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1500 / 2000 [ 75%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1600 / 2000 [ 80%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1700 / 2000 [ 85%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1800 / 2000 [ 90%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
-<span class="go">Chain [4] Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
-<span class="go">Chain [2] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
-
-<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
-<span class="go">0.01 seconds (Sampling)</span>
 <span class="go">0.015 seconds (Total)</span>
-
-<span class="go">Chain [4] Iteration: 2000 / 2000 [100%]  (Sampling)</span>
-
-<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
-<span class="go">0.012 seconds (Sampling)</span>
-<span class="go">0.017 seconds (Total)</span>
 </pre></div>
 </div>
 </section>

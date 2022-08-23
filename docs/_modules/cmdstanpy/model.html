@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.model &#8212; CmdStanPy 1.0.5 documentation</title>
+    <title>cmdstanpy.model &#8212; CmdStanPy 1.0.6 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.5</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.6</a>
     
   </div>
 
@@ -710,7 +710,9 @@
                     <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Semantic error&#39;</span><span class="p">)</span>
                 <span class="p">]</span>
                 <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Uncaught exception&#39;</span><span class="p">)</span>
+                    <span class="n">x</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span>
+                    <span class="k">if</span> <span class="s1">&#39;Uncaught exception&#39;</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">or</span> <span class="s1">&#39;fatal error&#39;</span> <span class="ow">in</span> <span class="n">x</span>
                 <span class="p">]</span>
                 <span class="k">if</span> <span class="p">(</span>
                     <span class="nb">len</span><span class="p">(</span><span class="n">syntax_errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
