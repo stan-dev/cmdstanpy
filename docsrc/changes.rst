@@ -8,6 +8,12 @@ What's New
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`__ on GitHub.
 
 
+CmdStanPy 1.0.6
+---------------
+
+- Fixed a build error in the documentation
+- Improved messages when model fails to compile due to C++ errors.
+
 CmdStanPy 1.0.5
 ---------------
 
