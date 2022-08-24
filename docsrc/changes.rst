@@ -7,6 +7,10 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`__ on GitHub.
 
+CmdStanPy 1.0.6
+---------------
+
+- Fixed an issue where complex number containers in Stan program outputs were not being read in properly by CmdStanPy. The output would have the correct shape, but the values would be mixed up.
 
 CmdStanPy 1.0.6
 ---------------
