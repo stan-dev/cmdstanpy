@@ -1815,6 +1815,12 @@ class CmdStanMCMCTest(CustomTestCase):
                 fit.stan_variable('zs')[0], np.array([[3, 4j, 5], [1j, 2j, 3j]])
             )
         )
+        self.assertTrue(
+            np.allclose(
+                fit.stan_variable('zs_mat')[0],
+                np.array([[3, 4j, 5], [1j, 2j, 3j]]),
+            )
+        )
 
         self.assertNotIn("zs_dim_2", fit.draws_xr())
         # getting a raw scalar out of xarray is heavy
