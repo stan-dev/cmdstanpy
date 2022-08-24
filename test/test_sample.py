@@ -1810,10 +1810,20 @@ class CmdStanMCMCTest(CustomTestCase):
         # make sure the name 'imag' isn't magic
         self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
 
+        self.assertTrue(
+            np.allclose(
+                fit.stan_variable('zs')[0], np.array([[3, 4j, 5], [1j, 2j, 3j]])
+            )
+        )
+
         self.assertNotIn("zs_dim_2", fit.draws_xr())
         # getting a raw scalar out of xarray is heavy
         self.assertEqual(
             fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+        )
+        np.testing.assert_allclose(
+            fit.draws_xr().zs.isel(chain=0, draw=1).data,
+            np.array([[3, 4j, 5], [1j, 2j, 3j]]),
         )
 
     def test_attrs(self):
