@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.gq &#8212; CmdStanPy 1.0.6 documentation</title>
+    <title>cmdstanpy.stanfit.gq &#8212; CmdStanPy 1.0.7 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.6</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.7</a>
     
   </div>
 
@@ -692,10 +692,15 @@
             <span class="n">col_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">dims</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
-            <span class="c1"># pylint: disable=redundant-keyword-arg</span>
-            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+
+            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span>
+
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="n">BaseType</span><span class="o">.</span><span class="n">COMPLEX</span><span class="p">:</span>
-                <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+
             <span class="k">return</span> <span class="n">draws</span></div>
 
 <div class="viewcode-block" id="CmdStanGQ.stan_variables"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.0.6 documentation</title>
+    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.0.7 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.6</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.7</a>
     
   </div>
 
@@ -625,7 +625,7 @@ mean of y: 0.2
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-18:58:33 - cmdstanpy - INFO - CmdStan start processing
+13:29:28 - cmdstanpy - INFO - CmdStan start processing
 chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
@@ -652,7 +652,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-18:58:33 - cmdstanpy - INFO - CmdStan done processing.
+13:29:28 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -709,27 +709,27 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-7.272190</td>
-      <td>0.020193</td>
-      <td>0.759561</td>
-      <td>-8.739310</td>
-      <td>-6.98950</td>
-      <td>-6.750100</td>
-      <td>1414.94</td>
-      <td>34510.6</td>
-      <td>1.00527</td>
+      <td>-7.281860</td>
+      <td>0.020178</td>
+      <td>0.750850</td>
+      <td>-8.966000</td>
+      <td>-6.980410</td>
+      <td>-6.749890</td>
+      <td>1384.73</td>
+      <td>32203.1</td>
+      <td>1.00237</td>
     </tr>
     <tr>
       <th>theta</th>
-      <td>0.253475</td>
-      <td>0.003270</td>
-      <td>0.120090</td>
-      <td>0.081312</td>
-      <td>0.23948</td>
-      <td>0.475314</td>
-      <td>1349.00</td>
-      <td>32902.4</td>
-      <td>1.00439</td>
+      <td>0.251858</td>
+      <td>0.003258</td>
+      <td>0.121122</td>
+      <td>0.074654</td>
+      <td>0.238443</td>
+      <td>0.473461</td>
+      <td>1381.77</td>
+      <td>32134.2</td>
+      <td>1.00304</td>
     </tr>
   </tbody>
 </table>
@@ -750,8 +750,8 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-18:58:33 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
-18:58:41 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+13:29:28 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+13:29:37 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -795,14 +795,14 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-18:58:41 - cmdstanpy - INFO - Chain [1] start processing
-18:58:41 - cmdstanpy - INFO - Chain [1] done processing
-18:58:41 - cmdstanpy - INFO - Chain [2] start processing
-18:58:41 - cmdstanpy - INFO - Chain [2] done processing
-18:58:41 - cmdstanpy - INFO - Chain [3] start processing
-18:58:41 - cmdstanpy - INFO - Chain [3] done processing
-18:58:41 - cmdstanpy - INFO - Chain [4] start processing
-18:58:41 - cmdstanpy - INFO - Chain [4] done processing
+13:29:38 - cmdstanpy - INFO - Chain [1] start processing
+13:29:38 - cmdstanpy - INFO - Chain [1] done processing
+13:29:38 - cmdstanpy - INFO - Chain [2] start processing
+13:29:38 - cmdstanpy - INFO - Chain [2] done processing
+13:29:38 - cmdstanpy - INFO - Chain [3] start processing
+13:29:38 - cmdstanpy - INFO - Chain [3] done processing
+13:29:38 - cmdstanpy - INFO - Chain [4] start processing
+13:29:38 - cmdstanpy - INFO - Chain [4] done processing
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code> object which contains the values for all variables in the generated quantitites block of the program <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc.stan</span></code>. Unlike the output from the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, it doesn’t contain any information on the joint log probability density, sampler state, or parameters or transformed parameter values.</p>
@@ -823,18 +823,18 @@ generated quantities {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (1000, 4, 10) (&#39;y_rep[1]&#39;, &#39;y_rep[2]&#39;, &#39;y_rep[3]&#39;, &#39;y_rep[4]&#39;, &#39;y_rep[5]&#39;, &#39;y_rep[6]&#39;, &#39;y_rep[7]&#39;, &#39;y_rep[8]&#39;, &#39;y_rep[9]&#39;, &#39;y_rep[10]&#39;)
-[[0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]
- [0. 0. 0. 1. 0. 1. 0. 1. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 1. 0. 0.]]
+[[1. 1. 1. 0. 1. 0. 0. 0. 0. 0.]
+ [1. 1. 1. 0. 0. 0. 0. 0. 0. 0.]
+ [1. 1. 1. 0. 0. 0. 0. 0. 0. 0.]
+ [1. 1. 1. 0. 0. 0. 0. 0. 0. 0.]]
+[[1. 1. 1. 0. 0. 0. 1. 0. 1. 1.]
+ [1. 0. 1. 0. 0. 0. 1. 0. 0. 0.]
+ [1. 0. 1. 0. 0. 0. 0. 0. 0. 0.]
+ [1. 1. 1. 0. 0. 0. 1. 0. 1. 1.]]
 [[0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]
- [0. 1. 0. 1. 0. 0. 1. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 1. 0. 0. 0.]]
-[[0. 1. 0. 1. 0. 0. 0. 0. 1. 0.]
- [0. 1. 0. 1. 0. 0. 0. 0. 1. 0.]
- [0. 1. 0. 1. 0. 0. 0. 0. 1. 0.]
- [0. 1. 0. 1. 0. 0. 0. 0. 1. 0.]]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 0. 0. 1. 0. 0. 0. 0. 1. 0.]
+ [0. 0. 0. 1. 0. 0. 0. 0. 1. 0.]]
 </pre></div></div>
 </div>
 <p>We can also use <code class="docutils literal notranslate"><span class="pre">draws_pd(inc_sample=True)</span></code> to get a pandas DataFrame which combines the input drawset with the generated quantities.</p>
@@ -903,65 +903,65 @@ generated quantities {
   <tbody>
     <tr>
       <th>0</th>
-      <td>-7.29072</td>
-      <td>0.913481</td>
-      <td>1.18093</td>
+      <td>-9.13552</td>
+      <td>0.940254</td>
+      <td>0.836793</td>
       <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>7.29639</td>
-      <td>0.136884</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>9.68264</td>
+      <td>0.560479</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
       <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-7.22814</td>
+      <td>-8.78559</td>
       <td>1.000000</td>
-      <td>1.18093</td>
+      <td>0.836793</td>
       <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>7.38664</td>
-      <td>0.142567</td>
+      <td>9.52300</td>
+      <td>0.536282</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-6.96068</td>
+      <td>-8.59408</td>
       <td>1.000000</td>
-      <td>1.18093</td>
+      <td>0.836793</td>
       <td>2.0</td>
-      <td>3.0</td>
+      <td>7.0</td>
       <td>0.0</td>
-      <td>7.18040</td>
-      <td>0.174933</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
+      <td>8.69180</td>
+      <td>0.071122</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
       <td>0.0</td>
     </tr>
   </tbody>
