@@ -523,10 +523,15 @@ class CmdStanGQ:
             col_idxs = self._metadata.stan_vars_cols[var]
             if len(col_idxs) > 0:
                 dims.extend(self._metadata.stan_vars_dims[var])
-            # pylint: disable=redundant-keyword-arg
-            draws = self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+
+            draws = self._draws[draw1:, :, col_idxs]
+
             if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-                draws = draws[..., 0] + 1j * draws[..., 1]
+                draws = draws[..., ::2] + 1j * draws[..., 1::2]
+                dims = dims[:-1]
+
+            draws = draws.reshape(dims, order='F')
+
             return draws
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:

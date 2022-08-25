@@ -218,12 +218,17 @@ class CmdStanMLE:
             dims = (num_rows,) + self._metadata.stan_vars_dims[var]
             # pylint: disable=redundant-keyword-arg
             if num_rows > 1:
-                result = self._all_iters[:, col_idxs].reshape(dims, order='F')
+                result = self._all_iters[:, col_idxs]
             else:
-                result = self._mle[col_idxs].reshape(dims[1:], order="F")
+                result = self._mle[col_idxs]
+                dims = dims[1:]
 
             if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-                result = result[..., 0] + 1j * result[..., 1]
+                result = result[..., ::2] + 1j * result[..., 1::2]
+                dims = dims[:-1]
+
+            result = result.reshape(dims, order='F')
+
             return result
 
         else:  # scalar var

@@ -44,12 +44,14 @@ def build_xarray_data(
     if dims:
         var_dims += tuple(f"{var_name}_dim_{i}" for i in range(len(dims)))
 
-        draws = drawset[start_row:, :, col_idxs].reshape(
-            *drawset.shape[:2], *dims, order="F"
-        )
+        draws = drawset[start_row:, :, col_idxs]
+
         if var_type == BaseType.COMPLEX:
-            draws = draws[..., 0] + 1j * draws[..., 1]
+            draws = draws[..., ::2] + 1j * draws[..., 1::2]
             var_dims = var_dims[:-1]
+            dims = dims[:-1]
+
+        draws = draws.reshape(*drawset.shape[:2], *dims, order="F")
 
         data[var_name] = (
             var_dims,
