@@ -16,7 +16,9 @@ generated quantities {
                            {{0, 1}, {0, 2}, {0, 3}}};
   array[2, 3] complex zs = {{3, 4i, 5}, {1i, 2i, 3i}};
   complex z = 3 + 4i;
-  
+
   array[2] int imag = {3, 4};
+
+  complex_matrix[2,3] zs_mat = to_matrix(zs);
 }
 
