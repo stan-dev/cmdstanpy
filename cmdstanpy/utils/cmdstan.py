@@ -48,7 +48,7 @@ def get_download_url(version: str) -> str:
     if not arch and platform.system() == "Linux":
         arch = determine_linux_arch()
 
-    if arch:
+    if arch and arch.lower() != "false":
         url_end = f'v{version}/cmdstan-{version}-linux-{arch}.tar.gz'
     else:
         url_end = f'v{version}/cmdstan-{version}.tar.gz'
