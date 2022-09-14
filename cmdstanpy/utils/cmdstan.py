@@ -21,9 +21,9 @@ EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 def determine_linux_arch() -> str:
     machine = platform.machine()
     arch = ""
-    if machine == "-aarch64":
+    if machine == "aarch64":
         arch = "arm64"
-    elif machine == "-armv7l":
+    elif machine == "armv7l":
         # Telling armel and armhf apart is nontrivial
         # c.f. https://forums.raspberrypi.com/viewtopic.php?t=20873
         if subprocess.run(
