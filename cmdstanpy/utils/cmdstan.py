@@ -3,6 +3,7 @@ Utilities for finding and installing CmdStan
 """
 import os
 import platform
+import subprocess
 import sys
 from collections import OrderedDict
 from typing import Callable, Dict, Optional, Tuple, Union
@@ -15,6 +16,44 @@ from .. import progress as progbar
 from .logging import get_logger
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
+
+
+def determine_linux_arch() -> str:
+    machine = platform.machine()
+    arch = ""
+    if machine == "-aarch64":
+        arch = "arm64"
+    elif machine == "-armv7l":
+        # Telling armel and armhf apart is nontrivial
+        # c.f. https://forums.raspberrypi.com/viewtopic.php?t=20873
+        if subprocess.run(
+            ["readelf -A /proc/self/exe | grep Tag_ABI_VFP_args"],
+            shell=True,
+            check=False,
+        ).returncode:
+            arch = "armel"
+        else:
+            arch = "armhf"
+    elif machine == "mips64":
+        arch = "mips64el"
+    elif machine == "ppc64el":
+        arch = "ppc64le"
+    elif machine == "s390x":
+        arch = "s390x"
+    return arch
+
+
+def get_download_url(version: str) -> str:
+    arch = os.environ.get("CMDSTAN_ARCH", "")
+    if not arch and platform.system() == "Linux":
+        arch = determine_linux_arch()
+
+    if arch:
+        url_end = f'v{version}/cmdstan-{version}-linux-{arch}.tar.gz'
+    else:
+        url_end = f'v{version}/cmdstan-{version}.tar.gz'
+
+    return f'https://github.com/stan-dev/cmdstan/releases/download/{url_end}'
 
 
 def validate_dir(install_dir: str) -> None:
