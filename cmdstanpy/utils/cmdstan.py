@@ -26,11 +26,13 @@ def determine_linux_arch() -> str:
     elif machine == "armv7l":
         # Telling armel and armhf apart is nontrivial
         # c.f. https://forums.raspberrypi.com/viewtopic.php?t=20873
-        if subprocess.run(
-            ["readelf -A /proc/self/exe | grep Tag_ABI_VFP_args"],
-            shell=True,
-            check=False,
-        ).returncode:
+        readelf = subprocess.run(
+            ["readelf", "-A", "/proc/self/exe"],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        if "Tag_ABI_VFP_args" in readelf.stdout:
             arch = "armel"
         else:
             arch = "armhf"
