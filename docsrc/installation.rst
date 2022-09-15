@@ -209,6 +209,17 @@ can be used to override these defaults:
     install_cmdstan -d my_local_cmdstan -v 2.27.0
     ls -F my_local_cmdstan
 
+Alternate Linux Architectures
+.............................
+
+CmdStan can be installed on Linux for the following non-x86 architectures:
+``arm64``, ``armel``, ``armhf``, ``mips64el``, ``ppc64el`` and ``s390x``.
+
+CmdStanPy will do its best to determine which of these is applicable for your
+machine when running ``install_cmdstan``. If the wrong choice is made, or if you
+need to manually override this, you can set the ``CMDSTAN_ARCH`` environment variable
+to one of the above options, or to "false" to use the standard x86 download.
+
 DIY Installation
 ^^^^^^^^^^^^^^^^
 
