@@ -4,8 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Overview: module code &#8212; CmdStanPy 1.0.7 documentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>CmdStanPy Examples &#8212; CmdStanPy 1.0.7 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -35,6 +36,8 @@
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="MCMC Sampling" href="examples/MCMC%20Sampling.html" />
+    <link rel="prev" title="Controlling Outputs" href="outputs.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -76,7 +79,7 @@
  </a>
 </li>
 
-<li class="toctree-l1 nav-item">
+<li class="toctree-l1 current active nav-item">
  <a class="reference internal nav-link" href="../users-guide.html">
   User’s Guide
  </a>
@@ -142,7 +145,71 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
   <div class="bd-toc-item active">
-    
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="hello_world.html">
+   “Hello, World!”
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="workflow.html">
+   CmdStanPy Workflow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="outputs.html">
+   Controlling Outputs
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="current reference internal" href="#">
+   CmdStanPy Examples
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/MCMC%20Sampling.html">
+     MCMC Sampling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Maximum%20Likelihood%20Estimation.html">
+     Maximum Likelihood Estimation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Variational%20Inference.html">
+     Variational Inference in Stan
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html">
+     Using Variational Estimates to Initialize the NUTS-HMC Sampler
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Run%20Generated%20Quantities.html">
+     Generating new quantities of interest.
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="examples/Using%20External%20C%2B%2B.html">
+     Advanced Topic: Using External C++ Functions
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
   </div>
 </nav>
               </div>
@@ -155,6 +222,27 @@
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
             
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide/examples.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
           </div>
           
 
@@ -166,27 +254,40 @@
               
               <div>
                 
-  <h1>All modules for which code is available</h1>
-<ul><li><a href="cmdstanpy/cmdstan_args.html">cmdstanpy.cmdstan_args</a></li>
-<li><a href="cmdstanpy/compiler_opts.html">cmdstanpy.compiler_opts</a></li>
-<li><a href="cmdstanpy/model.html">cmdstanpy.model</a></li>
-<li><a href="cmdstanpy/stanfit.html">cmdstanpy.stanfit</a></li>
-<ul><li><a href="cmdstanpy/stanfit/gq.html">cmdstanpy.stanfit.gq</a></li>
-<li><a href="cmdstanpy/stanfit/mcmc.html">cmdstanpy.stanfit.mcmc</a></li>
-<li><a href="cmdstanpy/stanfit/metadata.html">cmdstanpy.stanfit.metadata</a></li>
-<li><a href="cmdstanpy/stanfit/mle.html">cmdstanpy.stanfit.mle</a></li>
-<li><a href="cmdstanpy/stanfit/runset.html">cmdstanpy.stanfit.runset</a></li>
-<li><a href="cmdstanpy/stanfit/vb.html">cmdstanpy.stanfit.vb</a></li>
-</ul><li><a href="cmdstanpy/utils.html">cmdstanpy.utils</a></li>
-<ul><li><a href="cmdstanpy/utils/cmdstan.html">cmdstanpy.utils.cmdstan</a></li>
-<li><a href="cmdstanpy/utils/json.html">cmdstanpy.utils.json</a></li>
-</ul></ul>
+  <section id="cmdstanpy-examples">
+<h1>CmdStanPy Examples<a class="headerlink" href="#cmdstanpy-examples" title="Permalink to this headline">#</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples/MCMC%20Sampling.html">MCMC Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/Maximum%20Likelihood%20Estimation.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/Variational%20Inference.html">Variational Inference in Stan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html">Using Variational Estimates to Initialize the NUTS-HMC Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/Run%20Generated%20Quantities.html">Generating new quantities of interest.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/Using%20External%20C%2B%2B.html">Advanced Topic: Using External C++ Functions</a></li>
+</ul>
+</div>
+</section>
+
 
               </div>
               
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="outputs.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Controlling Outputs</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="examples/MCMC%20Sampling.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">MCMC Sampling</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
               
           </main>

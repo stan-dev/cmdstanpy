@@ -104,81 +104,65 @@ By default, the `sample` method runs 4 sampler chains.
     # fit the model
     fit = model.sample(data=data_file)
 
-Underlyingly, the CmdStan outputs are a set of per-chain
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output>`__.
-The filenames follow the template '<model_name>-<YYYYMMDDHHMMSS>-<chain_id>'
-plus the file suffix '.csv'.
-CmdStanPy also captures the per-chain console and error messages.
-The ``output_dir`` argument is an optional argument which specifies
-the path to the output directory used by CmdStan.
-If this argument is omitted, the output files are written
-to a temporary directory which is deleted when the current Python session is terminated.
 
-.. ipython:: python
+*Note* this model can be fit using other methods
 
-    # printing the object reports sampler commands, output files
-    print(fit)
-
++ the :meth:`~CmdStanModel.variational` method does approximate Bayesian inference and returns a :class:`CmdStanVB` object
++ the :meth:`~CmdStanModel.optimize` method does maximum likelihood estimation and returns a :class:`CmdStanMLE` object
 
 Accessing the results
 ^^^^^^^^^^^^^^^^^^^^^
 
-The ``sample`` method returns a :class:`CmdStanMCMC` object,
-which provides access to the information from the Stan CSV files.
-The CSV header and data rows contain the outputs from each iteration of the sampler.
-CSV comment blocks are used to report the inference engine configuration and timing information.
-The NUTS-HMC adaptive sampler algorithm also outputs the per-chain HMC tuning parameters step_size and metric.
-
-The ``CmdStanMCMC`` object parses the set of Stan CSV files into separate in-memory data structures for
-the set of sampler iterations, the metadata, and the step_size and metric and provides accessor methods for each.
-The primary object of interest are the draws from all iterations of the sampler, i.e., the CSV data rows.
-The ``CmdStanMCMC`` methods allow the user to extract the sample in whatever data format is needed for their analysis.
-The sample can be extracted in tabular format, either as
-
-+ a numpy.ndarray: :meth:`~CmdStanMCMC.draws`
-
-+ a pandas.DataFrame: :meth:`~CmdStanMCMC.draws_pd`
-
-.. ipython:: python
-
-    print(fit.draws().shape)
-    print(fit.draws(concat_chains=True).shape)
-    fit.draws_pd()
-
-The sample can be treated as a collection of named, structured variables.
+The sampler outputs are the set of per-chain
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html>`_,
+a non-standard CSV file format.
+Each data row of the Stan CSV file contains the per-iteration estimate of the Stan model
+parameters, transformed parameters,  and generated quantities variables.
+Container variables, i.e., vector, row-vector, matrix, and array variables
+are necessarily serialized into a single row's worth of data.
+The output objects parse the set of Stan CSV files into  a set of in-memory data structures
+and provide accessor functions for the all estimates and metadata.
 CmdStanPy makes a distinction between the per-iteration model outputs
 and the per-iteration algorithm outputs:  the former are 'stan_variables'
-and the information reported by the sampler are 'method_variables'.
-Accessor functions extract these as:
+and the latter are 'method_variables'.
 
-+ a structured numpy.ndarray: :meth:`~CmdStanMCMC.stan_variable`
-  which contains the set of all draws in the sample for the named Stan program variable.
-  The draws from all chains are flattened, i.e.,
-  the first ndarray dimension is the number of draws X number of chains.
-  The remaining ndarray dimensions correspond to the Stan program variable dimension.
+The `CmdStanMCMC` object provides the following accessor methods:
 
-+ an xarray.Dataset: :meth:`~CmdStanMCMC.draws_xr`
++ :meth:`~CmdStanMCMC.stan_variable`: returns an numpy.ndarray whose structure corresponds to the Stan program variable structure
 
-+ a Python dict mapping Stan variable names to numpy.ndarray objects, where the
-  chains are flattened, as above:
-  :meth:`~CmdStanMCMC.stan_variables`.
++ :meth:`~CmdStanMCMC.stan_variables`: returns an Python dictionary mapping the Stan program variable names to the corresponding numpy.ndarray.
 
-+ a Python dict mapping the algorithm outputs to numpy.ndarray objects.
-  Because these outputs are used for within-chain and cross-chain diagnostics,
-  they are not flattened.
-  :meth:`~CmdStanMCMC.stan_variables`.
++ :meth:`~CmdStanMCMC.draws`:  returns a numpy.ndarray which is either a 3-D array draws X chains X CSV columns,
+  or a 2-D array draws X columns, where the chains are concatenated into a single column.
+  The argument `vars` can be used to restrict this to just the columns for one or more variables.
+
++ :meth:`~CmdStanMCMC.draws_pd`: returns a pandas.DataFrame over all columns in the Stan CSV file.
+  The argument `vars` can be used to restrict this to one or more variables.
+
++ :meth:`~CmdStanMCMC.draws_xr`: returns an xarray.Dataset which maps model variable names to their respective values.
+  The argument `vars` can be used to restrict this to one or more variables.
+
++ :meth:`~CmdStanMCMC.method_variables`: returns a Python dictionary over the sampler diagnostic/information output columns
+  which by convention end in ``__``, e.g., ``lp__``.
 
 
 .. ipython:: python
 
+    # access model variable by name
     print(fit.stan_variable('theta'))
+    print(fit.draws_pd('theta')[:3])
     print(fit.draws_xr('theta'))
+    # access all model variables
     for k, v in fit.stan_variables().items():
         print(f'{k}\t{v.shape}')
+    # access the sampler method variables
     for k, v in fit.method_variables().items():
         print(f'{k}\t{v.shape}')
+    # access all Stan CSV file columns
+    print(f'numpy.ndarray of draws: {fit.draws().shape}')
+    fit.draws_pd()
 
-
+    
 In addition to the MCMC sample itself, the CmdStanMCMC object provides
 access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sampler,
 (if present).
@@ -190,7 +174,6 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
     print(fit.step_size)
 
 
-
 The CmdStanMCMC object also provides access to metadata about the model and the sampler run.
 
 .. ipython:: python
@@ -200,6 +183,7 @@ The CmdStanMCMC object also provides access to metadata about the model and the 
 
     print(fit.metadata.stan_vars_cols.keys())
     print(fit.metadata.method_vars_cols.keys())
+
 
 
 
@@ -230,18 +214,3 @@ The :meth:`~CmdStanMCMC.diagnose` method runs this utility and prints the output
 .. ipython:: python
 
     print(fit.diagnose())
-
-
-
-Managing Stan CSV files
-^^^^^^^^^^^^^^^^^^^^^^^
-
-The :class:`CmdStanMCMC` object keeps track of all output files produced
-by the sampler run.
-The :meth:`~CmdStanMCMC.save_csvfiles` function moves the CSV files
-to a specified directory.
-
-.. ipython:: python
-    :verbatim:
-
-    fit.save_csvfiles(dir='some/path')

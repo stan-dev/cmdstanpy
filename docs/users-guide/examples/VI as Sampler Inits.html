@@ -6,36 +6,36 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.4 documentation</title>
+    <title>Using Variational Estimates to Initialize the NUTS-HMC Sampler &#8212; CmdStanPy 1.0.7 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
-    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
   <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Generating new quantities of interest." href="Run%20Generated%20Quantities.html" />
     <link rel="prev" title="Variational Inference in Stan" href="Variational%20Inference.html" />
 
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.4</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.7</a>
     
   </div>
 
@@ -74,44 +74,32 @@
       <div class="navbar-center-item">
         <ul id="navbar-main-elements" class="navbar-nav">
     <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../overview.html">
-  Overview
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../installation.html">
+ <a class="reference internal nav-link" href="../../installation.html">
   Installation
  </a>
 </li>
 
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../hello_world.html">
-  “Hello, World!”
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../workflow.html">
-  CmdStanPy Workflow
- </a>
-</li>
-
 <li class="toctree-l1 current active nav-item">
- <a class="reference internal nav-link" href="../examples.html">
-  CmdStanPy Examples
+ <a class="reference internal nav-link" href="../../users-guide.html">
+  User’s Guide
  </a>
 </li>
 
 <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../community.html">
-  Community
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../api.html">
+ <a class="reference internal nav-link" href="../../api.html">
   API Reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../changes.html">
+  What’s New
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../community.html">
+  Community
  </a>
 </li>
 
@@ -150,20 +138,90 @@
       <div class="row">
           
             
-            <div class="col-12 col-md-1 col-xl-2 bd-sidebar no-sidebar"></div>
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../hello_world.html">
+   “Hello, World!”
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../workflow.html">
+   CmdStanPy Workflow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../outputs.html">
+   Controlling Outputs
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../examples.html">
+   CmdStanPy Examples
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="MCMC%20Sampling.html">
+     MCMC Sampling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Maximum%20Likelihood%20Estimation.html">
+     Maximum Likelihood Estimation
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Variational%20Inference.html">
+     Variational Inference in Stan
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Using Variational Estimates to Initialize the NUTS-HMC Sampler
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Run%20Generated%20Quantities.html">
+     Generating new quantities of interest.
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Using%20External%20C%2B%2B.html">
+     Advanced Topic: Using External C++ Functions
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
             
           
 
           
           <div class="d-none d-xl-block col-xl-2 bd-toc">
             
-              
-              <div class="toc-item">
-                <form class="bd-search d-flex align-items-center" action="../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form>
-              </div>
               
               <div class="toc-item">
                 
@@ -192,7 +250,7 @@
                 
 
 <div class="tocsection editthispage">
-    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/examples/VI as Sampler Inits.ipynb">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide/examples/VI as Sampler Inits.ipynb">
         <i class="fas fa-pencil-alt"></i> Edit this page
     </a>
 </div>
@@ -207,7 +265,7 @@
           
             
           
-          <main class="col-12 col-md-11 col-xl-8 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
               
               <div>
                 
@@ -498,8 +556,8 @@ conveince, we have copied the posteriordb model and data to this directory, in f
 <div class="highlight"><pre>
 /opt/hostedtoolcache/Python/3.9.13/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-20:25:42 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
-20:25:51 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr
+13:29:41 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/blr.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/blr
+13:29:52 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/blr
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -545,9 +603,9 @@ model {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:25:51 - cmdstanpy - INFO - Chain [1] start processing
-20:25:51 - cmdstanpy - INFO - Chain [1] done processing
-20:25:51 - cmdstanpy - WARNING - The algorithm may not have converged.
+13:29:52 - cmdstanpy - INFO - Chain [1] start processing
+13:29:52 - cmdstanpy - INFO - Chain [1] done processing
+13:29:52 - cmdstanpy - WARNING - The algorithm may not have converged.
 Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
@@ -589,7 +647,7 @@ Therefore, using the estimates from ADVI to initialize the parameter values for 
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:25:51 - cmdstanpy - INFO - CmdStan start processing
+13:29:52 - cmdstanpy - INFO - CmdStan start processing
 chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
@@ -627,12 +685,12 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-20:25:52 - cmdstanpy - INFO - CmdStan done processing.
-20:25:52 - cmdstanpy - WARNING - Non-fatal error during sampling:
-Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
-Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
-Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
-Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/examples/blr.stan&#39;, line 16, column 2 to column 45)
+13:29:53 - cmdstanpy - INFO - CmdStan done processing.
+13:29:53 - cmdstanpy - WARNING - Non-fatal error during sampling:
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/blr.stan&#39;, line 16, column 2 to column 45)
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/blr.stan&#39;, line 16, column 2 to column 45)
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/blr.stan&#39;, line 16, column 2 to column 45)
+Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in &#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/blr.stan&#39;, line 16, column 2 to column 45)
 Consider re-running with show_console=True if the above output is unclear!
 </pre></div></div>
 </div>
@@ -685,18 +743,6 @@ Consider re-running with show_console=True if the above output is unclear!
       <th>N_Eff/s</th>
       <th>R_hat</th>
     </tr>
-    <tr>
-      <th>name</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
   </thead>
   <tbody>
     <tr>
@@ -708,7 +754,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>-156.532000</td>
       <td>-154.64600</td>
       <td>938.42000</td>
-      <td>1983.980000</td>
+      <td>2035.620000</td>
       <td>1.001480</td>
     </tr>
     <tr>
@@ -720,7 +766,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>0.999461</td>
       <td>1.00107</td>
       <td>4863.49000</td>
-      <td>10282.200000</td>
+      <td>10549.900000</td>
       <td>1.000320</td>
     </tr>
     <tr>
@@ -732,7 +778,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.000210</td>
       <td>1.00210</td>
       <td>4344.92000</td>
-      <td>9185.880000</td>
+      <td>9424.990000</td>
       <td>0.999725</td>
     </tr>
     <tr>
@@ -744,7 +790,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.000430</td>
       <td>1.00200</td>
       <td>4385.54000</td>
-      <td>9271.760000</td>
+      <td>9513.100000</td>
       <td>0.999669</td>
     </tr>
     <tr>
@@ -756,7 +802,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.001150</td>
       <td>1.00292</td>
       <td>4664.71000</td>
-      <td>9861.970000</td>
+      <td>10118.700000</td>
       <td>0.999536</td>
     </tr>
     <tr>
@@ -768,7 +814,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>1.001540</td>
       <td>1.00321</td>
       <td>4786.98000</td>
-      <td>10120.500000</td>
+      <td>10383.900000</td>
       <td>0.999197</td>
     </tr>
     <tr>
@@ -780,7 +826,7 @@ Consider re-running with show_console=True if the above output is unclear!
       <td>0.961783</td>
       <td>1.09259</td>
       <td>256.47117</td>
-      <td>542.222346</td>
+      <td>556.336594</td>
       <td>1.011019</td>
     </tr>
   </tbody>
@@ -801,7 +847,7 @@ Consider re-running with show_console=True if the above output is unclear!
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_1.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_2.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_3.csv, /tmp/tmpp0wq33li/blra_mjwnh7/blr-20220630202551_4.csv
+Processing csv files: /tmp/tmpyvkgpyxk/blrty52urby/blr-20220825132952_1.csv, /tmp/tmpyvkgpyxk/blrty52urby/blr-20220825132952_2.csv, /tmp/tmpyvkgpyxk/blrty52urby/blr-20220825132952_3.csv, /tmp/tmpyvkgpyxk/blrty52urby/blr-20220825132952_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
@@ -834,7 +880,7 @@ Processing complete, no problems detected.
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:25:52 - cmdstanpy - INFO - CmdStan start processing
+13:29:53 - cmdstanpy - INFO - CmdStan start processing
 chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
@@ -842,14 +888,14 @@ chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
 
 chain 4 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+chain 2 |<span class="ansi-blue-fg">████████▎ </span>| 00:00 Iteration:  775 / 1075 [ 72%]  (Sampling)
+
+
 chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 
 
 chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
-
-
-
 chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 </pre></div></div>
 </div>
@@ -867,20 +913,27 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-20:25:52 - cmdstanpy - INFO - CmdStan done processing.
-20:25:52 - cmdstanpy - WARNING - Some chains may have failed to converge.
-        Chain 1 had 161 divergent transitions (16.1%)
-        Chain 3 had 147 divergent transitions (14.7%)
-        Chain 4 had 244 divergent transitions (24.4%)
-        Use function &#34;diagnose()&#34; to see further information.
+13:29:53 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+13:29:53 - cmdstanpy - WARNING - Some chains may have failed to converge.
+        Chain 1 had 161 divergent transitions (16.1%)
+        Chain 3 had 147 divergent transitions (14.7%)
+        Chain 4 had 244 divergent transitions (24.4%)
+        Use function &#34;diagnose()&#34; to see further information.
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -924,18 +977,6 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <th>N_Eff/s</th>
       <th>R_hat</th>
     </tr>
-    <tr>
-      <th>name</th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-      <th></th>
-    </tr>
   </thead>
   <tbody>
     <tr>
@@ -947,7 +988,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>-165.541000</td>
       <td>-154.33900</td>
       <td>2.03097</td>
-      <td>12.69360</td>
+      <td>12.08910</td>
       <td>11.37150</td>
     </tr>
     <tr>
@@ -959,7 +1000,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>0.999494</td>
       <td>1.00252</td>
       <td>232.18100</td>
-      <td>1451.13000</td>
+      <td>1382.03000</td>
       <td>1.01286</td>
     </tr>
     <tr>
@@ -971,7 +1012,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.000410</td>
       <td>1.00459</td>
       <td>110.88200</td>
-      <td>693.01400</td>
+      <td>660.01400</td>
       <td>1.04571</td>
     </tr>
     <tr>
@@ -983,7 +1024,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.000480</td>
       <td>1.00442</td>
       <td>62.47110</td>
-      <td>390.44400</td>
+      <td>371.85200</td>
       <td>1.04607</td>
     </tr>
     <tr>
@@ -995,7 +1036,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.001690</td>
       <td>1.00512</td>
       <td>103.34500</td>
-      <td>645.90400</td>
+      <td>615.14700</td>
       <td>1.09049</td>
     </tr>
     <tr>
@@ -1007,7 +1048,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>1.001290</td>
       <td>1.00443</td>
       <td>180.70500</td>
-      <td>1129.41000</td>
+      <td>1075.63000</td>
       <td>1.03165</td>
     </tr>
     <tr>
@@ -1019,7 +1060,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
       <td>2.708830</td>
       <td>3.17346</td>
       <td>2.03514</td>
-      <td>12.71963</td>
+      <td>12.11393</td>
       <td>10.50420</td>
     </tr>
   </tbody>
@@ -1039,7 +1080,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Processing csv files: /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_1.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_2.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_3.csv, /tmp/tmpp0wq33li/blrpvq8xdk4/blr-20220630202552_4.csv
+Processing csv files: /tmp/tmpyvkgpyxk/blr2u04w073/blr-20220825132953_1.csv, /tmp/tmpyvkgpyxk/blr2u04w073/blr-20220825132953_2.csv, /tmp/tmpyvkgpyxk/blr2u04w073/blr-20220825132953_3.csv, /tmp/tmpyvkgpyxk/blr2u04w073/blr-20220825132953_4.csv
 
 Checking sampler transitions treedepth.
 Treedepth satisfactory for all transitions.
@@ -1099,13 +1140,13 @@ Processing complete.
     </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
 <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2021, Stan Development Team.<br>
+    &copy; Copyright 2022, Stan Development Team.<br>
 </p>
     </div>
     

@@ -290,6 +290,8 @@ class CmdStanGQ(Generic[Fit]):
             else:
                 vars_list = vars
 
+            vars_list = list(dict.fromkeys(vars_list))
+
         if inc_warmup:
             if (
                 isinstance(self.previous_fit, CmdStanMCMC)
@@ -319,7 +321,7 @@ class CmdStanGQ(Generic[Fit]):
         gq_cols = []
         mcmc_vars = []
         if vars is not None:
-            for var in set(vars_list):
+            for var in vars_list:
                 if var in self.metadata.stan_vars_cols:
                     for idx in self.metadata.stan_vars_cols[var]:
                         gq_cols.append(self.column_names[idx])
@@ -332,6 +334,7 @@ class CmdStanGQ(Generic[Fit]):
                     raise ValueError('Unknown variable: {}'.format(var))
         else:
             gq_cols = list(self.column_names)
+            vars_list = gq_cols
 
         previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
 
@@ -347,8 +350,8 @@ class CmdStanGQ(Generic[Fit]):
                             columns=self.column_names,
                         )[gq_cols],
                     ],
-                    axis=1,
-                )
+                    axis='columns',
+                )[vars_list]
             else:
                 return previous_draws_pd
         elif inc_sample and vars is None:
@@ -585,10 +588,14 @@ class CmdStanGQ(Generic[Fit]):
         col_idxs = self._metadata.stan_vars_cols[var]
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[var])
-        # pylint: disable=redundant-keyword-arg
-        draws = self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+        draws = self._draws[draw1:, :, col_idxs]
+
         if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-            draws = draws[..., 0] + 1j * draws[..., 1]
+            draws = draws[..., ::2] + 1j * draws[..., 1::2]
+            dims = dims[:-1]
+
+        draws = draws.reshape(dims, order='F')
+
         return draws
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:

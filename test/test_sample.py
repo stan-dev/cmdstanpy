@@ -598,6 +598,8 @@ class SampleTest(unittest.TestCase):
             iter_sampling=100, show_progress=False
         )
         self.assertEqual(datagen_fit.step_size, None)
+        summary = datagen_fit.summary()
+        self.assertNotIn('lp__', list(summary.index))
 
         exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
         shutil.copyfile(datagen_model.exe_file, exe_only)
@@ -608,6 +610,8 @@ class SampleTest(unittest.TestCase):
         )
         self.assertEqual(datagen2_fit.chains, 4)
         self.assertEqual(datagen2_fit.step_size, None)
+        summary = datagen2_fit.summary()
+        self.assertNotIn('lp__', list(summary.index))
 
     def test_bernoulli_file_with_space(self):
         self.test_bernoulli_good('bernoulli with space in name.stan')
@@ -741,12 +745,24 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertEqual(fit.draws_pd(vars=['theta', 'lp__']).shape, (400, 2))
         self.assertEqual(fit.draws_pd(vars='theta').shape, (400, 1))
 
+        self.assertEqual(
+            list(fit.draws_pd(vars=['theta', 'lp__']).columns),
+            ['theta', 'lp__'],
+        )
+        self.assertEqual(
+            list(fit.draws_pd(vars=['lp__', 'theta']).columns),
+            ['lp__', 'theta'],
+        )
+
         summary = fit.summary()
         self.assertIn('5%', list(summary.columns))
         self.assertIn('50%', list(summary.columns))
         self.assertIn('95%', list(summary.columns))
         self.assertNotIn('1%', list(summary.columns))
         self.assertNotIn('99%', list(summary.columns))
+        self.assertEqual(summary.index.name, None)
+        self.assertIn('lp__', list(summary.index))
+        self.assertIn('theta', list(summary.index))
 
         summary = fit.summary(percentiles=[1, 45, 99])
         self.assertIn('1%', list(summary.columns))
@@ -1794,10 +1810,26 @@ class CmdStanMCMCTest(CustomTestCase):
         # make sure the name 'imag' isn't magic
         self.assertEqual(fit.stan_variable('imag').shape, (10, 2))
 
+        self.assertTrue(
+            np.allclose(
+                fit.stan_variable('zs')[0], np.array([[3, 4j, 5], [1j, 2j, 3j]])
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                fit.stan_variable('zs_mat')[0],
+                np.array([[3, 4j, 5], [1j, 2j, 3j]]),
+            )
+        )
+
         self.assertNotIn("zs_dim_2", fit.draws_xr())
         # getting a raw scalar out of xarray is heavy
         self.assertEqual(
             fit.draws_xr().z.isel(chain=0, draw=1).data[()], 3 + 4j
+        )
+        np.testing.assert_allclose(
+            fit.draws_xr().zs.isel(chain=0, draw=1).data,
+            np.array([[3, 4j, 5], [1j, 2j, 3j]]),
         )
 
     def test_attrs(self):

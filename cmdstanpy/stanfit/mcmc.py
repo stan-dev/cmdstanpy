@@ -448,11 +448,11 @@ class CmdStanMCMC:
     ) -> pd.DataFrame:
         """
         Run cmdstan/bin/stansummary over all output CSV files, assemble
-        summary into DataFrame object; first row contains summary statistics
-        for total joint log probability `lp__`, remaining rows contain summary
+        summary into DataFrame object.  The first row contains statistics
+        for the total joint log probability `lp__`, but is omitted when the
+        Stan model has no parameters.  The remaining rows contain summary
         statistics for all parameters, transformed parameters, and generated
-        quantities variables listed in the order in which they were declared
-        in the Stan program.
+        quantities variables, in program declaration order.
 
         :param percentiles: Ordered non-empty sequence of percentiles to report.
             Must be integers from (1, 99), inclusive. Defaults to
@@ -467,7 +467,6 @@ class CmdStanMCMC:
 
         :return: pandas.DataFrame
         """
-
         if len(percentiles) == 0:
             raise ValueError(
                 'Invalid percentiles argument, must be ordered'
@@ -526,7 +525,14 @@ class CmdStanMCMC:
                 comment='#',
                 float_precision='high',
             )
-        mask = [x == 'lp__' or not x.endswith('__') for x in summary_data.index]
+        mask = (
+            [not x.endswith('__') for x in summary_data.index]
+            if self._is_fixed_param
+            else [
+                x == 'lp__' or not x.endswith('__') for x in summary_data.index
+            ]
+        )
+        summary_data.index.name = None
         return summary_data[mask]
 
     def diagnose(self) -> Optional[str]:
@@ -589,7 +595,7 @@ class CmdStanMCMC:
             self._assemble_draws()
         cols = []
         if vars is not None:
-            for var in set(vars_list):
+            for var in dict.fromkeys(vars_list):
                 if (
                     var not in self.metadata.method_vars_cols
                     and var not in self.metadata.stan_vars_cols
@@ -741,9 +747,14 @@ class CmdStanMCMC:
         col_idxs = self._metadata.stan_vars_cols[var]
         if len(col_idxs) > 0:
             dims.extend(self._metadata.stan_vars_dims[var])
-        draws = self._draws[draw1:, :, col_idxs].reshape(dims, order='F')
+        draws = self._draws[draw1:, :, col_idxs]
+
         if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-            draws = draws[..., 0] + 1j * draws[..., 1]
+            draws = draws[..., ::2] + 1j * draws[..., 1::2]
+            dims = dims[:-1]
+
+        draws = draws.reshape(dims, order='F')
+
         return draws
 
     def stan_variables(self) -> Dict[str, np.ndarray]:

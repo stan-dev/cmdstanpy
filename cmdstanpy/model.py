@@ -552,7 +552,9 @@ class CmdStanModel:
                     x for x in lines if x.startswith('Semantic error')
                 ]
                 exceptions = [
-                    x for x in lines if x.startswith('Uncaught exception')
+                    x
+                    for x in lines
+                    if 'Uncaught exception' in x or 'fatal error' in x
                 ]
                 if (
                     len(syntax_errors) > 0

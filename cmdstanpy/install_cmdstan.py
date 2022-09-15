@@ -41,6 +41,7 @@ from cmdstanpy.utils import (
     validate_dir,
     wrap_url_progress_hook,
 )
+from cmdstanpy.utils.cmdstan import get_download_url
 
 from . import progress as progbar
 
@@ -426,10 +427,7 @@ def install_version(
 
 def is_version_available(version: str) -> bool:
     is_available = True
-    url = (
-        'https://github.com/stan-dev/cmdstan/releases/download/'
-        'v{0}/cmdstan-{0}.tar.gz'.format(version)
-    )
+    url = get_download_url(version)
     for i in range(6):
         try:
             urllib.request.urlopen(url)
@@ -458,10 +456,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
     print('Downloading CmdStan version {}'.format(version))
-    url = (
-        'https://github.com/stan-dev/cmdstan/releases/download/'
-        'v{0}/cmdstan-{0}.tar.gz'.format(version)
-    )
+    url = get_download_url(version)
     for i in range(6):  # always retry to allow for transient URLErrors
         try:
             if progress and progbar.allow_show_progress():

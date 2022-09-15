@@ -193,26 +193,31 @@ the object's :attr:`~CmdStanMCMC.metadata` property.
 Output data
 -----------
 
-The CSV data is assembled into the inference result object.
-CmdStanPy provides accessor methods which return this information
-either as columnar data (i.e., in terms of the CSV file columns),
-or as method and model variables.
+The resulting Stan CSV file or set of files are assembled into an inference result object.
 
-The :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd` methods
-for both :class:`CmdStanMCMC` and :class:`CmdStanGQ` return the sample contents
-in columnar format, as a numpy.ndarray or pandas.DataFrame, respectively. Similarly,
-the :meth:`~CmdStanMCMC.draws_xr` method  of these two objects returns the sample
-contents as an :py:class:`xarray.Dataset` which maps the method and model variable
-names to their respective values.
++ :class:`CmdStanMCMC` object contains the :meth:`~CmdStanModel.sample` outputs
++ :class:`CmdStanVB` object contains the :meth:`~CmdStanModel.variational` outputs
++ :class:`CmdStanMLE` object contains the :meth:`~CmdStanModel.optimize` outputs
++ :class:`CmdStanGQ` object contains the :meth:`~CmdStanModel.generate_quantities` outputs
 
-The :meth:`~CmdStanMCMC.method_variables` method returns a Python dict over all inference
-method variables.
 
-All inference objects expose the following methods:
+The objects provide accessor methods which return this information
+either as tabular data (i.e., in terms of the per-chain CSV file rows and columns),
+or as structured objects which correspond to the variables in the Stan model
+and the individual diagnostics produced by the inference method.
 
-The :meth:`~CmdStanMCMC.stan_variable` method to returns a numpy.ndarray object
-which contains the set of all draws in the sample for the named Stan program variable.
-The draws from all chains are flattened into a single drawset.
-The first ndarray dimension is the number of draws X number of chains.
-The remaining ndarray dimensions correspond to the Stan program variable dimension.
-The :meth:`~CmdStanMCMC.stan_variables` method returns a Python dict over all Stan model variables.
+The ``stan_variables`` method returns a Python dict over all Stan model variables,
+see :meth:`~CmdStanMCMC.stan_variables`.
+
+The ``stan_variable`` method returns a single model variable as a numpy.ndarray object
+with the same structure (per draw) as the Stan program variable,
+see :meth:`~CmdStanMCMC.stan_variable`.
+
+The ``method_variables`` method returns a Python dict over all inference
+method variables, cf :meth:`~CmdStanMCMC.method_variables`
+
+
+The output from the methods :class:`CmdStanMCMC` and :class:`CmdStanGQ` return the sample contents
+in tabular form, see :meth:`~CmdStanMCMC.draws` and :meth:`~CmdStanMCMC.draws_pd`.
+Similarly, the :meth:`~CmdStanMCMC.draws_xr` method returns the sample
+contents as an :py:class:`xarray.Dataset` which is a mapping from variable names to their respective values.

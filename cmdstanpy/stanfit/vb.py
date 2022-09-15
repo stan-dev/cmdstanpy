@@ -143,12 +143,13 @@ class CmdStanVB:
         shape: Tuple[int, ...] = ()
         if len(col_idxs) > 1:
             shape = self._metadata.stan_vars_dims[var]
-            result: np.ndarray = np.asarray(self._variational_mean)[
-                col_idxs
-            ].reshape(shape, order="F")
-
+            result: np.ndarray = np.asarray(self._variational_mean)[col_idxs]
             if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-                result = result[..., 0] + 1j * result[..., 1]
+                result = result[..., ::2] + 1j * result[..., 1::2]
+                shape = shape[:-1]
+
+            result = result.reshape(shape, order="F")
+
             return result
         else:
             return float(self._variational_mean[col_idxs[0]])

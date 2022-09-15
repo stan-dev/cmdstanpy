@@ -24,12 +24,11 @@ set of model, data, and posterior estimates.
 .. toctree::
    :maxdepth: 4
 
-   overview
    installation
-   hello_world
-   workflow
-   examples
-   community
+   users-guide
    api
+   changes
+   community
+
 
 :ref:`genindex`

@@ -1,7 +1,5 @@
 """The global configuration for the test suite"""
-import atexit
 import os
-import shutil
 import subprocess
 
 import pytest
@@ -15,16 +13,8 @@ DATAFILES_PATH = os.path.join(HERE, 'data')
 
 @pytest.fixture(scope='session', autouse=True)
 def cleanup_test_files():
-
-    import cmdstanpy
-
-    # see https://github.com/pytest-dev/pytest/issues/5502
-    atexit.unregister(cmdstanpy._cleanup_tmpdir)
-
+    """Remove compiled models and output files after test run."""
     yield
-
-    shutil.rmtree(cmdstanpy._TMPDIR, ignore_errors=True)
-
     subprocess.Popen(
         ['git', 'clean', '-fX', DATAFILES_PATH],
         stdout=subprocess.DEVNULL,
