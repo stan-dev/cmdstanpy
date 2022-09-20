@@ -210,12 +210,6 @@ class CmdStanModel:
 
         if compile and self._exe_file is None:
             self.compile(force=str(compile).lower() == 'force')
-            if self._exe_file is None:
-                raise ValueError(
-                    'Unable to compile Stan model file: {}.'.format(
-                        self._stan_file
-                    )
-                )
 
     def __repr__(self) -> str:
         repr = 'CmdStanModel: name={}'.format(self._name)
@@ -531,45 +525,26 @@ class CmdStanModel:
                 get_logger().info(
                     'compiled model executable: %s', self._exe_file
                 )
-            if compilation_failed or 'Warning' in console:
+            if 'Warning' in console:
                 lines = console.split('\n')
                 warnings = [x for x in lines if x.startswith('Warning')]
-                syntax_errors = [
-                    x for x in lines if x.startswith('Syntax error')
-                ]
-                semantic_errors = [
-                    x for x in lines if x.startswith('Semantic error')
-                ]
-                exceptions = [
-                    x
-                    for x in lines
-                    if 'Uncaught exception' in x or 'fatal error' in x
-                ]
-                if (
-                    len(syntax_errors) > 0
-                    or len(semantic_errors) > 0
-                    or len(exceptions) > 0
-                ):
-                    get_logger().error('Stan program failed to compile:')
-                    get_logger().warning(console)
-                elif len(warnings) > 0:
-                    get_logger().warning(
-                        'Stan compiler has produced %d warnings:',
-                        len(warnings),
-                    )
-                    get_logger().warning(console)
-                elif (
-                    'PCH file' in console
-                    or 'model_header.hpp.gch' in console
-                    or 'precompiled header' in console
-                ):
+                get_logger().warning(
+                    'Stan compiler has produced %d warnings:',
+                    len(warnings),
+                )
+                get_logger().warning(console)
+            if compilation_failed:
+                if 'PCH' in console or 'precompiled header' in console:
                     get_logger().warning(
                         "CmdStan's precompiled header (PCH) files "
                         "may need to be rebuilt."
-                        "If your model failed to compile please run "
-                        "cmdstanpy.rebuild_cmdstan().\nIf the "
-                        "issue persists please open a bug report"
+                        "Please run cmdstanpy.rebuild_cmdstan().\n"
+                        "If the issue persists please open a bug report"
                     )
+                raise ValueError(
+                    f"Failed to compile Stan model '{self._stan_file}'. "
+                    f"Console:\n{console}"
+                )
 
     def optimize(
         self,
