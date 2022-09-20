@@ -422,7 +422,7 @@ class OptimizeArgs:
             )
 
         if self.init_alpha is not None:
-            if self.algorithm.lower() == 'Newton':
+            if self.algorithm.lower() not in {'lbfgs', 'bfgs'}:
                 raise ValueError(
                     'init_alpha requires that algorithm be set to bfgs or lbfgs'
                 )
