@@ -726,7 +726,9 @@ class CmdStanModel:
             self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
 
         if not runset._check_retcodes():
-            msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
+            msg = "Error during optimization! Command '{}' failed: {}".format(
+                ' '.join(runset.cmd(0)), runset.get_err_msgs()
+            )
             if 'Line search failed' in msg and not require_converged:
                 get_logger().warning(msg)
             else:

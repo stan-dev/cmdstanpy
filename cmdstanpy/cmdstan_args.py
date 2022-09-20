@@ -396,7 +396,7 @@ class OptimizeArgs:
         history_size: Optional[int] = None,
     ) -> None:
 
-        self.algorithm = algorithm
+        self.algorithm = algorithm or ""
         self.init_alpha = init_alpha
         self.iter = iter
         self.save_iterations = save_iterations
@@ -414,10 +414,7 @@ class OptimizeArgs:
         """
         Check arguments correctness and consistency.
         """
-        if (
-            self.algorithm is not None
-            and self.algorithm not in self.OPTIMIZE_ALGOS
-        ):
+        if self.algorithm and self.algorithm not in self.OPTIMIZE_ALGOS:
             raise ValueError(
                 'Please specify optimizer algorithms as one of [{}]'.format(
                     ', '.join(self.OPTIMIZE_ALGOS)
@@ -425,9 +422,9 @@ class OptimizeArgs:
             )
 
         if self.init_alpha is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm.lower() == 'Newton':
                 raise ValueError(
-                    'init_alpha must not be set when algorithm is Newton'
+                    'init_alpha requires that algorithm be set to bfgs or lbfgs'
                 )
             if isinstance(self.init_alpha, float):
                 if self.init_alpha <= 0:
@@ -443,9 +440,9 @@ class OptimizeArgs:
                 raise ValueError('iter must be type of int')
 
         if self.tol_obj is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm.lower() not in {'lbfgs', 'bfgs'}:
                 raise ValueError(
-                    'tol_obj must not be set when algorithm is Newton'
+                    'tol_obj requires that algorithm be set to bfgs or lbfgs'
                 )
             if isinstance(self.tol_obj, float):
                 if self.tol_obj <= 0:
@@ -454,9 +451,10 @@ class OptimizeArgs:
                 raise ValueError('tol_obj must be type of float')
 
         if self.tol_rel_obj is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm.lower() not in {'lbfgs', 'bfgs'}:
                 raise ValueError(
-                    'tol_rel_obj must not be set when algorithm is Newton'
+                    'tol_rel_obj requires that algorithm be set to bfgs'
+                    ' or lbfgs'
                 )
             if isinstance(self.tol_rel_obj, float):
                 if self.tol_rel_obj <= 0:
@@ -465,9 +463,9 @@ class OptimizeArgs:
                 raise ValueError('tol_rel_obj must be type of float')
 
         if self.tol_grad is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm.lower() not in {'lbfgs', 'bfgs'}:
                 raise ValueError(
-                    'tol_grad must not be set when algorithm is Newton'
+                    'tol_grad requires that algorithm be set to bfgs or lbfgs'
                 )
             if isinstance(self.tol_grad, float):
                 if self.tol_grad <= 0:
@@ -476,9 +474,10 @@ class OptimizeArgs:
                 raise ValueError('tol_grad must be type of float')
 
         if self.tol_rel_grad is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm.lower() not in {'lbfgs', 'bfgs'}:
                 raise ValueError(
-                    'tol_rel_grad must not be set when algorithm is Newton'
+                    'tol_rel_grad requires that algorithm be set to bfgs'
+                    ' or lbfgs'
                 )
             if isinstance(self.tol_rel_grad, float):
                 if self.tol_rel_grad <= 0:
@@ -487,9 +486,9 @@ class OptimizeArgs:
                 raise ValueError('tol_rel_grad must be type of float')
 
         if self.tol_param is not None:
-            if self.algorithm == 'Newton':
+            if self.algorithm.lower() not in {'lbfgs', 'bfgs'}:
                 raise ValueError(
-                    'tol_param must not be set when algorithm is Newton'
+                    'tol_param requires that algorithm be set to bfgs or lbfgs'
                 )
             if isinstance(self.tol_param, float):
                 if self.tol_param <= 0:
@@ -498,10 +497,9 @@ class OptimizeArgs:
                 raise ValueError('tol_param must be type of float')
 
         if self.history_size is not None:
-            if self.algorithm == 'Newton' or self.algorithm == 'BFGS':
+            if self.algorithm.lower() != 'lbfgs':
                 raise ValueError(
-                    'history_size must not be set when algorithm is '
-                    'Newton or BFGS'
+                    'history_size requires that algorithm be set to lbfgs'
                 )
             if isinstance(self.history_size, int):
                 if self.history_size < 0:
