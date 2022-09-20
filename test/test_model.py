@@ -299,13 +299,8 @@ class CmdStanModelTest(CustomTestCase):
 
     def test_model_syntax_error(self):
         stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
-        with LogCapture(level=logging.WARNING) as log:
-            logging.getLogger()
-            with self.assertRaises(ValueError):
-                CmdStanModel(stan_file=stan)
-        log.check_present(
-            ('cmdstanpy', 'WARNING', StringComparison(r'(?s).*Syntax error.*'))
-        )
+        with self.assertRaisesRegex(ValueError, r'.*Syntax error.*'):
+            CmdStanModel(stan_file=stan)
 
     def test_repr(self):
         model = CmdStanModel(stan_file=BERN_STAN)
