@@ -1620,7 +1620,7 @@ class CmdStanModel:
                     runset._set_timeout_flag(idx, True)
 
                 timer = threading.Timer(timeout, _timer_target)
-                timer.setDaemon(True)
+                timer.daemon = True
                 timer.start()
             else:
                 timer = None
