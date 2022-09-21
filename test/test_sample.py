@@ -1913,6 +1913,12 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertEqual(fit.max_treedepths, None)
         self.assertEqual(fit.divergences, None)
 
+    def test_timeout(self):
+        stan = os.path.join(DATAFILES_PATH, 'timeout.stan')
+        timeout_model = CmdStanModel(stan_file=stan)
+        with self.assertRaises(TimeoutError):
+            timeout_model.sample(timeout=0.1, chains=1, data={'loop': 1})
+
 
 if __name__ == '__main__':
     unittest.main()
