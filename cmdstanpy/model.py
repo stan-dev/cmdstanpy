@@ -1527,10 +1527,8 @@ class CmdStanModel:
                     'current value is {}.'.format(grad_samples)
                 )
             else:
-                msg = (
-                    'Variational algorithm failed.\n '
-                    'Console output:\n{}'.format(contents)
-                )
+                msg = 'Error during variational inference: {}'.format(
+                    runset.get_err_msgs())
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
