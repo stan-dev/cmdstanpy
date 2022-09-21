@@ -234,6 +234,8 @@ class RunSet:
         """Checks console messages for each CmdStan run."""
         msgs = []
         for i in range(self._num_procs):
+            if self._retcodes[i] == 60:
+                msgs.append("processing timed out")
             if (
                 os.path.exists(self._stdout_files[i])
                 and os.stat(self._stdout_files[i]).st_size > 0

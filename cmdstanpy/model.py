@@ -13,6 +13,7 @@ from datetime import datetime
 from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
+import threading
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import ujson as json
@@ -593,6 +594,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -692,6 +694,8 @@ class CmdStanModel:
             :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
+        :param timeout: Duration at which optimization times out in seconds.
+
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
@@ -723,7 +727,8 @@ class CmdStanModel:
             )
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
+            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console,
+                              timeout=timeout)
 
         if not runset._check_retcodes():
             msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
@@ -767,6 +772,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
         *,
         force_one_process_per_chain: Optional[bool] = None,
     ) -> CmdStanMCMC:
@@ -964,6 +970,8 @@ class CmdStanModel:
             model was compiled with STAN_THREADS=True, and utilize the
             parallel chain functionality if those conditions are met.
 
+        :param timeout: Duration at which sampling times out in seconds.
+
         :return: CmdStanMCMC object
         """
         if fixed_param is None:
@@ -1139,6 +1147,7 @@ class CmdStanModel:
                         show_progress=show_progress,
                         show_console=show_console,
                         progress_hook=progress_hook,
+                        timeout=timeout,
                     )
             if show_progress and progress_hook is not None:
                 progress_hook("Done", -1)  # -1 == all chains finished
@@ -1209,6 +1218,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
     ) -> CmdStanGQ:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -1266,6 +1276,8 @@ class CmdStanModel:
         :param time_fmt: A format string passed to
             :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
+
+        :param timeout: Duration at which generation times out in seconds.
 
         :return: CmdStanGQ object
         """
@@ -1329,6 +1341,7 @@ class CmdStanModel:
                         runset,
                         i,
                         show_console=show_console,
+                        timeout=timeout,
                     )
 
             errors = runset.get_err_msgs()
@@ -1366,6 +1379,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1458,6 +1472,9 @@ class CmdStanModel:
             :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
+        :param timeout: Duration at which variational Bayesian inference times
+            out in seconds.
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
@@ -1491,7 +1508,8 @@ class CmdStanModel:
 
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
+            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console,
+                              timeout=timeout)
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
@@ -1541,6 +1559,7 @@ class CmdStanModel:
         show_progress: bool = False,
         show_console: bool = False,
         progress_hook: Optional[Callable[[str, int], None]] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         """
         Helper function which encapsulates call to CmdStan.
@@ -1577,6 +1596,12 @@ class CmdStanModel:
                 env=os.environ,
                 universal_newlines=True,
             )
+            if timeout:
+                timer = threading.Timer(timeout, proc.terminate)
+                timer.setDaemon(True)
+                timer.start()
+            else:
+                timer = None
             while proc.poll() is None:
                 if proc.stdout is not None:
                     line = proc.stdout.readline()
@@ -1589,6 +1614,8 @@ class CmdStanModel:
 
             stdout, _ = proc.communicate()
             retcode = proc.returncode
+            if timer and retcode == -15:
+                retcode = 60
             runset._set_retcode(idx, retcode)
 
             if stdout:

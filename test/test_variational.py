@@ -291,6 +291,14 @@ class VariationalTest(unittest.TestCase):
         with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
             dummy = fit.c
 
+    def test_timeout(self):
+        stan = os.path.join(DATAFILES_PATH, 'timeout.stan')
+        timeout_model = CmdStanModel(stan_file=stan)
+        self.assertRaisesRegex(
+            RuntimeError, 'processing timed out', timeout_model.variational,
+            timeout=0.1, data={'loop': 1}, show_console=True,
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
