@@ -1612,7 +1612,7 @@ class CmdStanModel:
             )
             if timeout:
 
-                def _timer_target():
+                def _timer_target() -> None:
                     # Abort if the process has already terminated.
                     if proc.poll() is not None:
                         return
