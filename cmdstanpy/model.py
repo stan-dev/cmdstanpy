@@ -727,8 +727,12 @@ class CmdStanModel:
             )
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console,
-                              timeout=timeout)
+            self._run_cmdstan(
+                runset,
+                dummy_chain_id,
+                show_console=show_console,
+                timeout=timeout,
+            )
 
         if not runset._check_retcodes():
             msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
@@ -1508,8 +1512,12 @@ class CmdStanModel:
 
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console,
-                              timeout=timeout)
+            self._run_cmdstan(
+                runset,
+                dummy_chain_id,
+                show_console=show_console,
+                timeout=timeout,
+            )
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
@@ -1546,7 +1554,8 @@ class CmdStanModel:
                 )
             else:
                 msg = 'Error during variational inference: {}'.format(
-                    runset.get_err_msgs())
+                    runset.get_err_msgs()
+                )
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)

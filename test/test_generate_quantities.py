@@ -481,8 +481,9 @@ class GenerateQuantitiesTest(CustomTestCase):
         timeout_model = CmdStanModel(stan_file=stan)
         fit = timeout_model.sample(data={'loop': 0}, chains=1, iter_sampling=10)
         with self.assertRaisesRegex(RuntimeError, 'processing timed out'):
-            timeout_model.generate_quantities(timeout=0.1, mcmc_sample=fit,
-                                              data={'loop': 1})
+            timeout_model.generate_quantities(
+                timeout=0.1, mcmc_sample=fit, data={'loop': 1}
+            )
 
 
 if __name__ == '__main__':
