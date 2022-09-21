@@ -432,9 +432,7 @@ class OptimizeTest(unittest.TestCase):
         jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
         jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
 
-        with self.assertRaisesRegex(
-            ValueError, 'must not be set when algorithm is Newton'
-        ):
+        with self.assertRaisesRegex(ValueError, 'bfgs or lbfgs'):
             model.optimize(
                 data=jdata,
                 seed=1239812093,
@@ -443,9 +441,7 @@ class OptimizeTest(unittest.TestCase):
                 tol_obj=1,
             )
 
-        with self.assertRaisesRegex(
-            ValueError, 'must not be set when algorithm is Newton'
-        ):
+        with self.assertRaisesRegex(ValueError, 'bfgs or lbfgs'):
             model.optimize(
                 data=jdata,
                 seed=1239812093,
@@ -454,9 +450,7 @@ class OptimizeTest(unittest.TestCase):
                 tol_rel_obj=1,
             )
 
-        with self.assertRaisesRegex(
-            ValueError, 'must not be set when algorithm is Newton'
-        ):
+        with self.assertRaisesRegex(ValueError, 'bfgs or lbfgs'):
             model.optimize(
                 data=jdata,
                 seed=1239812093,
@@ -465,9 +459,7 @@ class OptimizeTest(unittest.TestCase):
                 tol_grad=1,
             )
 
-        with self.assertRaisesRegex(
-            ValueError, 'must not be set when algorithm is Newton'
-        ):
+        with self.assertRaisesRegex(ValueError, 'bfgs or lbfgs'):
             model.optimize(
                 data=jdata,
                 seed=1239812093,
@@ -476,9 +468,15 @@ class OptimizeTest(unittest.TestCase):
                 tol_rel_grad=1,
             )
 
-        with self.assertRaisesRegex(
-            ValueError, 'must not be set when algorithm is Newton'
-        ):
+        with self.assertRaisesRegex(ValueError, 'bfgs or lbfgs'):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
+                tol_rel_grad=1,
+            )
+
+        with self.assertRaisesRegex(ValueError, 'bfgs or lbfgs'):
             model.optimize(
                 data=jdata,
                 seed=1239812093,
@@ -489,7 +487,7 @@ class OptimizeTest(unittest.TestCase):
 
         with self.assertRaisesRegex(
             ValueError,
-            'history_size must not be set when algorithm is Newton or BFGS',
+            'lbfgs',
         ):
             model.optimize(
                 data=jdata,
@@ -501,13 +499,24 @@ class OptimizeTest(unittest.TestCase):
 
         with self.assertRaisesRegex(
             ValueError,
-            'history_size must not be set when algorithm is Newton or BFGS',
+            'lbfgs',
         ):
             model.optimize(
                 data=jdata,
                 seed=1239812093,
                 inits=jinit,
                 algorithm='BFGS',
+                history_size=1,
+            )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            'lbfgs',
+        ):
+            model.optimize(
+                data=jdata,
+                seed=1239812093,
+                inits=jinit,
                 history_size=1,
             )
 
