@@ -637,7 +637,7 @@ class OptimizeTest(unittest.TestCase):
     def test_timeout(self):
         stan = os.path.join(DATAFILES_PATH, 'timeout.stan')
         timeout_model = CmdStanModel(stan_file=stan)
-        with self.assertRaisesRegex(RuntimeError, 'processing timed out'):
+        with self.assertRaises(TimeoutError):
             timeout_model.optimize(data={'loop': 1}, timeout=0.1)
 
 

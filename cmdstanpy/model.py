@@ -733,6 +733,7 @@ class CmdStanModel:
                 show_console=show_console,
                 timeout=timeout,
             )
+        runset.raise_for_timeouts()
 
         if not runset._check_retcodes():
             msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
@@ -1167,6 +1168,8 @@ class CmdStanModel:
                 sys.stdout.write('\n')
                 get_logger().info('CmdStan done processing.')
 
+            runset.raise_for_timeouts()
+
             get_logger().debug('runset\n%s', repr(runset))
 
             # hack needed to parse CSV files if model has no params
@@ -1348,6 +1351,7 @@ class CmdStanModel:
                         timeout=timeout,
                     )
 
+            runset.raise_for_timeouts()
             errors = runset.get_err_msgs()
             if errors:
                 msg = (
@@ -1518,6 +1522,7 @@ class CmdStanModel:
                 show_console=show_console,
                 timeout=timeout,
             )
+        runset.raise_for_timeouts()
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
@@ -1606,7 +1611,15 @@ class CmdStanModel:
                 universal_newlines=True,
             )
             if timeout:
-                timer = threading.Timer(timeout, proc.terminate)
+
+                def _timer_target():
+                    # Abort if the process has already terminated.
+                    if proc.poll() is not None:
+                        return
+                    proc.terminate()
+                    runset._set_timeout_flag(idx, True)
+
+                timer = threading.Timer(timeout, _timer_target)
                 timer.setDaemon(True)
                 timer.start()
             else:
@@ -1623,11 +1636,9 @@ class CmdStanModel:
 
             stdout, _ = proc.communicate()
             retcode = proc.returncode
+            runset._set_retcode(idx, retcode)
             if timer:
                 timer.cancel()
-                if retcode == -15:
-                    retcode = 60
-            runset._set_retcode(idx, retcode)
 
             if stdout:
                 fd_out.write(stdout)

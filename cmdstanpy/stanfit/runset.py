@@ -44,6 +44,7 @@ class RunSet:
         else:
             self._num_procs = 1
         self._retcodes = [-1 for _ in range(self._num_procs)]
+        self._timeout_flags = [False for _ in range(self._num_procs)]
         if chain_ids is None:
             chain_ids = [i + 1 for i in range(chains)]
         self._chain_ids = chain_ids
@@ -230,12 +231,14 @@ class RunSet:
         """Set retcode at process[idx] to val."""
         self._retcodes[idx] = val
 
+    def _set_timeout_flag(self, idx: int, val: bool) -> None:
+        """Set timeout_flag at process[idx] to val."""
+        self._timeout_flags[idx] = val
+
     def get_err_msgs(self) -> str:
         """Checks console messages for each CmdStan run."""
         msgs = []
         for i in range(self._num_procs):
-            if self._retcodes[i] == 60:
-                msgs.append("processing timed out")
             if (
                 os.path.exists(self._stdout_files[i])
                 and os.stat(self._stdout_files[i]).st_size > 0
@@ -296,3 +299,10 @@ class RunSet:
                 raise ValueError(
                     'Cannot save to file: {}'.format(to_path)
                 ) from e
+
+    def raise_for_timeouts(self) -> None:
+        if any(self._timeout_flags):
+            raise TimeoutError(
+                f"{sum(self._timeout_flags)} of {self.num_procs} processes "
+                "timed out"
+            )
