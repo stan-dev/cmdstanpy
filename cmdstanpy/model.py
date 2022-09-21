@@ -1614,8 +1614,10 @@ class CmdStanModel:
 
             stdout, _ = proc.communicate()
             retcode = proc.returncode
-            if timer and retcode == -15:
-                retcode = 60
+            if timer:
+                timer.cancel()
+                if retcode == -15:
+                    retcode = 60
             runset._set_retcode(idx, retcode)
 
             if stdout:
