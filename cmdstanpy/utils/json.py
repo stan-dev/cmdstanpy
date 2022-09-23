@@ -2,30 +2,10 @@
 Utilities for writing Stan Json files
 """
 import json
-import math
 from collections.abc import Collection
-from typing import Any, List, Mapping, Union
+from typing import Any, List, Mapping
 
 import numpy as np
-import ujson
-
-from .logging import get_logger
-
-
-def rewrite_inf_nan(
-    data: Union[float, int, List[Any]]
-) -> Union[str, int, float, List[Any]]:
-    """Replaces NaN and Infinity with string representations"""
-    if isinstance(data, float):
-        if math.isnan(data):
-            return 'NaN'
-        if math.isinf(data):
-            return ('+' if data > 0 else '-') + 'inf'
-        return data
-    elif isinstance(data, list):
-        return [rewrite_inf_nan(item) for item in data]
-    else:
-        return data
 
 
 def serialize_complex(c: Any) -> List[float]:
@@ -56,7 +36,6 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
     """
     data_out = {}
     for key, val in data.items():
-        handle_nan_inf = False
         if val is not None:
             if isinstance(val, (str, bytes)) or (
                 type(val).__module__ != 'numpy'
@@ -67,9 +46,9 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
                     + f"write_stan_json for key '{key}'"
                 )
             try:
-                handle_nan_inf = not np.all(np.isfinite(val))
-            except TypeError:
                 # handles cases like val == ['hello']
+                np.isfinite(val)
+            except TypeError:
                 # pylint: disable=raise-missing-from
                 raise ValueError(
                     "Invalid type provided to "
@@ -86,12 +65,5 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
         else:
             data_out[key] = val
 
-        if handle_nan_inf:
-            data_out[key] = rewrite_inf_nan(data_out[key])
-
     with open(path, 'w') as fd:
-        try:
-            ujson.dump(data_out, fd)
-        except TypeError as e:
-            get_logger().debug(e)
-            json.dump(data_out, fd, default=serialize_complex)
+        json.dump(data_out, fd, default=serialize_complex)

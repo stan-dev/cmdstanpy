@@ -1,22 +1,22 @@
 """CmdStanModel"""
 
 import io
+import json
 import os
 import platform
 import re
 import shutil
 import subprocess
 import sys
+import threading
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from io import StringIO
 from multiprocessing import cpu_count
 from pathlib import Path
-import threading
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
-import ujson as json
 from tqdm.auto import tqdm
 
 from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
@@ -1587,6 +1587,7 @@ class CmdStanModel:
                 env=os.environ,
                 universal_newlines=True,
             )
+            timer: Optional[threading.Timer]
             if timeout:
 
                 def _timer_target() -> None:
