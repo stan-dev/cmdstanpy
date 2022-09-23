@@ -1,4 +1,3 @@
 pandas
 numpy>=1.21
-ujson
 tqdm
