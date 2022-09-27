@@ -7,6 +7,16 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`__ on GitHub.
 
+CmdStanPy 1.0.8
+---------------
+
+- ``install_cmdstan`` now downloads the correct CmdStan for non-x86 Linux machines.
+- Improved reporting of errors during :meth:`~CmdStanModel.compile`.
+- Fixed some edge cases in mixing arguments of the :meth:`~CmdStanModel.optimize` function.
+- Fixed how ``NaN`` and infinite numbers were serialized to JSON.
+- Removed dependency on ``ujson``. For now, all JSON serialization is done with the Python standard library.
+- Added a ``timeout`` parameter to all model methods which can be used to terminate the CmdStan process after the specified time.
+
 CmdStanPy 1.0.7
 ---------------
 
