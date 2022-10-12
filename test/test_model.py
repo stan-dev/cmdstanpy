@@ -207,6 +207,36 @@ class CmdStanModelTest(CustomTestCase):
         self.assertIn('theta', model_info_include['parameters'])
         self.assertIn('included_files', model_info_include)
 
+    def test_compile_with_includes(self):
+        stan_file = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
+
+        # Compile for the first time.
+        model = CmdStanModel(stan_file=stan_file, compile=False)
+        with LogCapture(level=logging.INFO) as log:
+            model.compile()
+        log.check_present(('cmdstanpy', 'INFO',
+                           StringComparison('compiling stan file')))
+
+        # Compile for the second time, ensuring cache is used.
+        with LogCapture(level=logging.DEBUG) as log:
+            model.compile()
+        log.check_present(('cmdstanpy', 'DEBUG',
+                           StringComparison('found newer exe file')))
+
+        # Compile after modifying included file, ensuring cache is not used.
+        getmtime = os.path.getmtime
+
+        def _patched_getmtime(filename: str) -> float:
+            if filename.endswith("divide_real_by_two.stan"):
+                return float('inf')
+            return getmtime(filename)
+
+        with LogCapture(level=logging.INFO) as log, \
+                patch('os.path.getmtime', side_effect=_patched_getmtime):
+            model.compile()
+        log.check_present(('cmdstanpy', 'INFO',
+                           StringComparison('compiling stan file')))
+
     def test_compile_force(self):
         if os.path.exists(BERN_EXE):
             os.remove(BERN_EXE)
