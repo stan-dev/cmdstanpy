@@ -214,14 +214,16 @@ class CmdStanModelTest(CustomTestCase):
         model = CmdStanModel(stan_file=stan_file, compile=False)
         with LogCapture(level=logging.INFO) as log:
             model.compile()
-        log.check_present(('cmdstanpy', 'INFO',
-                           StringComparison('compiling stan file')))
+        log.check_present(
+            ('cmdstanpy', 'INFO', StringComparison('compiling stan file'))
+        )
 
         # Compile for the second time, ensuring cache is used.
         with LogCapture(level=logging.DEBUG) as log:
             model.compile()
-        log.check_present(('cmdstanpy', 'DEBUG',
-                           StringComparison('found newer exe file')))
+        log.check_present(
+            ('cmdstanpy', 'DEBUG', StringComparison('found newer exe file'))
+        )
 
         # Compile after modifying included file, ensuring cache is not used.
         getmtime = os.path.getmtime
@@ -231,11 +233,13 @@ class CmdStanModelTest(CustomTestCase):
                 return float('inf')
             return getmtime(filename)
 
-        with LogCapture(level=logging.INFO) as log, \
-                patch('os.path.getmtime', side_effect=_patched_getmtime):
+        with LogCapture(level=logging.INFO) as log, patch(
+            'os.path.getmtime', side_effect=_patched_getmtime
+        ):
             model.compile()
-        log.check_present(('cmdstanpy', 'INFO',
-                           StringComparison('compiling stan file')))
+        log.check_present(
+            ('cmdstanpy', 'INFO', StringComparison('compiling stan file'))
+        )
 
     def test_compile_force(self):
         if os.path.exists(BERN_EXE):

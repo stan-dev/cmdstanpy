@@ -418,35 +418,6 @@ class CmdStanModel:
             )
         return code
 
-    @staticmethod
-    def _is_out_of_date(stan_file: str, exe_time: float,
-                        include_paths: Iterable[str]) -> bool:
-        """
-        Determine whether the Stan program file or any of its includes are
-        newer than the executable.
-        """
-        if os.path.getmtime(stan_file) > exe_time:
-            return True
-
-        # Recursively identify whether any included files changed.
-        pattern = re.compile(r"^\s*#include\s+(.*?)(?:$|\/\/)", re.MULTILINE)
-        with open(stan_file) as handle:
-            text = handle.read()
-        for child_file in pattern.findall(text):
-            discovered = False
-            for include_path in include_paths:
-                candidate = os.path.join(include_path, child_file)
-                if not os.path.isfile(candidate):
-                    continue
-                discovered = True
-                if CmdStanModel._is_out_of_date(candidate, exe_time,
-                                                include_paths):
-                    return True
-            if not discovered:
-                raise FileNotFoundError(f"{child_file} included by {stan_file} "
-                                        "does not exist")
-        return False
-
     def compile(
         self,
         force: bool = False,
@@ -504,11 +475,12 @@ class CmdStanModel:
         exe_target = os.path.splitext(self._stan_file)[0] + EXTENSION
         if os.path.exists(exe_target):
             exe_time = os.path.getmtime(exe_target)
-            include_paths = [os.path.dirname(self._stan_file)]
-            include_paths.extend(
-                self._compiler_options._stanc_options.get("include_paths", []))
-            out_of_date = self._is_out_of_date(self._stan_file, exe_time,
-                                               include_paths)
+            included_files = [self._stan_file]
+            included_files.extend(self.src_info().get('included_files', []))
+            out_of_date = any(
+                os.path.getmtime(included_file) > exe_time
+                for included_file in included_files
+            )
             if not out_of_date and not force:
                 get_logger().debug('found newer exe file, not recompiling')
                 if self._exe_file is None:  # called from constructor
