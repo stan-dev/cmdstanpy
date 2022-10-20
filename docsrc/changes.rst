@@ -16,6 +16,7 @@ CmdStanPy 1.0.8
 - Fixed how ``NaN`` and infinite numbers were serialized to JSON.
 - Removed dependency on ``ujson``. For now, all JSON serialization is done with the Python standard library.
 - Added a ``timeout`` parameter to all model methods which can be used to terminate the CmdStan process after the specified time.
+- A model will now properly recompile if one of the `#include`-d files changed since it was last built.
 
 CmdStanPy 1.0.7
 ---------------
