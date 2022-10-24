@@ -39,7 +39,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.7, 3.8, 3.9, "3.10.6"]
+        # more specific version of 3.10 due to https://github.com/python/mypy/issues/13627
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -59,7 +60,7 @@ jobs:
           pip install codecov
 
       - name: Run flake8, pylint, mypy
-        if: matrix.python-version == '3.10'
+        if: matrix.python-version == '3.10.6'
         run: |
           flake8 cmdstanpy test
           pylint -v cmdstanpy test

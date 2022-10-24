@@ -25,7 +25,7 @@ repos:
       - id: mypy
         # Copied from setup.cfg
         exclude: ^test/
-        additional_dependencies: [ numpy >= 1.22, types-ujson ]
+        additional_dependencies: [ numpy >= 1.22]
   # local uses the user-installed pylint, this allows dependency checking
   - repo: local
     hooks:

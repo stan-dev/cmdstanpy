@@ -85,7 +85,7 @@ def show_versions(output: bool = True) -> str:
     except Exception:
         deps_info.append(('cmdstan', 'NOT FOUND'))
 
-    deps = ['cmdstanpy', 'pandas', 'xarray', 'tqdm', 'numpy', 'ujson']
+    deps = ['cmdstanpy', 'pandas', 'xarray', 'tqdm', 'numpy']
     for module in deps:
         try:
             if module in sys.modules:
