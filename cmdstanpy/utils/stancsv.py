@@ -1,6 +1,7 @@
 """
 Utility functions for reading the Stan CSV format
 """
+import json
 import math
 import re
 from enum import Enum, auto
@@ -17,7 +18,6 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-import ujson
 
 from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP
 
@@ -453,7 +453,7 @@ def read_metric(path: str) -> List[int]:
     """
     if path.endswith('.json'):
         with open(path, 'r') as fd:
-            metric_dict = ujson.load(fd)
+            metric_dict = json.load(fd)
         if 'inv_metric' in metric_dict:
             dims_np: np.ndarray = np.asarray(metric_dict['inv_metric'])
             return list(dims_np.shape)

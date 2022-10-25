@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import json
 import logging
 import os
 import platform
@@ -15,11 +16,6 @@ from time import time
 
 import numpy as np
 from testfixtures import LogCapture, StringComparison
-
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 import cmdstanpy.stanfit
 from cmdstanpy import _TMPDIR
@@ -1912,6 +1908,25 @@ class CmdStanMCMCTest(CustomTestCase):
         )
         self.assertEqual(fit.max_treedepths, None)
         self.assertEqual(fit.divergences, None)
+
+    def test_timeout(self):
+        stan = os.path.join(DATAFILES_PATH, 'timeout.stan')
+        timeout_model = CmdStanModel(stan_file=stan)
+        with self.assertRaises(TimeoutError):
+            timeout_model.sample(timeout=0.1, chains=1, data={'loop': 1})
+
+    def test_json_edges(self):
+        stan = os.path.join(DATAFILES_PATH, 'data-test.stan')
+        data_model = CmdStanModel(stan_file=stan)
+        data = {"inf": float("inf"), "nan": float("NaN")}
+        fit = data_model.sample(data, chains=1, iter_warmup=1, iter_sampling=1)
+        self.assertTrue(np.isnan(fit.stan_variable("nan_out")[0]))
+        self.assertTrue(np.isinf(fit.stan_variable("inf_out")[0]))
+
+        data = {"inf": np.inf, "nan": np.nan}
+        fit = data_model.sample(data, chains=1, iter_warmup=1, iter_sampling=1)
+        self.assertTrue(np.isnan(fit.stan_variable("nan_out")[0]))
+        self.assertTrue(np.isinf(fit.stan_variable("inf_out")[0]))
 
 
 if __name__ == '__main__':

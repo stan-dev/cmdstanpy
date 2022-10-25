@@ -252,8 +252,8 @@ class DataFilesTest(unittest.TestCase):
                 data_2 = d2[k]
                 if isinstance(data_2, collections.abc.Collection):
                     data_2 = np.asarray(data_2).tolist()
-
-                self.assertEqual(data_1, data_2)
+                # np properly handles NaN equality
+                np.testing.assert_equal(data_1, data_2)
 
         dict_list = {'a': [1.0, 2.0, 3.0]}
         file_list = os.path.join(_TMPDIR, 'list.json')
@@ -345,11 +345,14 @@ class DataFilesTest(unittest.TestCase):
                 ]
             )
         }
-        dict_inf_nan_exp = {'a': [["-inf", "+inf", "NaN"]] * 4}
+        dict_inf_nan_exp = {'a': [[-np.inf, np.inf, np.nan]] * 4}
         file_fin = os.path.join(_TMPDIR, 'inf.json')
         write_stan_json(file_fin, dict_inf_nan)
         with open(file_fin) as fd:
-            cmp(json.load(fd), dict_inf_nan_exp)
+            cmp(
+                json.load(fd),
+                dict_inf_nan_exp,
+            )
 
         dict_complex = {'a': np.array([np.complex64(3), 3 + 4j])}
         dict_complex_exp = {'a': [[3, 0], [3, 4]]}

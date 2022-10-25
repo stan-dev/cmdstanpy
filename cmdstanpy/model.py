@@ -1,12 +1,14 @@
 """CmdStanModel"""
 
 import io
+import json
 import os
 import platform
 import re
 import shutil
 import subprocess
 import sys
+import threading
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -25,7 +27,6 @@ from typing import (
     Union,
 )
 
-import ujson as json
 from tqdm.auto import tqdm
 
 from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
@@ -221,12 +222,6 @@ class CmdStanModel:
 
         if compile and self._exe_file is None:
             self.compile(force=str(compile).lower() == 'force')
-            if self._exe_file is None:
-                raise ValueError(
-                    'Unable to compile Stan model file: {}.'.format(
-                        self._stan_file
-                    )
-                )
 
     def __repr__(self) -> str:
         repr = 'CmdStanModel: name={}'.format(self._name)
@@ -490,9 +485,14 @@ class CmdStanModel:
                     self._compiler_options.add(compiler_options)
         exe_target = os.path.splitext(self._stan_file)[0] + EXTENSION
         if os.path.exists(exe_target):
-            src_time = os.path.getmtime(self._stan_file)
             exe_time = os.path.getmtime(exe_target)
-            if exe_time > src_time and not force:
+            included_files = [self._stan_file]
+            included_files.extend(self.src_info().get('included_files', []))
+            out_of_date = any(
+                os.path.getmtime(included_file) > exe_time
+                for included_file in included_files
+            )
+            if not out_of_date and not force:
                 get_logger().debug('found newer exe file, not recompiling')
                 if self._exe_file is None:  # called from constructor
                     self._exe_file = exe_target
@@ -542,45 +542,26 @@ class CmdStanModel:
                 get_logger().info(
                     'compiled model executable: %s', self._exe_file
                 )
-            if compilation_failed or 'Warning' in console:
+            if 'Warning' in console:
                 lines = console.split('\n')
                 warnings = [x for x in lines if x.startswith('Warning')]
-                syntax_errors = [
-                    x for x in lines if x.startswith('Syntax error')
-                ]
-                semantic_errors = [
-                    x for x in lines if x.startswith('Semantic error')
-                ]
-                exceptions = [
-                    x
-                    for x in lines
-                    if 'Uncaught exception' in x or 'fatal error' in x
-                ]
-                if (
-                    len(syntax_errors) > 0
-                    or len(semantic_errors) > 0
-                    or len(exceptions) > 0
-                ):
-                    get_logger().error('Stan program failed to compile:')
-                    get_logger().warning(console)
-                elif len(warnings) > 0:
-                    get_logger().warning(
-                        'Stan compiler has produced %d warnings:',
-                        len(warnings),
-                    )
-                    get_logger().warning(console)
-                elif (
-                    'PCH file' in console
-                    or 'model_header.hpp.gch' in console
-                    or 'precompiled header' in console
-                ):
+                get_logger().warning(
+                    'Stan compiler has produced %d warnings:',
+                    len(warnings),
+                )
+                get_logger().warning(console)
+            if compilation_failed:
+                if 'PCH' in console or 'precompiled header' in console:
                     get_logger().warning(
                         "CmdStan's precompiled header (PCH) files "
                         "may need to be rebuilt."
-                        "If your model failed to compile please run "
-                        "cmdstanpy.rebuild_cmdstan().\nIf the "
-                        "issue persists please open a bug report"
+                        "Please run cmdstanpy.rebuild_cmdstan().\n"
+                        "If the issue persists please open a bug report"
                     )
+                raise ValueError(
+                    f"Failed to compile Stan model '{self._stan_file}'. "
+                    f"Console:\n{console}"
+                )
 
     def optimize(
         self,
@@ -604,6 +585,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -703,6 +685,8 @@ class CmdStanModel:
             :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
+        :param timeout: Duration at which optimization times out in seconds.
+
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
@@ -734,10 +718,18 @@ class CmdStanModel:
             )
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
+            self._run_cmdstan(
+                runset,
+                dummy_chain_id,
+                show_console=show_console,
+                timeout=timeout,
+            )
+        runset.raise_for_timeouts()
 
         if not runset._check_retcodes():
-            msg = 'Error during optimization: {}'.format(runset.get_err_msgs())
+            msg = "Error during optimization! Command '{}' failed: {}".format(
+                ' '.join(runset.cmd(0)), runset.get_err_msgs()
+            )
             if 'Line search failed' in msg and not require_converged:
                 get_logger().warning(msg)
             else:
@@ -778,6 +770,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
         *,
         force_one_process_per_chain: Optional[bool] = None,
     ) -> CmdStanMCMC:
@@ -975,6 +968,8 @@ class CmdStanModel:
             model was compiled with STAN_THREADS=True, and utilize the
             parallel chain functionality if those conditions are met.
 
+        :param timeout: Duration at which sampling times out in seconds.
+
         :return: CmdStanMCMC object
         """
         if fixed_param is None:
@@ -1150,6 +1145,7 @@ class CmdStanModel:
                         show_progress=show_progress,
                         show_console=show_console,
                         progress_hook=progress_hook,
+                        timeout=timeout,
                     )
             if show_progress and progress_hook is not None:
                 progress_hook("Done", -1)  # -1 == all chains finished
@@ -1164,6 +1160,8 @@ class CmdStanModel:
                         sys.stdout.flush()
                 sys.stdout.write('\n')
                 get_logger().info('CmdStan done processing.')
+
+            runset.raise_for_timeouts()
 
             get_logger().debug('runset\n%s', repr(runset))
 
@@ -1220,6 +1218,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
         *,
         mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
     ) -> CmdStanGQ[Fit]:
@@ -1282,6 +1281,8 @@ class CmdStanModel:
         :param time_fmt: A format string passed to
             :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
+
+        :param timeout: Duration at which generation times out in seconds.
 
         :return: CmdStanGQ object
         """
@@ -1370,8 +1371,10 @@ class CmdStanModel:
                         runset,
                         i,
                         show_console=show_console,
+                        timeout=timeout,
                     )
 
+            runset.raise_for_timeouts()
             errors = runset.get_err_msgs()
             if errors:
                 msg = (
@@ -1407,6 +1410,7 @@ class CmdStanModel:
         show_console: bool = False,
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1499,6 +1503,9 @@ class CmdStanModel:
             :meth:`~datetime.datetime.strftime` to decide the file names for
             output CSVs. Defaults to "%Y%m%d%H%M%S"
 
+        :param timeout: Duration at which variational Bayesian inference times
+            out in seconds.
+
         :return: CmdStanVB object
         """
         variational_args = VariationalArgs(
@@ -1532,7 +1539,13 @@ class CmdStanModel:
 
             dummy_chain_id = 0
             runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
-            self._run_cmdstan(runset, dummy_chain_id, show_console=show_console)
+            self._run_cmdstan(
+                runset,
+                dummy_chain_id,
+                show_console=show_console,
+                timeout=timeout,
+            )
+        runset.raise_for_timeouts()
 
         # treat failure to converge as failure
         transcript_file = runset.stdout_files[dummy_chain_id]
@@ -1568,9 +1581,8 @@ class CmdStanModel:
                     'current value is {}.'.format(grad_samples)
                 )
             else:
-                msg = (
-                    'Variational algorithm failed.\n '
-                    'Console output:\n{}'.format(contents)
+                msg = 'Error during variational inference: {}'.format(
+                    runset.get_err_msgs()
                 )
             raise RuntimeError(msg)
         # pylint: disable=invalid-name
@@ -1584,6 +1596,7 @@ class CmdStanModel:
         show_progress: bool = False,
         show_console: bool = False,
         progress_hook: Optional[Callable[[str, int], None]] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         """
         Helper function which encapsulates call to CmdStan.
@@ -1620,6 +1633,21 @@ class CmdStanModel:
                 env=os.environ,
                 universal_newlines=True,
             )
+            timer: Optional[threading.Timer]
+            if timeout:
+
+                def _timer_target() -> None:
+                    # Abort if the process has already terminated.
+                    if proc.poll() is not None:
+                        return
+                    proc.terminate()
+                    runset._set_timeout_flag(idx, True)
+
+                timer = threading.Timer(timeout, _timer_target)
+                timer.daemon = True
+                timer.start()
+            else:
+                timer = None
             while proc.poll() is None:
                 if proc.stdout is not None:
                     line = proc.stdout.readline()
@@ -1633,6 +1661,8 @@ class CmdStanModel:
             stdout, _ = proc.communicate()
             retcode = proc.returncode
             runset._set_retcode(idx, retcode)
+            if timer:
+                timer.cancel()
 
             if stdout:
                 fd_out.write(stdout)

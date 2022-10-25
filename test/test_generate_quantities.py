@@ -737,6 +737,15 @@ class GQAfterVBTest(CustomTestCase):
         with self.assertRaisesRegex(RuntimeError, "via Sampling"):
             _ = bern_gqs.draws_xr()
 
+    def test_timeout(self):
+        stan = os.path.join(DATAFILES_PATH, 'timeout.stan')
+        timeout_model = CmdStanModel(stan_file=stan)
+        fit = timeout_model.sample(data={'loop': 0}, chains=1, iter_sampling=10)
+        with self.assertRaises(TimeoutError):
+            timeout_model.generate_quantities(
+                timeout=0.1, mcmc_sample=fit, data={'loop': 1}
+            )
+
 
 if __name__ == '__main__':
     unittest.main()
