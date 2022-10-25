@@ -2,6 +2,7 @@
  "cells": [
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "#  Generating new quantities of interest.\n",
     "\n",
@@ -19,11 +20,11 @@
     "-  transform parameters for reporting\n",
     "-  apply full Bayesian decision theory\n",
     "-  calculate log likelihoods, deviances, etc. for model comparison"
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "## Example:  add posterior predictive checks to `bernoulli.stan`\n",
     "\n",
@@ -34,12 +35,13 @@
     "We instantiate the model `bernoulli`,\n",
     "as in the \"Hello World\" section\n",
     "of the CmdStanPy [tutorial](https://github.com/stan-dev/cmdstanpy/blob/develop/cmdstanpy_tutorial.ipynb) notebook."
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "import os\n",
     "from cmdstanpy import cmdstan_path, CmdStanModel, CmdStanMCMC, CmdStanGQ\n",
@@ -51,153 +53,151 @@
     "# instantiate, compile bernoulli model\n",
     "model = CmdStanModel(stan_file=stan_file)\n",
     "print(model.code())"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "The input data consists of `N` - the number of bernoulli trials and `y` - the list of observed outcomes.\n",
     "Inspection of the data shows that on average, there is a 20% chance of success for any given Bernoulli trial."
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "# examine bernoulli data\n",
-    "import ujson\n",
+    "import json\n",
     "import statistics\n",
     "with open(data_file,'r') as fp:\n",
-    "    data_dict = ujson.load(fp)\n",
+    "    data_dict = json.load(fp)\n",
     "print(data_dict)\n",
     "print('mean of y: {}'.format(statistics.mean(data_dict['y'])))"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "As in the \"Hello World\" tutorial, we produce a sample from the posterior of the model conditioned on the data:"
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "# fit the model to the data\n",
     "fit = model.sample(data=data_file)"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "The fitted model produces an estimate of `theta` - the chance of success"
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "fit.summary()"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "To run a prior predictive check, we add a `generated quantities` block to the model, in which we generate a new data vector `y_rep` using the current estimate of theta.  The resulting model is in file [bernoulli_ppc.stan](https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli_ppc.stan)"
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "model_ppc = CmdStanModel(stan_file='bernoulli_ppc.stan')\n",
     "print(model_ppc.code())"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "We run the `generate_quantities` method on `bernoulli_ppc` using existing sample `fit` as input.  The `generate_quantities` method takes the values of `theta` in the `fit` sample as the set of draws from the posterior used to generate the corresponsing `y_rep` quantities of interest.\n",
     "\n",
     "The arguments to the `generate_quantities` method are:\n",
     " + `data`  - the data used to fit the model\n",
     " + `mcmc_sample` - either a `CmdStanMCMC` object or a list of stan-csv files\n"
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "new_quantities = model_ppc.generate_quantities(data=data_file, mcmc_sample=fit)"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "The `generate_quantities` method returns a `CmdStanGQ` object which contains the values for all variables in the generated quantitites block of the program ``bernoulli_ppc.stan``.  Unlike the output from the ``sample`` method, it doesn't contain any information on the joint log probability density, sampler state, or parameters or transformed parameter values.\n",
     "\n",
     "In this example, each draw consists of the N-length array of replicate of the `bernoulli` model's input variable  `y`, which is an N-length array of Bernoulli outcomes."
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "print(new_quantities.draws().shape, new_quantities.column_names)\n",
     "for i in range(3):\n",
     "    print (new_quantities.draws()[i,:])"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "We can also use ``draws_pd(inc_sample=True)`` to get a pandas DataFrame which combines the input drawset with the generated quantities."
-   ],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
+   "metadata": {},
+   "outputs": [],
    "source": [
     "sample_plus = new_quantities.draws_pd(inc_sample=True)\n",
     "print(type(sample_plus),sample_plus.shape)\n",
     "names = list(sample_plus.columns.values[7:18])\n",
     "sample_plus.iloc[0:3, :]"
-   ],
-   "outputs": [],
-   "metadata": {}
+   ]
   },
   {
    "cell_type": "markdown",
+   "metadata": {},
    "source": [
     "For models as simple as the bernoulli models here, it would be trivial to re-run the sampler and generate a new sample which contains both the estimate of the parameters `theta` as well as `y_rep` values. For models which are difficult to fit, i.e., when producing a sample is computationally expensive, the `generate_quantities` method is preferred."
-   ],
-   "metadata": {}
+   ]
   }
  ],
  "metadata": {
   "kernelspec": {
-   "display_name": "Python 3",
+   "display_name": "Python 3.9.5 ('stan')",
    "language": "python",
    "name": "python3"
   },
@@ -212,6 +212,11 @@
    "nbconvert_exporter": "python",
    "pygments_lexer": "ipython3",
    "version": "3.9.5"
+  },
+  "vscode": {
+   "interpreter": {
+    "hash": "8765ce46b013071999fc1966b52035a7309a0da7551e066cc0f0fa23e83d4f60"
+   }
   }
  },
  "nbformat": 4,

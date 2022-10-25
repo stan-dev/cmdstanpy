@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.model &#8212; CmdStanPy 1.0.7 documentation</title>
+    <title>cmdstanpy.model &#8212; CmdStanPy 1.0.8 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.7</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.8</a>
     
   </div>
 
@@ -170,12 +170,14 @@
 <span></span><span class="sd">&quot;&quot;&quot;CmdStanModel&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">platform</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
@@ -184,7 +186,6 @@
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">ujson</span> <span class="k">as</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">_CMDSTAN_REFRESH</span><span class="p">,</span> <span class="n">_CMDSTAN_SAMPLING</span><span class="p">,</span> <span class="n">_CMDSTAN_WARMUP</span>
@@ -379,12 +380,6 @@
 
         <span class="k">if</span> <span class="nb">compile</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">compile</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;force&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Unable to compile Stan model file: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanModel: name=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
@@ -648,9 +643,14 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">compiler_options</span><span class="p">)</span>
         <span class="n">exe_target</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">EXTENSION</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">exe_target</span><span class="p">):</span>
-            <span class="n">src_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
             <span class="n">exe_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">exe_target</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">exe_time</span> <span class="o">&gt;</span> <span class="n">src_time</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">included_files</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">]</span>
+            <span class="n">included_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">src_info</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;included_files&#39;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="n">out_of_date</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">included_file</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">exe_time</span>
+                <span class="k">for</span> <span class="n">included_file</span> <span class="ow">in</span> <span class="n">included_files</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">out_of_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
                 <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;found newer exe file, not recompiling&#39;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># called from constructor</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">exe_target</span>
@@ -700,45 +700,26 @@
                 <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s1">&#39;compiled model executable: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="n">compilation_failed</span> <span class="ow">or</span> <span class="s1">&#39;Warning&#39;</span> <span class="ow">in</span> <span class="n">console</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;Warning&#39;</span> <span class="ow">in</span> <span class="n">console</span><span class="p">:</span>
                 <span class="n">lines</span> <span class="o">=</span> <span class="n">console</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">warnings</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Warning&#39;</span><span class="p">)]</span>
-                <span class="n">syntax_errors</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Syntax error&#39;</span><span class="p">)</span>
-                <span class="p">]</span>
-                <span class="n">semantic_errors</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Semantic error&#39;</span><span class="p">)</span>
-                <span class="p">]</span>
-                <span class="n">exceptions</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">x</span>
-                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span>
-                    <span class="k">if</span> <span class="s1">&#39;Uncaught exception&#39;</span> <span class="ow">in</span> <span class="n">x</span> <span class="ow">or</span> <span class="s1">&#39;fatal error&#39;</span> <span class="ow">in</span> <span class="n">x</span>
-                <span class="p">]</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="nb">len</span><span class="p">(</span><span class="n">syntax_errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                    <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">semantic_errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                    <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">exceptions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="p">):</span>
-                    <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Stan program failed to compile:&#39;</span><span class="p">)</span>
-                    <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">console</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">warnings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="s1">&#39;Stan compiler has produced </span><span class="si">%d</span><span class="s1"> warnings:&#39;</span><span class="p">,</span>
-                        <span class="nb">len</span><span class="p">(</span><span class="n">warnings</span><span class="p">),</span>
-                    <span class="p">)</span>
-                    <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">console</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="p">(</span>
-                    <span class="s1">&#39;PCH file&#39;</span> <span class="ow">in</span> <span class="n">console</span>
-                    <span class="ow">or</span> <span class="s1">&#39;model_header.hpp.gch&#39;</span> <span class="ow">in</span> <span class="n">console</span>
-                    <span class="ow">or</span> <span class="s1">&#39;precompiled header&#39;</span> <span class="ow">in</span> <span class="n">console</span>
-                <span class="p">):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">&#39;Stan compiler has produced </span><span class="si">%d</span><span class="s1"> warnings:&#39;</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">warnings</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">console</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">compilation_failed</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;PCH&#39;</span> <span class="ow">in</span> <span class="n">console</span> <span class="ow">or</span> <span class="s1">&#39;precompiled header&#39;</span> <span class="ow">in</span> <span class="n">console</span><span class="p">:</span>
                     <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                         <span class="s2">&quot;CmdStan&#39;s precompiled header (PCH) files &quot;</span>
                         <span class="s2">&quot;may need to be rebuilt.&quot;</span>
-                        <span class="s2">&quot;If your model failed to compile please run &quot;</span>
-                        <span class="s2">&quot;cmdstanpy.rebuild_cmdstan().</span><span class="se">\n</span><span class="s2">If the &quot;</span>
-                        <span class="s2">&quot;issue persists please open a bug report&quot;</span>
-                    <span class="p">)</span></div>
+                        <span class="s2">&quot;Please run cmdstanpy.rebuild_cmdstan().</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="s2">&quot;If the issue persists please open a bug report&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to compile Stan model &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Console:</span><span class="se">\n</span><span class="si">{</span><span class="n">console</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span></div>
 
 <div class="viewcode-block" id="CmdStanModel.optimize"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -762,6 +743,7 @@
         <span class="n">show_console</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanMLE</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the specified CmdStan optimize algorithm to produce a</span>
@@ -861,6 +843,8 @@
 <span class="sd">            :meth:`~datetime.datetime.strftime` to decide the file names for</span>
 <span class="sd">            output CSVs. Defaults to &quot;%Y%m%d%H%M%S&quot;</span>
 
+<span class="sd">        :param timeout: Duration at which optimization times out in seconds.</span>
+
 <span class="sd">        :return: CmdStanMLE object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">optimize_args</span> <span class="o">=</span> <span class="n">OptimizeArgs</span><span class="p">(</span>
@@ -892,10 +876,18 @@
             <span class="p">)</span>
             <span class="n">dummy_chain_id</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">runset</span> <span class="o">=</span> <span class="n">RunSet</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">time_fmt</span><span class="o">=</span><span class="n">time_fmt</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_cmdstan</span><span class="p">(</span><span class="n">runset</span><span class="p">,</span> <span class="n">dummy_chain_id</span><span class="p">,</span> <span class="n">show_console</span><span class="o">=</span><span class="n">show_console</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_cmdstan</span><span class="p">(</span>
+                <span class="n">runset</span><span class="p">,</span>
+                <span class="n">dummy_chain_id</span><span class="p">,</span>
+                <span class="n">show_console</span><span class="o">=</span><span class="n">show_console</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">runset</span><span class="o">.</span><span class="n">raise_for_timeouts</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during optimization: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">())</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Error during optimization! Command &#39;</span><span class="si">{}</span><span class="s2">&#39; failed: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">cmd</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">()</span>
+            <span class="p">)</span>
             <span class="k">if</span> <span class="s1">&#39;Line search failed&#39;</span> <span class="ow">in</span> <span class="n">msg</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">require_converged</span><span class="p">:</span>
                 <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -936,6 +928,7 @@
         <span class="n">show_console</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">force_one_process_per_chain</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanMCMC</span><span class="p">:</span>
@@ -1133,6 +1126,8 @@
 <span class="sd">            model was compiled with STAN_THREADS=True, and utilize the</span>
 <span class="sd">            parallel chain functionality if those conditions are met.</span>
 
+<span class="sd">        :param timeout: Duration at which sampling times out in seconds.</span>
+
 <span class="sd">        :return: CmdStanMCMC object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">fixed_param</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1308,6 +1303,7 @@
                         <span class="n">show_progress</span><span class="o">=</span><span class="n">show_progress</span><span class="p">,</span>
                         <span class="n">show_console</span><span class="o">=</span><span class="n">show_console</span><span class="p">,</span>
                         <span class="n">progress_hook</span><span class="o">=</span><span class="n">progress_hook</span><span class="p">,</span>
+                        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
                     <span class="p">)</span>
             <span class="k">if</span> <span class="n">show_progress</span> <span class="ow">and</span> <span class="n">progress_hook</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">progress_hook</span><span class="p">(</span><span class="s2">&quot;Done&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># -1 == all chains finished</span>
@@ -1322,6 +1318,8 @@
                         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;CmdStan done processing.&#39;</span><span class="p">)</span>
+
+            <span class="n">runset</span><span class="o">.</span><span class="n">raise_for_timeouts</span><span class="p">()</span>
 
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;runset</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">runset</span><span class="p">))</span>
 
@@ -1378,6 +1376,7 @@
         <span class="n">show_console</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanGQ</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s generate_quantities method which runs the generated</span>
@@ -1435,6 +1434,8 @@
 <span class="sd">        :param time_fmt: A format string passed to</span>
 <span class="sd">            :meth:`~datetime.datetime.strftime` to decide the file names for</span>
 <span class="sd">            output CSVs. Defaults to &quot;%Y%m%d%H%M%S&quot;</span>
+
+<span class="sd">        :param timeout: Duration at which generation times out in seconds.</span>
 
 <span class="sd">        :return: CmdStanGQ object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1498,8 +1499,10 @@
                         <span class="n">runset</span><span class="p">,</span>
                         <span class="n">i</span><span class="p">,</span>
                         <span class="n">show_console</span><span class="o">=</span><span class="n">show_console</span><span class="p">,</span>
+                        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
                     <span class="p">)</span>
 
+            <span class="n">runset</span><span class="o">.</span><span class="n">raise_for_timeouts</span><span class="p">()</span>
             <span class="n">errors</span> <span class="o">=</span> <span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -1535,6 +1538,7 @@
         <span class="n">show_console</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanVB</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s variational inference algorithm to approximate</span>
@@ -1627,6 +1631,9 @@
 <span class="sd">            :meth:`~datetime.datetime.strftime` to decide the file names for</span>
 <span class="sd">            output CSVs. Defaults to &quot;%Y%m%d%H%M%S&quot;</span>
 
+<span class="sd">        :param timeout: Duration at which variational Bayesian inference times</span>
+<span class="sd">            out in seconds.</span>
+
 <span class="sd">        :return: CmdStanVB object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">variational_args</span> <span class="o">=</span> <span class="n">VariationalArgs</span><span class="p">(</span>
@@ -1660,7 +1667,13 @@
 
             <span class="n">dummy_chain_id</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">runset</span> <span class="o">=</span> <span class="n">RunSet</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">time_fmt</span><span class="o">=</span><span class="n">time_fmt</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_cmdstan</span><span class="p">(</span><span class="n">runset</span><span class="p">,</span> <span class="n">dummy_chain_id</span><span class="p">,</span> <span class="n">show_console</span><span class="o">=</span><span class="n">show_console</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_cmdstan</span><span class="p">(</span>
+                <span class="n">runset</span><span class="p">,</span>
+                <span class="n">dummy_chain_id</span><span class="p">,</span>
+                <span class="n">show_console</span><span class="o">=</span><span class="n">show_console</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">runset</span><span class="o">.</span><span class="n">raise_for_timeouts</span><span class="p">()</span>
 
         <span class="c1"># treat failure to converge as failure</span>
         <span class="n">transcript_file</span> <span class="o">=</span> <span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">[</span><span class="n">dummy_chain_id</span><span class="p">]</span>
@@ -1696,9 +1709,8 @@
                     <span class="s1">&#39;current value is </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grad_samples</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s1">&#39;Variational algorithm failed.</span><span class="se">\n</span><span class="s1"> &#39;</span>
-                    <span class="s1">&#39;Console output:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Error during variational inference: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">runset</span><span class="o">.</span><span class="n">get_err_msgs</span><span class="p">()</span>
                 <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="c1"># pylint: disable=invalid-name</span>
@@ -1712,6 +1724,7 @@
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">show_console</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">progress_hook</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function which encapsulates call to CmdStan.</span>
@@ -1748,6 +1761,21 @@
                 <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span>
                 <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="n">timer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">threading</span><span class="o">.</span><span class="n">Timer</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">timeout</span><span class="p">:</span>
+
+                <span class="k">def</span> <span class="nf">_timer_target</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Abort if the process has already terminated.</span>
+                    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">return</span>
+                    <span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                    <span class="n">runset</span><span class="o">.</span><span class="n">_set_timeout_flag</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+                <span class="n">timer</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Timer</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="n">_timer_target</span><span class="p">)</span>
+                <span class="n">timer</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">timer</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">while</span> <span class="n">proc</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
@@ -1761,6 +1789,8 @@
             <span class="n">stdout</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
             <span class="n">retcode</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span>
             <span class="n">runset</span><span class="o">.</span><span class="n">_set_retcode</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">retcode</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">timer</span><span class="p">:</span>
+                <span class="n">timer</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
 
             <span class="k">if</span> <span class="n">stdout</span><span class="p">:</span>
                 <span class="n">fd_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span>

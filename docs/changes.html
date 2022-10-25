@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>What’s New &#8212; CmdStanPy 1.0.7 documentation</title>
+    <title>What’s New &#8212; CmdStanPy 1.0.8 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.7</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.8</a>
     
   </div>
 
@@ -168,12 +168,17 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#cmdstanpy-1-0-6">
-   CmdStanPy 1.0.6
+  <a class="reference internal nav-link" href="#cmdstanpy-1-0-8">
+   CmdStanPy 1.0.8
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#id1">
+  <a class="reference internal nav-link" href="#cmdstanpy-1-0-7">
+   CmdStanPy 1.0.7
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#cmdstanpy-1-0-6">
    CmdStanPy 1.0.6
   </a>
  </li>
@@ -238,14 +243,26 @@
   <section id="what-s-new">
 <h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this headline">#</a></h1>
 <p>For full changes, see the <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/releases">Releases page</a> on GitHub.</p>
-<section id="cmdstanpy-1-0-6">
-<h2>CmdStanPy 1.0.6<a class="headerlink" href="#cmdstanpy-1-0-6" title="Permalink to this headline">#</a></h2>
+<section id="cmdstanpy-1-0-8">
+<h2>CmdStanPy 1.0.8<a class="headerlink" href="#cmdstanpy-1-0-8" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code> now downloads the correct CmdStan for non-x86 Linux machines.</p></li>
+<li><p>Improved reporting of errors during <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.compile" title="cmdstanpy.CmdStanModel.compile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile()</span></code></a>.</p></li>
+<li><p>Fixed some edge cases in mixing arguments of the <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.optimize" title="cmdstanpy.CmdStanModel.optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">optimize()</span></code></a> function.</p></li>
+<li><p>Fixed how <code class="docutils literal notranslate"><span class="pre">NaN</span></code> and infinite numbers were serialized to JSON.</p></li>
+<li><p>Removed dependency on <code class="docutils literal notranslate"><span class="pre">ujson</span></code>. For now, all JSON serialization is done with the Python standard library.</p></li>
+<li><p>Added a <code class="docutils literal notranslate"><span class="pre">timeout</span></code> parameter to all model methods which can be used to terminate the CmdStan process after the specified time.</p></li>
+<li><p>A model will now properly recompile if one of the <cite>#include</cite>-d files changed since it was last built.</p></li>
+</ul>
+</section>
+<section id="cmdstanpy-1-0-7">
+<h2>CmdStanPy 1.0.7<a class="headerlink" href="#cmdstanpy-1-0-7" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p>Fixed an issue where complex number containers in Stan program outputs were not being read in properly by CmdStanPy. The output would have the correct shape, but the values would be mixed up.</p></li>
 </ul>
 </section>
-<section id="id1">
-<h2>CmdStanPy 1.0.6<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h2>
+<section id="cmdstanpy-1-0-6">
+<h2>CmdStanPy 1.0.6<a class="headerlink" href="#cmdstanpy-1-0-6" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
 <li><p>Fixed a build error in the documentation</p></li>
 <li><p>Improved messages when model fails to compile due to C++ errors.</p></li>
