@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 import os
+import pickle
 import shutil
 import unittest
 
@@ -648,6 +649,32 @@ class OptimizeTest(unittest.TestCase):
         timeout_model = CmdStanModel(stan_file=stan)
         with self.assertRaises(TimeoutError):
             timeout_model.optimize(data={'loop': 1}, timeout=0.1)
+
+    def test_serialization(self):
+        stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model = CmdStanModel(stan_file=stan)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
+        mle1 = model.optimize(
+            data=jdata,
+            seed=1239812093,
+            inits=jinit,
+            algorithm='LBFGS',
+            init_alpha=0.001,
+            iter=100,
+            tol_obj=1e-12,
+            tol_rel_obj=1e4,
+            tol_grad=1e-8,
+            tol_rel_grad=1e7,
+            tol_param=1e-8,
+            history_size=5,
+        )
+        dumped = pickle.dumps(mle1)
+        shutil.rmtree(mle1.runset._output_dir)
+        mle2: CmdStanMLE = pickle.loads(dumped)
+        np.testing.assert_array_equal(
+            mle1.optimized_params_np, mle2.optimized_params_np
+        )
 
 
 if __name__ == '__main__':
