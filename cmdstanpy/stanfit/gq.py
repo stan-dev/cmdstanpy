@@ -85,6 +85,10 @@ class CmdStanGQ:
             # pylint: disable=raise-missing-from
             raise AttributeError(*e.args)
 
+    def __getstate__(self) -> dict:
+        self._assemble_generated_quantities()
+        return self.__dict__
+
     def _validate_csv_files(self) -> Dict[str, Any]:
         """
         Checks that Stan CSV output files for all chains are consistent
@@ -189,8 +193,7 @@ class CmdStanGQ:
         CmdStanGQ.draws_xr
         CmdStanMCMC.draws
         """
-        if self._draws.shape == (0,):
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
         if (
             inc_warmup
             and not self.mcmc_sample.metadata.cmdstan_config['save_warmup']
@@ -277,8 +280,7 @@ class CmdStanGQ:
                 'Draws from warmup iterations not available,'
                 ' must run sampler with "save_warmup=True".'
             )
-        if self._draws.shape == (0,):
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
 
         gq_cols = []
         mcmc_vars = []
@@ -400,8 +402,7 @@ class CmdStanGQ:
         for var in dup_vars:
             vars_list.remove(var)
 
-        if self._draws.shape == (0,):
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
 
         num_draws = self.mcmc_sample.num_draws_sampling
         sample_config = self.mcmc_sample.metadata.cmdstan_config
@@ -505,8 +506,7 @@ class CmdStanGQ:
         if var not in gq_var_names:
             return self.mcmc_sample.stan_variable(var, inc_warmup=inc_warmup)
         else:  # is gq variable
-            if self._draws.shape == (0,):
-                self._assemble_generated_quantities()
+            self._assemble_generated_quantities()
             draw1 = 0
             if (
                 not inc_warmup
@@ -561,6 +561,8 @@ class CmdStanGQ:
         return result
 
     def _assemble_generated_quantities(self) -> None:
+        if self._draws.shape != (0,):
+            return
         # use numpy loadtxt
         warmup = self.mcmc_sample.metadata.cmdstan_config['save_warmup']
         num_draws = self.mcmc_sample.draws(inc_warmup=warmup).shape[0]
