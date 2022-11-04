@@ -12,11 +12,11 @@ import tempfile
 import unittest
 from multiprocessing import cpu_count
 import pickle
-import pytest
 from test import CustomTestCase
 from time import time
 
 import numpy as np
+import pytest
 from testfixtures import LogCapture, StringComparison
 
 import cmdstanpy.stanfit

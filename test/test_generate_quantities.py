@@ -6,13 +6,13 @@ import json
 import logging
 import os
 import pickle
-import pytest
 import shutil
 import unittest
 from test import CustomTestCase
 
 import numpy as np
 import pandas as pd
+import pytest
 from numpy.testing import assert_array_equal, assert_raises
 from testfixtures import LogCapture
 
