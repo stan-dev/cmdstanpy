@@ -130,6 +130,10 @@ class CmdStanMCMC:
             raise AttributeError(*e.args)
 
     def __getstate__(self) -> dict:
+        # This function returns the mapping of objects to serialize with pickle.
+        # See https://docs.python.org/3/library/pickle.html#object.__getstate__
+        # for details. We call _assemble_draws to ensure posterior samples have
+        # been loaded prior to serialization.
         self._assemble_draws()
         return self.__dict__
 
