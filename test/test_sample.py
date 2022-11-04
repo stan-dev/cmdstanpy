@@ -12,6 +12,7 @@ import tempfile
 import unittest
 from multiprocessing import cpu_count
 import pickle
+import pytest
 from test import CustomTestCase
 from time import time
 
@@ -1929,10 +1930,11 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertTrue(np.isnan(fit.stan_variable("nan_out")[0]))
         self.assertTrue(np.isinf(fit.stan_variable("inf_out")[0]))
 
-    def test_mcmc_serialization(self, stanfile='bernoulli.stan'):
-        # This test must have a name with lexicographical less than any test
-        # that uses the `without_import` context manager because the latter uses
-        # `reload` with side effects that affect the consistency of classes.
+    @pytest.mark.order(before="test_no_xarray")
+    def test_serialization(self, stanfile='bernoulli.stan'):
+        # This test must before any test that uses the `without_import` context
+        # manager because the latter uses `reload` with side effects that affect
+        # the consistency of classes.
         stan = os.path.join(DATAFILES_PATH, stanfile)
         bern_model = CmdStanModel(stan_file=stan)
 
@@ -1946,8 +1948,7 @@ class CmdStanMCMCTest(CustomTestCase):
         )
         # Dump the result (which assembles draws) and delete the source files.
         dumped = pickle.dumps(bern_fit1)
-        for filename in bern_fit1.runset.csv_files:
-            os.unlink(filename)
+        shutil.rmtree(bern_fit1.runset._output_dir)
         # Load the serialized result and compare results.
         bern_fit2: CmdStanMCMC = pickle.loads(dumped)
         variables1 = bern_fit1.stan_variables()
