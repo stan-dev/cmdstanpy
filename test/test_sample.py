@@ -1929,7 +1929,10 @@ class CmdStanMCMCTest(CustomTestCase):
         self.assertTrue(np.isnan(fit.stan_variable("nan_out")[0]))
         self.assertTrue(np.isinf(fit.stan_variable("inf_out")[0]))
 
-    def test_serialization(self, stanfile='bernoulli.stan'):
+    def test_mcmc_serialization(self, stanfile='bernoulli.stan'):
+        # This test must have a name with lexicographical less than any test
+        # that uses the `without_import` context manager because the latter uses
+        # `reload` with side effects that affect the consistency of classes.
         stan = os.path.join(DATAFILES_PATH, stanfile)
         bern_model = CmdStanModel(stan_file=stan)
 
