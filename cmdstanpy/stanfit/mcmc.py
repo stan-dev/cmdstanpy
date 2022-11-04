@@ -129,6 +129,10 @@ class CmdStanMCMC:
             # pylint: disable=raise-missing-from
             raise AttributeError(*e.args)
 
+    def __getstate__(self) -> dict:
+        self._assemble_draws()
+        return self.__dict__
+
     @property
     def chains(self) -> int:
         """Number of chains."""
@@ -259,8 +263,7 @@ class CmdStanMCMC:
         CmdStanMCMC.draws_xr
         CmdStanGQ.draws
         """
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
 
         if inc_warmup and not self._save_warmup:
             get_logger().warning(
@@ -591,8 +594,7 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
 
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
         cols = []
         if vars is not None:
             for var in dict.fromkeys(vars_list):
@@ -648,8 +650,7 @@ class CmdStanMCMC:
         else:
             vars_list = vars
 
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
 
         num_draws = self.num_draws_sampling
         meta = self._metadata.cmdstan_config
@@ -735,8 +736,7 @@ class CmdStanMCMC:
                 'Available variables are '
                 + ", ".join(self._metadata.stan_vars_dims)
             )
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
         draw1 = 0
         if not inc_warmup and self._save_warmup:
             draw1 = self.num_draws_warmup
@@ -783,8 +783,7 @@ class CmdStanMCMC:
         containing per-draw diagnostic values.
         """
         result = {}
-        if self._draws.shape == (0,):
-            self._assemble_draws()
+        self._assemble_draws()
         for idxs in self.metadata.method_vars_cols.values():
             for idx in idxs:
                 result[self.column_names[idx]] = self._draws[:, :, idx]
