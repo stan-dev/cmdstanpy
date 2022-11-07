@@ -96,6 +96,14 @@ class CmdStanGQ(Generic[Fit]):
             # pylint: disable=raise-missing-from
             raise AttributeError(*e.args)
 
+    def __getstate__(self) -> dict:
+        # This function returns the mapping of objects to serialize with pickle.
+        # See https://docs.python.org/3/library/pickle.html#object.__getstate__
+        # for details. We call _assemble_generated_quantities to ensure
+        # the data are loaded prior to serialization.
+        self._assemble_generated_quantities()
+        return self.__dict__
+
     def _validate_csv_files(self) -> Dict[str, Any]:
         """
         Checks that Stan CSV output files for all chains are consistent
@@ -200,8 +208,7 @@ class CmdStanGQ(Generic[Fit]):
         CmdStanGQ.draws_xr
         CmdStanMCMC.draws
         """
-        if self._draws.shape == (0,):
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
         if inc_warmup:
             if (
                 isinstance(self.previous_fit, CmdStanMCMC)
@@ -315,8 +322,7 @@ class CmdStanGQ(Generic[Fit]):
                     '"inc_warmup=True"'
                 )
 
-        if self._draws.shape == (0,):
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
 
         gq_cols = []
         mcmc_vars = []
@@ -459,8 +465,7 @@ class CmdStanGQ(Generic[Fit]):
         for var in dup_vars:
             vars_list.remove(var)
 
-        if self._draws.shape == (0,):
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
 
         num_draws = self.previous_fit.num_draws_sampling
         sample_config = self.previous_fit.metadata.cmdstan_config
@@ -580,8 +585,7 @@ class CmdStanGQ(Generic[Fit]):
                 )
 
         # is gq variable
-        if self._draws.shape == (0,):
-            self._assemble_generated_quantities()
+        self._assemble_generated_quantities()
 
         draw1, num_draws = self._draws_start(inc_warmup)
         dims = [num_draws * self.chains]
@@ -625,6 +629,8 @@ class CmdStanGQ(Generic[Fit]):
         return result
 
     def _assemble_generated_quantities(self) -> None:
+        if self._draws.shape != (0,):
+            return
         # use numpy loadtxt
         _, num_draws = self._draws_start(inc_warmup=True)
 

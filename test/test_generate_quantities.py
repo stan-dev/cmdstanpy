@@ -5,17 +5,21 @@ import io
 import json
 import logging
 import os
+import pickle
+import shutil
 import unittest
 from test import CustomTestCase
 
 import numpy as np
 import pandas as pd
+import pytest
 from numpy.testing import assert_array_equal, assert_raises
 from testfixtures import LogCapture
 
 import cmdstanpy.stanfit
 from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.model import CmdStanModel
+from cmdstanpy.stanfit import CmdStanGQ
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -455,6 +459,26 @@ class GQAfterMCMCTest(CustomTestCase):
 
             with self.assertRaises(RuntimeError):
                 bern_gqs.draws_xr()
+
+    @pytest.mark.order(before="test_no_xarray")
+    def test_serialization(self):
+        stan_bern = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+        model_bern = CmdStanModel(stan_file=stan_bern)
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        fit_sampling = model_bern.sample(chains=1, iter_sampling=10, data=jdata)
+
+        stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
+        model = CmdStanModel(stan_file=stan)
+        fit1 = model.generate_quantities(data=jdata, mcmc_sample=fit_sampling)
+
+        dumped = pickle.dumps(fit1)
+        shutil.rmtree(fit1.runset._output_dir)
+        fit2: CmdStanGQ = pickle.loads(dumped)
+        variables1 = fit1.stan_variables()
+        variables2 = fit2.stan_variables()
+        self.assertEqual(set(variables1), set(variables2))
+        for key, value1 in variables1.items():
+            np.testing.assert_array_equal(value1, variables2[key])
 
     def test_single_row_csv(self):
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
