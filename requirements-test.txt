@@ -7,4 +7,3 @@ mypy
 testfixtures
 tqdm
 xarray
-types-ujson

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.utils.cmdstan &#8212; CmdStanPy 1.0.7 documentation</title>
+    <title>cmdstanpy.utils.cmdstan &#8212; CmdStanPy 1.0.8 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.7</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.8</a>
     
   </div>
 
@@ -172,6 +172,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
@@ -184,6 +185,46 @@
 <span class="kn">from</span> <span class="nn">.logging</span> <span class="kn">import</span> <span class="n">get_logger</span>
 
 <span class="n">EXTENSION</span> <span class="o">=</span> <span class="s1">&#39;.exe&#39;</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">determine_linux_arch</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">machine</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">machine</span><span class="p">()</span>
+    <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;aarch64&quot;</span><span class="p">:</span>
+        <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;arm64&quot;</span>
+    <span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;armv7l&quot;</span><span class="p">:</span>
+        <span class="c1"># Telling armel and armhf apart is nontrivial</span>
+        <span class="c1"># c.f. https://forums.raspberrypi.com/viewtopic.php?t=20873</span>
+        <span class="n">readelf</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;readelf&quot;</span><span class="p">,</span> <span class="s2">&quot;-A&quot;</span><span class="p">,</span> <span class="s2">&quot;/proc/self/exe&quot;</span><span class="p">],</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;Tag_ABI_VFP_args&quot;</span> <span class="ow">in</span> <span class="n">readelf</span><span class="o">.</span><span class="n">stdout</span><span class="p">:</span>
+            <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;armel&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;armhf&quot;</span>
+    <span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;mips64&quot;</span><span class="p">:</span>
+        <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;mips64el&quot;</span>
+    <span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;ppc64el&quot;</span><span class="p">:</span>
+        <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;ppc64le&quot;</span>
+    <span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;s390x&quot;</span><span class="p">:</span>
+        <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;s390x&quot;</span>
+    <span class="k">return</span> <span class="n">arch</span>
+
+
+<span class="k">def</span> <span class="nf">get_download_url</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">arch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CMDSTAN_ARCH&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">arch</span> <span class="ow">and</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span><span class="p">:</span>
+        <span class="n">arch</span> <span class="o">=</span> <span class="n">determine_linux_arch</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">arch</span> <span class="ow">and</span> <span class="n">arch</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;false&quot;</span><span class="p">:</span>
+        <span class="n">url_end</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">/cmdstan-</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">-linux-</span><span class="si">{</span><span class="n">arch</span><span class="si">}</span><span class="s1">.tar.gz&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">url_end</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;v</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">/cmdstan-</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">.tar.gz&#39;</span>
+
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;https://github.com/stan-dev/cmdstan/releases/download/</span><span class="si">{</span><span class="n">url_end</span><span class="si">}</span><span class="s1">&#39;</span>
 
 
 <span class="k">def</span> <span class="nf">validate_dir</span><span class="p">(</span><span class="n">install_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

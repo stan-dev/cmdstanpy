@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import json
 import logging
 import os
 import platform
@@ -10,16 +11,13 @@ import stat
 import tempfile
 import unittest
 from multiprocessing import cpu_count
+import pickle
 from test import CustomTestCase
 from time import time
 
 import numpy as np
+import pytest
 from testfixtures import LogCapture, StringComparison
-
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 import cmdstanpy.stanfit
 from cmdstanpy import _TMPDIR
@@ -1912,6 +1910,52 @@ class CmdStanMCMCTest(CustomTestCase):
         )
         self.assertEqual(fit.max_treedepths, None)
         self.assertEqual(fit.divergences, None)
+
+    def test_timeout(self):
+        stan = os.path.join(DATAFILES_PATH, 'timeout.stan')
+        timeout_model = CmdStanModel(stan_file=stan)
+        with self.assertRaises(TimeoutError):
+            timeout_model.sample(timeout=0.1, chains=1, data={'loop': 1})
+
+    def test_json_edges(self):
+        stan = os.path.join(DATAFILES_PATH, 'data-test.stan')
+        data_model = CmdStanModel(stan_file=stan)
+        data = {"inf": float("inf"), "nan": float("NaN")}
+        fit = data_model.sample(data, chains=1, iter_warmup=1, iter_sampling=1)
+        self.assertTrue(np.isnan(fit.stan_variable("nan_out")[0]))
+        self.assertTrue(np.isinf(fit.stan_variable("inf_out")[0]))
+
+        data = {"inf": np.inf, "nan": np.nan}
+        fit = data_model.sample(data, chains=1, iter_warmup=1, iter_sampling=1)
+        self.assertTrue(np.isnan(fit.stan_variable("nan_out")[0]))
+        self.assertTrue(np.isinf(fit.stan_variable("inf_out")[0]))
+
+    @pytest.mark.order(before="test_no_xarray")
+    def test_serialization(self, stanfile='bernoulli.stan'):
+        # This test must before any test that uses the `without_import` context
+        # manager because the latter uses `reload` with side effects that affect
+        # the consistency of classes.
+        stan = os.path.join(DATAFILES_PATH, stanfile)
+        bern_model = CmdStanModel(stan_file=stan)
+
+        jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+        bern_fit1 = bern_model.sample(
+            data=jdata,
+            chains=1,
+            iter_warmup=200,
+            iter_sampling=100,
+            show_progress=False,
+        )
+        # Dump the result (which assembles draws) and delete the source files.
+        dumped = pickle.dumps(bern_fit1)
+        shutil.rmtree(bern_fit1.runset._output_dir)
+        # Load the serialized result and compare results.
+        bern_fit2: CmdStanMCMC = pickle.loads(dumped)
+        variables1 = bern_fit1.stan_variables()
+        variables2 = bern_fit2.stan_variables()
+        self.assertEqual(set(variables1), set(variables2))
+        for key, value1 in variables1.items():
+            np.testing.assert_array_equal(value1, variables2[key])
 
 
 if __name__ == '__main__':

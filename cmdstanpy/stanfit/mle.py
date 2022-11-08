@@ -152,7 +152,7 @@ class CmdStanMLE:
         return pd.DataFrame(self._all_iters, columns=self.column_names)
 
     @property
-    def optimized_params_dict(self) -> Dict[str, float]:
+    def optimized_params_dict(self) -> Dict[str, np.float64]:
         """
         Returns all estimates from the optimizer, including `lp__` as a
         Python Dict.  Only returns estimate from final iteration.

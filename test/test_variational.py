@@ -3,6 +3,7 @@
 import contextlib
 import io
 import os
+import pickle
 import shutil
 import unittest
 from math import fabs
@@ -290,6 +291,29 @@ class VariationalTest(unittest.TestCase):
 
         with self.assertRaisesRegex(AttributeError, 'Unknown variable name:'):
             dummy = fit.c
+
+    def test_timeout(self):
+        stan = os.path.join(DATAFILES_PATH, 'timeout.stan')
+        timeout_model = CmdStanModel(stan_file=stan)
+        with self.assertRaises(TimeoutError):
+            timeout_model.variational(timeout=0.1, data={'loop': 1})
+
+    def test_serialization(self):
+        stan = os.path.join(
+            DATAFILES_PATH, 'variational', 'eta_should_be_big.stan'
+        )
+        model = CmdStanModel(stan_file=stan)
+        variational1 = model.variational(algorithm='meanfield', seed=999999)
+        dumped = pickle.dumps(variational1)
+        shutil.rmtree(variational1.runset._output_dir)
+        variational2: CmdStanVB = pickle.loads(dumped)
+        np.testing.assert_array_equal(
+            variational1.variational_sample, variational2.variational_sample
+        )
+        self.assertEqual(
+            variational1.variational_params_dict,
+            variational2.variational_params_dict,
+        )
 
 
 if __name__ == '__main__':
