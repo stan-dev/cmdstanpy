@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       new_version:
-        description: 'New version, for example: 0.9.69'     
+        description: 'New version, for example: 0.9.69'
         required: true
 
 jobs:
@@ -18,10 +18,10 @@ jobs:
       fail-fast: false
     steps:
       - name: Check out source code
-        uses: actions/checkout@v2
-      
+        uses: actions/checkout@v3
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -36,7 +36,7 @@ jobs:
           pip install -r requirements.txt
           pip install -e .
 
-      - name: Install CmdStan 
+      - name: Install CmdStan
         run: |
           python -m cmdstanpy.install_cmdstan
 
@@ -50,15 +50,15 @@ jobs:
           git checkout -b release/v${{ github.event.inputs.new_version }}
 
           sed -i 's/^__version__ = .*$/__version__ = '\''${{ github.event.inputs.new_version }}'\''/g' cmdstanpy/_version.py
-          
+
           cd docsrc
           make github
           cd ..
-          
+
           git add .
           git commit -m "release/v${{ github.event.inputs.new_version }}: updating version numbers"
           git push -u origin release/v${{ github.event.inputs.new_version }}
-          
+
       - name: Merge into develop
         run: |
           git checkout develop
@@ -78,13 +78,13 @@ jobs:
           git pull
           git reset --hard v${{ github.event.inputs.new_version }}
           git push -f origin master
-      
+
       - name: Build wheel
         run: python setup.py sdist bdist_wheel
 
       - name: Install bdist_wheel
         run: pip install dist/*.whl
-      
+
       - name: Upload to pypi
         if: success()
         env:
