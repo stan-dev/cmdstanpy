@@ -28,7 +28,9 @@ class CmdStanLogProb(CustomTestCase):
         model = CmdStanModel(stan_file=BERN_STAN)
 
         with LogCapture(level=logging.ERROR) as log:
-            with self.assertRaisesRegex(RuntimeError, "failed with returncode"):
+            with self.assertRaisesRegex(
+                RuntimeError, "failed with return code"
+            ):
                 model.log_prob({"not_here": 0.1}, data=BERN_DATA)
 
         log.check_present(
