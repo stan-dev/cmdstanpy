@@ -25,9 +25,9 @@ jobs:
         id: check-cmdstan
         run: |
             if [[ "${{ github.event.inputs.cmdstan-version }}" != "" ]]; then
-              echo "::set-output name=version::${{ github.event.inputs.cmdstan-version }}"
+              echo "version=${{ github.event.inputs.cmdstan-version }}" >> $GITHUB_OUTPUT
             else
-                echo "::set-output name=version::$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')"
+                echo "version=$(python -c 'import requests;print(requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])')" >> $GITHUB_OUTPUT
             fi
     outputs:
       version: ${{ steps.check-cmdstan.outputs.version }}
@@ -44,10 +44,10 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check out github
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -81,15 +81,11 @@ jobs:
       - name: Show libraries
         run: python -m pip freeze
 
-      - name: Get system info
-        uses: kenchan0130/actions-system-info@v1.0.0
-        id: system-info
-
       - name: CmdStan installation cacheing
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cmdstan
-          key: ${{ runner.os }}-${{ steps.system-info.outputs.release }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
+          key: ${{ runner.os }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
 
       - name: Install CmdStan (Linux, macOS)
         if: matrix.os != 'windows-latest'
