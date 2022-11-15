@@ -173,12 +173,7 @@ class CmdStanModel:
                     model_info = self.src_info()
                     if 'parameters' in model_info:
                         self._fixed_param |= len(model_info['parameters']) == 0
-                except (
-                    ValueError,
-                    RuntimeError,
-                    OSError,
-                    subprocess.CalledProcessError,
-                ) as e:
+                except ValueError as e:
                     if compile:
                         raise
                     get_logger().debug(e)
