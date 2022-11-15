@@ -46,7 +46,7 @@ def check_present(
     caplog: pytest.LogCaptureFixture,
     *conditions: List[tuple],
     clear: bool = True,
-) -> tuple:
+) -> None:
     """
     Check that all desired records exist.
     """
