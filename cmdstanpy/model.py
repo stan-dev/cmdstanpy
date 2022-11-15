@@ -287,8 +287,7 @@ class CmdStanModel:
             + self._compiler_options.compose_stanc()
             + ['--info', str(self.stan_file)]
         )
-        # pylint: disable=subprocess-run-check
-        proc = subprocess.run(cmd, capture_output=True, text=True)
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if proc.returncode:
             raise ValueError(
                 f"Failed to get source info for Stan model "
