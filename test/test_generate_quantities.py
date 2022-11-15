@@ -7,11 +7,11 @@ import logging
 import os
 import pickle
 import shutil
+from test import without_import, check_present
 
 import numpy as np
 import pandas as pd
 import pytest
-from test import without_import, check_present
 
 import cmdstanpy.stanfit
 from cmdstanpy.stanfit import CmdStanGQ

@@ -7,14 +7,14 @@ import logging
 import os
 import pickle
 import shutil
+from test import check_present
 
 import numpy as np
+import pytest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanMLE, RunSet, from_csv
-import pytest
-from test import check_present
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -51,7 +51,7 @@ def test_instantiate_from_csvfiles() -> None:
     mle = from_csv(path=csvfiles_path)
     assert 'CmdStanMLE: model=rosenbrock' in repr(mle)
     assert 'method=optimize' in repr(mle)
-    mle.column_names == ('lp__', 'x', 'y')
+    assert mle.column_names == ('lp__', 'x', 'y')
     np.testing.assert_almost_equal(mle.optimized_params_dict['x'], 1, decimal=3)
     np.testing.assert_almost_equal(mle.optimized_params_dict['y'], 1, decimal=3)
 

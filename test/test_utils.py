@@ -14,12 +14,12 @@ import shutil
 import stat
 import string
 import tempfile
+from test import raises_nested, mark_windows_only, check_present
 from unittest import mock
 
 import numpy as np
 import pandas as pd
 import pytest
-from test import raises_nested, mark_windows_only, check_present
 
 from cmdstanpy import _DOT_CMDSTAN, _TMPDIR
 from cmdstanpy.model import CmdStanModel

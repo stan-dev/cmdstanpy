@@ -3,8 +3,10 @@
 import logging
 import os
 import platform
-import pytest
+from test import check_present
 from time import time
+
+import pytest
 
 from cmdstanpy import _TMPDIR, cmdstan_path
 from cmdstanpy.cmdstan_args import (
@@ -16,7 +18,6 @@ from cmdstanpy.cmdstan_args import (
     VariationalArgs,
 )
 from cmdstanpy.utils import cmdstan_version_before
-from test import check_present
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

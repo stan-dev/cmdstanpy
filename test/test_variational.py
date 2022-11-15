@@ -5,16 +5,16 @@ import io
 import logging
 import os
 import pickle
-import pytest
 import shutil
 from math import fabs
+from test import check_present
 
 import numpy as np
+import pytest
 
 from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanVB, RunSet, from_csv
-from test import check_present
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

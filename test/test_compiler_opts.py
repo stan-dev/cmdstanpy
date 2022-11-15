@@ -2,10 +2,10 @@
 
 import logging
 import os
+from test import check_present
 import pytest
 
 from cmdstanpy.compiler_opts import CompilerOptions
-from test import check_present
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

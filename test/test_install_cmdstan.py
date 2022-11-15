@@ -1,5 +1,6 @@
 """install_cmdstan test"""
 from unittest import mock
+import pytest
 from cmdstanpy.install_cmdstan import (
     CmdStanInstallError,
     CmdStanRetrieveError,
@@ -8,7 +9,6 @@ from cmdstanpy.install_cmdstan import (
     rebuild_cmdstan,
     retrieve_version,
 )
-import pytest
 
 
 def test_is_version_available() -> None:
