@@ -1,18 +1,18 @@
 """CmdStanModel tests"""
 
 import contextlib
+from glob import glob
 import io
 import logging
 import os
+import re
 import shutil
 import tempfile
-import unittest
-from glob import glob
-from test import CustomTestCase
+from test import raises_nested, check_present
+from typing import List
 from unittest.mock import MagicMock, patch
 
 import pytest
-from testfixtures import LogCapture, StringComparison
 
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import EXTENSION, cmdstan_version_before
@@ -39,503 +39,517 @@ BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
-# pylint: disable=too-many-public-methods
-class CmdStanModelTest(CustomTestCase):
-    def test_model_good(self):
-        # compile on instantiation, override model name
-        model = CmdStanModel(model_name='bern', stan_file=BERN_STAN)
-        self.assertEqual(BERN_STAN, model.stan_file)
-        self.assertPathsEqual(model.exe_file, BERN_EXE)
-        self.assertEqual('bern', model.name)
+def test_model_good() -> None:
+    # compile on instantiation, override model name
+    model = CmdStanModel(model_name='bern', stan_file=BERN_STAN)
+    assert BERN_STAN == model.stan_file
+    assert os.path.samefile(model.exe_file, BERN_EXE)
+    assert 'bern' == model.name
 
-        # compile with external header
-        model = CmdStanModel(
-            stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
-            user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
-        )
+    # compile with external header
+    model = CmdStanModel(
+        stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
+        user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
+    )
 
-        # default model name
-        model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertEqual(BERN_BASENAME, model.name)
+    # default model name
+    model = CmdStanModel(stan_file=BERN_STAN)
+    assert BERN_BASENAME == model.name
 
-        # instantiate with existing exe
-        model = CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
-        self.assertEqual(BERN_STAN, model.stan_file)
-        self.assertPathsEqual(model.exe_file, BERN_EXE)
+    # instantiate with existing exe
+    model = CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
+    assert BERN_STAN == model.stan_file
+    assert os.path.samefile(model.exe_file, BERN_EXE)
 
-    def test_ctor_compile_arg(self):
-        # instantiate, don't compile
-        if os.path.exists(BERN_EXE):
-            os.remove(BERN_EXE)
-        model = CmdStanModel(stan_file=BERN_STAN, compile=False)
-        self.assertEqual(BERN_STAN, model.stan_file)
-        self.assertEqual(None, model.exe_file)
 
-        model = CmdStanModel(stan_file=BERN_STAN, compile=True)
-        self.assertPathsEqual(model.exe_file, BERN_EXE)
-        exe_time = os.path.getmtime(model.exe_file)
-
-        model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertTrue(exe_time == os.path.getmtime(model.exe_file))
-
-        model = CmdStanModel(stan_file=BERN_STAN, compile='force')
-        self.assertTrue(exe_time < os.path.getmtime(model.exe_file))
-
-    def test_exe_only(self):
-        model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertEqual(BERN_EXE, model.exe_file)
-        exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
-        shutil.copyfile(model.exe_file, exe_only)
-
-        model2 = CmdStanModel(exe_file=exe_only)
-        with self.assertRaises(RuntimeError):
-            model2.code()
-        with self.assertRaises(RuntimeError):
-            model2.compile()
-        self.assertFalse(model2._fixed_param)
-
-    def test_fixed_param(self):
-        stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
-        model = CmdStanModel(stan_file=stan)
-        self.assertTrue(model._fixed_param)
-
-    def test_model_pedantic(self):
-        stan_file = os.path.join(DATAFILES_PATH, 'bernoulli_pedantic.stan')
-        with LogCapture(level=logging.WARNING) as log:
-            logging.getLogger()
-            model = CmdStanModel(model_name='bern', stan_file=stan_file)
-            model.compile(force=True, stanc_options={'warn-pedantic': True})
-        log.check_present(
-            (
-                'cmdstanpy',
-                'WARNING',
-                StringComparison(r'(?s).*The parameter theta has no priors.*'),
-            )
-        )
-
-    def test_model_bad(self):
-        with self.assertRaises(ValueError):
-            CmdStanModel(stan_file=None, exe_file=None)
-        with self.assertRaises(ValueError):
-            CmdStanModel(model_name='bad')
-        with self.assertRaises(ValueError):
-            CmdStanModel(model_name='', stan_file=BERN_STAN)
-        with self.assertRaises(ValueError):
-            CmdStanModel(model_name='   ', stan_file=BERN_STAN)
-        with self.assertRaises(ValueError):
-            CmdStanModel(
-                stan_file=os.path.join(DATAFILES_PATH, "external.stan")
-            )
-        CmdStanModel(stan_file=BERN_STAN)
+def test_ctor_compile_arg() -> None:
+    # instantiate, don't compile
+    if os.path.exists(BERN_EXE):
         os.remove(BERN_EXE)
-        with self.assertRaises(ValueError):
-            CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
+    model = CmdStanModel(stan_file=BERN_STAN, compile=False)
+    assert BERN_STAN == model.stan_file
+    assert model.exe_file is None
 
-    def test_stanc_options(self):
+    model = CmdStanModel(stan_file=BERN_STAN, compile=True)
+    assert os.path.samefile(model.exe_file, BERN_EXE)
+    exe_time = os.path.getmtime(model.exe_file)
 
-        allowed_optims = ("", "0", "1", "experimental")
-        for optim in allowed_optims:
-            opts = {
-                f'O{optim}': True,
-                'allow-undefined': True,
-                'use-opencl': True,
-                'name': 'foo',
-            }
-            model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, stanc_options=opts
-            )
-            stanc_opts = model.stanc_options
-            self.assertTrue(stanc_opts[f'O{optim}'])
-            self.assertTrue(stanc_opts['allow-undefined'])
-            self.assertTrue(stanc_opts['use-opencl'])
-            self.assertTrue(stanc_opts['name'] == 'foo')
+    model = CmdStanModel(stan_file=BERN_STAN)
+    assert exe_time == os.path.getmtime(model.exe_file)
 
-            cpp_opts = model.cpp_options
-            self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
+    model = CmdStanModel(stan_file=BERN_STAN, compile='force')
+    assert exe_time < os.path.getmtime(model.exe_file)
 
-        with self.assertRaises(ValueError):
-            bad_opts = {'X': True}
-            model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
-            )
-        with self.assertRaises(ValueError):
-            bad_opts = {'include-paths': True}
-            model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
-            )
-        with self.assertRaises(ValueError):
-            bad_opts = {'include-paths': 'lkjdf'}
-            model = CmdStanModel(
-                stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
-            )
 
-    def test_cpp_options(self):
+def test_exe_only() -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    assert BERN_EXE == model.exe_file
+    exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
+    shutil.copyfile(model.exe_file, exe_only)
+
+    model2 = CmdStanModel(exe_file=exe_only)
+    with pytest.raises(RuntimeError):
+        model2.code()
+    with pytest.raises(RuntimeError):
+        model2.compile()
+    assert not model2._fixed_param
+
+
+def test_fixed_param() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
+    model = CmdStanModel(stan_file=stan)
+    assert model._fixed_param
+
+
+def test_model_pedantic(caplog: pytest.LogCaptureFixture) -> None:
+    stan_file = os.path.join(DATAFILES_PATH, 'bernoulli_pedantic.stan')
+    with caplog.at_level(logging.WARNING):
+        logging.getLogger()
+        model = CmdStanModel(model_name='bern', stan_file=stan_file)
+        model.compile(force=True, stanc_options={'warn-pedantic': True})
+
+    check_present(
+        caplog,
+        (
+            'cmdstanpy',
+            'WARNING',
+            re.compile(r'(?s).*The parameter theta has no priors.*'),
+        ),
+    )
+
+
+@pytest.mark.order(before="test_model_good")
+def test_model_bad() -> None:
+    with pytest.raises(ValueError):
+        CmdStanModel(stan_file=None, exe_file=None)
+    with pytest.raises(ValueError):
+        CmdStanModel(model_name='bad')
+    with pytest.raises(ValueError):
+        CmdStanModel(model_name='', stan_file=BERN_STAN)
+    with pytest.raises(ValueError):
+        CmdStanModel(model_name='   ', stan_file=BERN_STAN)
+    with pytest.raises(ValueError):
+        CmdStanModel(stan_file=os.path.join(DATAFILES_PATH, "external.stan"))
+    CmdStanModel(stan_file=BERN_STAN)
+    os.remove(BERN_EXE)
+    with pytest.raises(ValueError):
+        CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
+
+
+def test_stanc_options() -> None:
+
+    allowed_optims = ("", "0", "1", "experimental")
+    for optim in allowed_optims:
         opts = {
-            'STAN_OPENCL': 'TRUE',
-            'STAN_MPI': 'TRUE',
-            'STAN_THREADS': 'TRUE',
+            f'O{optim}': True,
+            'allow-undefined': True,
+            'use-opencl': True,
+            'name': 'foo',
         }
         model = CmdStanModel(
-            stan_file=BERN_STAN, compile=False, cpp_options=opts
+            stan_file=BERN_STAN, compile=False, stanc_options=opts
         )
+        stanc_opts = model.stanc_options
+        assert stanc_opts[f'O{optim}']
+        assert stanc_opts['allow-undefined']
+        assert stanc_opts['use-opencl']
+        assert stanc_opts['name'] == 'foo'
+
         cpp_opts = model.cpp_options
-        self.assertEqual(cpp_opts['STAN_OPENCL'], 'TRUE')
-        self.assertEqual(cpp_opts['STAN_MPI'], 'TRUE')
-        self.assertEqual(cpp_opts['STAN_THREADS'], 'TRUE')
+        assert cpp_opts['STAN_OPENCL'] == 'TRUE'
 
-    def test_model_info(self):
-        model = CmdStanModel(stan_file=BERN_STAN, compile=False)
-        model.compile(force=True)
-        info_dict = model.exe_info()
-        self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
+    with pytest.raises(ValueError):
+        bad_opts = {'X': True}
+        model = CmdStanModel(
+            stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
+        )
+    with pytest.raises(ValueError):
+        bad_opts = {'include-paths': True}
+        model = CmdStanModel(
+            stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
+        )
+    with pytest.raises(ValueError):
+        bad_opts = {'include-paths': 'lkjdf'}
+        model = CmdStanModel(
+            stan_file=BERN_STAN, compile=False, stanc_options=bad_opts
+        )
 
-        if model.exe_file is not None and os.path.exists(model.exe_file):
-            os.remove(model.exe_file)
-        empty_dict = model.exe_info()
-        self.assertEqual(len(empty_dict), 0)
 
-        model_info = model.src_info()
-        self.assertNotEqual(model_info, {})
-        self.assertIn('theta', model_info['parameters'])
+def test_cpp_options() -> None:
+    opts = {
+        'STAN_OPENCL': 'TRUE',
+        'STAN_MPI': 'TRUE',
+        'STAN_THREADS': 'TRUE',
+    }
+    model = CmdStanModel(stan_file=BERN_STAN, compile=False, cpp_options=opts)
+    cpp_opts = model.cpp_options
+    assert cpp_opts['STAN_OPENCL'] == 'TRUE'
+    assert cpp_opts['STAN_MPI'] == 'TRUE'
+    assert cpp_opts['STAN_THREADS'] == 'TRUE'
 
-        model_include = CmdStanModel(
-            stan_file=os.path.join(DATAFILES_PATH, "bernoulli_include.stan"),
+
+def test_model_info() -> None:
+    model = CmdStanModel(stan_file=BERN_STAN, compile=False)
+    model.compile(force=True)
+    info_dict = model.exe_info()
+    assert info_dict['STAN_THREADS'].lower() == 'false'
+
+    if model.exe_file is not None and os.path.exists(model.exe_file):
+        os.remove(model.exe_file)
+    empty_dict = model.exe_info()
+    assert len(empty_dict) == 0
+
+    model_info = model.src_info()
+    assert model_info != {}
+    assert 'theta' in model_info['parameters']
+
+    model_include = CmdStanModel(
+        stan_file=os.path.join(DATAFILES_PATH, "bernoulli_include.stan"),
+        compile=False,
+    )
+    model_info_include = model_include.src_info()
+    assert model_info_include != {}
+    assert 'theta' in model_info_include['parameters']
+    assert 'included_files' in model_info_include
+
+
+def test_compile_with_bad_includes(caplog: pytest.LogCaptureFixture) -> None:
+    # Ensure compilation fails if we break an included file.
+    stan_file = os.path.join(DATAFILES_PATH, "add_one_model.stan")
+    exe_file = os.path.splitext(stan_file)[0] + EXTENSION
+    if os.path.isfile(exe_file):
+        os.unlink(exe_file)
+    with tempfile.TemporaryDirectory() as include_path:
+        include_source = os.path.join(
+            DATAFILES_PATH, "include-path", "add_one_function.stan"
+        )
+        include_target = os.path.join(include_path, "add_one_function.stan")
+        shutil.copy(include_source, include_target)
+        model = CmdStanModel(
+            stan_file=stan_file,
             compile=False,
+            stanc_options={"include-paths": [include_path]},
         )
-        model_info_include = model_include.src_info()
-        self.assertNotEqual(model_info_include, {})
-        self.assertIn('theta', model_info_include['parameters'])
-        self.assertIn('included_files', model_info_include)
-
-    def test_compile_with_bad_includes(self):
-        # Ensure compilation fails if we break an included file.
-        stan_file = os.path.join(DATAFILES_PATH, "add_one_model.stan")
-        exe_file = os.path.splitext(stan_file)[0] + EXTENSION
-        if os.path.isfile(exe_file):
-            os.unlink(exe_file)
-        with tempfile.TemporaryDirectory() as include_path:
-            include_source = os.path.join(
-                DATAFILES_PATH, "include-path", "add_one_function.stan"
-            )
-            include_target = os.path.join(include_path, "add_one_function.stan")
-            shutil.copy(include_source, include_target)
-            model = CmdStanModel(
-                stan_file=stan_file,
-                compile=False,
-                stanc_options={"include-paths": [include_path]},
-            )
-            with LogCapture(level=logging.INFO) as log:
-                model.compile()
-            log.check_present(
-                ('cmdstanpy', 'INFO', StringComparison('compiling stan file'))
-            )
-            with open(include_target, "w") as fd:
-                fd.write("gobbledygook")
-            with pytest.raises(ValueError, match="Failed to get source info"):
-                model.compile()
-
-    def test_compile_with_includes(self):
-        getmtime = os.path.getmtime
-        configs = [
-            ('add_one_model.stan', ['include-path']),
-            ('bernoulli_include.stan', []),
-        ]
-        for stan_file, include_paths in configs:
-            stan_file = os.path.join(DATAFILES_PATH, stan_file)
-            exe_file = os.path.splitext(stan_file)[0] + EXTENSION
-            if os.path.isfile(exe_file):
-                os.unlink(exe_file)
-            include_paths = [
-                os.path.join(DATAFILES_PATH, path) for path in include_paths
-            ]
-
-            # Compile for the first time.
-            model = CmdStanModel(
-                stan_file=stan_file,
-                compile=False,
-                stanc_options={"include-paths": include_paths},
-            )
-            with LogCapture(level=logging.INFO) as log:
-                model.compile()
-            log.check_present(
-                ('cmdstanpy', 'INFO', StringComparison('compiling stan file'))
-            )
-
-            # Compile for the second time, ensuring cache is used.
-            with LogCapture(level=logging.DEBUG) as log:
-                model.compile()
-            log.check_present(
-                ('cmdstanpy', 'DEBUG', StringComparison('found newer exe file'))
-            )
-
-            # Compile after modifying included file, ensuring cache is not used.
-            def _patched_getmtime(filename: str) -> float:
-                includes = ['divide_real_by_two.stan', 'add_one_function.stan']
-                if any(filename.endswith(include) for include in includes):
-                    return float('inf')
-                return getmtime(filename)
-
-            with LogCapture(level=logging.INFO) as log, patch(
-                'os.path.getmtime', side_effect=_patched_getmtime
-            ):
-                model.compile()
-            log.check_present(
-                ('cmdstanpy', 'INFO', StringComparison('compiling stan file'))
-            )
-
-    def test_compile_force(self):
-        if os.path.exists(BERN_EXE):
-            os.remove(BERN_EXE)
-        model = CmdStanModel(stan_file=BERN_STAN, compile=False, cpp_options={})
-        self.assertIsNone(model.exe_file)
-
-        model.compile(force=True)
-        self.assertIsNotNone(model.exe_file)
-        self.assertTrue(os.path.exists(model.exe_file))
-
-        info_dict = model.exe_info()
-        self.assertEqual(info_dict['STAN_THREADS'].lower(), 'false')
-
-        more_opts = {'STAN_THREADS': 'TRUE'}
-
-        model.compile(force=True, cpp_options=more_opts)
-        self.assertIsNotNone(model.exe_file)
-        self.assertTrue(os.path.exists(model.exe_file))
-
-        info_dict2 = model.exe_info()
-        self.assertEqual(info_dict2['STAN_THREADS'].lower(), 'true')
-
-        override_opts = {'STAN_NO_RANGE_CHECKS': 'TRUE'}
-
-        model.compile(
-            force=True, cpp_options=override_opts, override_options=True
+        with caplog.at_level(logging.INFO):
+            model.compile()
+        check_present(
+            caplog, ('cmdstanpy', 'INFO', re.compile('compiling stan file'))
         )
-        info_dict3 = model.exe_info()
-        self.assertEqual(info_dict3['STAN_THREADS'].lower(), 'false')
-        # cmdstan#1056
-        # self.assertEqual(info_dict3['STAN_NO_RANGE_CHECKS'].lower(), 'true')
+        with open(include_target, "w") as fd:
+            fd.write("gobbledygook")
+        with pytest.raises(ValueError, match="Failed to get source info"):
+            model.compile()
 
-        model.compile(force=True, cpp_options=more_opts)
-        info_dict4 = model.exe_info()
-        self.assertEqual(info_dict4['STAN_THREADS'].lower(), 'true')
 
-        # test compile='force' in constructor
-        model2 = CmdStanModel(stan_file=BERN_STAN, compile='force')
-        info_dict5 = model2.exe_info()
-        self.assertEqual(info_dict5['STAN_THREADS'].lower(), 'false')
+@pytest.mark.parametrize(
+    "stan_file, include_paths",
+    [
+        ('add_one_model.stan', ['include-path']),
+        ('bernoulli_include.stan', []),
+    ],
+)
+def test_compile_with_includes(
+    caplog: pytest.LogCaptureFixture, stan_file: str, include_paths: List[str]
+) -> None:
+    getmtime = os.path.getmtime
+    stan_file = os.path.join(DATAFILES_PATH, stan_file)
+    include_paths = [
+        os.path.join(DATAFILES_PATH, path) for path in include_paths
+    ]
 
-    def test_model_paths(self):
-        # pylint: disable=unused-variable
-        model = CmdStanModel(stan_file=BERN_STAN)  # instantiates exe
-        self.assertTrue(os.path.exists(BERN_EXE))
+    # Compile for the first time.
+    model = CmdStanModel(
+        stan_file=stan_file,
+        compile=False,
+        stanc_options={"include-paths": include_paths},
+    )
+    with caplog.at_level(logging.INFO):
+        model.compile()
+    check_present(
+        caplog, ('cmdstanpy', 'INFO', re.compile('compiling stan file'))
+    )
 
-        dotdot_stan = os.path.realpath(os.path.join('..', 'bernoulli.stan'))
-        dotdot_exe = os.path.realpath(
-            os.path.join('..', 'bernoulli' + EXTENSION)
-        )
-        shutil.copyfile(BERN_STAN, dotdot_stan)
-        shutil.copyfile(BERN_EXE, dotdot_exe)
-        model1 = CmdStanModel(
-            stan_file=os.path.join('..', 'bernoulli.stan'),
-            exe_file=os.path.join('..', 'bernoulli' + EXTENSION),
-        )
-        self.assertEqual(model1.stan_file, dotdot_stan)
-        self.assertEqual(model1.exe_file, dotdot_exe)
-        os.remove(dotdot_stan)
-        os.remove(dotdot_exe)
+    # Compile for the second time, ensuring cache is used.
+    with caplog.at_level(logging.DEBUG):
+        model.compile()
+    check_present(
+        caplog, ('cmdstanpy', 'DEBUG', re.compile('found newer exe file'))
+    )
 
-        tilde_stan = os.path.realpath(
-            os.path.join(os.path.expanduser('~'), 'bernoulli.stan')
-        )
-        tilde_exe = os.path.realpath(
-            os.path.join(os.path.expanduser('~'), 'bernoulli' + EXTENSION)
-        )
-        shutil.copyfile(BERN_STAN, tilde_stan)
-        shutil.copyfile(BERN_EXE, tilde_exe)
-        model2 = CmdStanModel(
-            stan_file=os.path.join('~', 'bernoulli.stan'),
-            exe_file=os.path.join('~', 'bernoulli' + EXTENSION),
-        )
-        self.assertEqual(model2.stan_file, tilde_stan)
-        self.assertEqual(model2.exe_file, tilde_exe)
-        os.remove(tilde_stan)
-        os.remove(tilde_exe)
+    # Compile after modifying included file, ensuring cache is not used.
+    def _patched_getmtime(filename: str) -> float:
+        includes = ['divide_real_by_two.stan', 'add_one_function.stan']
+        if any(filename.endswith(include) for include in includes):
+            return float('inf')
+        return getmtime(filename)
 
-    def test_model_none(self):
-        with self.assertRaises(ValueError):
-            _ = CmdStanModel(exe_file=None, stan_file=None)
+    caplog.clear()
+    with caplog.at_level(logging.INFO), patch(
+        'os.path.getmtime', side_effect=_patched_getmtime
+    ):
+        model.compile()
+    check_present(
+        caplog, ('cmdstanpy', 'INFO', re.compile('compiling stan file'))
+    )
 
-    def test_model_file_does_not_exist(self):
-        with self.assertRaises(ValueError):
-            CmdStanModel(stan_file='xdlfkjx', exe_file='sdfndjsds')
 
-        stan = os.path.join(DATAFILES_PATH, 'b')
-        with self.assertRaises(ValueError):
-            CmdStanModel(stan_file=stan)
-
-    def test_model_syntax_error(self):
-        stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
-        with self.assertRaisesRegex(ValueError, r'.*Syntax error.*'):
-            CmdStanModel(stan_file=stan)
-
-    def test_model_syntax_error_without_compile(self):
-        stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
-        CmdStanModel(stan_file=stan, compile=False)
-
-    def test_repr(self):
-        model = CmdStanModel(stan_file=BERN_STAN)
-        model_repr = repr(model)
-        self.assertIn('name=bernoulli', model_repr)
-
-    def test_print(self):
-        model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertEqual(CODE, model.code())
-
-    def test_model_compile(self):
-        model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertPathsEqual(model.exe_file, BERN_EXE)
-
-        model = CmdStanModel(stan_file=BERN_STAN)
-        self.assertPathsEqual(model.exe_file, BERN_EXE)
-        old_exe_time = os.path.getmtime(model.exe_file)
+def test_compile_force() -> None:
+    if os.path.exists(BERN_EXE):
         os.remove(BERN_EXE)
+    model = CmdStanModel(stan_file=BERN_STAN, compile=False, cpp_options={})
+    assert model.exe_file is None
+
+    model.compile(force=True)
+    assert model.exe_file is not None
+    assert os.path.exists(model.exe_file)
+
+    info_dict = model.exe_info()
+    assert info_dict['STAN_THREADS'].lower() == 'false'
+
+    more_opts = {'STAN_THREADS': 'TRUE'}
+
+    model.compile(force=True, cpp_options=more_opts)
+    assert model.exe_file is not None
+    assert os.path.exists(model.exe_file)
+
+    info_dict2 = model.exe_info()
+    assert info_dict2['STAN_THREADS'].lower() == 'true'
+
+    override_opts = {'STAN_NO_RANGE_CHECKS': 'TRUE'}
+
+    model.compile(force=True, cpp_options=override_opts, override_options=True)
+    info_dict3 = model.exe_info()
+    assert info_dict3['STAN_THREADS'].lower() == 'false'
+    # cmdstan#1056
+    # assert info_dict3['STAN_NO_RANGE_CHECKS'].lower() == 'true'
+
+    model.compile(force=True, cpp_options=more_opts)
+    info_dict4 = model.exe_info()
+    assert info_dict4['STAN_THREADS'].lower() == 'true'
+
+    # test compile='force' in constructor
+    model2 = CmdStanModel(stan_file=BERN_STAN, compile='force')
+    info_dict5 = model2.exe_info()
+    assert info_dict5['STAN_THREADS'].lower() == 'false'
+
+
+def test_model_paths() -> None:
+    # pylint: disable=unused-variable
+    model = CmdStanModel(stan_file=BERN_STAN)  # instantiates exe
+    assert os.path.exists(BERN_EXE)
+
+    dotdot_stan = os.path.realpath(os.path.join('..', 'bernoulli.stan'))
+    dotdot_exe = os.path.realpath(os.path.join('..', 'bernoulli' + EXTENSION))
+    shutil.copyfile(BERN_STAN, dotdot_stan)
+    shutil.copyfile(BERN_EXE, dotdot_exe)
+    model1 = CmdStanModel(
+        stan_file=os.path.join('..', 'bernoulli.stan'),
+        exe_file=os.path.join('..', 'bernoulli' + EXTENSION),
+    )
+    assert model1.stan_file == dotdot_stan
+    assert model1.exe_file == dotdot_exe
+    os.remove(dotdot_stan)
+    os.remove(dotdot_exe)
+
+    tilde_stan = os.path.realpath(
+        os.path.join(os.path.expanduser('~'), 'bernoulli.stan')
+    )
+    tilde_exe = os.path.realpath(
+        os.path.join(os.path.expanduser('~'), 'bernoulli' + EXTENSION)
+    )
+    shutil.copyfile(BERN_STAN, tilde_stan)
+    shutil.copyfile(BERN_EXE, tilde_exe)
+    model2 = CmdStanModel(
+        stan_file=os.path.join('~', 'bernoulli.stan'),
+        exe_file=os.path.join('~', 'bernoulli' + EXTENSION),
+    )
+    assert model2.stan_file == tilde_stan
+    assert model2.exe_file == tilde_exe
+    os.remove(tilde_stan)
+    os.remove(tilde_exe)
+
+
+def test_model_none() -> None:
+    with pytest.raises(ValueError):
+        _ = CmdStanModel(exe_file=None, stan_file=None)
+
+
+def test_model_file_does_not_exist() -> None:
+    with pytest.raises(ValueError):
+        CmdStanModel(stan_file='xdlfkjx', exe_file='sdfndjsds')
+
+    stan = os.path.join(DATAFILES_PATH, 'b')
+    with pytest.raises(ValueError):
+        CmdStanModel(stan_file=stan)
+
+
+def test_model_syntax_error() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
+    with pytest.raises(ValueError, match=r'.*Syntax error.*'):
+        CmdStanModel(stan_file=stan)
+
+
+def test_model_syntax_error_without_compile():
+    stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
+    CmdStanModel(stan_file=stan, compile=False)
+
+
+def test_repr() -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    model_repr = repr(model)
+    assert 'name=bernoulli' in model_repr
+
+
+def test_print() -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    assert CODE == model.code()
+
+
+def test_model_compile() -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    assert os.path.samefile(model.exe_file, BERN_EXE)
+
+    model = CmdStanModel(stan_file=BERN_STAN)
+    assert os.path.samefile(model.exe_file, BERN_EXE)
+    old_exe_time = os.path.getmtime(model.exe_file)
+    os.remove(BERN_EXE)
+    model.compile()
+    new_exe_time = os.path.getmtime(model.exe_file)
+    assert new_exe_time > old_exe_time
+
+    # test compile with existing exe - timestamp on exe unchanged
+    exe_time = os.path.getmtime(model.exe_file)
+    model2 = CmdStanModel(stan_file=BERN_STAN)
+    assert exe_time == os.path.getmtime(model2.exe_file)
+
+
+def test_model_compile_space() -> None:
+    with tempfile.TemporaryDirectory(
+        prefix="cmdstanpy_testfolder_"
+    ) as tmp_path:
+        path_with_space = os.path.join(tmp_path, "space in path")
+        os.makedirs(path_with_space, exist_ok=True)
+        bern_stan_new = os.path.join(
+            path_with_space, os.path.split(BERN_STAN)[1]
+        )
+        bern_exe_new = os.path.join(path_with_space, os.path.split(BERN_EXE)[1])
+        shutil.copyfile(BERN_STAN, bern_stan_new)
+        model = CmdStanModel(stan_file=bern_stan_new)
+
+        old_exe_time = os.path.getmtime(model.exe_file)
+        os.remove(bern_exe_new)
         model.compile()
         new_exe_time = os.path.getmtime(model.exe_file)
-        self.assertTrue(new_exe_time > old_exe_time)
+        assert new_exe_time > old_exe_time
 
         # test compile with existing exe - timestamp on exe unchanged
         exe_time = os.path.getmtime(model.exe_file)
-        model2 = CmdStanModel(stan_file=BERN_STAN)
-        self.assertEqual(exe_time, os.path.getmtime(model2.exe_file))
+        model2 = CmdStanModel(stan_file=bern_stan_new)
+        assert exe_time == os.path.getmtime(model2.exe_file)
 
-    def test_model_compile_space(self):
-        with tempfile.TemporaryDirectory(
-            prefix="cmdstanpy_testfolder_"
-        ) as tmp_path:
-            path_with_space = os.path.join(tmp_path, "space in path")
-            os.makedirs(path_with_space, exist_ok=True)
-            bern_stan_new = os.path.join(
-                path_with_space, os.path.split(BERN_STAN)[1]
-            )
-            bern_exe_new = os.path.join(
-                path_with_space, os.path.split(BERN_EXE)[1]
-            )
-            shutil.copyfile(BERN_STAN, bern_stan_new)
-            model = CmdStanModel(stan_file=bern_stan_new)
 
-            old_exe_time = os.path.getmtime(model.exe_file)
-            os.remove(bern_exe_new)
-            model.compile()
-            new_exe_time = os.path.getmtime(model.exe_file)
-            self.assertTrue(new_exe_time > old_exe_time)
-
-            # test compile with existing exe - timestamp on exe unchanged
-            exe_time = os.path.getmtime(model.exe_file)
-            model2 = CmdStanModel(stan_file=bern_stan_new)
-            self.assertEqual(exe_time, os.path.getmtime(model2.exe_file))
-
-    def test_model_includes_explicit(self):
-        if os.path.exists(BERN_EXE):
-            os.remove(BERN_EXE)
-        model = CmdStanModel(
-            stan_file=BERN_STAN, stanc_options={'include-paths': DATAFILES_PATH}
-        )
-        self.assertEqual(BERN_STAN, model.stan_file)
-        self.assertPathsEqual(model.exe_file, BERN_EXE)
-
-    def test_model_includes_implicit(self):
-        stan = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
-        exe = os.path.join(DATAFILES_PATH, 'bernoulli_include' + EXTENSION)
-        if os.path.exists(exe):
-            os.remove(exe)
-        model2 = CmdStanModel(stan_file=stan)
-        self.assertPathsEqual(model2.exe_file, exe)
-
-    @pytest.mark.skipif(
-        not cmdstan_version_before(2, 32),
-        reason="Deprecated syntax removed in Stan 2.32",
+def test_model_includes_explicit() -> None:
+    if os.path.exists(BERN_EXE):
+        os.remove(BERN_EXE)
+    model = CmdStanModel(
+        stan_file=BERN_STAN, stanc_options={'include-paths': DATAFILES_PATH}
     )
-    def test_model_format_deprecations(self):
-        stan = os.path.join(DATAFILES_PATH, 'format_me_deprecations.stan')
+    assert BERN_STAN == model.stan_file
+    assert os.path.samefile(model.exe_file, BERN_EXE)
 
-        model = CmdStanModel(stan_file=stan, compile=False)
 
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            model.format()
+def test_model_includes_implicit() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
+    exe = os.path.join(DATAFILES_PATH, 'bernoulli_include' + EXTENSION)
+    if os.path.exists(exe):
+        os.remove(exe)
+    model2 = CmdStanModel(stan_file=stan)
+    assert os.path.samefile(model2.exe_file, exe)
 
-        formatted = sys_stdout.getvalue()
-        self.assertIn("//", formatted)
-        self.assertNotIn("#", formatted)
-        self.assertEqual(formatted.count('('), 5)
 
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            model.format(canonicalize=True)
+@pytest.mark.skipif(
+    not cmdstan_version_before(2, 32),
+    reason="Deprecated syntax removed in Stan 2.32",
+)
+def test_model_format_deprecations() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'format_me_deprecations.stan')
 
-        formatted = sys_stdout.getvalue()
-        print(formatted)
-        self.assertNotIn("<-", formatted)
-        self.assertEqual(formatted.count('('), 0)
+    model = CmdStanModel(stan_file=stan, compile=False)
 
-        shutil.copy(stan, stan + '.testbak')
-        try:
-            model.format(overwrite_file=True, canonicalize=True)
-            self.assertEqual(len(glob(stan + '.bak-*')), 1)
-        finally:
-            shutil.copy(stan + '.testbak', stan)
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
+        model.format()
 
-    @pytest.mark.skipif(
-        cmdstan_version_before(2, 29), reason='Options only available later'
-    )
-    def test_model_format_options(self):
-        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+    formatted = sys_stdout.getvalue()
+    assert "//" in formatted
+    assert "#" not in formatted
+    assert formatted.count('(') == 5
 
-        model = CmdStanModel(stan_file=stan, compile=False)
-
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            model.format(max_line_length=10)
-        formatted = sys_stdout.getvalue()
-        self.assertGreater(len(formatted.splitlines()), 11)
-
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            model.format(canonicalize='braces')
-        formatted = sys_stdout.getvalue()
-        self.assertEqual(formatted.count('{'), 3)
-        self.assertEqual(formatted.count('('), 4)
-
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            model.format(canonicalize=['parentheses'])
-        formatted = sys_stdout.getvalue()
-        self.assertEqual(formatted.count('{'), 1)
-        self.assertEqual(formatted.count('('), 1)
-
-        sys_stdout = io.StringIO()
-        with contextlib.redirect_stdout(sys_stdout):
-            model.format(canonicalize=True)
-        formatted = sys_stdout.getvalue()
-        self.assertEqual(formatted.count('{'), 3)
-        self.assertEqual(formatted.count('('), 1)
-
-    @patch(
-        'cmdstanpy.utils.cmdstan.cmdstan_version',
-        MagicMock(return_value=(2, 27)),
-    )
-    def test_format_old_version(self):
-        self.assertTrue(cmdstan_version_before(2, 28))
-
-        stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
-        model = CmdStanModel(stan_file=stan, compile=False)
-        with self.assertRaisesRegexNested(RuntimeError, r"--canonicalize"):
-            model.format(canonicalize='braces')
-        with self.assertRaisesRegexNested(RuntimeError, r"--max-line"):
-            model.format(max_line_length=88)
-
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
         model.format(canonicalize=True)
 
+    formatted = sys_stdout.getvalue()
+    print(formatted)
+    assert "<-" not in formatted
+    assert formatted.count('(') == 0
 
-if __name__ == '__main__':
-    unittest.main()
+    shutil.copy(stan, stan + '.testbak')
+    try:
+        model.format(overwrite_file=True, canonicalize=True)
+        assert len(glob(stan + '.bak-*')) == 1
+    finally:
+        shutil.copy(stan + '.testbak', stan)
+
+
+@pytest.mark.skipif(
+    cmdstan_version_before(2, 29), reason='Options only available later'
+)
+def test_model_format_options() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+
+    model = CmdStanModel(stan_file=stan, compile=False)
+
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
+        model.format(max_line_length=10)
+    formatted = sys_stdout.getvalue()
+    assert len(formatted.splitlines()) > 11
+
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
+        model.format(canonicalize='braces')
+    formatted = sys_stdout.getvalue()
+    assert formatted.count('{') == 3
+    assert formatted.count('(') == 4
+
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
+        model.format(canonicalize=['parentheses'])
+    formatted = sys_stdout.getvalue()
+    assert formatted.count('{') == 1
+    assert formatted.count('(') == 1
+
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
+        model.format(canonicalize=True)
+    formatted = sys_stdout.getvalue()
+    assert formatted.count('{') == 3
+    assert formatted.count('(') == 1
+
+
+@patch(
+    'cmdstanpy.utils.cmdstan.cmdstan_version',
+    MagicMock(return_value=(2, 27)),
+)
+def test_format_old_version() -> None:
+    assert cmdstan_version_before(2, 28)
+
+    stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
+    model = CmdStanModel(stan_file=stan, compile=False)
+    with raises_nested(RuntimeError, r"--canonicalize"):
+        model.format(canonicalize='braces')
+    with raises_nested(RuntimeError, r"--max-line"):
+        model.format(max_line_length=88)
+
+    model.format(canonicalize=True)
