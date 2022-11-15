@@ -207,6 +207,33 @@ class CmdStanModelTest(CustomTestCase):
         self.assertIn('theta', model_info_include['parameters'])
         self.assertIn('included_files', model_info_include)
 
+    def test_compile_with_bad_includes(self):
+        # Ensure compilation fails if we break an included file.
+        stan_file = os.path.join(DATAFILES_PATH, "add_one_model.stan")
+        exe_file = os.path.splitext(stan_file)[0] + EXTENSION
+        if os.path.isfile(exe_file):
+            os.unlink(exe_file)
+        with tempfile.TemporaryDirectory() as include_path:
+            include_source = os.path.join(
+                DATAFILES_PATH, "include-path", "add_one_function.stan"
+            )
+            include_target = os.path.join(include_path, "add_one_function.stan")
+            shutil.copy(include_source, include_target)
+            model = CmdStanModel(
+                stan_file=stan_file,
+                compile=False,
+                stanc_options={"include-paths": [include_path]},
+            )
+            with LogCapture(level=logging.INFO) as log:
+                model.compile()
+            log.check_present(
+                ('cmdstanpy', 'INFO', StringComparison('compiling stan file'))
+            )
+            with open(include_target, "w") as fd:
+                fd.write("gobbledygook")
+            with pytest.raises(ValueError, match="Failed to get source info"):
+                model.compile()
+
     def test_compile_with_includes(self):
         getmtime = os.path.getmtime
         configs = [
@@ -215,6 +242,9 @@ class CmdStanModelTest(CustomTestCase):
         ]
         for stan_file, include_paths in configs:
             stan_file = os.path.join(DATAFILES_PATH, stan_file)
+            exe_file = os.path.splitext(stan_file)[0] + EXTENSION
+            if os.path.isfile(exe_file):
+                os.unlink(exe_file)
             include_paths = [
                 os.path.join(DATAFILES_PATH, path) for path in include_paths
             ]
