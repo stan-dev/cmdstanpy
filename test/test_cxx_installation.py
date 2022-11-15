@@ -1,6 +1,6 @@
 """install_cxx_toolchain tests"""
 
-from test import mark_windows_only
+from test import mark_windows_only, mark_not_windows
 import pytest
 
 from cmdstanpy import install_cxx_toolchain
@@ -26,7 +26,7 @@ def test_config() -> None:
     assert config == config_reference
 
 
-@mark_windows_only
+@mark_not_windows
 def test_install_not_windows() -> None:
     """Try to install on unsupported platform."""
 

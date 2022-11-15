@@ -11,7 +11,10 @@ import pytest
 
 
 mark_windows_only = pytest.mark.skipif(
-    platform.system() != 'Windows', reason='Windows only tests'
+    platform.system() != 'Windows', reason='only runs on windows'
+)
+mark_not_windows = pytest.mark.skipif(
+    platform.system() == 'Windows', reason='does not run on windows'
 )
 
 

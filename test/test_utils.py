@@ -590,7 +590,7 @@ def test_windows_short_path_file_with_space() -> None:
         short_path = windows_short_path(original_path)
         assert os.path.exists(os.path.split(short_path)[0])
         assert original_path != short_path
-        assert ' ' not in short_path
+        assert ' ' in short_path
         assert os.path.splitext(short_path)[1] == '.csv'
 
 
