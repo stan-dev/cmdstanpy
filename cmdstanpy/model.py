@@ -169,9 +169,19 @@ class CmdStanModel:
             if not cmdstan_version_before(
                 2, 27
             ):  # unknown end of version range
-                model_info = self.src_info()
-                if 'parameters' in model_info:
-                    self._fixed_param |= len(model_info['parameters']) == 0
+                try:
+                    model_info = self.src_info()
+                    if 'parameters' in model_info:
+                        self._fixed_param |= len(model_info['parameters']) == 0
+                except (
+                    ValueError,
+                    RuntimeError,
+                    OSError,
+                    subprocess.CalledProcessError,
+                ) as e:
+                    if compile:
+                        raise
+                    get_logger().debug(e)
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))

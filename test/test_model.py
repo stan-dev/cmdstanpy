@@ -378,6 +378,10 @@ class CmdStanModelTest(CustomTestCase):
         with self.assertRaisesRegex(ValueError, r'.*Syntax error.*'):
             CmdStanModel(stan_file=stan)
 
+    def test_model_syntax_error_without_compile(self):
+        stan = os.path.join(DATAFILES_PATH, 'bad_syntax.stan')
+        CmdStanModel(stan_file=stan, compile=False)
+
     def test_repr(self):
         model = CmdStanModel(stan_file=BERN_STAN)
         model_repr = repr(model)
