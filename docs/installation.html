@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Installation &#8212; CmdStanPy 1.0.7 documentation</title>
+    <title>Installation &#8212; CmdStanPy 1.0.8 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.7</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.8</a>
     
   </div>
 
@@ -201,6 +201,13 @@
       </span>
      </code>
     </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#alternate-linux-architectures">
+       Alternate Linux Architectures
+      </a>
+     </li>
+    </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#diy-installation">
@@ -399,6 +406,15 @@ can be used to override these defaults:</p>
 ls -F my_local_cmdstan
 </pre></div>
 </div>
+<section id="alternate-linux-architectures">
+<h4>Alternate Linux Architectures<a class="headerlink" href="#alternate-linux-architectures" title="Permalink to this headline">#</a></h4>
+<p>CmdStan can be installed on Linux for the following non-x86 architectures:
+<code class="docutils literal notranslate"><span class="pre">arm64</span></code>, <code class="docutils literal notranslate"><span class="pre">armel</span></code>, <code class="docutils literal notranslate"><span class="pre">armhf</span></code>, <code class="docutils literal notranslate"><span class="pre">mips64el</span></code>, <code class="docutils literal notranslate"><span class="pre">ppc64el</span></code> and <code class="docutils literal notranslate"><span class="pre">s390x</span></code>.</p>
+<p>CmdStanPy will do its best to determine which of these is applicable for your
+machine when running <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code>. If the wrong choice is made, or if you
+need to manually override this, you can set the <code class="docutils literal notranslate"><span class="pre">CMDSTAN_ARCH</span></code> environment variable
+to one of the above options, or to “false” to use the standard x86 download.</p>
+</section>
 </section>
 <section id="diy-installation">
 <h3>DIY Installation<a class="headerlink" href="#diy-installation" title="Permalink to this headline">#</a></h3>
