@@ -253,6 +253,9 @@ def test_compile_with_includes(
 ) -> None:
     getmtime = os.path.getmtime
     stan_file = os.path.join(DATAFILES_PATH, stan_file)
+    exe_file = os.path.splitext(stan_file)[0] + EXTENSION
+    if os.path.isfile(exe_file):
+        os.unlink(exe_file)
     include_paths = [
         os.path.join(DATAFILES_PATH, path) for path in include_paths
     ]
