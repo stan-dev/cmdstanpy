@@ -2,9 +2,10 @@
 
 import logging
 import os
-from test import CustomTestCase
+import re
+from test import check_present
 
-from testfixtures import LogCapture, StringComparison
+import pytest
 
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import EXTENSION
@@ -18,25 +19,26 @@ BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
-class CmdStanLogProb(CustomTestCase):
-    def test_lp_good(self):
-        model = CmdStanModel(stan_file=BERN_STAN)
-        x = model.log_prob({"theta": 0.1}, data=BERN_DATA)
-        assert "lp_" in x.columns
+def test_lp_good() -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    x = model.log_prob({"theta": 0.1}, data=BERN_DATA)
+    assert "lp_" in x.columns
 
-    def test_lp_bad(self):
-        model = CmdStanModel(stan_file=BERN_STAN)
 
-        with LogCapture(level=logging.ERROR) as log:
-            with self.assertRaisesRegex(
-                RuntimeError, "failed with return code"
-            ):
-                model.log_prob({"not_here": 0.1}, data=BERN_DATA)
+def test_lp_bad(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
 
-        log.check_present(
-            (
-                'cmdstanpy',
-                'ERROR',
-                StringComparison(r"(?s).*parameter theta not found.*"),
-            )
-        )
+    with caplog.at_level(logging.ERROR):
+        with pytest.raises(RuntimeError, match="failed with return code"):
+            model.log_prob({"not_here": 0.1}, data=BERN_DATA)
+
+    check_present(
+        caplog,
+        (
+            'cmdstanpy',
+            'ERROR',
+            re.compile(r"(?s).*parameter theta not found.*"),
+        ),
+    )
