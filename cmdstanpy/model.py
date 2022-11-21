@@ -176,9 +176,14 @@ class CmdStanModel:
             if not cmdstan_version_before(
                 2, 27
             ):  # unknown end of version range
-                model_info = self.src_info()
-                if 'parameters' in model_info:
-                    self._fixed_param |= len(model_info['parameters']) == 0
+                try:
+                    model_info = self.src_info()
+                    if 'parameters' in model_info:
+                        self._fixed_param |= len(model_info['parameters']) == 0
+                except ValueError as e:
+                    if compile:
+                        raise
+                    get_logger().debug(e)
 
         if exe_file is not None:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
@@ -276,32 +281,22 @@ class CmdStanModel:
         If stanc is older than 2.27 or if the stan
         file cannot be found, returns an empty dictionary.
         """
-        result: Dict[str, Any] = {}
-        if self.stan_file is None:
-            return result
-        try:
-            cmd = (
-                [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
-                # handle include-paths, allow-undefined etc
-                + self._compiler_options.compose_stanc()
-                + [
-                    '--info',
-                    str(self.stan_file),
-                ]
+        if self.stan_file is None or cmdstan_version_before(2, 27):
+            return {}
+        cmd = (
+            [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
+            # handle include-paths, allow-undefined etc
+            + self._compiler_options.compose_stanc()
+            + ['--info', str(self.stan_file)]
+        )
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if proc.returncode:
+            raise ValueError(
+                f"Failed to get source info for Stan model "
+                f"'{self._stan_file}'. Console:\n{proc.stderr}"
             )
-            proc = subprocess.run(
-                cmd, capture_output=True, text=True, check=True
-            )
-            result = json.loads(proc.stdout)
-            return result
-        except (
-            ValueError,
-            RuntimeError,
-            OSError,
-            subprocess.CalledProcessError,
-        ) as e:
-            get_logger().debug(e)
-            return result
+        result: Dict[str, Any] = json.loads(proc.stdout)
+        return result
 
     def format(
         self,
