@@ -1604,9 +1604,6 @@ class CmdStanModel:
             output = os.path.join(output_dir, "output.csv")
             cmd += ["output", f"file={output}"]
 
-            log_p = os.path.join(output_dir, "log_p.csv")
-            cmd += [f"log_prob_output_file={log_p}"]
-
             get_logger().debug("Cmd: %s", str(cmd))
 
             proc = subprocess.run(
@@ -1623,7 +1620,7 @@ class CmdStanModel:
                     + str(proc.returncode)
                 )
 
-            result = pd.read_csv(log_p)
+            result = pd.read_csv(output, comment="#")
             return result
 
     def _run_cmdstan(
