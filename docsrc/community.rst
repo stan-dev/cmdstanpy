@@ -29,4 +29,7 @@ Software
   interface <https://julia.arviz.org/stable/>`_) for exploratory analysis of
   Bayesian models. Includes functions for posterior analysis, data storage,
   model checking, comparison and diagnostics.
-
+  
+ - `BridgeStan <https://github.com/roualdes/bridgestan>`_ A project which provides efficient 
+  in-memory access through Python, Julia, and R to the methods of a Stan model, including 
+  log densities, gradients, Hessians, and constraining and unconstraining transforms.
