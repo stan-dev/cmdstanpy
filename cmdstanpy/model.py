@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
@@ -17,9 +18,15 @@ from multiprocessing import cpu_count
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
+import pandas as pd
 from tqdm.auto import tqdm
 
-from cmdstanpy import _CMDSTAN_REFRESH, _CMDSTAN_SAMPLING, _CMDSTAN_WARMUP
+from cmdstanpy import (
+    _CMDSTAN_REFRESH,
+    _CMDSTAN_SAMPLING,
+    _CMDSTAN_WARMUP,
+    _TMPDIR,
+)
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
@@ -1542,6 +1549,74 @@ class CmdStanModel:
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
         return vb
+
+    def log_prob(
+        self,
+        params: Union[Dict[str, Any], str, os.PathLike],
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+    ) -> pd.DataFrame:
+        """
+        Calculate the log probability and gradient at the given parameter
+        values.
+
+        NOTE: This function is **NOT** an efficient way to evaluate the log
+        density of the model. It should be used for diagnostics ONLY.
+        Please, do not use this for other purposes such as testing new
+        sampling algorithms!
+
+        Parameters
+        ----------
+        :param data: Values for all parameters in the model, specified
+            either as a dictionary with entries matching the parameter
+            variables, or as the path of a data file in JSON or Rdump format.
+
+            These should be given on the constrained (natural) scale.
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :return: A pandas.DataFrame containing columns "lp_" and additional
+            columns for the gradient values. These gradients will be for the
+            unconstrained parameters of the model.
+        """
+
+        if cmdstan_version_before(2, 31, self.exe_info()):
+            raise ValueError(
+                "Method 'log_prob' not available for CmdStan versions "
+                "before 2.31"
+            )
+        with MaybeDictToFilePath(data, params) as (_data, _params):
+            cmd = [
+                str(self.exe_file),
+                "log_prob",
+                f"constrained_params={_params}",
+            ]
+            if _data is not None:
+                cmd += ["data", f"file={_data}"]
+
+            output_dir = tempfile.mkdtemp(prefix=self.name, dir=_TMPDIR)
+
+            output = os.path.join(output_dir, "output.csv")
+            cmd += ["output", f"file={output}"]
+
+            get_logger().debug("Cmd: %s", str(cmd))
+
+            proc = subprocess.run(
+                cmd, capture_output=True, check=False, text=True
+            )
+            if proc.returncode:
+                get_logger().error(
+                    "'log_prob' command failed!\nstdout:%s\nstderr:%s",
+                    proc.stdout,
+                    proc.stderr,
+                )
+                raise RuntimeError(
+                    "Method 'log_prob' failed with return code "
+                    + str(proc.returncode)
+                )
+
+            result = pd.read_csv(output, comment="#")
+            return result
 
     def _run_cmdstan(
         self,
