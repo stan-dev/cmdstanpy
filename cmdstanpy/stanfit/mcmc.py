@@ -86,7 +86,7 @@ class CmdStanMCMC:
         if sampler_args.thin is not None:
             self._thin = sampler_args.thin
         self._is_fixed_param = sampler_args.fixed_param
-        self._save_warmup = sampler_args.save_warmup
+        self._save_warmup: bool = sampler_args.save_warmup
         self._sig_figs = runset._args.sig_figs
 
         # info from CSV values, instantiated lazily

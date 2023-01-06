@@ -179,7 +179,8 @@ class CmdStanVB:
     @property
     def variational_sample_pd(self) -> pd.DataFrame:
         """
-        Returns inferred parameter means as pandas DataFrame.
+        Returns the set of approximate posterior output draws as
+        a pandas DataFrame.
         """
         return pd.DataFrame(self._variational_sample, columns=self.column_names)
 
