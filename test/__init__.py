@@ -4,11 +4,11 @@ import contextlib
 import logging
 import platform
 import re
-from typing import List, Type
-from unittest import mock
 from importlib import reload
-import pytest
+from typing import Tuple, Type
+from unittest import mock
 
+import pytest
 
 mark_windows_only = pytest.mark.skipif(
     platform.system() != 'Windows', reason='only runs on windows'
@@ -47,7 +47,7 @@ def without_import(library, module):
 
 def check_present(
     caplog: pytest.LogCaptureFixture,
-    *conditions: List[tuple],
+    *conditions: Tuple,
     clear: bool = True,
 ) -> None:
     """

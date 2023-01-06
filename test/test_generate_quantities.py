@@ -7,16 +7,16 @@ import logging
 import os
 import pickle
 import shutil
-from test import without_import, check_present
+from test import check_present, without_import
 
 import numpy as np
 import pandas as pd
 import pytest
 
 import cmdstanpy.stanfit
-from cmdstanpy.stanfit import CmdStanGQ
 from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.model import CmdStanModel
+from cmdstanpy.stanfit import CmdStanGQ
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -34,7 +34,7 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
     model = CmdStanModel(stan_file=stan)
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
-    bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=csv_files)
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=csv_files)
 
     assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
@@ -79,7 +79,7 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
     assert bern_gqs.draws_pd().shape == (400, 10)
     assert (
         bern_gqs.draws_pd(inc_sample=True).shape[1]
-        == bern_gqs.mcmc_sample.draws_pd().shape[1]
+        == bern_gqs.previous_fit.draws_pd().shape[1]
         + bern_gqs.draws_pd().shape[1]
     )
 
@@ -94,7 +94,7 @@ def test_from_csv_files_bad() -> None:
 
     # no filename
     with pytest.raises(ValueError):
-        model.generate_quantities(data=jdata, mcmc_sample=[])
+        model.generate_quantities(data=jdata, previous_fit=[])
 
     # Stan CSV flles corrupted
     goodfiles_path = os.path.join(
@@ -105,10 +105,10 @@ def test_from_csv_files_bad() -> None:
         csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
 
     with pytest.raises(Exception, match='Invalid sample from Stan CSV files'):
-        model.generate_quantities(data=jdata, mcmc_sample=csv_files)
+        model.generate_quantities(data=jdata, previous_fit=csv_files)
 
 
-def test_from_mcmc_sample() -> None:
+def test_from_previous_fit() -> None:
     # fitted_params sample
     stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
     bern_model = CmdStanModel(stan_file=stan)
@@ -124,7 +124,7 @@ def test_from_mcmc_sample() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
     model = CmdStanModel(stan_file=stan)
 
-    bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
     assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
@@ -136,7 +136,7 @@ def test_from_mcmc_sample() -> None:
         assert os.path.exists(csv_file)
 
 
-def test_from_mcmc_sample_draws() -> None:
+def test_from_previous_fit_draws() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
     bern_model = CmdStanModel(stan_file=stan)
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -150,12 +150,12 @@ def test_from_mcmc_sample_draws() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
     model = CmdStanModel(stan_file=stan)
 
-    bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
     assert bern_gqs.draws_pd().shape == (400, 10)
     assert (
         bern_gqs.draws_pd(inc_sample=True).shape[1]
-        == bern_gqs.mcmc_sample.draws_pd().shape[1]
+        == bern_gqs.previous_fit.draws_pd().shape[1]
         + bern_gqs.draws_pd().shape[1]
     )
     row1_sample_pd = bern_fit.draws_pd().iloc[0]
@@ -184,7 +184,7 @@ def test_from_mcmc_sample_draws() -> None:
     assert xr_data_plus.theta.values.shape == (4, 100)
 
 
-def test_from_mcmc_sample_variables() -> None:
+def test_from_previous_fit_variables() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
     bern_model = CmdStanModel(stan_file=stan)
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
@@ -198,7 +198,7 @@ def test_from_mcmc_sample_variables() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
     model = CmdStanModel(stan_file=stan)
 
-    bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
     theta = bern_gqs.stan_variable(var='theta')
     assert theta.shape == (400,)
@@ -211,7 +211,7 @@ def test_from_mcmc_sample_variables() -> None:
 
     vars_dict = bern_gqs.stan_variables()
     var_names = list(
-        bern_gqs.mcmc_sample.metadata.stan_vars_cols.keys()
+        bern_gqs.previous_fit.metadata.stan_vars_cols.keys()
     ) + list(bern_gqs.metadata.stan_vars_cols.keys())
     assert set(var_names) == set(list(vars_dict.keys()))
 
@@ -236,7 +236,7 @@ def test_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
 
     with caplog.at_level(level=logging.WARNING):
         logging.getLogger()
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
     check_present(
         caplog,
         (
@@ -286,7 +286,7 @@ def test_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
 
     vars_dict = bern_gqs.stan_variables()
     var_names = list(
-        bern_gqs.mcmc_sample.metadata.stan_vars_cols.keys()
+        bern_gqs.previous_fit.metadata.stan_vars_cols.keys()
     ) + list(bern_gqs.metadata.stan_vars_cols.keys())
     assert set(var_names) == set(list(vars_dict.keys()))
 
@@ -326,7 +326,7 @@ def test_sample_plus_quantities_dedup() -> None:
     # gq_model - y_rep[n] == y[n]
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc_dup.stan')
     model = CmdStanModel(stan_file=stan)
-    bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
     # check that models have different y_rep values
     with pytest.raises(AssertionError):
         np.testing.assert_array_equal(
@@ -360,7 +360,7 @@ def test_no_xarray() -> None:
         stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
         model = CmdStanModel(stan_file=stan)
 
-        bern_gqs = model.generate_quantities(data=jdata, mcmc_sample=bern_fit)
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
         with pytest.raises(RuntimeError):
             bern_gqs.draws_xr()
@@ -378,7 +378,7 @@ def test_single_row_csv() -> None:
     )
     stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
     model = CmdStanModel(stan_file=stan)
-    gqs = model.generate_quantities(mcmc_sample=bern_fit)
+    gqs = model.generate_quantities(previous_fit=bern_fit)
     z_as_ndarray = gqs.stan_variable(var="z")
     assert z_as_ndarray.shape == (1, 4, 3)  # flattens chains
     z_as_xr = gqs.draws_xr(vars="z")
@@ -407,7 +407,7 @@ def test_show_console() -> None:
     with contextlib.redirect_stdout(sys_stdout):
         model.generate_quantities(
             data=jdata,
-            mcmc_sample=bern_fit,
+            previous_fit=bern_fit,
             show_console=True,
         )
     console = sys_stdout.getvalue()
@@ -425,7 +425,7 @@ def test_complex_output() -> None:
 
     stan = os.path.join(DATAFILES_PATH, 'complex_var.stan')
     model = CmdStanModel(stan_file=stan)
-    fit = model.generate_quantities(mcmc_sample=fit_sampling)
+    fit = model.generate_quantities(previous_fit=fit_sampling)
 
     assert fit.stan_variable('zs').shape == (10, 2, 3)
     assert fit.stan_variable('z')[0] == 3 + 4j
@@ -437,6 +437,7 @@ def test_complex_output() -> None:
     # make sure the name 'imag' isn't magic
     assert fit.stan_variable('imag').shape == (10, 2)
 
+    # pylint: disable=unsupported-membership-test
     assert "zs_dim_2" not in fit.draws_xr()
     # getting a raw scalar out of xarray is heavy
     assert fit.draws_xr().z.isel(chain=0, draw=1).data[()] == 3 + 4j
@@ -450,7 +451,7 @@ def test_attrs() -> None:
 
     stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
     model = CmdStanModel(stan_file=stan)
-    fit = model.generate_quantities(data=jdata, mcmc_sample=fit_sampling)
+    fit = model.generate_quantities(data=jdata, previous_fit=fit_sampling)
 
     assert fit.a[0] == 4.5
     assert fit.b.shape == (10, 3)
@@ -469,7 +470,7 @@ def test_timeout() -> None:
     fit = timeout_model.sample(data={'loop': 0}, chains=1, iter_sampling=10)
     with pytest.raises(TimeoutError):
         timeout_model.generate_quantities(
-            timeout=0.1, mcmc_sample=fit, data={'loop': 1}
+            timeout=0.1, previous_fit=fit, data={'loop': 1}
         )
 
 
@@ -482,7 +483,7 @@ def test_serialization() -> None:
 
     stan = os.path.join(DATAFILES_PATH, 'named_output.stan')
     model = CmdStanModel(stan_file=stan)
-    fit1 = model.generate_quantities(data=jdata, mcmc_sample=fit_sampling)
+    fit1 = model.generate_quantities(data=jdata, previous_fit=fit_sampling)
 
     dumped = pickle.dumps(fit1)
     shutil.rmtree(fit1.runset._output_dir)
@@ -492,3 +493,235 @@ def test_serialization() -> None:
     assert set(variables1) == set(variables2)
     for key, value1 in variables1.items():
         np.testing.assert_array_equal(value1, variables2[key])
+
+
+def test_from_optimization() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit = bern_model.optimize(
+        data=jdata,
+        seed=12345,
+    )
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+
+    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
+
+    assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
+    assert 'method=generate_quantities' in repr(bern_gqs)
+    assert bern_gqs.runset.chains == 1
+    assert bern_gqs.runset._retcode(0) == 0
+    csv_file = bern_gqs.runset.csv_files[0]
+    assert os.path.exists(csv_file)
+
+    assert bern_gqs.draws().shape == (1, 1, 10)
+    assert bern_gqs.draws(inc_sample=True).shape == (1, 1, 12)
+
+    # draws_pd()
+    assert bern_gqs.draws_pd().shape == (1, 10)
+    assert (
+        bern_gqs.draws_pd(inc_sample=True).shape[1]
+        == bern_gqs.previous_fit.optimized_params_pd.shape[1]
+        + bern_gqs.draws_pd().shape[1]
+    )
+
+    # stan_variable
+    theta = bern_gqs.stan_variable(var='theta')
+    assert theta.shape == (1,)
+    y_rep = bern_gqs.stan_variable(var='y_rep')
+    assert y_rep.shape == (1, 10)
+
+
+def test_opt_save_iterations(caplog: pytest.LogCaptureFixture):
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit = bern_model.optimize(data=jdata, seed=12345, save_iterations=True)
+    iters = bern_fit.optimized_iterations_np.shape[0]
+
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    with caplog.at_level("WARNING"):
+        bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+    check_present(
+        caplog,
+        (
+            'cmdstanpy',
+            'WARNING',
+            'MLE contains saved iterations which will be used to '
+            'generate additional quantities of interest.',
+        ),
+    )
+
+    assert bern_gqs.draws().shape == (1, 1, 10)
+    assert bern_gqs.draws(inc_warmup=True).shape == (iters, 1, 10)
+    assert bern_gqs.draws(inc_warmup=True, inc_sample=True).shape == (
+        iters,
+        1,
+        12,
+    )
+
+    assert bern_gqs.draws(concat_chains=True).shape == (1, 10)
+    assert bern_gqs.draws(concat_chains=True, inc_sample=True).shape == (1, 12)
+    assert bern_gqs.draws(concat_chains=True, inc_warmup=True).shape == (
+        iters,
+        10,
+    )
+    assert bern_gqs.draws(
+        concat_chains=True, inc_warmup=True, inc_sample=True
+    ).shape == (iters, 12)
+
+    # stan_variable
+    theta = bern_gqs.stan_variable(var='theta')
+    assert theta.shape == (1,)
+    y_rep = bern_gqs.stan_variable(var='y_rep')
+    assert y_rep.shape == (1, 10)
+    theta = bern_gqs.stan_variable(var='theta', inc_warmup=True)
+    assert theta.shape == (iters,)
+    y_rep = bern_gqs.stan_variable(var='y_rep', inc_warmup=True)
+    assert y_rep.shape == (iters, 10)
+
+
+def test_opt_request_warmup_none(caplog: pytest.LogCaptureFixture):
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit = bern_model.optimize(
+        data=jdata,
+        seed=12345,
+    )
+
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+
+    with caplog.at_level("WARNING"):
+        bern_gqs.draws(inc_warmup=True)
+    check_present(
+        caplog,
+        (
+            'cmdstanpy',
+            'WARNING',
+            "MLE doesn't contain draws from pre-convergence iterations,"
+            ' rerun optimization with "save_iterations=True".',
+        ),
+    )
+
+    assert bern_gqs.draws(inc_warmup=True).shape == (1, 1, 10)
+
+
+def test_opt_xarray():
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit = bern_model.optimize(
+        data=jdata,
+        seed=12345,
+    )
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+    with pytest.raises(RuntimeError, match="via Sampling"):
+        _ = bern_gqs.draws_xr()
+
+
+def test_from_vb():
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit = bern_model.variational(
+        data=jdata,
+        show_console=True,
+        require_converged=False,
+        seed=12345,
+    )
+
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+
+    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
+    assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
+    assert 'method=generate_quantities' in repr(bern_gqs)
+    assert bern_gqs.runset.chains == 1
+    assert bern_gqs.runset._retcode(0) == 0
+    csv_file = bern_gqs.runset.csv_files[0]
+    assert os.path.exists(csv_file)
+
+    assert bern_gqs.draws().shape == (1000, 1, 10)
+    assert bern_gqs.draws(inc_sample=True).shape == (1000, 1, 14)
+
+    # draws_pd()
+    assert bern_gqs.draws_pd().shape == (1000, 10)
+    assert (
+        bern_gqs.draws_pd(inc_sample=True).shape[1]
+        == bern_gqs.previous_fit.variational_sample_pd.shape[1]
+        + bern_gqs.draws_pd().shape[1]
+    )
+
+    # stan_variable
+    theta = bern_gqs.stan_variable(var='theta')
+    # VB behavior is weird: it draws from mean by default?
+    assert theta.shape == (1,)
+    y_rep = bern_gqs.stan_variable(var='y_rep')
+    assert y_rep.shape == (1000, 10)
+
+
+def test_vb_request_warmup_none(caplog: pytest.LogCaptureFixture):
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit = bern_model.variational(
+        data=jdata,
+        show_console=True,
+        require_converged=False,
+        seed=12345,
+    )
+
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+    with caplog.at_level("WARNING"):
+        bern_gqs.draws_pd(inc_warmup=True)
+    check_present(
+        caplog,
+        (
+            'cmdstanpy',
+            'WARNING',
+            "Variational fit doesn't make sense with argument "
+            '"inc_warmup=True"',
+        ),
+    )
+
+
+def test_vb_xarray():
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit = bern_model.variational(
+        data=jdata,
+        show_console=True,
+        require_converged=False,
+        seed=12345,
+    )
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
+    with pytest.raises(RuntimeError, match="via Sampling"):
+        _ = bern_gqs.draws_xr()
