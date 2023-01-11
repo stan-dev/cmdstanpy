@@ -149,8 +149,8 @@ An example of each is provided in the `next section <examples.rst>`__
 
 * The :meth:`~CmdStanModel.generate_quantities` method runs Stan's
   `generate_quantities method <https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html>`_
-  which generates additional quantities of interest from a mode. Its take an existing sample as input and
-  uses the parameter estimates in the sample to run the Stan program's `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__.
+  which generates additional quantities of interest from a mode. Its take an existing fit as input and
+  uses the parameter estimates in the fit to run the Stan program's `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__.
 
   It returns a :class:`CmdStanGQ` object.
 
