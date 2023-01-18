@@ -198,7 +198,7 @@ class CmdStanGQ(Generic[Fit]):
         :param concat_chains: When ``True`` return a 2D array flattening all
             all draws from all chains.  Default value is ``False``.
 
-        :param inc_sample: When ``True`` include all columns in the mcmc_sample
+        :param inc_sample: When ``True`` include all columns in the previous_fit
             draws array as well, excepting columns for variables already present
             in the generated quantities drawset. Default value is ``False``.
 

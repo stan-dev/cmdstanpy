@@ -1600,18 +1600,17 @@ class CmdStanModel:
         Calculate the log probability and gradient at the given parameter
         values.
 
-        NOTE: This function is **NOT** an efficient way to evaluate the log
-        density of the model. It should be used for diagnostics ONLY.
-        Please, do not use this for other purposes such as testing new
-        sampling algorithms!
+        .. note:: This function is **NOT** an efficient way to evaluate the log
+            density of the model. It should be used for diagnostics ONLY.
+            Please, do not use this for other purposes such as testing new
+            sampling algorithms!
 
-        Parameters
-        ----------
-        :param data: Values for all parameters in the model, specified
+        :param params: Values for all parameters in the model, specified
             either as a dictionary with entries matching the parameter
             variables, or as the path of a data file in JSON or Rdump format.
 
             These should be given on the constrained (natural) scale.
+
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
