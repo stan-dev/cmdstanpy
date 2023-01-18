@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.cmdstan_args &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>cmdstanpy.cmdstan_args &#8212; CmdStanPy 1.1.0rc1 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0rc1</a>
     
   </div>
 
@@ -192,7 +192,7 @@
 
 
 <span class="k">class</span> <span class="nc">Method</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Supported CmdStan method names.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Supported CmdStan method names.&quot;&quot;&quot;</span>
 
     <span class="n">SAMPLE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
     <span class="n">OPTIMIZE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
@@ -204,7 +204,7 @@
 
 
 <div class="viewcode-block" id="SamplerArgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs">[docs]</a><span class="k">class</span> <span class="nc">SamplerArgs</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Arguments for the NUTS adaptive sampler.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Arguments for the NUTS adaptive sampler.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -224,7 +224,7 @@
         <span class="n">adapt_step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">fixed_param</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="o">=</span> <span class="n">iter_warmup</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span> <span class="o">=</span> <span class="n">iter_sampling</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save_warmup</span> <span class="o">=</span> <span class="n">save_warmup</span>
@@ -243,7 +243,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">diagnostic_file</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="SamplerArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check arguments correctness and consistency.</span>
 
 <span class="sd">        * adaptation and warmup args are consistent</span>
@@ -497,7 +497,7 @@
             <span class="p">)</span></div>
 
 <div class="viewcode-block" id="SamplerArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compose CmdStan command for method-specific non-default arguments.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=sample&#39;</span><span class="p">)</span>
@@ -547,7 +547,7 @@
 
 
 <div class="viewcode-block" id="OptimizeArgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs">[docs]</a><span class="k">class</span> <span class="nc">OptimizeArgs</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Container for arguments for the optimizer.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for arguments for the optimizer.&quot;&quot;&quot;</span>
 
     <span class="n">OPTIMIZE_ALGOS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;LBFGS&#39;</span><span class="p">,</span> <span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;Newton&#39;</span><span class="p">,</span> <span class="s1">&#39;newton&#39;</span><span class="p">}</span>
 
@@ -580,7 +580,7 @@
 <div class="viewcode-block" id="OptimizeArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># pylint: disable=unused-argument</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check arguments correctness and consistency.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIMIZE_ALGOS</span><span class="p">:</span>
@@ -678,7 +678,7 @@
 
     <span class="c1"># pylint: disable=unused-argument</span>
 <div class="viewcode-block" id="OptimizeArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;compose command string for CmdStan for non-default arg values.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;compose command string for CmdStan for non-default arg values.&quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=optimize&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;algorithm=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
@@ -705,16 +705,16 @@
 
 
 <span class="k">class</span> <span class="nc">GenerateQuantitiesArgs</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Arguments needed for generate_quantities method.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Arguments needed for generate_quantities method.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csv_files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sample_csv_files</span> <span class="o">=</span> <span class="n">csv_files</span>
 
     <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># pylint: disable=unused-argument</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check arguments correctness and consistency.</span>
 
 <span class="sd">        * check that sample csv files exist</span>
@@ -726,7 +726,7 @@
                 <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compose CmdStan command for method-specific non-default arguments.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=generate_quantities&#39;</span><span class="p">)</span>
@@ -735,7 +735,7 @@
 
 
 <div class="viewcode-block" id="VariationalArgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.VariationalArgs">[docs]</a><span class="k">class</span> <span class="nc">VariationalArgs</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Arguments needed for variational method.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Arguments needed for variational method.&quot;&quot;&quot;</span>
 
     <span class="n">VARIATIONAL_ALGOS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;meanfield&#39;</span><span class="p">,</span> <span class="s1">&#39;fullrank&#39;</span><span class="p">}</span>
 
@@ -766,7 +766,7 @@
 <div class="viewcode-block" id="VariationalArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.VariationalArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># pylint: disable=unused-argument</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check arguments correctness and consistency.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -833,7 +833,7 @@
 
     <span class="c1"># pylint: disable=unused-argument</span>
 <div class="viewcode-block" id="VariationalArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.VariationalArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compose CmdStan command for method-specific non-default arguments.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=variational&#39;</span><span class="p">)</span>
@@ -864,7 +864,7 @@
 
 
 <div class="viewcode-block" id="CmdStanArgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.CmdStanArgs">[docs]</a><span class="k">class</span> <span class="nc">CmdStanArgs</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Container for CmdStan command line arguments.</span>
 <span class="sd">    Consists of arguments common to all methods and</span>
 <span class="sd">    and an object which contains the method-specific arguments.</span>
@@ -887,7 +887,7 @@
         <span class="n">save_profile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_exe</span> <span class="o">=</span> <span class="n">model_exe</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chain_ids</span> <span class="o">=</span> <span class="n">chain_ids</span>
@@ -912,7 +912,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
 <div class="viewcode-block" id="CmdStanArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.CmdStanArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check arguments correctness and consistency.</span>
 
 <span class="sd">        * input files must exist</span>
@@ -1067,7 +1067,7 @@
         <span class="n">profile_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compose CmdStan command for non-default arguments.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>

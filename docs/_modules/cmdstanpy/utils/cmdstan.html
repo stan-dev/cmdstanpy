@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.utils.cmdstan &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>cmdstanpy.utils.cmdstan &#8212; CmdStanPy 1.1.0rc1 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.1.0rc1</a>
     
   </div>
 
@@ -228,7 +228,7 @@
 
 
 <span class="k">def</span> <span class="nf">validate_dir</span><span class="p">(</span><span class="n">install_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Check that specified install directory exists, can write.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check that specified install directory exists, can write.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">install_dir</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
@@ -252,7 +252,7 @@
 
 
 <span class="k">def</span> <span class="nf">get_latest_cmdstan</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given a valid directory path, find all installed CmdStan versions</span>
 <span class="sd">    and return highest (i.e., latest) version number.</span>
 
@@ -294,7 +294,7 @@
 
 
 <span class="k">def</span> <span class="nf">validate_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate that CmdStan directory exists and binaries have been built.</span>
 <span class="sd">    Throws exception if specified path is invalid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -310,7 +310,7 @@
 
 
 <div class="viewcode-block" id="set_cmdstan_path"><a class="viewcode-back" href="../../../api.html#cmdstanpy.set_cmdstan_path">[docs]</a><span class="k">def</span> <span class="nf">set_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate, then set CmdStan directory path.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">validate_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -318,14 +318,14 @@
 
 
 <div class="viewcode-block" id="set_make_env"><a class="viewcode-back" href="../../../api.html#cmdstanpy.set_make_env">[docs]</a><span class="k">def</span> <span class="nf">set_make_env</span><span class="p">(</span><span class="n">make</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    set MAKE environmental variable.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MAKE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">make</span></div>
 
 
 <div class="viewcode-block" id="cmdstan_path"><a class="viewcode-back" href="../../../api.html#cmdstanpy.cmdstan_path">[docs]</a><span class="k">def</span> <span class="nf">cmdstan_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate, then return CmdStan directory path.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cmdstan</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
@@ -351,7 +351,7 @@
 
 
 <div class="viewcode-block" id="cmdstan_version"><a class="viewcode-back" href="../../../api.html#cmdstanpy.cmdstan_version">[docs]</a><span class="k">def</span> <span class="nf">cmdstan_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parses version string out of CmdStan makefile variable CMDSTAN_VERSION,</span>
 <span class="sd">    returns Tuple(Major, minor).</span>
 
@@ -403,7 +403,7 @@
 <span class="k">def</span> <span class="nf">cmdstan_version_before</span><span class="p">(</span>
     <span class="n">major</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">minor</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check that CmdStan version is less than Major.minor version.</span>
 
 <span class="sd">    :param major: Major version number</span>
@@ -434,7 +434,7 @@
 <span class="k">def</span> <span class="nf">cxx_toolchain_path</span><span class="p">(</span>
     <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">install_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate, then activate C++ toolchain directory path.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
@@ -603,7 +603,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Download and install a CmdStan release from GitHub. Downloads the release</span>
 <span class="sd">    tar.gz file to temporary storage.  Retries GitHub requests in order</span>
 <span class="sd">    to allow for transient network outages. Builds CmdStan executables</span>
@@ -692,7 +692,7 @@
 
 <span class="nd">@progbar</span><span class="o">.</span><span class="n">wrap_callback</span>
 <span class="k">def</span> <span class="nf">wrap_url_progress_hook</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;Sets up tqdm callback for url downloads.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets up tqdm callback for url downloads.&quot;&quot;&quot;</span>
     <span class="n">pbar</span><span class="p">:</span> <span class="n">tqdm</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span>
         <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
         <span class="n">unit_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.gq &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>cmdstanpy.stanfit.gq &#8212; CmdStanPy 1.1.0rc1 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.1.0rc1</a>
     
   </div>
 
@@ -176,12 +176,16 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Generic</span><span class="p">,</span>
     <span class="n">Hashable</span><span class="p">,</span>
     <span class="n">List</span><span class="p">,</span>
     <span class="n">MutableMapping</span><span class="p">,</span>
+    <span class="n">NoReturn</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
+    <span class="n">overload</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -194,6 +198,7 @@
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">XARRAY_INSTALLED</span> <span class="o">=</span> <span class="kc">False</span>
 
+
 <span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="n">Method</span>
 <span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaseType</span><span class="p">,</span>
@@ -205,11 +210,15 @@
 
 <span class="kn">from</span> <span class="nn">.mcmc</span> <span class="kn">import</span> <span class="n">CmdStanMCMC</span>
 <span class="kn">from</span> <span class="nn">.metadata</span> <span class="kn">import</span> <span class="n">InferenceMetadata</span>
+<span class="kn">from</span> <span class="nn">.mle</span> <span class="kn">import</span> <span class="n">CmdStanMLE</span>
 <span class="kn">from</span> <span class="nn">.runset</span> <span class="kn">import</span> <span class="n">RunSet</span>
+<span class="kn">from</span> <span class="nn">.vb</span> <span class="kn">import</span> <span class="n">CmdStanVB</span>
+
+<span class="n">Fit</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;Fit&#39;</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="CmdStanGQ"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ">[docs]</a><span class="k">class</span> <span class="nc">CmdStanGQ</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="CmdStanGQ"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ">[docs]</a><span class="k">class</span> <span class="nc">CmdStanGQ</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">Fit</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Container for outputs from CmdStan generate_quantities run.</span>
 <span class="sd">    Created by :meth:`CmdStanModel.generate_quantities`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -217,16 +226,18 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">,</span>
-        <span class="n">mcmc_sample</span><span class="p">:</span> <span class="n">CmdStanMCMC</span><span class="p">,</span>
+        <span class="n">previous_fit</span><span class="p">:</span> <span class="n">Fit</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">GENERATE_QUANTITIES</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s1">&#39;Wrong runset method, expecting generate_quantities runset, &#39;</span>
                 <span class="s1">&#39;found method </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">runset</span> <span class="o">=</span> <span class="n">runset</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span> <span class="o">=</span> <span class="n">mcmc_sample</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">:</span> <span class="n">Fit</span> <span class="o">=</span> <span class="n">previous_fit</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_csv_files</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="n">InferenceMetadata</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
@@ -245,7 +256,7 @@
         <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Synonymous with ``fit.stan_variable(attr)&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Synonymous with ``fit.stan_variable(attr)&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown variable name </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
@@ -254,8 +265,16 @@
             <span class="c1"># pylint: disable=raise-missing-from</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="c1"># This function returns the mapping of objects to serialize with pickle.</span>
+        <span class="c1"># See https://docs.python.org/3/library/pickle.html#object.__getstate__</span>
+        <span class="c1"># for details. We call _assemble_generated_quantities to ensure</span>
+        <span class="c1"># the data are loaded prior to serialization.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+
     <span class="k">def</span> <span class="nf">_validate_csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks that Stan CSV output files for all chains are consistent</span>
 <span class="sd">        and returns dict containing config and column names.</span>
 
@@ -299,24 +318,24 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Number of chains.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of chains.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">chain_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Chain ids.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Chain ids.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chain_ids</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Names of generated quantities of interest.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;column_names&#39;</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InferenceMetadata</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns object which contains CmdStan configuration as well as</span>
 <span class="sd">        information about the names and structure of the inference method</span>
 <span class="sd">        and model output variables.</span>
@@ -330,7 +349,7 @@
         <span class="n">concat_chains</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">inc_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a numpy.ndarray over the generated quantities draws from</span>
 <span class="sd">        all chains which is stored column major so that the values</span>
 <span class="sd">        for a parameter are contiguous in memory, likewise all draws from</span>
@@ -348,7 +367,7 @@
 <span class="sd">        :param concat_chains: When ``True`` return a 2D array flattening all</span>
 <span class="sd">            all draws from all chains.  Default value is ``False``.</span>
 
-<span class="sd">        :param inc_sample: When ``True`` include all columns in the mcmc_sample</span>
+<span class="sd">        :param inc_sample: When ``True`` include all columns in the previous_fit</span>
 <span class="sd">            draws array as well, excepting columns for variables already present</span>
 <span class="sd">            in the generated quantities drawset. Default value is ``False``.</span>
 
@@ -358,18 +377,32 @@
 <span class="sd">        CmdStanGQ.draws_xr</span>
 <span class="sd">        CmdStanMCMC.draws</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">inc_warmup</span>
-            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Sample doesn&#39;t contain draws from warmup iterations,&quot;</span>
-                <span class="s1">&#39; rerun sampler with &quot;save_warmup=True&quot;.&#39;</span>
-            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_save_warmup</span>
+            <span class="p">):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Sample doesn&#39;t contain draws from warmup iterations,&quot;</span>
+                    <span class="s1">&#39; rerun sampler with &quot;save_warmup=True&quot;.&#39;</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_save_iterations</span>
+            <span class="p">):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;MLE doesn&#39;t contain draws from pre-convergence iterations,&quot;</span>
+                    <span class="s1">&#39; rerun optimization with &quot;save_iterations=True&quot;.&#39;</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Variational fit doesn&#39;t make sense with argument &quot;</span>
+                    <span class="s1">&#39;&quot;inc_warmup=True&quot;&#39;</span>
+                <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">inc_sample</span><span class="p">:</span>
-            <span class="n">cols_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="n">cols_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">column_names</span>
             <span class="n">cols_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_names</span>
             <span class="n">dups</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">item</span>
@@ -378,20 +411,15 @@
             <span class="p">]</span>
             <span class="n">drop_cols</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">dup</span> <span class="ow">in</span> <span class="n">dups</span><span class="p">:</span>
-                <span class="n">drop_cols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">dup</span><span class="p">])</span>
+                <span class="n">drop_cols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">dup</span><span class="p">])</span>
 
-        <span class="n">start_idx</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="ow">not</span> <span class="n">inc_warmup</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="n">start_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span>
-
+        <span class="n">start_idx</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_start</span><span class="p">(</span><span class="n">inc_warmup</span><span class="p">)</span>
+        <span class="n">previous_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_draws</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">concat_chains</span> <span class="ow">and</span> <span class="n">inc_sample</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">flatten_chains</span><span class="p">(</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span>
                     <span class="p">(</span>
-                        <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">draws</span><span class="p">(),</span> <span class="n">drop_cols</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">previous_draws</span><span class="p">,</span> <span class="n">drop_cols</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)[</span><span class="n">start_idx</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>
@@ -401,7 +429,7 @@
         <span class="k">if</span> <span class="n">inc_sample</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span>
                 <span class="p">(</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">draws</span><span class="p">(),</span> <span class="n">drop_cols</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">previous_draws</span><span class="p">,</span> <span class="n">drop_cols</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)[</span><span class="n">start_idx</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>
@@ -413,7 +441,7 @@
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">inc_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the generated quantities draws as a pandas DataFrame.</span>
 <span class="sd">        Flattens all chains into single column.  Container variables</span>
 <span class="sd">        (array, vector, matrix) will span multiple columns, one column</span>
@@ -437,17 +465,33 @@
                 <span class="n">vars_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">vars</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">vars</span>
+
             <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">vars_list</span><span class="p">))</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">inc_warmup</span>
-            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s1">&#39;Draws from warmup iterations not available,&#39;</span>
-                <span class="s1">&#39; must run sampler with &quot;save_warmup=True&quot;.&#39;</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_save_warmup</span>
+            <span class="p">):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Sample doesn&#39;t contain draws from warmup iterations,&quot;</span>
+                    <span class="s1">&#39; rerun sampler with &quot;save_warmup=True&quot;.&#39;</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_save_iterations</span>
+            <span class="p">):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;MLE doesn&#39;t contain draws from pre-convergence iterations,&quot;</span>
+                    <span class="s1">&#39; rerun optimization with &quot;save_iterations=True&quot;.&#39;</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Variational fit doesn&#39;t make sense with argument &quot;</span>
+                    <span class="s1">&#39;&quot;inc_warmup=True&quot;&#39;</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
 
         <span class="n">gq_cols</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">mcmc_vars</span> <span class="o">=</span> <span class="p">[]</span>
@@ -458,7 +502,7 @@
                         <span class="n">gq_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
                 <span class="k">elif</span> <span class="p">(</span>
                     <span class="n">inc_sample</span>
-                    <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
+                    <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
                 <span class="p">):</span>
                     <span class="n">mcmc_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -467,13 +511,13 @@
             <span class="n">gq_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
             <span class="n">vars_list</span> <span class="o">=</span> <span class="n">gq_cols</span>
 
+        <span class="n">previous_draws_pd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_draws_pd</span><span class="p">(</span><span class="n">mcmc_vars</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="n">mcmc_vars</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">gq_cols</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
                     <span class="p">[</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span>
-                            <span class="nb">vars</span><span class="o">=</span><span class="n">mcmc_vars</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span>
-                        <span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                        <span class="n">previous_draws_pd</span><span class="p">,</span>
                         <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
                             <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
@@ -484,11 +528,9 @@
                     <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;columns&#39;</span><span class="p">,</span>
                 <span class="p">)[</span><span class="n">vars_list</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span>
-                    <span class="nb">vars</span><span class="o">=</span><span class="n">mcmc_vars</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span>
-                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">previous_draws_pd</span>
         <span class="k">elif</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cols_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="n">cols_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">column_names</span>
             <span class="n">cols_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_names</span>
             <span class="n">dups</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">item</span>
@@ -497,16 +539,13 @@
             <span class="p">]</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
                 <span class="p">[</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
-                    <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">dups</span><span class="p">)</span>
-                    <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                    <span class="n">previous_draws_pd</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">dups</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                     <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
                         <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)),</span>
                         <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span>
                     <span class="p">),</span>
                 <span class="p">],</span>
-                <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;columns&#39;</span><span class="p">,</span>
-                <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">gq_cols</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
@@ -519,14 +558,35 @@
             <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">draws_xr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;CmdStanGQ[CmdStanMLE]&quot;</span><span class="p">,</span> <span class="s2">&quot;CmdStanGQ[CmdStanVB]&quot;</span><span class="p">],</span>
+        <span class="nb">vars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">inc_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoReturn</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">draws_xr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">:</span> <span class="s2">&quot;CmdStanGQ[CmdStanMCMC]&quot;</span><span class="p">,</span>
+        <span class="nb">vars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">inc_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;xr.Dataset&quot;</span><span class="p">:</span>
+        <span class="o">...</span>
+
 <div class="viewcode-block" id="CmdStanGQ.draws_xr"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.draws_xr">[docs]</a>    <span class="k">def</span> <span class="nf">draws_xr</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="nb">vars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">inc_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;xr.Dataset&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the generated quantities draws as a xarray Dataset.</span>
+
+<span class="sd">        This method can only be called when the underlying fit was made</span>
+<span class="sd">        through sampling, it cannot be used on MLE or VB outputs.</span>
 
 <span class="sd">        :param vars: optional list of variable names.</span>
 
@@ -544,6 +604,11 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s1">&#39;Package &quot;xarray&quot; is not installed, cannot produce draws array.&#39;</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s1">&#39;Method &quot;draws_xr&quot; is only available when &#39;</span>
+                <span class="s1">&#39;original fit is done via Sampling.&#39;</span>
+            <span class="p">)</span>
         <span class="n">mcmc_vars_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">dup_vars</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -554,7 +619,7 @@
             <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_list</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="p">(</span>
-                        <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
+                        <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
                     <span class="p">):</span>
                         <span class="n">mcmc_vars_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
                         <span class="n">dup_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
@@ -563,17 +628,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="k">if</span> <span class="n">inc_sample</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vars_list</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mcmc_vars_list</span><span class="p">:</span>
                         <span class="n">mcmc_vars_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">dup_vars</span><span class="p">:</span>
             <span class="n">vars_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
 
-        <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_sampling</span>
-        <span class="n">sample_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span>
+        <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">num_draws_sampling</span>
+        <span class="n">sample_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span>
         <span class="n">attrs</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;stan_version&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;stan_version_major&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;stan_version_minor&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -582,8 +646,8 @@
             <span class="s2">&quot;num_draws_sampling&quot;</span><span class="p">:</span> <span class="n">num_draws</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]:</span>
-            <span class="n">num_draws</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span>
-            <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;num_draws_warmup&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span>
+            <span class="n">num_draws</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">num_draws_warmup</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;num_draws_warmup&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">num_draws_warmup</span>
 
         <span class="n">data</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">coordinates</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -606,11 +670,11 @@
                 <span class="n">build_xarray_data</span><span class="p">(</span>
                     <span class="n">data</span><span class="p">,</span>
                     <span class="n">var</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                     <span class="mi">0</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
@@ -622,7 +686,7 @@
         <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a numpy.ndarray which contains the set of draws</span>
 <span class="sd">        for the named Stan program variable.  Flattens the chains,</span>
 <span class="sd">        leaving the draws in chain order.  The first array dimension,</span>
@@ -663,7 +727,7 @@
 <span class="sd">        CmdStanMLE.stan_variable</span>
 <span class="sd">        CmdStanVB.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">model_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">model_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="n">gq_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">var</span> <span class="ow">in</span> <span class="n">model_var_names</span> <span class="ow">or</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -672,39 +736,43 @@
                 <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_var_names</span> <span class="o">|</span> <span class="n">gq_var_names</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># is gq variable</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
-            <span class="n">draw1</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="ow">not</span> <span class="n">inc_warmup</span>
-                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
-            <span class="p">):</span>
-                <span class="n">draw1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span>
-            <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_sampling</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">inc_warmup</span>
-                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
-            <span class="p">):</span>
-                <span class="n">num_draws</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">num_draws_warmup</span>
-            <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_draws</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">]</span>
-            <span class="n">col_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">dims</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span>
+                    <span class="n">var</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span>
+                            <span class="n">var</span><span class="p">,</span> <span class="n">inc_iterations</span><span class="o">=</span><span class="n">inc_warmup</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
+                <span class="p">)</span>
 
-            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span>
+        <span class="c1"># is gq variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="n">BaseType</span><span class="o">.</span><span class="n">COMPLEX</span><span class="p">:</span>
-                <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-                <span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">draw1</span><span class="p">,</span> <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_start</span><span class="p">(</span><span class="n">inc_warmup</span><span class="p">)</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_draws</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">]</span>
+        <span class="n">col_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dims</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span>
 
-            <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="n">BaseType</span><span class="o">.</span><span class="n">COMPLEX</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-            <span class="k">return</span> <span class="n">draws</span></div>
+        <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">draws</span></div>
 
 <div class="viewcode-block" id="CmdStanGQ.stan_variables"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a dictionary mapping Stan program variables names</span>
 <span class="sd">        to the corresponding numpy.ndarray containing the inferred values.</span>
 
@@ -720,7 +788,7 @@
 <span class="sd">        CmdStanVB.stan_variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">sample_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">sample_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="n">gq_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">:</span>
             <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">)</span>
@@ -730,9 +798,11 @@
         <span class="k">return</span> <span class="n">result</span></div>
 
     <span class="k">def</span> <span class="nf">_assemble_generated_quantities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
+            <span class="k">return</span>
         <span class="c1"># use numpy loadtxt</span>
-        <span class="n">warmup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]</span>
-        <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcmc_sample</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">warmup</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_start</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="n">gq_sample</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
             <span class="p">(</span><span class="n">num_draws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">)),</span>
             <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
@@ -746,8 +816,79 @@
                 <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span> <span class="o">=</span> <span class="n">gq_sample</span>
 
+    <span class="k">def</span> <span class="nf">_draws_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+        <span class="n">draw1</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">p_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
+            <span class="n">num_draws</span> <span class="o">=</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">num_draws_sampling</span>
+            <span class="k">if</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
+                    <span class="n">num_draws</span> <span class="o">+=</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">num_draws_warmup</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">draw1</span> <span class="o">=</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">num_draws_warmup</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
+            <span class="n">num_draws</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+
+                <span class="n">opt_iters</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_iterations_np</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+                <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
+                    <span class="n">num_draws</span> <span class="o">=</span> <span class="n">opt_iters</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">draw1</span> <span class="o">=</span> <span class="n">opt_iters</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># CmdStanVB:</span>
+            <span class="n">draw1</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># skip mean</span>
+            <span class="n">num_draws</span> <span class="o">=</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">variational_sample</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
+                <span class="n">num_draws</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">draw1</span><span class="p">,</span> <span class="n">num_draws</span>
+
+    <span class="k">def</span> <span class="nf">_previous_draws</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract the draws from self.previous_fit.</span>
+<span class="sd">        Return is always 3-d</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_iterations_np</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_params_np</span><span class="p">,)[</span>  <span class="c1"># type: ignore</span>
+                <span class="p">:,</span> <span class="kc">None</span>
+            <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># CmdStanVB:</span>
+            <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">p_fit</span><span class="o">.</span><span class="n">variational_params_np</span><span class="p">,</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">variational_sample</span><span class="p">]</span>
+                <span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">variational_sample</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_previous_draws_pd</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">vars</span><span class="p">:</span>
+            <span class="n">sel</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">slice</span><span class="p">]</span> <span class="o">=</span> <span class="nb">vars</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sel</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">p_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span><span class="nb">vars</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_iterations_pd</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_params_pd</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># CmdStanVB:</span>
+            <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">variational_sample_pd</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span>
+
 <div class="viewcode-block" id="CmdStanGQ.save_csvfiles"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Move output CSV files to specified directory.  If files were</span>
 <span class="sd">        written to the temporary session directory, clean filename.</span>
 <span class="sd">        E.g., save &#39;bernoulli-201912081451-1-5nm6as7u.csv&#39; as</span>
@@ -760,7 +901,14 @@
 <span class="sd">        stanfit.RunSet.save_csvfiles</span>
 <span class="sd">        cmdstanpy.from_csv</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mcmc_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">]:</span>
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Property `mcmc_sample` is deprecated, use `previous_fit` instead&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span></div>
 </pre></div>
 
               </div>
