@@ -199,3 +199,27 @@ class CmdStanVB:
         cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
+
+    def tbd_method(
+        self,
+        var: str,
+    ) -> np.ndarray:
+        """
+        Return a numpy.ndarray which contains the set of variational draws for
+        the named Stan program variable.
+        """
+        col_idxs = list(self._metadata.stan_vars_cols[var])
+        if len(col_idxs) > 1:
+            shape = (
+                self._metadata.cmdstan_config["output_samples"],
+            ) + self._metadata.stan_vars_dims[var]
+            result: np.ndarray = self._variational_sample[:, col_idxs]
+            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
+                result = result[..., ::2] + 1j * result[..., 1::2]
+                shape = shape[:-1]
+
+            result = result.reshape(shape, order="F")
+
+            return result
+        else:
+            return self._variational_sample[:, col_idxs[0]]

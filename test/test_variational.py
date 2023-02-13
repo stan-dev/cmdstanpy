@@ -325,3 +325,35 @@ def test_serialization() -> None:
         variational1.variational_params_dict
         == variational2.variational_params_dict
     )
+
+
+def test_tbd_method() -> None:
+    stan = os.path.join(
+        DATAFILES_PATH, 'variational', 'variational_samples.stan'
+    )
+    model = CmdStanModel(stan_file=stan)
+    num = 3
+    data = {
+        'n': num,
+        'vec': np.random.normal(0, 1, num),
+        'cmat': np.random.normal(0, 1, (num, 2 * num, 2)) @ [1, 1j],
+        'scalar': np.random.normal(0, 1),
+        'arrvec': np.random.normal(0, 1, (num, 2, 5)),
+    }
+    fit = model.variational(
+        data,
+        iter=3,
+        seed=0,
+        require_converged=False,
+        sig_figs=9,
+        output_samples=13,
+    )
+
+    for key, value in data.items():
+        if key != "n":
+            actual = fit.tbd_method(f"g{key}")
+            # Transpose and add a dimension so we can broadcast along the sample
+            # dimension, then transpose back.
+            value = np.asarray(value)
+            desired = (value.T[..., None] + fit.tbd_method("theta")).T
+            np.testing.assert_allclose(actual, desired, atol=1e-6)
