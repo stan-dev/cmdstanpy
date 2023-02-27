@@ -1777,7 +1777,7 @@ class CmdStanModel:
             chain_id: tqdm(
                 total=total,
                 bar_format="{desc} |{bar}| {elapsed} {postfix[0][value]}",
-                postfix=[dict(value="Status")],
+                postfix=[{"value": "Status"}],
                 desc=f'chain {chain_id}',
                 colour='yellow',
             )
