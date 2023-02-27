@@ -317,7 +317,7 @@ def _wrap_build_progress_hook() -> Optional[Callable[[str], None]]:
     pbar: tqdm = tqdm(
         total=msgs_expected,
         bar_format="{desc} ({elapsed}) | {bar} | {postfix[0][value]}",
-        postfix=[dict(value=f'Building CmdStan {pad}')],
+        postfix=[{"value": f'Building CmdStan {pad}'}],
         colour='blue',
         desc='',
         position=0,

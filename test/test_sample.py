@@ -5,14 +5,14 @@ import io
 import json
 import logging
 import os
+import pickle
 import platform
 import re
 import shutil
 import stat
 import tempfile
 from multiprocessing import cpu_count
-import pickle
-from test import raises_nested, without_import, check_present
+from test import check_present, raises_nested, without_import
 from time import time
 
 import numpy as np
@@ -1146,7 +1146,7 @@ def test_save_csv() -> None:
         bern_fit.save_csvfiles(dir=DATAFILES_PATH)
 
     if platform.system() != 'Windows':
-        with pytest.raises(Exception, match='Cannot save to path: '):
+        with pytest.raises(RuntimeError, match='Cannot save to path: '):
             dir = tempfile.mkdtemp(dir=_TMPDIR)
             os.chmod(dir, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
             bern_fit.save_csvfiles(dir=dir)
