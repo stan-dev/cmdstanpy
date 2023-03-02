@@ -1,14 +1,14 @@
 """CmdStanModel tests"""
 
 import contextlib
-from glob import glob
 import io
 import logging
 import os
 import re
 import shutil
 import tempfile
-from test import raises_nested, check_present
+from glob import glob
+from test import check_present, raises_nested
 from typing import List
 from unittest.mock import MagicMock, patch
 

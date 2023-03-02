@@ -1,6 +1,7 @@
 """install_cxx_toolchain tests"""
 
-from test import mark_windows_only, mark_not_windows
+from test import mark_not_windows, mark_windows_only
+
 import pytest
 
 from cmdstanpy import install_cxx_toolchain

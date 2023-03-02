@@ -3,6 +3,7 @@
 import logging
 import os
 from test import check_present
+
 import pytest
 
 from cmdstanpy.compiler_opts import CompilerOptions

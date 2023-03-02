@@ -14,7 +14,7 @@ import shutil
 import stat
 import string
 import tempfile
-from test import raises_nested, mark_windows_only, check_present
+from test import check_present, mark_windows_only, raises_nested
 from unittest import mock
 
 import numpy as np
