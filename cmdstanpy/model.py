@@ -1333,6 +1333,11 @@ class CmdStanModel:
                     'to generate additional quantities of interest.'
                 )
         elif isinstance(fit_object, CmdStanMLE):
+            if cmdstan_version_before(2, 31):
+                raise RuntimeError(
+                    "Method generate_quantities was not "
+                    "available for non-HMC until CmdStan 2.31"
+                )
             chains = 1
             chain_ids = [1]
             if fit_object._save_iterations:
@@ -1341,6 +1346,11 @@ class CmdStanModel:
                     'to generate additional quantities of interest.'
                 )
         else:  # isinstance(fit_object, CmdStanVB)
+            if cmdstan_version_before(2, 31):
+                raise RuntimeError(
+                    "Method generate_quantities was not "
+                    "available for non-HMC until CmdStan 2.31"
+                )
             chains = 1
             chain_ids = [1]
 
