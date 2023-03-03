@@ -706,7 +706,7 @@ class CmdStanMCMC:
         the next M are from chain 2, and the last M elements are from chain N.
 
         * If the variable is a scalar variable, the return array has shape
-          ( draws X chains, 1).
+          ( draws X chains, ).
         * If the variable is a vector, the return array has shape
           ( draws X chains, len(vector))
         * If the variable is a matrix, the return array has shape
