@@ -38,8 +38,8 @@ def determine_linux_arch() -> str:
             arch = "armhf"
     elif machine == "mips64":
         arch = "mips64el"
-    elif machine == "ppc64el":
-        arch = "ppc64le"
+    elif machine == "ppc64el" or machine == "ppc64le":
+        arch = "ppc64el"
     elif machine == "s390x":
         arch = "s390x"
     return arch
@@ -280,7 +280,7 @@ def cxx_toolchain_path(
         if os.path.exists(os.path.join(toolchain_root, 'mingw64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -304,7 +304,7 @@ def cxx_toolchain_path(
         elif os.path.exists(os.path.join(toolchain_root, 'mingw_64')):
             compiler_path = os.path.join(
                 toolchain_root,
-                'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
                 'bin',
             )
             if os.path.exists(compiler_path):
@@ -356,7 +356,7 @@ def cxx_toolchain_path(
                 if version not in ('35', '3.5', '3'):
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw64' if (sys.maxsize > 2 ** 32) else 'mingw32',
+                        'mingw64' if (sys.maxsize > 2**32) else 'mingw32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
@@ -381,7 +381,7 @@ def cxx_toolchain_path(
                 else:
                     compiler_path = os.path.join(
                         toolchain_root,
-                        'mingw_64' if (sys.maxsize > 2 ** 32) else 'mingw_32',
+                        'mingw_64' if (sys.maxsize > 2**32) else 'mingw_32',
                         'bin',
                     )
                     if os.path.exists(compiler_path):
