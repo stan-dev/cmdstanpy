@@ -8,6 +8,7 @@ import os
 import pickle
 import shutil
 from test import check_present, without_import
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -725,3 +726,34 @@ def test_vb_xarray():
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
     with pytest.raises(RuntimeError, match="via Sampling"):
         _ = bern_gqs.draws_xr()
+
+
+@patch(
+    'cmdstanpy.utils.cmdstan.cmdstan_version',
+    MagicMock(return_value=(2, 27)),
+)
+def test_from_non_hmc_old():
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    bern_model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    bern_fit_v = bern_model.variational(
+        data=jdata,
+        show_console=True,
+        require_converged=False,
+        seed=12345,
+    )
+
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+
+    with pytest.raises(RuntimeError, match="2.31"):
+        model.generate_quantities(data=jdata, previous_fit=bern_fit_v)
+
+    bern_fit_opt = bern_model.optimize(
+        data=jdata,
+        seed=12345,
+    )
+
+    with pytest.raises(RuntimeError, match="2.31"):
+        model.generate_quantities(data=jdata, previous_fit=bern_fit_opt)

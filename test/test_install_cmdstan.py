@@ -1,6 +1,8 @@
 """install_cmdstan test"""
 from unittest import mock
+
 import pytest
+
 from cmdstanpy.install_cmdstan import (
     CmdStanInstallError,
     CmdStanRetrieveError,
