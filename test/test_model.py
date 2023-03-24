@@ -451,6 +451,35 @@ def test_model_compile_space() -> None:
         assert exe_time == os.path.getmtime(model2.exe_file)
 
 
+def test_model_includes_space() -> None:
+    """Test model with include file in path with spaces."""
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
+    stan_divide = os.path.join(DATAFILES_PATH, 'divide_real_by_two.stan')
+
+    with tempfile.TemporaryDirectory(
+        prefix="cmdstanpy_testfolder_"
+    ) as tmp_path:
+        path_with_space = os.path.join(tmp_path, "space in path")
+        os.makedirs(path_with_space, exist_ok=True)
+        bern_stan_new = os.path.join(path_with_space, os.path.split(stan)[1])
+        stan_divide_new = os.path.join(
+            path_with_space, os.path.split(stan_divide)[1]
+        )
+        shutil.copyfile(stan, bern_stan_new)
+        shutil.copyfile(stan_divide, stan_divide_new)
+
+        model = CmdStanModel(
+            stan_file=bern_stan_new,
+            stanc_options={'include-paths': path_with_space},
+        )
+        assert "space in path" in str(model.exe_file)
+
+        assert "space in path" in model.src_info()['included_files'][0]
+        assert (
+            "divide_real_by_two.stan" in model.src_info()['included_files'][0]
+        )
+
+
 def test_model_includes_explicit() -> None:
     if os.path.exists(BERN_EXE):
         os.remove(BERN_EXE)

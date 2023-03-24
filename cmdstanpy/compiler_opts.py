@@ -297,7 +297,10 @@ class CompilerOptions:
 
     def compose(self) -> List[str]:
         """Format makefile options as list of strings."""
-        opts = ['STANCFLAGS+=' + flag for flag in self.compose_stanc()]
+        opts = [
+            'STANCFLAGS+=' + flag.replace(" ", "\\ ")
+            for flag in self.compose_stanc()
+        ]
         if self._cpp_options is not None and len(self._cpp_options) > 0:
             for key, val in self._cpp_options.items():
                 opts.append(f'{key}={val}')
