@@ -6,6 +6,7 @@ import platform
 from test import check_present
 from time import time
 
+import numpy as np
 import pytest
 
 from cmdstanpy import _TMPDIR, cmdstan_path
@@ -348,6 +349,23 @@ def test_args_good() -> None:
     )
     cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
     assert 'id=7 random seed=' in ' '.join(cmd)
+
+    # integer type
+    rng = np.random.default_rng(42)
+    seed = rng.integers(low=0, high=int(1e7))
+    assert not isinstance(seed, int)
+    assert isinstance(seed, np.integer)
+
+    cmdstan_args = CmdStanArgs(
+        model_name='bernoulli',
+        model_exe=exe,
+        chain_ids=[7, 11, 18, 29],
+        data=jdata,
+        seed=seed,
+        method_args=sampler_args,
+    )
+    cmd = cmdstan_args.compose_command(idx=0, csv_file='bern-output-1.csv')
+    assert f'id=7 random seed={seed}' in ' '.join(cmd)
 
     dirname = 'tmp' + str(time())
     if os.path.exists(dirname):
