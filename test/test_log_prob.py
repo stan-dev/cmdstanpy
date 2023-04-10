@@ -22,7 +22,7 @@ BERN_BASENAME = 'bernoulli'
 def test_lp_good() -> None:
     model = CmdStanModel(stan_file=BERN_STAN)
     x = model.log_prob({"theta": 0.1}, data=BERN_DATA)
-    assert "lp_" in x.columns
+    assert "lp__" in x.columns[0]
 
 
 def test_lp_bad(
