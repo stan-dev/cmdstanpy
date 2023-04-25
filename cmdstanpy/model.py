@@ -588,6 +588,8 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
+        jacobian: bool = False,
+        # would be nice to move this further up, but that's a breaking change
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -689,6 +691,11 @@ class CmdStanModel:
 
         :param timeout: Duration at which optimization times out in seconds.
 
+        :param jacobian: Whether or not to use the Jacobian adjustment for
+            constrained variables in optimization. By default this is false,
+            meaning optimization yields the Maximum Likehood Estimate (MLE).
+            Setting it to true yields the Maximum A Posteriori Estimate (MAP).
+
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
@@ -702,6 +709,7 @@ class CmdStanModel:
             history_size=history_size,
             iter=iter,
             save_iterations=save_iterations,
+            jacobian=jacobian,
         )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):

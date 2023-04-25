@@ -170,6 +170,7 @@ def from_csv(
             optimize_args = OptimizeArgs(
                 algorithm=config_dict['algorithm'],
                 save_iterations=config_dict['save_iterations'],
+                jacobian=config_dict.get('jacobian', 0),
             )
             cmdstan_args = CmdStanArgs(
                 model_name=config_dict['model'],
