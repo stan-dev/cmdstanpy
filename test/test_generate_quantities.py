@@ -645,6 +645,7 @@ def test_from_vb():
         show_console=True,
         require_converged=False,
         seed=12345,
+        output_samples=999,
     )
 
     # gq_model
@@ -661,11 +662,11 @@ def test_from_vb():
     csv_file = bern_gqs.runset.csv_files[0]
     assert os.path.exists(csv_file)
 
-    assert bern_gqs.draws().shape == (1000, 1, 10)
-    assert bern_gqs.draws(inc_sample=True).shape == (1000, 1, 14)
+    assert bern_gqs.draws().shape == (999, 1, 10)
+    assert bern_gqs.draws(inc_sample=True).shape == (999, 1, 14)
 
     # draws_pd()
-    assert bern_gqs.draws_pd().shape == (1000, 10)
+    assert bern_gqs.draws_pd().shape == (999, 10)
     assert (
         bern_gqs.draws_pd(inc_sample=True).shape[1]
         == bern_gqs.previous_fit.variational_sample_pd.shape[1]
@@ -674,10 +675,9 @@ def test_from_vb():
 
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta')
-    # VB behavior is weird: it draws from mean by default?
-    assert theta.shape == (1,)
+    assert theta.shape == (999,)
     y_rep = bern_gqs.stan_variable(var='y_rep')
-    assert y_rep.shape == (1000, 10)
+    assert y_rep.shape == (999, 10)
 
 
 def test_vb_request_warmup_none(caplog: pytest.LogCaptureFixture):
