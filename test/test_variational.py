@@ -84,7 +84,8 @@ def test_variables() -> None:
     # pylint: disable=C0103
     stan = os.path.join(DATAFILES_PATH, 'variational', 'eta_should_be_big.stan')
     model = CmdStanModel(stan_file=stan)
-    variational = model.variational(algorithm='meanfield', seed=999999)
+    variational = model.variational(algorithm='meanfield', seed=999999,
+                                    output_samples=999)
     assert variational.column_names == (
         'lp__',
         'log_p__',
@@ -96,7 +97,7 @@ def test_variables() -> None:
     assert 'mu' in variational.metadata.stan_vars_dims
     assert variational.metadata.stan_vars_dims['mu'] == (2,)
     mu = variational.stan_variable(var='mu')
-    assert mu.shape == (2,)
+    assert mu.shape == (999, 2)
     with pytest.raises(ValueError):
         variational.stan_variable(var='eta')
     with pytest.raises(ValueError):
@@ -112,24 +113,25 @@ def test_variables_3d() -> None:
         data=jdata,
         seed=1239812093,
         algorithm='meanfield',
+        output_samples=999,
     )
     assert len(multidim_variational.metadata.stan_vars_dims) == 3
     assert 'y_rep' in multidim_variational.metadata.stan_vars_dims
     assert multidim_variational.metadata.stan_vars_dims['y_rep'] == (5, 4, 3)
     var_y_rep = multidim_variational.stan_variable(var='y_rep')
-    assert var_y_rep.shape == (5, 4, 3)
+    assert var_y_rep.shape == (999, 5, 4, 3)
     var_beta = multidim_variational.stan_variable(var='beta')
-    assert var_beta.shape == (2,)  # 1-element tuple
+    assert var_beta.shape == (999, 2)
     var_frac_60 = multidim_variational.stan_variable(var='frac_60')
-    assert isinstance(var_frac_60, float)
+    assert var_frac_60.shape == (999,)
     vars = multidim_variational.stan_variables()
     assert len(vars) == len(multidim_variational.metadata.stan_vars_dims)
     assert 'y_rep' in vars
-    assert vars['y_rep'].shape == (5, 4, 3)
+    assert vars['y_rep'].shape == (999, 5, 4, 3)
     assert 'beta' in vars
-    assert vars['beta'].shape == (2,)
+    assert vars['beta'].shape == (999, 2,)
     assert 'frac_60' in vars
-    assert isinstance(vars['frac_60'], float)
+    assert vars['frac_60'].shape == (999,)
 
 
 def test_variational_good() -> None:
@@ -215,13 +217,13 @@ def test_single_row_csv() -> None:
     stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
     model = CmdStanModel(stan_file=stan)
     # testing data parsing, allow non-convergence
-    vb_fit = model.variational(require_converged=False, seed=12345)
-    assert isinstance(vb_fit.stan_variable('theta'), float)
+    vb_fit = model.variational(require_converged=False, seed=12345,
+                               output_samples=999)
+    assert vb_fit.stan_variable('theta').shape == (999,)
     z_as_ndarray = vb_fit.stan_variable(var="z")
-    assert z_as_ndarray.shape == (4, 3)
-    for i in range(4):
-        for j in range(3):
-            assert int(z_as_ndarray[i, j]) == i + 1
+    assert z_as_ndarray.shape == (999, 4, 3)
+    desired = np.broadcast_to(np.arange(4)[:, None] + 1, z_as_ndarray.shape)
+    np.testing.assert_allclose(z_as_ndarray, desired)
 
 
 def test_show_console() -> None:
@@ -267,17 +269,21 @@ def test_complex_output() -> None:
         require_converged=False,
         seed=12345,
         algorithm='meanfield',
+        output_samples=999,
     )
 
-    assert fit.stan_variable('zs').shape == (2, 3)
-    assert fit.stan_variable('z') == 3 + 4j
+    var_z = fit.stan_variable('z')
+    assert var_z.shape == (999,)
+    np.testing.assert_allclose(var_z, 3 + 4j)
 
+    var_zs = fit.stan_variable('zs')
+    assert var_zs.shape == (999, 2, 3)
     np.testing.assert_allclose(
-        fit.stan_variable('zs'), np.array([[3, 4j, 5], [1j, 2j, 3j]])
+        var_zs, np.broadcast_to([[3, 4j, 5], [1j, 2j, 3j]], var_zs.shape)
     )
 
     # make sure the name 'imag' isn't magic
-    assert fit.stan_variable('imag').shape == (2,)
+    assert fit.stan_variable('imag').shape == (999, 2)
 
 
 def test_attrs() -> None:
@@ -289,16 +295,17 @@ def test_attrs() -> None:
         require_converged=False,
         seed=12345,
         algorithm='meanfield',
+        output_samples=999,
     )
 
-    assert fit.a == 4.5
-    assert fit.b.shape == (3,)
-    assert isinstance(fit.theta, float)
+    np.testing.assert_allclose(fit.a, 4.5)
+    assert fit.b.shape == (999, 3)
+    assert fit.theta.shape == (999,)
 
-    assert fit.stan_variable('thin') == 3.5
+    np.testing.assert_allclose(fit.stan_variable('thin'), 3.5)
 
     assert isinstance(fit.variational_params_np, np.ndarray)
-    assert fit.stan_variable('variational_params_np') == 0
+    np.testing.assert_allclose(fit.stan_variable('variational_params_np'), 0)
 
     with pytest.raises(AttributeError, match='Unknown variable name:'):
         dummy = fit.c
@@ -327,7 +334,7 @@ def test_serialization() -> None:
     )
 
 
-def test_tbd_method() -> None:
+def test_stan_variable_shape() -> None:
     stan = os.path.join(
         DATAFILES_PATH, 'variational', 'variational_samples.stan'
     )
@@ -351,9 +358,9 @@ def test_tbd_method() -> None:
 
     for key, value in data.items():
         if key != "n":
-            actual = fit.tbd_method(f"g{key}")
+            actual = fit.stan_variable(f"g{key}")
             # Transpose and add a dimension so we can broadcast along the sample
             # dimension, then transpose back.
             value = np.asarray(value)
-            desired = (value.T[..., None] + fit.tbd_method("theta")).T
+            desired = (value.T[..., None] + fit.stan_variable("theta")).T
             np.testing.assert_allclose(actual, desired, atol=1e-6)

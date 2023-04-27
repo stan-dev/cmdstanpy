@@ -115,9 +115,19 @@ class CmdStanVB:
 
     def stan_variable(self, var: str) -> Union[np.ndarray, float]:
         """
-        Return a numpy.ndarray which contains the estimates for the
-        for the named Stan program variable where the dimensions of the
-        numpy.ndarray match the shape of the Stan program variable.
+        Return a numpy.ndarray which contains draws from the variational
+        posterior approximation for the named Stan program variable. The first
+        array dimension corresponds to number of draws. The remaining dimensions
+        correspond to the shape of the Stan program variable.
+
+        * If the variable is a scalar variable, the return array has shape
+          ( draws, ).
+        * If the variable is a vector, the return array has shape
+          ( draws, len(vector))
+        * If the variable is a matrix, the return array has shape
+          ( draws, size(dim 1) X size(dim 2) )
+        * If the variable is an array with N dimensions, the return array
+          has shape ( draws, size(dim 1) X ... X size(dim N))
 
         This functionaltiy is also available via a shortcut using ``.`` -
         writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
@@ -140,10 +150,11 @@ class CmdStanVB:
                 + ", ".join(self._metadata.stan_vars_dims)
             )
         col_idxs = list(self._metadata.stan_vars_cols[var])
-        shape: Tuple[int, ...] = ()
         if len(col_idxs) > 1:
-            shape = self._metadata.stan_vars_dims[var]
-            result: np.ndarray = np.asarray(self._variational_mean)[col_idxs]
+            shape = (
+                self._metadata.cmdstan_config["output_samples"],
+            ) + self._metadata.stan_vars_dims[var]
+            result: np.ndarray = self._variational_sample[:, col_idxs]
             if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
                 result = result[..., ::2] + 1j * result[..., 1::2]
                 shape = shape[:-1]
@@ -152,7 +163,7 @@ class CmdStanVB:
 
             return result
         else:
-            return float(self._variational_mean[col_idxs[0]])
+            return self._variational_sample[:, col_idxs[0]]
 
     def stan_variables(self) -> Dict[str, Union[np.ndarray, float]]:
         """
@@ -199,27 +210,3 @@ class CmdStanVB:
         cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
-
-    def tbd_method(
-        self,
-        var: str,
-    ) -> np.ndarray:
-        """
-        Return a numpy.ndarray which contains the set of variational draws for
-        the named Stan program variable.
-        """
-        col_idxs = list(self._metadata.stan_vars_cols[var])
-        if len(col_idxs) > 1:
-            shape = (
-                self._metadata.cmdstan_config["output_samples"],
-            ) + self._metadata.stan_vars_dims[var]
-            result: np.ndarray = self._variational_sample[:, col_idxs]
-            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-                result = result[..., ::2] + 1j * result[..., 1::2]
-                shape = shape[:-1]
-
-            result = result.reshape(shape, order="F")
-
-            return result
-        else:
-            return self._variational_sample[:, col_idxs[0]]
