@@ -32,12 +32,12 @@ except ImportError:
 
 from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.utils import (
-    BaseType,
     build_xarray_data,
     flatten_chains,
     get_logger,
     scan_generated_quantities_csv,
 )
+from cmdstanpy.utils.data_munging import extract_reshape
 
 from .mcmc import CmdStanMCMC
 from .metadata import InferenceMetadata
@@ -586,21 +586,17 @@ class CmdStanGQ(Generic[Fit]):
 
         # is gq variable
         self._assemble_generated_quantities()
-
         draw1, num_draws = self._draws_start(inc_warmup)
-        dims = [num_draws * self.chains]
+        dims = (num_draws * self.chains,)
         col_idxs = self._metadata.stan_vars_cols[var]
-        if len(col_idxs) > 0:
-            dims.extend(self._metadata.stan_vars_dims[var])
-        draws = self._draws[draw1:, :, col_idxs]
 
-        if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-            draws = draws[..., ::2] + 1j * draws[..., 1::2]
-            dims = dims[:-1]
-
-        draws = draws.reshape(dims, order='F')
-
-        return draws
+        return extract_reshape(
+            dims=dims + self._metadata.stan_vars_dims[var],
+            col_idxs=col_idxs,
+            var_type=self._metadata.stan_vars_types[var],
+            start_row=draw1,
+            draws_in=self._draws,
+        )
 
     def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
         """
