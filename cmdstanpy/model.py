@@ -1613,6 +1613,8 @@ class CmdStanModel:
         self,
         params: Union[Dict[str, Any], str, os.PathLike],
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
+        jacobian: bool = True,
     ) -> pd.DataFrame:
         """
         Calculate the log probability and gradient at the given parameter
@@ -1633,6 +1635,9 @@ class CmdStanModel:
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
+        :param jacobian: Whether or not to enable the Jacobian adjustment
+            for constrained parameters. Defaults to ``True``.
+
         :return: A pandas.DataFrame containing columns "lp__" and additional
             columns for the gradient values. These gradients will be for the
             unconstrained parameters of the model.
@@ -1648,6 +1653,7 @@ class CmdStanModel:
                 str(self.exe_file),
                 "log_prob",
                 f"constrained_params={_params}",
+                f"jacobian={int(jacobian)}",
             ]
             if _data is not None:
                 cmd += ["data", f"file={_data}"]
