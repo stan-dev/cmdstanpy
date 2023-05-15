@@ -1700,7 +1700,7 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        opt_args: Dict[str, Any] = {},
+        opt_args: Optional[Dict[str, Any]] = None,
     ) -> CmdStanLaplace:
         if mode is None:
             optimize_args = {
@@ -1714,7 +1714,8 @@ class CmdStanModel:
                 "timeout": timeout,
                 "output_dir": output_dir,
             }
-            optimize_args.update(opt_args)
+            optimize_args.update(opt_args or {})
+            optimize_args['time_fmt'] = 'opt-' + time_fmt
             try:
                 cmdstan_mode: CmdStanMLE = self.optimize(
                     data=data,

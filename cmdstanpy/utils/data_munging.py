@@ -79,7 +79,7 @@ def extract_reshape(
     """
     # TODO also use in MLE, VB
     if dims:
-        draws = draws_in[start_row:, :, col_idxs]
+        draws = draws_in[start_row:, ..., col_idxs]
 
         if var_type == BaseType.COMPLEX:
             draws = draws[..., ::2] + 1j * draws[..., 1::2]
