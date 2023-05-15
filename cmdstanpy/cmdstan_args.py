@@ -401,7 +401,6 @@ class OptimizeArgs:
         history_size: Optional[int] = None,
         jacobian: bool = False,
     ) -> None:
-
         self.algorithm = algorithm or ""
         self.init_alpha = init_alpha
         self.iter = iter
@@ -415,9 +414,7 @@ class OptimizeArgs:
         self.jacobian = jacobian
         self.thin = None
 
-    def validate(
-        self, chains: Optional[int] = None  # pylint: disable=unused-argument
-    ) -> None:
+    def validate(self, _chains: Optional[int] = None) -> None:
         """
         Check arguments correctness and consistency.
         """
@@ -552,7 +549,7 @@ class LaplaceArgs:
         self.jacobian = jacobian
         self.draws = draws
 
-    def validate(self) -> None:
+    def validate(self, _chains: Optional[int] = None) -> None:
         """Check arguments correctness and consistency."""
         if not os.path.exists(self.mode):
             raise ValueError(f'Invalid path for mode file: {self.mode}')
@@ -753,7 +750,11 @@ class CmdStanArgs:
         model_exe: OptionalPath,
         chain_ids: Optional[List[int]],
         method_args: Union[
-            SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
+            SamplerArgs,
+            OptimizeArgs,
+            GenerateQuantitiesArgs,
+            VariationalArgs,
+            LaplaceArgs,
         ],
         data: Union[Mapping[str, Any], str, None] = None,
         seed: Union[int, List[int], None] = None,

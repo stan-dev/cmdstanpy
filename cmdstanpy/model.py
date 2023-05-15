@@ -40,6 +40,8 @@ from cmdstanpy import (
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
+    LaplaceArgs,
+    Method,
     OptimizeArgs,
     SamplerArgs,
     VariationalArgs,
@@ -47,6 +49,7 @@ from cmdstanpy.cmdstan_args import (
 from cmdstanpy.compiler_opts import CompilerOptions
 from cmdstanpy.stanfit import (
     CmdStanGQ,
+    CmdStanLaplace,
     CmdStanMCMC,
     CmdStanMLE,
     CmdStanVB,
@@ -393,7 +396,7 @@ class CmdStanModel:
                             + '.bak-'
                             + datetime.now().strftime("%Y%m%d%H%M%S"),
                         )
-                    with (open(self.stan_file, 'w')) as file_handle:
+                    with open(self.stan_file, 'w') as file_handle:
                         file_handle.write(result)
             else:
                 print(result)
@@ -1681,6 +1684,85 @@ class CmdStanModel:
 
             result = pd.read_csv(output, comment="#")
             return result
+
+    def laplace_sample(
+        self,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        mode: Union[CmdStanMLE, str, os.PathLike, None] = None,
+        draws: Optional[int] = None,
+        *,
+        jacobian: bool = True,  # NB: Different than optimize!
+        seed: Optional[int] = None,
+        output_dir: OptionalPath = None,
+        sig_figs: Optional[int] = None,
+        save_profile: bool = False,
+        show_console: bool = False,
+        refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
+        opt_args: Dict[str, Any] = {},
+    ) -> CmdStanLaplace:
+        if mode is None:
+            optimize_args = {
+                "seed": seed,
+                "sig_figs": sig_figs,
+                "jacobian": jacobian,
+                "save_profile": save_profile,
+                "show_console": show_console,
+                "refresh": refresh,
+                "time_fmt": time_fmt,
+                "timeout": timeout,
+                "output_dir": output_dir,
+            }
+            optimize_args.update(opt_args)
+            try:
+                cmdstan_mode: CmdStanMLE = self.optimize(
+                    data=data,
+                    **optimize_args,  # type: ignore
+                )
+            except Exception as e:
+                raise RuntimeError(
+                    "Failed to run optimizer on model. "
+                    "Consider supplying a mode or additional optimizer args"
+                ) from e
+        elif not isinstance(mode, CmdStanMLE):
+            cmdstan_mode = from_csv(mode)  # type: ignore  # we check below
+            if cmdstan_mode.runset.method != Method.OPTIMIZE:
+                raise ValueError(
+                    "Mode must be a CmdStanMLE or a path to an optimize CSV"
+                )
+        else:
+            cmdstan_mode = mode
+
+        # TODO: jacobian warnings on mismatch
+
+        laplace_args = LaplaceArgs(
+            cmdstan_mode.runset.csv_files[0], draws, jacobian
+        )
+
+        with MaybeDictToFilePath(data) as (_data,):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=None,
+                data=_data,
+                seed=seed,
+                output_dir=output_dir,
+                sig_figs=sig_figs,
+                save_profile=save_profile,
+                method_args=laplace_args,
+                refresh=refresh,
+            )
+            dummy_chain_id = 0
+            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
+            self._run_cmdstan(
+                runset,
+                dummy_chain_id,
+                show_console=show_console,
+                timeout=timeout,
+            )
+        runset.raise_for_timeouts()
+        return CmdStanLaplace(runset, cmdstan_mode)
 
     def _run_cmdstan(
         self,

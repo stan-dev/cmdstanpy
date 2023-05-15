@@ -13,6 +13,7 @@ from cmdstanpy.cmdstan_args import (
 from cmdstanpy.utils import check_sampler_csv, get_logger, scan_config
 
 from .gq import CmdStanGQ
+from .laplace import CmdStanLaplace
 from .mcmc import CmdStanMCMC
 from .metadata import InferenceMetadata
 from .mle import CmdStanMLE
@@ -26,6 +27,7 @@ __all__ = [
     "CmdStanMLE",
     "CmdStanVB",
     "CmdStanGQ",
+    "CmdStanLaplace",
 ]
 
 
@@ -143,7 +145,7 @@ def from_csv(
                         save_warmup=config_dict['save_warmup'],
                         fixed_param=True,
                     )
-                except (ValueError) as e:
+                except ValueError as e:
                     raise ValueError(
                         'Invalid or corrupt Stan CSV output file, '
                     ) from e
