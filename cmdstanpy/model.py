@@ -1625,7 +1625,7 @@ class CmdStanModel:
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
-        :return: A pandas.DataFrame containing columns "lp_" and additional
+        :return: A pandas.DataFrame containing columns "lp__" and additional
             columns for the gradient values. These gradients will be for the
             unconstrained parameters of the model.
         """
