@@ -568,16 +568,8 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
     """
     Run a (potentially interactive) installation
     """
-    if is_version_available(args.version):
-        print('Installing CmdStan version: {}'.format(args.version))
-    else:
-        raise ValueError(
-            f'Version {args.version} cannot be downloaded. '
-            'Connection to GitHub failed. '
-            'Check firewall settings or ensure this version exists.'
-        )
     validate_dir(args.dir)
-    print('Install directory: {}'.format(args.dir))
+    print('CmdStan install directory: {}'.format(args.dir))
 
     # these accesses just 'warm up' the interactive install
     _ = args.progress
@@ -598,6 +590,14 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
             )
         )
         if not already_installed or args.overwrite:
+            if is_version_available(args.version):
+                print('Installing CmdStan version: {}'.format(args.version))
+            else:
+                raise ValueError(
+                    f'Version {args.version} cannot be downloaded. '
+                    'Connection to GitHub failed. '
+                    'Check firewall settings or ensure this version exists.'
+                )
             retrieve_version(args.version, args.progress)
             install_version(
                 cmdstan_version=cmdstan_version,
