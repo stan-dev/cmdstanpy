@@ -75,7 +75,9 @@ def test_default_path() -> None:
         assert 'CMDSTAN' in os.environ
 
 
-def test_non_spaces_location() -> None:
+@pytest.mark.parametrize("bad_dir", ["bad dir", "bad~dir"])
+@pytest.mark.parametrize("bad_name", ["bad name", "bad~name"])
+def test_non_special_chars_location(bad_dir: str, bad_name: str) -> None:
     with tempfile.TemporaryDirectory(
         prefix="cmdstan_tests", dir=_TMPDIR
     ) as tmpdir:
@@ -86,10 +88,10 @@ def test_non_spaces_location() -> None:
             assert not is_changed
 
         # prepare files for test
-        bad_path = os.path.join(tmpdir, 'bad dir')
+        bad_path = os.path.join(tmpdir, bad_dir)
         os.makedirs(bad_path, exist_ok=True)
         stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
-        stan_bad = os.path.join(bad_path, 'bad name.stan')
+        stan_bad = os.path.join(bad_path, bad_name)
         shutil.copy(stan, stan_bad)
 
         stan_copied = None
@@ -98,6 +100,7 @@ def test_non_spaces_location() -> None:
                 stan_copied = pth
                 assert os.path.exists(stan_copied)
                 assert ' ' not in stan_copied
+                assert platform.system() == 'Windows' or '~' not in stan_copied
                 assert is_changed
                 raise RuntimeError
         except RuntimeError:
