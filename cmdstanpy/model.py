@@ -715,6 +715,12 @@ class CmdStanModel:
             jacobian=jacobian,
         )
 
+        if jacobian and cmdstan_version_before(2, 32, self.exe_info()):
+            raise ValueError(
+                "Jacobian adjustment for optimization is only supported "
+                "in CmdStan 2.32 and above."
+            )
+
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
                 self._name,
@@ -1702,6 +1708,12 @@ class CmdStanModel:
         timeout: Optional[float] = None,
         opt_args: Optional[Dict[str, Any]] = None,
     ) -> CmdStanLaplace:
+
+        if cmdstan_version_before(2, 32, self.exe_info()):
+            raise ValueError(
+                "Method 'laplace_sample' not available for CmdStan versions "
+                "before 2.32"
+            )
         if mode is None:
             optimize_args = {
                 "seed": seed,
