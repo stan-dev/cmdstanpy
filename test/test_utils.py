@@ -100,8 +100,20 @@ def test_non_special_chars_location(bad_dir: str, bad_name: str) -> None:
                 stan_copied = pth
                 assert os.path.exists(stan_copied)
                 assert ' ' not in stan_copied
-                assert platform.system() == 'Windows' or '~' not in stan_copied
-                assert is_changed
+
+                # Determine if the file should have been copied, i.e., we either
+                # are on a unix-ish system or on windows, the path contains a
+                # space, and there is no short path.
+                if platform.system() == 'Windows':
+                    should_change = ' ' in bad_name or (
+                        ' ' in bad_path
+                        and not os.path.exists(windows_short_path(bad_path))
+                    )
+                else:
+                    should_change = True
+                    assert '~' not in stan_copied
+
+                assert is_changed == should_change
                 raise RuntimeError
         except RuntimeError:
             pass
