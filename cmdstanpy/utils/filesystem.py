@@ -4,6 +4,7 @@ Utilities for interacting with the filesystem on multiple platforms
 import contextlib
 import os
 import platform
+import re
 import shutil
 import tempfile
 from typing import Any, Iterator, List, Mapping, Tuple, Union
@@ -169,11 +170,22 @@ class MaybeDictToFilePath:
 
 
 class SanitizedOrTmpFilePath:
-    """Context manager for tmpfiles, handles spaces in filepath."""
+    """
+    Context manager for tmpfiles, handles special characters in filepath.
+    """
+    UNIXISH_PATTERN = re.compile(r"[\s~]")
+    WINDOWS_PATTERN = re.compile(r"\s")
+
+    @classmethod
+    def _has_special_chars(cls, file_path: str) -> bool:
+        if platform.system() == "Windows":
+            return bool(cls.WINDOWS_PATTERN.search(file_path))
+        return bool(cls.UNIXISH_PATTERN.search(file_path))
 
     def __init__(self, file_path: str):
         self._tmpdir = None
-        if ' ' in os.path.abspath(file_path) and platform.system() == 'Windows':
+
+        if self._has_special_chars(os.path.abspath(file_path)):
             base_path, file_name = os.path.split(os.path.abspath(file_path))
             os.makedirs(base_path, exist_ok=True)
             try:
@@ -183,12 +195,13 @@ class SanitizedOrTmpFilePath:
             except RuntimeError:
                 pass
 
-        if ' ' in os.path.abspath(file_path):
+        if self._has_special_chars(os.path.abspath(file_path)):
             tmpdir = tempfile.mkdtemp()
-            if ' ' in tmpdir:
+            if self._has_special_chars(tmpdir):
                 raise RuntimeError(
-                    'Unable to generate temporary path without spaces! \n'
-                    + 'Please move your stan file to location without spaces.'
+                    'Unable to generate temporary path without spaces or '
+                    'special characters! \n Please move your stan file to a '
+                    'location without spaces or special characters.'
                 )
 
             _, path = tempfile.mkstemp(suffix='.stan', dir=tmpdir)
