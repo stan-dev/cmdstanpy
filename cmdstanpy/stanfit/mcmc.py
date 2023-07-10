@@ -615,9 +615,31 @@ class CmdStanMCMC:
         else:
             cols = list(self.column_names)
 
+        draws = self.draws(inc_warmup=inc_warmup)
+        # add long-form columns for chain, iteration, draw
+        n_draws, n_chains, _ = draws.shape
+        chains_col = (
+            np.repeat(np.arange(1, n_chains + 1), n_draws)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        iter_col = (
+            np.tile(np.arange(1, n_draws + 1), n_chains)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        draw_col = (
+            np.arange(1, (n_draws * n_chains) + 1)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
+
+        cols = ['chain', 'iter', 'draw'] + cols
+
         return pd.DataFrame(
-            data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-            columns=self.column_names,
+            data=flatten_chains(draws),
+            columns=['chain', 'iter', 'draw'] + list(self.column_names),
         )[cols]
 
     def draws_xr(
