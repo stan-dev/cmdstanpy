@@ -344,17 +344,41 @@ class CmdStanGQ(Generic[Fit]):
 
         previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
 
+        draws = self.draws(inc_warmup=inc_warmup)
+        # add long-form columns for chain, iteration, draw
+        n_draws, n_chains, _ = draws.shape
+        chains_col = (
+            np.repeat(np.arange(1, n_chains + 1), n_draws)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        iter_col = (
+            np.tile(np.arange(1, n_draws + 1), n_chains)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        draw_col = (
+            np.arange(1, (n_draws * n_chains) + 1)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
+
+        vars_list = ['chain__', 'iter__', 'draw__'] + vars_list
+        if gq_cols:
+            gq_cols = ['chain__', 'iter__', 'draw__'] + gq_cols
+
+        draws_pd = pd.DataFrame(
+            data=flatten_chains(draws),
+            columns=['chain__', 'iter__', 'draw__'] + list(self.column_names),
+        )
+
         if inc_sample and mcmc_vars:
             if gq_cols:
                 return pd.concat(
                     [
                         previous_draws_pd,
-                        pd.DataFrame(
-                            data=flatten_chains(
-                                self.draws(inc_warmup=inc_warmup)
-                            ),
-                            columns=self.column_names,
-                        )[gq_cols],
+                        draws_pd[gq_cols],
                     ],
                     axis='columns',
                 )[vars_list]
@@ -371,23 +395,14 @@ class CmdStanGQ(Generic[Fit]):
             return pd.concat(
                 [
                     previous_draws_pd.drop(columns=dups).reset_index(drop=True),
-                    pd.DataFrame(
-                        data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-                        columns=self.column_names,
-                    ),
+                    draws_pd,
                 ],
                 axis=1,
             )
         elif gq_cols:
-            return pd.DataFrame(
-                data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-                columns=self.column_names,
-            )[gq_cols]
+            return draws_pd[gq_cols]
 
-        return pd.DataFrame(
-            data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-            columns=self.column_names,
-        )
+        return draws_pd
 
     @overload
     def draws_xr(

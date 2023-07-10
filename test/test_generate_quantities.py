@@ -77,14 +77,16 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
     )
 
     # draws_pd()
-    assert bern_gqs.draws_pd().shape == (400, 10)
+    assert bern_gqs.draws_pd().shape == (400, 13)
     assert (
         bern_gqs.draws_pd(inc_sample=True).shape[1]
         == bern_gqs.previous_fit.draws_pd().shape[1]
         + bern_gqs.draws_pd().shape[1]
     )
 
-    assert list(bern_gqs.draws_pd(vars=['y_rep']).columns) == column_names
+    assert list(bern_gqs.draws_pd(vars=['y_rep']).columns) == (
+        ["chain__", "iter__", "draw__"] + column_names
+    )
 
 
 def test_from_csv_files_bad() -> None:
@@ -153,7 +155,7 @@ def test_from_previous_fit_draws() -> None:
 
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
-    assert bern_gqs.draws_pd().shape == (400, 10)
+    assert bern_gqs.draws_pd().shape == (400, 13)
     assert (
         bern_gqs.draws_pd(inc_sample=True).shape[1]
         == bern_gqs.previous_fit.draws_pd().shape[1]
@@ -267,14 +269,14 @@ def test_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
         10,
     )
 
-    assert bern_gqs.draws_pd().shape == (400, 10)
-    assert bern_gqs.draws_pd(inc_warmup=False).shape == (400, 10)
-    assert bern_gqs.draws_pd(inc_warmup=True).shape == (800, 10)
+    assert bern_gqs.draws_pd().shape == (400, 13)
+    assert bern_gqs.draws_pd(inc_warmup=False).shape == (400, 13)
+    assert bern_gqs.draws_pd(inc_warmup=True).shape == (800, 13)
     assert bern_gqs.draws_pd(vars=['y_rep'], inc_warmup=False).shape == (
         400,
-        10,
+        13,
     )
-    assert bern_gqs.draws_pd(vars='y_rep', inc_warmup=False).shape == (400, 10)
+    assert bern_gqs.draws_pd(vars='y_rep', inc_warmup=False).shape == (400, 13)
 
     theta = bern_gqs.stan_variable(var='theta')
     assert theta.shape == (400,)
@@ -523,7 +525,7 @@ def test_from_optimization() -> None:
     assert bern_gqs.draws(inc_sample=True).shape == (1, 1, 12)
 
     # draws_pd()
-    assert bern_gqs.draws_pd().shape == (1, 10)
+    assert bern_gqs.draws_pd().shape == (1, 13)
     assert (
         bern_gqs.draws_pd(inc_sample=True).shape[1]
         == bern_gqs.previous_fit.optimized_params_pd.shape[1]
@@ -665,7 +667,7 @@ def test_from_vb():
     assert bern_gqs.draws(inc_sample=True).shape == (1000, 1, 14)
 
     # draws_pd()
-    assert bern_gqs.draws_pd().shape == (1000, 10)
+    assert bern_gqs.draws_pd().shape == (1000, 13)
     assert (
         bern_gqs.draws_pd(inc_sample=True).shape[1]
         == bern_gqs.previous_fit.variational_sample_pd.shape[1]

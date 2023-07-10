@@ -635,11 +635,11 @@ class CmdStanMCMC:
         )
         draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
 
-        cols = ['chain', 'iter', 'draw'] + cols
+        cols = ['chain__', 'iter__', 'draw__'] + cols
 
         return pd.DataFrame(
             data=flatten_chains(draws),
-            columns=['chain', 'iter', 'draw'] + list(self.column_names),
+            columns=['chain__', 'iter__', 'draw__'] + list(self.column_names),
         )[cols]
 
     def draws_xr(
