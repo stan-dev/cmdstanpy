@@ -89,6 +89,45 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
     )
 
 
+def test_pd_xr_agreement():
+    # fitted_params sample - list of filenames
+    goodfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', 'bern')
+    csv_files = []
+    for i in range(4):
+        csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
+
+    # gq_model
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
+    model = CmdStanModel(stan_file=stan)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+    bern_gqs = model.generate_quantities(data=jdata, previous_fit=csv_files)
+
+    draws_pd = bern_gqs.draws_pd(inc_sample=True)
+    draws_xr = bern_gqs.draws_xr(inc_sample=True)
+
+    # check that the indexing is the same between the two
+    np.testing.assert_equal(
+        draws_pd[draws_pd['chain__'] == 2]['y_rep[1]'],
+        draws_xr.y_rep.sel(chain=2).isel(y_rep_dim_0=0).values,
+    )
+    # "draw" is 0-indexed in xarray, equiv. "iter__" is 1-indexed in pandas
+    np.testing.assert_equal(
+        draws_pd[draws_pd['iter__'] == 100]['y_rep[1]'],
+        draws_xr.y_rep.sel(draw=99).isel(y_rep_dim_0=0).values,
+    )
+
+    # check for included sample as well
+    np.testing.assert_equal(
+        draws_pd[draws_pd['chain__'] == 2]['theta'],
+        draws_xr.theta.sel(chain=2).values,
+    )
+    np.testing.assert_equal(
+        draws_pd[draws_pd['iter__'] == 100]['theta'],
+        draws_xr.theta.sel(draw=99).values,
+    )
+
+
 def test_from_csv_files_bad() -> None:
     # gq model
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')

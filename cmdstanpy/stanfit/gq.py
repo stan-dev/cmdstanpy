@@ -385,8 +385,8 @@ class CmdStanGQ(Generic[Fit]):
             else:
                 return previous_draws_pd
         elif inc_sample and vars is None:
-            cols_1 = self.previous_fit.column_names
-            cols_2 = self.column_names
+            cols_1 = list(previous_draws_pd.columns)
+            cols_2 = list(draws_pd.columns)
             dups = [
                 item
                 for item, count in Counter(cols_1 + cols_2).items()
@@ -676,7 +676,6 @@ class CmdStanGQ(Generic[Fit]):
         elif isinstance(p_fit, CmdStanMLE):
             num_draws = 1
             if p_fit._save_iterations:
-
                 opt_iters = len(p_fit.optimized_iterations_np)  # type: ignore
                 if inc_warmup:
                     num_draws = opt_iters
@@ -725,7 +724,6 @@ class CmdStanGQ(Generic[Fit]):
             return p_fit.draws_pd(vars or None, inc_warmup=inc_warmup)
 
         elif isinstance(p_fit, CmdStanMLE):
-
             if inc_warmup and p_fit._save_iterations:
                 return p_fit.optimized_iterations_pd[sel]  # type: ignore
             else:

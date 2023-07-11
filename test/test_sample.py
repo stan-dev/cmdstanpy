@@ -873,6 +873,25 @@ def test_instantiate_from_csvfiles() -> None:
     )
 
 
+def test_pd_xr_agreement():
+    csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', '*.csv')
+    bern_fit = from_csv(path=csvfiles_path)
+
+    draws_pd = bern_fit.draws_pd()
+    draws_xr = bern_fit.draws_xr()
+
+    # check that the indexing is the same between the two
+    np.testing.assert_equal(
+        draws_pd[draws_pd['chain__'] == 2]['theta'],
+        draws_xr.theta.sel(chain=2).values,
+    )
+    # "draw" is 0-indexed in xarray, equiv. "iter__" is 1-indexed in pandas
+    np.testing.assert_equal(
+        draws_pd[draws_pd['iter__'] == 100]['theta'],
+        draws_xr.theta.sel(draw=99).values,
+    )
+
+
 def test_instantiate_from_csvfiles_fail(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
