@@ -2,12 +2,29 @@
     Container for the result of running a laplace approximation.
 """
 
-from typing import Dict, Optional
+from typing import (
+    Any,
+    Dict,
+    Hashable,
+    List,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import numpy as np
+import pandas as pd
+
+try:
+    import xarray as xr
+
+    XARRAY_INSTALLED = True
+except ImportError:
+    XARRAY_INSTALLED = False
 
 from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils.data_munging import extract_reshape
+from cmdstanpy.utils.data_munging import build_xarray_data, extract_reshape
 from cmdstanpy.utils.stancsv import scan_laplace_csv
 
 from .metadata import InferenceMetadata
@@ -15,7 +32,6 @@ from .mle import CmdStanMLE
 from .runset import RunSet
 
 # TODO list:
-# - remaining methods
 # - tests
 # - docs and example notebook
 # - make sure features like standalone GQ are updated/working
@@ -117,9 +133,99 @@ class CmdStanLaplace:
             result[name] = self._draws[..., idxs[0]]
         return result
 
-    # def draws
-    # def draws_pd
-    # def draws_xr
+    def draws(self) -> np.ndarray:
+        """
+        Return a numpy.ndarray containing the draws from the
+        approximate posterior distribution. This is a 2-D array
+        of shape (draws, parameters).
+        """
+        self._assemble_draws()
+        return self._draws
+
+    def draws_pd(
+        self,
+        vars: Union[List[str], str, None] = None,
+    ) -> pd.DataFrame:
+        if vars is not None:
+            if isinstance(vars, str):
+                vars_list = [vars]
+            else:
+                vars_list = vars
+
+        self._assemble_draws()
+        cols = []
+        if vars is not None:
+            for var in dict.fromkeys(vars_list):
+                if (
+                    var not in self._metadata.method_vars_cols
+                    and var not in self._metadata.stan_vars_cols
+                ):
+                    raise ValueError('Unknown variable: {}'.format(var))
+                if var in self._metadata.method_vars_cols:
+                    cols.append(var)
+                else:
+                    for idx in self._metadata.stan_vars_cols[var]:
+                        cols.append(self.column_names[idx])
+        else:
+            cols = list(self.column_names)
+
+        return pd.DataFrame(self._draws, columns=self.column_names)[cols]
+
+    def draws_xr(
+        self,
+        vars: Union[str, List[str], None] = None,
+    ) -> "xr.Dataset":
+        """
+        Returns the sampler draws as a xarray Dataset.
+
+        :param vars: optional list of variable names.
+
+        See Also
+        --------
+        CmdStanMCMC.draws_xr
+        CmdStanGQ.draws_xr
+        """
+        if not XARRAY_INSTALLED:
+            raise RuntimeError(
+                'Package "xarray" is not installed, cannot produce draws array.'
+            )
+
+        if vars is None:
+            vars_list = list(self._metadata.stan_vars_cols.keys())
+        elif isinstance(vars, str):
+            vars_list = [vars]
+        else:
+            vars_list = vars
+
+        self._assemble_draws()
+
+        meta = self._metadata.cmdstan_config
+        attrs: MutableMapping[Hashable, Any] = {
+            "stan_version": f"{meta['stan_version_major']}."
+            f"{meta['stan_version_minor']}.{meta['stan_version_patch']}",
+            "model": meta["model"],
+        }
+
+        data: MutableMapping[Hashable, Any] = {}
+        coordinates: MutableMapping[Hashable, Any] = {
+            "draw": np.arange(self._draws.shape[0]),
+        }
+
+        for var in vars_list:
+            build_xarray_data(
+                data,
+                var,
+                self._metadata.stan_vars_dims[var],
+                self._metadata.stan_vars_cols[var],
+                0,
+                self._draws[:, np.newaxis, :],
+                self._metadata.stan_vars_types[var],
+            )
+        return (
+            xr.Dataset(data, coords=coordinates, attrs=attrs)
+            .transpose('draw', ...)
+            .squeeze()
+        )
 
     @property
     def mode(self) -> CmdStanMLE:
@@ -128,6 +234,32 @@ class CmdStanLaplace:
         as a :class:`CmdStanMLE` object.
         """
         return self._mode
+
+    def __repr__(self) -> str:
+        mode = '\n'.join(
+            ['\t' + line for line in repr(self.mode).splitlines()]
+        )[1:]
+        rep = 'CmdStanLaplace: model={} \nmode=({})\n{}'.format(
+            self._runset.model,
+            mode,
+            self._runset._args.method_args.compose(0, cmd=[]),
+        )
+        rep = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
+            rep,
+            '\n\t'.join(self._runset.csv_files),
+            '\n\t'.join(self._runset.stdout_files),
+        )
+        return rep
+
+    @property
+    def column_names(self) -> Tuple[str, ...]:
+        """
+        Names of all outputs from the sampler, comprising sampler parameters
+        and all components of all model parameters, transformed parameters,
+        and quantities of interest. Corresponds to Stan CSV file header row,
+        with names munged to array notation, e.g. `beta[1]` not `beta.1`.
+        """
+        return self._metadata.cmdstan_config['column_names']  # type: ignore
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
