@@ -82,6 +82,7 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
         bern_gqs.draws_pd(inc_sample=True).shape[1]
         == bern_gqs.previous_fit.draws_pd().shape[1]
         + bern_gqs.draws_pd().shape[1]
+        - 3  # chain, iter, draw duplicates
     )
 
     assert list(bern_gqs.draws_pd(vars=['y_rep']).columns) == (
@@ -199,11 +200,12 @@ def test_from_previous_fit_draws() -> None:
         bern_gqs.draws_pd(inc_sample=True).shape[1]
         == bern_gqs.previous_fit.draws_pd().shape[1]
         + bern_gqs.draws_pd().shape[1]
+        - 3  # duplicates of chain, iter, and draw
     )
     row1_sample_pd = bern_fit.draws_pd().iloc[0]
     row1_gqs_pd = bern_gqs.draws_pd().iloc[0]
     np.testing.assert_array_equal(
-        pd.concat((row1_sample_pd, row1_gqs_pd), axis=0).values,
+        pd.concat((row1_sample_pd, row1_gqs_pd), axis=0).values[3:],
         bern_gqs.draws_pd(inc_sample=True).iloc[0].values,
     )
     # draws_xr
