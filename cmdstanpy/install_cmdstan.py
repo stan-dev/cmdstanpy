@@ -457,6 +457,8 @@ def is_version_available(version: str) -> bool:
 
 def retrieve_version(version: str, progress: bool = True) -> None:
     """Download specified CmdStan version."""
+    if version is None or version == '':
+        raise ValueError('Argument "version" unspecified.')
 
     if 'git:' in version:
         tag = version.split(':')[1]
@@ -478,8 +480,6 @@ def retrieve_version(version: str, progress: bool = True) -> None:
         )
         return
 
-    if version is None or version == '':
-        raise ValueError('Argument "version" unspecified.')
     print('Downloading CmdStan version {}'.format(version))
     url = get_download_url(version)
     for i in range(6):  # always retry to allow for transient URLErrors
