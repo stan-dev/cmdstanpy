@@ -520,7 +520,11 @@ def install_cmdstan(
         logger.warning('CmdStan installation failed.\n%s', str(e))
         return False
 
-    set_cmdstan_path(os.path.join(args.dir, f"cmdstan-{args.version}"))
+    if 'git:' in args.version:
+        folder = f"cmdstan-{args.version.replace(':', '-').replace('/', '_')}"
+    else:
+        folder = f"cmdstan-{args.version}"
+    set_cmdstan_path(os.path.join(args.dir, folder))
 
     return True
 
