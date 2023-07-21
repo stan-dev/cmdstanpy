@@ -22,6 +22,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import sys
 import tarfile
 import urllib.error
@@ -426,6 +427,9 @@ def install_version(
 
 
 def is_version_available(version: str) -> bool:
+    if 'git:' in version:
+        return True  # no good way in general to check if a git tag exists
+
     is_available = True
     url = get_download_url(version)
     for i in range(6):
@@ -453,6 +457,27 @@ def is_version_available(version: str) -> bool:
 
 def retrieve_version(version: str, progress: bool = True) -> None:
     """Download specified CmdStan version."""
+
+    if 'git:' in version:
+        tag = version.split(':')[1]
+        tag_folder = version.replace(':', '-').replace('/', '_')
+        print(f"Cloning CmdStan branch '{tag}' from stan-dev/cmdstan on GitHub")
+        do_command(
+            [
+                'git',
+                'clone',
+                '--depth',
+                '1',
+                '--branch',
+                tag,
+                '--recursive',
+                '--shallow-submodules',
+                'https://github.com/stan-dev/cmdstan.git',
+                f'cmdstan-{tag_folder}',
+            ]
+        )
+        return
+
     if version is None or version == '':
         raise ValueError('Argument "version" unspecified.')
     print('Downloading CmdStan version {}'.format(version))
@@ -578,9 +603,12 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
     if args.compiler:
         run_compiler_install(args.dir, args.verbose, args.progress)
 
-    cmdstan_version = f'cmdstan-{args.version}'
+    if 'git:' in args.version:
+        tag = args.version.replace(':', '-').replace('/', '_')
+        cmdstan_version = f'cmdstan-{tag}'
+    else:
+        cmdstan_version = f'cmdstan-{args.version}'
     with pushd(args.dir):
-
         already_installed = os.path.exists(cmdstan_version) and os.path.exists(
             os.path.join(
                 cmdstan_version,
@@ -598,6 +626,7 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
                     'Connection to GitHub failed. '
                     'Check firewall settings or ensure this version exists.'
                 )
+            shutil.rmtree(cmdstan_version, ignore_errors=True)
             retrieve_version(args.version, args.progress)
             install_version(
                 cmdstan_version=cmdstan_version,
@@ -620,7 +649,11 @@ def parse_cmdline_args() -> Dict[str, Any]:
         + "interactive mode",
     )
     parser.add_argument(
-        '--version', '-v', help="version, defaults to latest release version"
+        '--version',
+        '-v',
+        help="version, defaults to latest release version. "
+        "If git is installed, you can also specify a git tag or branch, "
+        "e.g. git:develop",
     )
     parser.add_argument(
         '--dir', '-d', help="install directory, defaults to '$HOME/.cmdstan"

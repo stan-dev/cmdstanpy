@@ -97,11 +97,13 @@ def get_latest_cmdstan(cmdstan_dir: str) -> Optional[str]:
         for name in os.listdir(cmdstan_dir)
         if os.path.isdir(os.path.join(cmdstan_dir, name))
         and name.startswith('cmdstan-')
-        and name[8].isdigit()
-        and len(name[8:].split('.')) == 3
     ]
     if len(versions) == 0:
         return None
+    if len(versions) == 1:
+        return 'cmdstan-' + versions[0]
+    # we can only compare numeric versions
+    versions = [v for v in versions if v[0].isdigit() and v.count('.') == 2]
     # munge rc for sort, e.g. 2.25.0-rc1 -> 2.25.-99
     for i in range(len(versions)):  # # pylint: disable=C0200
         if '-rc' in versions[i]:
@@ -442,6 +444,8 @@ def install_cmdstan(
 
     :param version: CmdStan version string, e.g. "2.29.2".
         Defaults to latest CmdStan release.
+        If ``git`` is installed, a git tag or branch of stan-dev/cmdstan
+        can be specified, e.g. "git:develop".
 
     :param dir: Path to install directory.  Defaults to hidden directory
         ``$HOME/.cmdstan``.
