@@ -7,6 +7,24 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`__ on GitHub.
 
+
+CmdStanPy 1.1.0
+---------------
+- **New functionality**
+
+  - :meth:`CmdStanModel.generate_quantities` can now accept samples from optimization and variational inference.
+    The argument ``mcmc_sample`` has been renamed ``previous_fit`` to reflect this; the former name is still accepted
+    but deprecated.
+  - :meth:`CmdStanModel.log_prob` is able to return the log probability and its gradient with respect to a set of parameters.
+    **Note** that this is *not* an efficient way of calculating this in general and should be reserved for debugging
+    and model development.
+- **Other changes**
+
+  - Improved some of the type hints in the package.
+  - Ensure draws are serialized if a fit object is pickled.
+  - :meth:`~CmdStanModel.src_info` now raises an error if the command fails, rather than returning ``{}``.
+  - CmdStanPy has transitioned all unit tests from the ``unittest`` library to use ``pytest``.
+
 CmdStanPy 1.0.8
 ---------------
 

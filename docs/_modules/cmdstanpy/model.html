@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.model &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>cmdstanpy.model &#8212; CmdStanPy 1.1.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
     
   </div>
 
@@ -177,6 +177,7 @@
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
@@ -184,11 +185,27 @@
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">cpu_count</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">_CMDSTAN_REFRESH</span><span class="p">,</span> <span class="n">_CMDSTAN_SAMPLING</span><span class="p">,</span> <span class="n">_CMDSTAN_WARMUP</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_CMDSTAN_REFRESH</span><span class="p">,</span>
+    <span class="n">_CMDSTAN_SAMPLING</span><span class="p">,</span>
+    <span class="n">_CMDSTAN_WARMUP</span><span class="p">,</span>
+    <span class="n">_TMPDIR</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CmdStanArgs</span><span class="p">,</span>
     <span class="n">GenerateQuantitiesArgs</span><span class="p">,</span>
@@ -220,13 +237,14 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">progress</span> <span class="k">as</span> <span class="n">progbar</span>
 
 <span class="n">OptionalPath</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="n">Fit</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;Fit&#39;</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="CmdStanModel"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel">[docs]</a><span class="k">class</span> <span class="nc">CmdStanModel</span><span class="p">:</span>
     <span class="c1"># overview, omitted from doc comment in order to improve Sphinx docs.</span>
     <span class="c1">#    A CmdStanModel object encapsulates the Stan program and provides</span>
     <span class="c1">#    methods for compilation and inference.</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The constructor method allows model instantiation given either the</span>
 <span class="sd">    Stan program source file or the compiled executable, or both.</span>
 <span class="sd">    By default, the constructor will compile the Stan program on instantiation</span>
@@ -271,7 +289,7 @@
         <span class="n">cpp_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">user_header</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize object given constructor args.</span>
 
 <span class="sd">        :param model_name: Model name, used for output file names.</span>
@@ -338,9 +356,14 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">cmdstan_version_before</span><span class="p">(</span>
                 <span class="mi">2</span><span class="p">,</span> <span class="mi">27</span>
             <span class="p">):</span>  <span class="c1"># unknown end of version range</span>
-                <span class="n">model_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_info</span><span class="p">()</span>
-                <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">model_info</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_param</span> <span class="o">|=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_info</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">model_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_info</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">model_info</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_param</span> <span class="o">|=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_info</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">compile</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                    <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">exe_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">exe_file</span><span class="p">))</span>
@@ -390,7 +413,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Model name used in output filename templates. Default is basename</span>
 <span class="sd">        of Stan program or exe file, unless specified in call to constructor</span>
 <span class="sd">        via argument ``model_name``.</span>
@@ -399,16 +422,16 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stan_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptionalPath</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Full path to Stan program file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Full path to Stan program file.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">exe_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptionalPath</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Full path to Stan exe file.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Full path to Stan exe file.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span>
 
 <div class="viewcode-block" id="CmdStanModel.exe_info"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.exe_info">[docs]</a>    <span class="k">def</span> <span class="nf">exe_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run model with option &#39;info&#39;. Parse output statements, which all</span>
 <span class="sd">        have form &#39;key = value&#39; into a Dict.</span>
 <span class="sd">        If exe file compiled with CmdStan &lt; 2.27, option &#39;info&#39; isn&#39;t</span>
@@ -432,38 +455,28 @@
             <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="CmdStanModel.src_info"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.src_info">[docs]</a>    <span class="k">def</span> <span class="nf">src_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run stanc with option &#39;--info&#39;.</span>
 
 <span class="sd">        If stanc is older than 2.27 or if the stan</span>
 <span class="sd">        file cannot be found, returns an empty dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">result</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">result</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;stanc&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)]</span>
-                <span class="c1"># handle include-paths, allow-undefined etc</span>
-                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">compose_stanc</span><span class="p">()</span>
-                <span class="o">+</span> <span class="p">[</span>
-                    <span class="s1">&#39;--info&#39;</span><span class="p">,</span>
-                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">),</span>
-                <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">27</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;stanc&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)]</span>
+            <span class="c1"># handle include-paths, allow-undefined etc</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">compose_stanc</span><span class="p">()</span>
+            <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;--info&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to get source info for Stan model &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="si">}</span><span class="s2">&#39;. Console:</span><span class="se">\n</span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
-            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
-            <span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">result</span>
-        <span class="k">except</span> <span class="p">(</span>
-            <span class="ne">ValueError</span><span class="p">,</span>
-            <span class="ne">RuntimeError</span><span class="p">,</span>
-            <span class="ne">OSError</span><span class="p">,</span>
-            <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">,</span>
-        <span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">result</span></div>
+        <span class="n">result</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="CmdStanModel.format"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -473,7 +486,7 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">backup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run stanc&#39;s auto-formatter on the model code. Either saves directly</span>
 <span class="sd">        back to the file or prints for inspection</span>
 
@@ -559,21 +572,21 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stanc_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Options to stanc compilers.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Options to stanc compilers.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">_stanc_options</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">cpp_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Options to C++ compilers.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Options to C++ compilers.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">_cpp_options</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">user_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;The user header file if it exists, otherwise empty&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The user header file if it exists, otherwise empty&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">_user_header</span>
 
 <div class="viewcode-block" id="CmdStanModel.code"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.code">[docs]</a>    <span class="k">def</span> <span class="nf">code</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Return Stan program as a string.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return Stan program as a string.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Please specify source file&#39;</span><span class="p">)</span>
 
@@ -595,7 +608,7 @@
         <span class="n">user_header</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">override_options</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compile the given Stan program file.  Translates the Stan code to</span>
 <span class="sd">        C++, then calls the C++ compiler.</span>
 
@@ -745,7 +758,7 @@
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
         <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanMLE</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the specified CmdStan optimize algorithm to produce a</span>
 <span class="sd">        penalized maximum likelihood estimate of the model parameters.</span>
 
@@ -932,7 +945,7 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">force_one_process_per_chain</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanMCMC</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run or more chains of the NUTS-HMC sampler to produce a set of draws</span>
 <span class="sd">        from the posterior distribution of a model conditioned on some data.</span>
 
@@ -1369,7 +1382,7 @@
 <div class="viewcode-block" id="CmdStanModel.generate_quantities"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.generate_quantities">[docs]</a>    <span class="k">def</span> <span class="nf">generate_quantities</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">mcmc_sample</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">previous_fit</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Fit</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">gq_output_dir</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sig_figs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1377,14 +1390,18 @@
         <span class="n">refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
         <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanGQ</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">mcmc_sample</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanGQ</span><span class="p">[</span><span class="n">Fit</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s generate_quantities method which runs the generated</span>
 <span class="sd">        quantities block of a model given an existing sample.</span>
 
-<span class="sd">        This function takes a :class:`CmdStanMCMC` object and the dataset used</span>
-<span class="sd">        to generate that sample and calls to the CmdStan ``generate_quantities``</span>
-<span class="sd">        method to generate additional quantities of interest.</span>
+<span class="sd">        This function takes one of the Stan fit objects</span>
+<span class="sd">        :class:`CmdStanMCMC`, :class:`CmdStanMLE`, or :class:`CmdStanVB`</span>
+<span class="sd">        and the data required for the model and calls to the CmdStan</span>
+<span class="sd">        ``generate_quantities`` method to generate additional quantities of</span>
+<span class="sd">        interest.</span>
 
 <span class="sd">        The :class:`CmdStanGQ` object records the command, the return code,</span>
 <span class="sd">        and the paths to the generate method output CSV and console files.</span>
@@ -1403,9 +1420,10 @@
 <span class="sd">            either as a dictionary with entries matching the data variables,</span>
 <span class="sd">            or as the path of a data file in JSON or Rdump format.</span>
 
-<span class="sd">        :param mcmc_sample: Can be either a :class:`CmdStanMCMC` object returned</span>
-<span class="sd">            by the :meth:`sample` method or a list of stan-csv files generated</span>
-<span class="sd">            by fitting the model to the data using any Stan interface.</span>
+<span class="sd">        :param previous_fit: Can be either a :class:`CmdStanMCMC`,</span>
+<span class="sd">            :class:`CmdStanMLE`, or :class:`CmdStanVB` or a list of</span>
+<span class="sd">            stan-csv files generated by fitting the model to the data</span>
+<span class="sd">            using any Stan interface.</span>
 
 <span class="sd">        :param seed: The seed for random number generator. Must be an integer</span>
 <span class="sd">            between 0 and 2^32 - 1. If unspecified,</span>
@@ -1439,39 +1457,64 @@
 
 <span class="sd">        :return: CmdStanGQ object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mcmc_sample</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
-            <span class="n">mcmc_fit</span> <span class="o">=</span> <span class="n">mcmc_sample</span>
-            <span class="n">sample_csv_files</span> <span class="o">=</span> <span class="n">mcmc_sample</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mcmc_sample</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mcmc_sample</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mcmc_sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">previous_fit</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot supply both &#39;previous_fit&#39; and &quot;</span>
+                    <span class="s2">&quot;deprecated argument &#39;mcmc_sample&#39;&quot;</span>
+                <span class="p">)</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Argument name `mcmc_sample` is deprecated, please &quot;</span>
+                <span class="s2">&quot;rename to `previous_fit`.&quot;</span>
+            <span class="p">)</span>
+
+            <span class="n">previous_fit</span> <span class="o">=</span> <span class="n">mcmc_sample</span>  <span class="c1"># type: ignore</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_fit</span><span class="p">,</span> <span class="p">(</span><span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">)):</span>
+            <span class="n">fit_object</span> <span class="o">=</span> <span class="n">previous_fit</span>
+            <span class="n">fit_csv_files</span> <span class="o">=</span> <span class="n">previous_fit</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">previous_fit</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">previous_fit</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Expecting list of Stan CSV files, found empty list&#39;</span>
                 <span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">sample_csv_files</span> <span class="o">=</span> <span class="n">mcmc_sample</span>
-                <span class="n">sample_fit</span> <span class="o">=</span> <span class="n">from_csv</span><span class="p">(</span><span class="n">sample_csv_files</span><span class="p">)</span>
-                <span class="n">mcmc_fit</span> <span class="o">=</span> <span class="n">sample_fit</span>  <span class="c1"># type: ignore</span>
+                <span class="n">fit_csv_files</span> <span class="o">=</span> <span class="n">previous_fit</span>
+                <span class="n">fit_object</span> <span class="o">=</span> <span class="n">from_csv</span><span class="p">(</span><span class="n">fit_csv_files</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Invalid sample from Stan CSV files, error:</span><span class="se">\n\t</span><span class="si">{}</span><span class="se">\n\t</span><span class="s1">&#39;</span>
                     <span class="s1">&#39; while processing files</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="nb">repr</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">mcmc_sample</span><span class="p">)</span>
+                        <span class="nb">repr</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">previous_fit</span><span class="p">)</span>
                     <span class="p">)</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;MCMC sample must be either CmdStanMCMC object&#39;</span>
-                <span class="s1">&#39; or list of paths to sample Stan CSV files.&#39;</span>
+                <span class="s1">&#39;Previous fit must be either CmdStanPy fit object&#39;</span>
+                <span class="s1">&#39; or list of paths to Stan CSV files.&#39;</span>
             <span class="p">)</span>
-        <span class="n">chains</span> <span class="o">=</span> <span class="n">mcmc_fit</span><span class="o">.</span><span class="n">chains</span>
-        <span class="n">chain_ids</span> <span class="o">=</span> <span class="n">mcmc_fit</span><span class="o">.</span><span class="n">chain_ids</span>
-        <span class="k">if</span> <span class="n">mcmc_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">]:</span>
-            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s1">&#39;Sample contains saved warmup draws which will be used &#39;</span>
-                <span class="s1">&#39;to generate additional quantities of interest.&#39;</span>
-            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fit_object</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
+            <span class="n">chains</span> <span class="o">=</span> <span class="n">fit_object</span><span class="o">.</span><span class="n">chains</span>
+            <span class="n">chain_ids</span> <span class="o">=</span> <span class="n">fit_object</span><span class="o">.</span><span class="n">chain_ids</span>
+            <span class="k">if</span> <span class="n">fit_object</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">&#39;Sample contains saved warmup draws which will be used &#39;</span>
+                    <span class="s1">&#39;to generate additional quantities of interest.&#39;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fit_object</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
+            <span class="n">chains</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">chain_ids</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">fit_object</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">&#39;MLE contains saved iterations which will be used &#39;</span>
+                    <span class="s1">&#39;to generate additional quantities of interest.&#39;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># isinstance(fit_object, CmdStanVB)</span>
+            <span class="n">chains</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">chain_ids</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
         <span class="n">generate_quantities_args</span> <span class="o">=</span> <span class="n">GenerateQuantitiesArgs</span><span class="p">(</span>
-            <span class="n">csv_files</span><span class="o">=</span><span class="n">sample_csv_files</span>
+            <span class="n">csv_files</span><span class="o">=</span><span class="n">fit_csv_files</span>
         <span class="p">)</span>
         <span class="n">generate_quantities_args</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">chains</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">MaybeDictToFilePath</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">_inits</span><span class="p">):</span>
@@ -1512,7 +1555,7 @@
                     <span class="o">+</span> <span class="s1">&#39; output is unclear!&#39;</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">quantities</span> <span class="o">=</span> <span class="n">CmdStanGQ</span><span class="p">(</span><span class="n">runset</span><span class="o">=</span><span class="n">runset</span><span class="p">,</span> <span class="n">mcmc_sample</span><span class="o">=</span><span class="n">mcmc_fit</span><span class="p">)</span>
+            <span class="n">quantities</span> <span class="o">=</span> <span class="n">CmdStanGQ</span><span class="p">(</span><span class="n">runset</span><span class="o">=</span><span class="n">runset</span><span class="p">,</span> <span class="n">previous_fit</span><span class="o">=</span><span class="n">fit_object</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">quantities</span></div>
 
 <div class="viewcode-block" id="CmdStanModel.variational"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.variational">[docs]</a>    <span class="k">def</span> <span class="nf">variational</span><span class="p">(</span>
@@ -1540,7 +1583,7 @@
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
         <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanVB</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s variational inference algorithm to approximate</span>
 <span class="sd">        the posterior distribution of the model conditioned on the data.</span>
 
@@ -1717,6 +1760,73 @@
         <span class="n">vb</span> <span class="o">=</span> <span class="n">CmdStanVB</span><span class="p">(</span><span class="n">runset</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">vb</span></div>
 
+<div class="viewcode-block" id="CmdStanModel.log_prob"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.log_prob">[docs]</a>    <span class="k">def</span> <span class="nf">log_prob</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the log probability and gradient at the given parameter</span>
+<span class="sd">        values.</span>
+
+<span class="sd">        .. note:: This function is **NOT** an efficient way to evaluate the log</span>
+<span class="sd">            density of the model. It should be used for diagnostics ONLY.</span>
+<span class="sd">            Please, do not use this for other purposes such as testing new</span>
+<span class="sd">            sampling algorithms!</span>
+
+<span class="sd">        :param params: Values for all parameters in the model, specified</span>
+<span class="sd">            either as a dictionary with entries matching the parameter</span>
+<span class="sd">            variables, or as the path of a data file in JSON or Rdump format.</span>
+
+<span class="sd">            These should be given on the constrained (natural) scale.</span>
+
+<span class="sd">        :param data: Values for all data variables in the model, specified</span>
+<span class="sd">            either as a dictionary with entries matching the data variables,</span>
+<span class="sd">            or as the path of a data file in JSON or Rdump format.</span>
+
+<span class="sd">        :return: A pandas.DataFrame containing columns &quot;lp_&quot; and additional</span>
+<span class="sd">            columns for the gradient values. These gradients will be for the</span>
+<span class="sd">            unconstrained parameters of the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exe_info</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Method &#39;log_prob&#39; not available for CmdStan versions &quot;</span>
+                <span class="s2">&quot;before 2.31&quot;</span>
+            <span class="p">)</span>
+        <span class="k">with</span> <span class="n">MaybeDictToFilePath</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">_data</span><span class="p">,</span> <span class="n">_params</span><span class="p">):</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exe_file</span><span class="p">),</span>
+                <span class="s2">&quot;log_prob&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;constrained_params=</span><span class="si">{</span><span class="n">_params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="n">_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;file=</span><span class="si">{</span><span class="n">_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+            <span class="n">output_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">)</span>
+
+            <span class="n">output</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;output.csv&quot;</span><span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;file=</span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cmd: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">:</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">&quot;&#39;log_prob&#39; command failed!</span><span class="se">\n</span><span class="s2">stdout:</span><span class="si">%s</span><span class="se">\n</span><span class="s2">stderr:</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span>
+                    <span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Method &#39;log_prob&#39; failed with return code &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span></div>
+
     <span class="k">def</span> <span class="nf">_run_cmdstan</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">,</span>
@@ -1726,7 +1836,7 @@
         <span class="n">progress_hook</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function which encapsulates call to CmdStan.</span>
 <span class="sd">        Uses subprocess POpen object to run the process.</span>
 <span class="sd">        Records stdout, stderr messages, and process returncode.</span>
@@ -1825,7 +1935,7 @@
         <span class="n">chain_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">total</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets up tqdm callback for CmdStan sampler console msgs.</span>
 <span class="sd">        CmdStan progress messages start with &quot;Iteration&quot;, for single chain</span>
 <span class="sd">        process, &quot;Chain [id] Iteration&quot; for multi-chain processing.</span>

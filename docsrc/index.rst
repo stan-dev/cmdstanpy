@@ -10,7 +10,7 @@
 .. module:: cmdstanpy
    :synopsis: A lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms.
 
-.. moduleauthor:: Stan Developement Team
+.. moduleauthor:: Stan Development Team
 
 CmdStanPy is a lightweight interface to Stan for Python users which
 provides the necessary objects and functions to do Bayesian inference

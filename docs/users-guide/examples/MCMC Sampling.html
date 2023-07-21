@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>MCMC Sampling &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>MCMC Sampling &#8212; CmdStanPy 1.1.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
     
   </div>
 
@@ -464,10 +464,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -639,7 +640,7 @@ the inference method.</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>jupyter nbextension <span class="nb">enable</span> --py widgetsnbextension
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>jupyter<span class="w"> </span>nbextension<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--py<span class="w"> </span>widgetsnbextension
 </pre></div>
 </div>
 </div>
@@ -1555,7 +1556,7 @@ Attributes:
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sample as ndarray: </span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="se">\n</span><span class="s1">first 2 draws, chain 1:</span><span class="se">\n</span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()[:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sample as ndarray: </span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="se">\n</span><span class="s1">first 2 draws, chain 1:</span><span class="se">\n</span><span class="si">{</span><span class="n">fit</span><span class="o">.</span><span class="n">draws</span><span class="p">()[:</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="p">:]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

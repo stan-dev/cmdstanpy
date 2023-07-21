@@ -107,7 +107,7 @@ To install the current develop branch from GitHub:
 
 .. code-block:: bash
 
-    pip install -e git+https://github.com/stan-dev/cmdstanpy@/develop#egg=cmdstanpy
+    pip install -e git+https://github.com/stan-dev/cmdstanpy@develop#egg=cmdstanpy
 
 
 .. note::

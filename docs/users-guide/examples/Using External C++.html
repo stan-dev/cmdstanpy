@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.1.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
     
   </div>
 
@@ -364,10 +364,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -699,16 +700,16 @@ array([0.20418  , 0.27078  , 0.614841 , ..., 0.124882 , 0.0797855,
 </pre></div></div>
 </div>
 <p>The contents of this header file are a bit complicated unless you are familiar with the C++ internals of Stan, so they are presented without comment:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/math/tools/promotion.hpp&gt;</span><span class="cp"></span>
-<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ostream&gt;</span><span class="cp"></span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;boost/math/tools/promotion.hpp&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ostream&gt;</span>
 
-<span class="k">namespace</span><span class="w"> </span><span class="nn">bernoulli_model_namespace</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T0__</span><span class="o">&gt;</span><span class="w">  </span><span class="kr">inline</span><span class="w">  </span><span class="k">typename</span><span class="w"></span>
-<span class="w">          </span><span class="nc">boost</span><span class="o">::</span><span class="n">math</span><span class="o">::</span><span class="n">tools</span><span class="o">::</span><span class="n">promote_args</span><span class="o">&lt;</span><span class="n">T0__</span><span class="o">&gt;::</span><span class="n">type</span><span class="w"></span>
-<span class="w">          </span><span class="n">make_odds</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T0__</span><span class="o">&amp;</span><span class="w"> </span><span class="n">theta</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">*</span><span class="w"> </span><span class="n">pstream__</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">theta</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">theta</span><span class="p">);</span><span class="w"></span>
-<span class="w">       </span><span class="p">}</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="k">namespace</span><span class="w"> </span><span class="nn">bernoulli_model_namespace</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T0__</span><span class="o">&gt;</span><span class="w">  </span><span class="kr">inline</span><span class="w">  </span><span class="k">typename</span>
+<span class="w">          </span><span class="nc">boost</span><span class="o">::</span><span class="n">math</span><span class="o">::</span><span class="n">tools</span><span class="o">::</span><span class="n">promote_args</span><span class="o">&lt;</span><span class="n">T0__</span><span class="o">&gt;::</span><span class="n">type</span>
+<span class="w">          </span><span class="n">make_odds</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T0__</span><span class="o">&amp;</span><span class="w"> </span><span class="n">theta</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">*</span><span class="w"> </span><span class="n">pstream__</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">theta</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">theta</span><span class="p">);</span>
+<span class="w">       </span><span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>

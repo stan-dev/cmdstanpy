@@ -33,7 +33,7 @@ class CmdStanMLE:
         assert isinstance(
             optimize_args, OptimizeArgs
         )  # make the typechecker happy
-        self._save_iterations = optimize_args.save_iterations
+        self._save_iterations: bool = optimize_args.save_iterations
         self._set_mle_attrs(runset.csv_files[0])
 
     def __repr__(self) -> str:

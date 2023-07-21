@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>What’s New &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>What’s New &#8212; CmdStanPy 1.1.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.1.0</a>
     
   </div>
 
@@ -168,6 +168,11 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#cmdstanpy-1-1-0">
+   CmdStanPy 1.1.0
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#cmdstanpy-1-0-8">
    CmdStanPy 1.0.8
   </a>
@@ -243,6 +248,29 @@
   <section id="what-s-new">
 <h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this headline">#</a></h1>
 <p>For full changes, see the <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/releases">Releases page</a> on GitHub.</p>
+<section id="cmdstanpy-1-1-0">
+<h2>CmdStanPy 1.1.0<a class="headerlink" href="#cmdstanpy-1-1-0" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><strong>New functionality</strong></p>
+<ul>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.generate_quantities" title="cmdstanpy.CmdStanModel.generate_quantities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.generate_quantities()</span></code></a> can now accept samples from optimization and variational inference.
+The argument <code class="docutils literal notranslate"><span class="pre">mcmc_sample</span></code> has been renamed <code class="docutils literal notranslate"><span class="pre">previous_fit</span></code> to reflect this; the former name is still accepted
+but deprecated.</p></li>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.log_prob" title="cmdstanpy.CmdStanModel.log_prob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.log_prob()</span></code></a> is able to return the log probability and its gradient with respect to a set of parameters.
+<strong>Note</strong> that this is <em>not</em> an efficient way of calculating this in general and should be reserved for debugging
+and model development.</p></li>
+</ul>
+</li>
+<li><p><strong>Other changes</strong></p>
+<ul>
+<li><p>Improved some of the type hints in the package.</p></li>
+<li><p>Ensure draws are serialized if a fit object is pickled.</p></li>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.src_info" title="cmdstanpy.CmdStanModel.src_info"><code class="xref py py-meth docutils literal notranslate"><span class="pre">src_info()</span></code></a> now raises an error if the command fails, rather than returning <code class="docutils literal notranslate"><span class="pre">{}</span></code>.</p></li>
+<li><p>CmdStanPy has transitioned all unit tests from the <code class="docutils literal notranslate"><span class="pre">unittest</span></code> library to use <code class="docutils literal notranslate"><span class="pre">pytest</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+</section>
 <section id="cmdstanpy-1-0-8">
 <h2>CmdStanPy 1.0.8<a class="headerlink" href="#cmdstanpy-1-0-8" title="Permalink to this headline">#</a></h2>
 <ul class="simple">

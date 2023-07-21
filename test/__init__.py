@@ -1,81 +1,69 @@
 """Testing utilities for CmdStanPy."""
 
 import contextlib
-import os
-import sys
-import unittest
+import logging
+import platform
+import re
 from importlib import reload
-from io import StringIO
+from typing import Tuple, Type
+from unittest import mock
+
+import pytest
+
+mark_windows_only = pytest.mark.skipif(
+    platform.system() != 'Windows', reason='only runs on windows'
+)
+mark_not_windows = pytest.mark.skipif(
+    platform.system() == 'Windows', reason='does not run on windows'
+)
 
 
-class CustomTestCase(unittest.TestCase):
-    # pylint: disable=invalid-name
-    @contextlib.contextmanager
-    def assertRaisesRegexNested(self, exc, msg):
-        """A version of assertRaisesRegex that checks the full traceback.
+# pylint: disable=invalid-name
+@contextlib.contextmanager
+def raises_nested(expected_exception: Type[Exception], match: str) -> None:
+    """A version of assertRaisesRegex that checks the full traceback.
 
-        Useful for when an exception is raised from another and you wish to
-        inspect the inner exception.
-        """
-        with self.assertRaises(exc) as ctx:
-            yield
-        exception = ctx.exception
-        exn_string = str(ctx.exception)
-        while exception.__cause__ is not None:
-            exception = exception.__cause__
-            exn_string += "\n" + str(exception)
-        self.assertRegex(exn_string, msg)
-
-    @contextlib.contextmanager
-    def without_import(self, library, module):
-        with unittest.mock.patch.dict('sys.modules', {library: None}):
-            reload(module)
-            yield
-        reload(module)
-
-    # recipe modified from https://stackoverflow.com/a/36491341
-    @contextlib.contextmanager
-    def replace_stdin(self, target: str):
-        orig = sys.stdin
-        sys.stdin = StringIO(target)
+    Useful for when an exception is raised from another and you wish to
+    inspect the inner exception.
+    """
+    with pytest.raises(expected_exception) as ctx:
         yield
-        sys.stdin = orig
+    exception: Exception = ctx.value
+    lines = []
+    while exception:
+        lines.append(str(exception))
+        exception = exception.__cause__
+    text = "\n".join(lines)
+    assert re.search(match, text), f"pattern `{match}` does not match `{text}`"
 
-    # recipe from https://stackoverflow.com/a/34333710
-    @contextlib.contextmanager
-    def modified_environ(self, *remove, **update):
-        """
-        Temporarily updates the ``os.environ`` dictionary in-place.
 
-        The ``os.environ`` dictionary is updated in-place so that
-        the modification is sure to work in all situations.
+@contextlib.contextmanager
+def without_import(library, module):
+    with mock.patch.dict('sys.modules', {library: None}):
+        reload(module)
+        yield
+    reload(module)
 
-        :param remove: Environment variables to remove.
-        :param update: Dictionary of environment variables and values to
-             add/update.
-        """
-        env = os.environ
-        update = update or {}
-        remove = remove or []
 
-        # List of environment variables being updated or removed.
-        stomped = (set(update.keys()) | set(remove)) & set(env.keys())
-        # Environment variables and values to restore on exit.
-        update_after = {k: env[k] for k in stomped}
-        # Environment variables and values to remove on exit.
-        remove_after = frozenset(k for k in update if k not in env)
-
-        try:
-            env.update(update)
-            for k in remove:
-                env.pop(k, None)
-            yield
-        finally:
-            env.update(update_after)
-            for k in remove_after:
-                env.pop(k)
-
-    # pylint: disable=invalid-name
-    def assertPathsEqual(self, path1, path2):
-        """Assert paths are equal after normalization"""
-        self.assertTrue(os.path.samefile(path1, path2))
+def check_present(
+    caplog: pytest.LogCaptureFixture,
+    *conditions: Tuple,
+    clear: bool = True,
+) -> None:
+    """
+    Check that all desired records exist.
+    """
+    for condition in conditions:
+        logger, level, message = condition
+        if isinstance(level, str):
+            level = getattr(logging, level)
+        found = any(
+            logger == logger_ and level == level_ and message.match(message_)
+            if isinstance(message, re.Pattern)
+            else message == message_
+            for logger_, level_, message_ in caplog.record_tuples
+        )
+        if not found:
+            raise ValueError(f"logs did not contain the record {condition}")
+    if clear:
+        caplog.clear()

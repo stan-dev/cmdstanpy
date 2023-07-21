@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.1.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
     
   </div>
 
@@ -379,10 +379,11 @@ div.nboutput.container div.prompt > div {
     }
 }
 
-/* disable scrollbars on prompts */
+/* disable scrollbars and line breaks on prompts */
 div.nbinput.container div.prompt pre,
 div.nboutput.container div.prompt pre {
     overflow: hidden;
+    white-space: pre;
 }
 
 /* input/output area */
@@ -563,7 +564,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/opt/hostedtoolcache/Python/3.9.15/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+/opt/hostedtoolcache/Python/3.9.16/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
 </pre></div></div>
 </div>
@@ -625,7 +626,7 @@ mean of y: 0.2
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-13:59:43 - cmdstanpy - INFO - CmdStan start processing
+16:56:20 - cmdstanpy - INFO - CmdStan start processing
 chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
@@ -652,7 +653,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-13:59:43 - cmdstanpy - INFO - CmdStan done processing.
+16:56:20 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -709,27 +710,27 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-7.261840</td>
-      <td>0.019730</td>
-      <td>0.759061</td>
-      <td>-8.799640</td>
-      <td>-6.966800</td>
-      <td>-6.750220</td>
-      <td>1480.07</td>
-      <td>25518.4</td>
-      <td>1.00197</td>
+      <td>-7.294360</td>
+      <td>0.021998</td>
+      <td>0.784799</td>
+      <td>-8.824450</td>
+      <td>-6.995040</td>
+      <td>-6.750290</td>
+      <td>1272.76</td>
+      <td>23569.7</td>
+      <td>1.000660</td>
     </tr>
     <tr>
       <th>theta</th>
-      <td>0.246352</td>
-      <td>0.002884</td>
-      <td>0.116454</td>
-      <td>0.077285</td>
-      <td>0.233223</td>
-      <td>0.459592</td>
-      <td>1630.56</td>
-      <td>28113.2</td>
-      <td>1.00198</td>
+      <td>0.250677</td>
+      <td>0.003251</td>
+      <td>0.120806</td>
+      <td>0.077581</td>
+      <td>0.237291</td>
+      <td>0.465231</td>
+      <td>1380.46</td>
+      <td>25564.0</td>
+      <td>0.999431</td>
     </tr>
   </tbody>
 </table>
@@ -750,8 +751,8 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-13:59:44 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
-13:59:55 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+16:56:20 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+16:56:29 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -781,12 +782,12 @@ generated quantities {
 </pre></div></div>
 </div>
 <p>We run the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method on <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc</span></code> using existing sample <code class="docutils literal notranslate"><span class="pre">fit</span></code> as input. The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method takes the values of <code class="docutils literal notranslate"><span class="pre">theta</span></code> in the <code class="docutils literal notranslate"><span class="pre">fit</span></code> sample as the set of draws from the posterior used to generate the corresponsing <code class="docutils literal notranslate"><span class="pre">y_rep</span></code> quantities of interest.</p>
-<p>The arguments to the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method are: + <code class="docutils literal notranslate"><span class="pre">data</span></code> - the data used to fit the model + <code class="docutils literal notranslate"><span class="pre">mcmc_sample</span></code> - either a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code> object or a list of stan-csv files</p>
+<p>The arguments to the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method are: + <code class="docutils literal notranslate"><span class="pre">data</span></code> - the data used to fit the model + <code class="docutils literal notranslate"><span class="pre">previous_fit</span></code> - either a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code>, <code class="docutils literal notranslate"><span class="pre">CmdStanVB</span></code>, or <code class="docutils literal notranslate"><span class="pre">CmdStanMLE</span></code> object or a list of stan-csv files</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">new_quantities</span> <span class="o">=</span> <span class="n">model_ppc</span><span class="o">.</span><span class="n">generate_quantities</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">mcmc_sample</span><span class="o">=</span><span class="n">fit</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">new_quantities</span> <span class="o">=</span> <span class="n">model_ppc</span><span class="o">.</span><span class="n">generate_quantities</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">previous_fit</span><span class="o">=</span><span class="n">fit</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -795,14 +796,14 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-13:59:55 - cmdstanpy - INFO - Chain [1] start processing
-13:59:55 - cmdstanpy - INFO - Chain [1] done processing
-13:59:55 - cmdstanpy - INFO - Chain [2] start processing
-13:59:55 - cmdstanpy - INFO - Chain [2] done processing
-13:59:55 - cmdstanpy - INFO - Chain [3] start processing
-13:59:55 - cmdstanpy - INFO - Chain [3] done processing
-13:59:55 - cmdstanpy - INFO - Chain [4] start processing
-13:59:55 - cmdstanpy - INFO - Chain [4] done processing
+16:56:29 - cmdstanpy - INFO - Chain [1] start processing
+16:56:29 - cmdstanpy - INFO - Chain [1] done processing
+16:56:29 - cmdstanpy - INFO - Chain [2] start processing
+16:56:30 - cmdstanpy - INFO - Chain [2] done processing
+16:56:30 - cmdstanpy - INFO - Chain [3] start processing
+16:56:30 - cmdstanpy - INFO - Chain [3] done processing
+16:56:30 - cmdstanpy - INFO - Chain [4] start processing
+16:56:30 - cmdstanpy - INFO - Chain [4] done processing
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code> object which contains the values for all variables in the generated quantitites block of the program <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc.stan</span></code>. Unlike the output from the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, it doesn’t contain any information on the joint log probability density, sampler state, or parameters or transformed parameter values.</p>
@@ -817,24 +818,35 @@ generated quantities {
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (1000, 4, 10) (&#39;y_rep[1]&#39;, &#39;y_rep[2]&#39;, &#39;y_rep[3]&#39;, &#39;y_rep[4]&#39;, &#39;y_rep[5]&#39;, &#39;y_rep[6]&#39;, &#39;y_rep[7]&#39;, &#39;y_rep[8]&#39;, &#39;y_rep[9]&#39;, &#39;y_rep[10]&#39;)
-[[0. 0. 1. 1. 0. 1. 0. 0. 0. 1.]
- [0. 0. 1. 1. 0. 1. 0. 0. 0. 1.]
- [0. 0. 1. 1. 0. 1. 0. 0. 0. 1.]
- [0. 0. 1. 1. 0. 1. 0. 0. 0. 1.]]
-[[0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 1. 0. 0. 1. 1. 0. 1. 0. 0.]
- [0. 1. 0. 1. 1. 1. 0. 1. 0. 0.]]
-[[1. 0. 0. 0. 0. 0. 0. 0. 0. 1.]
+[[1. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
+ [1. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
+ [1. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
+ [0. 0. 0. 0. 0. 0. 1. 0. 1. 0.]]
+[[0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
  [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [1. 0. 0. 0. 0. 1. 0. 0. 0. 1.]
- [1. 0. 0. 0. 0. 1. 0. 0. 0. 1.]]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]]
+[[0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ [1. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
+ [1. 1. 0. 0. 0. 0. 0. 0. 0. 0.]]
 </pre></div></div>
 </div>
 <p>We can also use <code class="docutils literal notranslate"><span class="pre">draws_pd(inc_sample=True)</span></code> to get a pandas DataFrame which combines the input drawset with the generated quantities.</p>
@@ -848,6 +860,14 @@ generated quantities {
 <span class="n">sample_plus</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+</pre></div></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
@@ -880,60 +900,60 @@ generated quantities {
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>0</th>
-      <th>1</th>
-      <th>2</th>
-      <th>3</th>
-      <th>4</th>
-      <th>5</th>
-      <th>6</th>
-      <th>7</th>
-      <th>8</th>
-      <th>9</th>
-      <th>10</th>
-      <th>11</th>
-      <th>12</th>
-      <th>13</th>
-      <th>14</th>
-      <th>15</th>
-      <th>16</th>
-      <th>17</th>
+      <th>lp__</th>
+      <th>accept_stat__</th>
+      <th>stepsize__</th>
+      <th>treedepth__</th>
+      <th>n_leapfrog__</th>
+      <th>divergent__</th>
+      <th>energy__</th>
+      <th>theta</th>
+      <th>y_rep[1]</th>
+      <th>y_rep[2]</th>
+      <th>y_rep[3]</th>
+      <th>y_rep[4]</th>
+      <th>y_rep[5]</th>
+      <th>y_rep[6]</th>
+      <th>y_rep[7]</th>
+      <th>y_rep[8]</th>
+      <th>y_rep[9]</th>
+      <th>y_rep[10]</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>-6.78689</td>
-      <td>0.983668</td>
-      <td>1.02377</td>
+      <td>-7.24234</td>
+      <td>0.949730</td>
+      <td>0.933829</td>
       <td>2.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>7.21986</td>
-      <td>0.216274</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>1.0</td>
-      <td>0.0</td>
+      <td>7.59405</td>
+      <td>0.141234</td>
       <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
       <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-8.02517</td>
-      <td>0.765605</td>
-      <td>1.02377</td>
+      <td>-9.03554</td>
+      <td>0.807989</td>
+      <td>0.933829</td>
       <td>1.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>8.22072</td>
-      <td>0.092059</td>
+      <td>9.26243</td>
+      <td>0.059059</td>
       <td>0.0</td>
-      <td>1.0</td>
+      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
@@ -945,15 +965,14 @@ generated quantities {
     </tr>
     <tr>
       <th>2</th>
-      <td>-7.26300</td>
-      <td>1.000000</td>
-      <td>1.02377</td>
+      <td>-9.04921</td>
+      <td>0.998983</td>
+      <td>0.933829</td>
       <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>7.89245</td>
-      <td>0.139341</td>
-      <td>1.0</td>
+      <td>9.33709</td>
+      <td>0.058728</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
@@ -962,7 +981,8 @@ generated quantities {
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
     </tr>
   </tbody>
 </table>

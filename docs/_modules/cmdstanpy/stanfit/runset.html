@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.runset &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>cmdstanpy.stanfit.runset &#8212; CmdStanPy 1.1.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.1.0</a>
     
   </div>
 
@@ -186,7 +186,7 @@
 
 
 <div class="viewcode-block" id="RunSet"><a class="viewcode-back" href="../../../internal_api.html#cmdstanpy.stanfit.RunSet">[docs]</a><span class="k">class</span> <span class="nc">RunSet</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encapsulates the configuration and results of a call to any CmdStan</span>
 <span class="sd">    inference method. Records the method return code and locations of</span>
 <span class="sd">    all console, error, and output files.</span>
@@ -204,7 +204,7 @@
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
         <span class="n">one_process_per_chain</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Initialize object (no input arg checks).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object (no input arg checks).&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="n">args</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_chains</span> <span class="o">=</span> <span class="n">chains</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_one_process_per_chain</span> <span class="o">=</span> <span class="n">one_process_per_chain</span>
@@ -288,22 +288,22 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Stan model name.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stan model name.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">model_name</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Method</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;CmdStan method used to generate this fit.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;CmdStan method used to generate this fit.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">num_procs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Number of processes run.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of processes run.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">one_process_per_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        When True, for each chain, call CmdStan in its own subprocess.</span>
 <span class="sd">        When False, use CmdStan&#39;s `num_chains` arg to run parallel chains.</span>
 <span class="sd">        Always True if CmdStan &lt; 2.28.</span>
@@ -313,16 +313,16 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Number of chains.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of chains.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chains</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">chain_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Chain ids.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Chain ids.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain_ids</span>
 
 <div class="viewcode-block" id="RunSet.cmd"><a class="viewcode-back" href="../../../internal_api.html#cmdstanpy.stanfit.RunSet.cmd">[docs]</a>    <span class="k">def</span> <span class="nf">cmd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Assemble CmdStan invocation.</span>
 <span class="sd">        When running parallel chains from single process (2.28 and up),</span>
 <span class="sd">        specify CmdStan arg `num_chains` and leave chain idx off CSV files.</span>
@@ -353,19 +353,19 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan output files.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List of paths to CmdStan output files.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stdout_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List of paths to transcript of CmdStan messages sent to the console.</span>
 <span class="sd">        Transcripts include config information, progress, and error messages.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span>
 
     <span class="k">def</span> <span class="nf">_check_retcodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Returns ``True`` when all chains have retcode 0.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns ``True`` when all chains have retcode 0.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">code</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">code</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
@@ -373,12 +373,12 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">diagnostic_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan hamiltonian diagnostic files.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List of paths to CmdStan hamiltonian diagnostic files.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">profile_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;List of paths to CmdStan profiler files.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List of paths to CmdStan profiler files.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span>
 
     <span class="c1"># pylint: disable=invalid-name</span>
@@ -393,19 +393,19 @@
         <span class="k">return</span> <span class="n">file</span>
 
     <span class="k">def</span> <span class="nf">_retcode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Get retcode for process[idx].&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get retcode for process[idx].&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_set_retcode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Set retcode at process[idx] to val.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set retcode at process[idx] to val.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
     <span class="k">def</span> <span class="nf">_set_timeout_flag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Set timeout_flag at process[idx] to val.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set timeout_flag at process[idx] to val.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_flags</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
 <div class="viewcode-block" id="RunSet.get_err_msgs"><a class="viewcode-back" href="../../../internal_api.html#cmdstanpy.stanfit.RunSet.get_err_msgs">[docs]</a>    <span class="k">def</span> <span class="nf">get_err_msgs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Checks console messages for each CmdStan run.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks console messages for each CmdStan run.&quot;&quot;&quot;</span>
         <span class="n">msgs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span>
@@ -427,7 +427,7 @@
         <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msgs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RunSet.save_csvfiles"><a class="viewcode-back" href="../../../internal_api.html#cmdstanpy.stanfit.RunSet.save_csvfiles">[docs]</a>    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Moves CSV files to specified directory.</span>
 
 <span class="sd">        :param dir: directory path</span>

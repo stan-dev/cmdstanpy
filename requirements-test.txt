@@ -4,6 +4,5 @@ pytest
 pytest-cov
 pytest-order
 mypy
-testfixtures
 tqdm
 xarray

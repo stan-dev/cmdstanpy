@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.compiler_opts &#8212; CmdStanPy 1.0.8 documentation</title>
+    <title>cmdstanpy.compiler_opts &#8212; CmdStanPy 1.1.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.0.8</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
     
   </div>
 
@@ -221,7 +221,7 @@
 
 
 <div class="viewcode-block" id="CompilerOptions"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions">[docs]</a><span class="k">class</span> <span class="nc">CompilerOptions</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    User-specified flags for stanc and C++ compiler.</span>
 
 <span class="sd">    Attributes:</span>
@@ -237,7 +237,7 @@
         <span class="n">cpp_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">user_header</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span> <span class="o">=</span> <span class="n">stanc_options</span> <span class="k">if</span> <span class="n">stanc_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span> <span class="o">=</span> <span class="n">cpp_options</span> <span class="k">if</span> <span class="n">cpp_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_header</span><span class="p">)</span> <span class="k">if</span> <span class="n">user_header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
@@ -248,7 +248,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Overrides the default implementation&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Overrides the default implementation&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">()</span> <span class="ow">and</span> <span class="n">other</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># equiv w/r/t compiler</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CompilerOptions</span><span class="p">):</span>
@@ -260,7 +260,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="CompilerOptions.is_empty"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;True if no options specified.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;True if no options specified.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span> <span class="o">==</span> <span class="p">{}</span>
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span> <span class="o">==</span> <span class="p">{}</span>
@@ -269,21 +269,21 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stanc_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Stanc compiler options.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stanc compiler options.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">cpp_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;C++ compiler options.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;C++ compiler options.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">user_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;user header.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;user header.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span>
 
 <div class="viewcode-block" id="CompilerOptions.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check compiler args.</span>
 <span class="sd">        Raise ValueError if invalid options are found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -292,7 +292,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_user_header</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="CompilerOptions.validate_stanc_opts"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_stanc_opts">[docs]</a>    <span class="k">def</span> <span class="nf">validate_stanc_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check stanc compiler args and consistency between stanc and C++ options.</span>
 <span class="sd">        Raise ValueError if bad config is found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -365,7 +365,7 @@
             <span class="p">]</span></div>
 
 <div class="viewcode-block" id="CompilerOptions.validate_cpp_opts"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_cpp_opts">[docs]</a>    <span class="k">def</span> <span class="nf">validate_cpp_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check cpp compiler args.</span>
 <span class="sd">        Raise ValueError if bad config is found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -382,7 +382,7 @@
                     <span class="p">)</span></div>
 
 <div class="viewcode-block" id="CompilerOptions.validate_user_header"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_user_header">[docs]</a>    <span class="k">def</span> <span class="nf">validate_user_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        User header exists.</span>
 <span class="sd">        Raise ValueError if bad config is found.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -420,7 +420,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span><span class="p">[</span><span class="s1">&#39;USER_HEADER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span></div>
 
 <div class="viewcode-block" id="CompilerOptions.add"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_opts</span><span class="p">:</span> <span class="s2">&quot;CompilerOptions&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: disable=Q000</span>
-        <span class="sd">&quot;&quot;&quot;Adds options to existing set of compiler options.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds options to existing set of compiler options.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">stanc_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span> <span class="o">=</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">stanc_options</span>
@@ -437,7 +437,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span> <span class="o">=</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">_user_header</span></div>
 
 <div class="viewcode-block" id="CompilerOptions.add_include_path"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.add_include_path">[docs]</a>    <span class="k">def</span> <span class="nf">add_include_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Adds include path to existing set of compiler options.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds include path to existing set of compiler options.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
         <span class="k">if</span> <span class="s1">&#39;include-paths&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">[</span><span class="s1">&#39;include-paths&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span><span class="p">]</span>
@@ -465,7 +465,7 @@
         <span class="k">return</span> <span class="n">opts</span>
 
 <div class="viewcode-block" id="CompilerOptions.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Format makefile options as list of strings.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format makefile options as list of strings.&quot;&quot;&quot;</span>
         <span class="n">opts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;STANCFLAGS+=&#39;</span> <span class="o">+</span> <span class="n">flag</span> <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compose_stanc</span><span class="p">()]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>

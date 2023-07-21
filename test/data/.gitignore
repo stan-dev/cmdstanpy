@@ -9,3 +9,6 @@
 *.testbak
 *.bak-*
 !return_one.hpp
+# Ignore temporary files created as part of compilation.
+*.o
+*.o.tmp
