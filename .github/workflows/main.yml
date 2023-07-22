@@ -82,6 +82,7 @@ jobs:
         run: python -m pip freeze
 
       - name: CmdStan installation cacheing
+        if: ${{ !startswith(needs.get-cmdstan-version.outputs.version, 'git:') }}
         uses: actions/cache@v3
         with:
           path: ~/.cmdstan
