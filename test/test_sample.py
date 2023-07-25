@@ -1938,6 +1938,24 @@ def test_json_edges() -> None:
     assert np.isinf(fit.stan_variable("inf_out")[0])
 
 
+def test_json_junk_alongside_data() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'data-test.stan')
+    data_model = CmdStanModel(stan_file=stan)
+    data = {
+        "inf": float("inf"),
+        "nan": float("NaN"),
+        "_foo": "this should be harmless!",
+    }
+    data_model.sample(data, chains=1, iter_warmup=1, iter_sampling=1)
+
+
+def test_tuple_data_in() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'tuple_data.stan')
+    data_model = CmdStanModel(stan_file=stan)
+    data = {"x": (1, 2, 3), 'y': [(i, np.random.randn(4, 5)) for i in range(3)]}
+    data_model.sample(data, chains=1, iter_warmup=1, iter_sampling=1)
+
+
 @pytest.mark.order(before="test_no_xarray")
 def test_serialization(stanfile='bernoulli.stan'):
     # This test must before any test that uses the `without_import` context

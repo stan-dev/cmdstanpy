@@ -269,6 +269,10 @@ def test_write_stan_json() -> None:
         for k in d1:
             data_1 = d1[k]
             data_2 = d2[k]
+            if isinstance(data_1, dict):
+                cmp(data_1, data_2)
+                continue
+
             if isinstance(data_2, collections.abc.Collection):
                 data_2 = np.asarray(data_2).tolist()
             # np properly handles NaN equality
@@ -291,7 +295,10 @@ def test_write_stan_json() -> None:
     file_bool = os.path.join(_TMPDIR, 'bool.json')
     write_stan_json(file_bool, dict_bool)
     with open(file_bool) as fd:
-        cmp(json.load(fd), {'a': 0})
+        res = json.load(fd)
+        assert isinstance(res['a'], int)
+        assert not isinstance(res['a'], bool)
+        cmp(res, {'a': 0})
 
     dict_none = {'a': None}
     file_none = os.path.join(_TMPDIR, 'none.json')
@@ -380,17 +387,22 @@ def test_write_stan_json() -> None:
     with open(file_complex) as fd:
         cmp(json.load(fd), dict_complex_exp)
 
-
-def test_write_stan_json_bad() -> None:
-    file_bad = os.path.join(_TMPDIR, 'bad.json')
-
-    dict_badtype = {'a': 'a string'}
-    with pytest.raises(TypeError):
-        write_stan_json(file_bad, dict_badtype)
-
-    dict_badtype_nested = {'a': ['a string']}
-    with pytest.raises(ValueError):
-        write_stan_json(file_bad, dict_badtype_nested)
+    dict_tuples = {
+        'a': (1, 2, 3),
+        'b': [(1, [2, 3]), (4, [5, 6])],
+        'c': ((1, np.array([1, 2.0, 3])), (3, np.array([1, 2, 3]))),
+        'm': {'1': 1, '2': [2, 3]},
+    }
+    dict_tuple_exp = {
+        "a": {"1": 1, "2": 2, "3": 3},
+        "b": [{"1": 1, "2": [2, 3]}, {"1": 4, "2": [5, 6]}],
+        "c": {"1": {"1": 1, "2": [1, 2.0, 3]}, "2": {"1": 3, "2": [1, 2, 3]}},
+        "m": {"1": 1, "2": [2, 3]},
+    }
+    file_tuple = os.path.join(_TMPDIR, 'tuple.json')
+    write_stan_json(file_tuple, dict_tuples)
+    with open(file_tuple) as fd:
+        cmp(json.load(fd), dict_tuple_exp)
 
 
 def test_check_sampler_csv_1() -> None:

@@ -2,17 +2,38 @@
 Utilities for writing Stan Json files
 """
 import json
-from collections.abc import Collection
-from typing import Any, List, Mapping
+from typing import Any, Mapping
 
 import numpy as np
 
 
-def serialize_complex(c: Any) -> List[float]:
-    if isinstance(c, complex):
-        return [c.real, c.imag]
-    else:
-        raise TypeError(f"Unserializable type: {type(c)}")
+def process_dictionary(d: Mapping[str, Any]) -> Mapping[str, Any]:
+    return {k: process_value(v) for k, v in d.items()}
+
+
+# pylint: disable=too-many-return-statements
+def process_value(val: Any) -> Any:
+    if val is None:
+        return None
+    if isinstance(val, bool):  # stan uses 0, 1
+        return int(val)
+    if isinstance(val, complex):  # treat as 2-long array
+        return [val.real, val.imag]
+    if isinstance(val, dict):  # if a tuple was manually specified
+        return process_dictionary(val)
+    if isinstance(val, tuple):  # otherwise, turn a tuple into a dict
+        return dict(zip(range(1, len(val) + 1), map(process_value, val)))
+    if isinstance(val, list):
+        return [process_value(i) for i in val]
+    original_module = getattr(type(val), '__module__', '')
+    if (
+        'numpy' in original_module
+        or 'xarray' in original_module
+        or 'pandas' in original_module
+    ):
+        return process_value(np.asanyarray(val).tolist())
+
+    return val
 
 
 def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
@@ -34,36 +55,6 @@ def write_stan_json(path: str, data: Mapping[str, Any]) -> None:
         or something more exotic like an :class:`xarray.Dataset`. This will be
         copied before type conversion, not modified
     """
-    data_out = {}
-    for key, val in data.items():
-        if val is not None:
-            if isinstance(val, (str, bytes)) or (
-                type(val).__module__ != 'numpy'
-                and not isinstance(val, (Collection, bool, int, float))
-            ):
-                raise TypeError(
-                    f"Invalid type '{type(val)}' provided to "
-                    + f"write_stan_json for key '{key}'"
-                )
-            try:
-                # handles cases like val == ['hello']
-                np.isfinite(val)
-            except TypeError:
-                # pylint: disable=raise-missing-from
-                raise ValueError(
-                    "Invalid type provided to "
-                    f"write_stan_json for key '{key}' "
-                    f"as part of collection {type(val)}"
-                )
-
-        if type(val).__module__ == 'numpy':
-            data_out[key] = val.tolist()
-        elif isinstance(val, Collection):
-            data_out[key] = np.asarray(val).tolist()
-        elif isinstance(val, bool):
-            data_out[key] = int(val)
-        else:
-            data_out[key] = val
-
     with open(path, 'w') as fd:
-        json.dump(data_out, fd, default=serialize_complex)
+        for chunk in json.JSONEncoder().iterencode(process_dictionary(data)):
+            fd.write(chunk)
