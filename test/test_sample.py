@@ -49,7 +49,8 @@ BERNOULLI_COLS = SAMPLER_STATE + ['theta']
     [
         'bernoulli.stan',
         'bernoulli with space in name.stan',
-        'path with space/' + 'bernoulli_path_with_space.stan',
+        'path with space/bernoulli_path_with_space.stan',
+        'path~with~tilde/bernoulli_path_with_tilde.stan',
     ],
 )
 def test_bernoulli_good(stanfile: str):

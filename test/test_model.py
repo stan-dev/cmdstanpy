@@ -426,16 +426,18 @@ def test_model_compile() -> None:
     assert exe_time == os.path.getmtime(model2.exe_file)
 
 
-def test_model_compile_space() -> None:
+@pytest.mark.parametrize("path", ["space in path", "tilde~in~path"])
+def test_model_compile_special_char(path: str) -> None:
     with tempfile.TemporaryDirectory(
         prefix="cmdstanpy_testfolder_"
     ) as tmp_path:
-        path_with_space = os.path.join(tmp_path, "space in path")
-        os.makedirs(path_with_space, exist_ok=True)
+        path_with_special_char = os.path.join(tmp_path, path)
+        os.makedirs(path_with_special_char, exist_ok=True)
         bern_stan_new = os.path.join(
-            path_with_space, os.path.split(BERN_STAN)[1]
+            path_with_special_char, os.path.split(BERN_STAN)[1]
         )
-        bern_exe_new = os.path.join(path_with_space, os.path.split(BERN_EXE)[1])
+        bern_exe_new = os.path.join(path_with_special_char,
+                                    os.path.split(BERN_EXE)[1])
         shutil.copyfile(BERN_STAN, bern_stan_new)
         model = CmdStanModel(stan_file=bern_stan_new)
 
@@ -451,7 +453,8 @@ def test_model_compile_space() -> None:
         assert exe_time == os.path.getmtime(model2.exe_file)
 
 
-def test_model_includes_space() -> None:
+@pytest.mark.parametrize("path", ["space in path", "tilde~in~path"])
+def test_model_includes_special_char(path: str) -> None:
     """Test model with include file in path with spaces."""
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
     stan_divide = os.path.join(DATAFILES_PATH, 'divide_real_by_two.stan')
@@ -459,22 +462,23 @@ def test_model_includes_space() -> None:
     with tempfile.TemporaryDirectory(
         prefix="cmdstanpy_testfolder_"
     ) as tmp_path:
-        path_with_space = os.path.join(tmp_path, "space in path")
-        os.makedirs(path_with_space, exist_ok=True)
-        bern_stan_new = os.path.join(path_with_space, os.path.split(stan)[1])
+        path_with_special_char = os.path.join(tmp_path, path)
+        os.makedirs(path_with_special_char, exist_ok=True)
+        bern_stan_new = os.path.join(path_with_special_char,
+                                     os.path.split(stan)[1])
         stan_divide_new = os.path.join(
-            path_with_space, os.path.split(stan_divide)[1]
+            path_with_special_char, os.path.split(stan_divide)[1]
         )
         shutil.copyfile(stan, bern_stan_new)
         shutil.copyfile(stan_divide, stan_divide_new)
 
         model = CmdStanModel(
             stan_file=bern_stan_new,
-            stanc_options={'include-paths': path_with_space},
+            stanc_options={'include-paths': path_with_special_char},
         )
-        assert "space in path" in str(model.exe_file)
+        assert path in str(model.exe_file)
 
-        assert "space in path" in model.src_info()['included_files'][0]
+        assert path in model.src_info()['included_files'][0]
         assert (
             "divide_real_by_two.stan" in model.src_info()['included_files'][0]
         )

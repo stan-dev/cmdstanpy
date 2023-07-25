@@ -31,7 +31,7 @@ CmdStanPy is designed to support the development, testing, and deployment of a S
 CmdStanPy manages the Stan program files, data files, and CmdStan output files.
 By default, output files are written to a temporary filesystem which persists
 throughout the session.  This is appropriate behavior during model development
-because it allows the user to test many models without filsystem clutter or worse.
+because it allows the user to test many models without filesystem clutter or worse.
 Once deployed into production, 
 the user can specify the output directory for the CmdStan outputs.
 

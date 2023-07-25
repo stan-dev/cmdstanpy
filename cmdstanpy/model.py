@@ -504,7 +504,8 @@ class CmdStanModel:
                 return
 
         compilation_failed = False
-        # if target path has space, use copy in a tmpdir (GNU-Make constraint)
+        # if target path has spaces or special characters, use a copy in a
+        # temporary directory (GNU-Make constraint)
         with SanitizedOrTmpFilePath(self._stan_file) as (stan_file, is_copied):
             exe_file = os.path.splitext(stan_file)[0] + EXTENSION
 
