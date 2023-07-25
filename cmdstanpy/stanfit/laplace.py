@@ -32,7 +32,6 @@ from .mle import CmdStanMLE
 from .runset import RunSet
 
 # TODO list:
-# - tests
 # - docs and example notebook
 # - make sure features like standalone GQ are updated/working
 
@@ -57,7 +56,6 @@ class CmdStanLaplace:
         if self._draws.shape != (0,):
             return
 
-        # TODO: should we fake a chain dimension?
         with open(self._runset.csv_files[0], 'r') as fd:
             lines = (line for line in fd if not line.startswith('#'))
             self._draws = np.loadtxt(

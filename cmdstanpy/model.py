@@ -1714,6 +1714,10 @@ class CmdStanModel:
                 "Method 'laplace_sample' not available for CmdStan versions "
                 "before 2.32"
             )
+        if opt_args is not None and mode is not None:
+            raise ValueError(
+                "Cannot specify both 'opt_args' and 'mode' arguments"
+            )
         if mode is None:
             optimize_args = {
                 "seed": seed,

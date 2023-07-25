@@ -46,6 +46,18 @@ def test_laplace_bad_jacobian_mismatch():
         )
 
 
+def test_laplace_bad_two_modes():
+    model_file = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
+    model = cmdstanpy.CmdStanModel(stan_file=model_file)
+    with pytest.raises(ValueError):
+        model.laplace_sample(
+            data={},
+            mode=os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv'),
+            opt_args={'iter': 1003},
+            jacobian=False,
+        )
+
+
 def test_laplace_outputs():
     model_file = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
     model = cmdstanpy.CmdStanModel(stan_file=model_file)
