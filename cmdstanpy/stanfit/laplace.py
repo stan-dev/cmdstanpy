@@ -251,6 +251,24 @@ class CmdStanLaplace:
         )
         return rep
 
+    def __getattr__(self, attr: str) -> np.ndarray:
+        """Synonymous with ``fit.stan_variable(attr)"""
+        if attr.startswith("_"):
+            raise AttributeError(f"Unknown variable name {attr}")
+        try:
+            return self.stan_variable(attr)
+        except ValueError as e:
+            # pylint: disable=raise-missing-from
+            raise AttributeError(*e.args)
+
+    def __getstate__(self) -> dict:
+        # This function returns the mapping of objects to serialize with pickle.
+        # See https://docs.python.org/3/library/pickle.html#object.__getstate__
+        # for details. We call _assemble_draws to ensure posterior samples have
+        # been loaded prior to serialization.
+        self._assemble_draws()
+        return self.__dict__
+
     @property
     def column_names(self) -> Tuple[str, ...]:
         """

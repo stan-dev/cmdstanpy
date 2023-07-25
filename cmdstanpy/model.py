@@ -1709,7 +1709,6 @@ class CmdStanModel:
         timeout: Optional[float] = None,
         opt_args: Optional[Dict[str, Any]] = None,
     ) -> CmdStanLaplace:
-
         if cmdstan_version_before(2, 32, self.exe_info()):
             raise ValueError(
                 "Method 'laplace_sample' not available for CmdStan versions "
@@ -1741,14 +1740,23 @@ class CmdStanModel:
                 ) from e
         elif not isinstance(mode, CmdStanMLE):
             cmdstan_mode = from_csv(mode)  # type: ignore  # we check below
-            if cmdstan_mode.runset.method != Method.OPTIMIZE:
-                raise ValueError(
-                    "Mode must be a CmdStanMLE or a path to an optimize CSV"
-                )
         else:
             cmdstan_mode = mode
 
-        # TODO: jacobian warnings on mismatch
+        if cmdstan_mode.runset.method != Method.OPTIMIZE:
+            raise ValueError(
+                "Mode must be a CmdStanMLE or a path to an optimize CSV"
+            )
+
+        mode_jacobian = (
+            cmdstan_mode.runset._args.method_args.jacobian  # type: ignore
+        )
+        if mode_jacobian != jacobian:
+            raise ValueError(
+                "Jacobian argument to optimize and laplace must match!\n"
+                f"Laplace was run with jacobian={jacobian},\n"
+                f"but optimize was run with jacobian={mode_jacobian}"
+            )
 
         laplace_args = LaplaceArgs(
             cmdstan_mode.runset.csv_files[0], draws, jacobian
