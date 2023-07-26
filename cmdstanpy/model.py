@@ -40,6 +40,8 @@ from cmdstanpy import (
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
+    LaplaceArgs,
+    Method,
     OptimizeArgs,
     SamplerArgs,
     VariationalArgs,
@@ -47,6 +49,7 @@ from cmdstanpy.cmdstan_args import (
 from cmdstanpy.compiler_opts import CompilerOptions
 from cmdstanpy.stanfit import (
     CmdStanGQ,
+    CmdStanLaplace,
     CmdStanMCMC,
     CmdStanMLE,
     CmdStanVB,
@@ -393,7 +396,7 @@ class CmdStanModel:
                             + '.bak-'
                             + datetime.now().strftime("%Y%m%d%H%M%S"),
                         )
-                    with (open(self.stan_file, 'w')) as file_handle:
+                    with open(self.stan_file, 'w') as file_handle:
                         file_handle.write(result)
             else:
                 print(result)
@@ -589,6 +592,8 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
+        jacobian: bool = False,
+        # would be nice to move this further up, but that's a breaking change
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -690,6 +695,11 @@ class CmdStanModel:
 
         :param timeout: Duration at which optimization times out in seconds.
 
+        :param jacobian: Whether or not to use the Jacobian adjustment for
+            constrained variables in optimization. By default this is false,
+            meaning optimization yields the Maximum Likehood Estimate (MLE).
+            Setting it to true yields the Maximum A Posteriori Estimate (MAP).
+
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
@@ -703,7 +713,14 @@ class CmdStanModel:
             history_size=history_size,
             iter=iter,
             save_iterations=save_iterations,
+            jacobian=jacobian,
         )
+
+        if jacobian and cmdstan_version_before(2, 32, self.exe_info()):
+            raise ValueError(
+                "Jacobian adjustment for optimization is only supported "
+                "in CmdStan 2.32 and above."
+            )
 
         with MaybeDictToFilePath(data, inits) as (_data, _inits):
             args = CmdStanArgs(
@@ -1589,6 +1606,8 @@ class CmdStanModel:
         self,
         params: Union[Dict[str, Any], str, os.PathLike],
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
+        jacobian: bool = True,
     ) -> pd.DataFrame:
         """
         Calculate the log probability and gradient at the given parameter
@@ -1609,6 +1628,9 @@ class CmdStanModel:
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
 
+        :param jacobian: Whether or not to enable the Jacobian adjustment
+            for constrained parameters. Defaults to ``True``.
+
         :return: A pandas.DataFrame containing columns "lp__" and additional
             columns for the gradient values. These gradients will be for the
             unconstrained parameters of the model.
@@ -1624,6 +1646,7 @@ class CmdStanModel:
                 str(self.exe_file),
                 "log_prob",
                 f"constrained_params={_params}",
+                f"jacobian={int(jacobian)}",
             ]
             if _data is not None:
                 cmd += ["data", f"file={_data}"]
@@ -1651,6 +1674,104 @@ class CmdStanModel:
 
             result = pd.read_csv(output, comment="#")
             return result
+
+    def laplace_sample(
+        self,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        mode: Union[CmdStanMLE, str, os.PathLike, None] = None,
+        draws: Optional[int] = None,
+        *,
+        jacobian: bool = True,  # NB: Different than optimize!
+        seed: Optional[int] = None,
+        output_dir: OptionalPath = None,
+        sig_figs: Optional[int] = None,
+        save_profile: bool = False,
+        show_console: bool = False,
+        refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
+        opt_args: Optional[Dict[str, Any]] = None,
+    ) -> CmdStanLaplace:
+        if cmdstan_version_before(2, 32, self.exe_info()):
+            raise ValueError(
+                "Method 'laplace_sample' not available for CmdStan versions "
+                "before 2.32"
+            )
+        if opt_args is not None and mode is not None:
+            raise ValueError(
+                "Cannot specify both 'opt_args' and 'mode' arguments"
+            )
+        if mode is None:
+            optimize_args = {
+                "seed": seed,
+                "sig_figs": sig_figs,
+                "jacobian": jacobian,
+                "save_profile": save_profile,
+                "show_console": show_console,
+                "refresh": refresh,
+                "time_fmt": time_fmt,
+                "timeout": timeout,
+                "output_dir": output_dir,
+            }
+            optimize_args.update(opt_args or {})
+            optimize_args['time_fmt'] = 'opt-' + time_fmt
+            try:
+                cmdstan_mode: CmdStanMLE = self.optimize(
+                    data=data,
+                    **optimize_args,  # type: ignore
+                )
+            except Exception as e:
+                raise RuntimeError(
+                    "Failed to run optimizer on model. "
+                    "Consider supplying a mode or additional optimizer args"
+                ) from e
+        elif not isinstance(mode, CmdStanMLE):
+            cmdstan_mode = from_csv(mode)  # type: ignore  # we check below
+        else:
+            cmdstan_mode = mode
+
+        if cmdstan_mode.runset.method != Method.OPTIMIZE:
+            raise ValueError(
+                "Mode must be a CmdStanMLE or a path to an optimize CSV"
+            )
+
+        mode_jacobian = (
+            cmdstan_mode.runset._args.method_args.jacobian  # type: ignore
+        )
+        if mode_jacobian != jacobian:
+            raise ValueError(
+                "Jacobian argument to optimize and laplace must match!\n"
+                f"Laplace was run with jacobian={jacobian},\n"
+                f"but optimize was run with jacobian={mode_jacobian}"
+            )
+
+        laplace_args = LaplaceArgs(
+            cmdstan_mode.runset.csv_files[0], draws, jacobian
+        )
+
+        with MaybeDictToFilePath(data) as (_data,):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=None,
+                data=_data,
+                seed=seed,
+                output_dir=output_dir,
+                sig_figs=sig_figs,
+                save_profile=save_profile,
+                method_args=laplace_args,
+                refresh=refresh,
+            )
+            dummy_chain_id = 0
+            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
+            self._run_cmdstan(
+                runset,
+                dummy_chain_id,
+                show_console=show_console,
+                timeout=timeout,
+            )
+        runset.raise_for_timeouts()
+        return CmdStanLaplace(runset, cmdstan_mode)
 
     def _run_cmdstan(
         self,

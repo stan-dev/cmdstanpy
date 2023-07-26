@@ -745,18 +745,24 @@ def test_validate_good_run() -> None:
     draws_pd = fit.draws_pd()
     assert draws_pd.shape == (
         fit.runset.chains * fit.num_draws_sampling,
-        len(fit.column_names),
+        len(fit.column_names) + 3,
     )
-    assert fit.draws_pd(vars=['theta']).shape == (400, 1)
-    assert fit.draws_pd(vars=['lp__', 'theta']).shape == (400, 2)
-    assert fit.draws_pd(vars=['theta', 'lp__']).shape == (400, 2)
-    assert fit.draws_pd(vars='theta').shape == (400, 1)
+    assert fit.draws_pd(vars=['theta']).shape == (400, 4)
+    assert fit.draws_pd(vars=['lp__', 'theta']).shape == (400, 5)
+    assert fit.draws_pd(vars=['theta', 'lp__']).shape == (400, 5)
+    assert fit.draws_pd(vars='theta').shape == (400, 4)
 
     assert list(fit.draws_pd(vars=['theta', 'lp__']).columns) == [
+        'chain__',
+        'iter__',
+        'draw__',
         'theta',
         'lp__',
     ]
     assert list(fit.draws_pd(vars=['lp__', 'theta']).columns) == [
+        'chain__',
+        'iter__',
+        'draw__',
         'lp__',
         'theta',
     ]
@@ -817,7 +823,7 @@ def test_validate_big_run() -> None:
     assert fit.step_size.shape == (2,)
     assert fit.metric.shape == (2, 2095)
     assert fit.draws().shape == (1000, 2, 2102)
-    assert fit.draws_pd(vars=['phi']).shape == (2000, 2095)
+    assert fit.draws_pd(vars=['phi']).shape == (2000, 2098)
     with raises_nested(ValueError, r'Unknown variable: gamma'):
         fit.draws_pd(vars=['gamma'])
 
@@ -828,14 +834,14 @@ def test_instantiate_from_csvfiles() -> None:
     draws_pd = bern_fit.draws_pd()
     assert draws_pd.shape == (
         bern_fit.runset.chains * bern_fit.num_draws_sampling,
-        len(bern_fit.column_names),
+        len(bern_fit.column_names) + 3,
     )
     csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-big')
     big_fit = from_csv(path=csvfiles_path)
     draws_pd = big_fit.draws_pd()
     assert draws_pd.shape == (
         big_fit.runset.chains * big_fit.num_draws_sampling,
-        len(big_fit.column_names),
+        len(big_fit.column_names) + 3,
     )
     # list
     csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good')
@@ -848,14 +854,14 @@ def test_instantiate_from_csvfiles() -> None:
     draws_pd = bern_fit.draws_pd()
     assert draws_pd.shape == (
         bern_fit.runset.chains * bern_fit.num_draws_sampling,
-        len(bern_fit.column_names),
+        len(bern_fit.column_names) + 3,
     )
     # single csvfile
     bern_fit = from_csv(path=csvfiles[0])
     draws_pd = bern_fit.draws_pd()
     assert draws_pd.shape == (
         bern_fit.num_draws_sampling,
-        len(bern_fit.column_names),
+        len(bern_fit.column_names) + 3,
     )
     # glob
     csvfiles_path = os.path.join(csvfiles_path, '*.csv')
@@ -863,7 +869,26 @@ def test_instantiate_from_csvfiles() -> None:
     draws_pd = big_fit.draws_pd()
     assert draws_pd.shape == (
         big_fit.runset.chains * big_fit.num_draws_sampling,
-        len(big_fit.column_names),
+        len(big_fit.column_names) + 3,
+    )
+
+
+def test_pd_xr_agreement():
+    csvfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', '*.csv')
+    bern_fit = from_csv(path=csvfiles_path)
+
+    draws_pd = bern_fit.draws_pd()
+    draws_xr = bern_fit.draws_xr()
+
+    # check that the indexing is the same between the two
+    np.testing.assert_equal(
+        draws_pd[draws_pd['chain__'] == 2]['theta'],
+        draws_xr.theta.sel(chain=2).values,
+    )
+    # "draw" is 0-indexed in xarray, equiv. "iter__" is 1-indexed in pandas
+    np.testing.assert_equal(
+        draws_pd[draws_pd['iter__'] == 100]['theta'],
+        draws_xr.theta.sel(draw=99).values,
     )
 
 
@@ -930,7 +955,7 @@ def test_instantiate_from_csvfiles_fail(
 def test_from_csv_fixed_param() -> None:
     csv_path = os.path.join(DATAFILES_PATH, 'fixed_param_sample.csv')
     fixed_param_sample = from_csv(path=csv_path)
-    assert fixed_param_sample.draws_pd().shape == (100, 85)
+    assert fixed_param_sample.draws_pd().shape == (100, 88)
 
 
 def test_custom_metric() -> None:
@@ -1292,14 +1317,14 @@ def test_save_warmup() -> None:
         len(BERNOULLI_COLS),
     )
 
-    assert bern_fit.draws_pd().shape == (200, len(BERNOULLI_COLS))
+    assert bern_fit.draws_pd().shape == (200, len(BERNOULLI_COLS) + 3)
     assert bern_fit.draws_pd(inc_warmup=False).shape == (
         200,
-        len(BERNOULLI_COLS),
+        len(BERNOULLI_COLS) + 3,
     )
     assert bern_fit.draws_pd(inc_warmup=True).shape == (
         600,
-        len(BERNOULLI_COLS),
+        len(BERNOULLI_COLS) + 3,
     )
 
 
@@ -1371,7 +1396,7 @@ def test_dont_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING):
         assert bern_fit.draws_pd(inc_warmup=True).shape == (
             200,
-            len(BERNOULLI_COLS),
+            len(BERNOULLI_COLS) + 3,
         )
     check_present(
         caplog,
