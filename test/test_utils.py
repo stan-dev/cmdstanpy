@@ -44,6 +44,7 @@ from cmdstanpy.utils import (
     read_metric,
     rload,
     set_cmdstan_path,
+    stancsv,
     validate_cmdstan_path,
     validate_dir,
     windows_short_path,
@@ -920,3 +921,24 @@ def test_show_progress_fns(caplog: pytest.LogCaptureFixture) -> None:
     # msg should only be printed once per session - check not found
     assert 'Disabling progress bars for this session' not in msgs
     assert not allow_show_progress()
+
+
+def test_munge_varnames() -> None:
+    var = 'y'
+    assert stancsv.munge_varname(var) == 'y'
+    var = 'y.2'
+    assert stancsv.munge_varname(var) == 'y[2]'
+    var = 'y.2.3'
+    assert stancsv.munge_varname(var) == 'y[2,3]'
+
+    var = 'y:2'
+    assert stancsv.munge_varname(var) == 'y.2'
+    var = 'y:2:3'
+    assert stancsv.munge_varname(var) == 'y.2.3'
+    var = 'y:2.1'
+    assert stancsv.munge_varname(var) == 'y.2[1]'
+    var = 'y.1:2'
+    assert stancsv.munge_varname(var) == 'y[1].2'
+
+    var = 'y.2.3:1.2:5:6'
+    assert stancsv.munge_varname(var) == 'y[2,3].1[2].5.6'

@@ -257,6 +257,23 @@ def scan_column_names(
     return lineno
 
 
+def munge_varname(name: str) -> str:
+    if '.' not in name and ':' not in name:
+        return name
+
+    tuple_parts = name.split(':')
+    print(tuple_parts)
+    for i, part in enumerate(tuple_parts):
+        if '.' not in part:
+            continue
+        part = part.replace('.', '[', 1)
+        part = part.replace('.', ',')
+        part += ']'
+        tuple_parts[i] = part
+
+    return '.'.join(tuple_parts)
+
+
 def munge_varnames(names: List[str]) -> List[str]:
     """
     Change formatting for indices of container var elements
@@ -265,14 +282,7 @@ def munge_varnames(names: List[str]) -> List[str]:
     """
     if names is None:
         raise ValueError('missing argument "names"')
-    result = []
-    for name in names:
-        if '.' not in name:
-            result.append(name)
-        else:
-            head, *rest = name.split('.')
-            result.append(''.join([head, '[', ','.join(rest), ']']))
-    return result
+    return [munge_varname(name) for name in names]
 
 
 def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
@@ -309,7 +319,7 @@ def parse_stan_vars(
     types_map: Dict[str, BaseType] = {}
     idxs = []
     dims: Union[List[str], List[int]]
-    for (idx, name) in enumerate(names):
+    for idx, name in enumerate(names):
         if name.endswith('real]') or name.endswith('imag]'):
             basetype = BaseType.COMPLEX
         else:
