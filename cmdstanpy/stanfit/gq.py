@@ -344,25 +344,49 @@ class CmdStanGQ(Generic[Fit]):
 
         previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
 
+        draws = self.draws(inc_warmup=inc_warmup)
+        # add long-form columns for chain, iteration, draw
+        n_draws, n_chains, _ = draws.shape
+        chains_col = (
+            np.repeat(np.arange(1, n_chains + 1), n_draws)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        iter_col = (
+            np.tile(np.arange(1, n_draws + 1), n_chains)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        draw_col = (
+            np.arange(1, (n_draws * n_chains) + 1)
+            .reshape(1, n_chains, n_draws)
+            .T
+        )
+        draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
+
+        vars_list = ['chain__', 'iter__', 'draw__'] + vars_list
+        if gq_cols:
+            gq_cols = ['chain__', 'iter__', 'draw__'] + gq_cols
+
+        draws_pd = pd.DataFrame(
+            data=flatten_chains(draws),
+            columns=['chain__', 'iter__', 'draw__'] + list(self.column_names),
+        )
+
         if inc_sample and mcmc_vars:
             if gq_cols:
                 return pd.concat(
                     [
                         previous_draws_pd,
-                        pd.DataFrame(
-                            data=flatten_chains(
-                                self.draws(inc_warmup=inc_warmup)
-                            ),
-                            columns=self.column_names,
-                        )[gq_cols],
+                        draws_pd[gq_cols],
                     ],
                     axis='columns',
                 )[vars_list]
             else:
                 return previous_draws_pd
         elif inc_sample and vars is None:
-            cols_1 = self.previous_fit.column_names
-            cols_2 = self.column_names
+            cols_1 = list(previous_draws_pd.columns)
+            cols_2 = list(draws_pd.columns)
             dups = [
                 item
                 for item, count in Counter(cols_1 + cols_2).items()
@@ -371,23 +395,14 @@ class CmdStanGQ(Generic[Fit]):
             return pd.concat(
                 [
                     previous_draws_pd.drop(columns=dups).reset_index(drop=True),
-                    pd.DataFrame(
-                        data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-                        columns=self.column_names,
-                    ),
+                    draws_pd,
                 ],
                 axis=1,
             )
         elif gq_cols:
-            return pd.DataFrame(
-                data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-                columns=self.column_names,
-            )[gq_cols]
+            return draws_pd[gq_cols]
 
-        return pd.DataFrame(
-            data=flatten_chains(self.draws(inc_warmup=inc_warmup)),
-            columns=self.column_names,
-        )
+        return draws_pd
 
     @overload
     def draws_xr(
@@ -657,7 +672,6 @@ class CmdStanGQ(Generic[Fit]):
         elif isinstance(p_fit, CmdStanMLE):
             num_draws = 1
             if p_fit._save_iterations:
-
                 opt_iters = len(p_fit.optimized_iterations_np)  # type: ignore
                 if inc_warmup:
                     num_draws = opt_iters
@@ -706,7 +720,6 @@ class CmdStanGQ(Generic[Fit]):
             return p_fit.draws_pd(vars or None, inc_warmup=inc_warmup)
 
         elif isinstance(p_fit, CmdStanMLE):
-
             if inc_warmup and p_fit._save_iterations:
                 return p_fit.optimized_iterations_pd[sel]  # type: ignore
             else:
