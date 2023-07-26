@@ -979,10 +979,7 @@ class CmdStanModel:
             fixed_param = self._fixed_param
 
         if chains is None:
-            if fixed_param:
-                chains = 1
-            else:
-                chains = 4
+            chains = 4
         if chains < 1:
             raise ValueError(
                 'Chains must be a positive integer value, found {}.'.format(
@@ -1073,8 +1070,7 @@ class CmdStanModel:
             one_process_per_chain = True
             info_dict = self.exe_info()
             stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
-            # run multi-chain sampler unless algo is fixed_param or 1 chain
-            if fixed_param or (chains == 1):
+            if chains == 1:
                 force_one_process_per_chain = True
 
             if (
@@ -1177,19 +1173,6 @@ class CmdStanModel:
                     get_logger().debug("Detected fixed param model")
                     sampler_args.fixed_param = True
                     runset._args.method_args = sampler_args
-
-            # if there was an exe-file only initialization,
-            # this could happen, so throw a nice error
-            if (
-                sampler_args.fixed_param
-                and not one_process_per_chain
-                and chains > 1
-            ):
-                raise RuntimeError(
-                    "Cannot use single-process multichain parallelism"
-                    " with algorithm fixed_param.\nTry setting argument"
-                    " force_one_process_per_chain to True"
-                )
 
             errors = runset.get_err_msgs()
             if not runset._check_retcodes():
