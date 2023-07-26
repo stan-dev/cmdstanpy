@@ -5,6 +5,7 @@ import os
 import re
 from test import check_present
 
+import numpy as np
 import pytest
 
 from cmdstanpy.model import CmdStanModel
@@ -21,8 +22,14 @@ BERN_BASENAME = 'bernoulli'
 
 def test_lp_good() -> None:
     model = CmdStanModel(stan_file=BERN_STAN)
-    x = model.log_prob({"theta": 0.1}, data=BERN_DATA)
-    assert "lp__" in x.columns
+    out = model.log_prob({"theta": 0.1}, data=BERN_DATA)
+    assert "lp_" in out.columns[0]
+
+    out_unadjusted = model.log_prob(
+        {"theta": 0.1}, data=BERN_DATA, jacobian=False
+    )
+    assert "lp_" in out_unadjusted.columns[0]
+    assert not np.allclose(out.to_numpy(), out_unadjusted.to_numpy())
 
 
 def test_lp_bad(
