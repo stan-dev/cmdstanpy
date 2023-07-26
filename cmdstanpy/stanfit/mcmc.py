@@ -31,7 +31,6 @@ from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
 from cmdstanpy.cmdstan_args import Method, SamplerArgs
 from cmdstanpy.utils import (
     EXTENSION,
-    BaseType,
     build_xarray_data,
     check_sampler_csv,
     cmdstan_path,
@@ -41,6 +40,7 @@ from cmdstanpy.utils import (
     flatten_chains,
     get_logger,
 )
+from cmdstanpy.utils.data_munging import extract_reshape
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -740,26 +740,18 @@ class CmdStanMCMC:
                 'Available variables are '
                 + ", ".join(self._metadata.stan_vars_dims)
             )
-        self._assemble_draws()
-        draw1 = 0
-        if not inc_warmup and self._save_warmup:
-            draw1 = self.num_draws_warmup
-        num_draws = self.num_draws_sampling
-        if inc_warmup and self._save_warmup:
-            num_draws += self.num_draws_warmup
-        dims = [num_draws * self.chains]
+
+        draws = self.draws(inc_warmup=inc_warmup)
+        dims = (draws.shape[0] * self.chains,)
         col_idxs = self._metadata.stan_vars_cols[var]
-        if len(col_idxs) > 0:
-            dims.extend(self._metadata.stan_vars_dims[var])
-        draws = self._draws[draw1:, :, col_idxs]
 
-        if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-            draws = draws[..., ::2] + 1j * draws[..., 1::2]
-            dims = dims[:-1]
-
-        draws = draws.reshape(dims, order='F')
-
-        return draws
+        return extract_reshape(
+            dims=dims + self._metadata.stan_vars_dims[var],
+            col_idxs=col_idxs,
+            var_type=self._metadata.stan_vars_types[var],
+            start_row=0,
+            draws_in=draws,
+        )
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """

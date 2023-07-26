@@ -63,3 +63,30 @@ def build_xarray_data(
             var_dims,
             np.squeeze(drawset[start_row:, :, col_idxs], axis=2),
         )
+
+
+def extract_reshape(
+    *,
+    dims: Tuple[int, ...],
+    col_idxs: Tuple[int, ...],
+    var_type: BaseType,
+    start_row: int,
+    draws_in: np.ndarray,
+) -> np.ndarray:
+    """
+    Helper to turn a draws table into a numpy array of draws.
+    Includes special handling for complex numbers.
+    """
+    # TODO also use in MLE, VB
+    if dims:
+        draws = draws_in[start_row:, ..., col_idxs]
+
+        if var_type == BaseType.COMPLEX:
+            draws = draws[..., ::2] + 1j * draws[..., 1::2]
+            dims = dims[:-1]
+
+        draws = draws.reshape(*dims, order="F")
+
+        return draws
+    else:
+        return np.squeeze(draws_in[start_row:, :, col_idxs], axis=2)

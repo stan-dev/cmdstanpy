@@ -29,6 +29,7 @@ class Method(Enum):
     OPTIMIZE = auto()
     GENERATE_QUANTITIES = auto()
     VARIATIONAL = auto()
+    LAPLACE = auto()
 
     def __repr__(self) -> str:
         return '<%s.%s>' % (self.__class__.__name__, self.name)
@@ -398,8 +399,8 @@ class OptimizeArgs:
         tol_rel_grad: Optional[float] = None,
         tol_param: Optional[float] = None,
         history_size: Optional[int] = None,
+        jacobian: bool = False,
     ) -> None:
-
         self.algorithm = algorithm or ""
         self.init_alpha = init_alpha
         self.iter = iter
@@ -410,11 +411,10 @@ class OptimizeArgs:
         self.tol_rel_grad = tol_rel_grad
         self.tol_param = tol_param
         self.history_size = history_size
+        self.jacobian = jacobian
         self.thin = None
 
-    def validate(
-        self, chains: Optional[int] = None  # pylint: disable=unused-argument
-    ) -> None:
+    def validate(self, _chains: Optional[int] = None) -> None:
         """
         Check arguments correctness and consistency.
         """
@@ -511,8 +511,7 @@ class OptimizeArgs:
             else:
                 raise ValueError('history_size must be type of int')
 
-    # pylint: disable=unused-argument
-    def compose(self, idx: int, cmd: List[str]) -> List[str]:
+    def compose(self, _idx: int, cmd: List[str]) -> List[str]:
         """compose command string for CmdStan for non-default arg values."""
         cmd.append('method=optimize')
         if self.algorithm:
@@ -535,7 +534,37 @@ class OptimizeArgs:
             cmd.append('iter={}'.format(self.iter))
         if self.save_iterations:
             cmd.append('save_iterations=1')
+        if self.jacobian:
+            cmd.append("jacobian=1")
+        return cmd
 
+
+class LaplaceArgs:
+    """Arguments needed for laplace method."""
+
+    def __init__(
+        self, mode: str, draws: Optional[int] = None, jacobian: bool = True
+    ) -> None:
+        self.mode = mode
+        self.jacobian = jacobian
+        self.draws = draws
+
+    def validate(self, _chains: Optional[int] = None) -> None:
+        """Check arguments correctness and consistency."""
+        if not os.path.exists(self.mode):
+            raise ValueError(f'Invalid path for mode file: {self.mode}')
+        if self.draws is not None:
+            if not isinstance(self.draws, (int, np.integer)) or self.draws <= 0:
+                raise ValueError('draws must be a positive integer')
+
+    def compose(self, _idx: int, cmd: List[str]) -> List[str]:
+        """compose command string for CmdStan for non-default arg values."""
+        cmd.append('method=laplace')
+        cmd.append(f'mode={self.mode}')
+        if self.draws:
+            cmd.append(f'draws={self.draws}')
+        if not self.jacobian:
+            cmd.append("jacobian=0")
         return cmd
 
 
@@ -721,7 +750,11 @@ class CmdStanArgs:
         model_exe: OptionalPath,
         chain_ids: Optional[List[int]],
         method_args: Union[
-            SamplerArgs, OptimizeArgs, GenerateQuantitiesArgs, VariationalArgs
+            SamplerArgs,
+            OptimizeArgs,
+            GenerateQuantitiesArgs,
+            VariationalArgs,
+            LaplaceArgs,
         ],
         data: Union[Mapping[str, Any], str, None] = None,
         seed: Union[int, List[int], None] = None,
@@ -753,6 +786,8 @@ class CmdStanArgs:
             self.method = Method.GENERATE_QUANTITIES
         elif isinstance(method_args, VariationalArgs):
             self.method = Method.VARIATIONAL
+        elif isinstance(method_args, LaplaceArgs):
+            self.method = Method.LAPLACE
         self.method_args.validate(len(chain_ids) if chain_ids else None)
         self.validate()
 
@@ -913,7 +948,7 @@ class CmdStanArgs:
         *,
         diagnostic_file: Optional[str] = None,
         profile_file: Optional[str] = None,
-        num_chains: Optional[int] = None
+        num_chains: Optional[int] = None,
     ) -> List[str]:
         """
         Compose CmdStan command for non-default arguments.
