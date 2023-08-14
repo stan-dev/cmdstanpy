@@ -242,7 +242,7 @@ class CmdStanGQ(Generic[Fit]):
             drop_cols: List[int] = []
             for dup in dups:
                 drop_cols.extend(
-                    self.previous_fit.metadata.stan_vars[dup].columns()
+                    self.previous_fit._metadata.stan_vars[dup].columns()
                 )
 
         start_idx, _ = self._draws_start(inc_warmup)
@@ -329,12 +329,14 @@ class CmdStanGQ(Generic[Fit]):
         mcmc_vars: List[str] = []
         if vars is not None:
             for var in vars_list:
-                if var in self.metadata.stan_vars:
+                if var in self._metadata.stan_vars:
                     info = self._metadata.stan_vars[var]
                     gq_cols.extend(
                         self.column_names[info.start_idx : info.end_idx]
                     )
-                elif inc_sample and var in self.previous_fit.metadata.stan_vars:
+                elif (
+                    inc_sample and var in self.previous_fit._metadata.stan_vars
+                ):
                     info = self.previous_fit._metadata.stan_vars[var]
                     mcmc_vars.extend(
                         self.previous_fit.column_names[
@@ -468,18 +470,18 @@ class CmdStanGQ(Generic[Fit]):
             else:
                 vars_list = vars
             for var in vars_list:
-                if var not in self.metadata.stan_vars:
+                if var not in self._metadata.stan_vars:
                     if inc_sample and (
-                        var in self.previous_fit.metadata.stan_vars
+                        var in self.previous_fit._metadata.stan_vars
                     ):
                         mcmc_vars_list.append(var)
                         dup_vars.append(var)
                     else:
                         raise ValueError('Unknown variable: {}'.format(var))
         else:
-            vars_list = list(self.metadata.stan_vars.keys())
+            vars_list = list(self._metadata.stan_vars.keys())
             if inc_sample:
-                for var in self.previous_fit.metadata.stan_vars.keys():
+                for var in self.previous_fit._metadata.stan_vars.keys():
                     if var not in vars_list and var not in mcmc_vars_list:
                         mcmc_vars_list.append(var)
         for var in dup_vars:
@@ -488,7 +490,7 @@ class CmdStanGQ(Generic[Fit]):
         self._assemble_generated_quantities()
 
         num_draws = self.previous_fit.num_draws_sampling
-        sample_config = self.previous_fit.metadata.cmdstan_config
+        sample_config = self.previous_fit._metadata.cmdstan_config
         attrs: MutableMapping[Hashable, Any] = {
             "stan_version": f"{sample_config['stan_version_major']}."
             f"{sample_config['stan_version_minor']}."
@@ -621,8 +623,8 @@ class CmdStanGQ(Generic[Fit]):
         CmdStanVB.stan_variables
         """
         result = {}
-        sample_var_names = self.previous_fit.metadata.stan_vars.keys()
-        gq_var_names = self.metadata.stan_vars.keys()
+        sample_var_names = self.previous_fit._metadata.stan_vars.keys()
+        gq_var_names = self._metadata.stan_vars.keys()
         for name in gq_var_names:
             result[name] = self.stan_variable(name, inc_warmup)
         for name in sample_var_names:

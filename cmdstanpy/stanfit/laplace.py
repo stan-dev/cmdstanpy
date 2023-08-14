@@ -231,6 +231,13 @@ class CmdStanLaplace:
         """
         return self._mode
 
+    @property
+    def metadata(self) -> InferenceMetadata:
+        """
+        Return the inference metadata as an :class:`InferenceMetadata` object.
+        """
+        return self._metadata
+
     def __repr__(self) -> str:
         mode = '\n'.join(
             ['\t' + line for line in repr(self.mode).splitlines()]

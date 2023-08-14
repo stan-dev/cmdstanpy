@@ -351,7 +351,7 @@ class CmdStanMCMC:
         """
         if np.any(self._divergences) or np.any(self._max_treedepths):
             diagnostics = ['Some chains may have failed to converge.']
-            ct_iters = self.metadata.cmdstan_config['num_samples']
+            ct_iters = self._metadata.cmdstan_config['num_samples']
             for i in range(self.runset._chains):
                 if self._divergences[i] > 0:
                     diagnostics.append(
@@ -668,7 +668,7 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
         if vars is None:
-            vars_list = list(self.metadata.stan_vars.keys())
+            vars_list = list(self._metadata.stan_vars.keys())
         elif isinstance(vars, str):
             vars_list = [vars]
         else:
@@ -792,7 +792,7 @@ class CmdStanMCMC:
         self._assemble_draws()
         return {
             name: var.extract_reshape(self._draws)
-            for name, var in self.metadata.method_vars.items()
+            for name, var in self._metadata.method_vars.items()
         }
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
