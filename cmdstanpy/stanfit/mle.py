@@ -192,7 +192,6 @@ class CmdStanMLE:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        # TODO XXX replace with faster O(1) lookup for all usages
         if var not in self._metadata.stan_vars:
             raise ValueError(
                 f'Unknown variable name: {var}\n'

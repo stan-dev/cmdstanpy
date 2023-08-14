@@ -22,6 +22,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     Optional,
     TypeVar,
@@ -117,8 +118,7 @@ class CmdStanModel:
         model_name: Optional[str] = None,
         stan_file: OptionalPath = None,
         exe_file: OptionalPath = None,
-        # TODO should be Literal['force'] not str
-        compile: Union[bool, str] = True,
+        compile: Union[bool, Literal['force']] = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
         user_header: OptionalPath = None,
