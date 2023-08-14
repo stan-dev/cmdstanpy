@@ -587,17 +587,14 @@ class CmdStanGQ(Generic[Fit]):
                 )
             elif isinstance(self.previous_fit, CmdStanMLE):
                 return np.atleast_1d(  # type: ignore
-                    np.asarray(
-                        self.previous_fit.stan_variable(
-                            var, inc_iterations=inc_warmup
-                        )
+                    self.previous_fit.stan_variable(
+                        var, inc_iterations=inc_warmup
                     )
                 )
             else:
                 return np.atleast_1d(  # type: ignore
-                    np.asarray(self.previous_fit.stan_variable(var))
+                    self.previous_fit.stan_variable(var)
                 )
-
         # is gq variable
         self._assemble_generated_quantities()
 

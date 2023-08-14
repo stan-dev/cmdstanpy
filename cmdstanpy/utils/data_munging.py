@@ -28,7 +28,7 @@ def flatten_chains(draws_array: np.ndarray) -> np.ndarray:
 
 def build_xarray_data(
     data: MutableMapping[Hashable, Tuple[Tuple[str, ...], np.ndarray]],
-    var: stanio.Parameter,
+    var: stanio.Variable,
     drawset: np.ndarray,
 ) -> None:
     """

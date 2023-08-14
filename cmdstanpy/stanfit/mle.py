@@ -209,11 +209,11 @@ class CmdStanMLE:
         if inc_iterations and self._save_iterations:
             data = self._all_iters
         else:
-            data = np.atleast_2d(self._mle)
+            data = self._mle
 
         try:
-            out: np.ndarray = (
-                self._metadata.stan_vars[var].extract_reshape(data).squeeze()
+            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
+                data
             )
             return out
         except KeyError:

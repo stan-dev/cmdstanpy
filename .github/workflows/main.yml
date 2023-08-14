@@ -15,6 +15,11 @@ on:
         required: false
         default: ''
 
+# only run one copy per PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   get-cmdstan-version:
     # get the latest cmdstan version to use as part of the cache key

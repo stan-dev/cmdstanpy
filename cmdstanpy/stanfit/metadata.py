@@ -39,12 +39,12 @@ class InferenceMetadata:
         return copy.deepcopy(self._cmdstan_config)
 
     @property
-    def method_vars(self) -> Dict[str, stanio.Parameter]:
+    def method_vars(self) -> Dict[str, stanio.Variable]:
         """
         Method variable names always end in `__`, e.g. `lp__`.
         """
         return self._method_vars
 
     @property
-    def stan_vars(self) -> Dict[str, stanio.Parameter]:
+    def stan_vars(self) -> Dict[str, stanio.Variable]:
         return self._stan_vars
