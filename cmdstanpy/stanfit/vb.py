@@ -117,7 +117,9 @@ class CmdStanVB:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
-        numpy.ndarray match the shape of the Stan program variable.
+        numpy.ndarray match the shape of the Stan program variable, with
+        a leading axis added for the number of draws from the variational
+        approximation.
 
         This functionaltiy is also available via a shortcut using ``.`` -
         writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
