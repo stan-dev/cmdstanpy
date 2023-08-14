@@ -173,6 +173,7 @@ class SanitizedOrTmpFilePath:
     """
     Context manager for tmpfiles, handles special characters in filepath.
     """
+
     UNIXISH_PATTERN = re.compile(r"[\s~]")
     WINDOWS_PATTERN = re.compile(r"\s")
 

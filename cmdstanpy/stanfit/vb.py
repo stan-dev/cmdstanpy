@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils import BaseType, scan_variational_csv
+from cmdstanpy.utils import scan_variational_csv
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -113,7 +113,7 @@ class CmdStanVB:
         """
         return self._metadata
 
-    def stan_variable(self, var: str) -> Union[np.ndarray, float]:
+    def stan_variable(self, var: str) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -131,30 +131,20 @@ class CmdStanVB:
         CmdStanMLE.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var is None:
-            raise ValueError('No variable name specified.')
-        if var not in self._metadata.stan_vars_dims:
+        try:
+            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
+                self._variational_sample
+            )
+            return out
+        except KeyError:
+            # pylint: disable=raise-missing-from
             raise ValueError(
                 f'Unknown variable name: {var}\n'
                 'Available variables are '
-                + ", ".join(self._metadata.stan_vars_dims)
+                + ", ".join(self._metadata.stan_vars.keys())
             )
-        col_idxs = list(self._metadata.stan_vars_cols[var])
-        shape: Tuple[int, ...] = ()
-        if len(col_idxs) > 1:
-            shape = self._metadata.stan_vars_dims[var]
-            result: np.ndarray = np.asarray(self._variational_mean)[col_idxs]
-            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-                result = result[..., ::2] + 1j * result[..., 1::2]
-                shape = shape[:-1]
 
-            result = result.reshape(shape, order="F")
-
-            return result
-        else:
-            return float(self._variational_mean[col_idxs[0]])
-
-    def stan_variables(self) -> Dict[str, Union[np.ndarray, float]]:
+    def stan_variables(self) -> Dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
@@ -167,7 +157,7 @@ class CmdStanVB:
         CmdStanGQ.stan_variables
         """
         result = {}
-        for name in self._metadata.stan_vars_dims.keys():
+        for name in self._metadata.stan_vars:
             result[name] = self.stan_variable(name)
         return result
 

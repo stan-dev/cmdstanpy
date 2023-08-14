@@ -4,32 +4,12 @@ Utility functions for reading the Stan CSV format
 import json
 import math
 import re
-from enum import Enum, auto
-from typing import (
-    Any,
-    Dict,
-    List,
-    MutableMapping,
-    Optional,
-    TextIO,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, List, MutableMapping, Optional, TextIO, Union
 
 import numpy as np
 import pandas as pd
 
 from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP
-
-
-class BaseType(Enum):
-    """Stan langauge base type"""
-
-    COMPLEX = auto()
-    PRIM = auto()  # future: int / real
-
-    def __repr__(self) -> str:
-        return '<%s.%s>' % (self.__class__.__name__, self.name)
 
 
 def check_sampler_csv(
@@ -261,8 +241,8 @@ def scan_column_names(
     """
     line = fd.readline().strip()
     lineno += 1
+    config_dict['raw_header'] = line.strip()
     names = line.split(',')
-    config_dict['column_names_raw'] = tuple(names)
     config_dict['column_names'] = tuple(munge_varnames(names))
     return lineno
 
@@ -272,7 +252,6 @@ def munge_varname(name: str) -> str:
         return name
 
     tuple_parts = name.split(':')
-    print(tuple_parts)
     for i, part in enumerate(tuple_parts):
         if '.' not in part:
             continue
@@ -293,70 +272,6 @@ def munge_varnames(names: List[str]) -> List[str]:
     if names is None:
         raise ValueError('missing argument "names"')
     return [munge_varname(name) for name in names]
-
-
-def parse_method_vars(names: Tuple[str, ...]) -> Dict[str, Tuple[int, ...]]:
-    """
-    Parses out names ending in `__` from list of CSV file column names.
-    Return a dict mapping sampler variable name to Stan CSV file column, using
-    zero-based column indexing.
-    Currently, (Stan 2.X) all CmdStan inference method vars are scalar,
-    the map entries are tuples of int to allow for structured variables.
-    """
-    if names is None:
-        raise ValueError('missing argument "names"')
-    # note: method vars are currently all scalar so not checking for structure
-    return {v: (k,) for (k, v) in enumerate(names) if v.endswith('__')}
-
-
-def parse_stan_vars(
-    names: Tuple[str, ...]
-) -> Tuple[
-    Dict[str, Tuple[int, ...]], Dict[str, Tuple[int, ...]], Dict[str, BaseType]
-]:
-    """
-    Parses out Stan variable names (i.e., names not ending in `__`)
-    from list of CSV file column names.
-    Returns three dicts which map variable names to base type, dimensions and
-    CSV file columns, respectively, using zero-based column indexing.
-    Note: assumes: (a) munged varnames and (b) container vars are non-ragged
-    and dense; no checks on size, indices.
-    """
-    if names is None:
-        raise ValueError('missing argument "names"')
-    dims_map: Dict[str, Tuple[int, ...]] = {}
-    cols_map: Dict[str, Tuple[int, ...]] = {}
-    types_map: Dict[str, BaseType] = {}
-    idxs = []
-    dims: Union[List[str], List[int]]
-    for idx, name in enumerate(names):
-        if name.endswith('real]') or name.endswith('imag]'):
-            basetype = BaseType.COMPLEX
-        else:
-            basetype = BaseType.PRIM
-        idxs.append(idx)
-        var, *dims = name.split('[')
-        if var.endswith('__'):
-            idxs = []
-        elif len(dims) == 0:
-            dims_map[var] = ()
-            cols_map[var] = tuple(idxs)
-            types_map[var] = basetype
-            idxs = []
-        else:
-            if idx < len(names) - 1 and names[idx + 1].split('[')[0] == var:
-                continue
-            coords = dims[0][:-1].split(',')
-            if coords[-1] == 'imag':
-                dims = [int(x) for x in coords[:-1]]
-                dims.append(2)
-            else:
-                dims = [int(x) for x in coords]
-            dims_map[var] = tuple(dims)
-            cols_map[var] = tuple(idxs)
-            types_map[var] = basetype
-            idxs = []
-    return (dims_map, cols_map, types_map)
 
 
 def scan_hmc_params(

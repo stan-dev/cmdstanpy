@@ -816,7 +816,7 @@ def test_validate_big_run() -> None:
     ]
     fit = CmdStanMCMC(runset)
     phis = ['phi[{}]'.format(str(x + 1)) for x in range(2095)]
-    column_names = list(fit.metadata.method_vars_cols.keys()) + phis
+    column_names = list(fit.metadata.method_vars.keys()) + phis
     assert fit.num_draws_sampling == 1000
     assert fit.column_names == tuple(column_names)
     assert fit.metric_type == 'diag_e'
@@ -1435,9 +1435,9 @@ def test_variable_bern() -> None:
     bern_fit = bern_model.sample(
         data=jdata, chains=2, seed=12345, iter_warmup=100, iter_sampling=100
     )
-    assert 1 == len(bern_fit.metadata.stan_vars_dims)
-    assert 'theta' in bern_fit.metadata.stan_vars_dims
-    assert bern_fit.metadata.stan_vars_dims['theta'] == ()
+    assert 1 == len(bern_fit.metadata.stan_vars)
+    assert 'theta' in bern_fit.metadata.stan_vars
+    assert bern_fit.metadata.stan_vars['theta'].dimensions == ()
     assert bern_fit.stan_variable(var='theta').shape == (200,)
     with pytest.raises(ValueError):
         bern_fit.stan_variable(var='eta')
@@ -1449,11 +1449,11 @@ def test_variables_2d() -> None:
     csvfiles_path = os.path.join(DATAFILES_PATH, 'lotka-volterra.csv')
     fit = from_csv(path=csvfiles_path)
     assert 20 == fit.num_draws_sampling
-    assert 8 == len(fit.metadata.stan_vars_dims)
-    assert 'z' in fit.metadata.stan_vars_dims
-    assert fit.metadata.stan_vars_dims['z'] == (20, 2)
+    assert 8 == len(fit.metadata.stan_vars)
+    assert 'z' in fit.metadata.stan_vars
+    assert fit.metadata.stan_vars['z'].dimensions == (20, 2)
     vars = fit.stan_variables()
-    assert len(vars) == len(fit.metadata.stan_vars_dims)
+    assert len(vars) == len(fit.metadata.stan_vars)
     assert 'z' in vars
     assert vars['z'].shape == (20, 20, 2)
     assert 'theta' in vars
@@ -1465,9 +1465,9 @@ def test_variables_3d() -> None:
     csvfiles_path = os.path.join(DATAFILES_PATH, 'multidim_vars.csv')
     fit = from_csv(path=csvfiles_path)
     assert 20 == fit.num_draws_sampling
-    assert 3 == len(fit.metadata.stan_vars_dims)
-    assert 'y_rep' in fit.metadata.stan_vars_dims
-    assert fit.metadata.stan_vars_dims['y_rep'] == (5, 4, 3)
+    assert 3 == len(fit.metadata.stan_vars)
+    assert 'y_rep' in fit.metadata.stan_vars
+    assert fit.metadata.stan_vars['y_rep'].dimensions == (5, 4, 3)
     var_y_rep = fit.stan_variable(var='y_rep')
     assert var_y_rep.shape == (20, 5, 4, 3)
     var_beta = fit.stan_variable(var='beta')
@@ -1475,7 +1475,7 @@ def test_variables_3d() -> None:
     var_frac_60 = fit.stan_variable(var='frac_60')
     assert var_frac_60.shape == (20,)
     vars = fit.stan_variables()
-    assert len(vars) == len(fit.metadata.stan_vars_dims)
+    assert len(vars) == len(fit.metadata.stan_vars)
     assert 'y_rep' in vars
     assert vars['y_rep'].shape == (20, 5, 4, 3)
     assert 'beta' in vars
@@ -1525,8 +1525,7 @@ def test_validate() -> None:
     assert bern_fit.num_draws_warmup == 100
     assert bern_fit.num_draws_sampling == 50
     assert len(bern_fit.column_names) == 8
-    assert len(bern_fit.metadata.stan_vars_dims) == 1
-    assert len(bern_fit.metadata.stan_vars_cols.keys()) == 1
+    assert len(bern_fit.metadata.stan_vars) == 1
     assert bern_fit.metric_type == 'diag_e'
 
 
@@ -1672,14 +1671,13 @@ def test_metadata() -> None:
     assert fit.metadata.cmdstan_config['metric'] == 'diag_e'
     np.testing.assert_almost_equal(fit.metadata.cmdstan_config['delta'], 0.80)
 
-    assert 'n_leapfrog__' in fit.metadata.method_vars_cols
-    assert 'energy__' in fit.metadata.method_vars_cols
-    assert 'beta' not in fit.metadata.method_vars_cols
-    assert 'energy__' not in fit.metadata.stan_vars_dims
-    assert 'beta' in fit.metadata.stan_vars_dims
-    assert 'beta' in fit.metadata.stan_vars_cols
-    assert fit.metadata.stan_vars_dims['beta'] == (2,)
-    assert fit.metadata.stan_vars_cols['beta'] == (7, 8)
+    assert 'n_leapfrog__' in fit.metadata.method_vars
+    assert 'energy__' in fit.metadata.method_vars
+    assert 'beta' not in fit.metadata.method_vars
+    assert 'energy__' not in fit.metadata.stan_vars
+    assert 'beta' in fit.metadata.stan_vars
+    assert fit.metadata.stan_vars['beta'].dimensions == (2,)
+    assert tuple(fit.metadata.stan_vars['beta'].columns()) == (7, 8)
 
 
 def test_save_latent_dynamics() -> None:
