@@ -300,7 +300,7 @@ class CmdStanModel:
         cmd = (
             [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
             # handle include-paths, allow-undefined etc
-            + self._compiler_options.compose_stanc()
+            + self._compiler_options.compose_stanc(None)
             + ['--info', str(self.stan_file)]
         )
         proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
@@ -343,7 +343,7 @@ class CmdStanModel:
             cmd = (
                 [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
                 # handle include-paths, allow-undefined etc
-                + self._compiler_options.compose_stanc()
+                + self._compiler_options.compose_stanc(None)
                 + [str(self.stan_file)]
             )
 
@@ -528,7 +528,7 @@ class CmdStanModel:
             )
             cmd = [make]
             if self._compiler_options is not None:
-                cmd.extend(self._compiler_options.compose())
+                cmd.extend(self._compiler_options.compose(self._stan_file))
             cmd.append(Path(exe_file).as_posix())
 
             sout = io.StringIO()
