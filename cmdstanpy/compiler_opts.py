@@ -299,7 +299,7 @@ class CompilerOptions:
                     opts.append(f'--{key}')
         return opts
 
-    def compose(self, filename_in_msg: Optional[str]) -> List[str]:
+    def compose(self, filename_in_msg: Optional[str] = None) -> List[str]:
         """Format makefile options as list of strings."""
         opts = [
             'STANCFLAGS+=' + flag.replace(" ", "\\ ")
