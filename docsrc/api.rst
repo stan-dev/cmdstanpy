@@ -62,6 +62,11 @@ CmdStanVB
 .. autoclass:: cmdstanpy.CmdStanVB
    :members:
 
+CmdStanLaplace
+==============
+
+.. autoclass:: cmdstanpy.CmdStanLaplace
+   :members:
 
 *********
 Functions

@@ -121,6 +121,15 @@ class CmdStanVB:
         a leading axis added for the number of draws from the variational
         approximation.
 
+        * If the variable is a scalar variable, the return array has shape
+          ( draws, ).
+        * If the variable is a vector, the return array has shape
+          ( draws, len(vector))
+        * If the variable is a matrix, the return array has shape
+          ( draws, size(dim 1), size(dim 2) )
+        * If the variable is an array with N dimensions, the return array
+          has shape ( draws, size(dim 1), ..., size(dim N))
+
         This functionaltiy is also available via a shortcut using ``.`` -
         writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
 
