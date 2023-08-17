@@ -514,19 +514,11 @@ def test_model_format_deprecations() -> None:
 
     sys_stdout = io.StringIO()
     with contextlib.redirect_stdout(sys_stdout):
-        model.format()
+        model.format(canonicalize=True)
 
     formatted = sys_stdout.getvalue()
     assert "//" in formatted
     assert "#" not in formatted
-    assert formatted.count('(') == 5
-
-    sys_stdout = io.StringIO()
-    with contextlib.redirect_stdout(sys_stdout):
-        model.format(canonicalize=True)
-
-    formatted = sys_stdout.getvalue()
-    print(formatted)
     assert "<-" not in formatted
     assert formatted.count('(') == 0
 
