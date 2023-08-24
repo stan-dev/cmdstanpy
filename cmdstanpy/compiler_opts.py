@@ -300,7 +300,15 @@ class CompilerOptions:
         return opts
 
     def compose(self, filename_in_msg: Optional[str] = None) -> List[str]:
-        """Format makefile options as list of strings."""
+        """
+        Format makefile options as list of strings.
+
+        Parameters
+        ----------
+        filename_in_msg : str, optional
+            filename to be displayed in stanc3 error messages
+            (if different from actual filename on disk), by default None
+        """
         opts = [
             'STANCFLAGS+=' + flag.replace(" ", "\\ ")
             for flag in self.compose_stanc(filename_in_msg)
