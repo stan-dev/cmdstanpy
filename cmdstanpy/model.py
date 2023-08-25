@@ -1707,8 +1707,7 @@ class CmdStanModel:
                 ' '.join(runset.cmd(0)), runset.get_err_msgs()
             )
             raise RuntimeError(msg)
-        mle = CmdStanPathfinder(runset)
-        return mle
+        return CmdStanPathfinder(runset)
 
     def log_prob(
         self,
