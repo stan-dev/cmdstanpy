@@ -1647,10 +1647,10 @@ class CmdStanModel:
         tol_rel_grad: Optional[float] = None,
         tol_param: Optional[float] = None,
         history_size: Optional[int] = None,
-        num_psis_draws: Optional[int] = None,
         num_paths: Optional[int] = None,
         max_lbfgs_iters: Optional[int] = None,
         draws: Optional[int] = None,
+        num_single_draws: Optional[int] = None,
         num_elbo_draws: Optional[int] = None,
         # arguments standard to all methods
         seed: Optional[int] = None,
@@ -1663,6 +1663,21 @@ class CmdStanModel:
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
     ) -> CmdStanPathfinder:
+        if cmdstan_version_before(2, 33, self.exe_info()):
+            raise ValueError(
+                "Method 'pathfinder' not available for CmdStan versions "
+                "before 2.33"
+            )
+
+        if num_paths == 1:
+            if num_single_draws is None:
+                num_single_draws = draws
+            elif draws is not None and num_single_draws != draws:
+                raise ValueError(
+                    "Cannot specify both 'draws' and 'num_single_draws'"
+                    " when 'num_paths' is 1"
+                )
+
         pathfinder_args = PathfinderArgs(
             init_alpha=init_alpha,
             tol_obj=tol_obj,
@@ -1671,10 +1686,10 @@ class CmdStanModel:
             tol_rel_grad=tol_rel_grad,
             tol_param=tol_param,
             history_size=history_size,
-            num_psis_draws=num_psis_draws,
+            num_psis_draws=draws,
             num_paths=num_paths,
             max_lbfgs_iters=max_lbfgs_iters,
-            num_draws=draws,
+            num_draws=num_single_draws,
             num_elbo_draws=num_elbo_draws,
         )
 
