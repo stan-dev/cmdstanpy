@@ -31,6 +31,8 @@ def test_pathfinder_outputs():
     assert theta.shape == (draws,)
     assert 0.23 < theta.mean() < 0.27
 
+    assert pathfinder.draws().shape == (draws, 3)
+
 
 def test_pathfinder_from_csv():
     pathfinder_outputs = DATAFILES_PATH / 'pathfinder'
