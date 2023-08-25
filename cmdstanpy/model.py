@@ -44,6 +44,7 @@ from cmdstanpy.cmdstan_args import (
     LaplaceArgs,
     Method,
     OptimizeArgs,
+    PathfinderArgs,
     SamplerArgs,
     VariationalArgs,
 )
@@ -53,6 +54,7 @@ from cmdstanpy.stanfit import (
     CmdStanLaplace,
     CmdStanMCMC,
     CmdStanMLE,
+    CmdStanPathfinder,
     CmdStanVB,
     RunSet,
     from_csv,
@@ -1448,7 +1450,7 @@ class CmdStanModel:
         adapt_iter: Optional[int] = None,
         tol_rel_obj: Optional[float] = None,
         eval_elbo: Optional[int] = None,
-        output_samples: Optional[int] = None,
+        draws: Optional[int] = None,
         require_converged: bool = True,
         show_console: bool = False,
         refresh: Optional[int] = None,
@@ -1530,7 +1532,7 @@ class CmdStanModel:
 
         :param eval_elbo: Number of iterations between ELBO evaluations.
 
-        :param output_samples: Number of approximate posterior output draws
+        :param draws: Number of approximate posterior output draws
             to save.
 
         :param require_converged: Whether or not to raise an error if Stan
@@ -1561,7 +1563,7 @@ class CmdStanModel:
             adapt_iter=adapt_iter,
             tol_rel_obj=tol_rel_obj,
             eval_elbo=eval_elbo,
-            output_samples=output_samples,
+            output_samples=draws,
         )
 
         with temp_single_json(data) as _data, temp_inits(
@@ -1633,6 +1635,80 @@ class CmdStanModel:
         # pylint: disable=invalid-name
         vb = CmdStanVB(runset)
         return vb
+
+    def pathfinder(
+        self,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
+        init_alpha: Optional[float] = None,
+        tol_obj: Optional[float] = None,
+        tol_rel_obj: Optional[float] = None,
+        tol_grad: Optional[float] = None,
+        tol_rel_grad: Optional[float] = None,
+        tol_param: Optional[float] = None,
+        history_size: Optional[int] = None,
+        num_psis_draws: Optional[int] = None,
+        num_paths: Optional[int] = None,
+        max_lbfgs_iters: Optional[int] = None,
+        draws: Optional[int] = None,
+        num_elbo_draws: Optional[int] = None,
+        # arguments standard to all methods
+        seed: Optional[int] = None,
+        inits: Union[Dict[str, float], float, str, os.PathLike, None] = None,
+        output_dir: OptionalPath = None,
+        sig_figs: Optional[int] = None,
+        save_profile: bool = False,
+        show_console: bool = False,
+        refresh: Optional[int] = None,
+        time_fmt: str = "%Y%m%d%H%M%S",
+        timeout: Optional[float] = None,
+    ) -> CmdStanPathfinder:
+        pathfinder_args = PathfinderArgs(
+            init_alpha=init_alpha,
+            tol_obj=tol_obj,
+            tol_rel_obj=tol_rel_obj,
+            tol_grad=tol_grad,
+            tol_rel_grad=tol_rel_grad,
+            tol_param=tol_param,
+            history_size=history_size,
+            num_psis_draws=num_psis_draws,
+            num_paths=num_paths,
+            max_lbfgs_iters=max_lbfgs_iters,
+            num_draws=draws,
+            num_elbo_draws=num_elbo_draws,
+        )
+
+        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+            args = CmdStanArgs(
+                self._name,
+                self._exe_file,
+                chain_ids=None,
+                data=_data,
+                seed=seed,
+                inits=_inits,
+                output_dir=output_dir,
+                sig_figs=sig_figs,
+                save_profile=save_profile,
+                method_args=pathfinder_args,
+                refresh=refresh,
+            )
+            dummy_chain_id = 0
+            runset = RunSet(args=args, chains=1, time_fmt=time_fmt)
+            self._run_cmdstan(
+                runset,
+                dummy_chain_id,
+                show_console=show_console,
+                timeout=timeout,
+            )
+        runset.raise_for_timeouts()
+
+        if not runset._check_retcodes():
+            msg = "Error during Pathfinder! Command '{}' failed: {}".format(
+                ' '.join(runset.cmd(0)), runset.get_err_msgs()
+            )
+            raise RuntimeError(msg)
+        mle = CmdStanPathfinder(runset)
+        return mle
 
     def log_prob(
         self,

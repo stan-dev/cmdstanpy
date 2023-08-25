@@ -6,12 +6,13 @@ import numpy as np
 import pytest
 
 import cmdstanpy
+from cmdstanpy.stanfit import from_csv
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
-def test_laplace_from_csv():
+def test_laplace_from_opt_csv():
     model_file = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
     model = cmdstanpy.CmdStanModel(stan_file=model_file)
     fit = model.laplace_sample(
@@ -22,6 +23,21 @@ def test_laplace_from_csv():
     assert 'x' in fit.stan_variables()
     assert 'y' in fit.stan_variables()
     assert isinstance(fit.mode, cmdstanpy.CmdStanMLE)
+
+
+def test_laplace_from_csv():
+    model_file = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
+    model = cmdstanpy.CmdStanModel(stan_file=model_file)
+    fit = model.laplace_sample(
+        data={},
+        seed=1234,
+        jacobian=False,
+    )
+    fit2 = from_csv(fit._runset.csv_files)
+    assert isinstance(fit2, cmdstanpy.CmdStanLaplace)
+    assert 'x' in fit2.stan_variables()
+    assert 'y' in fit2.stan_variables()
+    assert isinstance(fit2.mode, cmdstanpy.CmdStanMLE)
 
 
 def test_laplace_runs_opt():

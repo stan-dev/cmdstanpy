@@ -1,51 +1,26 @@
 """
-    Container for the result of running a laplace approximation.
+    Container for the result of running Pathfinder.
 """
 
-from typing import (
-    Any,
-    Dict,
-    Hashable,
-    List,
-    MutableMapping,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import pandas as pd
-
-try:
-    import xarray as xr
-
-    XARRAY_INSTALLED = True
-except ImportError:
-    XARRAY_INSTALLED = False
 
 from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils.data_munging import build_xarray_data
+from cmdstanpy.stanfit.metadata import InferenceMetadata
+from cmdstanpy.stanfit.runset import RunSet
 from cmdstanpy.utils.stancsv import scan_generic_csv
 
-from .metadata import InferenceMetadata
-from .mle import CmdStanMLE
-from .runset import RunSet
 
-# TODO list:
-# - docs and example notebook
-# - make sure features like standalone GQ are updated/working
-
-
-class CmdStanLaplace:
-    def __init__(self, runset: RunSet, mode: CmdStanMLE) -> None:
+class CmdStanPathfinder:
+    def __init__(self, runset: RunSet):
         """Initialize object."""
-        if not runset.method == Method.LAPLACE:
+        if not runset.method == Method.PATHFINDER:
             raise ValueError(
-                'Wrong runset method, expecting laplace runset, '
+                'Wrong runset method, expecting Pathfinder runset, '
                 'found method {}'.format(runset.method)
             )
         self._runset = runset
-        self._mode = mode
 
         self._draws: np.ndarray = np.array(())
 
@@ -84,6 +59,7 @@ class CmdStanLaplace:
         CmdStanMCMC.stan_variable
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
+        CmdStanLaplace.stan_variable
         """
         self._assemble_draws()
         try:
@@ -114,6 +90,7 @@ class CmdStanLaplace:
         CmdStanMCMC.stan_variables
         CmdStanMLE.stan_variables
         CmdStanVB.stan_variables
+        CmdStanLaplace.stan_variables
         """
         result = {}
         for name in self._metadata.stan_vars:
@@ -143,109 +120,9 @@ class CmdStanLaplace:
         self._assemble_draws()
         return self._draws
 
-    def draws_pd(
-        self,
-        vars: Union[List[str], str, None] = None,
-    ) -> pd.DataFrame:
-        if vars is not None:
-            if isinstance(vars, str):
-                vars_list = [vars]
-            else:
-                vars_list = vars
-
-        self._assemble_draws()
-        cols = []
-        if vars is not None:
-            for var in dict.fromkeys(vars_list):
-                if var in self._metadata.method_vars:
-                    cols.append(var)
-                elif var in self._metadata.stan_vars:
-                    info = self._metadata.stan_vars[var]
-                    cols.extend(
-                        self.column_names[info.start_idx : info.end_idx]
-                    )
-                else:
-                    raise ValueError(f'Unknown variable: {var}')
-
-        else:
-            cols = list(self.column_names)
-
-        return pd.DataFrame(self._draws, columns=self.column_names)[cols]
-
-    def draws_xr(
-        self,
-        vars: Union[str, List[str], None] = None,
-    ) -> "xr.Dataset":
-        """
-        Returns the sampler draws as a xarray Dataset.
-
-        :param vars: optional list of variable names.
-
-        See Also
-        --------
-        CmdStanMCMC.draws_xr
-        CmdStanGQ.draws_xr
-        """
-        if not XARRAY_INSTALLED:
-            raise RuntimeError(
-                'Package "xarray" is not installed, cannot produce draws array.'
-            )
-
-        if vars is None:
-            vars_list = list(self._metadata.stan_vars.keys())
-        elif isinstance(vars, str):
-            vars_list = [vars]
-        else:
-            vars_list = vars
-
-        self._assemble_draws()
-
-        meta = self._metadata.cmdstan_config
-        attrs: MutableMapping[Hashable, Any] = {
-            "stan_version": f"{meta['stan_version_major']}."
-            f"{meta['stan_version_minor']}.{meta['stan_version_patch']}",
-            "model": meta["model"],
-        }
-
-        data: MutableMapping[Hashable, Any] = {}
-        coordinates: MutableMapping[Hashable, Any] = {
-            "draw": np.arange(self._draws.shape[0]),
-        }
-
-        for var in vars_list:
-            build_xarray_data(
-                data,
-                self._metadata.stan_vars[var],
-                self._draws[:, np.newaxis, :],
-            )
-        return (
-            xr.Dataset(data, coords=coordinates, attrs=attrs)
-            .transpose('draw', ...)
-            .squeeze()
-        )
-
-    @property
-    def mode(self) -> CmdStanMLE:
-        """
-        Return the maximum a posteriori estimate (mode)
-        as a :class:`CmdStanMLE` object.
-        """
-        return self._mode
-
-    @property
-    def metadata(self) -> InferenceMetadata:
-        """
-        Return the inference metadata as an :class:`InferenceMetadata` object.
-        """
-        return self._metadata
-
     def __repr__(self) -> str:
-        mode = '\n'.join(
-            ['\t' + line for line in repr(self.mode).splitlines()]
-        )[1:]
-        rep = 'CmdStanLaplace: model={} \nmode=({})\n{}'.format(
+        rep = 'CmdStanPathfinder: model={}{}'.format(
             self._runset.model,
-            mode,
             self._runset._args.method_args.compose(0, cmd=[]),
         )
         rep = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
@@ -274,6 +151,15 @@ class CmdStanLaplace:
         return self.__dict__
 
     @property
+    def metadata(self) -> InferenceMetadata:
+        """
+        Returns object which contains CmdStan configuration as well as
+        information about the names and structure of the inference method
+        and model output variables.
+        """
+        return self._metadata
+
+    @property
     def column_names(self) -> Tuple[str, ...]:
         """
         Names of all outputs from the sampler, comprising sampler parameters
@@ -283,18 +169,23 @@ class CmdStanLaplace:
         """
         return self._metadata.cmdstan_config['column_names']  # type: ignore
 
-    def save_csvfiles(self, dir: Optional[str] = None) -> None:
-        """
-        Move output CSV files to specified directory.  If files were
-        written to the temporary session directory, clean filename.
-        E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
-        'bernoulli-201912081451-1.csv'.
-
-        :param dir: directory path
-
-        See Also
-        --------
-        stanfit.RunSet.save_csvfiles
-        cmdstanpy.from_csv
-        """
-        self._runset.save_csvfiles(dir)
+    def create_inits(
+        self, seed: Optional[int] = None, chains: int = 4
+    ) -> Union[List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
+        self._assemble_draws()
+        rng = np.random.default_rng(seed)
+        idxs = rng.choice(self._draws.shape[0], size=chains, replace=False)
+        if chains == 1:
+            draw = self._draws[idxs[0]]
+            return {
+                name: var.extract_reshape(draw)
+                for name, var in self._metadata.stan_vars.items()
+            }
+        else:
+            return [
+                {
+                    name: var.extract_reshape(self._draws[idx])
+                    for name, var in self._metadata.stan_vars.items()
+                }
+                for idx in idxs
+            ]

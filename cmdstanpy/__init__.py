@@ -26,8 +26,10 @@ from .install_cmdstan import rebuild_cmdstan
 from .model import CmdStanModel
 from .stanfit import (
     CmdStanGQ,
+    CmdStanLaplace,
     CmdStanMCMC,
     CmdStanMLE,
+    CmdStanPathfinder,
     CmdStanVB,
     InferenceMetadata,
     from_csv,
@@ -51,6 +53,8 @@ __all__ = [
     'CmdStanMLE',
     'CmdStanGQ',
     'CmdStanVB',
+    'CmdStanLaplace',
+    'CmdStanPathfinder',
     'CmdStanModel',
     'InferenceMetadata',
     'from_csv',
