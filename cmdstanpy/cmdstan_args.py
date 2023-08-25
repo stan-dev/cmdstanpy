@@ -510,9 +510,7 @@ class LaplaceArgs:
         """Check arguments correctness and consistency."""
         if not os.path.exists(self.mode):
             raise ValueError(f'Invalid path for mode file: {self.mode}')
-        if self.draws is not None:
-            if not isinstance(self.draws, (int, np.integer)) or self.draws <= 0:
-                raise ValueError('draws must be a positive integer')
+        positive_int(self.draws, 'draws')
 
     def compose(self, _idx: int, cmd: List[str]) -> List[str]:
         """compose command string for CmdStan for non-default arg values."""

@@ -1669,14 +1669,13 @@ class CmdStanModel:
                 "before 2.33"
             )
 
-        if num_paths == 1:
-            if num_single_draws is None:
-                num_single_draws = draws
-            elif draws is not None and num_single_draws != draws:
-                raise ValueError(
-                    "Cannot specify both 'draws' and 'num_single_draws'"
-                    " when 'num_paths' is 1"
-                )
+        if num_single_draws is None:
+            num_single_draws = draws
+        elif num_paths == 1 and draws is not None and num_single_draws != draws:
+            raise ValueError(
+                "Cannot specify both 'draws' and 'num_single_draws'"
+                " when 'num_paths' is 1"
+            )
 
         pathfinder_args = PathfinderArgs(
             init_alpha=init_alpha,
