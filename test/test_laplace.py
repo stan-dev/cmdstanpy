@@ -1,6 +1,7 @@
 """Tests for the Laplace sampling method."""
 
 import os
+from tempfile import TemporaryDirectory
 
 import numpy as np
 import pytest
@@ -31,13 +32,27 @@ def test_laplace_from_csv():
     fit = model.laplace_sample(
         data={},
         seed=1234,
-        jacobian=False,
     )
     fit2 = from_csv(fit._runset.csv_files)
     assert isinstance(fit2, cmdstanpy.CmdStanLaplace)
     assert 'x' in fit2.stan_variables()
     assert 'y' in fit2.stan_variables()
     assert isinstance(fit2.mode, cmdstanpy.CmdStanMLE)
+
+    with TemporaryDirectory() as dir:
+        model.laplace_sample(data={}, seed=1234, output_dir=dir)
+
+        fit3 = from_csv(
+            [
+                os.path.join(dir, f)
+                for f in os.listdir(dir)
+                if f.endswith(".csv") and "opt" not in f
+            ]
+        )
+        assert isinstance(fit3, cmdstanpy.CmdStanLaplace)
+        assert 'x' in fit3.stan_variables()
+        assert 'y' in fit3.stan_variables()
+        assert isinstance(fit3.mode, cmdstanpy.CmdStanMLE)
 
 
 def test_laplace_runs_opt():

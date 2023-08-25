@@ -27,6 +27,40 @@ class CmdStanPathfinder:
         config = scan_generic_csv(runset.csv_files[0])
         self._metadata = InferenceMetadata(config)
 
+    def create_inits(
+        self, seed: Optional[int] = None, chains: int = 4
+    ) -> Union[List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
+        self._assemble_draws()
+        rng = np.random.default_rng(seed)
+        idxs = rng.choice(self._draws.shape[0], size=chains, replace=False)
+        if chains == 1:
+            draw = self._draws[idxs[0]]
+            return {
+                name: var.extract_reshape(draw)
+                for name, var in self._metadata.stan_vars.items()
+            }
+        else:
+            return [
+                {
+                    name: var.extract_reshape(self._draws[idx])
+                    for name, var in self._metadata.stan_vars.items()
+                }
+                for idx in idxs
+            ]
+
+    def __repr__(self) -> str:
+        rep = 'CmdStanPathfinder: model={}{}'.format(
+            self._runset.model,
+            self._runset._args.method_args.compose(0, cmd=[]),
+        )
+        rep = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
+            rep,
+            '\n\t'.join(self._runset.csv_files),
+            '\n\t'.join(self._runset.stdout_files),
+        )
+        return rep
+
+    # below this is identical to same functions in Laplace
     def _assemble_draws(self) -> None:
         if self._draws.shape != (0,):
             return
@@ -120,18 +154,6 @@ class CmdStanPathfinder:
         self._assemble_draws()
         return self._draws
 
-    def __repr__(self) -> str:
-        rep = 'CmdStanPathfinder: model={}{}'.format(
-            self._runset.model,
-            self._runset._args.method_args.compose(0, cmd=[]),
-        )
-        rep = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
-            rep,
-            '\n\t'.join(self._runset.csv_files),
-            '\n\t'.join(self._runset.stdout_files),
-        )
-        return rep
-
     def __getattr__(self, attr: str) -> np.ndarray:
         """Synonymous with ``fit.stan_variable(attr)"""
         if attr.startswith("_"):
@@ -169,23 +191,18 @@ class CmdStanPathfinder:
         """
         return self._metadata.cmdstan_config['column_names']  # type: ignore
 
-    def create_inits(
-        self, seed: Optional[int] = None, chains: int = 4
-    ) -> Union[List[Dict[str, np.ndarray]], Dict[str, np.ndarray]]:
-        self._assemble_draws()
-        rng = np.random.default_rng(seed)
-        idxs = rng.choice(self._draws.shape[0], size=chains, replace=False)
-        if chains == 1:
-            draw = self._draws[idxs[0]]
-            return {
-                name: var.extract_reshape(draw)
-                for name, var in self._metadata.stan_vars.items()
-            }
-        else:
-            return [
-                {
-                    name: var.extract_reshape(self._draws[idx])
-                    for name, var in self._metadata.stan_vars.items()
-                }
-                for idx in idxs
-            ]
+    def save_csvfiles(self, dir: Optional[str] = None) -> None:
+        """
+        Move output CSV files to specified directory.  If files were
+        written to the temporary session directory, clean filename.
+        E.g., save 'bernoulli-201912081451-1-5nm6as7u.csv' as
+        'bernoulli-201912081451-1.csv'.
+
+        :param dir: directory path
+
+        See Also
+        --------
+        stanfit.RunSet.save_csvfiles
+        cmdstanpy.from_csv
+        """
+        self._runset.save_csvfiles(dir)

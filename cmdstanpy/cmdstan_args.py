@@ -47,7 +47,7 @@ def positive_int(value: Any, name: str) -> None:
 
 def positive_float(value: Any, name: str) -> None:
     if value is not None:
-        if isinstance(value, (float, np.floating)):
+        if isinstance(value, (int, float, np.floating)):
             if value <= 0:
                 raise ValueError(f'{name} must be greater than 0')
         else:
