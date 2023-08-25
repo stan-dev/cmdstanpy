@@ -1663,19 +1663,11 @@ class CmdStanModel:
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
     ) -> CmdStanPathfinder:
-        if cmdstan_version_before(2, 33, self.exe_info()):
-            raise ValueError(
-                "Method 'pathfinder' not available for CmdStan versions "
-                "before 2.33"
-            )
-
-        if num_single_draws is None:
-            num_single_draws = draws
-        elif num_paths == 1 and draws is not None and num_single_draws != draws:
-            raise ValueError(
-                "Cannot specify both 'draws' and 'num_single_draws'"
-                " when 'num_paths' is 1"
-            )
+        # if cmdstan_version_before(2, 33, self.exe_info()):
+        #     raise ValueError(
+        #         "Method 'pathfinder' not available for CmdStan versions "
+        #         "before 2.33"
+        #     )
 
         pathfinder_args = PathfinderArgs(
             init_alpha=init_alpha,

@@ -540,6 +540,7 @@ class PathfinderArgs:
         max_lbfgs_iters: Optional[int] = None,
         num_draws: Optional[int] = None,
         num_elbo_draws: Optional[int] = None,
+        save_single_paths: bool = False,
     ) -> None:
         self.init_alpha = init_alpha
         self.tol_obj = tol_obj
@@ -554,6 +555,8 @@ class PathfinderArgs:
         self.max_lbfgs_iters = max_lbfgs_iters
         self.num_draws = num_draws
         self.num_elbo_draws = num_elbo_draws
+
+        self.save_single_paths = save_single_paths
 
     def validate(self, _chains: Optional[int] = None) -> None:
         """
@@ -602,6 +605,9 @@ class PathfinderArgs:
             cmd.append(f'num_draws={self.num_draws}')
         if self.num_elbo_draws is not None:
             cmd.append(f'num_elbo_draws={self.num_elbo_draws}')
+
+        if self.save_single_paths:
+            cmd.append('save_single_paths=1')
 
         return cmd
 
