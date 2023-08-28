@@ -179,7 +179,6 @@ class RunSet:
                 profile_file=self.file_path(".csv", extra="-profile")
                 if self._args.save_profile
                 else None,
-                num_chains=self._chains,
             )
 
     @property
