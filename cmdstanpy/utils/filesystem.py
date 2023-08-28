@@ -107,7 +107,10 @@ def _temp_single_json(
     data: Union[str, os.PathLike, Mapping[str, Any], None]
 ) -> Iterator[Optional[str]]:
     """Context manager for json files."""
-    if data is None or isinstance(data, (str, os.PathLike)):
+    if data is None:
+        yield None
+        return
+    if isinstance(data, (str, os.PathLike)):
         yield str(data)
         return
 
