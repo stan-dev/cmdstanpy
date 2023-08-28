@@ -1669,6 +1669,14 @@ class CmdStanModel:
         #         "before 2.33"
         #     )
 
+        if num_single_draws is None:
+            num_single_draws = draws
+        elif num_paths == 1 and draws is not None and num_single_draws != draws:
+            raise ValueError(
+                "Cannot specify both 'draws' and 'num_single_draws'"
+                " when 'num_paths' is 1"
+            )
+
         pathfinder_args = PathfinderArgs(
             init_alpha=init_alpha,
             tol_obj=tol_obj,
@@ -1684,7 +1692,7 @@ class CmdStanModel:
             num_elbo_draws=num_elbo_draws,
         )
 
-        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+        with temp_single_json(data) as _data, temp_inits(inits) as _inits:
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,

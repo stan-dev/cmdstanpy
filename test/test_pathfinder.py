@@ -107,3 +107,18 @@ def test_pathfinder_create_inits():
         init1['theta'] == init2['theta']
         for init1, init2 in zip(seeded, seeded2)
     )
+
+
+def test_pathfinder_init_sampling():
+    logistic_stan = DATAFILES_PATH / 'logistic.stan'
+    logistic_model = cmdstanpy.CmdStanModel(stan_file=logistic_stan)
+    logistic_data = str(DATAFILES_PATH / 'logistic.data.R')
+    pathfinder = logistic_model.pathfinder(data=logistic_data)
+
+    fit = logistic_model.sample(
+        data=logistic_data,
+        inits=pathfinder.create_inits(),
+    )
+
+    assert fit.chains == 4
+    assert fit.draws().shape == (1000, 4, 9)
