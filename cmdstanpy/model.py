@@ -59,7 +59,6 @@ from cmdstanpy.stanfit import (
 )
 from cmdstanpy.utils import (
     EXTENSION,
-    MaybeDictToFilePath,
     SanitizedOrTmpFilePath,
     cmdstan_path,
     cmdstan_version,
@@ -68,6 +67,7 @@ from cmdstanpy.utils import (
     get_logger,
     returncode_msg,
 )
+from cmdstanpy.utils.filesystem import temp_inits, temp_single_json
 
 from . import progress as progbar
 
@@ -573,7 +573,7 @@ class CmdStanModel:
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         seed: Optional[int] = None,
-        inits: Union[Dict[str, float], float, str, os.PathLike, None] = None,
+        inits: Union[Mapping[str, Any], float, str, os.PathLike, None] = None,
         output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
         save_profile: bool = False,
@@ -722,7 +722,9 @@ class CmdStanModel:
                 "in CmdStan 2.32 and above."
             )
 
-        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+        with temp_single_json(data) as _data, temp_inits(
+            inits, allow_multiple=False
+        ) as _inits:
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,
@@ -766,7 +768,14 @@ class CmdStanModel:
         threads_per_chain: Optional[int] = None,
         seed: Union[int, List[int], None] = None,
         chain_ids: Union[int, List[int], None] = None,
-        inits: Union[Dict[str, float], float, str, List[str], None] = None,
+        inits: Union[
+            Mapping[str, Any],
+            float,
+            str,
+            List[str],
+            List[Mapping[str, Any]],
+            None,
+        ] = None,
         iter_warmup: Optional[int] = None,
         iter_sampling: Optional[int] = None,
         save_warmup: bool = False,
@@ -1003,6 +1012,69 @@ class CmdStanModel:
                     chains
                 )
             )
+
+        if parallel_chains is None:
+            parallel_chains = max(min(cpu_count(), chains), 1)
+        elif parallel_chains > chains:
+            get_logger().info(
+                'Requested %u parallel_chains but only %u required, '
+                'will run all chains in parallel.',
+                parallel_chains,
+                chains,
+            )
+            parallel_chains = chains
+        elif parallel_chains < 1:
+            raise ValueError(
+                'Argument parallel_chains must be a positive integer, '
+                'found {}.'.format(parallel_chains)
+            )
+        if threads_per_chain is None:
+            threads_per_chain = 1
+        if threads_per_chain < 1:
+            raise ValueError(
+                'Argument threads_per_chain must be a positive integer, '
+                'found {}.'.format(threads_per_chain)
+            )
+
+        parallel_procs = parallel_chains
+        num_threads = threads_per_chain
+        one_process_per_chain = True
+        info_dict = self.exe_info()
+        stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
+        # run multi-chain sampler unless algo is fixed_param or 1 chain
+        if chains == 1:
+            force_one_process_per_chain = True
+
+        if (
+            force_one_process_per_chain is None
+            and not cmdstan_version_before(2, 28, info_dict)
+            and stan_threads == 'true'
+        ):
+            one_process_per_chain = False
+            num_threads = parallel_chains * num_threads
+            parallel_procs = 1
+        if force_one_process_per_chain is False:
+            if not cmdstan_version_before(2, 28, info_dict):
+                one_process_per_chain = False
+                num_threads = parallel_chains * num_threads
+                parallel_procs = 1
+                if stan_threads == 'false':
+                    get_logger().warning(
+                        'Stan program not compiled for threading, '
+                        'process will run chains sequentially. '
+                        'For multi-chain parallelization, recompile '
+                        'the model with argument '
+                        '"cpp_options={\'STAN_THREADS\':\'TRUE\'}.'
+                    )
+            else:
+                get_logger().warning(
+                    'Installed version of CmdStan cannot multi-process '
+                    'chains, will run %d processes. '
+                    'Run "install_cmdstan" to upgrade to latest version.',
+                    chains,
+                )
+        os.environ['STAN_NUM_THREADS'] = str(num_threads)
+
         if chain_ids is None:
             chain_ids = [i + 1 for i in range(chains)]
         else:
@@ -1014,6 +1086,13 @@ class CmdStanModel:
                     )
                 chain_ids = [i + chain_ids for i in range(chains)]
             else:
+                if not one_process_per_chain:
+                    for i, j in zip(chain_ids, chain_ids[1:]):
+                        if i != j - 1:
+                            raise ValueError(
+                                'chain_ids must be sequential list of integers,'
+                                ' found {}.'.format(chain_ids)
+                            )
                 if not len(chain_ids) == chains:
                     raise ValueError(
                         'Chain_ids must correspond to number of chains'
@@ -1029,6 +1108,7 @@ class CmdStanModel:
                         )
 
         sampler_args = SamplerArgs(
+            num_chains=1 if one_process_per_chain else chains,
             iter_warmup=iter_warmup,
             iter_sampling=iter_sampling,
             save_warmup=save_warmup,
@@ -1043,14 +1123,25 @@ class CmdStanModel:
             adapt_step_size=adapt_step_size,
             fixed_param=fixed_param,
         )
-        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+
+        with temp_single_json(data) as _data, temp_inits(
+            inits, id=chain_ids[0]
+        ) as _inits:
+            cmdstan_inits: Union[str, List[str], int, float, None]
+            if one_process_per_chain and isinstance(inits, list):  # legacy
+                cmdstan_inits = [
+                    f"{_inits[:-5]}_{i}.json" for i in chain_ids  # type: ignore
+                ]
+            else:
+                cmdstan_inits = _inits
+
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,
                 chain_ids=chain_ids,
                 data=_data,
                 seed=seed,
-                inits=_inits,
+                inits=cmdstan_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
                 save_latent_dynamics=save_latent_dynamics,
@@ -1058,67 +1149,6 @@ class CmdStanModel:
                 method_args=sampler_args,
                 refresh=refresh,
             )
-
-            if parallel_chains is None:
-                parallel_chains = max(min(cpu_count(), chains), 1)
-            elif parallel_chains > chains:
-                get_logger().info(
-                    'Requested %u parallel_chains but only %u required, '
-                    'will run all chains in parallel.',
-                    parallel_chains,
-                    chains,
-                )
-                parallel_chains = chains
-            elif parallel_chains < 1:
-                raise ValueError(
-                    'Argument parallel_chains must be a positive integer, '
-                    'found {}.'.format(parallel_chains)
-                )
-            if threads_per_chain is None:
-                threads_per_chain = 1
-            if threads_per_chain < 1:
-                raise ValueError(
-                    'Argument threads_per_chain must be a positive integer, '
-                    'found {}.'.format(threads_per_chain)
-                )
-
-            parallel_procs = parallel_chains
-            num_threads = threads_per_chain
-            one_process_per_chain = True
-            info_dict = self.exe_info()
-            stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
-            if chains == 1:
-                force_one_process_per_chain = True
-
-            if (
-                force_one_process_per_chain is None
-                and not cmdstan_version_before(2, 28, info_dict)
-                and stan_threads == 'true'
-            ):
-                one_process_per_chain = False
-                num_threads = parallel_chains * num_threads
-                parallel_procs = 1
-            if force_one_process_per_chain is False:
-                if not cmdstan_version_before(2, 28, info_dict):
-                    one_process_per_chain = False
-                    num_threads = parallel_chains * num_threads
-                    parallel_procs = 1
-                    if stan_threads == 'false':
-                        get_logger().warning(
-                            'Stan program not compiled for threading, '
-                            'process will run chains sequentially. '
-                            'For multi-chain parallelization, recompile '
-                            'the model with argument '
-                            '"cpp_options={\'STAN_THREADS\':\'TRUE\'}.'
-                        )
-                else:
-                    get_logger().warning(
-                        'Installed version of CmdStan cannot multi-process '
-                        'chains, will run %d processes. '
-                        'Run "install_cmdstan" to upgrade to latest version.',
-                        chains,
-                    )
-            os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
             if show_console:
                 show_progress = False
@@ -1359,7 +1389,7 @@ class CmdStanModel:
             csv_files=fit_csv_files
         )
         generate_quantities_args.validate(chains)
-        with MaybeDictToFilePath(data, None) as (_data, _inits):
+        with temp_single_json(data) as _data:
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,
@@ -1534,7 +1564,9 @@ class CmdStanModel:
             output_samples=output_samples,
         )
 
-        with MaybeDictToFilePath(data, inits) as (_data, _inits):
+        with temp_single_json(data) as _data, temp_inits(
+            inits, allow_multiple=False
+        ) as _inits:
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,
@@ -1641,7 +1673,9 @@ class CmdStanModel:
                 "Method 'log_prob' not available for CmdStan versions "
                 "before 2.31"
             )
-        with MaybeDictToFilePath(data, params) as (_data, _params):
+        with temp_single_json(data) as _data, temp_single_json(
+            params
+        ) as _params:
             cmd = [
                 str(self.exe_file),
                 "log_prob",
@@ -1749,7 +1783,7 @@ class CmdStanModel:
             cmdstan_mode.runset.csv_files[0], draws, jacobian
         )
 
-        with MaybeDictToFilePath(data) as (_data,):
+        with temp_single_json(data) as _data:
             args = CmdStanArgs(
                 self._name,
                 self._exe_file,

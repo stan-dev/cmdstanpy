@@ -7,7 +7,7 @@ import platform
 import re
 import shutil
 import tempfile
-from typing import Any, Iterator, List, Mapping, Tuple, Union
+from typing import Any, Iterator, List, Mapping, Optional, Tuple, Union
 
 from cmdstanpy import _TMPDIR
 
@@ -103,70 +103,85 @@ def pushd(new_dir: str) -> Iterator[None]:
         os.chdir(previous_dir)
 
 
-class MaybeDictToFilePath:
+def _temp_single_json(
+    data: Union[str, os.PathLike, Mapping[str, Any], None]
+) -> Iterator[Optional[str]]:
     """Context manager for json files."""
+    if data is None:
+        yield None
+        return
+    if isinstance(data, (str, os.PathLike)):
+        yield str(data)
+        return
 
-    def __init__(
-        self,
-        *objs: Union[
-            str, Mapping[str, Any], List[Any], int, float, os.PathLike, None
-        ],
-    ):
-        self._unlink = [False] * len(objs)
-        self._paths: List[Any] = [''] * len(objs)
-        i = 0
-        # pylint: disable=isinstance-second-argument-not-valid-type
-        for obj in objs:
-            if isinstance(obj, Mapping):
-                data_file = create_named_text_file(
-                    dir=_TMPDIR, prefix='', suffix='.json'
-                )
-                get_logger().debug('input tempfile: %s', data_file)
-                write_stan_json(data_file, obj)
-                self._paths[i] = data_file
-                self._unlink[i] = True
-            elif isinstance(obj, (str, os.PathLike)):
-                if not os.path.exists(obj):
-                    raise ValueError("File doesn't exist {}".format(obj))
-                self._paths[i] = obj
-            elif isinstance(obj, list):
-                err_msgs = []
-                missing_obj_items = []
-                for j, obj_item in enumerate(obj):
-                    if not isinstance(obj_item, str):
-                        err_msgs.append(
-                            (
-                                'List element {} must be a filename string,'
-                                ' found {}'
-                            ).format(j, obj_item)
-                        )
-                    elif not os.path.exists(obj_item):
-                        missing_obj_items.append(
-                            "File doesn't exist: {}".format(obj_item)
-                        )
-                if err_msgs:
-                    raise ValueError('\n'.join(err_msgs))
-                if missing_obj_items:
-                    raise ValueError('\n'.join(missing_obj_items))
-                self._paths[i] = obj
-            elif obj is None:
-                self._paths[i] = None
-            elif i == 1 and isinstance(obj, (int, float)):
-                self._paths[i] = obj
+    data_file = create_named_text_file(dir=_TMPDIR, prefix='', suffix='.json')
+    get_logger().debug('input tempfile: %s', data_file)
+    write_stan_json(data_file, data)
+    try:
+        yield data_file
+    finally:
+        with contextlib.suppress(PermissionError):
+            os.remove(data_file)
+
+
+temp_single_json = contextlib.contextmanager(_temp_single_json)
+
+
+def _temp_multiinput(
+    input: Union[str, os.PathLike, Mapping[str, Any], List[Any], None],
+    base: int = 1,
+) -> Iterator[Optional[str]]:
+    if isinstance(input, list):
+        # most complicated case: list of inits
+        # for multiple chains, we need to create multiple files
+        # which look like somename_{i}.json and then pass somename.json
+        # to CmdStan
+
+        mother_file = create_named_text_file(
+            dir=_TMPDIR, prefix='', suffix='.json', name_only=True
+        )
+        new_files = [
+            os.path.splitext(mother_file)[0] + f'_{i+base}.json'
+            for i in range(len(input))
+        ]
+        for init, file in zip(input, new_files):
+            if isinstance(init, dict):
+                write_stan_json(file, init)
+            elif isinstance(init, str):
+                shutil.copy(init, file)
             else:
-                raise ValueError('data must be string or dict')
-            i += 1
+                raise ValueError(
+                    'A list of inits must contain dicts or strings, not'
+                    + str(type(init))
+                )
+        try:
+            yield mother_file
+        finally:
+            for file in new_files:
+                with contextlib.suppress(PermissionError):
+                    os.remove(file)
+    else:
+        yield from _temp_single_json(input)
 
-    def __enter__(self) -> List[str]:
-        return self._paths
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
-        for can_unlink, path in zip(self._unlink, self._paths):
-            if can_unlink and path:
-                try:
-                    os.remove(path)
-                except PermissionError:
-                    pass
+@contextlib.contextmanager
+def temp_inits(
+    inits: Union[
+        str, os.PathLike, Mapping[str, Any], float, int, List[Any], None
+    ],
+    *,
+    allow_multiple: bool = True,
+    id: int = 1,
+) -> Iterator[Union[str, float, int, None]]:
+    if isinstance(inits, (float, int)):
+        yield inits
+        return
+    if allow_multiple:
+        yield from _temp_multiinput(inits, base=id)
+    else:
+        if isinstance(inits, list):
+            raise ValueError('Expected single initialization, got list')
+        yield from _temp_single_json(inits)
 
 
 class SanitizedOrTmpFilePath:

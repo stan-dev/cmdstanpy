@@ -22,7 +22,6 @@ from .cmdstan import (
 from .command import do_command, returncode_msg
 from .data_munging import build_xarray_data, flatten_chains
 from .filesystem import (
-    MaybeDictToFilePath,
     SanitizedOrTmpFilePath,
     create_named_text_file,
     pushd,
@@ -112,7 +111,6 @@ def show_versions(output: bool = True) -> str:
 
 __all__ = [
     'EXTENSION',
-    'MaybeDictToFilePath',
     'SanitizedOrTmpFilePath',
     'build_xarray_data',
     'check_sampler_csv',
