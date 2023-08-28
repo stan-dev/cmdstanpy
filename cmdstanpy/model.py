@@ -876,6 +876,7 @@ class CmdStanModel:
             * dictionary - pairs parameter name : initial value.
             * string - pathname to a JSON or Rdump data file.
             * list of strings - per-chain pathname to data file.
+            * list of dictionaries - per-chain initial values.
 
         :param iter_warmup: Number of warmup iterations for each chain.
 
@@ -949,8 +950,7 @@ class CmdStanModel:
             only those values in the generated quantities block that are
             produced by RNG functions may change.  This provides
             a way to use Stan programs to generate simulated data via the
-            generated quantities block.  This option must be used when the
-            parameters block is empty.  Default value is ``False``.
+            generated quantities block.  Default value is ``False``.
 
         :param output_dir: Name of the directory to which CmdStan output
             files are written. If unspecified, output files will be written
@@ -1663,6 +1663,109 @@ class CmdStanModel:
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
     ) -> CmdStanPathfinder:
+        """
+        Run CmdStan's Pathfinder variational inference algorithm.
+
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :param num_paths: Number of single-path Pathfinders to run.
+            Default is 4, when the number of paths is 1 then no importance
+            sampling is done.
+
+        :param draws: Number of approximate draws to return.
+
+        :param num_single_draws: Number of draws each single-pathfinder will
+            draw. By default, this is set to be equal to draws.
+            If ``num_paths`` is 1, only one of this and ``draws`` should be
+            used.
+
+        :param max_lbfgs_iters: Maximum number of L-BFGS iterations.
+
+        :param num_elbo_draws: Number of Monte Carlo draws to evaluate ELBO.
+
+        :param seed: The seed for random number generator. Must be an integer
+            between 0 and 2^32 - 1. If unspecified,
+            :class:`numpy.random.RandomState` is used to generate a seed.
+
+        :param inits: Specifies how the algorithm initializes parameter values.
+            Initialization is either uniform random on a range centered on 0,
+            exactly 0, or a dictionary or file of initial values for some or all
+            parameters in the model.  The default initialization behavior will
+            initialize all parameter values on range [-2, 2] on the
+            *unconstrained* support.  If the expected parameter values are
+            too far from this range, this option may improve adaptation.
+            The following value types are allowed:
+
+            * Single number n > 0 - initialization range is [-n, n].
+            * 0 - all parameters are initialized to 0.
+            * dictionary - pairs parameter name : initial value.
+            * string - pathname to a JSON or Rdump data file.
+            * list of strings - per-path pathname to data file.
+            * list of dictionaries - per-path initial values.
+
+        :param init_alpha: For internal L-BFGS: Line search step size for
+            first iteration
+
+        :param tol_obj: For internal L-BFGS: Convergence tolerance on changes
+            in objective function value
+
+        :param tol_rel_obj: For internal L-BFGS: Convergence tolerance on
+            relative changes in objective function value
+
+        :param tol_grad: For internal L-BFGS: Convergence tolerance on the
+            norm of the gradient
+
+        :param tol_rel_grad: For internal L-BFGS: Convergence tolerance on
+            the relative norm of the gradient
+
+        :param tol_param: For internal L-BFGS: Convergence tolerance on changes
+            in parameter value
+
+        :param history_size: For internal L-BFGS: Size of the history for LBFGS
+            Hessian approximation. The value should be less than the
+            dimensionality of the parameter space. 5-10 is usually sufficient
+
+        :param output_dir: Name of the directory to which CmdStan output
+            files are written. If unspecified, output files will be written
+            to a temporary directory which is deleted upon session exit.
+
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
+
+        :param save_profile: Whether or not to profile auto-diff operations in
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<path_id>'.
+            Introduced in CmdStan-2.26, see
+            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            section "Profiling CSV output file" for details.
+
+        :param show_console: If ``True``, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is ``False``.
+
+        :param refresh: Specify the number of iterations CmdStan will take
+            between progress messages. Default value is 100.
+
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
+
+        :param timeout: Duration at which Pathfinder times
+            out in seconds. Defaults to None.
+
+        :return: A :class:`CmdStanPathfinder` object
+
+        References
+        ----------
+
+        Zhang, L., Carpenter, B., Gelman, A., & Vehtari, A. (2022). Pathfinder:
+        Parallel quasi-Newton variational inference. Journal of Machine Learning
+        Research, 23(306), 1–49. Retrieved from
+        http://jmlr.org/papers/v23/21-0889.html
+        """
         # if cmdstan_version_before(2, 33, self.exe_info()):
         #     raise ValueError(
         #         "Method 'pathfinder' not available for CmdStan versions "
@@ -1815,6 +1918,63 @@ class CmdStanModel:
         timeout: Optional[float] = None,
         opt_args: Optional[Dict[str, Any]] = None,
     ) -> CmdStanLaplace:
+        """
+        Run a Laplace approximation around the posterior mode.
+
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :param mode: The mode around which to place the approximation.
+            This can be:
+            * A :class:`CmdStanMLE` object
+            * A path to a CSV file containing the output of an optimization
+              run.
+            * ``None``. In this case, the model will be optimized using the
+                default optimizer settings plus any supplied in ``opt_args``.
+
+        :param draws: Number of approximate draws to return.
+            Defaults to 1000
+
+        :param jacobian: Whether or not to enable the Jacobian adjustment
+            for constrained parameters. Defaults to ``True``.
+            Note: This must match the argument used in the creation of
+            ``mode``, if supplied.
+
+        :param output_dir: Name of the directory to which CmdStan output
+            files are written. If unspecified, output files will be written
+            to a temporary directory which is deleted upon session exit.
+
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
+
+        :param save_profile: Whether or not to profile auto-diff operations in
+            labelled blocks of code.  If ``True``, CSV outputs are written to
+            file '<model_name>-<YYYYMMDDHHMM>-profile-<path_id>'.
+            Introduced in CmdStan-2.26, see
+            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            section "Profiling CSV output file" for details.
+
+        :param show_console: If ``True``, stream CmdStan messages sent to stdout
+            and stderr to the console.  Default is ``False``.
+
+        :param refresh: Specify the number of iterations CmdStan will take
+            between progress messages. Default value is 100.
+
+        :param time_fmt: A format string passed to
+            :meth:`~datetime.datetime.strftime` to decide the file names for
+            output CSVs. Defaults to "%Y%m%d%H%M%S"
+
+        :param timeout: Duration at which Pathfinder times
+            out in seconds. Defaults to None.
+
+        :param opt_args: Dictionary of additional arguments
+            which will be passed to :meth:`~CmdStanModel.optimize`
+
+        :return: A :class:`CmdStanLaplace` object.
+        """
         if cmdstan_version_before(2, 32, self.exe_info()):
             raise ValueError(
                 "Method 'laplace_sample' not available for CmdStan versions "
