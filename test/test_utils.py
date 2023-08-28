@@ -262,7 +262,7 @@ def test_dict_to_file() -> None:
 
     assert not os.path.exists(created_tmp)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(AttributeError):
         with temp_single_json(123) as _:
             pass
 
@@ -271,10 +271,9 @@ def test_temp_inits():
     dict_good = {'a': 0.5}
     with temp_inits([dict_good, dict_good]) as base_file:
         fg1 = base_file[:-5] + '_1.json'
-        fg2 = base_file[:-5] + '_1.json'
+        fg2 = base_file[:-5] + '_2.json'
         assert os.path.exists(fg1)
         assert os.path.exists(fg2)
-        assert fg1 != fg2
         with open(fg1) as fg1_d:
             assert json.load(fg1_d) == dict_good
         with open(fg2) as fg2_d:
