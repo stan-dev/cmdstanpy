@@ -27,7 +27,6 @@ from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
     EXTENSION,
     BaseType,
-    MaybeDictToFilePath,
     SanitizedOrTmpFilePath,
     check_sampler_csv,
     cmdstan_path,
@@ -49,6 +48,7 @@ from cmdstanpy.utils import (
     windows_short_path,
     write_stan_json,
 )
+from cmdstanpy.utils.filesystem import temp_inits, temp_single_json
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -249,17 +249,46 @@ def test_dict_to_file() -> None:
     file_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
     dict_good = {'a': 0.5}
     created_tmp = None
-    with MaybeDictToFilePath(file_good, dict_good) as (fg1, fg2):
+
+    with temp_single_json(file_good) as fg1:
         assert os.path.exists(fg1)
+    assert os.path.exists(file_good)
+
+    with temp_single_json(dict_good) as fg2:
         assert os.path.exists(fg2)
         with open(fg2) as fg2_d:
             assert json.load(fg2_d) == dict_good
         created_tmp = fg2
-    assert os.path.exists(file_good)
+
     assert not os.path.exists(created_tmp)
 
+    with pytest.raises(AttributeError):
+        with temp_single_json(123) as _:
+            pass
+
+
+def test_temp_inits():
+    dict_good = {'a': 0.5}
+    with temp_inits([dict_good, dict_good]) as base_file:
+        fg1 = base_file[:-5] + '_1.json'
+        fg2 = base_file[:-5] + '_2.json'
+        assert os.path.exists(fg1)
+        assert os.path.exists(fg2)
+        with open(fg1) as fg1_d:
+            assert json.load(fg1_d) == dict_good
+        with open(fg2) as fg2_d:
+            assert json.load(fg2_d) == dict_good
+        created_tmp = (fg1, fg2)
+
+    assert not os.path.exists(created_tmp[0])
+    assert not os.path.exists(created_tmp[1])
+
     with pytest.raises(ValueError):
-        with MaybeDictToFilePath(123, dict_good) as (fg1, fg2):
+        with temp_inits([123]) as _:
+            pass
+
+    with pytest.raises(ValueError):
+        with temp_inits([dict_good], allow_multiple=False) as _:
             pass
 
 

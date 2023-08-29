@@ -55,6 +55,7 @@ class SamplerArgs:
         adapt_metric_window: Optional[int] = None,
         adapt_step_size: Optional[int] = None,
         fixed_param: bool = False,
+        num_chains: int = 1,
     ) -> None:
         """Initialize object."""
         self.iter_warmup = iter_warmup
@@ -73,6 +74,7 @@ class SamplerArgs:
         self.adapt_step_size = adapt_step_size
         self.fixed_param = fixed_param
         self.diagnostic_file = None
+        self.num_chains = num_chains
 
     def validate(self, chains: Optional[int]) -> None:
         """
@@ -316,6 +318,10 @@ class SamplerArgs:
                     'Argument "adapt_step_size" must be a non-negative integer,'
                     'found {}'.format(self.adapt_step_size)
                 )
+        if self.num_chains < 1 or not isinstance(
+            self.num_chains, (int, np.integer)
+        ):
+            raise ValueError("num_chains must be positive")
 
         if self.fixed_param and (
             self.max_treedepth is not None
@@ -378,6 +384,8 @@ class SamplerArgs:
             cmd.append('window={}'.format(self.adapt_metric_window))
         if self.adapt_step_size is not None:
             cmd.append('term_buffer={}'.format(self.adapt_step_size))
+        if self.num_chains > 1:
+            cmd.append('num_chains={}'.format(self.num_chains))
 
         return cmd
 
@@ -921,8 +929,12 @@ class CmdStanArgs:
                         )
                     )
             elif isinstance(self.inits, str):
-                if not os.path.exists(self.inits):
-                    raise ValueError('no such file {}'.format(self.inits))
+                if not (
+                    isinstance(self.method_args, SamplerArgs)
+                    and self.method_args.num_chains > 1
+                ):
+                    if not os.path.exists(self.inits):
+                        raise ValueError('no such file {}'.format(self.inits))
             elif isinstance(self.inits, list):
                 if self.chain_ids is None:
                     raise ValueError(
@@ -948,7 +960,6 @@ class CmdStanArgs:
         *,
         diagnostic_file: Optional[str] = None,
         profile_file: Optional[str] = None,
-        num_chains: Optional[int] = None,
     ) -> List[str]:
         """
         Compose CmdStan command for non-default arguments.
@@ -992,6 +1003,4 @@ class CmdStanArgs:
         if self.sig_figs is not None:
             cmd.append('sig_figs={}'.format(self.sig_figs))
         cmd = self.method_args.compose(idx, cmd)
-        if num_chains:
-            cmd.append('num_chains={}'.format(num_chains))
         return cmd

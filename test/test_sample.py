@@ -277,21 +277,24 @@ def test_init_types() -> None:
         iter_sampling=100,
         inits=[inits_path1, inits_path2],
         show_progress=False,
-    )
-    assert 'init={}'.format(inits_path1.replace('\\', '\\\\')) in repr(
-        bern_fit.runset
+        force_one_process_per_chain=False,
     )
 
-    with pytest.raises(ValueError):
-        bern_model.sample(
-            data=jdata,
-            chains=2,
-            parallel_chains=2,
-            seed=12345,
-            iter_warmup=100,
-            iter_sampling=100,
-            inits=(1, 2),
-        )
+    # will be copied, given basename
+    assert isinstance(bern_fit.runset._args.inits, str)
+
+    bern_fit = bern_model.sample(
+        data=jdata,
+        chains=2,
+        seed=12345,
+        iter_warmup=100,
+        iter_sampling=100,
+        inits=[inits_path1, inits_path2],
+        show_progress=False,
+        force_one_process_per_chain=True,
+    )
+    # one per process
+    assert isinstance(bern_fit.runset._args.inits, list)
 
     with pytest.raises(ValueError):
         bern_model.sample(
@@ -303,6 +306,34 @@ def test_init_types() -> None:
             iter_sampling=100,
             inits=-1,
         )
+
+    # test that inits are actually used by having a bad one
+    init_1 = {"theta": 0.2}
+    init_2 = {"theta": 4.0}
+    with pytest.raises(RuntimeError):
+        bern_fit = bern_model.sample(
+            data=jdata,
+            chains=2,
+            seed=12345,
+            inits=[init_1, init_2],
+            iter_warmup=100,
+            iter_sampling=100,
+            force_one_process_per_chain=True,
+            show_progress=False,
+        )
+    if not cmdstan_version_before(2, 33):
+        # https://github.com/stan-dev/cmdstan/pull/1191
+        with pytest.raises(RuntimeError):
+            bern_fit = bern_model.sample(
+                data=jdata,
+                chains=2,
+                seed=12345,
+                inits=[init_1, init_2],
+                iter_warmup=100,
+                iter_sampling=100,
+                force_one_process_per_chain=False,
+                show_progress=False,
+            )
 
 
 def test_bernoulli_bad() -> None:
