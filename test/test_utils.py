@@ -633,9 +633,7 @@ def test_bad_version(caplog: pytest.LogCaptureFixture) -> None:
 
 
 def test_interactive_extra_args(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.WARNING), mock.patch(
-        "sys.stdin", io.StringIO("9.99.9\n")
-    ):
+    with caplog.at_level(logging.WARNING):
         assert not install_cmdstan(version="2.29.2", interactive=True)
     check_present(
         caplog,
