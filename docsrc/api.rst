@@ -35,7 +35,7 @@ A CmdStanModel object encapsulates the Stan program. It manages program compilat
     draw from a Laplace approximatation centered at the posterior mode found by ``optimize``.
 
 :meth:`~CmdStanModel.variational`
-    run CmdStan’s ADVI variational inference algorithm to approximate the posterior distribution.
+    run CmdStan’s automatic differentiation variational inference (ADVI) algorithm to approximate the posterior distribution.
 
 :meth:`~CmdStanModel.generate_quantities`
     runs CmdStan’s generate_quantities method to produce additional quantities of interest based on draws from an existing sample.
