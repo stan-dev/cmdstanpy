@@ -5,7 +5,7 @@ Makefile options for stanc and C++ compilers
 import os
 from copy import copy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from cmdstanpy.utils import get_logger
 
@@ -99,7 +99,7 @@ class CompilerOptions:
         )
 
     @property
-    def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
+    def stanc_options(self) -> Dict[str, Union[bool, int, str, Iterable[str]]]:
         """Stanc compiler options."""
         return self._stanc_options
 
@@ -258,7 +258,12 @@ class CompilerOptions:
             else:
                 for key, val in new_opts.stanc_options.items():
                     if key == 'include-paths':
-                        self.add_include_path(str(val))
+                        if isinstance(val, Iterable) \
+                                and not isinstance(val, str):
+                            for path in val:
+                                self.add_include_path(str(path))
+                        else:
+                            self.add_include_path(str(val))
                     else:
                         self._stanc_options[key] = val
         if new_opts.cpp_options is not None:

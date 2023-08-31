@@ -494,6 +494,18 @@ def test_model_includes_explicit() -> None:
     assert os.path.samefile(model.exe_file, BERN_EXE)
 
 
+def test_model_compile_with_explicit_includes() -> None:
+    stan_file = os.path.join(DATAFILES_PATH, "add_one_model.stan")
+    exe_file = os.path.splitext(stan_file)[0] + EXTENSION
+    if os.path.isfile(exe_file):
+        os.unlink(exe_file)
+
+    model = CmdStanModel(stan_file=stan_file, compile=False)
+    include_paths = [os.path.join(DATAFILES_PATH, "include-path")]
+    stanc_options = {"include-paths": include_paths}
+    model.compile(stanc_options=stanc_options)
+
+
 def test_model_includes_implicit() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
     exe = os.path.join(DATAFILES_PATH, 'bernoulli_include' + EXTENSION)
