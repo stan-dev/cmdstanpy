@@ -1456,6 +1456,8 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
+        *,
+        output_samples: Optional[int] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1553,6 +1555,19 @@ class CmdStanModel:
 
         :return: CmdStanVB object
         """
+        if output_samples is not None:
+            if draws is not None:
+                raise ValueError(
+                    "Cannot supply both 'draws' and deprecated argument "
+                    "'output_samples'"
+                )
+            get_logger().warning(
+                "Argument name `output_samples` is deprecated, please "
+                "rename to `draws`."
+            )
+
+            draws = output_samples
+
         variational_args = VariationalArgs(
             algorithm=algorithm,
             iter=iter,
