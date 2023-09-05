@@ -8,6 +8,7 @@ import pandas as pd
 
 from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.utils import scan_variational_csv
+from cmdstanpy.utils.logging import get_logger
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -113,7 +114,9 @@ class CmdStanVB:
         """
         return self._metadata
 
-    def stan_variable(self, var: str) -> np.ndarray:
+    def stan_variable(
+        self, var: str, *, mean: Optional[bool] = None
+    ) -> Union[np.ndarray, float]:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -135,6 +138,10 @@ class CmdStanVB:
 
         :param var: variable name
 
+        :param mean: if True, return the variational mean. Otherwise,
+            return the variational sample.  The default behavior will
+            change in a future release to return the variational sample.
+
         See Also
         --------
         CmdStanVB.stan_variables
@@ -142,10 +149,35 @@ class CmdStanVB:
         CmdStanMLE.stan_variable
         CmdStanGQ.stan_variable
         """
+        # TODO(2.0): remove None case, make default `False`
+        if mean is None:
+            get_logger().warning(
+                "The default behavior of CmdStanVB.stan_variable() "
+                "will change in a future release to return the "
+                "variational sample, rather than the mean.\n"
+                "To maintain the current behavior, pass the argument "
+                "mean=True"
+            )
+            mean = True
+        if mean:
+            draws = self._variational_mean
+        else:
+            draws = self._variational_sample
+
         try:
             out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
-                self._variational_sample
+                draws
             )
+            # TODO(2.0): remove
+            if out.shape == ():
+                if mean:
+                    get_logger().warning(
+                        "The default behavior of "
+                        "CmdStanVB.stan_variable(mean=True) will change in a "
+                        "future release to always return a numpy.ndarray, even "
+                        "for scalar variables."
+                    )
+                return out.item()  # type: ignore
             return out
         except KeyError:
             # pylint: disable=raise-missing-from
@@ -155,7 +187,9 @@ class CmdStanVB:
                 + ", ".join(self._metadata.stan_vars.keys())
             )
 
-    def stan_variables(self) -> Dict[str, np.ndarray]:
+    def stan_variables(
+        self, *, mean: Optional[bool] = None
+    ) -> Dict[str, Union[np.ndarray, float]]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
@@ -169,7 +203,7 @@ class CmdStanVB:
         """
         result = {}
         for name in self._metadata.stan_vars:
-            result[name] = self.stan_variable(name)
+            result[name] = self.stan_variable(name, mean=mean)
         return result
 
     @property

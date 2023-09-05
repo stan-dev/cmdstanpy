@@ -22,6 +22,7 @@ STANC_OPTS = [
     'warn-pedantic',
 ]
 
+# TODO(2.0): remove
 STANC_DEPRECATED_OPTS = {
     'allow_undefined': 'allow-undefined',
     'include_paths': 'include-paths',

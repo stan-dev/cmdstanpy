@@ -1321,6 +1321,7 @@ class CmdStanModel:
 
         :return: CmdStanGQ object
         """
+        # TODO(2.0): remove
         if mcmc_sample is not None:
             if previous_fit:
                 raise ValueError(
@@ -1555,6 +1556,7 @@ class CmdStanModel:
 
         :return: CmdStanVB object
         """
+        # TODO(2.0): remove
         if output_samples is not None:
             if draws is not None:
                 raise ValueError(

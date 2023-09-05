@@ -201,7 +201,8 @@ def test_variable_bern() -> None:
     assert 'theta' in bern_mle.metadata.stan_vars
     assert bern_mle.metadata.stan_vars['theta'].dimensions == ()
     theta = bern_mle.stan_variable(var='theta')
-    assert theta.shape == ()
+    # TODO(2.0): remove before `or` clause
+    assert isinstance(theta, float) or theta.shape == ()
     with pytest.raises(ValueError):
         bern_mle.stan_variable(var='eta')
     with pytest.raises(ValueError):
@@ -233,7 +234,8 @@ def test_variables_3d() -> None:
     var_beta = multidim_mle.stan_variable(var='beta')
     assert var_beta.shape == (2,)
     var_frac_60 = multidim_mle.stan_variable(var='frac_60')
-    assert var_frac_60.shape == ()
+    # TODO(2.0): remove before `or` clause
+    assert isinstance(var_frac_60, float) or var_frac_60.shape == ()
     vars = multidim_mle.stan_variables()
     assert len(vars) == len(multidim_mle.metadata.stan_vars)
     assert 'y_rep' in vars
@@ -241,7 +243,8 @@ def test_variables_3d() -> None:
     assert 'beta' in vars
     assert vars['beta'].shape == (2,)
     assert 'frac_60' in vars
-    assert vars['frac_60'].shape == ()
+    # TODO(2.0): remove before `or` clause
+    assert isinstance(vars['frac_60'], float) or vars['frac_60'].shape == ()
 
     multidim_mle_iters = multidim_model.optimize(
         data=jdata,
@@ -560,7 +563,9 @@ def test_single_row_csv() -> None:
     stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
     model = CmdStanModel(stan_file=stan)
     mle = model.optimize()
-    assert mle.stan_variable('theta').shape == ()
+    theta = mle.stan_variable('theta')
+    # TODO(2.0): remove before `or` clause
+    assert isinstance(theta, float) or theta.shape == ()
     z_as_ndarray = mle.stan_variable(var="z")
     assert z_as_ndarray.shape == (4, 3)
     for i in range(4):
@@ -621,7 +626,8 @@ def test_attrs() -> None:
 
     assert fit.a == 4.5
     assert fit.b.shape == (3,)
-    assert fit.theta.shape == ()
+    # TODO(2.0) remove before `or` clause
+    assert isinstance(fit.theta, float) or fit.theta.shape == ()
 
     assert fit.stan_variable('thin') == 3.5
 

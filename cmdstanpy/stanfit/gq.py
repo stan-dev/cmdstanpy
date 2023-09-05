@@ -729,6 +729,7 @@ class CmdStanGQ(Generic[Fit]):
         """
         self.runset.save_csvfiles(dir)
 
+    # TODO(2.0): remove
     @property
     def mcmc_sample(self) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
         get_logger().warning(
