@@ -22,6 +22,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     Optional,
     TypeVar,
@@ -117,8 +118,7 @@ class CmdStanModel:
         model_name: Optional[str] = None,
         stan_file: OptionalPath = None,
         exe_file: OptionalPath = None,
-        # TODO should be Literal['force'] not str
-        compile: Union[bool, str] = True,
+        compile: Union[bool, Literal['force']] = True,
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
         user_header: OptionalPath = None,
@@ -300,7 +300,7 @@ class CmdStanModel:
         cmd = (
             [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
             # handle include-paths, allow-undefined etc
-            + self._compiler_options.compose_stanc()
+            + self._compiler_options.compose_stanc(None)
             + ['--info', str(self.stan_file)]
         )
         proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
@@ -343,7 +343,7 @@ class CmdStanModel:
             cmd = (
                 [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
                 # handle include-paths, allow-undefined etc
-                + self._compiler_options.compose_stanc()
+                + self._compiler_options.compose_stanc(None)
                 + [str(self.stan_file)]
             )
 
@@ -528,7 +528,7 @@ class CmdStanModel:
             )
             cmd = [make]
             if self._compiler_options is not None:
-                cmd.extend(self._compiler_options.compose())
+                cmd.extend(self._compiler_options.compose(self._stan_file))
             cmd.append(Path(exe_file).as_posix())
 
             sout = io.StringIO()
@@ -1005,10 +1005,7 @@ class CmdStanModel:
             fixed_param = self._fixed_param
 
         if chains is None:
-            if fixed_param:
-                chains = 1
-            else:
-                chains = 4
+            chains = 4
         if chains < 1:
             raise ValueError(
                 'Chains must be a positive integer value, found {}.'.format(
@@ -1045,7 +1042,7 @@ class CmdStanModel:
         info_dict = self.exe_info()
         stan_threads = info_dict.get('STAN_THREADS', 'false').lower()
         # run multi-chain sampler unless algo is fixed_param or 1 chain
-        if fixed_param or (chains == 1):
+        if chains == 1:
             force_one_process_per_chain = True
 
         if (
@@ -1223,19 +1220,6 @@ class CmdStanModel:
                     get_logger().debug("Detected fixed param model")
                     sampler_args.fixed_param = True
                     runset._args.method_args = sampler_args
-
-            # if there was an exe-file only initialization,
-            # this could happen, so throw a nice error
-            if (
-                sampler_args.fixed_param
-                and not one_process_per_chain
-                and chains > 1
-            ):
-                raise RuntimeError(
-                    "Cannot use single-process multichain parallelism"
-                    " with algorithm fixed_param.\nTry setting argument"
-                    " force_one_process_per_chain to True"
-                )
 
             errors = runset.get_err_msgs()
             if not runset._check_retcodes():

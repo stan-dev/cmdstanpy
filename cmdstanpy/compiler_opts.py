@@ -275,8 +275,12 @@ class CompilerOptions:
         elif path not in self._stanc_options['include-paths']:
             self._stanc_options['include-paths'].append(path)
 
-    def compose_stanc(self) -> List[str]:
+    def compose_stanc(self, filename_in_msg: Optional[str]) -> List[str]:
         opts = []
+
+        if filename_in_msg is not None:
+            opts.append(f'--filename-in-msg={filename_in_msg}')
+
         if self._stanc_options is not None and len(self._stanc_options) > 0:
             for key, val in self._stanc_options.items():
                 if key == 'include-paths':
@@ -295,11 +299,19 @@ class CompilerOptions:
                     opts.append(f'--{key}')
         return opts
 
-    def compose(self) -> List[str]:
-        """Format makefile options as list of strings."""
+    def compose(self, filename_in_msg: Optional[str] = None) -> List[str]:
+        """
+        Format makefile options as list of strings.
+
+        Parameters
+        ----------
+        filename_in_msg : str, optional
+            filename to be displayed in stanc3 error messages
+            (if different from actual filename on disk), by default None
+        """
         opts = [
             'STANCFLAGS+=' + flag.replace(" ", "\\ ")
-            for flag in self.compose_stanc()
+            for flag in self.compose_stanc(filename_in_msg)
         ]
         if self._cpp_options is not None and len(self._cpp_options) > 0:
             for key, val in self._cpp_options.items():

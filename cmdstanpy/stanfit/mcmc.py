@@ -40,7 +40,6 @@ from cmdstanpy.utils import (
     flatten_chains,
     get_logger,
 )
-from cmdstanpy.utils.data_munging import extract_reshape
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -352,7 +351,7 @@ class CmdStanMCMC:
         """
         if np.any(self._divergences) or np.any(self._max_treedepths):
             diagnostics = ['Some chains may have failed to converge.']
-            ct_iters = self.metadata.cmdstan_config['num_samples']
+            ct_iters = self._metadata.cmdstan_config['num_samples']
             for i in range(self.runset._chains):
                 if self._divergences[i] > 0:
                     diagnostics.append(
@@ -602,16 +601,15 @@ class CmdStanMCMC:
         cols = []
         if vars is not None:
             for var in dict.fromkeys(vars_list):
-                if (
-                    var not in self.metadata.method_vars_cols
-                    and var not in self.metadata.stan_vars_cols
-                ):
-                    raise ValueError('Unknown variable: {}'.format(var))
-                if var in self.metadata.method_vars_cols:
+                if var in self._metadata.method_vars:
                     cols.append(var)
+                elif var in self._metadata.stan_vars:
+                    info = self._metadata.stan_vars[var]
+                    cols.extend(
+                        self.column_names[info.start_idx : info.end_idx]
+                    )
                 else:
-                    for idx in self.metadata.stan_vars_cols[var]:
-                        cols.append(self.column_names[idx])
+                    raise ValueError(f'Unknown variable: {var}')
         else:
             cols = list(self.column_names)
 
@@ -670,7 +668,7 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
         if vars is None:
-            vars_list = list(self.metadata.stan_vars_cols.keys())
+            vars_list = list(self._metadata.stan_vars.keys())
         elif isinstance(vars, str):
             vars_list = [vars]
         else:
@@ -699,12 +697,8 @@ class CmdStanMCMC:
         for var in vars_list:
             build_xarray_data(
                 data,
-                var,
-                self._metadata.stan_vars_dims[var],
-                self._metadata.stan_vars_cols[var],
-                0,
+                self._metadata.stan_vars[var],
                 self.draws(inc_warmup=inc_warmup),
-                self._metadata.stan_vars_types[var],
             )
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
             'chain', 'draw', ...
@@ -728,13 +722,13 @@ class CmdStanMCMC:
         the next M are from chain 2, and the last M elements are from chain N.
 
         * If the variable is a scalar variable, the return array has shape
-          ( draws X chains, 1).
+          ( draws * chains, 1).
         * If the variable is a vector, the return array has shape
-          ( draws X chains, len(vector))
+          ( draws * chains, len(vector))
         * If the variable is a matrix, the return array has shape
-          ( draws X chains, size(dim 1) X size(dim 2) )
+          ( draws * chains, size(dim 1), size(dim 2) )
         * If the variable is an array with N dimensions, the return array
-          has shape ( draws X chains, size(dim 1) X ... X size(dim N))
+          has shape ( draws * chains, size(dim 1), ..., size(dim N))
 
         For example, if the Stan program variable ``theta`` is a 3x3 matrix,
         and the sample consists of 4 chains with 1000 post-warmup draws,
@@ -756,24 +750,19 @@ class CmdStanMCMC:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var not in self._metadata.stan_vars_dims:
+        try:
+            draws = self.draws(inc_warmup=inc_warmup, concat_chains=True)
+            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
+                draws
+            )
+            return out
+        except KeyError:
+            # pylint: disable=raise-missing-from
             raise ValueError(
                 f'Unknown variable name: {var}\n'
                 'Available variables are '
-                + ", ".join(self._metadata.stan_vars_dims)
+                + ", ".join(self._metadata.stan_vars.keys())
             )
-
-        draws = self.draws(inc_warmup=inc_warmup)
-        dims = (draws.shape[0] * self.chains,)
-        col_idxs = self._metadata.stan_vars_cols[var]
-
-        return extract_reshape(
-            dims=dims + self._metadata.stan_vars_dims[var],
-            col_idxs=col_idxs,
-            var_type=self._metadata.stan_vars_types[var],
-            start_row=0,
-            draws_in=draws,
-        )
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -788,7 +777,7 @@ class CmdStanMCMC:
         CmdStanGQ.stan_variables
         """
         result = {}
-        for name in self._metadata.stan_vars_dims.keys():
+        for name in self._metadata.stan_vars:
             result[name] = self.stan_variable(name)
         return result
 
@@ -800,12 +789,11 @@ class CmdStanMCMC:
         Maps each column name to a numpy.ndarray (draws x chains x 1)
         containing per-draw diagnostic values.
         """
-        result = {}
         self._assemble_draws()
-        for idxs in self.metadata.method_vars_cols.values():
-            for idx in idxs:
-                result[self.column_names[idx]] = self._draws[:, :, idx]
-        return result
+        return {
+            name: var.extract_reshape(self._draws)
+            for name, var in self._metadata.method_vars.items()
+        }
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """

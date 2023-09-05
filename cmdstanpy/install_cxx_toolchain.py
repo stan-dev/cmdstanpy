@@ -7,7 +7,7 @@ Currently implemented platforms (platform.system)
     Linux: Not implemented
 Optional command line arguments:
    -v, --version : version, defaults to latest
-   -d, --dir : install directory, defaults to '~/.cmdstan(py)
+   -d, --dir : install directory, defaults to '~/.cmdstan
    -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
    -m --no-make : don't install mingw32-make (Windows RTools 4.0 only)
    --progress : flag, when specified show progress bar for RTools download
@@ -27,7 +27,7 @@ from cmdstanpy import _DOT_CMDSTAN
 from cmdstanpy.utils import pushd, validate_dir, wrap_url_progress_hook
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
-IS_64BITS = sys.maxsize > 2 ** 32
+IS_64BITS = sys.maxsize > 2**32
 
 
 def usage() -> None:
@@ -333,7 +333,7 @@ def parse_cmdline_args() -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', '-v', help="version, defaults to latest")
     parser.add_argument(
-        '--dir', '-d', help="install directory, defaults to '~/.cmdstan(py)"
+        '--dir', '-d', help="install directory, defaults to '~/.cmdstan"
     )
     parser.add_argument(
         '--silent',

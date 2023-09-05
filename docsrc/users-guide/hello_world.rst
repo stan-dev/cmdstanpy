@@ -162,7 +162,7 @@ The `CmdStanMCMC` object provides the following accessor methods:
     print(f'numpy.ndarray of draws: {fit.draws().shape}')
     fit.draws_pd()
 
-    
+
 In addition to the MCMC sample itself, the CmdStanMCMC object provides
 access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sampler,
 (if present).
@@ -180,12 +180,6 @@ The CmdStanMCMC object also provides access to metadata about the model and the 
 
     print(fit.metadata.cmdstan_config['model'])
     print(fit.metadata.cmdstan_config['seed'])
-
-    print(fit.metadata.stan_vars_cols.keys())
-    print(fit.metadata.method_vars_cols.keys())
-
-
-
 
 
 CmdStan utilities:  ``stansummary``, ``diagnose``

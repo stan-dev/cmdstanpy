@@ -1,6 +1,5 @@
 """utils test"""
 
-import collections.abc
 import contextlib
 import io
 import json
@@ -18,7 +17,6 @@ from test import check_present, mark_windows_only, raises_nested
 from unittest import mock
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from cmdstanpy import _DOT_CMDSTAN, _TMPDIR
@@ -26,7 +24,6 @@ from cmdstanpy.model import CmdStanModel
 from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
     EXTENSION,
-    BaseType,
     SanitizedOrTmpFilePath,
     check_sampler_csv,
     cmdstan_path,
@@ -36,17 +33,15 @@ from cmdstanpy.utils import (
     flatten_chains,
     get_latest_cmdstan,
     install_cmdstan,
-    parse_method_vars,
     parse_rdump_value,
-    parse_stan_vars,
     pushd,
     read_metric,
     rload,
     set_cmdstan_path,
+    stancsv,
     validate_cmdstan_path,
     validate_dir,
     windows_short_path,
-    write_stan_json,
 )
 from cmdstanpy.utils.filesystem import temp_inits, temp_single_json
 
@@ -290,136 +285,6 @@ def test_temp_inits():
     with pytest.raises(ValueError):
         with temp_inits([dict_good], allow_multiple=False) as _:
             pass
-
-
-def test_write_stan_json() -> None:
-    def cmp(d1, d2):
-        assert d1.keys() == d2.keys()
-        for k in d1:
-            data_1 = d1[k]
-            data_2 = d2[k]
-            if isinstance(data_2, collections.abc.Collection):
-                data_2 = np.asarray(data_2).tolist()
-            # np properly handles NaN equality
-            np.testing.assert_equal(data_1, data_2)
-
-    dict_list = {'a': [1.0, 2.0, 3.0]}
-    file_list = os.path.join(_TMPDIR, 'list.json')
-    write_stan_json(file_list, dict_list)
-    with open(file_list) as fd:
-        cmp(json.load(fd), dict_list)
-
-    arr = np.repeat(3, 4)
-    dict_vec = {'a': arr}
-    file_vec = os.path.join(_TMPDIR, 'vec.json')
-    write_stan_json(file_vec, dict_vec)
-    with open(file_vec) as fd:
-        cmp(json.load(fd), dict_vec)
-
-    dict_bool = {'a': False}
-    file_bool = os.path.join(_TMPDIR, 'bool.json')
-    write_stan_json(file_bool, dict_bool)
-    with open(file_bool) as fd:
-        cmp(json.load(fd), {'a': 0})
-
-    dict_none = {'a': None}
-    file_none = os.path.join(_TMPDIR, 'none.json')
-    write_stan_json(file_none, dict_none)
-    with open(file_none) as fd:
-        cmp(json.load(fd), dict_none)
-
-    series = pd.Series(arr)
-    dict_vec_pd = {'a': series}
-    file_vec_pd = os.path.join(_TMPDIR, 'vec_pd.json')
-    write_stan_json(file_vec_pd, dict_vec_pd)
-    with open(file_vec_pd) as fd:
-        cmp(json.load(fd), dict_vec_pd)
-
-    df_vec = pd.DataFrame(dict_list)
-    file_pd = os.path.join(_TMPDIR, 'pd.json')
-    write_stan_json(file_pd, df_vec)
-    with open(file_pd) as fd:
-        cmp(json.load(fd), dict_list)
-
-    dict_zero_vec = {'a': []}
-    file_zero_vec = os.path.join(_TMPDIR, 'empty_vec.json')
-    write_stan_json(file_zero_vec, dict_zero_vec)
-    with open(file_zero_vec) as fd:
-        cmp(json.load(fd), dict_zero_vec)
-
-    dict_zero_matrix = {'a': [[], [], []]}
-    file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
-    write_stan_json(file_zero_matrix, dict_zero_matrix)
-    with open(file_zero_matrix) as fd:
-        cmp(json.load(fd), dict_zero_matrix)
-
-    arr = np.zeros(shape=(5, 0))
-    dict_zero_matrix = {'a': arr}
-    file_zero_matrix = os.path.join(_TMPDIR, 'empty_matrix.json')
-    write_stan_json(file_zero_matrix, dict_zero_matrix)
-    with open(file_zero_matrix) as fd:
-        cmp(json.load(fd), dict_zero_matrix)
-
-    arr = np.zeros(shape=(2, 3, 4))
-    assert isinstance(arr, np.ndarray)
-    assert arr.shape == (2, 3, 4)
-
-    dict_3d_matrix = {'a': arr}
-    file_3d_matrix = os.path.join(_TMPDIR, '3d_matrix.json')
-    write_stan_json(file_3d_matrix, dict_3d_matrix)
-    with open(file_3d_matrix) as fd:
-        cmp(json.load(fd), dict_3d_matrix)
-
-    scalr = np.int32(1)
-    assert type(scalr).__module__ == 'numpy'
-    dict_scalr = {'a': scalr}
-    file_scalr = os.path.join(_TMPDIR, 'scalr.json')
-    write_stan_json(file_scalr, dict_scalr)
-    with open(file_scalr) as fd:
-        cmp(json.load(fd), dict_scalr)
-
-    # custom Stan serialization
-    dict_inf_nan = {
-        'a': np.array(
-            [
-                [-np.inf, np.inf, np.NaN],
-                [-float('inf'), float('inf'), float('NaN')],
-                [
-                    np.float32(-np.inf),
-                    np.float32(np.inf),
-                    np.float32(np.NaN),
-                ],
-                [1e200 * -1e200, 1e220 * 1e200, -np.nan],
-            ]
-        )
-    }
-    dict_inf_nan_exp = {'a': [[-np.inf, np.inf, np.nan]] * 4}
-    file_fin = os.path.join(_TMPDIR, 'inf.json')
-    write_stan_json(file_fin, dict_inf_nan)
-    with open(file_fin) as fd:
-        cmp(
-            json.load(fd),
-            dict_inf_nan_exp,
-        )
-
-    dict_complex = {'a': np.array([np.complex64(3), 3 + 4j])}
-    dict_complex_exp = {'a': [[3, 0], [3, 4]]}
-    file_complex = os.path.join(_TMPDIR, 'complex.json')
-    write_stan_json(file_complex, dict_complex)
-    with open(file_complex) as fd:
-        cmp(json.load(fd), dict_complex_exp)
-
-
-def test_write_stan_json_bad() -> None:
-    file_bad = os.path.join(_TMPDIR, 'bad.json')
-
-    dict_badtype = {'a': 'a string'}
-    with pytest.raises(TypeError):
-        write_stan_json(file_bad, dict_badtype)
-
-    dict_badtype_nested = {'a': ['a string']}
-    with pytest.raises(ValueError):
-        write_stan_json(file_bad, dict_badtype_nested)
 
 
 def test_check_sampler_csv_1() -> None:
@@ -710,128 +575,6 @@ def test_parse_rdump_value() -> None:
     assert v_struct3[6, 1] == 15
 
 
-def test_parse_empty() -> None:
-    x = []
-    sampler_vars = parse_method_vars(x)
-    assert len(sampler_vars) == 0
-    stan_vars_dims, stan_vars_cols, stan_var_types = parse_stan_vars(x)
-    assert len(stan_vars_dims) == 0
-    assert len(stan_vars_cols) == 0
-    assert len(stan_var_types) == 0
-
-
-def test_parse_missing() -> None:
-    with pytest.raises(ValueError):
-        parse_method_vars(None)
-    with pytest.raises(ValueError):
-        parse_stan_vars(None)
-
-
-def test_parse_method_vars() -> None:
-    x = [
-        'lp__',
-        'accept_stat__',
-        'stepsize__',
-        'treedepth__',
-        'n_leapfrog__',
-        'divergent__',
-        'energy__',
-        'theta[1]',
-        'theta[2]',
-        'theta[3]',
-        'theta[4]',
-        'z_init[1]',
-        'z_init[2]',
-    ]
-    vars_dict = parse_method_vars(x)
-    assert len(vars_dict) == 7
-    assert vars_dict['lp__'] == (0,)
-    assert vars_dict['stepsize__'] == (2,)
-
-
-def test_parse_scalars() -> None:
-    x = ['lp__', 'foo']
-    dims_map, cols_map, _ = parse_stan_vars(x)
-    assert len(dims_map) == 1
-    assert dims_map['foo'] == ()
-    assert len(cols_map) == 1
-    assert cols_map['foo'] == (1,)
-
-    dims_map = {}
-    cols_map = {}
-    x = ['lp__', 'foo1', 'foo2']
-    dims_map, cols_map, _ = parse_stan_vars(x)
-    assert len(dims_map) == 2
-    assert dims_map['foo1'] == ()
-    assert dims_map['foo2'] == ()
-    assert len(cols_map) == 2
-    assert cols_map['foo1'] == (1,)
-    assert cols_map['foo2'] == (2,)
-
-    dims_map = {}
-    cols_map = {}
-    x = ['lp__', 'z[real]', 'z[imag]']
-    dims_map, cols_map, types_map = parse_stan_vars(x)
-    assert len(dims_map) == 1
-    assert dims_map['z'] == (2,)
-    assert types_map['z'] == BaseType.COMPLEX
-
-
-def test_parse_containers() -> None:
-    # demonstrates flaw in shortcut to get container dims
-    x = [
-        'lp__',
-        'accept_stat__',
-        'foo',
-        'phi[1]',
-        'phi[2]',
-        'phi[3]',
-        'phi[10]',
-        'bar',
-    ]
-    dims_map, cols_map, _ = parse_stan_vars(x)
-    assert len(dims_map) == 3
-    assert dims_map['foo'] == ()
-    assert dims_map['phi'] == (10,)  # sic
-    assert dims_map['bar'] == ()
-    assert len(cols_map) == 3
-    assert cols_map['foo'] == (2,)
-    assert cols_map['phi'] == (3, 4, 5, 6)
-    assert cols_map['bar'] == (7,)
-
-    x = [
-        'lp__',
-        'accept_stat__',
-        'foo',
-        'phi[1]',
-        'phi[2]',
-        'phi[3]',
-        'phi[10,10]',
-        'bar',
-    ]
-    dims_map = {}
-    cols_map = {}
-    dims_map, cols_map, _ = parse_stan_vars(x)
-    assert len(dims_map) == 3
-    assert dims_map['phi'] == (10, 10)
-    assert len(cols_map) == 3
-    assert cols_map['phi'] == (3, 4, 5, 6)
-
-    x = [
-        'lp__',
-        'accept_stat__',
-        'foo',
-        'phi[10,10,10]',
-    ]
-    dims_map = {}
-    cols_map = {}
-    dims_map, cols_map, _ = parse_stan_vars(x)
-    assert len(dims_map) == 2
-    assert dims_map['phi'] == (10, 10, 10)
-    assert len(cols_map) == 2
-    assert cols_map['phi'] == (3,)
-
-
 def test_capture_console() -> None:
     tmp = io.StringIO()
     do_command(cmd=['ls'], cwd=HERE, fd_out=tmp)
@@ -937,3 +680,24 @@ def test_show_progress_fns(caplog: pytest.LogCaptureFixture) -> None:
     # msg should only be printed once per session - check not found
     assert 'Disabling progress bars for this session' not in msgs
     assert not allow_show_progress()
+
+
+def test_munge_varnames() -> None:
+    var = 'y'
+    assert stancsv.munge_varname(var) == 'y'
+    var = 'y.2'
+    assert stancsv.munge_varname(var) == 'y[2]'
+    var = 'y.2.3'
+    assert stancsv.munge_varname(var) == 'y[2,3]'
+
+    var = 'y:2'
+    assert stancsv.munge_varname(var) == 'y.2'
+    var = 'y:2:3'
+    assert stancsv.munge_varname(var) == 'y.2.3'
+    var = 'y:2.1'
+    assert stancsv.munge_varname(var) == 'y.2[1]'
+    var = 'y.1:2'
+    assert stancsv.munge_varname(var) == 'y[1].2'
+
+    var = 'y.2.3:1.2:5:6'
+    assert stancsv.munge_varname(var) == 'y[2,3].1[2].5.6'

@@ -165,31 +165,6 @@ and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
 as well as method-specific informational properties and methods.objects
 
-Metadata
---------
-
-By `metadata` we mean the information parsed from the header comments and header row of the
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html>`_
-into a :class:`InferenceMetadata` object which is exposed via
-the object's :attr:`~CmdStanMCMC.metadata` property.
-
-* The metadata :attr:`~InferenceMetadata.cmdstan_config`
-  property provides the CmdStan configuration information parsed out
-  of the Stan CSV file header.
-
-* The metadata :attr:`~InferenceMetadata.method_vars_cols`
-  property returns the names, column indices of the inference engine method variables,
-  e.g.,
-  `the NUTS-HMC sampler output variables <https://mc-stan.org/docs/cmdstan-guide/mcmc-intro.html#mcmc_output_csv>`_
-  are ``lp__``, ..., ``energy__``.
-
-* The metadata :attr:`~InferenceMetadata.stan_vars_cols`
-  property returns the names, column indices of all Stan model variables.
-  Container variables will span as many columns, one column per element.
-
-* The metadata :attr:`~InferenceMetadata.stan_vars_dims`
-  property specifies the names, dimensions of the Stan model variables.
-
 Output data
 -----------
 

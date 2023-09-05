@@ -31,7 +31,7 @@ def test_laplace_runs_opt():
     assert isinstance(fit1.mode, cmdstanpy.CmdStanMLE)
 
     assert fit1.mode.metadata.cmdstan_config['seed'] == 1234
-    assert fit1._metadata.cmdstan_config['seed'] == 1234
+    assert fit1.metadata.cmdstan_config['seed'] == 1234
     assert fit1.mode.metadata.cmdstan_config['iter'] == 1003
 
 

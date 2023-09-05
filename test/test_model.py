@@ -137,7 +137,6 @@ def test_model_bad() -> None:
 
 
 def test_stanc_options() -> None:
-
     allowed_optims = ("", "0", "1", "experimental")
     for optim in allowed_optims:
         opts = {
@@ -323,8 +322,7 @@ def test_compile_force() -> None:
     model.compile(force=True, cpp_options=override_opts, override_options=True)
     info_dict3 = model.exe_info()
     assert info_dict3['STAN_THREADS'].lower() == 'false'
-    # cmdstan#1056
-    # assert info_dict3['STAN_NO_RANGE_CHECKS'].lower() == 'true'
+    assert info_dict3['STAN_NO_RANGE_CHECKS'].lower() == 'true'
 
     model.compile(force=True, cpp_options=more_opts)
     info_dict4 = model.exe_info()
@@ -436,8 +434,9 @@ def test_model_compile_special_char(path: str) -> None:
         bern_stan_new = os.path.join(
             path_with_special_char, os.path.split(BERN_STAN)[1]
         )
-        bern_exe_new = os.path.join(path_with_special_char,
-                                    os.path.split(BERN_EXE)[1])
+        bern_exe_new = os.path.join(
+            path_with_special_char, os.path.split(BERN_EXE)[1]
+        )
         shutil.copyfile(BERN_STAN, bern_stan_new)
         model = CmdStanModel(stan_file=bern_stan_new)
 
@@ -464,8 +463,9 @@ def test_model_includes_special_char(path: str) -> None:
     ) as tmp_path:
         path_with_special_char = os.path.join(tmp_path, path)
         os.makedirs(path_with_special_char, exist_ok=True)
-        bern_stan_new = os.path.join(path_with_special_char,
-                                     os.path.split(stan)[1])
+        bern_stan_new = os.path.join(
+            path_with_special_char, os.path.split(stan)[1]
+        )
         stan_divide_new = os.path.join(
             path_with_special_char, os.path.split(stan_divide)[1]
         )
@@ -514,19 +514,11 @@ def test_model_format_deprecations() -> None:
 
     sys_stdout = io.StringIO()
     with contextlib.redirect_stdout(sys_stdout):
-        model.format()
+        model.format(canonicalize=True)
 
     formatted = sys_stdout.getvalue()
     assert "//" in formatted
     assert "#" not in formatted
-    assert formatted.count('(') == 5
-
-    sys_stdout = io.StringIO()
-    with contextlib.redirect_stdout(sys_stdout):
-        model.format(canonicalize=True)
-
-    formatted = sys_stdout.getvalue()
-    print(formatted)
     assert "<-" not in formatted
     assert formatted.count('(') == 0
 

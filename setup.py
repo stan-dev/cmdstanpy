@@ -84,7 +84,7 @@ setuptools.setup(
         ]
     },
     install_requires=INSTALL_REQUIRES,
-    python_requires='>=3.7',
+    python_requires='>=3.8',
     extras_require=EXTRAS_REQUIRE,
     classifiers=_classifiers.strip().split('\n'),
 )

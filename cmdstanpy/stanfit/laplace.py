@@ -24,7 +24,7 @@ except ImportError:
     XARRAY_INSTALLED = False
 
 from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils.data_munging import build_xarray_data, extract_reshape
+from cmdstanpy.utils.data_munging import build_xarray_data
 from cmdstanpy.utils.stancsv import scan_laplace_csv
 
 from .metadata import InferenceMetadata
@@ -85,16 +85,18 @@ class CmdStanLaplace:
         CmdStanGQ.stan_variable
         """
         self._assemble_draws()
-        draws = self._draws
-        dims = (draws.shape[0],)
-        col_idxs = self._metadata.stan_vars_cols[var]
-        return extract_reshape(
-            dims=dims + self._metadata.stan_vars_dims[var],
-            col_idxs=col_idxs,
-            var_type=self._metadata.stan_vars_types[var],
-            start_row=0,
-            draws_in=draws,
-        )
+        try:
+            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
+                self._draws
+            )
+            return out
+        except KeyError:
+            # pylint: disable=raise-missing-from
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars.keys())
+            )
 
     def stan_variables(self) -> Dict[str, np.ndarray]:
         """
@@ -113,7 +115,7 @@ class CmdStanLaplace:
         CmdStanVB.stan_variables
         """
         result = {}
-        for name in self._metadata.stan_vars_dims.keys():
+        for name in self._metadata.stan_vars:
             result[name] = self.stan_variable(name)
         return result
 
@@ -125,11 +127,11 @@ class CmdStanLaplace:
         Maps each column name to a numpy.ndarray (draws x chains x 1)
         containing per-draw diagnostic values.
         """
-        result = {}
         self._assemble_draws()
-        for name, idxs in self._metadata.method_vars_cols.items():
-            result[name] = self._draws[..., idxs[0]]
-        return result
+        return {
+            name: var.extract_reshape(self._draws)
+            for name, var in self._metadata.method_vars.items()
+        }
 
     def draws(self) -> np.ndarray:
         """
@@ -154,16 +156,16 @@ class CmdStanLaplace:
         cols = []
         if vars is not None:
             for var in dict.fromkeys(vars_list):
-                if (
-                    var not in self._metadata.method_vars_cols
-                    and var not in self._metadata.stan_vars_cols
-                ):
-                    raise ValueError('Unknown variable: {}'.format(var))
-                if var in self._metadata.method_vars_cols:
+                if var in self._metadata.method_vars:
                     cols.append(var)
+                elif var in self._metadata.stan_vars:
+                    info = self._metadata.stan_vars[var]
+                    cols.extend(
+                        self.column_names[info.start_idx : info.end_idx]
+                    )
                 else:
-                    for idx in self._metadata.stan_vars_cols[var]:
-                        cols.append(self.column_names[idx])
+                    raise ValueError(f'Unknown variable: {var}')
+
         else:
             cols = list(self.column_names)
 
@@ -189,7 +191,7 @@ class CmdStanLaplace:
             )
 
         if vars is None:
-            vars_list = list(self._metadata.stan_vars_cols.keys())
+            vars_list = list(self._metadata.stan_vars.keys())
         elif isinstance(vars, str):
             vars_list = [vars]
         else:
@@ -212,12 +214,8 @@ class CmdStanLaplace:
         for var in vars_list:
             build_xarray_data(
                 data,
-                var,
-                self._metadata.stan_vars_dims[var],
-                self._metadata.stan_vars_cols[var],
-                0,
+                self._metadata.stan_vars[var],
                 self._draws[:, np.newaxis, :],
-                self._metadata.stan_vars_types[var],
             )
         return (
             xr.Dataset(data, coords=coordinates, attrs=attrs)
@@ -232,6 +230,13 @@ class CmdStanLaplace:
         as a :class:`CmdStanMLE` object.
         """
         return self._mode
+
+    @property
+    def metadata(self) -> InferenceMetadata:
+        """
+        Return the inference metadata as an :class:`InferenceMetadata` object.
+        """
+        return self._metadata
 
     def __repr__(self) -> str:
         mode = '\n'.join(

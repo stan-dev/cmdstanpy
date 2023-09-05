@@ -46,6 +46,6 @@ def test_lp_bad(
         (
             'cmdstanpy',
             'ERROR',
-            re.compile(r"(?s).*parameter theta not found.*"),
+            re.compile(r"(?s).*variable does not exist.*name=theta.*"),
         ),
     )
