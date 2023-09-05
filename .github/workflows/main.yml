@@ -32,8 +32,7 @@ jobs:
             if [[ "${{ github.event.inputs.cmdstan-version }}" != "" ]]; then
               echo "version=${{ github.event.inputs.cmdstan-version }}" >> $GITHUB_OUTPUT
             else
-              echo "version=git:develop" >> $GITHUB_OUTPUT
-              # python -c 'import requests;print("version="+requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])' >> $GITHUB_OUTPUT
+              python -c 'import requests;print("version="+requests.get("https://api.github.com/repos/stan-dev/cmdstan/releases/latest").json()["tag_name"][1:])' >> $GITHUB_OUTPUT
             fi
     outputs:
       version: ${{ steps.check-cmdstan.outputs.version }}
