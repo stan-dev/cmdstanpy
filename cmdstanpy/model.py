@@ -1781,11 +1781,11 @@ class CmdStanModel:
         Research, 23(306), 1–49. Retrieved from
         http://jmlr.org/papers/v23/21-0889.html
         """
-        # if cmdstan_version_before(2, 33, self.exe_info()):
-        #     raise ValueError(
-        #         "Method 'pathfinder' not available for CmdStan versions "
-        #         "before 2.33"
-        #     )
+        if cmdstan_version_before(2, 33, self.exe_info()):
+            raise ValueError(
+                "Method 'pathfinder' not available for CmdStan versions "
+                "before 2.33"
+            )
 
         if num_single_draws is None:
             num_single_draws = draws
