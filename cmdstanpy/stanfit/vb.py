@@ -169,7 +169,7 @@ class CmdStanVB:
                 draws
             )
             # TODO(2.0): remove
-            if out.shape == ():
+            if out.shape == () or out.shape == (1,):
                 if mean:
                     get_logger().warning(
                         "The default behavior of "

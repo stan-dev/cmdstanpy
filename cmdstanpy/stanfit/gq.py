@@ -172,6 +172,7 @@ class CmdStanGQ(Generic[Fit]):
         self,
         *,
         inc_warmup: bool = False,
+        inc_iterations: bool = False,
         concat_chains: bool = False,
         inc_sample: bool = False,
     ) -> np.ndarray:
@@ -204,6 +205,7 @@ class CmdStanGQ(Generic[Fit]):
         CmdStanMCMC.draws
         """
         self._assemble_generated_quantities()
+        inc_warmup |= inc_iterations
         if inc_warmup:
             if (
                 isinstance(self.previous_fit, CmdStanMCMC)
@@ -522,11 +524,7 @@ class CmdStanGQ(Generic[Fit]):
             'chain', 'draw', ...
         )
 
-    def stan_variable(
-        self,
-        var: str,
-        inc_warmup: bool = False,
-    ) -> np.ndarray:
+    def stan_variable(self, var: str, **kwargs: bool) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the set of draws
         for the named Stan program variable.  Flattens the chains,
@@ -557,9 +555,9 @@ class CmdStanGQ(Generic[Fit]):
 
         :param var: variable name
 
-        :param inc_warmup: When ``True`` and the warmup draws are present in
-            the MCMC sample, then the warmup draws are included.
-            Default value is ``False``.
+        :param kwargs: Additional keyword arguments are passed to the underlying
+            fit's ``stan_variable`` method if the variable is not a generated
+            quantity.
 
         See Also
         --------
@@ -577,36 +575,30 @@ class CmdStanGQ(Generic[Fit]):
                 + ", ".join(model_var_names | gq_var_names)
             )
         if var not in gq_var_names:
-            if isinstance(self.previous_fit, CmdStanMCMC):
-                return self.previous_fit.stan_variable(
-                    var, inc_warmup=inc_warmup
-                )
-            elif isinstance(self.previous_fit, CmdStanMLE):
-                return np.atleast_1d(  # type: ignore
-                    self.previous_fit.stan_variable(
-                        var, inc_iterations=inc_warmup
-                    )
-                )
-            else:
-                return np.atleast_1d(  # type: ignore
-                    self.previous_fit.stan_variable(var)
-                )
+            # TODO(2.0) atleast1d may not be needed
+            return np.atleast_1d(  # type: ignore
+                self.previous_fit.stan_variable(var, **kwargs)
+            )
+
         # is gq variable
         self._assemble_generated_quantities()
 
-        draw1, _ = self._draws_start(inc_warmup)
+        draw1, _ = self._draws_start(
+            inc_warmup=kwargs.get('inc_warmup', False)
+            or kwargs.get('inc_iterations', False)
+        )
         draws = flatten_chains(self._draws[draw1:])
         out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(draws)
         return out
 
-    def stan_variables(self, inc_warmup: bool = False) -> Dict[str, np.ndarray]:
+    def stan_variables(self, **kwargs: bool) -> Dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
 
-        :param inc_warmup: When ``True`` and the warmup draws are present in
-            the MCMC sample, then the warmup draws are included.
-            Default value is ``False``
+        :param kwargs: Additional keyword arguments are passed to the underlying
+            fit's ``stan_variable`` method if the variable is not a generated
+            quantity.
 
         See Also
         --------
@@ -619,10 +611,10 @@ class CmdStanGQ(Generic[Fit]):
         sample_var_names = self.previous_fit._metadata.stan_vars.keys()
         gq_var_names = self._metadata.stan_vars.keys()
         for name in gq_var_names:
-            result[name] = self.stan_variable(name, inc_warmup)
+            result[name] = self.stan_variable(name, **kwargs)
         for name in sample_var_names:
             if name not in gq_var_names:
-                result[name] = self.stan_variable(name, inc_warmup)
+                result[name] = self.stan_variable(name, **kwargs)
         return result
 
     def _assemble_generated_quantities(self) -> None:

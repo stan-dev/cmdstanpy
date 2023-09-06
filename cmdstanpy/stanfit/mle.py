@@ -216,9 +216,9 @@ class CmdStanMLE:
                 data
             )
             # TODO(2.0) remove
-            if out.shape == ():
+            if out.shape == () or out.shape == (1,):
                 get_logger().warning(
-                    "The default behavior of CmdStanVB.stan_variable() "
+                    "The default behavior of CmdStanMLE.stan_variable() "
                     "will change in a future release to always return a "
                     "numpy.ndarray, even for scalar variables."
                 )

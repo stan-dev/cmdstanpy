@@ -32,6 +32,9 @@ CmdStanPy 1.2.0
   - The documentation on how to use external C++ code was updated.
   - Various other bug fixes.
 
+.. note::
+    The minimum supported version for CmdStanPy is now Python 3.8.
+
 CmdStanPy 1.1.0
 ---------------
 - **New functionality**

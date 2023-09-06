@@ -626,9 +626,9 @@ def test_opt_save_iterations(caplog: pytest.LogCaptureFixture):
     assert theta.shape == (1,)
     y_rep = bern_gqs.stan_variable(var='y_rep')
     assert y_rep.shape == (1, 10)
-    theta = bern_gqs.stan_variable(var='theta', inc_warmup=True)
+    theta = bern_gqs.stan_variable(var='theta', inc_iterations=True)
     assert theta.shape == (iters,)
-    y_rep = bern_gqs.stan_variable(var='y_rep', inc_warmup=True)
+    y_rep = bern_gqs.stan_variable(var='y_rep', inc_iterations=True)
     assert y_rep.shape == (iters, 10)
 
 
@@ -659,7 +659,7 @@ def test_opt_request_warmup_none(caplog: pytest.LogCaptureFixture):
         ),
     )
 
-    assert bern_gqs.draws(inc_warmup=True).shape == (1, 1, 10)
+    assert bern_gqs.draws(inc_iterations=True).shape == (1, 1, 10)
 
 
 def test_opt_xarray():
@@ -716,9 +716,9 @@ def test_from_vb():
     )
 
     # stan_variable
-    theta = bern_gqs.stan_variable(var='theta')
+    theta = bern_gqs.stan_variable(var='theta', mean=False)
     assert theta.shape == (1000,)
-    y_rep = bern_gqs.stan_variable(var='y_rep')
+    y_rep = bern_gqs.stan_variable(var='y_rep', mean=False)
     assert y_rep.shape == (1000, 10)
 
 
