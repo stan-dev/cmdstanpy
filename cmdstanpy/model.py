@@ -1667,7 +1667,6 @@ class CmdStanModel:
         :param sig_figs: Numerical precision used for output CSV and text files.
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
-            Introduced in CmdStan-2.25.
 
         :return: A pandas.DataFrame containing columns "lp__" and additional
             columns for the gradient values. These gradients will be for the
