@@ -7,6 +7,30 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`__ on GitHub.
 
+CmdStanPy 1.2.0
+---------------
+- **New functionality**
+
+  - The Pathfinder algorithm (available in CmdStan 2.33+) is now availble as :meth:`CmdStanModel.pathfinder`.
+  - Laplace approximations (available in CmdStan 2.32+) are now available as :meth:`CmdStanModel.laplace_sample`.
+  - The :meth:`CmdStanModel.optimize` method now supports the ``jacobian`` boolean argument to enable change-of-variables adjustments.
+    When enabled, the Maximum a posteriori estimate (MAP) is returned, rather than the MLE.
+  - The :func:`cmdstanpy.install_cmdstan` function and script can install development versions of CmdStan using the ``git:`` prefix in the version.
+
+- **Deprecations**
+  The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations. Additional deprecations in this version:
+
+  - :meth:`CmdStanMLE.stan_variable` will begin returning a :class:`np.ndarray` in all cases, as opposed to the current behavior where sometimes a float is returned.
+  - :meth:`CmdStanVB.stan_variables` will return the _draws_ from the approximate posterior, rather than the optimized mean.
+    A new argument, ``mean``, can be set to True to return the mean instead. Additionally, a :class:`np.ndarray` will be returned in all cases starting in the next version.
+  - :meth:`CmdStanModel.variational` argument ``output_samples`` will has been renamed to ``draws``.
+
+- **Other changes**
+
+  - A list of dictionaries is now allowed as the ``inits`` argument to :meth:`CmdStanModel.sample`.
+  - :func:`cmdstanpy.install_cmdstan` correctly fetches the CmdStan version for ppc64el machines.
+  - The documentation on how to use external C++ code was updated.
+  - Various other bug fixes.
 
 CmdStanPy 1.1.0
 ---------------
