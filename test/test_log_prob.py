@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from test import check_present
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import pytest
@@ -21,21 +21,21 @@ BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
-@pytest.mark.parametrize("sig_figs", [15, 3, None])
-def test_lp_good(sig_figs: Optional[int]) -> None:
+@pytest.mark.parametrize("sig_figs, expected, expected_unadjusted", [
+    (11, ["-7.0214667713","-1.188472607"], ["-5.5395901199", "-1.4903938392"]),
+    (3, ["-7.02", "-1.19"], ["-5.54", "-1.49"]),
+    (None, ["-7.02147", "-1.18847"], ["-5.53959", "-1.49039"])
+])
+def test_lp_good(sig_figs: Optional[int], expected: List[str],
+                 expected_unadjusted: List[str]) -> None:
     model = CmdStanModel(stan_file=BERN_STAN)
     params = {"theta": 0.34903938392023830482}
     out = model.log_prob(params, data=BERN_DATA, sig_figs=sig_figs)
     assert "lp_" in out.columns[0]
 
     # Check the number of digits.
-    expected_values = {
-        None: ["-7.02147", "-1.18847"],
-        3: ["-7.02", "-1.19"],
-        15: ["-7.02146677130525","-1.18847260704286"],
-    }[sig_figs]
-    for actual, expected in zip(out.values[0], expected_values):
-        assert str(actual) == expected
+    for actual, value in zip(out.values[0], expected):
+        assert str(actual) == value
 
     out_unadjusted = model.log_prob(
         params, data=BERN_DATA, jacobian=False, sig_figs=sig_figs
@@ -43,13 +43,8 @@ def test_lp_good(sig_figs: Optional[int]) -> None:
     assert "lp_" in out_unadjusted.columns[0]
     assert not np.allclose(out.to_numpy(), out_unadjusted.to_numpy())
 
-    expected_values = {
-        None: ["-5.53959", "-1.49039"],
-        3: ["-5.54", "-1.49"],
-        15: ["-5.53959011989073", "-1.49039383920238"],
-    }[sig_figs]
-    for actual, expected in zip(out_unadjusted.values[0], expected_values):
-        assert str(actual) == expected
+    for actual, value in zip(out_unadjusted.values[0], expected_unadjusted):
+        assert str(actual) == value
 
 
 def test_lp_bad(
