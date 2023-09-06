@@ -1640,6 +1640,7 @@ class CmdStanModel:
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         *,
         jacobian: bool = True,
+        sig_figs: Optional[int] = None,
     ) -> pd.DataFrame:
         """
         Calculate the log probability and gradient at the given parameter
@@ -1662,6 +1663,11 @@ class CmdStanModel:
 
         :param jacobian: Whether or not to enable the Jacobian adjustment
             for constrained parameters. Defaults to ``True``.
+
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+            Introduced in CmdStan-2.25.
 
         :return: A pandas.DataFrame containing columns "lp__" and additional
             columns for the gradient values. These gradients will be for the
@@ -1689,6 +1695,8 @@ class CmdStanModel:
 
             output = os.path.join(output_dir, "output.csv")
             cmd += ["output", f"file={output}"]
+            if sig_figs is not None:
+                cmd.append(f"sig_figs={sig_figs}")
 
             get_logger().debug("Cmd: %s", str(cmd))
 
