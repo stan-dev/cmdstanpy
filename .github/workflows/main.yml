@@ -49,7 +49,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check out github
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -87,11 +87,16 @@ jobs:
         run: python -m pip freeze
 
       - name: CmdStan installation cacheing
+        id: cache-cmdstan
         if: ${{ !startswith(needs.get-cmdstan-version.outputs.version, 'git:') }}
         uses: actions/cache@v3
         with:
           path: ~/.cmdstan
           key: ${{ runner.os }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
+
+      - name: Delete precompiled header (MacOS)
+        if: matrix.os == 'macos-latest' && steps.cache-cmdstan.outputs.cache-hit == 'true'
+        run: rm -f ~/.cmdstan/cmdstan-${{ needs.get-cmdstan-version.outputs.version }}/stan/src/stan/model/*.hpp.gch
 
       - name: Install CmdStan (Linux, macOS)
         if: matrix.os != 'windows-latest'
