@@ -1456,6 +1456,8 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
+        *,
+        output_samples: Optional[int] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1553,6 +1555,19 @@ class CmdStanModel:
 
         :return: CmdStanVB object
         """
+        if output_samples is not None:
+            if draws is not None:
+                raise ValueError(
+                    "Cannot supply both 'draws' and deprecated argument "
+                    "'output_samples'"
+                )
+            get_logger().warning(
+                "Argument name `output_samples` is deprecated, please "
+                "rename to `draws`."
+            )
+
+            draws = output_samples
+
         variational_args = VariationalArgs(
             algorithm=algorithm,
             iter=iter,
@@ -1766,11 +1781,11 @@ class CmdStanModel:
         Research, 23(306), 1–49. Retrieved from
         http://jmlr.org/papers/v23/21-0889.html
         """
-        # if cmdstan_version_before(2, 33, self.exe_info()):
-        #     raise ValueError(
-        #         "Method 'pathfinder' not available for CmdStan versions "
-        #         "before 2.33"
-        #     )
+        if cmdstan_version_before(2, 33, self.exe_info()):
+            raise ValueError(
+                "Method 'pathfinder' not available for CmdStan versions "
+                "before 2.33"
+            )
 
         if num_single_draws is None:
             num_single_draws = draws
