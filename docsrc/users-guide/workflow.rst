@@ -112,8 +112,7 @@ Assemble input and initialization data
 
 CmdStan is file-based interface, therefore all model input and
 initialization data must be supplied as JSON files, as described in the
-`CmdStan User's Guide
-<https://mc-stan.org/docs/cmdstan-guide/json.html>`__.
+`CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/json.html>`__.
 
 CmdStanPy inference methods allow inputs and initializations
 to be specified as in-memory Python dictionary objects
@@ -127,28 +126,28 @@ Run the CmdStan inference engine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For each CmdStan inference method, there is a corresponding method on the :class:`CmdStanModel` class.
-An example of each is provided in the `next section <examples.rst>`__
+An example of each is provided in the `next section <examples.rst>`__.
 
 * The :meth:`~CmdStanModel.sample` method runs Stan's
-  `HMC-NUTS sampler <https://mc-stan.org/docs/reference-manual/hamiltonian-monte-carlo.html>`_.
+  `HMC-NUTS sampler <https://mc-stan.org/docs/reference-manual/hamiltonian-monte-carlo.html>`__.
 
   It returns a :class:`CmdStanMCMC` object which contains
   a sample from the posterior distribution of the model conditioned on the data.
 
 * The :meth:`~CmdStanModel.variational` method runs Stan's
-  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`_.
+  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`__.
 
   It returns a :class:`CmdStanVB` object which contains
   an approximation the posterior distribution in the unconstrained variable space.
 
 * The :meth:`~CmdStanModel.optimize` runs one of
-  `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`_
+  `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`__.
   to find a mode of the density specified by the Stan program.
 
   It returns a :class:`CmdStanMLE` object.
 
 * The :meth:`~CmdStanModel.generate_quantities` method runs Stan's
-  `generate_quantities method <https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html>`_
+  `generate_quantities method <https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html>`__.
   which generates additional quantities of interest from a mode. Its take an existing fit as input and
   uses the parameter estimates in the fit to run the Stan program's `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__.
 

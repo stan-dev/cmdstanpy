@@ -17,7 +17,7 @@ the StanC compiler, and the C++ toolchain have all been properly installed.
 
 For substantive example models and
 guidance on coding statistical models in Stan, see
-the `Stan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`_.
+the `Stan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`__.
 
 
 The Stan model
@@ -114,7 +114,7 @@ Accessing the results
 ^^^^^^^^^^^^^^^^^^^^^
 
 The sampler outputs are the set of per-chain
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html>`_,
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html>`__,
 a non-standard CSV file format.
 Each data row of the Stan CSV file contains the per-iteration estimate of the Stan model
 parameters, transformed parameters,  and generated quantities variables.
