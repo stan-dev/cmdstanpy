@@ -966,14 +966,14 @@ class CmdStanModel:
             If ``True``, CSV outputs are written to an output file
             '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv', see
-            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            https://mc-stan.org/docs/cmdstan-guide/stan_csv.html,
             section "Diagnostic CSV output file" for details.
 
         :param save_profile: Whether or not to profile auto-diff operations in
             labelled blocks of code.  If ``True``, CSV outputs are written to
             file '<model_name>-<YYYYMMDDHHMM>-profile-<chain_id>'.
             Introduced in CmdStan-2.26, see
-            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            https://mc-stan.org/docs/cmdstan-guide/stan_csv.html,
             section "Profiling CSV output file" for details.
 
         :param show_progress: If ``True``, display progress bar to track
@@ -1740,7 +1740,7 @@ class CmdStanModel:
             labelled blocks of code.  If ``True``, CSV outputs are written to
             file '<model_name>-<YYYYMMDDHHMM>-profile-<path_id>'.
             Introduced in CmdStan-2.26, see
-            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            https://mc-stan.org/docs/cmdstan-guide/stan_csv.html,
             section "Profiling CSV output file" for details.
 
         :param show_console: If ``True``, stream CmdStan messages sent to stdout
@@ -1928,10 +1928,8 @@ class CmdStanModel:
         :param mode: The mode around which to place the approximation.
             This can be:
             * A :class:`CmdStanMLE` object
-            * A path to a CSV file containing the output of an optimization
-              run.
-            * ``None``. In this case, the model will be optimized using the
-                default optimizer settings plus any supplied in ``opt_args``.
+            * A path to a CSV file containing the output of an optimization run.
+            * ``None`` - use default optimizer settings and/or any ``opt_args``.
 
         :param draws: Number of approximate draws to return.
             Defaults to 1000
@@ -1954,7 +1952,7 @@ class CmdStanModel:
             labelled blocks of code.  If ``True``, CSV outputs are written to
             file '<model_name>-<YYYYMMDDHHMM>-profile-<path_id>'.
             Introduced in CmdStan-2.26, see
-            https://mc-stan.org/docs/cmdstan-guide/stan-csv.html,
+            https://mc-stan.org/docs/cmdstan-guide/stan_csv.html,
             section "Profiling CSV output file" for details.
 
         :param show_console: If ``True``, stream CmdStan messages sent to stdout
