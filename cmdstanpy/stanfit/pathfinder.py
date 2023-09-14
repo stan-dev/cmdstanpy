@@ -1,5 +1,5 @@
 """
-    Container for the result of running Pathfinder.
+Container for the result of running Pathfinder.
 """
 
 from typing import Dict, List, Optional, Tuple, Union
@@ -42,9 +42,10 @@ class CmdStanPathfinder:
         :param seed: Used for random selection, defaults to None
         :param chains: Number of initial values to return, defaults to 4
         :return: The initial values for the parameters of the model.
-            If ``chains`` is 1, a dictionary is returned, otherwise a list
-            of dictionaries is returned, in the format expected for
-            :meth:`CmdStanModel.sample`'s ``inits`` argument.
+        
+        If ``chains`` is 1, a dictionary is returned, otherwise a list
+        of dictionaries is returned, in the format expected for the
+        ``inits`` argument. of :meth:`CmdStanModel.sample`.
         """
         self._assemble_draws()
         rng = np.random.default_rng(seed)
@@ -129,10 +130,6 @@ class CmdStanPathfinder:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
-
-        :param inc_warmup: When ``True`` and the warmup draws are present in
-            the MCMC sample, then the warmup draws are included.
-            Default value is ``False``
 
         See Also
         --------
