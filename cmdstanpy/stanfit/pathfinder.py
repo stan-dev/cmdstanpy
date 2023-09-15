@@ -42,7 +42,7 @@ class CmdStanPathfinder:
         :param seed: Used for random selection, defaults to None
         :param chains: Number of initial values to return, defaults to 4
         :return: The initial values for the parameters of the model.
-        
+
         If ``chains`` is 1, a dictionary is returned, otherwise a list
         of dictionaries is returned, in the format expected for the
         ``inits`` argument. of :meth:`CmdStanModel.sample`.
