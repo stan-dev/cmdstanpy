@@ -122,20 +122,8 @@ def scan_optimize_csv(path: str, save_iters: bool = False) -> Dict[str, Any]:
     return dict
 
 
-def scan_laplace_csv(path: str) -> Dict[str, Any]:
+def scan_generic_csv(path: str) -> Dict[str, Any]:
     """Process laplace stan_csv output file line by line."""
-    dict: Dict[str, Any] = {}
-    lineno = 0
-    with open(path, 'r') as fd:
-        lineno = scan_config(fd, dict, lineno)
-        lineno = scan_column_names(fd, dict, lineno)
-    return dict
-
-
-def scan_generated_quantities_csv(path: str) -> Dict[str, Any]:
-    """
-    Process standalone generated quantities stan_csv output file line by line.
-    """
     dict: Dict[str, Any] = {}
     lineno = 0
     with open(path, 'r') as fd:

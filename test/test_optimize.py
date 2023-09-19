@@ -368,7 +368,7 @@ def test_parameters_are_floats() -> None:
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
     jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -377,7 +377,7 @@ def test_parameters_are_floats() -> None:
             tol_obj="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -386,7 +386,7 @@ def test_parameters_are_floats() -> None:
             tol_rel_obj="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -395,7 +395,7 @@ def test_parameters_are_floats() -> None:
             tol_grad="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -404,7 +404,7 @@ def test_parameters_are_floats() -> None:
             tol_rel_grad="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -413,7 +413,7 @@ def test_parameters_are_floats() -> None:
             tol_param="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of int'):
+    with pytest.raises(ValueError, match='must be of type int'):
         model.optimize(
             data=jdata,
             seed=1239812093,

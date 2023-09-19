@@ -31,12 +31,8 @@ except ImportError:
 
 
 from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils import (
-    build_xarray_data,
-    flatten_chains,
-    get_logger,
-    scan_generated_quantities_csv,
-)
+from cmdstanpy.utils import build_xarray_data, flatten_chains, get_logger
+from cmdstanpy.utils.stancsv import scan_generic_csv
 
 from .mcmc import CmdStanMCMC
 from .metadata import InferenceMetadata
@@ -113,11 +109,11 @@ class CmdStanGQ(Generic[Fit]):
         dzero = {}
         for i in range(self.chains):
             if i == 0:
-                dzero = scan_generated_quantities_csv(
+                dzero = scan_generic_csv(
                     path=self.runset.csv_files[i],
                 )
             else:
-                drest = scan_generated_quantities_csv(
+                drest = scan_generic_csv(
                     path=self.runset.csv_files[i],
                 )
                 for key in dzero:

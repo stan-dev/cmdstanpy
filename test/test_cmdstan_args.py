@@ -13,8 +13,10 @@ from cmdstanpy import _TMPDIR, cmdstan_path
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
+    LaplaceArgs,
     Method,
     OptimizeArgs,
+    PathfinderArgs,
     SamplerArgs,
     VariationalArgs,
 )
@@ -739,3 +741,95 @@ def test_variational_args_bad() -> None:
     args = VariationalArgs(output_samples=0)
     with pytest.raises(ValueError):
         args.validate()
+
+
+def test_args_laplace():
+    mode = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
+    args = LaplaceArgs(mode=mode)
+    args.validate()
+    cmd = args.compose(0, cmd=[])
+    full_cmd = ' '.join(cmd)
+    assert 'method=laplace' in full_cmd
+    assert 'rosenbrock_mle.csv' in full_cmd
+
+    args = LaplaceArgs(mode=mode, jacobian=False)
+    args.validate()
+    cmd = args.compose(0, cmd=[])
+    full_cmd = ' '.join(cmd)
+    assert 'method=laplace' in full_cmd
+    assert 'rosenbrock_mle.csv' in full_cmd
+    assert 'jacobian=0' in full_cmd
+
+
+def test_args_laplace_bad():
+    fake_mode = os.path.join(DATAFILES_PATH, 'not_here.csv')
+    args = LaplaceArgs(mode=fake_mode)
+    with pytest.raises(ValueError):
+        args.validate()
+
+    mode = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
+    args = LaplaceArgs(mode=mode, draws=0)
+    with pytest.raises(ValueError):
+        args.validate()
+
+    args = LaplaceArgs(mode=mode, draws=1.1)
+    with pytest.raises(ValueError):
+        args.validate()
+
+
+def test_args_pathfinder():
+    args = PathfinderArgs()
+    args.validate()
+    cmd = args.compose(0, cmd=[])
+    full_cmd = ' '.join(cmd)
+    assert 'method=pathfinder' in full_cmd
+
+    args = PathfinderArgs(init_alpha=0.1)
+    args.validate()
+    cmd = args.compose(0, cmd=[])
+    full_cmd = ' '.join(cmd)
+    assert 'method=pathfinder' in full_cmd
+    assert 'init_alpha=0.1' in full_cmd
+
+    args = PathfinderArgs(
+        num_draws=93, num_psis_draws=42, num_paths=5, num_elbo_draws=10
+    )
+    args.validate()
+    cmd = args.compose(0, cmd=[])
+    full_cmd = ' '.join(cmd)
+    assert 'method=pathfinder' in full_cmd
+    assert 'num_draws=93' in full_cmd
+    assert 'num_psis_draws=42' in full_cmd
+    assert 'num_paths=5' in full_cmd
+    assert 'num_elbo_draws=10' in full_cmd
+
+
+@pytest.mark.parametrize(
+    "arg,require_int",
+    [
+        ('init_alpha', False),
+        ('tol_obj', False),
+        ('tol_rel_obj', False),
+        ('tol_grad', False),
+        ('tol_rel_grad', False),
+        ('tol_param', False),
+        ('history_size', True),
+        ('num_psis_draws', True),
+        ('num_paths', True),
+        ('max_lbfgs_iters', True),
+        ('num_draws', True),
+        ('num_elbo_draws', True),
+    ],
+)
+def test_args_pathfinder_bad(arg, require_int):
+    # pathfinder's only arg restrictions are on positiveness
+    args = PathfinderArgs(**{arg: 0})
+    with pytest.raises(ValueError):
+        args.validate()
+    args = PathfinderArgs(**{arg: -1})
+    with pytest.raises(ValueError):
+        args.validate()
+    if require_int:
+        args = PathfinderArgs(**{arg: 1.1})
+        with pytest.raises(ValueError):
+            args.validate()
