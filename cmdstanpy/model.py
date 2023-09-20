@@ -501,9 +501,9 @@ class CmdStanModel:
         self._exe_file = compilation.compile_stan_file(
             str(self.stan_file),
             force=force,
-            stanc_options=self._compiler_options._stanc_options,
-            cpp_options=self._compiler_options._cpp_options,
-            user_header=self._compiler_options._user_header,
+            stanc_options=self._compiler_options.stanc_options,
+            cpp_options=self._compiler_options.cpp_options,
+            user_header=self._compiler_options.user_header,
         )
 
     def optimize(
