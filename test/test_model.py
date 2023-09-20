@@ -281,7 +281,7 @@ def test_compile_with_includes(
     # Compile after modifying included file, ensuring cache is not used.
     def _patched_getmtime(filename: str) -> float:
         includes = ['divide_real_by_two.stan', 'add_one_function.stan']
-        if any(filename.endswith(include) for include in includes):
+        if any(str(filename).endswith(include) for include in includes):
             return float('inf')
         return getmtime(filename)
 
