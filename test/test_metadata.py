@@ -64,10 +64,7 @@ def test_good() -> None:
         'energy__',
     }
 
-    method_vars_cols = metadata.method_vars_cols
+    method_vars_cols = metadata.method_vars
     assert hmc_vars == method_vars_cols.keys()
     bern_model_vars = {'theta'}
-    assert bern_model_vars == metadata.stan_vars_dims.keys()
-    assert () == metadata.stan_vars_dims['theta']
-    assert bern_model_vars == metadata.stan_vars_cols.keys()
-    assert metadata.stan_vars_cols['theta'] == (7,)
+    assert bern_model_vars == metadata.stan_vars.keys()

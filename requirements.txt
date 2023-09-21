@@ -1,3 +1,4 @@
 pandas
 numpy>=1.21
 tqdm
+stanio~=0.3.0

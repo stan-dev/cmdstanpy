@@ -22,14 +22,16 @@ atexit.register(_cleanup_tmpdir)
 
 
 from ._version import __version__  # noqa
+from .compilation import compile_stan_file
 from .install_cmdstan import rebuild_cmdstan
 from .model import CmdStanModel
 from .stanfit import (
     CmdStanGQ,
+    CmdStanLaplace,
     CmdStanMCMC,
     CmdStanMLE,
+    CmdStanPathfinder,
     CmdStanVB,
-    InferenceMetadata,
     from_csv,
 )
 from .utils import (
@@ -47,12 +49,14 @@ __all__ = [
     'cmdstan_path',
     'set_make_env',
     'install_cmdstan',
+    'compile_stan_file',
     'CmdStanMCMC',
     'CmdStanMLE',
     'CmdStanGQ',
     'CmdStanVB',
+    'CmdStanLaplace',
+    'CmdStanPathfinder',
     'CmdStanModel',
-    'InferenceMetadata',
     'from_csv',
     'write_stan_json',
     'show_versions',

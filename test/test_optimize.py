@@ -197,11 +197,11 @@ def test_variable_bern() -> None:
         tol_param=1e-8,
         history_size=5,
     )
-    assert 1 == len(bern_mle.metadata.stan_vars_dims)
-    assert 'theta' in bern_mle.metadata.stan_vars_dims
-    assert bern_mle.metadata.stan_vars_dims['theta'] == ()
+    assert 1 == len(bern_mle.metadata.stan_vars)
+    assert 'theta' in bern_mle.metadata.stan_vars
+    assert bern_mle.metadata.stan_vars['theta'].dimensions == ()
     theta = bern_mle.stan_variable(var='theta')
-    assert isinstance(theta, float)
+    assert theta.shape == ()
     with pytest.raises(ValueError):
         bern_mle.stan_variable(var='eta')
     with pytest.raises(ValueError):
@@ -225,23 +225,23 @@ def test_variables_3d() -> None:
         tol_param=1e-8,
         history_size=5,
     )
-    assert 3 == len(multidim_mle.metadata.stan_vars_dims)
-    assert 'y_rep' in multidim_mle.metadata.stan_vars_dims
-    assert multidim_mle.metadata.stan_vars_dims['y_rep'] == (5, 4, 3)
+    assert 3 == len(multidim_mle.metadata.stan_vars)
+    assert 'y_rep' in multidim_mle.metadata.stan_vars
+    assert multidim_mle.metadata.stan_vars['y_rep'].dimensions == (5, 4, 3)
     var_y_rep = multidim_mle.stan_variable(var='y_rep')
     assert var_y_rep.shape == (5, 4, 3)
     var_beta = multidim_mle.stan_variable(var='beta')
-    assert var_beta.shape == (2,)  # 1-element tuple
+    assert var_beta.shape == (2,)
     var_frac_60 = multidim_mle.stan_variable(var='frac_60')
-    assert isinstance(var_frac_60, float)
+    assert var_frac_60.shape == ()
     vars = multidim_mle.stan_variables()
-    assert len(vars) == len(multidim_mle.metadata.stan_vars_dims)
+    assert len(vars) == len(multidim_mle.metadata.stan_vars)
     assert 'y_rep' in vars
     assert vars['y_rep'].shape == (5, 4, 3)
     assert 'beta' in vars
     assert vars['beta'].shape == (2,)
     assert 'frac_60' in vars
-    assert isinstance(vars['frac_60'], float)
+    assert vars['frac_60'].shape == ()
 
     multidim_mle_iters = multidim_model.optimize(
         data=jdata,
@@ -258,7 +258,7 @@ def test_variables_3d() -> None:
         save_iterations=True,
     )
     vars_iters = multidim_mle_iters.stan_variables(inc_iterations=True)
-    assert len(vars_iters) == len(multidim_mle_iters.metadata.stan_vars_dims)
+    assert len(vars_iters) == len(multidim_mle_iters.metadata.stan_vars)
     assert 'y_rep' in vars_iters
     assert vars_iters['y_rep'].shape == (8, 5, 4, 3)
     assert 'beta' in vars_iters
@@ -368,7 +368,7 @@ def test_parameters_are_floats() -> None:
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
     jinit = os.path.join(DATAFILES_PATH, 'bernoulli.init.json')
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -377,7 +377,7 @@ def test_parameters_are_floats() -> None:
             tol_obj="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -386,7 +386,7 @@ def test_parameters_are_floats() -> None:
             tol_rel_obj="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -395,7 +395,7 @@ def test_parameters_are_floats() -> None:
             tol_grad="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -404,7 +404,7 @@ def test_parameters_are_floats() -> None:
             tol_rel_grad="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of float'):
+    with pytest.raises(ValueError, match='must be of type float'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -413,7 +413,7 @@ def test_parameters_are_floats() -> None:
             tol_param="rabbit",
         )
 
-    with pytest.raises(ValueError, match='must be type of int'):
+    with pytest.raises(ValueError, match='must be of type int'):
         model.optimize(
             data=jdata,
             seed=1239812093,
@@ -560,7 +560,7 @@ def test_single_row_csv() -> None:
     stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
     model = CmdStanModel(stan_file=stan)
     mle = model.optimize()
-    assert isinstance(mle.stan_variable('theta'), float)
+    assert mle.stan_variable('theta').shape == ()
     z_as_ndarray = mle.stan_variable(var="z")
     assert z_as_ndarray.shape == (4, 3)
     for i in range(4):
@@ -621,7 +621,7 @@ def test_attrs() -> None:
 
     assert fit.a == 4.5
     assert fit.b.shape == (3,)
-    assert isinstance(fit.theta, float)
+    assert fit.theta.shape == ()
 
     assert fit.stan_variable('thin') == 3.5
 

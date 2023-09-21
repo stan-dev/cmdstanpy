@@ -17,7 +17,7 @@ the StanC compiler, and the C++ toolchain have all been properly installed.
 
 For substantive example models and
 guidance on coding statistical models in Stan, see
-the `Stan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`_.
+the `Stan User's Guide <https://mc-stan.org/docs/stan-users-guide/index.html>`__.
 
 
 The Stan model
@@ -31,7 +31,7 @@ given a set of N observations of i.i.d. binary data
 
     data {
       int<lower=0> N;
-      int<lower=0,upper=1> y[N];
+      array[N] int<lower=0,upper=1> y;
     }
     parameters {
       real<lower=0,upper=1> theta;
@@ -114,7 +114,7 @@ Accessing the results
 ^^^^^^^^^^^^^^^^^^^^^
 
 The sampler outputs are the set of per-chain
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html>`_,
+`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan-csv.html>`__,
 a non-standard CSV file format.
 Each data row of the Stan CSV file contains the per-iteration estimate of the Stan model
 parameters, transformed parameters,  and generated quantities variables.
@@ -162,7 +162,7 @@ The `CmdStanMCMC` object provides the following accessor methods:
     print(f'numpy.ndarray of draws: {fit.draws().shape}')
     fit.draws_pd()
 
-    
+
 In addition to the MCMC sample itself, the CmdStanMCMC object provides
 access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sampler,
 (if present).
@@ -180,12 +180,6 @@ The CmdStanMCMC object also provides access to metadata about the model and the 
 
     print(fit.metadata.cmdstan_config['model'])
     print(fit.metadata.cmdstan_config['seed'])
-
-    print(fit.metadata.stan_vars_cols.keys())
-    print(fit.metadata.method_vars_cols.keys())
-
-
-
 
 
 CmdStan utilities:  ``stansummary``, ``diagnose``

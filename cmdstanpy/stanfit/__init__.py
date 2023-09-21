@@ -6,7 +6,9 @@ from typing import Any, Dict, List, Optional, Union
 
 from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
+    LaplaceArgs,
     OptimizeArgs,
+    PathfinderArgs,
     SamplerArgs,
     VariationalArgs,
 )
@@ -17,6 +19,7 @@ from .laplace import CmdStanLaplace
 from .mcmc import CmdStanMCMC
 from .metadata import InferenceMetadata
 from .mle import CmdStanMLE
+from .pathfinder import CmdStanPathfinder
 from .runset import RunSet
 from .vb import CmdStanVB
 
@@ -28,13 +31,16 @@ __all__ = [
     "CmdStanVB",
     "CmdStanGQ",
     "CmdStanLaplace",
+    "CmdStanPathfinder",
 ]
 
 
 def from_csv(
     path: Union[str, List[str], os.PathLike, None] = None,
     method: Optional[str] = None,
-) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB, None]:
+) -> Union[
+    CmdStanMCMC, CmdStanMLE, CmdStanVB, CmdStanPathfinder, CmdStanLaplace, None
+]:
     """
     Instantiate a CmdStan object from a the Stan CSV files from a CmdStan run.
     CSV files are specified from either a list of Stan CSV files or a single
@@ -56,6 +62,8 @@ def from_csv(
         'sample',
         'optimize',
         'variational',
+        'laplace',
+        'pathfinder',
     ]:
         raise ValueError(
             'Bad method argument {}, must be one of: '
@@ -212,6 +220,43 @@ def from_csv(
             for i in range(len(runset._retcodes)):
                 runset._set_retcode(i, 0)
             return CmdStanVB(runset)
+        elif config_dict['method'] == 'laplace':
+            laplace_args = LaplaceArgs(
+                mode=config_dict['mode'],
+                draws=config_dict['draws'],
+                jacobian=config_dict['jacobian'],
+            )
+            cmdstan_args = CmdStanArgs(
+                model_name=config_dict['model'],
+                model_exe=config_dict['model'],
+                chain_ids=None,
+                method_args=laplace_args,
+            )
+            runset = RunSet(args=cmdstan_args)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            mode: CmdStanMLE = from_csv(
+                config_dict['mode'],
+                method='optimize',
+            )  # type: ignore
+            return CmdStanLaplace(runset, mode=mode)
+        elif config_dict['method'] == 'pathfinder':
+            pathfinder_args = PathfinderArgs(
+                num_draws=config_dict['num_draws'],
+                num_paths=config_dict['num_paths'],
+            )
+            cmdstan_args = CmdStanArgs(
+                model_name=config_dict['model'],
+                model_exe=config_dict['model'],
+                chain_ids=None,
+                method_args=pathfinder_args,
+            )
+            runset = RunSet(args=cmdstan_args)
+            runset._csv_files = csvfiles
+            for i in range(len(runset._retcodes)):
+                runset._set_retcode(i, 0)
+            return CmdStanPathfinder(runset)
         else:
             get_logger().info(
                 'Unable to process CSV output files from method %s.',

@@ -254,9 +254,9 @@ def test_from_previous_fit_variables() -> None:
         bern_gqs.stan_variable(var='lp__')
 
     vars_dict = bern_gqs.stan_variables()
-    var_names = list(
-        bern_gqs.previous_fit.metadata.stan_vars_cols.keys()
-    ) + list(bern_gqs.metadata.stan_vars_cols.keys())
+    var_names = list(bern_gqs.previous_fit.metadata.stan_vars.keys()) + list(
+        bern_gqs.metadata.stan_vars.keys()
+    )
     assert set(var_names) == set(list(vars_dict.keys()))
 
 
@@ -329,9 +329,9 @@ def test_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
         bern_gqs.stan_variable(var='lp__')
 
     vars_dict = bern_gqs.stan_variables()
-    var_names = list(
-        bern_gqs.previous_fit.metadata.stan_vars_cols.keys()
-    ) + list(bern_gqs.metadata.stan_vars_cols.keys())
+    var_names = list(bern_gqs.previous_fit.metadata.stan_vars.keys()) + list(
+        bern_gqs.metadata.stan_vars.keys()
+    )
     assert set(var_names) == set(list(vars_dict.keys()))
 
     xr_data = bern_gqs.draws_xr()
@@ -717,8 +717,7 @@ def test_from_vb():
 
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta')
-    # VB behavior is weird: it draws from mean by default?
-    assert theta.shape == (1,)
+    assert theta.shape == (1000,)
     y_rep = bern_gqs.stan_variable(var='y_rep')
     assert y_rep.shape == (1000, 10)
 

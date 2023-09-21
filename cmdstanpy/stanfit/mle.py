@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from cmdstanpy.cmdstan_args import Method, OptimizeArgs
-from cmdstanpy.utils import BaseType, get_logger, scan_optimize_csv
+from cmdstanpy.utils import get_logger, scan_optimize_csv
 
 from .metadata import InferenceMetadata
 from .runset import RunSet
@@ -169,7 +169,7 @@ class CmdStanMLE:
         *,
         inc_iterations: bool = False,
         warn: bool = True,
-    ) -> Union[np.ndarray, float]:
+    ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -192,11 +192,10 @@ class CmdStanMLE:
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
-        if var not in self._metadata.stan_vars_dims:
+        if var not in self._metadata.stan_vars:
             raise ValueError(
                 f'Unknown variable name: {var}\n'
-                'Available variables are '
-                + ", ".join(self._metadata.stan_vars_dims)
+                'Available variables are ' + ", ".join(self._metadata.stan_vars)
             )
         if warn and inc_iterations and not self._save_iterations:
             get_logger().warning(
@@ -207,40 +206,27 @@ class CmdStanMLE:
             get_logger().warning(
                 'Invalid estimate, optimization failed to converge.'
             )
-
-        col_idxs = list(self._metadata.stan_vars_cols[var])
         if inc_iterations and self._save_iterations:
-            num_rows = self._all_iters.shape[0]
+            data = self._all_iters
         else:
-            num_rows = 1
+            data = self._mle
 
-        if len(col_idxs) > 1:  # container var
-            dims = (num_rows,) + self._metadata.stan_vars_dims[var]
-            # pylint: disable=redundant-keyword-arg
-            if num_rows > 1:
-                result = self._all_iters[:, col_idxs]
-            else:
-                result = self._mle[col_idxs]
-                dims = dims[1:]
-
-            if self._metadata.stan_vars_types[var] == BaseType.COMPLEX:
-                result = result[..., ::2] + 1j * result[..., 1::2]
-                dims = dims[:-1]
-
-            result = result.reshape(dims, order='F')
-
-            return result
-
-        else:  # scalar var
-            col_idx = col_idxs[0]
-            if num_rows > 1:
-                return self._all_iters[:, col_idx]
-            else:
-                return float(self._mle[col_idx])
+        try:
+            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
+                data
+            )
+            return out
+        except KeyError:
+            # pylint: disable=raise-missing-from
+            raise ValueError(
+                f'Unknown variable name: {var}\n'
+                'Available variables are '
+                + ", ".join(self._metadata.stan_vars.keys())
+            )
 
     def stan_variables(
         self, inc_iterations: bool = False
-    ) -> Dict[str, Union[np.ndarray, float]]:
+    ) -> Dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
@@ -263,7 +249,7 @@ class CmdStanMLE:
                 'Invalid estimate, optimization failed to converge.'
             )
         result = {}
-        for name in self._metadata.stan_vars_dims.keys():
+        for name in self._metadata.stan_vars:
             result[name] = self.stan_variable(
                 name, inc_iterations=inc_iterations, warn=False
             )
