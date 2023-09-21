@@ -110,9 +110,9 @@ jobs:
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
-          $env:TBB_CXXFLAGS = "-D_URCT"
-          python -m cmdstanpy.install_cmdstan --version ${{ needs.get-cmdstan-version.outputs.version }} --cores 2 --verbose
-          echo "TBB_CXXFLAGS+=-D_URCT" >> ~/.cmdstan/cmdstan-${{ needs.get-cmdstan-version.outputs.version }}/make/local
+          $env:TBB_CXXFLAGS = "-D_UCRT"
+          python -m cmdstanpy.install_cmdstan --version ${{ needs.get-cmdstan-version.outputs.version }} --cores 2
+          echo "TBB_CXXFLAGS+=-D_UCRT" >> ~/.cmdstan/cmdstan-${{ needs.get-cmdstan-version.outputs.version }}/make/local
 
       - name: Run tests
         run: |
