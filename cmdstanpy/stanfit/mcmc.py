@@ -366,7 +366,8 @@ class CmdStanMCMC:
                         f'({((self._max_treedepths[i]/ct_iters)*100):.1f}%)'
                     )
             diagnostics.append(
-                'Use function "diagnose()" to see further information.'
+                'Use the "diagnose()" method on the CmdStanMCMC object'
+                ' to see further information.'
             )
             get_logger().warning('\n\t'.join(diagnostics))
 

@@ -281,7 +281,7 @@ def test_compile_with_includes(
     # Compile after modifying included file, ensuring cache is not used.
     def _patched_getmtime(filename: str) -> float:
         includes = ['divide_real_by_two.stan', 'add_one_function.stan']
-        if any(filename.endswith(include) for include in includes):
+        if any(str(filename).endswith(include) for include in includes):
             return float('inf')
         return getmtime(filename)
 
@@ -492,6 +492,18 @@ def test_model_includes_explicit() -> None:
     )
     assert BERN_STAN == model.stan_file
     assert os.path.samefile(model.exe_file, BERN_EXE)
+
+
+def test_model_compile_with_explicit_includes() -> None:
+    stan_file = os.path.join(DATAFILES_PATH, "add_one_model.stan")
+    exe_file = os.path.splitext(stan_file)[0] + EXTENSION
+    if os.path.isfile(exe_file):
+        os.unlink(exe_file)
+
+    model = CmdStanModel(stan_file=stan_file, compile=False)
+    include_paths = [os.path.join(DATAFILES_PATH, "include-path")]
+    stanc_options = {"include-paths": include_paths}
+    model.compile(stanc_options=stanc_options)
 
 
 def test_model_includes_implicit() -> None:

@@ -3,8 +3,7 @@
 
 # ### Import CmdStanPy classes and methods
 
-import os.path
-import sys
+import os
 
 from cmdstanpy import CmdStanModel, cmdstan_path
 

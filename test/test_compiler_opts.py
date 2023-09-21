@@ -6,7 +6,7 @@ from test import check_present
 
 import pytest
 
-from cmdstanpy.compiler_opts import CompilerOptions
+from cmdstanpy.compilation import CompilerOptions
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
