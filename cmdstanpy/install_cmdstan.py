@@ -361,7 +361,7 @@ def compile_example(verbose: bool = False) -> None:
             do_command(cmd, fd_out=None)
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
-        raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
+        raise CmdStanInstallError(f'Command "{" ".join(cmd)}" failed:\n{e}')
 
     if not path.is_file():
         raise CmdStanInstallError("Failed to generate example binary")
