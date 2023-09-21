@@ -349,12 +349,13 @@ def compile_example(verbose: bool = False) -> None:
 
     :param verbose: Boolean value; when ``True``, show output from make command.
     """
-    cmd = [
-        MAKE,
-        Path(
-            os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
-        ).as_posix(),
-    ]
+    path = Path(
+        os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
+    )
+    if path.is_file():
+        path.unlink()
+
+    cmd = [MAKE, path.as_posix()]
     try:
         if verbose:
             do_command(cmd)
@@ -635,8 +636,10 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
             )
         else:
             print('CmdStan version {} already installed'.format(args.version))
-        print('Test model compilation')
-        compile_example(args.verbose)
+
+        with pushd(cmdstan_version):
+            print('Test model compilation')
+            compile_example(args.verbose)
 
 
 def parse_cmdline_args() -> Dict[str, Any]:
