@@ -421,8 +421,6 @@ def install_version(
             clean_all(verbose)
             print('Rebuilding version {}'.format(cmdstan_version))
         build(verbose, progress=progress, cores=cores)
-        print('Test model compilation')
-        compile_example(verbose)
     print('Installed {}'.format(cmdstan_version))
 
 
@@ -637,6 +635,8 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
             )
         else:
             print('CmdStan version {} already installed'.format(args.version))
+        print('Test model compilation')
+        compile_example(args.verbose)
 
 
 def parse_cmdline_args() -> Dict[str, Any]:
