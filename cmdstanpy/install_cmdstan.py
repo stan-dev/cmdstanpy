@@ -349,9 +349,7 @@ def compile_example(verbose: bool = False) -> None:
 
     :param verbose: Boolean value; when ``True``, show output from make command.
     """
-    path = Path(
-        os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
-    )
+    path = Path('examples', 'bernoulli', 'bernoulli').with_suffix(EXTENSION)
     if path.is_file():
         path.unlink()
 
