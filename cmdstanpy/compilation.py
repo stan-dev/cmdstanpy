@@ -60,6 +60,7 @@ STANC_IGNORE_OPTS = [
 OptionalPath = Union[str, os.PathLike, None]
 
 
+# TODO(2.0): can remove add function and other logic
 class CompilerOptions:
     """
     User-specified flags for stanc and C++ compiler.

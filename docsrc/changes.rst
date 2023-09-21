@@ -20,6 +20,9 @@ CmdStanPy 1.2.0
 - **Deprecations**
   The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations. Additional deprecations in this version:
 
+  - :class:`CmdStanModel` will *require* that it has a compiled executable after construction. The ``compile`` argument is deprecated,
+    (the ability to force recompilation is available under the argument ``force_compile``), and the ``compile()`` method is deprecated.
+    If you wish to compile Stan files independent of constructing a model, use :func:`cmdstanpy.compile_stan_file`.
   - :meth:`CmdStanMLE.stan_variable` will begin returning a :class:`np.ndarray` in all cases, as opposed to the current behavior where sometimes a float is returned.
   - :meth:`CmdStanVB.stan_variables` will return the _draws_ from the approximate posterior, rather than the optimized mean.
     A new argument, ``mean``, can be set to True to return the mean instead. Additionally, a :class:`np.ndarray` will be returned in all cases starting in the next version.

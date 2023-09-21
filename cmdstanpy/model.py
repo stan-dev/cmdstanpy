@@ -434,6 +434,7 @@ class CmdStanModel:
             )
         return code
 
+    # TODO(2.0): remove
     def compile(
         self,
         force: bool = False,
