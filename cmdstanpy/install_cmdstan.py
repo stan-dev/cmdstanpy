@@ -363,6 +363,9 @@ def compile_example(verbose: bool = False) -> None:
         # pylint: disable=raise-missing-from
         raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
 
+    if not path.is_file():
+        raise CmdStanInstallError("Failed to generate example binary")
+
 
 def rebuild_cmdstan(
     verbose: bool = False, progress: bool = True, cores: int = 1
