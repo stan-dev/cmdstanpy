@@ -25,14 +25,14 @@ A CmdStanModel object encapsulates the Stan program. It manages program compilat
 :meth:`~CmdStanModel.sample`
     runs the HMC-NUTS sampler to produce a set of draws from the posterior distribution.
 
-:meth:`~CmdStanModel.pathfinder`
-    runs the Pathfinder variational inference parameters to recieve approximate draws from the posterior.
-
 :meth:`~CmdStanModel.optimize`
     produce a penalized maximum likelihood estimate or maximum a posteriori estimate (point estimate) of the model parameters.
 
 :meth:`~CmdStanModel.laplace_sample`
     draw from a Laplace approximatation centered at the posterior mode found by ``optimize``.
+
+:meth:`~CmdStanModel.pathfinder`
+    runs the Pathfinder variational inference parameters to recieve approximate draws from the posterior.
 
 :meth:`~CmdStanModel.variational`
     run CmdStan’s automatic differentiation variational inference (ADVI) algorithm to approximate the posterior distribution.
@@ -43,18 +43,10 @@ A CmdStanModel object encapsulates the Stan program. It manages program compilat
 .. autoclass:: cmdstanpy.CmdStanModel
    :members:
 
-
 CmdStanMCMC
 ===========
 
 .. autoclass:: cmdstanpy.CmdStanMCMC
-   :members:
-
-
-CmdStanPathfinder
-=================
-
-.. autoclass:: cmdstanpy.CmdStanPathfinder
    :members:
 
 CmdStanMLE
@@ -63,10 +55,16 @@ CmdStanMLE
 .. autoclass:: cmdstanpy.CmdStanMLE
    :members:
 
-CmdStanGQ
-=========
+CmdStanLaplace
+==============
 
-.. autoclass:: cmdstanpy.CmdStanGQ
+.. autoclass:: cmdstanpy.CmdStanLaplace
+   :members:
+
+CmdStanPathfinder
+=================
+
+.. autoclass:: cmdstanpy.CmdStanPathfinder
    :members:
 
 CmdStanVB
@@ -75,10 +73,10 @@ CmdStanVB
 .. autoclass:: cmdstanpy.CmdStanVB
    :members:
 
-CmdStanLaplace
-==============
+CmdStanGQ
+=========
 
-.. autoclass:: cmdstanpy.CmdStanLaplace
+.. autoclass:: cmdstanpy.CmdStanGQ
    :members:
 
 *********

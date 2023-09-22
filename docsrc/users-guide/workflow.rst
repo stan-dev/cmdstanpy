@@ -134,22 +134,34 @@ An example of each is provided in the `next section <examples.rst>`__.
   It returns a :class:`CmdStanMCMC` object which contains
   a sample from the posterior distribution of the model conditioned on the data.
 
-* The :meth:`~CmdStanModel.variational` method runs Stan's
-  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`__.
-
-  It returns a :class:`CmdStanVB` object which contains
-  an approximation the posterior distribution in the unconstrained variable space.
-
-* The :meth:`~CmdStanModel.optimize` runs one of
+* The :meth:`~CmdStanModel.optimize` method runs one of
   `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`__.
   to find a mode of the density specified by the Stan program.
 
   It returns a :class:`CmdStanMLE` object.
 
+* The :meth:`~CmdStanModel.laplace` method runs Stan's
+  `Laplace approximation algorithm <https://mc-stan.org/docs/reference-manual/laplace.html>`__.
+  and returns a sample from a Laplace approximatation centered at the posterior mode found by optimization.
+
+  It returns a :class:`CmdStanLaplace` object.
+
+* The :meth:`~CmdStanModel.pathfinder` method runs Stan's
+  `Pathfinder Variational Inference algorithm <https://mc-stan.org/docs/reference-manual/pathfinder.html>`__.
+
+  It returns a :class:`CmdStanPathfinder` object which contains a sample from a Guassian approximation to the posterior.
+
+* The :meth:`~CmdStanModel.variational` method runs Stan's
+  `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`__.
+
+  It returns a :class:`CmdStanVB` object which contains
+  an approximation to the posterior distribution in the unconstrained variable space.
+
 * The :meth:`~CmdStanModel.generate_quantities` method runs Stan's
   `generate_quantities method <https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html>`__.
   which generates additional quantities of interest from a mode. Its take an existing fit as input and
-  uses the parameter estimates in the fit to run the Stan program's `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__.
+  uses the parameter estimates in the fit to run the Stan program's
+  `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__.
 
   It returns a :class:`CmdStanGQ` object.
 
@@ -170,8 +182,10 @@ Output data
 The resulting Stan CSV file or set of files are assembled into an inference result object.
 
 + :class:`CmdStanMCMC` object contains the :meth:`~CmdStanModel.sample` outputs
-+ :class:`CmdStanVB` object contains the :meth:`~CmdStanModel.variational` outputs
 + :class:`CmdStanMLE` object contains the :meth:`~CmdStanModel.optimize` outputs
++ :class:`CmdStanLaplace` object contains the :meth:`~CmdStanModel.laplace` outputs
++ :class:`CmdStanPathfinder` object contains the :meth:`~CmdStanModel.pathfinder` outputs
++ :class:`CmdStanVB` object contains the :meth:`~CmdStanModel.variational` outputs
 + :class:`CmdStanGQ` object contains the :meth:`~CmdStanModel.generate_quantities` outputs
 
 

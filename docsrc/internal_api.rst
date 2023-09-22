@@ -48,6 +48,12 @@ OptimizeArgs
 .. autoclass:: cmdstanpy.cmdstan_args.OptimizeArgs
    :members:
 
+PathfinderArgs
+==============
+
+.. autoclass:: cmdstanpy.cmdstan_args.PathfinderArgs
+   :members:
+
 VariationalArgs
 ===============
 
