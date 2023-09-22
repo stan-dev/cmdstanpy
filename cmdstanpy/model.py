@@ -1163,17 +1163,21 @@ class CmdStanModel:
             if not runset._check_retcodes():
                 msg = (
                     f'Error during sampling:\n{errors}\n'
-                    + f'Command and output files:\n{repr(runset)}\n'
-                    + 'Consider re-running with show_console=True if the above'
-                    + ' output is unclear!'
+                    f'Command and output files:\n{repr(runset)}'
                 )
+                if not show_console:
+                    msg += (
+                        '\nConsider re-running with show_console=True if the'
+                        ' above output is unclear!'
+                    )
                 raise RuntimeError(msg)
             if errors:
-                msg = (
-                    f'Non-fatal error during sampling:\n{errors}\n'
-                    + 'Consider re-running with show_console=True if the above'
-                    + ' output is unclear!'
-                )
+                msg = f'Non-fatal error during sampling:\n{errors}'
+                if not show_console:
+                    msg += (
+                        '\nConsider re-running with show_console=True if the'
+                        ' above output is unclear!'
+                    )
                 get_logger().warning(msg)
 
             mcmc = CmdStanMCMC(runset)
@@ -1361,10 +1365,13 @@ class CmdStanModel:
             if errors:
                 msg = (
                     f'Error during generate_quantities:\n{errors}\n'
-                    + f'Command and output files:\n{repr(runset)}\n'
-                    + 'Consider re-running with show_console=True if the above'
-                    + ' output is unclear!'
+                    f'Command and output files:\n{repr(runset)}'
                 )
+                if not show_console:
+                    msg += (
+                        '\nConsider re-running with show_console=True if the'
+                        ' above output is unclear!'
+                    )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, previous_fit=fit_object)
         return quantities
