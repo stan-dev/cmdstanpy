@@ -12,7 +12,8 @@ With CmdStanPy, you can:
 
     + Exact Bayesian estimation using the `NUTS-HMC sampler <https://mc-stan.org/docs/reference-manual/hmc.html>`__.
 
-    + Approximate Bayesian estimation using `ADVI <https://mc-stan.org/docs/reference-manual/vi-algorithms.html>`__.
+    + Approximate Bayesian estimation algorithms `Pathfinder <https://mc-stan.org/docs/reference-manual/pathfinder.html>`__
+      and `ADVI <https://mc-stan.org/docs/reference-manual/vi-algorithms.html>`__.
 
     + MAP estimation by `optimization <https://mc-stan.org/docs/reference-manual/optimization-algorithms.html>`__.
 

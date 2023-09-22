@@ -163,8 +163,9 @@ An example of each is provided in the `next section <examples.rst>`__.
 Validate, view, export the inference engine outputs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The inference engine results objects
-:class:`CmdStanMCMC`, :class:`CmdStanVB`, :class:`CmdStanMLE` and :class:`CmdStanGQ,`
+The inference method-specific results objects
+:class:`CmdStanMCMC`, :class:`CmdStanPathfinder`, :class:`CmdStanVB`,
+:class:`CmdStanMLE`, and :class:`CmdStanGQ`
 contain the CmdStan method configuration information
 and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,

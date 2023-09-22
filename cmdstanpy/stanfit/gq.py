@@ -566,7 +566,9 @@ class CmdStanGQ(Generic[Fit]):
         CmdStanGQ.stan_variables
         CmdStanMCMC.stan_variable
         CmdStanMLE.stan_variable
+        CmdStanPathfinder.stan_variable
         CmdStanVB.stan_variable
+        CmdStanLaplace.stan_variable
         """
         model_var_names = self.previous_fit._metadata.stan_vars.keys()
         gq_var_names = self._metadata.stan_vars.keys()
@@ -613,7 +615,9 @@ class CmdStanGQ(Generic[Fit]):
         CmdStanGQ.stan_variable
         CmdStanMCMC.stan_variables
         CmdStanMLE.stan_variables
+        CmdStanPathfinder.stan_variables
         CmdStanVB.stan_variables
+        CmdStanLaplace.stan_variables
         """
         result = {}
         sample_var_names = self.previous_fit._metadata.stan_vars.keys()

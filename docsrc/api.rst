@@ -6,7 +6,8 @@ API Reference
 
 The following documents the public API of CmdStanPy. It is expected to be stable between versions,
 with backwards compatibility between minor versions and deprecation warnings preceding breaking changes.
-There is also the `internal API <internal_api.rst>`__, which is makes no such guarantees.
+The documentation for the `internal API <internal_api.rst>`_ is also provided, but the internal API
+does not guarantee either stability and backwards compatibility.
 
 .. toctree::
    :hidden:

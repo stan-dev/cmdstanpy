@@ -748,8 +748,10 @@ class CmdStanMCMC:
         --------
         CmdStanMCMC.stan_variables
         CmdStanMLE.stan_variable
+        CmdStanPathfinder.stan_variable
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
+        CmdStanLaplace.stan_variable
         """
         try:
             draws = self.draws(inc_warmup=inc_warmup, concat_chains=True)
@@ -774,8 +776,10 @@ class CmdStanMCMC:
         --------
         CmdStanMCMC.stan_variable
         CmdStanMLE.stan_variables
+        CmdStanPathfinder.stan_variables
         CmdStanVB.stan_variables
         CmdStanGQ.stan_variables
+        CmdStanLaplace.stan_variables
         """
         result = {}
         for name in self._metadata.stan_vars:
