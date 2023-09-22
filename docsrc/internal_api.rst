@@ -15,7 +15,7 @@ Classes
 InferenceMetadata
 =================
 
-.. autoclass:: cmdstanpy.InferenceMetadata
+.. autoclass:: cmdstanpy.stanfit.InferenceMetadata
    :members:
 
 RunSet
@@ -27,7 +27,7 @@ RunSet
 CompilerOptions
 ===============
 
-.. autoclass:: cmdstanpy.compiler_opts.CompilerOptions
+.. autoclass:: cmdstanpy.compilation.CompilerOptions
    :members:
 
 CmdStanArgs
