@@ -1883,7 +1883,7 @@ class CmdStanModel:
             or as the path of a data file in JSON or Rdump format.
 
         :param mode: The mode around which to place the approximation, either
-            
+
             * A :class:`CmdStanMLE` object
             * A path to a CSV file containing the output of an optimization run.
             * ``None`` - use default optimizer settings and/or any ``opt_args``.
