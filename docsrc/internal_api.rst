@@ -36,6 +36,7 @@ CmdStanArgs
 .. autoclass:: cmdstanpy.cmdstan_args.CmdStanArgs
    :members:
 
+
 SamplerArgs
 ===========
 
@@ -46,6 +47,12 @@ OptimizeArgs
 ============
 
 .. autoclass:: cmdstanpy.cmdstan_args.OptimizeArgs
+   :members:
+
+LaplaceArgs
+===========
+
+.. autoclass:: cmdstanpy.cmdstan_args.LaplaceArgs
    :members:
 
 PathfinderArgs
