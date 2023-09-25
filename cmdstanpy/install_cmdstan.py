@@ -349,12 +349,11 @@ def compile_example(verbose: bool = False) -> None:
 
     :param verbose: Boolean value; when ``True``, show output from make command.
     """
-    cmd = [
-        MAKE,
-        Path(
-            os.path.join('examples', 'bernoulli', 'bernoulli' + EXTENSION)
-        ).as_posix(),
-    ]
+    path = Path('examples', 'bernoulli', 'bernoulli').with_suffix(EXTENSION)
+    if path.is_file():
+        path.unlink()
+
+    cmd = [MAKE, path.as_posix()]
     try:
         if verbose:
             do_command(cmd)
@@ -362,7 +361,10 @@ def compile_example(verbose: bool = False) -> None:
             do_command(cmd, fd_out=None)
     except RuntimeError as e:
         # pylint: disable=raise-missing-from
-        raise CmdStanInstallError(f'Command "make clean-all" failed\n{e}')
+        raise CmdStanInstallError(f'Command "{" ".join(cmd)}" failed:\n{e}')
+
+    if not path.is_file():
+        raise CmdStanInstallError("Failed to generate example binary")
 
 
 def rebuild_cmdstan(
@@ -421,8 +423,6 @@ def install_version(
             clean_all(verbose)
             print('Rebuilding version {}'.format(cmdstan_version))
         build(verbose, progress=progress, cores=cores)
-        print('Test model compilation')
-        compile_example(verbose)
     print('Installed {}'.format(cmdstan_version))
 
 
@@ -637,6 +637,10 @@ def run_install(args: Union[InteractiveSettings, InstallationSettings]) -> None:
             )
         else:
             print('CmdStan version {} already installed'.format(args.version))
+
+        with pushd(cmdstan_version):
+            print('Test model compilation')
+            compile_example(args.verbose)
 
 
 def parse_cmdline_args() -> Dict[str, Any]:
