@@ -6,7 +6,7 @@ Internal API Reference
 
 The following documents the internal API of CmdStanPy. No guarantees are made about backwards compatibility between
 minor versions and refactors are expected. If you find yourself needing something exposed here, please
-`open an issue <https://github.com/stan-dev/cmdstanpy/issues>`__ requesting it be added to the `public API <api.rst>`__.
+`open an issue <https://github.com/stan-dev/cmdstanpy/issues>`_ requesting it be added to the public `API <api.rst>`_.
 
 *******
 Classes
@@ -15,7 +15,7 @@ Classes
 InferenceMetadata
 =================
 
-.. autoclass:: cmdstanpy.InferenceMetadata
+.. autoclass:: cmdstanpy.stanfit.InferenceMetadata
    :members:
 
 RunSet
@@ -27,7 +27,7 @@ RunSet
 CompilerOptions
 ===============
 
-.. autoclass:: cmdstanpy.compiler_opts.CompilerOptions
+.. autoclass:: cmdstanpy.compilation.CompilerOptions
    :members:
 
 CmdStanArgs
@@ -35,6 +35,7 @@ CmdStanArgs
 
 .. autoclass:: cmdstanpy.cmdstan_args.CmdStanArgs
    :members:
+
 
 SamplerArgs
 ===========
@@ -46,6 +47,18 @@ OptimizeArgs
 ============
 
 .. autoclass:: cmdstanpy.cmdstan_args.OptimizeArgs
+   :members:
+
+LaplaceArgs
+===========
+
+.. autoclass:: cmdstanpy.cmdstan_args.LaplaceArgs
+   :members:
+
+PathfinderArgs
+==============
+
+.. autoclass:: cmdstanpy.cmdstan_args.PathfinderArgs
    :members:
 
 VariationalArgs

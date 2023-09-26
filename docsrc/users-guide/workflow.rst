@@ -134,11 +134,16 @@ An example of each is provided in the `next section <examples.rst>`__.
   It returns a :class:`CmdStanMCMC` object which contains
   a sample from the posterior distribution of the model conditioned on the data.
 
+* The :meth:`~CmdStanModel.pathfinder` method runs Stan's
+  `Pathfinder Variational Inference algorithm <https://mc-stan.org/docs/reference-manual/pathfinder.html>`__.
+
+  It returns a :class:`CmdStanPathfinder` object which contains
+  a sample from a Gaussian approximation the posterior distribution.
+
 * The :meth:`~CmdStanModel.variational` method runs Stan's
   `Automatic Differentiation Variational Inference (ADVI) algorithm <https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html>`__.
 
-  It returns a :class:`CmdStanVB` object which contains
-  an approximation the posterior distribution in the unconstrained variable space.
+  It returns a :class:`CmdStanVB` object which contains an approximation the posterior distribution.
 
 * The :meth:`~CmdStanModel.optimize` runs one of
   `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`__.
@@ -149,7 +154,8 @@ An example of each is provided in the `next section <examples.rst>`__.
 * The :meth:`~CmdStanModel.generate_quantities` method runs Stan's
   `generate_quantities method <https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html>`__.
   which generates additional quantities of interest from a mode. Its take an existing fit as input and
-  uses the parameter estimates in the fit to run the Stan program's `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__.
+  uses the parameter estimates in the fit to run the Stan program's
+  `generated quantities block <https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html>`__.
 
   It returns a :class:`CmdStanGQ` object.
 
@@ -157,8 +163,9 @@ An example of each is provided in the `next section <examples.rst>`__.
 Validate, view, export the inference engine outputs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The inference engine results objects
-:class:`CmdStanMCMC`, :class:`CmdStanVB`, :class:`CmdStanMLE` and :class:`CmdStanGQ,`
+The inference method-specific results objects
+:class:`CmdStanMCMC`, :class:`CmdStanPathfinder`, :class:`CmdStanVB`,
+:class:`CmdStanMLE`, and :class:`CmdStanGQ`
 contain the CmdStan method configuration information
 and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
@@ -170,6 +177,7 @@ Output data
 The resulting Stan CSV file or set of files are assembled into an inference result object.
 
 + :class:`CmdStanMCMC` object contains the :meth:`~CmdStanModel.sample` outputs
++ :class:`CmdStanPathfinder` object contains the :meth:`~CmdStanModel.pathfinder` outputs
 + :class:`CmdStanVB` object contains the :meth:`~CmdStanModel.variational` outputs
 + :class:`CmdStanMLE` object contains the :meth:`~CmdStanModel.optimize` outputs
 + :class:`CmdStanGQ` object contains the :meth:`~CmdStanModel.generate_quantities` outputs

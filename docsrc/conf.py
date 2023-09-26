@@ -133,7 +133,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'CmdStanPy'
-copyright = '2022, Stan Development Team'
+copyright = '2023, Stan Development Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -399,8 +399,10 @@ napoleon_type_aliases = {
     "DataFrame": "~pandas.DataFrame",
     "CmdStanMCMC": "~cmdstanpy.CmdStanMCMC",
     "CmdStanMLE": "~cmdstanpy.CmdStanMLE",
-    "CmdStanMCVB": "~cmdstanpy.CmdStanMCVB",
-    "CmdStanMCGQ": "~cmdstanpy.CmdStanMCGQ",
+    "CmdStanVB": "~cmdstanpy.CmdStanVB",
+    "CmdStanGQ": "~cmdstanpy.CmdStanGQ",
+    "CmdStanLaplace": "~cmdstanpy.CmdStanLaplace",
+    "CmdStanPathfinder": "~cmdstanpy.CmdStanPathfinder"
 }
 
 nbsphinx_allow_errors = False

@@ -107,6 +107,7 @@ By default, the `sample` method runs 4 sampler chains.
 
 *Note* this model can be fit using other methods
 
++ the :meth:`~CmdStanModel.pathfinder` method does approximate Bayesian inference and returns a :class:`CmdStanPathfinder` object
 + the :meth:`~CmdStanModel.variational` method does approximate Bayesian inference and returns a :class:`CmdStanVB` object
 + the :meth:`~CmdStanModel.optimize` method does maximum likelihood estimation and returns a :class:`CmdStanMLE` object
 

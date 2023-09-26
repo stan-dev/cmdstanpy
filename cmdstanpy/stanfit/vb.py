@@ -140,7 +140,9 @@ class CmdStanVB:
         CmdStanVB.stan_variables
         CmdStanMCMC.stan_variable
         CmdStanMLE.stan_variable
+        CmdStanPathfinder.stan_variable
         CmdStanGQ.stan_variable
+        CmdStanLaplace.stan_variable
         """
         try:
             out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
@@ -166,6 +168,8 @@ class CmdStanVB:
         CmdStanMCMC.stan_variables
         CmdStanMLE.stan_variables
         CmdStanGQ.stan_variables
+        CmdStanPathfinder.stan_variables
+        CmdStanLaplace.stan_variables
         """
         result = {}
         for name in self._metadata.stan_vars:
