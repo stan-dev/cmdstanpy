@@ -1637,7 +1637,7 @@ class CmdStanModel:
         :param draws: Number of approximate draws to return.
 
         :param num_single_draws: Number of draws each single-pathfinder will
-            draw. By default, this is set to be equal to draws.
+            draw.
             If ``num_paths`` is 1, only one of this and ``draws`` should be
             used.
 
@@ -1732,13 +1732,14 @@ class CmdStanModel:
                 "before 2.33"
             )
 
-        if num_single_draws is None:
-            num_single_draws = draws
-        elif num_paths == 1 and draws is not None and num_single_draws != draws:
-            raise ValueError(
-                "Cannot specify both 'draws' and 'num_single_draws'"
-                " when 'num_paths' is 1"
-            )
+        if num_paths == 1:
+            if num_single_draws is None:
+                num_single_draws = draws
+            if draws is not None and num_single_draws != draws:
+                raise ValueError(
+                    "Cannot specify both 'draws' and 'num_single_draws'"
+                    " when 'num_paths' is 1"
+                )
 
         pathfinder_args = PathfinderArgs(
             init_alpha=init_alpha,
