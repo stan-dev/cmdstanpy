@@ -5,7 +5,7 @@
 What's New
 ==========
 
-For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`__ on GitHub.
+For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
 CmdStanPy 1.2.0
 ---------------

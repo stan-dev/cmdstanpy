@@ -189,8 +189,10 @@ class CmdStanMLE:
         --------
         CmdStanMLE.stan_variables
         CmdStanMCMC.stan_variable
+        CmdStanPathfinder.stan_variable
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
+        CmdStanLaplace.stan_variable
         """
         if var not in self._metadata.stan_vars:
             raise ValueError(
@@ -249,8 +251,10 @@ class CmdStanMLE:
         --------
         CmdStanMLE.stan_variable
         CmdStanMCMC.stan_variables
+        CmdStanPathfinder.stan_variables
         CmdStanVB.stan_variables
         CmdStanGQ.stan_variables
+        CmdStanLaplace.stan_variables
         """
         if not self.runset._check_retcodes():
             get_logger().warning(

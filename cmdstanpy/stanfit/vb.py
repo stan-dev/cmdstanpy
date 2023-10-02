@@ -147,7 +147,9 @@ class CmdStanVB:
         CmdStanVB.stan_variables
         CmdStanMCMC.stan_variable
         CmdStanMLE.stan_variable
+        CmdStanPathfinder.stan_variable
         CmdStanGQ.stan_variable
+        CmdStanLaplace.stan_variable
         """
         # TODO(2.0): remove None case, make default `False`
         if mean is None:
@@ -200,6 +202,8 @@ class CmdStanVB:
         CmdStanMCMC.stan_variables
         CmdStanMLE.stan_variables
         CmdStanGQ.stan_variables
+        CmdStanPathfinder.stan_variables
+        CmdStanLaplace.stan_variables
         """
         result = {}
         for name in self._metadata.stan_vars:

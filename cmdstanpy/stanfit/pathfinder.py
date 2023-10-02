@@ -106,7 +106,8 @@ class CmdStanPathfinder:
 
         See Also
         --------
-        CmdStanMLE.stan_variables
+        CmdStanPathfinder.stan_variables
+        CmdStanMLE.stan_variable
         CmdStanMCMC.stan_variable
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
@@ -133,10 +134,11 @@ class CmdStanPathfinder:
 
         See Also
         --------
-        CmdStanGQ.stan_variable
+        CmdStanPathfinder.stan_variable
         CmdStanMCMC.stan_variables
         CmdStanMLE.stan_variables
         CmdStanVB.stan_variables
+        CmdStanGQ.stan_variables
         CmdStanLaplace.stan_variables
         """
         result = {}

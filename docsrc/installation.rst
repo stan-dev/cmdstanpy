@@ -9,11 +9,11 @@ There are several ways to install CmdStanPy and the underlying CmdStan component
 
 * You can download CmdStanPy, CmdStan, and the C++ toolchain from conda-forge.
 
-* You can download the CmdStanPy package from `PyPI <https://pypi.org>`__
-  using `pip <https://pip.pypa.io/en/stable/>`__.
+* You can download the CmdStanPy package from `PyPI <https://pypi.org>`_
+  using `pip <https://pip.pypa.io/en/stable/>`_.
 
 * If you want the current development version, you can clone the
-  GitHub `CmdStanPy <https://github.com/stan-dev/cmdstanpy>`__ repository.
+  GitHub `CmdStanPy <https://github.com/stan-dev/cmdstanpy>`_ repository.
 
 If you install CmdStanPy from PyPI or GitHub you will need to
 install CmdStan as well, see section :ref:`CmdStan Installation <cmdstan-install>` below.
@@ -22,9 +22,9 @@ install CmdStan as well, see section :ref:`CmdStan Installation <cmdstan-install
 Conda: install CmdStanPy, CmdStan, C++ toolchain
 ------------------------------------------------
 
-If you use `conda <https://docs.conda.io/en/latest/>`__,
+If you use `conda <https://docs.conda.io/en/latest/>`_,
 you can install CmdStanPy and the underlying CmdStan components from the
-`conda-forge <https://conda-forge.org/>`__ repository
+`conda-forge <https://conda-forge.org/>`_ repository
 via the following command:
 
 
@@ -60,7 +60,7 @@ If you require a specific release of CmdStan, CmdStan versions
 ``cmdstan==VERSION`` in the install command.
 Versions before 2.26.1 are not available from conda
 but can be downloaded from the CmdStan
-`releases <https://github.com/stan-dev/cmdstan/releases>`__ page.
+`releases <https://github.com/stan-dev/cmdstan/releases>`_ page.
 
 A Conda environment is a directory that contains a specific collection of Conda packages.
 To see the locations of your conda environments, use the command
@@ -120,12 +120,12 @@ To install the current develop branch from GitHub:
 
   **Jupyter notebook users:**  If you intend to run CmdStanPy from within a Jupyter notebook,
   you may need to install the
-  `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`__.
-  This will allow for progress bars implemented using the `tqdm <https://pypi.org/project/tqdm/>`__
+  `ipywidgets <https://ipywidgets.readthedocs.io/en/latest/index.html>`_.
+  This will allow for progress bars implemented using the `tqdm <https://pypi.org/project/tqdm/>`_
   to display properly in the browser.
   For further help on Jupyter notebook installation and configuration , see
-  `ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`__
-  and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`__.
+  `ipywidgets installation instructions <https://ipywidgets.readthedocs.io/en/latest/user_install.html#>`_
+  and `this tqdm GitHub issue <https://github.com/tqdm/tqdm/issues/394#issuecomment-384743637>`_.
 
 
 .. _cmdstan-install:
@@ -156,7 +156,7 @@ There is usually a pre-installed C++ compiler as well, but not necessarily new e
 **MacOS** The Xcode and Xcode command line tools must be installed.  Xcode is available for free from the Mac App Store.
 To install the Xcode command line tools, run the shell command: ``xcode-select --install``.
 
-**Windows**  We recommend using the `RTools 4.0 <https://cran.r-project.org/bin/windows/Rtools/rtools40.html>`__ toolchain
+**Windows**  We recommend using the `RTools 4.0 <https://cran.r-project.org/bin/windows/Rtools/rtools40.html>`_ toolchain
 which contains a ``g++ 8`` compiler and ``Mingw``, the native Windows equivalent of the GNU-Make utility.
 This can be installed along with CmdStan when you invoke the function :meth:`cmdstanpy.install_cmdstan`
 with argument ``compiler=True``.
@@ -206,7 +206,7 @@ can be used to override these defaults:
 
 .. code-block:: bash
 
-    install_cmdstan -d my_local_cmdstan -v 2.27.0
+    install_cmdstan -d my_local_cmdstan -v 2.33.0
     ls -F my_local_cmdstan
 
 Alternate Linux Architectures
@@ -224,7 +224,7 @@ DIY Installation
 ^^^^^^^^^^^^^^^^
 
 If you with to install CmdStan yourself, follow the instructions
-in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`__.
+in the `CmdStan User's Guide <https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html>`_.
 
 Locating the CmdStan installation directory
 -------------------------------------------

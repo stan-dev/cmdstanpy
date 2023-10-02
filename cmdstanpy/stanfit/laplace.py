@@ -82,6 +82,7 @@ class CmdStanLaplace:
         --------
         CmdStanMLE.stan_variables
         CmdStanMCMC.stan_variable
+        CmdStanPathfinder.stan_variable
         CmdStanVB.stan_variable
         CmdStanGQ.stan_variable
         """
@@ -113,6 +114,7 @@ class CmdStanLaplace:
         CmdStanGQ.stan_variable
         CmdStanMCMC.stan_variables
         CmdStanMLE.stan_variables
+        CmdStanPathfinder.stan_variables
         CmdStanVB.stan_variables
         """
         result = {}
@@ -235,7 +237,9 @@ class CmdStanLaplace:
     @property
     def metadata(self) -> InferenceMetadata:
         """
-        Return the inference metadata as an :class:`InferenceMetadata` object.
+        Returns object which contains CmdStan configuration as well as
+        information about the names and structure of the inference method
+        and model output variables.
         """
         return self._metadata
 
