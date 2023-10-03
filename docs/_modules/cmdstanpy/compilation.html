@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.compiler_opts &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.compilation &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -166,17 +166,25 @@
               
               <div>
                 
-  <h1>Source code for cmdstanpy.compiler_opts</h1><div class="highlight"><pre>
+  <h1>Source code for cmdstanpy.compilation</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Makefile options for stanc and C++ compilers</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils.cmdstan</span> <span class="kn">import</span> <span class="n">EXTENSION</span><span class="p">,</span> <span class="n">cmdstan_path</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils.command</span> <span class="kn">import</span> <span class="n">do_command</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils.filesystem</span> <span class="kn">import</span> <span class="n">SanitizedOrTmpFilePath</span>
 
 <span class="n">STANC_OPTS</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;O&#39;</span><span class="p">,</span>
@@ -191,6 +199,7 @@
     <span class="s1">&#39;warn-pedantic&#39;</span><span class="p">,</span>
 <span class="p">]</span>
 
+<span class="c1"># TODO(2.0): remove</span>
 <span class="n">STANC_DEPRECATED_OPTS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;allow_undefined&#39;</span><span class="p">:</span> <span class="s1">&#39;allow-undefined&#39;</span><span class="p">,</span>
     <span class="s1">&#39;include_paths&#39;</span><span class="p">:</span> <span class="s1">&#39;include-paths&#39;</span><span class="p">,</span>
@@ -220,7 +229,8 @@
 <span class="n">OptionalPath</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="CompilerOptions"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions">[docs]</a><span class="k">class</span> <span class="nc">CompilerOptions</span><span class="p">:</span>
+<span class="c1"># TODO(2.0): can remove add function and other logic</span>
+<div class="viewcode-block" id="CompilerOptions"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions">[docs]</a><span class="k">class</span> <span class="nc">CompilerOptions</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    User-specified flags for stanc and C++ compiler.</span>
 
@@ -259,7 +269,7 @@
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">user_header</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="CompilerOptions.is_empty"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="CompilerOptions.is_empty"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;True if no options specified.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span> <span class="o">==</span> <span class="p">{}</span>
@@ -268,7 +278,7 @@
         <span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">stanc_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">stanc_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Stanc compiler options.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span>
 
@@ -282,7 +292,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;user header.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span>
 
-<div class="viewcode-block" id="CompilerOptions.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CompilerOptions.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check compiler args.</span>
 <span class="sd">        Raise ValueError if invalid options are found.</span>
@@ -291,7 +301,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_cpp_opts</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_user_header</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="CompilerOptions.validate_stanc_opts"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_stanc_opts">[docs]</a>    <span class="k">def</span> <span class="nf">validate_stanc_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CompilerOptions.validate_stanc_opts"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.validate_stanc_opts">[docs]</a>    <span class="k">def</span> <span class="nf">validate_stanc_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check stanc compiler args and consistency between stanc and C++ options.</span>
 <span class="sd">        Raise ValueError if bad config is found.</span>
@@ -364,7 +374,7 @@
                 <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span>
             <span class="p">]</span></div>
 
-<div class="viewcode-block" id="CompilerOptions.validate_cpp_opts"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_cpp_opts">[docs]</a>    <span class="k">def</span> <span class="nf">validate_cpp_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CompilerOptions.validate_cpp_opts"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.validate_cpp_opts">[docs]</a>    <span class="k">def</span> <span class="nf">validate_cpp_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check cpp compiler args.</span>
 <span class="sd">        Raise ValueError if bad config is found.</span>
@@ -381,7 +391,7 @@
                         <span class="sa">f</span><span class="s1">&#39; found </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s1">.&#39;</span>
                     <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CompilerOptions.validate_user_header"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.validate_user_header">[docs]</a>    <span class="k">def</span> <span class="nf">validate_user_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CompilerOptions.validate_user_header"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.validate_user_header">[docs]</a>    <span class="k">def</span> <span class="nf">validate_user_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        User header exists.</span>
 <span class="sd">        Raise ValueError if bad config is found.</span>
@@ -419,7 +429,7 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span><span class="p">[</span><span class="s1">&#39;USER_HEADER&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span></div>
 
-<div class="viewcode-block" id="CompilerOptions.add"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_opts</span><span class="p">:</span> <span class="s2">&quot;CompilerOptions&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: disable=Q000</span>
+<div class="viewcode-block" id="CompilerOptions.add"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_opts</span><span class="p">:</span> <span class="s2">&quot;CompilerOptions&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># noqa: disable=Q000</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds options to existing set of compiler options.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">stanc_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -427,7 +437,13 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">stanc_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;include-paths&#39;</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">add_include_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+                            <span class="n">val</span><span class="p">,</span> <span class="nb">str</span>
+                        <span class="p">):</span>
+                            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">add_include_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">add_include_path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
         <span class="k">if</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">cpp_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -436,7 +452,7 @@
         <span class="k">if</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">_user_header</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_user_header</span> <span class="o">=</span> <span class="n">new_opts</span><span class="o">.</span><span class="n">_user_header</span></div>
 
-<div class="viewcode-block" id="CompilerOptions.add_include_path"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.add_include_path">[docs]</a>    <span class="k">def</span> <span class="nf">add_include_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="CompilerOptions.add_include_path"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.add_include_path">[docs]</a>    <span class="k">def</span> <span class="nf">add_include_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds include path to existing set of compiler options.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
         <span class="k">if</span> <span class="s1">&#39;include-paths&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">:</span>
@@ -444,8 +460,12 @@
         <span class="k">elif</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">[</span><span class="s1">&#39;include-paths&#39;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">[</span><span class="s1">&#39;include-paths&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">compose_stanc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">compose_stanc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename_in_msg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="n">opts</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">filename_in_msg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--filename-in-msg=</span><span class="si">{</span><span class="n">filename_in_msg</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;include-paths&#39;</span><span class="p">:</span>
@@ -464,13 +484,167 @@
                     <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">opts</span>
 
-<div class="viewcode-block" id="CompilerOptions.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compiler_opts.CompilerOptions.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Format makefile options as list of strings.&quot;&quot;&quot;</span>
-        <span class="n">opts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;STANCFLAGS+=&#39;</span> <span class="o">+</span> <span class="n">flag</span> <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compose_stanc</span><span class="p">()]</span>
+<div class="viewcode-block" id="CompilerOptions.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.compilation.CompilerOptions.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename_in_msg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format makefile options as list of strings.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename_in_msg : str, optional</span>
+<span class="sd">            filename to be displayed in stanc3 error messages</span>
+<span class="sd">            (if different from actual filename on disk), by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;STANCFLAGS+=&#39;</span> <span class="o">+</span> <span class="n">flag</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2"> &quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">compose_stanc</span><span class="p">(</span><span class="n">filename_in_msg</span><span class="p">)</span>
+        <span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cpp_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">opts</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">src_info</span><span class="p">(</span>
+    <span class="n">stan_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">compiler_options</span><span class="p">:</span> <span class="n">CompilerOptions</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get source info for Stan program file.</span>
+
+<span class="sd">    This function is used in the implementation of</span>
+<span class="sd">    :meth:`CmdStanModel.src_info`, and should not be called directly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;stanc&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)]</span>
+        <span class="c1"># handle include-paths, allow-undefined etc</span>
+        <span class="o">+</span> <span class="n">compiler_options</span><span class="o">.</span><span class="n">compose_stanc</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;--info&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">stan_file</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed to get source info for Stan model &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">stan_file</span><span class="si">}</span><span class="s2">&#39;. Console:</span><span class="se">\n</span><span class="si">{</span><span class="n">proc</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="n">result</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">compile_stan_file</span><span class="p">(</span>
+    <span class="n">src</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">stanc_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cpp_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">user_header</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compile the given Stan program file.  Translates the Stan code to</span>
+<span class="sd">    C++, then calls the C++ compiler.</span>
+
+<span class="sd">    By default, this function compares the timestamps on the source and</span>
+<span class="sd">    executable files; if the executable is newer than the source file, it</span>
+<span class="sd">    will not recompile the file, unless argument ``force`` is ``True``</span>
+<span class="sd">    or unless the compiler options have been changed.</span>
+
+<span class="sd">    :param src: Path to Stan program file.</span>
+
+<span class="sd">    :param force: When ``True``, always compile, even if the executable file</span>
+<span class="sd">        is newer than the source file.  Used for Stan models which have</span>
+<span class="sd">        ``#include`` directives in order to force recompilation when changes</span>
+<span class="sd">        are made to the included files.</span>
+
+<span class="sd">    :param stanc_options: Options for stanc compiler.</span>
+<span class="sd">    :param cpp_options: Options for C++ compiler.</span>
+<span class="sd">    :param user_header: A path to a header file to include during C++</span>
+<span class="sd">        compilation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">src</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">src</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">src</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;stan file does not exist: </span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">compiler_options</span> <span class="o">=</span> <span class="n">CompilerOptions</span><span class="p">(</span>
+        <span class="n">stanc_options</span><span class="o">=</span><span class="n">stanc_options</span><span class="p">,</span>
+        <span class="n">cpp_options</span><span class="o">=</span><span class="n">cpp_options</span><span class="p">,</span>
+        <span class="n">user_header</span><span class="o">=</span><span class="n">user_header</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">compiler_options</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+    <span class="n">exe_target</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">EXTENSION</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exe_target</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">exe_time</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">exe_target</span><span class="p">)</span>
+        <span class="n">included_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">src</span><span class="p">]</span>
+        <span class="n">included_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">src_info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">),</span> <span class="n">compiler_options</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;included_files&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="p">)</span>
+        <span class="n">out_of_date</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">included_file</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">exe_time</span>
+            <span class="k">for</span> <span class="n">included_file</span> <span class="ow">in</span> <span class="n">included_files</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">out_of_date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;found newer exe file, not recompiling&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">exe_target</span><span class="p">)</span>
+
+    <span class="n">compilation_failed</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># if target path has spaces or special characters, use a copy in a</span>
+    <span class="c1"># temporary directory (GNU-Make constraint)</span>
+    <span class="k">with</span> <span class="n">SanitizedOrTmpFilePath</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">))</span> <span class="k">as</span> <span class="p">(</span><span class="n">stan_file</span><span class="p">,</span> <span class="n">is_copied</span><span class="p">):</span>
+        <span class="n">exe_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">stan_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">EXTENSION</span>
+
+        <span class="n">hpp_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.hpp&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">hpp_file</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">hpp_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">exe_file</span><span class="p">):</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Removing </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">exe_file</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span>
+
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;compiling stan file </span><span class="si">%s</span><span class="s1"> to exe file </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">stan_file</span><span class="p">,</span>
+            <span class="n">exe_target</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">make</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span>
+            <span class="s1">&#39;MAKE&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;make&#39;</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;Windows&#39;</span> <span class="k">else</span> <span class="s1">&#39;mingw32-make&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">make</span><span class="p">]</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">compiler_options</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">filename_in_msg</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">exe_file</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+
+        <span class="n">sout</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="n">fd_out</span><span class="o">=</span><span class="n">sout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">sout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">compilation_failed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">console</span> <span class="o">=</span> <span class="n">sout</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Console output:</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">console</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">compilation_failed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_copied</span><span class="p">:</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">exe_file</span><span class="p">,</span> <span class="n">exe_target</span><span class="p">)</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;compiled model executable: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">exe_target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;Warning&#39;</span> <span class="ow">in</span> <span class="n">console</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">console</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">warnings</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">lines</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Warning&#39;</span><span class="p">)]</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Stan compiler has produced </span><span class="si">%d</span><span class="s1"> warnings:&#39;</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">warnings</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">console</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">compilation_failed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;PCH&#39;</span> <span class="ow">in</span> <span class="n">console</span> <span class="ow">or</span> <span class="s1">&#39;precompiled header&#39;</span> <span class="ow">in</span> <span class="n">console</span><span class="p">:</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;CmdStan&#39;s precompiled header (PCH) files &quot;</span>
+                    <span class="s2">&quot;may need to be rebuilt.&quot;</span>
+                    <span class="s2">&quot;Please run cmdstanpy.rebuild_cmdstan().</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;If the issue persists please open a bug report&quot;</span>
+                <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to compile Stan model &#39;</span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s2">&#39;. &quot;</span> <span class="sa">f</span><span class="s2">&quot;Console:</span><span class="se">\n</span><span class="si">{</span><span class="n">console</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">exe_target</span><span class="p">)</span>
 </pre></div>
 
               </div>
@@ -493,7 +667,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

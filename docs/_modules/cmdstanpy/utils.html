@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.utils &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.utils &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -191,7 +191,6 @@
 <span class="kn">from</span> <span class="nn">.command</span> <span class="kn">import</span> <span class="n">do_command</span><span class="p">,</span> <span class="n">returncode_msg</span>
 <span class="kn">from</span> <span class="nn">.data_munging</span> <span class="kn">import</span> <span class="n">build_xarray_data</span><span class="p">,</span> <span class="n">flatten_chains</span>
 <span class="kn">from</span> <span class="nn">.filesystem</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">MaybeDictToFilePath</span><span class="p">,</span>
     <span class="n">SanitizedOrTmpFilePath</span><span class="p">,</span>
     <span class="n">create_named_text_file</span><span class="p">,</span>
     <span class="n">pushd</span><span class="p">,</span>
@@ -200,16 +199,12 @@
 <span class="kn">from</span> <span class="nn">.json</span> <span class="kn">import</span> <span class="n">write_stan_json</span>
 <span class="kn">from</span> <span class="nn">.logging</span> <span class="kn">import</span> <span class="n">get_logger</span>
 <span class="kn">from</span> <span class="nn">.stancsv</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">BaseType</span><span class="p">,</span>
     <span class="n">check_sampler_csv</span><span class="p">,</span>
-    <span class="n">parse_method_vars</span><span class="p">,</span>
     <span class="n">parse_rdump_value</span><span class="p">,</span>
-    <span class="n">parse_stan_vars</span><span class="p">,</span>
     <span class="n">read_metric</span><span class="p">,</span>
     <span class="n">rload</span><span class="p">,</span>
     <span class="n">scan_column_names</span><span class="p">,</span>
     <span class="n">scan_config</span><span class="p">,</span>
-    <span class="n">scan_generated_quantities_csv</span><span class="p">,</span>
     <span class="n">scan_hmc_params</span><span class="p">,</span>
     <span class="n">scan_optimize_csv</span><span class="p">,</span>
     <span class="n">scan_sampler_csv</span><span class="p">,</span>
@@ -283,9 +278,7 @@
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;BaseType&#39;</span><span class="p">,</span>
     <span class="s1">&#39;EXTENSION&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;MaybeDictToFilePath&#39;</span><span class="p">,</span>
     <span class="s1">&#39;SanitizedOrTmpFilePath&#39;</span><span class="p">,</span>
     <span class="s1">&#39;build_xarray_data&#39;</span><span class="p">,</span>
     <span class="s1">&#39;check_sampler_csv&#39;</span><span class="p">,</span>
@@ -299,16 +292,13 @@
     <span class="s1">&#39;get_latest_cmdstan&#39;</span><span class="p">,</span>
     <span class="s1">&#39;get_logger&#39;</span><span class="p">,</span>
     <span class="s1">&#39;install_cmdstan&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;parse_method_vars&#39;</span><span class="p">,</span>
     <span class="s1">&#39;parse_rdump_value&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;parse_stan_vars&#39;</span><span class="p">,</span>
     <span class="s1">&#39;pushd&#39;</span><span class="p">,</span>
     <span class="s1">&#39;read_metric&#39;</span><span class="p">,</span>
     <span class="s1">&#39;returncode_msg&#39;</span><span class="p">,</span>
     <span class="s1">&#39;rload&#39;</span><span class="p">,</span>
     <span class="s1">&#39;scan_column_names&#39;</span><span class="p">,</span>
     <span class="s1">&#39;scan_config&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;scan_generated_quantities_csv&#39;</span><span class="p">,</span>
     <span class="s1">&#39;scan_hmc_params&#39;</span><span class="p">,</span>
     <span class="s1">&#39;scan_optimize_csv&#39;</span><span class="p">,</span>
     <span class="s1">&#39;scan_sampler_csv&#39;</span><span class="p">,</span>
@@ -346,7 +336,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

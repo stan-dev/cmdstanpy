@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Variational Inference in Stan &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>Variational Inference using ADVI &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -23,6 +23,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -37,7 +38,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Using Variational Estimates to Initialize the NUTS-HMC Sampler" href="VI%20as%20Sampler%20Inits.html" />
-    <link rel="prev" title="Maximum Likelihood Estimation" href="Maximum%20Likelihood%20Estimation.html" />
+    <link rel="prev" title="Variational Inference using Pathfinder" href="Pathfinder.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -59,7 +60,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -186,9 +187,14 @@
      Maximum Likelihood Estimation
     </a>
    </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Pathfinder.html">
+     Variational Inference using Pathfinder
+    </a>
+   </li>
    <li class="toctree-l2 current active">
     <a class="current reference internal" href="#">
-     Variational Inference in Stan
+     Variational Inference using ADVI
     </a>
    </li>
    <li class="toctree-l2">
@@ -269,271 +275,14 @@
               
               <div>
                 
-  
-<style>
-/* CSS for nbsphinx extension */
-
-/* remove conflicting styling from Sphinx themes */
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt *,
-div.nbinput.container div.input_area pre,
-div.nboutput.container div.output_area pre,
-div.nbinput.container div.input_area .highlight,
-div.nboutput.container div.output_area .highlight {
-    border: none;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-}
-
-div.nbinput.container > div[class*=highlight],
-div.nboutput.container > div[class*=highlight] {
-    margin: 0;
-}
-
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt * {
-    background: none;
-}
-
-div.nboutput.container div.output_area .highlight,
-div.nboutput.container div.output_area pre {
-    background: unset;
-}
-
-div.nboutput.container div.output_area div.highlight {
-    color: unset;  /* override Pygments text color */
-}
-
-/* avoid gaps between output lines */
-div.nboutput.container div[class*=highlight] pre {
-    line-height: normal;
-}
-
-/* input/output containers */
-div.nbinput.container,
-div.nboutput.container {
-    display: -webkit-flex;
-    display: flex;
-    align-items: flex-start;
-    margin: 0;
-    width: 100%;
-}
-@media (max-width: 540px) {
-    div.nbinput.container,
-    div.nboutput.container {
-        flex-direction: column;
-    }
-}
-
-/* input container */
-div.nbinput.container {
-    padding-top: 5px;
-}
-
-/* last container */
-div.nblast.container {
-    padding-bottom: 5px;
-}
-
-/* input prompt */
-div.nbinput.container div.prompt pre {
-    color: #307FC1;
-}
-
-/* output prompt */
-div.nboutput.container div.prompt pre {
-    color: #BF5B3D;
-}
-
-/* all prompts */
-div.nbinput.container div.prompt,
-div.nboutput.container div.prompt {
-    width: 4.5ex;
-    padding-top: 5px;
-    position: relative;
-    user-select: none;
-}
-
-div.nbinput.container div.prompt > div,
-div.nboutput.container div.prompt > div {
-    position: absolute;
-    right: 0;
-    margin-right: 0.3ex;
-}
-
-@media (max-width: 540px) {
-    div.nbinput.container div.prompt,
-    div.nboutput.container div.prompt {
-        width: unset;
-        text-align: left;
-        padding: 0.4em;
-    }
-    div.nboutput.container div.prompt.empty {
-        padding: 0;
-    }
-
-    div.nbinput.container div.prompt > div,
-    div.nboutput.container div.prompt > div {
-        position: unset;
-    }
-}
-
-/* disable scrollbars and line breaks on prompts */
-div.nbinput.container div.prompt pre,
-div.nboutput.container div.prompt pre {
-    overflow: hidden;
-    white-space: pre;
-}
-
-/* input/output area */
-div.nbinput.container div.input_area,
-div.nboutput.container div.output_area {
-    -webkit-flex: 1;
-    flex: 1;
-    overflow: auto;
-}
-@media (max-width: 540px) {
-    div.nbinput.container div.input_area,
-    div.nboutput.container div.output_area {
-        width: 100%;
-    }
-}
-
-/* input area */
-div.nbinput.container div.input_area {
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    /*background: #f5f5f5;*/
-}
-
-/* override MathJax center alignment in output cells */
-div.nboutput.container div[class*=MathJax] {
-    text-align: left !important;
-}
-
-/* override sphinx.ext.imgmath center alignment in output cells */
-div.nboutput.container div.math p {
-    text-align: left;
-}
-
-/* standard error */
-div.nboutput.container div.output_area.stderr {
-    background: #fdd;
-}
-
-/* ANSI colors */
-.ansi-black-fg { color: #3E424D; }
-.ansi-black-bg { background-color: #3E424D; }
-.ansi-black-intense-fg { color: #282C36; }
-.ansi-black-intense-bg { background-color: #282C36; }
-.ansi-red-fg { color: #E75C58; }
-.ansi-red-bg { background-color: #E75C58; }
-.ansi-red-intense-fg { color: #B22B31; }
-.ansi-red-intense-bg { background-color: #B22B31; }
-.ansi-green-fg { color: #00A250; }
-.ansi-green-bg { background-color: #00A250; }
-.ansi-green-intense-fg { color: #007427; }
-.ansi-green-intense-bg { background-color: #007427; }
-.ansi-yellow-fg { color: #DDB62B; }
-.ansi-yellow-bg { background-color: #DDB62B; }
-.ansi-yellow-intense-fg { color: #B27D12; }
-.ansi-yellow-intense-bg { background-color: #B27D12; }
-.ansi-blue-fg { color: #208FFB; }
-.ansi-blue-bg { background-color: #208FFB; }
-.ansi-blue-intense-fg { color: #0065CA; }
-.ansi-blue-intense-bg { background-color: #0065CA; }
-.ansi-magenta-fg { color: #D160C4; }
-.ansi-magenta-bg { background-color: #D160C4; }
-.ansi-magenta-intense-fg { color: #A03196; }
-.ansi-magenta-intense-bg { background-color: #A03196; }
-.ansi-cyan-fg { color: #60C6C8; }
-.ansi-cyan-bg { background-color: #60C6C8; }
-.ansi-cyan-intense-fg { color: #258F8F; }
-.ansi-cyan-intense-bg { background-color: #258F8F; }
-.ansi-white-fg { color: #C5C1B4; }
-.ansi-white-bg { background-color: #C5C1B4; }
-.ansi-white-intense-fg { color: #A1A6B2; }
-.ansi-white-intense-bg { background-color: #A1A6B2; }
-
-.ansi-default-inverse-fg { color: #FFFFFF; }
-.ansi-default-inverse-bg { background-color: #000000; }
-
-.ansi-bold { font-weight: bold; }
-.ansi-underline { text-decoration: underline; }
-
-
-div.nbinput.container div.input_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight].math,
-div.nboutput.container div.output_area.rendered_html,
-div.nboutput.container div.output_area > div.output_javascript,
-div.nboutput.container div.output_area:not(.rendered_html) > img{
-    padding: 5px;
-    margin: 0;
-}
-
-/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
-div.nbinput.container div.input_area > div[class^='highlight'],
-div.nboutput.container div.output_area > div[class^='highlight']{
-    overflow-y: hidden;
-}
-
-/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt .copybtn {
-    display: none;
-}
-
-/* Some additional styling taken form the Jupyter notebook CSS */
-.jp-RenderedHTMLCommon table,
-div.rendered_html table {
-  border: none;
-  border-collapse: collapse;
-  border-spacing: 0;
-  color: black;
-  font-size: 12px;
-  table-layout: fixed;
-}
-.jp-RenderedHTMLCommon thead,
-div.rendered_html thead {
-  border-bottom: 1px solid black;
-  vertical-align: bottom;
-}
-.jp-RenderedHTMLCommon tr,
-.jp-RenderedHTMLCommon th,
-.jp-RenderedHTMLCommon td,
-div.rendered_html tr,
-div.rendered_html th,
-div.rendered_html td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
-}
-.jp-RenderedHTMLCommon th,
-div.rendered_html th {
-  font-weight: bold;
-}
-.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
-div.rendered_html tbody tr:nth-child(odd) {
-  background: #f5f5f5;
-}
-.jp-RenderedHTMLCommon tbody tr:hover,
-div.rendered_html tbody tr:hover {
-  background: rgba(66, 165, 245, 0.2);
-}
-</style>
-<section id="Variational-Inference-in-Stan">
-<h1>Variational Inference in Stan<a class="headerlink" href="#Variational-Inference-in-Stan" title="Permalink to this headline">#</a></h1>
-<p>Variational inference is a scalable technique for approximate Bayesian inference. Stan implements an automatic variational inference algorithm, called Automatic Differentiation Variational Inference (ADVI) which searches over a family of simple densities to find the best approximate posterior density. ADVI produces an estimate of the parameter means together with a sample from the approximate posterior density.</p>
-<p>ADVI approximates the variational objective function, the evidence lower bound or ELBO, using stochastic gradient ascent. The algorithm ascends these gradients using an adaptive stepsize sequence that has one parameter <code class="docutils literal notranslate"><span class="pre">eta</span></code> which is adjusted during warmup. The number of draws used to approximate the ELBO is denoted by <code class="docutils literal notranslate"><span class="pre">elbo_samples</span></code>. ADVI heuristically determines a rolling window over which it computes the average and the median change of the ELBO. When this change falls below a threshold,
+  <section id="Variational-Inference-using-ADVI">
+<h1>Variational Inference using ADVI<a class="headerlink" href="#Variational-Inference-using-ADVI" title="Permalink to this headline">#</a></h1>
+<p>Variational inference is a method for approximating complex Bayesian posterior distributions using simpler, parameterized distributions. The Automatic Differentiation Variational Inference (ADVI) algorithm searches over a family of simple densities to find the best approximate posterior density. ADVI produces an estimate of the parameter means together with a sample from the approximate posterior density.</p>
+<p>ADVI uses stochastic gradient ascent to approximate the variational objective function, the evidence lower bound or ELBO. The algorithm ascends these gradients using an adaptive stepsize sequence that has one parameter <code class="docutils literal notranslate"><span class="pre">eta</span></code> which is adjusted during warmup. The number of draws used to approximate the ELBO is denoted by <code class="docutils literal notranslate"><span class="pre">elbo_samples</span></code>. ADVI heuristically determines a rolling window over which it computes the average and the median change of the ELBO. When this change falls below a threshold,
 denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_obj</span></code>, the algorithm is considered to have converged.</p>
 <section id="Example:-variational-inference-for-model-bernoulli.stan">
 <h2>Example: variational inference for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-variational-inference-for-model-bernoulli.stan" title="Permalink to this headline">#</a></h2>
-<p>In CmdStanPy, the <code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code> class method <code class="docutils literal notranslate"><span class="pre">variational</span></code> invokes CmdStan with <code class="docutils literal notranslate"><span class="pre">method=variational</span></code> and returns an estimate of the approximate posterior mean of all model parameters as well as a set of draws from this approximate posterior.</p>
+<p>The <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.variational">CmdStanModel variational</a> method wraps the CmdStan <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/variational-config.html">variational</a> method.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -557,13 +306,23 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/opt/hostedtoolcache/Python/3.9.16/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+/opt/hostedtoolcache/Python/3.9.18/x64/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-16:56:50 - cmdstanpy - INFO - Chain [1] start processing
-16:56:50 - cmdstanpy - INFO - Chain [1] done processing
+14:43:46 - cmdstanpy - INFO - Chain [1] start processing
+14:43:46 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
-<p>The class <code class="docutils literal notranslate"><span class="pre">`CmdStanVB</span></code> &lt;<a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html#stanvariational">https://cmdstanpy.readthedocs.io/en/latest/api.html#stanvariational</a>&gt;`__ provides the following properties to access information about the parameter names, estimated means, and the sample: + <code class="docutils literal notranslate"><span class="pre">column_names</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_params_dict</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_params_np</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_params_pd</span></code> + <code class="docutils literal notranslate"><span class="pre">variational_sample</span></code></p>
+<p>The class <code class="docutils literal notranslate"><span class="pre">`CmdStanVB</span></code> &lt;<a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanvb">https://mc-stan.org/cmdstanpy/api.html#cmdstanvb</a>&gt;`__ provides the following properties to access information about the parameter names, estimated means, and the sample:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">column_names</span></code> - list of column names</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">columns</span></code> - number of columns</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eta</span></code> - step size scaling parameter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variational_params_dict</span></code> - inferred parameter means as a Dict.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variational_params_np</span></code> - inferred parameter means as a numpy.ndarray.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variational_params_pd</span></code> - inferred parameter means as a pandas.DataFrame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variational_sample</span></code> - the set of approximate posterior output draws ad a numpy.ndarray.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variational_sample_pd</span></code> - the set of approximate posterior output draws ad a pandas.DataFrame.</p></li>
+</ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -593,7 +352,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.231102
+0.235774
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -627,10 +386,10 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:56:50 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
-16:57:03 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
-16:57:03 - cmdstanpy - INFO - Chain [1] start processing
-16:57:03 - cmdstanpy - INFO - Chain [1] done processing
+14:43:46 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
+14:44:07 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
+14:44:07 - cmdstanpy - INFO - Chain [1] start processing
+14:44:08 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -644,20 +403,20 @@ Cell <span class="ansi-green-fg">In[5], line 2</span>
 <span class="ansi-green-intense-fg ansi-bold">      1</span> model_fail <span style="color: rgb(98,98,98)">=</span> CmdStanModel(stan_file<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">eta_should_fail.stan</span><span style="color: rgb(175,0,0)">&#39;</span>)
 <span class="ansi-green-fg">----&gt; 2</span> vi_fail <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">model_fail</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">variational</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">)</span>
 
-File <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py:1559</span>, in <span class="ansi-cyan-fg">CmdStanModel.variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_latent_dynamics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, output_samples, require_converged, show_console, refresh, time_fmt, timeout)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1557</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span style="color: rgb(0,135,0)">len</span>(re<span style="color: rgb(98,98,98)">.</span>findall(pat, contents)) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>:
-<span class="ansi-green-intense-fg ansi-bold">   1558</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> require_converged:
-<span class="ansi-green-fg">-&gt; 1559</span>         <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">RuntimeError</span>(
-<span class="ansi-green-intense-fg ansi-bold">   1560</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1561</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">If you would like to inspect the output, </span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1562</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">re-call with require_converged=False</span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1563</span>         )
-<span class="ansi-green-intense-fg ansi-bold">   1564</span>     <span style="color: rgb(95,135,135)"># else:</span>
-<span class="ansi-green-intense-fg ansi-bold">   1565</span>     get_logger()<span style="color: rgb(98,98,98)">.</span>warning(
-<span class="ansi-green-intense-fg ansi-bold">   1566</span>         <span style="color: rgb(175,0,0)">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span style="color: rgb(175,0,0)">&#39;</span>,
-<span class="ansi-green-intense-fg ansi-bold">   1567</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span style="color: rgb(175,0,0)">&#39;</span>,
-<span class="ansi-green-intense-fg ansi-bold">   1568</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Proceeding because require_converged is set to False</span><span style="color: rgb(175,0,0)">&#39;</span>,
-<span class="ansi-green-intense-fg ansi-bold">   1569</span>     )
+File <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py:1564</span>, in <span class="ansi-cyan-fg">CmdStanModel.variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_latent_dynamics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, draws, require_converged, show_console, refresh, time_fmt, timeout, output_samples)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1562</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span style="color: rgb(0,135,0)">len</span>(re<span style="color: rgb(98,98,98)">.</span>findall(pat, contents)) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>:
+<span class="ansi-green-intense-fg ansi-bold">   1563</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> require_converged:
+<span class="ansi-green-fg">-&gt; 1564</span>         <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">RuntimeError</span>(
+<span class="ansi-green-intense-fg ansi-bold">   1565</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1566</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">If you would like to inspect the output, </span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1567</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">re-call with require_converged=False</span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1568</span>         )
+<span class="ansi-green-intense-fg ansi-bold">   1569</span>     <span style="color: rgb(95,135,135)"># else:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1570</span>     get_logger()<span style="color: rgb(98,98,98)">.</span>warning(
+<span class="ansi-green-intense-fg ansi-bold">   1571</span>         <span style="color: rgb(175,0,0)">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span style="color: rgb(175,0,0)">&#39;</span>,
+<span class="ansi-green-intense-fg ansi-bold">   1572</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span style="color: rgb(175,0,0)">&#39;</span>,
+<span class="ansi-green-intense-fg ansi-bold">   1573</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Proceeding because require_converged is set to False</span><span style="color: rgb(175,0,0)">&#39;</span>,
+<span class="ansi-green-intense-fg ansi-bold">   1574</span>     )
 
 <span class="ansi-red-fg">RuntimeError</span>: The algorithm may not have converged.
 If you would like to inspect the output, re-call with require_converged=False
@@ -677,9 +436,9 @@ If you would like to inspect the output, re-call with require_converged=False
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:57:03 - cmdstanpy - INFO - Chain [1] start processing
-16:57:03 - cmdstanpy - INFO - Chain [1] done processing
-16:57:03 - cmdstanpy - WARNING - The algorithm may not have converged.
+14:44:08 - cmdstanpy - INFO - Chain [1] start processing
+14:44:08 - cmdstanpy - INFO - Chain [1] done processing
+14:44:08 - cmdstanpy - WARNING - The algorithm may not have converged.
 Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
@@ -701,11 +460,11 @@ Proceeding because require_converged is set to False
 OrderedDict([(&#39;lp__&#39;, 0.0),
              (&#39;log_p__&#39;, 0.0),
              (&#39;log_g__&#39;, 0.0),
-             (&#39;mu[1]&#39;, 0.0112419),
-             (&#39;mu[2]&#39;, -0.04206)])
+             (&#39;mu[1]&#39;, 0.0226452),
+             (&#39;mu[2]&#39;, -0.00872416)])
 </pre></div></div>
 </div>
-<p>See the <a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html">api docs</a>, section <code class="docutils literal notranslate"><span class="pre">`CmdStanModel.variational</span></code> &lt;<a class="reference external" href="https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational">https://cmdstanpy.readthedocs.io/en/latest/api.html#cmdstanpy.CmdStanModel.variational</a>&gt;`__ for a full description of all arguments.</p>
+<p>See the <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.variational">API documentation</a> for a full description of all arguments.</p>
 </section>
 </section>
 
@@ -715,11 +474,11 @@ OrderedDict([(&#39;lp__&#39;, 0.0),
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="Maximum%20Likelihood%20Estimation.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="Pathfinder.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Maximum Likelihood Estimation</p>
+            <p class="prev-next-title">Variational Inference using Pathfinder</p>
         </div>
     </a>
     <a class='right-next' id="next-link" href="VI%20as%20Sampler%20Inits.html" title="next page">
@@ -744,7 +503,7 @@ OrderedDict([(&#39;lp__&#39;, 0.0),
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.stanfit &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -175,16 +175,20 @@
 
 <span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CmdStanArgs</span><span class="p">,</span>
+    <span class="n">LaplaceArgs</span><span class="p">,</span>
     <span class="n">OptimizeArgs</span><span class="p">,</span>
+    <span class="n">PathfinderArgs</span><span class="p">,</span>
     <span class="n">SamplerArgs</span><span class="p">,</span>
     <span class="n">VariationalArgs</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">check_sampler_csv</span><span class="p">,</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">scan_config</span>
 
 <span class="kn">from</span> <span class="nn">.gq</span> <span class="kn">import</span> <span class="n">CmdStanGQ</span>
+<span class="kn">from</span> <span class="nn">.laplace</span> <span class="kn">import</span> <span class="n">CmdStanLaplace</span>
 <span class="kn">from</span> <span class="nn">.mcmc</span> <span class="kn">import</span> <span class="n">CmdStanMCMC</span>
 <span class="kn">from</span> <span class="nn">.metadata</span> <span class="kn">import</span> <span class="n">InferenceMetadata</span>
 <span class="kn">from</span> <span class="nn">.mle</span> <span class="kn">import</span> <span class="n">CmdStanMLE</span>
+<span class="kn">from</span> <span class="nn">.pathfinder</span> <span class="kn">import</span> <span class="n">CmdStanPathfinder</span>
 <span class="kn">from</span> <span class="nn">.runset</span> <span class="kn">import</span> <span class="n">RunSet</span>
 <span class="kn">from</span> <span class="nn">.vb</span> <span class="kn">import</span> <span class="n">CmdStanVB</span>
 
@@ -195,13 +199,17 @@
     <span class="s2">&quot;CmdStanMLE&quot;</span><span class="p">,</span>
     <span class="s2">&quot;CmdStanVB&quot;</span><span class="p">,</span>
     <span class="s2">&quot;CmdStanGQ&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CmdStanLaplace&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CmdStanPathfinder&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
 
 <div class="viewcode-block" id="from_csv"><a class="viewcode-back" href="../../api.html#cmdstanpy.from_csv">[docs]</a><span class="k">def</span> <span class="nf">from_csv</span><span class="p">(</span>
     <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">,</span> <span class="n">CmdStanPathfinder</span><span class="p">,</span> <span class="n">CmdStanLaplace</span><span class="p">,</span> <span class="kc">None</span>
+<span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Instantiate a CmdStan object from a the Stan CSV files from a CmdStan run.</span>
 <span class="sd">    CSV files are specified from either a list of Stan CSV files or a single</span>
@@ -223,6 +231,8 @@
         <span class="s1">&#39;sample&#39;</span><span class="p">,</span>
         <span class="s1">&#39;optimize&#39;</span><span class="p">,</span>
         <span class="s1">&#39;variational&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;laplace&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;pathfinder&#39;</span><span class="p">,</span>
     <span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s1">&#39;Bad method argument </span><span class="si">{}</span><span class="s1">, must be one of: &#39;</span>
@@ -312,7 +322,7 @@
                         <span class="n">save_warmup</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;save_warmup&#39;</span><span class="p">],</span>
                         <span class="n">fixed_param</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="p">)</span>
-                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s1">&#39;Invalid or corrupt Stan CSV output file, &#39;</span>
                     <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
@@ -339,6 +349,7 @@
             <span class="n">optimize_args</span> <span class="o">=</span> <span class="n">OptimizeArgs</span><span class="p">(</span>
                 <span class="n">algorithm</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;algorithm&#39;</span><span class="p">],</span>
                 <span class="n">save_iterations</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;save_iterations&#39;</span><span class="p">],</span>
+                <span class="n">jacobian</span><span class="o">=</span><span class="n">config_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;jacobian&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
             <span class="p">)</span>
             <span class="n">cmdstan_args</span> <span class="o">=</span> <span class="n">CmdStanArgs</span><span class="p">(</span>
                 <span class="n">model_name</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">],</span>
@@ -378,6 +389,43 @@
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">)):</span>
                 <span class="n">runset</span><span class="o">.</span><span class="n">_set_retcode</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">CmdStanVB</span><span class="p">(</span><span class="n">runset</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;laplace&#39;</span><span class="p">:</span>
+            <span class="n">laplace_args</span> <span class="o">=</span> <span class="n">LaplaceArgs</span><span class="p">(</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">],</span>
+                <span class="n">draws</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;draws&#39;</span><span class="p">],</span>
+                <span class="n">jacobian</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;jacobian&#39;</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">cmdstan_args</span> <span class="o">=</span> <span class="n">CmdStanArgs</span><span class="p">(</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">],</span>
+                <span class="n">model_exe</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">],</span>
+                <span class="n">chain_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">method_args</span><span class="o">=</span><span class="n">laplace_args</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">runset</span> <span class="o">=</span> <span class="n">RunSet</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmdstan_args</span><span class="p">)</span>
+            <span class="n">runset</span><span class="o">.</span><span class="n">_csv_files</span> <span class="o">=</span> <span class="n">csvfiles</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">)):</span>
+                <span class="n">runset</span><span class="o">.</span><span class="n">_set_retcode</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">mode</span><span class="p">:</span> <span class="n">CmdStanMLE</span> <span class="o">=</span> <span class="n">from_csv</span><span class="p">(</span>
+                <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s1">&#39;optimize&#39;</span><span class="p">,</span>
+            <span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="k">return</span> <span class="n">CmdStanLaplace</span><span class="p">(</span><span class="n">runset</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;pathfinder&#39;</span><span class="p">:</span>
+            <span class="n">pathfinder_args</span> <span class="o">=</span> <span class="n">PathfinderArgs</span><span class="p">(</span>
+                <span class="n">num_draws</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;num_draws&#39;</span><span class="p">],</span>
+                <span class="n">num_paths</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;num_paths&#39;</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">cmdstan_args</span> <span class="o">=</span> <span class="n">CmdStanArgs</span><span class="p">(</span>
+                <span class="n">model_name</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">],</span>
+                <span class="n">model_exe</span><span class="o">=</span><span class="n">config_dict</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">],</span>
+                <span class="n">chain_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">method_args</span><span class="o">=</span><span class="n">pathfinder_args</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">runset</span> <span class="o">=</span> <span class="n">RunSet</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">cmdstan_args</span><span class="p">)</span>
+            <span class="n">runset</span><span class="o">.</span><span class="n">_csv_files</span> <span class="o">=</span> <span class="n">csvfiles</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">_retcodes</span><span class="p">)):</span>
+                <span class="n">runset</span><span class="o">.</span><span class="n">_set_retcode</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">CmdStanPathfinder</span><span class="p">(</span><span class="n">runset</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                 <span class="s1">&#39;Unable to process CSV output files from method </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="p">,</span>
@@ -410,7 +458,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

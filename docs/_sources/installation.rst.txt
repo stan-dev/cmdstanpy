@@ -158,7 +158,7 @@ To install the Xcode command line tools, run the shell command: ``xcode-select -
 
 **Windows**  We recommend using the `RTools 4.0 <https://cran.r-project.org/bin/windows/Rtools/rtools40.html>`_ toolchain
 which contains a ``g++ 8`` compiler and ``Mingw``, the native Windows equivalent of the GNU-Make utility.
-This can be installed allong with CmdStan when you invoke the function :meth:`cmdstanpy.install_cmdstan`
+This can be installed along with CmdStan when you invoke the function :meth:`cmdstanpy.install_cmdstan`
 with argument ``compiler=True``.
 
 
@@ -206,7 +206,7 @@ can be used to override these defaults:
 
 .. code-block:: bash
 
-    install_cmdstan -d my_local_cmdstan -v 2.27.0
+    install_cmdstan -d my_local_cmdstan -v 2.33.0
     ls -F my_local_cmdstan
 
 Alternate Linux Architectures

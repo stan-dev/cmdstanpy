@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -187,8 +187,13 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="examples/Pathfinder.html">
+     Variational Inference using Pathfinder
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="examples/Variational%20Inference.html">
-     Variational Inference in Stan
+     Variational Inference using ADVI
     </a>
    </li>
    <li class="toctree-l2">
@@ -251,11 +256,6 @@
    Validate, view, export the inference engine outputs
   </a>
   <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#metadata">
-     Metadata
-    </a>
-   </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#output-data">
      Output data
@@ -398,66 +398,51 @@ numpy arrays or pandas.Series.</p>
 <section id="run-the-cmdstan-inference-engine">
 <h2>Run the CmdStan inference engine<a class="headerlink" href="#run-the-cmdstan-inference-engine" title="Permalink to this headline">#</a></h2>
 <p>For each CmdStan inference method, there is a corresponding method on the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class.
-An example of each is provided in the <a class="reference internal" href="examples.html"><span class="doc">next section</span></a></p>
+An example of each is provided in the <a class="reference internal" href="examples.html"><span class="doc">next section</span></a>.</p>
 <ul>
 <li><p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method runs Stan’s
 <a class="reference external" href="https://mc-stan.org/docs/reference-manual/hamiltonian-monte-carlo.html">HMC-NUTS sampler</a>.</p>
 <p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> object which contains
 a sample from the posterior distribution of the model conditioned on the data.</p>
 </li>
+<li><p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.pathfinder" title="cmdstanpy.CmdStanModel.pathfinder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pathfinder()</span></code></a> method runs Stan’s
+<a class="reference external" href="https://mc-stan.org/docs/reference-manual/pathfinder.html">Pathfinder Variational Inference algorithm</a>.</p>
+<p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanPathfinder" title="cmdstanpy.CmdStanPathfinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanPathfinder</span></code></a> object which contains
+a sample from a Gaussian approximation the posterior distribution.</p>
+</li>
 <li><p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.variational" title="cmdstanpy.CmdStanModel.variational"><code class="xref py py-meth docutils literal notranslate"><span class="pre">variational()</span></code></a> method runs Stan’s
 <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html">Automatic Differentiation Variational Inference (ADVI) algorithm</a>.</p>
-<p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a> object which contains
-an approximation the posterior distribution in the unconstrained variable space.</p>
+<p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a> object which contains an approximation the posterior distribution.</p>
 </li>
 <li><p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.optimize" title="cmdstanpy.CmdStanModel.optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">optimize()</span></code></a> runs one of
-<a class="reference external" href="https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html">Stan’s optimization algorithms</a>
+<a class="reference external" href="https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html">Stan’s optimization algorithms</a>.
 to find a mode of the density specified by the Stan program.</p>
 <p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a> object.</p>
 </li>
 <li><p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.generate_quantities" title="cmdstanpy.CmdStanModel.generate_quantities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_quantities()</span></code></a> method runs Stan’s
-<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html">generate_quantities method</a>
+<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/standalone-generate-quantities.html">generate_quantities method</a>.
 which generates additional quantities of interest from a mode. Its take an existing fit as input and
-uses the parameter estimates in the fit to run the Stan program’s <a class="reference external" href="https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html">generated quantities block</a>.</p>
+uses the parameter estimates in the fit to run the Stan program’s
+<a class="reference external" href="https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html">generated quantities block</a>.</p>
 <p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a> object.</p>
 </li>
 </ul>
 </section>
 <section id="validate-view-export-the-inference-engine-outputs">
 <h2>Validate, view, export the inference engine outputs<a class="headerlink" href="#validate-view-export-the-inference-engine-outputs" title="Permalink to this headline">#</a></h2>
-<p>The inference engine results objects
-<a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ,</span></code>
+<p>The inference method-specific results objects
+<a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanPathfinder" title="cmdstanpy.CmdStanPathfinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanPathfinder</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a>,
+<a class="reference internal" href="../api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a>, and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a>
 contain the CmdStan method configuration information
 and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
 as well as method-specific informational properties and methods.objects</p>
-<section id="metadata">
-<h3>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">#</a></h3>
-<p>By <cite>metadata</cite> we mean the information parsed from the header comments and header row of the
-<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html">Stan CSV files</a>
-into a <a class="reference internal" href="../internal_api.html#cmdstanpy.InferenceMetadata" title="cmdstanpy.InferenceMetadata"><code class="xref py py-class docutils literal notranslate"><span class="pre">InferenceMetadata</span></code></a> object which is exposed via
-the object’s <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.metadata" title="cmdstanpy.CmdStanMCMC.metadata"><code class="xref py py-attr docutils literal notranslate"><span class="pre">metadata</span></code></a> property.</p>
-<ul class="simple">
-<li><p>The metadata <a class="reference internal" href="../internal_api.html#cmdstanpy.InferenceMetadata.cmdstan_config" title="cmdstanpy.InferenceMetadata.cmdstan_config"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cmdstan_config</span></code></a>
-property provides the CmdStan configuration information parsed out
-of the Stan CSV file header.</p></li>
-<li><p>The metadata <a class="reference internal" href="../internal_api.html#cmdstanpy.InferenceMetadata.method_vars_cols" title="cmdstanpy.InferenceMetadata.method_vars_cols"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_vars_cols</span></code></a>
-property returns the names, column indices of the inference engine method variables,
-e.g.,
-<a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/mcmc-intro.html#mcmc_output_csv">the NUTS-HMC sampler output variables</a>
-are <code class="docutils literal notranslate"><span class="pre">lp__</span></code>, …, <code class="docutils literal notranslate"><span class="pre">energy__</span></code>.</p></li>
-<li><p>The metadata <a class="reference internal" href="../internal_api.html#cmdstanpy.InferenceMetadata.stan_vars_cols" title="cmdstanpy.InferenceMetadata.stan_vars_cols"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stan_vars_cols</span></code></a>
-property returns the names, column indices of all Stan model variables.
-Container variables will span as many columns, one column per element.</p></li>
-<li><p>The metadata <a class="reference internal" href="../internal_api.html#cmdstanpy.InferenceMetadata.stan_vars_dims" title="cmdstanpy.InferenceMetadata.stan_vars_dims"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stan_vars_dims</span></code></a>
-property specifies the names, dimensions of the Stan model variables.</p></li>
-</ul>
-</section>
 <section id="output-data">
 <h3>Output data<a class="headerlink" href="#output-data" title="Permalink to this headline">#</a></h3>
 <p>The resulting Stan CSV file or set of files are assembled into an inference result object.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> object contains the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> outputs</p></li>
+<li><p><a class="reference internal" href="../api.html#cmdstanpy.CmdStanPathfinder" title="cmdstanpy.CmdStanPathfinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanPathfinder</span></code></a> object contains the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.pathfinder" title="cmdstanpy.CmdStanModel.pathfinder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pathfinder()</span></code></a> outputs</p></li>
 <li><p><a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a> object contains the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.variational" title="cmdstanpy.CmdStanModel.variational"><code class="xref py py-meth docutils literal notranslate"><span class="pre">variational()</span></code></a> outputs</p></li>
 <li><p><a class="reference internal" href="../api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a> object contains the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.optimize" title="cmdstanpy.CmdStanModel.optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">optimize()</span></code></a> outputs</p></li>
 <li><p><a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a> object contains the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.generate_quantities" title="cmdstanpy.CmdStanModel.generate_quantities"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_quantities()</span></code></a> outputs</p></li>
@@ -476,7 +461,7 @@ method variables, cf <a class="reference internal" href="../api.html#cmdstanpy.C
 <p>The output from the methods <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a> return the sample contents
 in tabular form, see <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws" title="cmdstanpy.CmdStanMCMC.draws"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws()</span></code></a> and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws_pd" title="cmdstanpy.CmdStanMCMC.draws_pd"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_pd()</span></code></a>.
 Similarly, the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws_xr" title="cmdstanpy.CmdStanMCMC.draws_xr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_xr()</span></code></a> method returns the sample
-contents as an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2023.1.1.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which is a mapping from variable names to their respective values.</p>
+contents as an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2023.9.1.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which is a mapping from variable names to their respective values.</p>
 </section>
 </section>
 </section>
@@ -516,7 +501,7 @@ contents as an <a class="reference external" href="https://docs.xarray.dev/en/st
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

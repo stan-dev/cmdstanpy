@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Controlling Outputs &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>Controlling Outputs &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -187,8 +187,13 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="examples/Pathfinder.html">
+     Variational Inference using Pathfinder
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="examples/Variational%20Inference.html">
-     Variational Inference in Stan
+     Variational Inference using ADVI
     </a>
    </li>
    <li class="toctree-l2">
@@ -297,15 +302,15 @@ CmdStanPy also captures the per-chain console and error messages.</p>
 <span class="gp">In [7]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_1.csv</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_2.csv</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_3.csv</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_4.csv</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_1.csv</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_2.csv</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_3.csv</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_4.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_0-stdout.txt</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_1-stdout.txt</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_2-stdout.txt</span>
-<span class="go">	/tmp/tmpusygxqxd/bernoulli4qabqsoq/bernoulli-20230125165716_3-stdout.txt</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_0-stdout.txt</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_1-stdout.txt</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_2-stdout.txt</span>
+<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_3-stdout.txt</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is an optional argument which specifies
@@ -319,10 +324,10 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
 
 <span class="gp">In [9]: </span><span class="o">!</span>ls<span class="w"> </span>outputs/
-<span class="go">bernoulli-20230125165716_0-stdout.txt  bernoulli-20230125165716_2.csv</span>
-<span class="go">bernoulli-20230125165716_1-stdout.txt  bernoulli-20230125165716_3-stdout.txt</span>
-<span class="go">bernoulli-20230125165716_1.csv	       bernoulli-20230125165716_3.csv</span>
-<span class="go">bernoulli-20230125165716_2-stdout.txt  bernoulli-20230125165716_4.csv</span>
+<span class="go">bernoulli-20231003144428_0-stdout.txt  bernoulli-20231003144428_2.csv</span>
+<span class="go">bernoulli-20231003144428_1-stdout.txt  bernoulli-20231003144428_3-stdout.txt</span>
+<span class="go">bernoulli-20231003144428_1.csv	       bernoulli-20231003144428_3.csv</span>
+<span class="go">bernoulli-20231003144428_2-stdout.txt  bernoulli-20231003144428_4.csv</span>
 </pre></div>
 </div>
 <p>Alternatively, the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.save_csvfiles" title="cmdstanpy.CmdStanMCMC.save_csvfiles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></a> function moves the CSV files
@@ -335,8 +340,8 @@ to a specified directory.</p>
 <span class="gp">In [11]: </span><span class="n">fit</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;some/path&#39;</span><span class="p">)</span>
 
 <span class="gp">In [12]: </span><span class="o">!</span>ls<span class="w"> </span>some/path
-<span class="go">bernoulli-20230125165716_1.csv	bernoulli-20230125165716_3.csv</span>
-<span class="go">bernoulli-20230125165716_2.csv	bernoulli-20230125165716_4.csv</span>
+<span class="go">bernoulli-20231003144429_1.csv	bernoulli-20231003144429_3.csv</span>
+<span class="go">bernoulli-20231003144429_2.csv	bernoulli-20231003144429_4.csv</span>
 </pre></div>
 </div>
 </section>
@@ -399,40 +404,40 @@ to a file.</p>
 <span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
 <span class="gp">   ....: </span>        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 <span class="gp">   ....: </span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - cmd: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli info</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - cmd: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli info</span>
 <span class="go">cwd: None</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - CmdStan start processing</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - idx 0</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=34682&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [1] start processing</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - idx 1</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=2&#39;, &#39;random&#39;, &#39;seed=34682&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_2.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [2] start processing</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [1] done processing</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [2] done processing</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - idx 2</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - idx 3</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=4&#39;, &#39;random&#39;, &#39;seed=34682&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_4.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [4] start processing</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=3&#39;, &#39;random&#39;, &#39;seed=34682&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_3.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [3] start processing</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [4] done processing</span>
-<span class="go">16:57:17 - cmdstanpy - INFO - Chain [3] done processing</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - runset</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - CmdStan start processing</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 0</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [1] start processing</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 1</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=2&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_2.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [2] start processing</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [1] done processing</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 2</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=3&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_3.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [3] start processing</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [2] done processing</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 3</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=4&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_4.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [4] start processing</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [3] done processing</span>
+<span class="go">14:44:29 - cmdstanpy - INFO - Chain [4] done processing</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - runset</span>
 <span class="go">RunSet: chains=4, chain_ids=[1, 2, 3, 4], num_processes=4</span>
 <span class="go">cmd (chain 1):</span>
-<span class="go">[&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=34682&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">[&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go">retcodes=[0, 0, 0, 0]</span>
 <span class="go">per-chain output files (showing chain 1 only):</span>
 <span class="go">csv_file:</span>
-<span class="go">/tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_1.csv</span>
+<span class="go">/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv</span>
 <span class="go">console_msgs (if any):</span>
-<span class="go">/tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_0-stdout.txt</span>
-<span class="go">16:57:17 - cmdstanpy - DEBUG - Chain 1 console:</span>
+<span class="go">/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_0-stdout.txt</span>
+<span class="go">14:44:29 - cmdstanpy - DEBUG - Chain 1 console:</span>
 <span class="go">method = sample (Default)</span>
 <span class="go">sample</span>
 <span class="go">num_samples = 1000 (Default)</span>
@@ -463,9 +468,9 @@ to a file.</p>
 <span class="go">file = users-guide/examples/bernoulli.data.json</span>
 <span class="go">init = 2 (Default)</span>
 <span class="go">random</span>
-<span class="go">seed = 34682</span>
+<span class="go">seed = 26092</span>
 <span class="go">output</span>
-<span class="go">file = /tmp/tmpusygxqxd/bernoulliivpziwbi/bernoulli-20230125165717_1.csv</span>
+<span class="go">file = /tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv</span>
 <span class="go">diagnostic_file =  (Default)</span>
 <span class="go">refresh = 100 (Default)</span>
 <span class="go">sig_figs = -1 (Default)</span>
@@ -501,9 +506,9 @@ to a file.</p>
 <span class="go">Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
 <span class="go">Iteration: 2000 / 2000 [100%]  (Sampling)</span>
 
-<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
-<span class="go">0.018 seconds (Sampling)</span>
-<span class="go">0.023 seconds (Total)</span>
+<span class="go">Elapsed Time: 0.003 seconds (Warm-up)</span>
+<span class="go">0.009 seconds (Sampling)</span>
+<span class="go">0.012 seconds (Total)</span>
 </pre></div>
 </div>
 </section>
@@ -544,7 +549,7 @@ to a file.</p>
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

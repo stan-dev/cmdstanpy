@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.vb &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.stanfit.vb &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -176,7 +176,8 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="n">Method</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">BaseType</span><span class="p">,</span> <span class="n">scan_variational_csv</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">scan_variational_csv</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils.logging</span> <span class="kn">import</span> <span class="n">get_logger</span>
 
 <span class="kn">from</span> <span class="nn">.metadata</span> <span class="kn">import</span> <span class="n">InferenceMetadata</span>
 <span class="kn">from</span> <span class="nn">.runset</span> <span class="kn">import</span> <span class="n">RunSet</span>
@@ -282,48 +283,84 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span>
 
-<div class="viewcode-block" id="CmdStanVB.stan_variable"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanVB.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<div class="viewcode-block" id="CmdStanVB.stan_variable"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanVB.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a numpy.ndarray which contains the estimates for the</span>
 <span class="sd">        for the named Stan program variable where the dimensions of the</span>
-<span class="sd">        numpy.ndarray match the shape of the Stan program variable.</span>
+<span class="sd">        numpy.ndarray match the shape of the Stan program variable, with</span>
+<span class="sd">        a leading axis added for the number of draws from the variational</span>
+<span class="sd">        approximation.</span>
+
+<span class="sd">        * If the variable is a scalar variable, the return array has shape</span>
+<span class="sd">          ( draws, ).</span>
+<span class="sd">        * If the variable is a vector, the return array has shape</span>
+<span class="sd">          ( draws, len(vector))</span>
+<span class="sd">        * If the variable is a matrix, the return array has shape</span>
+<span class="sd">          ( draws, size(dim 1), size(dim 2) )</span>
+<span class="sd">        * If the variable is an array with N dimensions, the return array</span>
+<span class="sd">          has shape ( draws, size(dim 1), ..., size(dim N))</span>
 
 <span class="sd">        This functionaltiy is also available via a shortcut using ``.`` -</span>
 <span class="sd">        writing ``fit.a`` is a synonym for ``fit.stan_variable(&quot;a&quot;)``</span>
 
 <span class="sd">        :param var: variable name</span>
 
+<span class="sd">        :param mean: if True, return the variational mean. Otherwise,</span>
+<span class="sd">            return the variational sample.  The default behavior will</span>
+<span class="sd">            change in a future release to return the variational sample.</span>
+
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        CmdStanVB.stan_variables</span>
 <span class="sd">        CmdStanMCMC.stan_variable</span>
 <span class="sd">        CmdStanMLE.stan_variable</span>
+<span class="sd">        CmdStanPathfinder.stan_variable</span>
 <span class="sd">        CmdStanGQ.stan_variable</span>
+<span class="sd">        CmdStanLaplace.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No variable name specified.&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">:</span>
+        <span class="c1"># TODO(2.0): remove None case, make default `False`</span>
+        <span class="k">if</span> <span class="n">mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;The default behavior of CmdStanVB.stan_variable() &quot;</span>
+                <span class="s2">&quot;will change in a future release to return the &quot;</span>
+                <span class="s2">&quot;variational sample, rather than the mean.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;To maintain the current behavior, pass the argument &quot;</span>
+                <span class="s2">&quot;mean=True&quot;</span>
+            <span class="p">)</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">mean</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variational_sample</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">extract_reshape</span><span class="p">(</span>
+                <span class="n">draws</span>
+            <span class="p">)</span>
+            <span class="c1"># TODO(2.0): remove</span>
+            <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="ow">or</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+                <span class="k">if</span> <span class="n">mean</span><span class="p">:</span>
+                    <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;The default behavior of &quot;</span>
+                        <span class="s2">&quot;CmdStanVB.stan_variable(mean=True) will change in a &quot;</span>
+                        <span class="s2">&quot;future release to always return a numpy.ndarray, even &quot;</span>
+                        <span class="s2">&quot;for scalar variables.&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># pylint: disable=raise-missing-from</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
                 <span class="s1">&#39;Available variables are &#39;</span>
-                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="n">col_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
-        <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
-            <span class="n">result</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span><span class="p">)[</span><span class="n">col_idxs</span><span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="n">BaseType</span><span class="o">.</span><span class="n">COMPLEX</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">result</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-                <span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="p">)</span></div>
 
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">result</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_variational_mean</span><span class="p">[</span><span class="n">col_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span></div>
-
-<div class="viewcode-block" id="CmdStanVB.stan_variables"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanVB.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<div class="viewcode-block" id="CmdStanVB.stan_variables"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanVB.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a dictionary mapping Stan program variables names</span>
 <span class="sd">        to the corresponding numpy.ndarray containing the inferred values.</span>
@@ -334,10 +371,12 @@
 <span class="sd">        CmdStanMCMC.stan_variables</span>
 <span class="sd">        CmdStanMLE.stan_variables</span>
 <span class="sd">        CmdStanGQ.stan_variables</span>
+<span class="sd">        CmdStanPathfinder.stan_variables</span>
+<span class="sd">        CmdStanLaplace.stan_variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="n">mean</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
     <span class="nd">@property</span>
@@ -390,7 +429,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

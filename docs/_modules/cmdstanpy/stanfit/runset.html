@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.runset &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.stanfit.runset &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -348,7 +348,6 @@
                 <span class="n">profile_file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">save_profile</span>
                 <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="n">num_chains</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_chains</span><span class="p">,</span>
             <span class="p">)</span></div>
 
     <span class="nd">@property</span>
@@ -445,7 +444,7 @@
                 <span class="k">pass</span>
             <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">test_path</span><span class="p">)</span>  <span class="c1"># cleanup</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">PermissionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Cannot save to path: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">dir</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Cannot save to path: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">dir</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">exc</span>
 
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
@@ -497,7 +496,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

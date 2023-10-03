@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -23,6 +23,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css" />
     
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
@@ -59,7 +60,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -187,8 +188,13 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="Pathfinder.html">
+     Variational Inference using Pathfinder
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="Variational%20Inference.html">
-     Variational Inference in Stan
+     Variational Inference using ADVI
     </a>
    </li>
    <li class="toctree-l2">
@@ -269,264 +275,7 @@
               
               <div>
                 
-  
-<style>
-/* CSS for nbsphinx extension */
-
-/* remove conflicting styling from Sphinx themes */
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt *,
-div.nbinput.container div.input_area pre,
-div.nboutput.container div.output_area pre,
-div.nbinput.container div.input_area .highlight,
-div.nboutput.container div.output_area .highlight {
-    border: none;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-}
-
-div.nbinput.container > div[class*=highlight],
-div.nboutput.container > div[class*=highlight] {
-    margin: 0;
-}
-
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt * {
-    background: none;
-}
-
-div.nboutput.container div.output_area .highlight,
-div.nboutput.container div.output_area pre {
-    background: unset;
-}
-
-div.nboutput.container div.output_area div.highlight {
-    color: unset;  /* override Pygments text color */
-}
-
-/* avoid gaps between output lines */
-div.nboutput.container div[class*=highlight] pre {
-    line-height: normal;
-}
-
-/* input/output containers */
-div.nbinput.container,
-div.nboutput.container {
-    display: -webkit-flex;
-    display: flex;
-    align-items: flex-start;
-    margin: 0;
-    width: 100%;
-}
-@media (max-width: 540px) {
-    div.nbinput.container,
-    div.nboutput.container {
-        flex-direction: column;
-    }
-}
-
-/* input container */
-div.nbinput.container {
-    padding-top: 5px;
-}
-
-/* last container */
-div.nblast.container {
-    padding-bottom: 5px;
-}
-
-/* input prompt */
-div.nbinput.container div.prompt pre {
-    color: #307FC1;
-}
-
-/* output prompt */
-div.nboutput.container div.prompt pre {
-    color: #BF5B3D;
-}
-
-/* all prompts */
-div.nbinput.container div.prompt,
-div.nboutput.container div.prompt {
-    width: 4.5ex;
-    padding-top: 5px;
-    position: relative;
-    user-select: none;
-}
-
-div.nbinput.container div.prompt > div,
-div.nboutput.container div.prompt > div {
-    position: absolute;
-    right: 0;
-    margin-right: 0.3ex;
-}
-
-@media (max-width: 540px) {
-    div.nbinput.container div.prompt,
-    div.nboutput.container div.prompt {
-        width: unset;
-        text-align: left;
-        padding: 0.4em;
-    }
-    div.nboutput.container div.prompt.empty {
-        padding: 0;
-    }
-
-    div.nbinput.container div.prompt > div,
-    div.nboutput.container div.prompt > div {
-        position: unset;
-    }
-}
-
-/* disable scrollbars and line breaks on prompts */
-div.nbinput.container div.prompt pre,
-div.nboutput.container div.prompt pre {
-    overflow: hidden;
-    white-space: pre;
-}
-
-/* input/output area */
-div.nbinput.container div.input_area,
-div.nboutput.container div.output_area {
-    -webkit-flex: 1;
-    flex: 1;
-    overflow: auto;
-}
-@media (max-width: 540px) {
-    div.nbinput.container div.input_area,
-    div.nboutput.container div.output_area {
-        width: 100%;
-    }
-}
-
-/* input area */
-div.nbinput.container div.input_area {
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    /*background: #f5f5f5;*/
-}
-
-/* override MathJax center alignment in output cells */
-div.nboutput.container div[class*=MathJax] {
-    text-align: left !important;
-}
-
-/* override sphinx.ext.imgmath center alignment in output cells */
-div.nboutput.container div.math p {
-    text-align: left;
-}
-
-/* standard error */
-div.nboutput.container div.output_area.stderr {
-    background: #fdd;
-}
-
-/* ANSI colors */
-.ansi-black-fg { color: #3E424D; }
-.ansi-black-bg { background-color: #3E424D; }
-.ansi-black-intense-fg { color: #282C36; }
-.ansi-black-intense-bg { background-color: #282C36; }
-.ansi-red-fg { color: #E75C58; }
-.ansi-red-bg { background-color: #E75C58; }
-.ansi-red-intense-fg { color: #B22B31; }
-.ansi-red-intense-bg { background-color: #B22B31; }
-.ansi-green-fg { color: #00A250; }
-.ansi-green-bg { background-color: #00A250; }
-.ansi-green-intense-fg { color: #007427; }
-.ansi-green-intense-bg { background-color: #007427; }
-.ansi-yellow-fg { color: #DDB62B; }
-.ansi-yellow-bg { background-color: #DDB62B; }
-.ansi-yellow-intense-fg { color: #B27D12; }
-.ansi-yellow-intense-bg { background-color: #B27D12; }
-.ansi-blue-fg { color: #208FFB; }
-.ansi-blue-bg { background-color: #208FFB; }
-.ansi-blue-intense-fg { color: #0065CA; }
-.ansi-blue-intense-bg { background-color: #0065CA; }
-.ansi-magenta-fg { color: #D160C4; }
-.ansi-magenta-bg { background-color: #D160C4; }
-.ansi-magenta-intense-fg { color: #A03196; }
-.ansi-magenta-intense-bg { background-color: #A03196; }
-.ansi-cyan-fg { color: #60C6C8; }
-.ansi-cyan-bg { background-color: #60C6C8; }
-.ansi-cyan-intense-fg { color: #258F8F; }
-.ansi-cyan-intense-bg { background-color: #258F8F; }
-.ansi-white-fg { color: #C5C1B4; }
-.ansi-white-bg { background-color: #C5C1B4; }
-.ansi-white-intense-fg { color: #A1A6B2; }
-.ansi-white-intense-bg { background-color: #A1A6B2; }
-
-.ansi-default-inverse-fg { color: #FFFFFF; }
-.ansi-default-inverse-bg { background-color: #000000; }
-
-.ansi-bold { font-weight: bold; }
-.ansi-underline { text-decoration: underline; }
-
-
-div.nbinput.container div.input_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight].math,
-div.nboutput.container div.output_area.rendered_html,
-div.nboutput.container div.output_area > div.output_javascript,
-div.nboutput.container div.output_area:not(.rendered_html) > img{
-    padding: 5px;
-    margin: 0;
-}
-
-/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
-div.nbinput.container div.input_area > div[class^='highlight'],
-div.nboutput.container div.output_area > div[class^='highlight']{
-    overflow-y: hidden;
-}
-
-/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt .copybtn {
-    display: none;
-}
-
-/* Some additional styling taken form the Jupyter notebook CSS */
-.jp-RenderedHTMLCommon table,
-div.rendered_html table {
-  border: none;
-  border-collapse: collapse;
-  border-spacing: 0;
-  color: black;
-  font-size: 12px;
-  table-layout: fixed;
-}
-.jp-RenderedHTMLCommon thead,
-div.rendered_html thead {
-  border-bottom: 1px solid black;
-  vertical-align: bottom;
-}
-.jp-RenderedHTMLCommon tr,
-.jp-RenderedHTMLCommon th,
-.jp-RenderedHTMLCommon td,
-div.rendered_html tr,
-div.rendered_html th,
-div.rendered_html td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
-}
-.jp-RenderedHTMLCommon th,
-div.rendered_html th {
-  font-weight: bold;
-}
-.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
-div.rendered_html tbody tr:nth-child(odd) {
-  background: #f5f5f5;
-}
-.jp-RenderedHTMLCommon tbody tr:hover,
-div.rendered_html tbody tr:hover {
-  background: rgba(66, 165, 245, 0.2);
-}
-</style>
-<section id="Generating-new-quantities-of-interest.">
+  <section id="Generating-new-quantities-of-interest.">
 <h1>Generating new quantities of interest.<a class="headerlink" href="#Generating-new-quantities-of-interest." title="Permalink to this headline">#</a></h1>
 <p>The <a class="reference external" href="https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html">generated quantities block</a> computes quantities of interest based on the data, transformed data, parameters, and transformed parameters. It can be used to:</p>
 <ul class="simple">
@@ -564,7 +313,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/opt/hostedtoolcache/Python/3.9.16/x64/lib/python3.9/site-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+/opt/hostedtoolcache/Python/3.9.18/x64/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
 </pre></div></div>
 </div>
@@ -575,7 +324,7 @@ div.rendered_html tbody tr:hover {
 <div class="highlight"><pre>
 data {
   int&lt;lower=0&gt; N;
-  array[N] int&lt;lower=0,upper=1&gt; y; // or int&lt;lower=0,upper=1&gt; y[N];
+  array[N] int&lt;lower=0,upper=1&gt; y;
 }
 parameters {
   real&lt;lower=0,upper=1&gt; theta;
@@ -626,7 +375,7 @@ mean of y: 0.2
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:56:20 - cmdstanpy - INFO - CmdStan start processing
+14:43:23 - cmdstanpy - INFO - CmdStan start processing
 chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
 
@@ -653,7 +402,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-16:56:20 - cmdstanpy - INFO - CmdStan done processing.
+14:43:24 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -710,27 +459,27 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-7.294360</td>
-      <td>0.021998</td>
-      <td>0.784799</td>
-      <td>-8.824450</td>
-      <td>-6.995040</td>
-      <td>-6.750290</td>
-      <td>1272.76</td>
-      <td>23569.7</td>
-      <td>1.000660</td>
+      <td>-7.258710</td>
+      <td>0.017763</td>
+      <td>0.710178</td>
+      <td>-8.712690</td>
+      <td>-6.965650</td>
+      <td>-6.750050</td>
+      <td>1598.43</td>
+      <td>44400.9</td>
+      <td>1.00284</td>
     </tr>
     <tr>
       <th>theta</th>
-      <td>0.250677</td>
-      <td>0.003251</td>
-      <td>0.120806</td>
-      <td>0.077581</td>
-      <td>0.237291</td>
-      <td>0.465231</td>
-      <td>1380.46</td>
-      <td>25564.0</td>
-      <td>0.999431</td>
+      <td>0.251822</td>
+      <td>0.003216</td>
+      <td>0.119748</td>
+      <td>0.080723</td>
+      <td>0.235608</td>
+      <td>0.473338</td>
+      <td>1386.06</td>
+      <td>38501.8</td>
+      <td>1.00213</td>
     </tr>
   </tbody>
 </table>
@@ -751,8 +500,8 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:56:20 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
-16:56:29 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+14:43:24 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+14:43:42 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -781,7 +530,7 @@ generated quantities {
 
 </pre></div></div>
 </div>
-<p>We run the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method on <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc</span></code> using existing sample <code class="docutils literal notranslate"><span class="pre">fit</span></code> as input. The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method takes the values of <code class="docutils literal notranslate"><span class="pre">theta</span></code> in the <code class="docutils literal notranslate"><span class="pre">fit</span></code> sample as the set of draws from the posterior used to generate the corresponsing <code class="docutils literal notranslate"><span class="pre">y_rep</span></code> quantities of interest.</p>
+<p>We run the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method on <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc</span></code> using existing sample <code class="docutils literal notranslate"><span class="pre">fit</span></code> as input. The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method takes the values of <code class="docutils literal notranslate"><span class="pre">theta</span></code> in the <code class="docutils literal notranslate"><span class="pre">fit</span></code> sample as the set of draws from the posterior used to generate the corresponding <code class="docutils literal notranslate"><span class="pre">y_rep</span></code> quantities of interest.</p>
 <p>The arguments to the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method are: + <code class="docutils literal notranslate"><span class="pre">data</span></code> - the data used to fit the model + <code class="docutils literal notranslate"><span class="pre">previous_fit</span></code> - either a <code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code>, <code class="docutils literal notranslate"><span class="pre">CmdStanVB</span></code>, or <code class="docutils literal notranslate"><span class="pre">CmdStanMLE</span></code> object or a list of stan-csv files</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -796,17 +545,17 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:56:29 - cmdstanpy - INFO - Chain [1] start processing
-16:56:29 - cmdstanpy - INFO - Chain [1] done processing
-16:56:29 - cmdstanpy - INFO - Chain [2] start processing
-16:56:30 - cmdstanpy - INFO - Chain [2] done processing
-16:56:30 - cmdstanpy - INFO - Chain [3] start processing
-16:56:30 - cmdstanpy - INFO - Chain [3] done processing
-16:56:30 - cmdstanpy - INFO - Chain [4] start processing
-16:56:30 - cmdstanpy - INFO - Chain [4] done processing
+14:43:42 - cmdstanpy - INFO - Chain [1] start processing
+14:43:42 - cmdstanpy - INFO - Chain [1] done processing
+14:43:42 - cmdstanpy - INFO - Chain [2] start processing
+14:43:42 - cmdstanpy - INFO - Chain [2] done processing
+14:43:42 - cmdstanpy - INFO - Chain [3] start processing
+14:43:42 - cmdstanpy - INFO - Chain [3] done processing
+14:43:42 - cmdstanpy - INFO - Chain [4] start processing
+14:43:42 - cmdstanpy - INFO - Chain [4] done processing
 </pre></div></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code> object which contains the values for all variables in the generated quantitites block of the program <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc.stan</span></code>. Unlike the output from the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, it doesn’t contain any information on the joint log probability density, sampler state, or parameters or transformed parameter values.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code> object which contains the values for all variables in the generated quantities block of the program <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc.stan</span></code>. Unlike the output from the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, it doesn’t contain any information on the joint log probability density, sampler state, or parameters or transformed parameter values.</p>
 <p>In this example, each draw consists of the N-length array of replicate of the <code class="docutils literal notranslate"><span class="pre">bernoulli</span></code> model’s input variable <code class="docutils literal notranslate"><span class="pre">y</span></code>, which is an N-length array of Bernoulli outcomes.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -823,10 +572,10 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
-16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
-16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
-16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -835,18 +584,18 @@ generated quantities {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (1000, 4, 10) (&#39;y_rep[1]&#39;, &#39;y_rep[2]&#39;, &#39;y_rep[3]&#39;, &#39;y_rep[4]&#39;, &#39;y_rep[5]&#39;, &#39;y_rep[6]&#39;, &#39;y_rep[7]&#39;, &#39;y_rep[8]&#39;, &#39;y_rep[9]&#39;, &#39;y_rep[10]&#39;)
-[[1. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
- [1. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
- [1. 0. 0. 0. 0. 0. 1. 0. 1. 0.]
- [0. 0. 0. 0. 0. 0. 1. 0. 1. 0.]]
-[[0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]]
-[[0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [1. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
- [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]
- [1. 1. 0. 0. 0. 0. 0. 0. 0. 0.]]
+[[0. 0. 0. 1. 1. 0. 0. 1. 0. 0.]
+ [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
+ [0. 0. 0. 1. 1. 0. 0. 1. 0. 0.]
+ [0. 0. 0. 1. 1. 0. 0. 0. 0. 0.]]
+[[0. 1. 1. 0. 0. 0. 0. 0. 1. 1.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 1. 1.]
+ [1. 1. 1. 0. 0. 1. 0. 1. 1. 1.]
+ [0. 1. 1. 0. 0. 0. 0. 0. 1. 1.]]
+[[0. 0. 0. 1. 0. 1. 0. 0. 0. 0.]
+ [0. 0. 0. 1. 0. 1. 0. 1. 0. 0.]
+ [0. 0. 0. 1. 0. 1. 0. 1. 0. 0.]
+ [0. 0. 0. 1. 0. 1. 0. 1. 0. 0.]]
 </pre></div></div>
 </div>
 <p>We can also use <code class="docutils literal notranslate"><span class="pre">draws_pd(inc_sample=True)</span></code> to get a pandas DataFrame which combines the input drawset with the generated quantities.</p>
@@ -866,7 +615,7 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:56:30 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -874,7 +623,7 @@ generated quantities {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt; (4000, 18)
+&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt; (4000, 21)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -908,6 +657,9 @@ generated quantities {
       <th>divergent__</th>
       <th>energy__</th>
       <th>theta</th>
+      <th>chain__</th>
+      <th>iter__</th>
+      <th>...</th>
       <th>y_rep[1]</th>
       <th>y_rep[2]</th>
       <th>y_rep[3]</th>
@@ -923,62 +675,71 @@ generated quantities {
   <tbody>
     <tr>
       <th>0</th>
-      <td>-7.24234</td>
-      <td>0.949730</td>
-      <td>0.933829</td>
+      <td>-6.75039</td>
+      <td>0.994259</td>
+      <td>1.04538</td>
       <td>2.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>7.59405</td>
-      <td>0.141234</td>
+      <td>6.85607</td>
+      <td>0.241469</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>1.0</td>
       <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-9.03554</td>
-      <td>0.807989</td>
-      <td>0.933829</td>
+      <td>-7.02741</td>
+      <td>0.933689</td>
+      <td>1.04538</td>
       <td>1.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>9.26243</td>
-      <td>0.059059</td>
+      <td>7.05916</td>
+      <td>0.165126</td>
+      <td>1.0</td>
+      <td>2.0</td>
+      <td>...</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-9.04921</td>
-      <td>0.998983</td>
-      <td>0.933829</td>
+      <td>-6.96129</td>
+      <td>1.000000</td>
+      <td>1.04538</td>
       <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>9.33709</td>
-      <td>0.058728</td>
+      <td>7.05382</td>
+      <td>0.174834</td>
+      <td>1.0</td>
+      <td>3.0</td>
+      <td>...</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
+      <td>1.0</td>
       <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
@@ -986,6 +747,7 @@ generated quantities {
     </tr>
   </tbody>
 </table>
+<p>3 rows × 21 columns</p>
 </div></div>
 </div>
 <p>For models as simple as the bernoulli models here, it would be trivial to re-run the sampler and generate a new sample which contains both the estimate of the parameters <code class="docutils literal notranslate"><span class="pre">theta</span></code> as well as <code class="docutils literal notranslate"><span class="pre">y_rep</span></code> values. For models which are difficult to fit, i.e., when producing a sample is computationally expensive, the <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method is preferred.</p>
@@ -1027,7 +789,7 @@ generated quantities {
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

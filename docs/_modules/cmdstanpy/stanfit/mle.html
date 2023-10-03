@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.mle &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.stanfit.mle &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -176,7 +176,7 @@
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 <span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="n">Method</span><span class="p">,</span> <span class="n">OptimizeArgs</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">BaseType</span><span class="p">,</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">scan_optimize_csv</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">scan_optimize_csv</span>
 
 <span class="kn">from</span> <span class="nn">.metadata</span> <span class="kn">import</span> <span class="n">InferenceMetadata</span>
 <span class="kn">from</span> <span class="nn">.runset</span> <span class="kn">import</span> <span class="n">RunSet</span>
@@ -358,14 +358,15 @@
 <span class="sd">        --------</span>
 <span class="sd">        CmdStanMLE.stan_variables</span>
 <span class="sd">        CmdStanMCMC.stan_variable</span>
+<span class="sd">        CmdStanPathfinder.stan_variable</span>
 <span class="sd">        CmdStanVB.stan_variable</span>
 <span class="sd">        CmdStanGQ.stan_variable</span>
+<span class="sd">        CmdStanLaplace.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;Available variables are &#39;</span>
-                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">)</span>
+                <span class="s1">&#39;Available variables are &#39;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">warn</span> <span class="ow">and</span> <span class="n">inc_iterations</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -376,36 +377,31 @@
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
             <span class="p">)</span>
-
-        <span class="n">col_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">inc_iterations</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
-            <span class="n">num_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">num_rows</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># container var</span>
-            <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_rows</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
-            <span class="c1"># pylint: disable=redundant-keyword-arg</span>
-            <span class="k">if</span> <span class="n">num_rows</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span><span class="p">[:,</span> <span class="n">col_idxs</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">[</span><span class="n">col_idxs</span><span class="p">]</span>
-                <span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="n">BaseType</span><span class="o">.</span><span class="n">COMPLEX</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">result</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-                <span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">result</span>
-
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># scalar var</span>
-            <span class="n">col_idx</span> <span class="o">=</span> <span class="n">col_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">num_rows</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_iters</span><span class="p">[:,</span> <span class="n">col_idx</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mle</span><span class="p">[</span><span class="n">col_idx</span><span class="p">])</span></div>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">extract_reshape</span><span class="p">(</span>
+                <span class="n">data</span>
+            <span class="p">)</span>
+            <span class="c1"># TODO(2.0) remove</span>
+            <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="ow">or</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;The default behavior of CmdStanMLE.stan_variable() &quot;</span>
+                    <span class="s2">&quot;will change in a future release to always return a &quot;</span>
+                    <span class="s2">&quot;numpy.ndarray, even for scalar variables.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># pylint: disable=raise-missing-from</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;Available variables are &#39;</span>
+                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="CmdStanMLE.stan_variables"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMLE.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">inc_iterations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -424,15 +420,17 @@
 <span class="sd">        --------</span>
 <span class="sd">        CmdStanMLE.stan_variable</span>
 <span class="sd">        CmdStanMCMC.stan_variables</span>
+<span class="sd">        CmdStanPathfinder.stan_variables</span>
 <span class="sd">        CmdStanVB.stan_variables</span>
 <span class="sd">        CmdStanGQ.stan_variables</span>
+<span class="sd">        CmdStanLaplace.stan_variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_check_retcodes</span><span class="p">():</span>
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s1">&#39;Invalid estimate, optimization failed to converge.&#39;</span>
             <span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
             <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span>
                 <span class="n">name</span><span class="p">,</span> <span class="n">inc_iterations</span><span class="o">=</span><span class="n">inc_iterations</span><span class="p">,</span> <span class="n">warn</span><span class="o">=</span><span class="kc">False</span>
             <span class="p">)</span>
@@ -475,7 +473,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

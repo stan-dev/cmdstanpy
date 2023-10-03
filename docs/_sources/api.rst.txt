@@ -5,8 +5,9 @@ API Reference
 #############
 
 The following documents the public API of CmdStanPy. It is expected to be stable between versions,
-with backwards compatibility between minor versions and deprecation warnings preceeding breaking changes.
-There is also the `internal API <internal_api.rst>`__, which is makes no such guarantees.
+with backwards compatibility between minor versions and deprecation warnings preceding breaking changes.
+The documentation for the `internal API <internal_api.rst>`_ is also provided, but the internal API
+does not guarantee either stability and backwards compatibility.
 
 .. toctree::
    :hidden:
@@ -26,17 +27,22 @@ A CmdStanModel object encapsulates the Stan program. It manages program compilat
     runs the HMC-NUTS sampler to produce a set of draws from the posterior distribution.
 
 :meth:`~CmdStanModel.optimize`
-    produce a penalized maximum likelihood estimate (point estimate) of the model parameters.
+    produce a penalized maximum likelihood estimate or maximum a posteriori estimate (point estimate) of the model parameters.
+
+:meth:`~CmdStanModel.laplace_sample`
+    draw from a Laplace approximatation centered at the posterior mode found by ``optimize``.
+
+:meth:`~CmdStanModel.pathfinder`
+    runs the Pathfinder variational inference parameters to recieve approximate draws from the posterior.
 
 :meth:`~CmdStanModel.variational`
-    run CmdStan’s variational inference algorithm to approximate the posterior distribution.
+    run CmdStan’s automatic differentiation variational inference (ADVI) algorithm to approximate the posterior distribution.
 
 :meth:`~CmdStanModel.generate_quantities`
     runs CmdStan’s generate_quantities method to produce additional quantities of interest based on draws from an existing sample.
 
 .. autoclass:: cmdstanpy.CmdStanModel
    :members:
-
 
 CmdStanMCMC
 ===========
@@ -50,10 +56,16 @@ CmdStanMLE
 .. autoclass:: cmdstanpy.CmdStanMLE
    :members:
 
-CmdStanGQ
-=========
+CmdStanLaplace
+==============
 
-.. autoclass:: cmdstanpy.CmdStanGQ
+.. autoclass:: cmdstanpy.CmdStanLaplace
+   :members:
+
+CmdStanPathfinder
+=================
+
+.. autoclass:: cmdstanpy.CmdStanPathfinder
    :members:
 
 CmdStanVB
@@ -62,6 +74,11 @@ CmdStanVB
 .. autoclass:: cmdstanpy.CmdStanVB
    :members:
 
+CmdStanGQ
+=========
+
+.. autoclass:: cmdstanpy.CmdStanGQ
+   :members:
 
 *********
 Functions

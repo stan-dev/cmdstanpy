@@ -1,0 +1,507 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Variational Inference using Pathfinder &#8212; CmdStanPy 1.2.0 documentation</title>
+    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+
+    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css" />
+    
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Variational Inference using ADVI" href="Variational%20Inference.html" />
+    <link rel="prev" title="Maximum Likelihood Estimation" href="Maximum%20Likelihood%20Estimation.html" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+<link rel="stylesheet" href="_static/basic.css" type="text/css" />
+
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+<nav id="navbar-main" class="navbar navbar-dark navbar-expand-lg fixed-top bd-navbar"
+    style="background-color: #222222;"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    <!-- This will display the version of the docs -->
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../installation.html">
+  Installation
+ </a>
+</li>
+
+<li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../../users-guide.html">
+  User’s Guide
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../api.html">
+  API Reference
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../changes.html">
+  What’s New
+ </a>
+</li>
+
+<li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../community.html">
+  Community
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter"></i></span>
+            <label class="sr-only">Twitter</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums"><span><i class="fas fa-users"></i></span>
+            <label class="sr-only">Forums</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+</nav>
+
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../overview.html">
+   Overview
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../hello_world.html">
+   “Hello, World!”
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../workflow.html">
+   CmdStanPy Workflow
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../outputs.html">
+   Controlling Outputs
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../examples.html">
+   CmdStanPy Examples
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="MCMC%20Sampling.html">
+     MCMC Sampling
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Maximum%20Likelihood%20Estimation.html">
+     Maximum Likelihood Estimation
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     Variational Inference using Pathfinder
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Variational%20Inference.html">
+     Variational Inference using ADVI
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="VI%20as%20Sampler%20Inits.html">
+     Using Variational Estimates to Initialize the NUTS-HMC Sampler
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Run%20Generated%20Quantities.html">
+     Generating new quantities of interest.
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="Using%20External%20C%2B%2B.html">
+     Advanced Topic: Using External C++ Functions
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Example:-variational-inference-with-Pathfinder-for-model-bernoulli.stan">
+   Example: variational inference with Pathfinder for model
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     bernoulli.stan
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#Pathfinders-as-initialization-for-the-MCMC-sampler">
+   Pathfinders as initialization for the MCMC sampler
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide/examples/Pathfinder.ipynb">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="Variational-Inference-using-Pathfinder">
+<h1>Variational Inference using Pathfinder<a class="headerlink" href="#Variational-Inference-using-Pathfinder" title="Permalink to this headline">#</a></h1>
+<p>Stan supports the Pathfinder algorithm (<a class="reference external" href="https://jmlr.org/papers/v23/21-0889.html">Zhang, 2022</a>). Pathfinder is a variational method for approximately sampling from differentiable log densities. Starting from a random initialization, Pathfinder locates normal approximations to the target density along a quasi-Newton optimization path, with local covariance estimated using the negative inverse Hessian estimates produced by the LBFGS optimizer. Pathfinder returns draws from the Gaussian
+approximation with the lowest estimated Kullback-Leibler (KL) divergence to the true posterior.</p>
+<p>There are two Stan implementations of the Pathfinder algorithm: single-path Pathfinder and multi-path Pathfinder. Single-path Pathfinder generates a set of approximate draws from one run of the basic Pathfinder algorithm. Multi-path Pathfinder uses importance resampling over the draws from multiple runs of Pathfinder. This better matches non-normal target densities and also mitigates the problem of L-BFGS getting stuck at local optima or in saddle points on plateaus.</p>
+<section id="Example:-variational-inference-with-Pathfinder-for-model-bernoulli.stan">
+<h2>Example: variational inference with Pathfinder for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-variational-inference-with-Pathfinder-for-model-bernoulli.stan" title="Permalink to this headline">#</a></h2>
+<p>The <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.pathfinder">CmdStanModel pathfinder</a> method wraps the CmdStan <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/pathfinder-config.html">pathfinder</a> method.</p>
+<p>By default, CmdStanPy runs multi-path Pathfinder which returns an importance-resampled set of draws over the outputs of 4 independent single-path Pathfinders.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.model</span> <span class="kn">import</span> <span class="n">CmdStanModel</span><span class="p">,</span> <span class="n">cmdstan_path</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/opt/hostedtoolcache/Python/3.9.18/x64/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bernoulli_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;examples&#39;</span><span class="p">,</span> <span class="s1">&#39;bernoulli&#39;</span><span class="p">)</span>
+<span class="n">stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.stan&#39;</span><span class="p">)</span>
+<span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bernoulli_dir</span><span class="p">,</span> <span class="s1">&#39;bernoulli.data.json&#39;</span><span class="p">)</span>
+<span class="c1"># instantiate, compile bernoulli model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">stan_file</span><span class="p">)</span>
+<span class="c1"># run CmdStan&#39;s pathfinder method, returns object `CmdStanPathfinder`</span>
+<span class="n">pathfinder</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">pathfinder</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+14:43:21 - cmdstanpy - INFO - Chain [1] start processing
+14:43:21 - cmdstanpy - INFO - Chain [1] done processing
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">pathfinder</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pathfinder</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CmdStanPathfinder: model=bernoulli[&#39;method=pathfinder&#39;]
+ csv_files:
+        /tmp/tmpe58v_i7q/bernoullih8v8dm3c/bernoulli-20231003144321.csv
+ output_files:
+        /tmp/tmpe58v_i7q/bernoullih8v8dm3c/bernoulli-20231003144321_0-stdout.txt
+Metadata:
+{&#39;stan_version_major&#39;: 2, &#39;stan_version_minor&#39;: 33, &#39;stan_version_patch&#39;: 0, &#39;model&#39;: &#39;bernoulli_model&#39;, &#39;start_datetime&#39;: &#39;2023-10-03 14:43:21 UTC&#39;, &#39;method&#39;: &#39;pathfinder&#39;, &#39;init_alpha&#39;: 0.001, &#39;tol_obj&#39;: 1e-12, &#39;tol_rel_obj&#39;: 10000, &#39;tol_grad&#39;: 1e-08, &#39;tol_rel_grad&#39;: 10000000, &#39;tol_param&#39;: 1e-08, &#39;history_size&#39;: 5, &#39;num_psis_draws&#39;: 1000, &#39;num_paths&#39;: 4, &#39;save_single_paths&#39;: 0, &#39;max_lbfgs_iters&#39;: 1000, &#39;num_draws&#39;: 1000, &#39;num_elbo_draws&#39;: 25, &#39;id&#39;: 1, &#39;data_file&#39;: &#39;/home/runner/.cmdstan/cmdstan-2.33.1/examples/bernoulli/bernoulli.data.json&#39;, &#39;init&#39;: 2, &#39;seed&#39;: 56891, &#39;diagnostic_file&#39;: &#39;&#39;, &#39;refresh&#39;: 100, &#39;sig_figs&#39;: -1, &#39;profile_file&#39;: &#39;profile.csv&#39;, &#39;num_threads&#39;: 1, &#39;raw_header&#39;: &#39;lp_approx__,lp__,theta&#39;, &#39;column_names&#39;: (&#39;lp_approx__&#39;, &#39;lp__&#39;, &#39;theta&#39;)}
+
+</pre></div></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">pathfinder</span></code> method returns a <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpathfinder">CmdStanPathfinder</a> object, which provides access to the disparate information from the Stan CSV files.</p>
+<ul class="simple">
+<li><p>The <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanPathfinder.stan_variable">stan_variable</a> and <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanPathfinder.stan_variables">stan_variables</a> methods return a Python <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray">numpy.ndarray</a> containing all draws from the sample where the structure of each draw corresponds to the structure of the Stan variable.</p></li>
+<li><p>The <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanPathfinder.draws">draws</a> method returns the sample as a numpy.ndarray.</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pathfinder</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="s2">&quot;theta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(1000,)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pathfinder</span><span class="o">.</span><span class="n">column_names</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&#39;lp_approx__&#39;, &#39;lp__&#39;, &#39;theta&#39;)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pathfinder</span><span class="o">.</span><span class="n">draws</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(1000, 3)
+</pre></div></div>
+</div>
+</section>
+<section id="Pathfinders-as-initialization-for-the-MCMC-sampler">
+<h2>Pathfinders as initialization for the MCMC sampler<a class="headerlink" href="#Pathfinders-as-initialization-for-the-MCMC-sampler" title="Permalink to this headline">#</a></h2>
+<p>The method <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanPathfinder.create_inits">create_inits</a> returns a Python Dict containing a set of per-chain initializations for the model parameters. Each set of initializations is a random draw from the Pathfinder sample. These initializations can be used as the initial parameter values for Stan’s NUTS-HMC sampler, which will reduce the number of warmup iterations needed.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inits</span> <span class="o">=</span> <span class="n">pathfinder</span><span class="o">.</span><span class="n">create_inits</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">inits</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;theta&#39;: array(0.161636)}, {&#39;theta&#39;: array(0.22604)}, {&#39;theta&#39;: array(0.174072)}, {&#39;theta&#39;: array(0.222407)}]
+</pre></div></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">create_inits</span></code> takes two arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code> - used for random selection.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chains</span></code> - the number of draws to return, default is 4. This should match the number of sampler chains to run.</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">inits</span> <span class="o">=</span> <span class="n">pathfinder</span><span class="o">.</span><span class="n">create_inits</span><span class="p">(</span><span class="n">chains</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">inits</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;theta&#39;: array(0.0678106)}, {&#39;theta&#39;: array(0.177306)}, {&#39;theta&#39;: array(0.151628)}]
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="Maximum%20Likelihood%20Estimation.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Maximum Likelihood Estimation</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="Variational%20Inference.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Variational Inference using ADVI</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2023, Stan Development Team.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

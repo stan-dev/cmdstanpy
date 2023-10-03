@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.cmdstan_args &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.cmdstan_args &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -198,9 +198,29 @@
     <span class="n">OPTIMIZE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
     <span class="n">GENERATE_QUANTITIES</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
     <span class="n">VARIATIONAL</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">LAPLACE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">PATHFINDER</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1">&gt;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">positive_int</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> must be greater than 0&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> must be of type int&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">positive_float</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> must be greater than 0&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> must be of type float&#39;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="SamplerArgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs">[docs]</a><span class="k">class</span> <span class="nc">SamplerArgs</span><span class="p">:</span>
@@ -223,6 +243,7 @@
         <span class="n">adapt_metric_window</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">adapt_step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">fixed_param</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">num_chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="o">=</span> <span class="n">iter_warmup</span>
@@ -241,6 +262,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span> <span class="o">=</span> <span class="n">adapt_step_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fixed_param</span> <span class="o">=</span> <span class="n">fixed_param</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">diagnostic_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_chains</span> <span class="o">=</span> <span class="n">num_chains</span>
 
 <div class="viewcode-block" id="SamplerArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.SamplerArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -250,7 +272,7 @@
 <span class="sd">        * if file(s) for metric are supplied, check contents.</span>
 <span class="sd">        * length of per-chain lists equals specified # of chains</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">chains</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span> <span class="ow">or</span> <span class="n">chains</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s1">&#39;Sampler expects number of chains to be greater than 0.&#39;</span>
             <span class="p">)</span>
@@ -279,7 +301,9 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Value for iter_warmup must be a non-negative integer,&#39;</span>
                     <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span><span class="p">)</span>
@@ -291,28 +315,20 @@
                 <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span><span class="p">,</span> <span class="nb">int</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Argument &quot;iter_sampling&quot; must be a non-negative integer,&#39;</span>
                     <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span><span class="p">)</span>
                 <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thin</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Argument &quot;thin&quot; must be a positive integer,&#39;</span>
-                    <span class="s1">&#39;found </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span><span class="p">,</span> <span class="nb">int</span>
-            <span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Argument &quot;max_treedepth&quot; must be a positive integer,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span><span class="p">)</span>
-                <span class="p">)</span>
+
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">,</span> <span class="s1">&#39;thin&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span><span class="p">,</span> <span class="s1">&#39;max_treedepth&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s1">&#39;Argument &quot;step_size&quot; must be &gt; 0, &#39;</span>
@@ -347,7 +363,7 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">=</span> <span class="s1">&#39;dense_e&#39;</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">metric_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="n">Dict</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="k">if</span> <span class="s1">&#39;inv_metric&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s1">&#39;Entry &quot;inv_metric&quot; not found in metric dict.&#39;</span>
@@ -458,7 +474,7 @@
                 <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_init_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_init_phase</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">adapt_init_phase</span><span class="p">,</span> <span class="nb">int</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adapt_init_phase</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Argument &quot;adapt_init_phase&quot; must be a non-negative &#39;</span>
@@ -466,7 +482,7 @@
                 <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_metric_window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_metric_window</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">adapt_metric_window</span><span class="p">,</span> <span class="nb">int</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adapt_metric_window</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Argument &quot;adapt_metric_window&quot; must be a non-negative &#39;</span>
@@ -474,12 +490,13 @@
                 <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span><span class="p">,</span> <span class="nb">int</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Argument &quot;adapt_step_size&quot; must be a non-negative integer,&#39;</span>
                     <span class="s1">&#39;found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span><span class="p">)</span>
                 <span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_chains</span><span class="p">,</span> <span class="s1">&#39;num_chains&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_param</span> <span class="ow">and</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -502,13 +519,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=sample&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;num_samples=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;num_samples=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_sampling</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;num_warmup=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;num_warmup=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_warmup</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_warmup</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;save_warmup=1&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">thin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;thin=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;thin=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_param</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;algorithm=fixed_param&#39;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">cmd</span>
@@ -516,32 +533,34 @@
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;algorithm=hmc&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;engine=nuts&#39;</span><span class="p">)</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;max_depth=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;max_depth=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_treedepth</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;stepsize=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="p">))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;stepsize=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;stepsize=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;stepsize=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;metric=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;metric=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_file</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;metric_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_file</span><span class="p">))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;metric_file=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;metric_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_file</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;metric_file=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_file</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;adapt&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_engaged</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;engaged=1&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;engaged=0&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_delta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;delta=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_delta</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;delta=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_delta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_init_phase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;init_buffer=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_init_phase</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;init_buffer=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_init_phase</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_metric_window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;window=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_metric_window</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;window=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_metric_window</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;term_buffer=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_step_size</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_chains</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;num_chains=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_chains</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">cmd</span></div></div>
 
@@ -550,6 +569,15 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for arguments for the optimizer.&quot;&quot;&quot;</span>
 
     <span class="n">OPTIMIZE_ALGOS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;BFGS&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;LBFGS&#39;</span><span class="p">,</span> <span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;Newton&#39;</span><span class="p">,</span> <span class="s1">&#39;newton&#39;</span><span class="p">}</span>
+    <span class="n">bfgs_only</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;init_alpha&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tol_obj&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tol_rel_obj&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tol_grad&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tol_rel_grad&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tol_param&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;history_size&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -563,8 +591,8 @@
         <span class="n">tol_rel_grad</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tol_param</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">history_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jacobian</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">algorithm</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span> <span class="o">=</span> <span class="n">init_alpha</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="nb">iter</span>
@@ -575,11 +603,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span> <span class="o">=</span> <span class="n">tol_rel_grad</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span> <span class="o">=</span> <span class="n">tol_param</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">history_size</span> <span class="o">=</span> <span class="n">history_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">thin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span> <span class="o">=</span> <span class="n">jacobian</span>
 
-<div class="viewcode-block" id="OptimizeArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># pylint: disable=unused-argument</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="OptimizeArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check arguments correctness and consistency.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -590,116 +616,167 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">}:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;init_alpha requires that algorithm be set to bfgs or lbfgs&#39;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;init_alpha must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;init_alpha must be type of float&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;iter must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;iter must be type of int&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">}:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;tol_obj requires that algorithm be set to bfgs or lbfgs&#39;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_obj must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_obj must be type of float&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">}:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;tol_rel_obj requires that algorithm be set to bfgs&#39;</span>
-                    <span class="s1">&#39; or lbfgs&#39;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_rel_obj must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_rel_obj must be type of float&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">}:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;tol_grad requires that algorithm be set to bfgs or lbfgs&#39;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_grad must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_grad must be type of float&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">}:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;tol_rel_grad requires that algorithm be set to bfgs&#39;</span>
-                    <span class="s1">&#39; or lbfgs&#39;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_rel_grad must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_rel_grad must be type of float&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;lbfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgs&#39;</span><span class="p">}:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;tol_param requires that algorithm be set to bfgs or lbfgs&#39;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_param must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;tol_param must be type of float&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;lbfgs&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;bfgs&#39;</span><span class="p">,</span> <span class="s1">&#39;lbfgs&#39;</span><span class="p">}:</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bfgs_only</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">arg</span><span class="si">}</span><span class="s1"> requires that algorithm be set to bfgs or lbfgs&#39;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;lbfgs&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;history_size requires that algorithm be set to lbfgs&#39;</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;history_size must be greater than 0&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;history_size must be type of int&#39;</span><span class="p">)</span></div>
 
-    <span class="c1"># pylint: disable=unused-argument</span>
-<div class="viewcode-block" id="OptimizeArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span><span class="p">,</span> <span class="s1">&#39;init_alpha&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">,</span> <span class="s1">&#39;iter&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span><span class="p">,</span> <span class="s1">&#39;tol_obj&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">,</span> <span class="s1">&#39;tol_rel_obj&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span><span class="p">,</span> <span class="s1">&#39;tol_grad&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span><span class="p">,</span> <span class="s1">&#39;tol_rel_grad&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span><span class="p">,</span> <span class="s1">&#39;tol_param&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history_size</span><span class="p">,</span> <span class="s1">&#39;history_size&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OptimizeArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.OptimizeArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;compose command string for CmdStan for non-default arg values.&quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=optimize&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;algorithm=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;algorithm=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;init_alpha=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;init_alpha=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tol_obj=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_obj=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tol_rel_obj=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_rel_obj=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tol_grad=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_grad=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tol_rel_grad=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_rel_grad=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tol_param=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_param=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;history_size=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history_size</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;history_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">history_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;iter=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;iter=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_iterations</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;save_iterations=1&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;jacobian=1&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cmd</span></div></div>
+
+
+<div class="viewcode-block" id="LaplaceArgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.LaplaceArgs">[docs]</a><span class="k">class</span> <span class="nc">LaplaceArgs</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Arguments needed for laplace method.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">draws</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">jacobian</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span> <span class="o">=</span> <span class="n">jacobian</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span>
+
+<div class="viewcode-block" id="LaplaceArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.LaplaceArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check arguments correctness and consistency.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Invalid path for mode file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="s1">&#39;draws&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LaplaceArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.LaplaceArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;compose command string for CmdStan for non-default arg values.&quot;&quot;&quot;</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=laplace&#39;</span><span class="p">)</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mode=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;draws=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacobian</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;jacobian=0&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cmd</span></div></div>
+
+
+<div class="viewcode-block" id="PathfinderArgs"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.PathfinderArgs">[docs]</a><span class="k">class</span> <span class="nc">PathfinderArgs</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for arguments for Pathfinder.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">init_alpha</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tol_obj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tol_rel_obj</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tol_grad</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tol_rel_grad</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tol_param</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">history_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_psis_draws</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_paths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_lbfgs_iters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_draws</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_elbo_draws</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_single_paths</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span> <span class="o">=</span> <span class="n">init_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span> <span class="o">=</span> <span class="n">tol_obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="o">=</span> <span class="n">tol_rel_obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span> <span class="o">=</span> <span class="n">tol_grad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span> <span class="o">=</span> <span class="n">tol_rel_grad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span> <span class="o">=</span> <span class="n">tol_param</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history_size</span> <span class="o">=</span> <span class="n">history_size</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_psis_draws</span> <span class="o">=</span> <span class="n">num_psis_draws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_paths</span> <span class="o">=</span> <span class="n">num_paths</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_lbfgs_iters</span> <span class="o">=</span> <span class="n">max_lbfgs_iters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_draws</span> <span class="o">=</span> <span class="n">num_draws</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_elbo_draws</span> <span class="o">=</span> <span class="n">num_elbo_draws</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_single_paths</span> <span class="o">=</span> <span class="n">save_single_paths</span>
+
+<div class="viewcode-block" id="PathfinderArgs.validate"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.PathfinderArgs.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check arguments correctness and consistency.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span><span class="p">,</span> <span class="s1">&#39;init_alpha&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span><span class="p">,</span> <span class="s1">&#39;tol_obj&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">,</span> <span class="s1">&#39;tol_rel_obj&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span><span class="p">,</span> <span class="s1">&#39;tol_grad&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span><span class="p">,</span> <span class="s1">&#39;tol_rel_grad&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span><span class="p">,</span> <span class="s1">&#39;tol_param&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history_size</span><span class="p">,</span> <span class="s1">&#39;history_size&#39;</span><span class="p">)</span>
+
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_psis_draws</span><span class="p">,</span> <span class="s1">&#39;num_psis_draws&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_paths</span><span class="p">,</span> <span class="s1">&#39;num_paths&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_lbfgs_iters</span><span class="p">,</span> <span class="s1">&#39;max_lbfgs_iters&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_draws</span><span class="p">,</span> <span class="s1">&#39;num_draws&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_elbo_draws</span><span class="p">,</span> <span class="s1">&#39;num_elbo_draws&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PathfinderArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.PathfinderArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;compose command string for CmdStan for non-default arg values.&quot;&quot;&quot;</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=pathfinder&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;init_alpha=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">init_alpha</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_obj=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_rel_obj=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_grad=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_grad</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_rel_grad=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_grad</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_param=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_param</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">history_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;history_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">history_size</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_psis_draws</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;num_psis_draws=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_psis_draws</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;num_paths=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_paths</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_lbfgs_iters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;max_lbfgs_iters=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_lbfgs_iters</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_draws</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;num_draws=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_draws</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_elbo_draws</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;num_elbo_draws=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_elbo_draws</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_single_paths</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;save_single_paths=1&#39;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">cmd</span></div></div>
 
@@ -730,7 +807,7 @@
 <span class="sd">        Compose CmdStan command for method-specific non-default arguments.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=generate_quantities&#39;</span><span class="p">)</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;fitted_params=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_csv_files</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;fitted_params=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_csv_files</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cmd</span>
 
 
@@ -778,58 +855,14 @@
                     <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">VARIATIONAL_ALGOS</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;iter must be a positive integer,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;grad_samples must be a positive integer,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;elbo_samples must be a positive integer,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;eta must be a non-negative number,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;adapt_iter must be a positive integer,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
-            <span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;tol_rel_obj must be a positive number,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;eval_elbo must be a positive integer,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span><span class="p">)</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span><span class="p">,</span> <span class="nb">int</span>
-            <span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;output_samples must be a positive integer,&#39;</span>
-                    <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span><span class="p">)</span>
-                <span class="p">)</span></div>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">,</span> <span class="s1">&#39;iter&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span><span class="p">,</span> <span class="s1">&#39;grad_samples&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span><span class="p">,</span> <span class="s1">&#39;elbo_samples&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">,</span> <span class="s1">&#39;eta&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span><span class="p">,</span> <span class="s1">&#39;adapt_iter&#39;</span><span class="p">)</span>
+        <span class="n">positive_float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">,</span> <span class="s1">&#39;tol_rel_obj&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span><span class="p">,</span> <span class="s1">&#39;eval_elbo&#39;</span><span class="p">)</span>
+        <span class="n">positive_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span><span class="p">,</span> <span class="s1">&#39;output_samples&#39;</span><span class="p">)</span></div>
 
     <span class="c1"># pylint: disable=unused-argument</span>
 <div class="viewcode-block" id="VariationalArgs.compose"><a class="viewcode-back" href="../../internal_api.html#cmdstanpy.cmdstan_args.VariationalArgs.compose">[docs]</a>    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -838,28 +871,28 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;method=variational&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;algorithm=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;algorithm=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;iter=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;iter=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;grad_samples=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;grad_samples=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_samples</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;elbo_samples=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;elbo_samples=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">elbo_samples</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;eta=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;eta=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;adapt&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_engaged</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;engaged=1&#39;</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;iter=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span><span class="p">))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;iter=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">adapt_iter</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;engaged=0&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;tol_rel_obj=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;tol_rel_obj=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_rel_obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;eval_elbo=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;eval_elbo=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_elbo</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;output_samples=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;output_samples=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">output_samples</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cmd</span></div></div>
 
 
@@ -876,7 +909,12 @@
         <span class="n">model_exe</span><span class="p">:</span> <span class="n">OptionalPath</span><span class="p">,</span>
         <span class="n">chain_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
         <span class="n">method_args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
-            <span class="n">SamplerArgs</span><span class="p">,</span> <span class="n">OptimizeArgs</span><span class="p">,</span> <span class="n">GenerateQuantitiesArgs</span><span class="p">,</span> <span class="n">VariationalArgs</span>
+            <span class="n">SamplerArgs</span><span class="p">,</span>
+            <span class="n">OptimizeArgs</span><span class="p">,</span>
+            <span class="n">GenerateQuantitiesArgs</span><span class="p">,</span>
+            <span class="n">VariationalArgs</span><span class="p">,</span>
+            <span class="n">LaplaceArgs</span><span class="p">,</span>
+            <span class="n">PathfinderArgs</span><span class="p">,</span>
         <span class="p">],</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -908,6 +946,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">Method</span><span class="o">.</span><span class="n">GENERATE_QUANTITIES</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method_args</span><span class="p">,</span> <span class="n">VariationalArgs</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">Method</span><span class="o">.</span><span class="n">VARIATIONAL</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method_args</span><span class="p">,</span> <span class="n">LaplaceArgs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">Method</span><span class="o">.</span><span class="n">LAPLACE</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method_args</span><span class="p">,</span> <span class="n">PathfinderArgs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">Method</span><span class="o">.</span><span class="n">PATHFINDER</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Unsupported method args type: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">method_args</span><span class="p">))</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">method_args</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">chain_ids</span><span class="p">)</span> <span class="k">if</span> <span class="n">chain_ids</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
@@ -961,7 +1007,10 @@
                     <span class="s1">&#39; cannot write to dir: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">)</span>
                 <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh</span> <span class="o">&lt;</span> <span class="mi">1</span>
+            <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Argument &quot;refresh&quot; must be a positive integer value, &#39;</span>
                     <span class="s1">&#39;found </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="p">)</span>
@@ -969,7 +1018,7 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span>
-                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span>
                 <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span> <span class="o">&lt;</span> <span class="mi">1</span>
                 <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span> <span class="o">&gt;</span> <span class="mi">18</span>
             <span class="p">):</span>
@@ -991,13 +1040,13 @@
             <span class="n">rng</span> <span class="o">=</span> <span class="n">RandomState</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">99999</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Argument &quot;seed&quot; must be an integer between &#39;</span>
                     <span class="s1">&#39;0 and 2**32-1, found </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s1">&#39;Argument &quot;seed&quot; must be an integer between &#39;</span>
                         <span class="s1">&#39;0 and 2**32-1, found </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
@@ -1016,7 +1065,7 @@
                         <span class="p">)</span>
                     <span class="p">)</span>
                 <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">seed</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">seed</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">seed</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">seed</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                             <span class="s1">&#39;Argument &quot;seed&quot; must be an integer value&#39;</span>
                             <span class="s1">&#39; between 0 and 2**32-1,&#39;</span>
@@ -1030,7 +1079,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Argument &quot;data&quot; must be string or dict&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)):</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inits</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s1">&#39;Argument &quot;inits&quot; must be &gt; 0, found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -1038,8 +1087,12 @@
                         <span class="p">)</span>
                     <span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no such file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method_args</span><span class="p">,</span> <span class="n">SamplerArgs</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_args</span><span class="o">.</span><span class="n">num_chains</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                <span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no such file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">))</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">chain_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1065,7 +1118,6 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">diagnostic_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">profile_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">num_chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compose CmdStan command for non-default arguments.</span>
@@ -1079,38 +1131,36 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_exe</span><span class="p">)</span>  <span class="c1"># type: ignore # guaranteed by validate</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;id=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;id=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_exe</span><span class="p">)</span>  <span class="c1"># type: ignore # guaranteed by validate</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;seed=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;seed=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;seed=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;seed=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;file=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;init=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;init=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;init=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;init=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;output&#39;</span><span class="p">)</span>
-        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">csv_file</span><span class="p">))</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;file=</span><span class="si">{</span><span class="n">csv_file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">diagnostic_file</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;diagnostic_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">diagnostic_file</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;diagnostic_file=</span><span class="si">{</span><span class="n">diagnostic_file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">profile_file</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;profile_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">profile_file</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;profile_file=</span><span class="si">{</span><span class="n">profile_file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;refresh=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;refresh=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">refresh</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;sig_figs=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span><span class="p">))</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sig_figs=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_args</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">num_chains</span><span class="p">:</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;num_chains=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_chains</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">cmd</span></div></div>
 </pre></div>
 
@@ -1134,7 +1184,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

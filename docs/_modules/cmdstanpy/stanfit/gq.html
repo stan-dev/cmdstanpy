@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.gq &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy.stanfit.gq &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -56,7 +56,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -200,13 +200,8 @@
 
 
 <span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="n">Method</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">BaseType</span><span class="p">,</span>
-    <span class="n">build_xarray_data</span><span class="p">,</span>
-    <span class="n">flatten_chains</span><span class="p">,</span>
-    <span class="n">get_logger</span><span class="p">,</span>
-    <span class="n">scan_generated_quantities_csv</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">build_xarray_data</span><span class="p">,</span> <span class="n">flatten_chains</span><span class="p">,</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">cmdstanpy.utils.stancsv</span> <span class="kn">import</span> <span class="n">scan_generic_csv</span>
 
 <span class="kn">from</span> <span class="nn">.mcmc</span> <span class="kn">import</span> <span class="n">CmdStanMCMC</span>
 <span class="kn">from</span> <span class="nn">.metadata</span> <span class="kn">import</span> <span class="n">InferenceMetadata</span>
@@ -283,11 +278,11 @@
         <span class="n">dzero</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">dzero</span> <span class="o">=</span> <span class="n">scan_generated_quantities_csv</span><span class="p">(</span>
+                <span class="n">dzero</span> <span class="o">=</span> <span class="n">scan_generic_csv</span><span class="p">(</span>
                     <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">drest</span> <span class="o">=</span> <span class="n">scan_generated_quantities_csv</span><span class="p">(</span>
+                <span class="n">drest</span> <span class="o">=</span> <span class="n">scan_generic_csv</span><span class="p">(</span>
                     <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dzero</span><span class="p">:</span>
@@ -346,6 +341,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">inc_iterations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">concat_chains</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">inc_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -378,6 +374,7 @@
 <span class="sd">        CmdStanMCMC.draws</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
+        <span class="n">inc_warmup</span> <span class="o">|=</span> <span class="n">inc_iterations</span>
         <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">)</span>
@@ -411,7 +408,9 @@
             <span class="p">]</span>
             <span class="n">drop_cols</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">dup</span> <span class="ow">in</span> <span class="n">dups</span><span class="p">:</span>
-                <span class="n">drop_cols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">dup</span><span class="p">])</span>
+                <span class="n">drop_cols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">dup</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">()</span>
+                <span class="p">)</span>
 
         <span class="n">start_idx</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_start</span><span class="p">(</span><span class="n">inc_warmup</span><span class="p">)</span>
         <span class="n">previous_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_draws</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
@@ -493,18 +492,24 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
 
-        <span class="n">gq_cols</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">mcmc_vars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">gq_cols</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mcmc_vars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_list</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">]:</span>
-                        <span class="n">gq_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
+                    <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+                    <span class="n">gq_cols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="n">info</span><span class="o">.</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">end_idx</span><span class="p">]</span>
+                    <span class="p">)</span>
                 <span class="k">elif</span> <span class="p">(</span>
-                    <span class="n">inc_sample</span>
-                    <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
+                    <span class="n">inc_sample</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span>
                 <span class="p">):</span>
-                    <span class="n">mcmc_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+                    <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+                    <span class="n">mcmc_vars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span>
+                            <span class="n">info</span><span class="o">.</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">end_idx</span>
+                        <span class="p">]</span>
+                    <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown variable: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -513,25 +518,49 @@
 
         <span class="n">previous_draws_pd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_draws_pd</span><span class="p">(</span><span class="n">mcmc_vars</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">)</span>
 
+        <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
+        <span class="c1"># add long-form columns for chain, iteration, draw</span>
+        <span class="n">n_draws</span><span class="p">,</span> <span class="n">n_chains</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">chains_col</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_chains</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">n_draws</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_chains</span><span class="p">,</span> <span class="n">n_draws</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">T</span>
+        <span class="p">)</span>
+        <span class="n">iter_col</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_draws</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">n_chains</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_chains</span><span class="p">,</span> <span class="n">n_draws</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">T</span>
+        <span class="p">)</span>
+        <span class="n">draw_col</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">n_draws</span> <span class="o">*</span> <span class="n">n_chains</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_chains</span><span class="p">,</span> <span class="n">n_draws</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">T</span>
+        <span class="p">)</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">chains_col</span><span class="p">,</span> <span class="n">iter_col</span><span class="p">,</span> <span class="n">draw_col</span><span class="p">,</span> <span class="n">draws</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">vars_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;chain__&#39;</span><span class="p">,</span> <span class="s1">&#39;iter__&#39;</span><span class="p">,</span> <span class="s1">&#39;draw__&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">vars_list</span>
+        <span class="k">if</span> <span class="n">gq_cols</span><span class="p">:</span>
+            <span class="n">gq_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;chain__&#39;</span><span class="p">,</span> <span class="s1">&#39;iter__&#39;</span><span class="p">,</span> <span class="s1">&#39;draw__&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">gq_cols</span>
+
+        <span class="n">draws_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span><span class="n">draws</span><span class="p">),</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;chain__&#39;</span><span class="p">,</span> <span class="s1">&#39;iter__&#39;</span><span class="p">,</span> <span class="s1">&#39;draw__&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">),</span>
+        <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="n">mcmc_vars</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">gq_cols</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
                     <span class="p">[</span>
                         <span class="n">previous_draws_pd</span><span class="p">,</span>
-                        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-                            <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
-                            <span class="p">),</span>
-                            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span>
-                        <span class="p">)[</span><span class="n">gq_cols</span><span class="p">],</span>
+                        <span class="n">draws_pd</span><span class="p">[</span><span class="n">gq_cols</span><span class="p">],</span>
                     <span class="p">],</span>
                     <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;columns&#39;</span><span class="p">,</span>
                 <span class="p">)[</span><span class="n">vars_list</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">previous_draws_pd</span>
         <span class="k">elif</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cols_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">column_names</span>
-            <span class="n">cols_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="n">cols_1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">previous_draws_pd</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">cols_2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">draws_pd</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
             <span class="n">dups</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">item</span>
                 <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">Counter</span><span class="p">(</span><span class="n">cols_1</span> <span class="o">+</span> <span class="n">cols_2</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -540,23 +569,14 @@
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">previous_draws_pd</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">dups</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-                        <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)),</span>
-                        <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span>
-                    <span class="p">),</span>
+                    <span class="n">draws_pd</span><span class="p">,</span>
                 <span class="p">],</span>
                 <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">gq_cols</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-                <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)),</span>
-                <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span>
-            <span class="p">)[</span><span class="n">gq_cols</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">draws_pd</span><span class="p">[</span><span class="n">gq_cols</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="n">data</span><span class="o">=</span><span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)),</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">draws_pd</span></div>
 
     <span class="nd">@overload</span>
     <span class="k">def</span> <span class="nf">draws_xr</span><span class="p">(</span>
@@ -617,18 +637,18 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">vars</span>
             <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_list</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">inc_sample</span> <span class="ow">and</span> <span class="p">(</span>
-                        <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span>
+                        <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span>
                     <span class="p">):</span>
                         <span class="n">mcmc_vars_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
                         <span class="n">dup_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown variable: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="k">if</span> <span class="n">inc_sample</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vars_list</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mcmc_vars_list</span><span class="p">:</span>
                         <span class="n">mcmc_vars_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">dup_vars</span><span class="p">:</span>
@@ -637,7 +657,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
 
         <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">num_draws_sampling</span>
-        <span class="n">sample_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span>
+        <span class="n">sample_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span>
         <span class="n">attrs</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;stan_version&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;stan_version_major&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sample_config</span><span class="p">[</span><span class="s1">&#39;stan_version_minor&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -658,34 +678,22 @@
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_list</span><span class="p">:</span>
             <span class="n">build_xarray_data</span><span class="p">(</span>
                 <span class="n">data</span><span class="p">,</span>
-                <span class="n">var</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                <span class="mi">0</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">inc_sample</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">mcmc_vars_list</span><span class="p">:</span>
                 <span class="n">build_xarray_data</span><span class="p">(</span>
                     <span class="n">data</span><span class="p">,</span>
-                    <span class="n">var</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                    <span class="mi">0</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">),</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
             <span class="s1">&#39;chain&#39;</span><span class="p">,</span> <span class="s1">&#39;draw&#39;</span><span class="p">,</span> <span class="o">...</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="CmdStanGQ.stan_variable"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="CmdStanGQ.stan_variable"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.stan_variable">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a numpy.ndarray which contains the set of draws</span>
 <span class="sd">        for the named Stan program variable.  Flattens the chains,</span>
@@ -699,13 +707,13 @@
 <span class="sd">        the next M are from chain 2, and the last M elements are from chain N.</span>
 
 <span class="sd">        * If the variable is a scalar variable, the return array has shape</span>
-<span class="sd">          ( draws X chains, 1).</span>
+<span class="sd">          ( draws * chains, 1).</span>
 <span class="sd">        * If the variable is a vector, the return array has shape</span>
-<span class="sd">          ( draws X chains, len(vector))</span>
+<span class="sd">          ( draws * chains, len(vector))</span>
 <span class="sd">        * If the variable is a matrix, the return array has shape</span>
-<span class="sd">          ( draws X chains, size(dim 1) X size(dim 2) )</span>
+<span class="sd">          ( draws * chains, size(dim 1), size(dim 2) )</span>
 <span class="sd">        * If the variable is an array with N dimensions, the return array</span>
-<span class="sd">          has shape ( draws X chains, size(dim 1) X ... X size(dim N))</span>
+<span class="sd">          has shape ( draws * chains, size(dim 1), ..., size(dim N))</span>
 
 <span class="sd">        For example, if the Stan program variable ``theta`` is a 3x3 matrix,</span>
 <span class="sd">        and the sample consists of 4 chains with 1000 post-warmup draws,</span>
@@ -716,19 +724,21 @@
 
 <span class="sd">        :param var: variable name</span>
 
-<span class="sd">        :param inc_warmup: When ``True`` and the warmup draws are present in</span>
-<span class="sd">            the MCMC sample, then the warmup draws are included.</span>
-<span class="sd">            Default value is ``False``.</span>
+<span class="sd">        :param kwargs: Additional keyword arguments are passed to the underlying</span>
+<span class="sd">            fit&#39;s ``stan_variable`` method if the variable is not a generated</span>
+<span class="sd">            quantity.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        CmdStanGQ.stan_variables</span>
 <span class="sd">        CmdStanMCMC.stan_variable</span>
 <span class="sd">        CmdStanMLE.stan_variable</span>
+<span class="sd">        CmdStanPathfinder.stan_variable</span>
 <span class="sd">        CmdStanVB.stan_variable</span>
+<span class="sd">        CmdStanLaplace.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">model_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-        <span class="n">gq_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">model_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">gq_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">var</span> <span class="ow">in</span> <span class="n">model_var_names</span> <span class="ow">or</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
@@ -736,65 +746,48 @@
                 <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_var_names</span> <span class="o">|</span> <span class="n">gq_var_names</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMCMC</span><span class="p">):</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span>
-                    <span class="n">var</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span>
-                <span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span>
-                            <span class="n">var</span><span class="p">,</span> <span class="n">inc_iterations</span><span class="o">=</span><span class="n">inc_warmup</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">var</span><span class="p">))</span>
-                <span class="p">)</span>
+            <span class="c1"># TODO(2.0) atleast1d may not be needed</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="c1"># is gq variable</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_generated_quantities</span><span class="p">()</span>
 
-        <span class="n">draw1</span><span class="p">,</span> <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_start</span><span class="p">(</span><span class="n">inc_warmup</span><span class="p">)</span>
-        <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">num_draws</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">]</span>
-        <span class="n">col_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">dims</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_dims</span><span class="p">[</span><span class="n">var</span><span class="p">])</span>
-        <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:,</span> <span class="p">:,</span> <span class="n">col_idxs</span><span class="p">]</span>
+        <span class="n">draw1</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws_start</span><span class="p">(</span>
+            <span class="n">inc_warmup</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inc_warmup&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inc_iterations&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="n">flatten_chains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw1</span><span class="p">:])</span>
+        <span class="n">out</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">extract_reshape</span><span class="p">(</span><span class="n">draws</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars_types</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">==</span> <span class="n">BaseType</span><span class="o">.</span><span class="n">COMPLEX</span><span class="p">:</span>
-            <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">draws</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-            <span class="n">dims</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">draws</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">draws</span></div>
-
-<div class="viewcode-block" id="CmdStanGQ.stan_variables"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<div class="viewcode-block" id="CmdStanGQ.stan_variables"><a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanGQ.stan_variables">[docs]</a>    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a dictionary mapping Stan program variables names</span>
 <span class="sd">        to the corresponding numpy.ndarray containing the inferred values.</span>
 
-<span class="sd">        :param inc_warmup: When ``True`` and the warmup draws are present in</span>
-<span class="sd">            the MCMC sample, then the warmup draws are included.</span>
-<span class="sd">            Default value is ``False``</span>
+<span class="sd">        :param kwargs: Additional keyword arguments are passed to the underlying</span>
+<span class="sd">            fit&#39;s ``stan_variable`` method if the variable is not a generated</span>
+<span class="sd">            quantity.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        CmdStanGQ.stan_variable</span>
 <span class="sd">        CmdStanMCMC.stan_variables</span>
 <span class="sd">        CmdStanMLE.stan_variables</span>
+<span class="sd">        CmdStanPathfinder.stan_variables</span>
 <span class="sd">        CmdStanVB.stan_variables</span>
+<span class="sd">        CmdStanLaplace.stan_variables</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">sample_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-        <span class="n">gq_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars_cols</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">sample_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous_fit</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">gq_var_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">:</span>
-            <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sample_var_names</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gq_var_names</span><span class="p">:</span>
-                <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
     <span class="k">def</span> <span class="nf">_assemble_generated_quantities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -830,7 +823,6 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
             <span class="n">num_draws</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
-
                 <span class="n">opt_iters</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_iterations_np</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
                 <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
                     <span class="n">num_draws</span> <span class="o">=</span> <span class="n">opt_iters</span>
@@ -856,9 +848,9 @@
             <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_iterations_np</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
 
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_params_np</span><span class="p">,)[</span>  <span class="c1"># type: ignore</span>
-                <span class="p">:,</span> <span class="kc">None</span>
-            <span class="p">]</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_params_np</span><span class="p">,</span>
+            <span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># CmdStanVB:</span>
             <span class="k">if</span> <span class="n">inc_warmup</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
@@ -879,7 +871,6 @@
             <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span><span class="nb">vars</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p_fit</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">):</span>
-
             <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">_save_iterations</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">p_fit</span><span class="o">.</span><span class="n">optimized_iterations_pd</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
             <span class="k">else</span><span class="p">:</span>
@@ -903,6 +894,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span></div>
 
+    <span class="c1"># TODO(2.0): remove</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">mcmc_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">CmdStanMCMC</span><span class="p">,</span> <span class="n">CmdStanMLE</span><span class="p">,</span> <span class="n">CmdStanVB</span><span class="p">]:</span>
         <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -931,7 +923,7 @@
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

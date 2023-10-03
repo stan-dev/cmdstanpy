@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -58,7 +58,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='#'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='#'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -233,7 +233,6 @@ set of model, data, and posterior estimates.</p>
 <li class="toctree-l3"><a class="reference internal" href="users-guide/workflow.html#assemble-input-and-initialization-data">Assemble input and initialization data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="users-guide/workflow.html#run-the-cmdstan-inference-engine">Run the CmdStan inference engine</a></li>
 <li class="toctree-l3"><a class="reference internal" href="users-guide/workflow.html#validate-view-export-the-inference-engine-outputs">Validate, view, export the inference engine outputs</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="users-guide/workflow.html#metadata">Metadata</a></li>
 <li class="toctree-l4"><a class="reference internal" href="users-guide/workflow.html#output-data">Output data</a></li>
 </ul>
 </li>
@@ -255,13 +254,18 @@ set of model, data, and posterior estimates.</p>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="users-guide/examples/Maximum%20Likelihood%20Estimation.html">Maximum Likelihood Estimation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="users-guide/examples/Variational%20Inference.html">Variational Inference in Stan</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="users-guide/examples/Pathfinder.html">Variational Inference using Pathfinder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="users-guide/examples/Pathfinder.html#Example:-variational-inference-with-Pathfinder-for-model-bernoulli.stan">Example: variational inference with Pathfinder for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="users-guide/examples/Pathfinder.html#Pathfinders-as-initialization-for-the-MCMC-sampler">Pathfinders as initialization for the MCMC sampler</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="users-guide/examples/Variational%20Inference.html">Variational Inference using ADVI</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="users-guide/examples/Variational%20Inference.html#Example:-variational-inference-for-model-bernoulli.stan">Example: variational inference for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="users-guide/examples/VI%20as%20Sampler%20Inits.html">Using Variational Estimates to Initialize the NUTS-HMC Sampler</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="users-guide/examples/VI%20as%20Sampler%20Inits.html#Model-and-data">Model and data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="users-guide/examples/VI%20as%20Sampler%20Inits.html#Run-Stan’s-variational-inference-algorithm,-obtain-fitted-estimates">Run Stan’s variational inference algorithm, obtain fitted estimates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="users-guide/examples/VI%20as%20Sampler%20Inits.html#Run-Stan's-pathfinder-or-variational-algorithm,-obtain-fitted-estimates">Run Stan’s <code class="docutils literal notranslate"><span class="pre">pathfinder</span></code> or <code class="docutils literal notranslate"><span class="pre">variational</span></code> algorithm, obtain fitted estimates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="users-guide/examples/Run%20Generated%20Quantities.html">Generating new quantities of interest.</a><ul>
@@ -278,8 +282,10 @@ set of model, data, and posterior estimates.</p>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmodel">CmdStanModel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmcmc">CmdStanMCMC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmle">CmdStanMLE</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstangq">CmdStanGQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanlaplace">CmdStanLaplace</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanpathfinder">CmdStanPathfinder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanvb">CmdStanVB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstangq">CmdStanGQ</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#functions">Functions</a><ul>
@@ -296,6 +302,7 @@ set of model, data, and posterior estimates.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changes.html">What’s New</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-2-0">CmdStanPy 1.2.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-1-0">CmdStanPy 1.1.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-0-8">CmdStanPy 1.0.8</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-0-7">CmdStanPy 1.0.7</a></li>
@@ -346,7 +353,7 @@ set of model, data, and posterior estimates.</p>
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

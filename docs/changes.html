@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>What’s New &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>What’s New &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -168,6 +168,11 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#cmdstanpy-1-2-0">
+   CmdStanPy 1.2.0
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#cmdstanpy-1-1-0">
    CmdStanPy 1.1.0
   </a>
@@ -248,6 +253,44 @@
   <section id="what-s-new">
 <h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this headline">#</a></h1>
 <p>For full changes, see the <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/releases">Releases page</a> on GitHub.</p>
+<section id="cmdstanpy-1-2-0">
+<h2>CmdStanPy 1.2.0<a class="headerlink" href="#cmdstanpy-1-2-0" title="Permalink to this headline">#</a></h2>
+<ul class="simple">
+<li><p><strong>New functionality</strong></p>
+<ul>
+<li><p>The Pathfinder algorithm (available in CmdStan 2.33+) is now availble as <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.pathfinder" title="cmdstanpy.CmdStanModel.pathfinder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.pathfinder()</span></code></a>.</p></li>
+<li><p>Laplace approximations (available in CmdStan 2.32+) are now available as <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.laplace_sample" title="cmdstanpy.CmdStanModel.laplace_sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.laplace_sample()</span></code></a>.</p></li>
+<li><p>The <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.optimize" title="cmdstanpy.CmdStanModel.optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.optimize()</span></code></a> method now supports the <code class="docutils literal notranslate"><span class="pre">jacobian</span></code> boolean argument to enable change-of-variables adjustments.
+When enabled, the Maximum a posteriori estimate (MAP) is returned, rather than the MLE.</p></li>
+<li><p>The <a class="reference internal" href="api.html#cmdstanpy.install_cmdstan" title="cmdstanpy.install_cmdstan"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.install_cmdstan()</span></code></a> function and script can install development versions of CmdStan using the <code class="docutils literal notranslate"><span class="pre">git:</span></code> prefix in the version.</p></li>
+</ul>
+</li>
+<li><p><strong>Deprecations</strong>
+The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations. Additional deprecations in this version:</p>
+<ul>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> will <em>require</em> that it has a compiled executable after construction. The <code class="docutils literal notranslate"><span class="pre">compile</span></code> argument is deprecated,
+(the ability to force recompilation is available under the argument <code class="docutils literal notranslate"><span class="pre">force_compile</span></code>), and the <code class="docutils literal notranslate"><span class="pre">compile()</span></code> method is deprecated.
+If you wish to compile Stan files independent of constructing a model, use <code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.compile_stan_file()</span></code>.</p></li>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanMLE.stan_variable" title="cmdstanpy.CmdStanMLE.stan_variable"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanMLE.stan_variable()</span></code></a> will begin returning a <code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> in all cases, as opposed to the current behavior where sometimes a float is returned.</p></li>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanVB.stan_variables" title="cmdstanpy.CmdStanVB.stan_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanVB.stan_variables()</span></code></a> will return the _draws_ from the approximate posterior, rather than the optimized mean.
+A new argument, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, can be set to True to return the mean instead. Additionally, a <code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> will be returned in all cases starting in the next version.</p></li>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.variational" title="cmdstanpy.CmdStanModel.variational"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.variational()</span></code></a> argument <code class="docutils literal notranslate"><span class="pre">output_samples</span></code> will has been renamed to <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p></li>
+</ul>
+</li>
+<li><p><strong>Other changes</strong></p>
+<ul>
+<li><p>A list of dictionaries is now allowed as the <code class="docutils literal notranslate"><span class="pre">inits</span></code> argument to <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.sample()</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="api.html#cmdstanpy.install_cmdstan" title="cmdstanpy.install_cmdstan"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.install_cmdstan()</span></code></a> correctly fetches the CmdStan version for ppc64el machines.</p></li>
+<li><p>The documentation on how to use external C++ code was updated.</p></li>
+<li><p>Various other bug fixes.</p></li>
+</ul>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The minimum supported version for CmdStanPy is now Python 3.8.</p>
+</div>
+</section>
 <section id="cmdstanpy-1-1-0">
 <h2>CmdStanPy 1.1.0<a class="headerlink" href="#cmdstanpy-1-1-0" title="Permalink to this headline">#</a></h2>
 <ul class="simple">
@@ -395,7 +438,7 @@ and model development.</p></li>
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     

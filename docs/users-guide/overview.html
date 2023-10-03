@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Overview &#8212; CmdStanPy 1.1.0 documentation</title>
+    <title>Overview &#8212; CmdStanPy 1.2.0 documentation</title>
     
   <!-- Loaded before other Sphinx assets -->
   <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -59,7 +59,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.1.0</a>
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.0</a>
     
   </div>
 
@@ -187,8 +187,13 @@
     </a>
    </li>
    <li class="toctree-l2">
+    <a class="reference internal" href="examples/Pathfinder.html">
+     Variational Inference using Pathfinder
+    </a>
+   </li>
+   <li class="toctree-l2">
     <a class="reference internal" href="examples/Variational%20Inference.html">
-     Variational Inference in Stan
+     Variational Inference using ADVI
     </a>
    </li>
    <li class="toctree-l2">
@@ -266,7 +271,8 @@ With CmdStanPy, you can:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Exact Bayesian estimation using the <a class="reference external" href="https://mc-stan.org/docs/reference-manual/hmc.html">NUTS-HMC sampler</a>.</p></li>
-<li><p>Approximate Bayesian estimation using <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms.html">ADVI</a>.</p></li>
+<li><p>Approximate Bayesian estimation algorithms <a class="reference external" href="https://mc-stan.org/docs/reference-manual/pathfinder.html">Pathfinder</a>
+and <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms.html">ADVI</a>.</p></li>
 <li><p>MAP estimation by <a class="reference external" href="https://mc-stan.org/docs/reference-manual/optimization-algorithms.html">optimization</a>.</p></li>
 </ul>
 </div></blockquote>
@@ -284,7 +290,7 @@ to larger datasets than might be possible in PyStan or RStan.</p>
 CmdStanPy manages the Stan program files, data files, and CmdStan output files.
 By default, output files are written to a temporary filesystem which persists
 throughout the session.  This is appropriate behavior during model development
-because it allows the user to test many models without filsystem clutter or worse.
+because it allows the user to test many models without filesystem clutter or worse.
 Once deployed into production,
 the user can specify the output directory for the CmdStan outputs.</p>
 </section>
@@ -324,7 +330,7 @@ the user can specify the output directory for the CmdStan outputs.</p>
     
     <div class="footer-item">
       <p class="copyright">
-    &copy; Copyright 2022, Stan Development Team.<br>
+    &copy; Copyright 2023, Stan Development Team.<br>
 </p>
     </div>
     
