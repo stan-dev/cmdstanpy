@@ -30,6 +30,7 @@ STANC_OPTS = [
     'warn-pedantic',
 ]
 
+# TODO(2.0): remove
 STANC_DEPRECATED_OPTS = {
     'allow_undefined': 'allow-undefined',
     'include_paths': 'include-paths',
@@ -59,6 +60,7 @@ STANC_IGNORE_OPTS = [
 OptionalPath = Union[str, os.PathLike, None]
 
 
+# TODO(2.0): can remove add function and other logic
 class CompilerOptions:
     """
     User-specified flags for stanc and C++ compiler.

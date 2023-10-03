@@ -434,6 +434,7 @@ class CmdStanModel:
             )
         return code
 
+    # TODO(2.0): remove
     def compile(
         self,
         force: bool = False,
@@ -1162,17 +1163,21 @@ class CmdStanModel:
             if not runset._check_retcodes():
                 msg = (
                     f'Error during sampling:\n{errors}\n'
-                    + f'Command and output files:\n{repr(runset)}\n'
-                    + 'Consider re-running with show_console=True if the above'
-                    + ' output is unclear!'
+                    f'Command and output files:\n{repr(runset)}'
                 )
+                if not show_console:
+                    msg += (
+                        '\nConsider re-running with show_console=True if the'
+                        ' above output is unclear!'
+                    )
                 raise RuntimeError(msg)
             if errors:
-                msg = (
-                    f'Non-fatal error during sampling:\n{errors}\n'
-                    + 'Consider re-running with show_console=True if the above'
-                    + ' output is unclear!'
-                )
+                msg = f'Non-fatal error during sampling:\n{errors}'
+                if not show_console:
+                    msg += (
+                        '\nConsider re-running with show_console=True if the'
+                        ' above output is unclear!'
+                    )
                 get_logger().warning(msg)
 
             mcmc = CmdStanMCMC(runset)
@@ -1256,6 +1261,7 @@ class CmdStanModel:
 
         :return: CmdStanGQ object
         """
+        # TODO(2.0): remove
         if mcmc_sample is not None:
             if previous_fit:
                 raise ValueError(
@@ -1359,10 +1365,13 @@ class CmdStanModel:
             if errors:
                 msg = (
                     f'Error during generate_quantities:\n{errors}\n'
-                    + f'Command and output files:\n{repr(runset)}\n'
-                    + 'Consider re-running with show_console=True if the above'
-                    + ' output is unclear!'
+                    f'Command and output files:\n{repr(runset)}'
                 )
+                if not show_console:
+                    msg += (
+                        '\nConsider re-running with show_console=True if the'
+                        ' above output is unclear!'
+                    )
                 raise RuntimeError(msg)
             quantities = CmdStanGQ(runset=runset, previous_fit=fit_object)
         return quantities
@@ -1490,6 +1499,7 @@ class CmdStanModel:
 
         :return: CmdStanVB object
         """
+        # TODO(2.0): remove
         if output_samples is not None:
             if draws is not None:
                 raise ValueError(
@@ -1627,7 +1637,7 @@ class CmdStanModel:
         :param draws: Number of approximate draws to return.
 
         :param num_single_draws: Number of draws each single-pathfinder will
-            draw. By default, this is set to be equal to draws.
+            draw.
             If ``num_paths`` is 1, only one of this and ``draws`` should be
             used.
 
@@ -1722,13 +1732,14 @@ class CmdStanModel:
                 "before 2.33"
             )
 
-        if num_single_draws is None:
-            num_single_draws = draws
-        elif num_paths == 1 and draws is not None and num_single_draws != draws:
-            raise ValueError(
-                "Cannot specify both 'draws' and 'num_single_draws'"
-                " when 'num_paths' is 1"
-            )
+        if num_paths == 1:
+            if num_single_draws is None:
+                num_single_draws = draws
+            if draws is not None and num_single_draws != draws:
+                raise ValueError(
+                    "Cannot specify both 'draws' and 'num_single_draws'"
+                    " when 'num_paths' is 1"
+                )
 
         pathfinder_args = PathfinderArgs(
             init_alpha=init_alpha,
