@@ -562,7 +562,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            :class:`numpy.random.RandomState` is used to generate a seed.
+            :func:`numpy.random.default_rng` is used to generate a seed.
 
         :param inits:  Specifies how the sampler initializes parameter values.
             Initialization is either uniform random on a range centered on 0,
@@ -789,7 +789,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            :class:`numpy.random.RandomState`
+            :func:`numpy.random.default_rng`
             is used to generate a seed which will be used for all chains.
             When the same seed is used across all chains,
             the chain-id is used to advance the RNG to avoid dependent samples.
@@ -1231,7 +1231,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            :class:`numpy.random.RandomState`
+            :func:`numpy.random.default_rng`
             is used to generate a seed which will be used for all chains.
             *NOTE: Specifying the seed will guarantee the same result for
             multiple invocations of this method with the same inputs.  However
@@ -1432,7 +1432,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            :class:`numpy.random.RandomState`
+            :func:`numpy.random.default_rng`
             is used to generate a seed which will be used for all chains.
 
         :param inits:  Specifies how the sampler initializes parameter values.
@@ -1647,7 +1647,7 @@ class CmdStanModel:
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
-            :class:`numpy.random.RandomState` is used to generate a seed.
+            :func:`numpy.random.default_rng` is used to generate a seed.
 
         :param inits: Specifies how the algorithm initializes parameter values.
             Initialization is either uniform random on a range centered on 0,

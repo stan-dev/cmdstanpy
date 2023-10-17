@@ -7,7 +7,7 @@ from time import time
 from typing import Any, Dict, List, Mapping, Optional, Union
 
 import numpy as np
-from numpy.random import RandomState
+from numpy.random import default_rng
 
 from cmdstanpy import _TMPDIR
 from cmdstanpy.utils import (
@@ -868,8 +868,8 @@ class CmdStanArgs:
                 )
 
         if self.seed is None:
-            rng = RandomState()
-            self.seed = rng.randint(1, 99999 + 1)
+            rng = default_rng()
+            self.seed = rng.integers(low=1, high=99999, size=1).item()
         else:
             if not isinstance(self.seed, (int, list, np.integer)):
                 raise ValueError(
