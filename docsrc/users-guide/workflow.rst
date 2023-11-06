@@ -145,8 +145,8 @@ An example of each is provided in the `next section <examples.rst>`__.
 
   It returns a :class:`CmdStanVB` object which contains an approximation the posterior distribution.
 
-* The :meth:`~CmdStanModel.optimize` runs one of
-  `Stan's optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`__.
+* The :meth:`~CmdStanModel.optimize` runs one of Stan's
+  `optimization algorithms <https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html>`__
   to find a mode of the density specified by the Stan program.
 
   It returns a :class:`CmdStanMLE` object.
