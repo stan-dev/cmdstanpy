@@ -609,10 +609,12 @@ class CmdStanMCMC:
                     cols.extend(
                         self.column_names[info.start_idx : info.end_idx]
                     )
+                elif var in ['chain__', 'iter__', 'draw__']:
+                    cols.append(var)
                 else:
                     raise ValueError(f'Unknown variable: {var}')
         else:
-            cols = list(self.column_names)
+            cols = ['chain__', 'iter__', 'draw__'] + list(self.column_names)
 
         draws = self.draws(inc_warmup=inc_warmup)
         # add long-form columns for chain, iteration, draw
@@ -633,8 +635,6 @@ class CmdStanMCMC:
             .T
         )
         draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
-
-        cols = ['chain__', 'iter__', 'draw__'] + cols
 
         return pd.DataFrame(
             data=flatten_chains(draws),
