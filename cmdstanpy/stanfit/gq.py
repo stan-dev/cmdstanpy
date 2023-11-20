@@ -577,7 +577,6 @@ class CmdStanGQ(Generic[Fit]):
                 + ", ".join(model_var_names | gq_var_names)
             )
         if var not in gq_var_names:
-            # TODO(2.0) atleast1d may not be needed
             return np.atleast_1d(  # type: ignore
                 self.previous_fit.stan_variable(var, **kwargs)
             )
@@ -724,11 +723,3 @@ class CmdStanGQ(Generic[Fit]):
         cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
-
-    # TODO(2.0): remove
-    @property
-    def mcmc_sample(self) -> Union[CmdStanMCMC, CmdStanMLE, CmdStanVB]:
-        get_logger().warning(
-            "Property `mcmc_sample` is deprecated, use `previous_fit` instead"
-        )
-        return self.previous_fit

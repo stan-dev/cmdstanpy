@@ -19,7 +19,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Literal,
     Mapping,
     Optional,
     TypeVar,
@@ -120,8 +119,6 @@ class CmdStanModel:
         stanc_options: Optional[Dict[str, Any]] = None,
         cpp_options: Optional[Dict[str, Any]] = None,
         user_header: OptionalPath = None,
-        *,
-        compile: Union[bool, Literal['force'], None] = None,
     ) -> None:
         """
         Initialize object given constructor args.
@@ -146,20 +143,6 @@ class CmdStanModel:
         self._compiler_options.validate()
 
         self._fixed_param = False
-
-        if compile is None:
-            compile = True
-        else:
-            get_logger().warning(
-                "CmdStanModel(compile=...) is deprecated and will be "
-                "removed in the next major version. The constructor will "
-                "always ensure a model has a compiled executable.\n"
-                "If you wish to force recompilation, use force_compile=True "
-                "instead."
-            )
-
-        if force_compile:
-            compile = 'force'
 
         if model_name is not None:
             get_logger().warning(
@@ -203,16 +186,19 @@ class CmdStanModel:
             if not cmdstan_version_before(
                 2, 27
             ):  # unknown end of version range
-                try:
-                    model_info = self.src_info()
-                    if 'parameters' in model_info:
-                        self._fixed_param |= len(model_info['parameters']) == 0
-                except ValueError as e:
-                    if compile:
-                        raise
-                    get_logger().debug(e)
+                model_info = self.src_info()
+                if 'parameters' in model_info:
+                    self._fixed_param |= len(model_info['parameters']) == 0
 
-        if exe_file is not None:
+        if exe_file is None or force_compile:
+            self._exe_file = compilation.compile_stan_file(
+                str(self.stan_file),
+                force=force_compile,
+                stanc_options=self._compiler_options.stanc_options,
+                cpp_options=self._compiler_options.cpp_options,
+                user_header=self._compiler_options.user_header,
+            )
+        else:
             self._exe_file = os.path.realpath(os.path.expanduser(exe_file))
             if not os.path.exists(self._exe_file):
                 raise ValueError('no such file {}'.format(self._exe_file))
@@ -247,9 +233,6 @@ class CmdStanModel:
                 )
             else:
                 get_logger().debug("TBB already found in load path")
-
-        if compile and self._exe_file is None:
-            self.compile(force=str(compile).lower() == 'force', _internal=True)
 
     def __repr__(self) -> str:
         repr = 'CmdStanModel: name={}'.format(self._name)
@@ -433,79 +416,6 @@ class CmdStanModel:
                 'Cannot read file Stan file: %s', self._stan_file
             )
         return code
-
-    # TODO(2.0): remove
-    def compile(
-        self,
-        force: bool = False,
-        stanc_options: Optional[Dict[str, Any]] = None,
-        cpp_options: Optional[Dict[str, Any]] = None,
-        user_header: OptionalPath = None,
-        override_options: bool = False,
-        *,
-        _internal: bool = False,
-    ) -> None:
-        """
-        Compile the given Stan program file.  Translates the Stan code to
-        C++, then calls the C++ compiler.
-
-        By default, this function compares the timestamps on the source and
-        executable files; if the executable is newer than the source file, it
-        will not recompile the file, unless argument ``force`` is ``True``
-        or unless the compiler options have been changed.
-
-        :param force: When ``True``, always compile, even if the executable file
-            is newer than the source file.  Used for Stan models which have
-            ``#include`` directives in order to force recompilation when changes
-            are made to the included files.
-
-        :param stanc_options: Options for stanc compiler.
-        :param cpp_options: Options for C++ compiler.
-        :param user_header: A path to a header file to include during C++
-            compilation.
-
-        :param override_options: When ``True``, override existing option.
-            When ``False``, add/replace existing options.  Default is ``False``.
-        """
-        if not _internal:
-            get_logger().warning(
-                "CmdStanModel.compile() is deprecated and will be removed in "
-                "the next major version. To compile a model, use the "
-                "CmdStanModel() constructor or cmdstanpy.compile_stan_file()."
-            )
-
-        if not self._stan_file:
-            raise RuntimeError('Please specify source file')
-
-        compiler_options = None
-        if (
-            stanc_options is not None
-            or cpp_options is not None
-            or user_header is not None
-        ):
-            compiler_options = compilation.CompilerOptions(
-                stanc_options=stanc_options,
-                cpp_options=cpp_options,
-                user_header=user_header,
-            )
-            compiler_options.validate()
-
-            if compiler_options != self._compiler_options:
-                force = True
-                if self._compiler_options is None:
-                    self._compiler_options = compiler_options
-                elif override_options:
-                    self._compiler_options = compiler_options
-                else:
-                    self._compiler_options.add(compiler_options)
-
-        self._exe_file = compilation.compile_stan_file(
-            str(self.stan_file),
-            force=force,
-            stanc_options=self._compiler_options.stanc_options,
-            cpp_options=self._compiler_options.cpp_options,
-            user_header=self._compiler_options.user_header,
-        )
 
     def optimize(
         self,
@@ -1194,8 +1104,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
-        mcmc_sample: Union[CmdStanMCMC, List[str], None] = None,
     ) -> CmdStanGQ[Fit]:
         """
         Run CmdStan's generate_quantities method which runs the generated
@@ -1261,19 +1169,6 @@ class CmdStanModel:
 
         :return: CmdStanGQ object
         """
-        # TODO(2.0): remove
-        if mcmc_sample is not None:
-            if previous_fit:
-                raise ValueError(
-                    "Cannot supply both 'previous_fit' and "
-                    "deprecated argument 'mcmc_sample'"
-                )
-            get_logger().warning(
-                "Argument name `mcmc_sample` is deprecated, please "
-                "rename to `previous_fit`."
-            )
-
-            previous_fit = mcmc_sample  # type: ignore
 
         if isinstance(previous_fit, (CmdStanMCMC, CmdStanMLE, CmdStanVB)):
             fit_object = previous_fit
@@ -1400,8 +1295,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
-        output_samples: Optional[int] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1499,19 +1392,6 @@ class CmdStanModel:
 
         :return: CmdStanVB object
         """
-        # TODO(2.0): remove
-        if output_samples is not None:
-            if draws is not None:
-                raise ValueError(
-                    "Cannot supply both 'draws' and deprecated argument "
-                    "'output_samples'"
-                )
-            get_logger().warning(
-                "Argument name `output_samples` is deprecated, please "
-                "rename to `draws`."
-            )
-
-            draws = output_samples
 
         variational_args = VariationalArgs(
             algorithm=algorithm,

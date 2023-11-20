@@ -8,7 +8,6 @@ import os
 import platform
 import shutil
 import subprocess
-from copy import copy
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Union
 
@@ -29,12 +28,6 @@ STANC_OPTS = [
     'name',
     'warn-pedantic',
 ]
-
-# TODO(2.0): remove
-STANC_DEPRECATED_OPTS = {
-    'allow_undefined': 'allow-undefined',
-    'include_paths': 'include-paths',
-}
 
 STANC_IGNORE_OPTS = [
     'debug-lex',
@@ -60,7 +53,6 @@ STANC_IGNORE_OPTS = [
 OptionalPath = Union[str, os.PathLike, None]
 
 
-# TODO(2.0): can remove add function and other logic
 class CompilerOptions:
     """
     User-specified flags for stanc and C++ compiler.
@@ -86,26 +78,6 @@ class CompilerOptions:
     def __repr__(self) -> str:
         return 'stanc_options={}, cpp_options={}'.format(
             self._stanc_options, self._cpp_options
-        )
-
-    def __eq__(self, other: Any) -> bool:
-        """Overrides the default implementation"""
-        if self.is_empty() and other is None:  # equiv w/r/t compiler
-            return True
-        if not isinstance(other, CompilerOptions):
-            return False
-        return (
-            self._stanc_options == other.stanc_options
-            and self._cpp_options == other.cpp_options
-            and self._user_header == other.user_header
-        )
-
-    def is_empty(self) -> bool:
-        """True if no options specified."""
-        return (
-            self._stanc_options == {}
-            and self._cpp_options == {}
-            and self._user_header == ''
         )
 
     @property
@@ -144,24 +116,6 @@ class CompilerOptions:
         paths = None
         has_o_flag = False
 
-        for deprecated, replacement in STANC_DEPRECATED_OPTS.items():
-            if deprecated in self._stanc_options:
-                if replacement:
-                    get_logger().warning(
-                        'compiler option "%s" is deprecated, use "%s" instead',
-                        deprecated,
-                        replacement,
-                    )
-                    self._stanc_options[replacement] = copy(
-                        self._stanc_options[deprecated]
-                    )
-                    del self._stanc_options[deprecated]
-                else:
-                    get_logger().warning(
-                        'compiler option "%s" is deprecated and '
-                        'should not be used',
-                        deprecated,
-                    )
         for key, val in self._stanc_options.items():
             if key in STANC_IGNORE_OPTS:
                 get_logger().info('ignoring compiler option: %s', key)
@@ -259,29 +213,6 @@ class CompilerOptions:
                 )
 
             self._cpp_options['USER_HEADER'] = self._user_header
-
-    def add(self, new_opts: "CompilerOptions") -> None:  # noqa: disable=Q000
-        """Adds options to existing set of compiler options."""
-        if new_opts.stanc_options is not None:
-            if self._stanc_options is None:
-                self._stanc_options = new_opts.stanc_options
-            else:
-                for key, val in new_opts.stanc_options.items():
-                    if key == 'include-paths':
-                        if isinstance(val, Iterable) and not isinstance(
-                            val, str
-                        ):
-                            for path in val:
-                                self.add_include_path(str(path))
-                        else:
-                            self.add_include_path(str(val))
-                    else:
-                        self._stanc_options[key] = val
-        if new_opts.cpp_options is not None:
-            for key, val in new_opts.cpp_options.items():
-                self._cpp_options[key] = val
-        if new_opts._user_header != '' and self._user_header == '':
-            self._user_header = new_opts._user_header
 
     def add_include_path(self, path: str) -> None:
         """Adds include path to existing set of compiler options."""

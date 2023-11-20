@@ -169,7 +169,7 @@ class CmdStanMLE:
         *,
         inc_iterations: bool = False,
         warn: bool = True,
-    ) -> Union[np.ndarray, float]:
+    ) -> np.ndarray:
         """
         Return a numpy.ndarray which contains the estimates for the
         for the named Stan program variable where the dimensions of the
@@ -217,14 +217,6 @@ class CmdStanMLE:
             out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
                 data
             )
-            # TODO(2.0) remove
-            if out.shape == () or out.shape == (1,):
-                get_logger().warning(
-                    "The default behavior of CmdStanMLE.stan_variable() "
-                    "will change in a future release to always return a "
-                    "numpy.ndarray, even for scalar variables."
-                )
-                return out.item()  # type: ignore
             return out
         except KeyError:
             # pylint: disable=raise-missing-from
@@ -236,7 +228,7 @@ class CmdStanMLE:
 
     def stan_variables(
         self, inc_iterations: bool = False
-    ) -> Dict[str, Union[np.ndarray, float]]:
+    ) -> Dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.

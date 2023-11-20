@@ -34,7 +34,6 @@ from cmdstanpy.utils import (
     build_xarray_data,
     check_sampler_csv,
     cmdstan_path,
-    cmdstan_version_before,
     create_named_text_file,
     do_command,
     flatten_chains,
@@ -513,9 +512,7 @@ class CmdStanMCMC:
             dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv', name_only=True
         )
         csv_str = '--csv_filename={}'.format(tmp_csv_path)
-        # TODO: remove at some future release
-        if cmdstan_version_before(2, 24):
-            csv_str = '--csv_file={}'.format(tmp_csv_path)
+
         cmd = [
             cmd_path,
             percentiles_str,

@@ -63,21 +63,17 @@ def test_model_good() -> None:
 
 
 def test_ctor_compile_arg() -> None:
-    # instantiate, don't compile
     if os.path.exists(BERN_EXE):
         os.remove(BERN_EXE)
-    model = CmdStanModel(stan_file=BERN_STAN, compile=False)
-    assert BERN_STAN == model.stan_file
-    assert model.exe_file is None
 
-    model = CmdStanModel(stan_file=BERN_STAN, compile=True)
+    model = CmdStanModel(stan_file=BERN_STAN)
     assert os.path.samefile(model.exe_file, BERN_EXE)
     exe_time = os.path.getmtime(model.exe_file)
 
     model = CmdStanModel(stan_file=BERN_STAN)
     assert exe_time == os.path.getmtime(model.exe_file)
 
-    model = CmdStanModel(stan_file=BERN_STAN, compile='force')
+    model = CmdStanModel(stan_file=BERN_STAN, force_compile=True)
     assert exe_time < os.path.getmtime(model.exe_file)
 
 
@@ -500,10 +496,9 @@ def test_model_compile_with_explicit_includes() -> None:
     if os.path.isfile(exe_file):
         os.unlink(exe_file)
 
-    model = CmdStanModel(stan_file=stan_file, compile=False)
     include_paths = [os.path.join(DATAFILES_PATH, "include-path")]
     stanc_options = {"include-paths": include_paths}
-    model.compile(stanc_options=stanc_options)
+    CmdStanModel(stan_file=stan_file, stanc_options=stanc_options)
 
 
 def test_model_includes_implicit() -> None:

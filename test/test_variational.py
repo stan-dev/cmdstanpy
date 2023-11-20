@@ -277,9 +277,8 @@ def test_complex_output() -> None:
     )
 
     assert fit.stan_variable('zs', mean=False).shape == (1000, 2, 3)
-    # TODO(2.0): change
-    np.testing.assert_equal(fit.z, 3 + 4j)
-    # np.testing.assert_equal(fit.z, np.repeat(3 + 4j, 1000))
+
+    np.testing.assert_equal(fit.z, np.repeat(3 + 4j, 1000))
 
     np.testing.assert_allclose(
         fit.stan_variable('zs', mean=False)[0],
@@ -304,14 +303,9 @@ def test_attrs() -> None:
         algorithm='meanfield',
     )
 
-    # TODO(2.0): swap tests
-    np.testing.assert_equal(fit.a, 4.5)
-    assert fit.b.shape == (3,)
-    assert isinstance(fit.theta, float)
-
-    # np.testing.assert_equal(fit.a, np.repeat(4.5, 1000))
-    # assert fit.b.shape == (1000, 3)
-    # assert fit.theta.shape == (1000,)
+    np.testing.assert_equal(fit.a, np.repeat(4.5, 1000))
+    assert fit.b.shape == (1000, 3)
+    assert fit.theta.shape == (1000,)
 
     assert fit.stan_variable('thin', mean=True) == 3.5
 

@@ -38,7 +38,6 @@ def do_command(
     try:
         # NB: Using this rather than cwd arg to Popen due to windows behavior
         with pushd(cwd if cwd is not None else '.'):
-            # TODO: replace with subprocess.run in later Python versions?
             proc = subprocess.Popen(
                 cmd,
                 bufsize=1,
