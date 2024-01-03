@@ -64,9 +64,9 @@ jobs:
           pip install codecov
 
       - name: Install numpy, scipy nightlies
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.11' && matrix.os != 'windows-latest'
         run: |
-          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U numpy scipy
+          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U numpy scipy pandas
 
       - name: Run flake8, pylint, mypy
         if: matrix.python-version == '3.11'
