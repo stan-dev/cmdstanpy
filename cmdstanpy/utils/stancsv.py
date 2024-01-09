@@ -289,10 +289,16 @@ def scan_hmc_params(
         raise ValueError(
             'line {}: invalid step size: {}'.format(lineno, step_size)
         ) from e
-    if metric == 'unit_e':
-        return lineno
+    before_metric = fd.tell()
     line = fd.readline().strip()
     lineno += 1
+    if metric == 'unit_e':
+        if line.startswith("# No free parameters"):
+            return lineno
+        else:
+            fd.seek(before_metric)
+            return lineno - 1
+
     if not (
         (
             metric == 'diag_e'
