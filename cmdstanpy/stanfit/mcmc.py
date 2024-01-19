@@ -441,6 +441,12 @@ class CmdStanMCMC:
                                 self._metric[chain, i, :] = [
                                     float(x) for x in xs
                                 ]
+                    else:  # unit_e changed in 2.34 to have an extra line
+                        pos = fd.tell()
+                        line = fd.readline().strip()
+                        if not line.startswith('#'):
+                            fd.seek(pos)
+
                 # process draws
                 for i in range(sampling_iter_start, num_draws):
                     line = fd.readline().strip()
