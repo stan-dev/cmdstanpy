@@ -21,13 +21,21 @@ BERN_EXE = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
 BERN_BASENAME = 'bernoulli'
 
 
-@pytest.mark.parametrize("sig_figs, expected, expected_unadjusted", [
-    (11, ["-7.0214667713","-1.188472607"], ["-5.5395901199", "-1.4903938392"]),
-    (3, ["-7.02", "-1.19"], ["-5.54", "-1.49"]),
-    (None, ["-7.02147", "-1.18847"], ["-5.53959", "-1.49039"])
-])
-def test_lp_good(sig_figs: Optional[int], expected: List[str],
-                 expected_unadjusted: List[str]) -> None:
+@pytest.mark.parametrize(
+    "sig_figs, expected, expected_unadjusted",
+    [
+        (
+            11,
+            ["-7.0214667713", "-1.188472607"],
+            ["-5.5395901199", "-1.4903938392"],
+        ),
+        (3, ["-7.02", "-1.19"], ["-5.54", "-1.49"]),
+        (None, ["-7.02147", "-1.18847"], ["-5.53959", "-1.49039"]),
+    ],
+)
+def test_lp_good(
+    sig_figs: Optional[int], expected: List[str], expected_unadjusted: List[str]
+) -> None:
     model = CmdStanModel(stan_file=BERN_STAN)
     params = {"theta": 0.34903938392023830482}
     out = model.log_prob(params, data=BERN_DATA, sig_figs=sig_figs)

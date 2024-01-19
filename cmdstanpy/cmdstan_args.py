@@ -541,6 +541,8 @@ class PathfinderArgs:
         num_draws: Optional[int] = None,
         num_elbo_draws: Optional[int] = None,
         save_single_paths: bool = False,
+        psis_resample: bool = True,
+        calculate_lp: bool = True,
     ) -> None:
         self.init_alpha = init_alpha
         self.tol_obj = tol_obj
@@ -557,6 +559,8 @@ class PathfinderArgs:
         self.num_elbo_draws = num_elbo_draws
 
         self.save_single_paths = save_single_paths
+        self.psis_resample = psis_resample
+        self.calculate_lp = calculate_lp
 
     def validate(self, _chains: Optional[int] = None) -> None:
         """
@@ -608,6 +612,12 @@ class PathfinderArgs:
 
         if self.save_single_paths:
             cmd.append('save_single_paths=1')
+
+        if not self.psis_resample:
+            cmd.append('psis_resample=0')
+
+        if not self.calculate_lp:
+            cmd.append('calculate_lp=0')
 
         return cmd
 
