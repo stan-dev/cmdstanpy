@@ -103,16 +103,14 @@ jobs:
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
-          python -c "import cmdstanpy; cmdstanpy.install_cmdstan(version='${{ needs.get-cmdstan-version.outputs.version }}', cores=2)"
+          python -c "import cmdstanpy; cmdstanpy.install_cmdstan(version='${{ needs.get-cmdstan-version.outputs.version }}', cores=4)"
 
       - name: Install CmdStan (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
-          $env:TBB_CXXFLAGS = "-D_UCRT"
-          python -m cmdstanpy.install_cmdstan --version ${{ needs.get-cmdstan-version.outputs.version }} --cores 2
-          echo "TBB_CXXFLAGS+=-D_UCRT" >> ~/.cmdstan/cmdstan-${{ needs.get-cmdstan-version.outputs.version }}/make/local
+          python -m cmdstanpy.install_cmdstan --version ${{ needs.get-cmdstan-version.outputs.version }} --cores 4
 
       - name: Run tests
         run: |
