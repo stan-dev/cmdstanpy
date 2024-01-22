@@ -7,6 +7,17 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
+CmdStanPy 1.2.1
+---------------
+
+- Switched from :class:`numpy.random.RandomState` to :func:`~numpy.random.default_rng`.
+- Fixed minor doc typos.
+- Stan 2.34: Fixed parsing of unit_e output files.
+- Stan 2.34: Exposed new Pathfinder arguments.
+- Allow the ``vars`` argument to :meth:`CmdStanMCMC.draws_pd` to filter the ``chain__``, ``iter__``, and ``draws__`` columns.
+
+Reminder: The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations.
+
 CmdStanPy 1.2.0
 ---------------
 - **New functionality**
