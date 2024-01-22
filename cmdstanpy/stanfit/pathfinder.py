@@ -206,6 +206,18 @@ class CmdStanPathfinder:
         """
         return self._metadata.cmdstan_config['column_names']  # type: ignore
 
+    @property
+    def is_resampled(self) -> bool:
+        """
+        Returns True if the draws were resampled from several Pathfinder
+        approximations, False otherwise.
+        """
+        return (  # type: ignore
+            self._metadata.cmdstan_config.get("num_paths", 4) > 1
+            and self._metadata.cmdstan_config.get('psis_resample', 1) == 1
+            and self._metadata.cmdstan_config.get('calculate_lp', 1) == 1
+        )
+
     def save_csvfiles(self, dir: Optional[str] = None) -> None:
         """
         Move output CSV files to specified directory.  If files were

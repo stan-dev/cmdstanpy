@@ -4,6 +4,7 @@
 
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 import cmdstanpy
@@ -31,6 +32,8 @@ def test_pathfinder_outputs():
     assert theta.shape == (draws,)
     assert 0.23 < theta.mean() < 0.27
 
+    assert pathfinder.is_resampled
+
     assert pathfinder.draws().shape == (draws, 3)
 
 
@@ -57,6 +60,8 @@ def test_single_pathfinder():
         num_paths=1,
         draws=draws,
     )
+
+    assert not pathfinder.is_resampled
 
     theta = pathfinder.theta
     assert theta.shape == (draws,)
@@ -122,3 +127,28 @@ def test_pathfinder_init_sampling():
 
     assert fit.chains == 4
     assert fit.draws().shape == (1000, 4, 9)
+
+
+def test_pathfinder_no_psis():
+    stan = DATAFILES_PATH / 'bernoulli.stan'
+    bern_model = cmdstanpy.CmdStanModel(stan_file=stan)
+    jdata = str(DATAFILES_PATH / 'bernoulli.data.json')
+
+    pathfinder = bern_model.pathfinder(data=jdata, psis_resample=False)
+
+    assert not pathfinder.is_resampled
+    assert pathfinder.draws().shape == (4000, 3)
+
+
+def test_pathfinder_no_lp_calc():
+    stan = DATAFILES_PATH / 'bernoulli.stan'
+    bern_model = cmdstanpy.CmdStanModel(stan_file=stan)
+    jdata = str(DATAFILES_PATH / 'bernoulli.data.json')
+
+    pathfinder = bern_model.pathfinder(data=jdata, calculate_lp=False)
+
+    assert not pathfinder.is_resampled
+    assert pathfinder.draws().shape == (4000, 3)
+    n_lp_nan = np.sum(np.isnan(pathfinder.method_variables()['lp__']))
+    assert n_lp_nan < 4000  # some lp still calculated during pathfinder
+    assert n_lp_nan > 3000  # but most are not
