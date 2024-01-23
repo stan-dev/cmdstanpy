@@ -84,7 +84,8 @@ class CmdStanModel:
     unless the argument ``compile=False`` is specified.
     The set of constructor arguments are:
 
-    :param model_name: Model name, used for output file names.
+    :param model_name: Deprecated: Model name will be taken from executable.
+        Model name, used for output file names.
         Optional, default is the base filename of the Stan program file.
 
     :param stan_file: Path to Stan program file.
@@ -94,9 +95,8 @@ class CmdStanModel:
         the compiled executable file are specified, the base filenames
         must match, (but different directory locations are allowed).
 
-    :param compile: Whether or not to compile the model.  Default is ``True``.
-        If set to the string ``"force"``, it will always compile even if
-        an existing executable is found.
+    :param force_compile: If ``True``, always compile, even if there
+        is an existing executable file for this model.
 
     :param stanc_options: Options for stanc compiler, specified as a Python
         dictionary containing Stanc3 compiler option name, value pairs.
@@ -109,6 +109,11 @@ class CmdStanModel:
     :param user_header: A path to a header file to include during C++
         compilation.
         Optional.
+
+    :param compile: Deprecated: Use ``force_compile`` instead.
+        Whether or not to compile the model.  Default is ``True``.
+        If set to the string ``"force"``, it will always compile even if
+        an existing executable is found.
     """
 
     def __init__(
@@ -126,14 +131,16 @@ class CmdStanModel:
         """
         Initialize object given constructor args.
 
-        :param model_name: Model name, used for output file names.
+        :param model_name: Deprecated. Model name, used for output file names.
         :param stan_file: Path to Stan program file.
         :param exe_file: Path to compiled executable file.
-        :param compile: Whether or not to compile the model.
+        :param force_compile: Whether or not to force recompilation if
+            executable file already exists.
         :param stanc_options: Options for stanc compiler.
         :param cpp_options: Options for C++ compiler.
         :param user_header: A path to a header file to include during C++
             compilation.
+        :param compile: Deprecated. Whether or not to compile the model.
         """
         self._name = ''
         self._stan_file = None
@@ -446,6 +453,9 @@ class CmdStanModel:
         _internal: bool = False,
     ) -> None:
         """
+        Deprecated: To compile a model, use the :class:`~cmdstanpy.CmdStanModel`
+        constructor or :func:`cmdstanpy.compile_stan_file()`.
+
         Compile the given Stan program file.  Translates the Stan code to
         C++, then calls the C++ compiler.
 
