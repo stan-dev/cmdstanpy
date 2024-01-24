@@ -80,13 +80,12 @@ class CmdStanModel:
     """
     The constructor method allows model instantiation given either the
     Stan program source file or the compiled executable, or both.
-    By default, the constructor will compile the Stan program on instantiation
-    unless the argument ``compile=False`` is specified.
-    The set of constructor arguments are:
+    This will compile the model if provided a Stan file and no executable,
 
-    :param model_name: Deprecated: Model name will be taken from executable.
-        Model name, used for output file names.
+    :param model_name: Model name, used for output file names.
         Optional, default is the base filename of the Stan program file.
+        Deprecated: In version 2.0.0, model name cannot be
+        specified and will always be taken from executable.
 
     :param stan_file: Path to Stan program file.
 
@@ -110,10 +109,12 @@ class CmdStanModel:
         compilation.
         Optional.
 
-    :param compile: Deprecated: Use ``force_compile`` instead.
-        Whether or not to compile the model.  Default is ``True``.
+    :param compile: Whether or not to compile the model.  Default is ``True``.
         If set to the string ``"force"``, it will always compile even if
         an existing executable is found.
+        Deprecated: Use ``force_compile`` instead. The ability to instantiate
+        a CmdStanModel without an executable will be removed in version 2.0.0.
+
     """
 
     def __init__(
