@@ -111,7 +111,7 @@ def test_bad() -> None:
     with pytest.raises(ValueError):
         args.validate(chains=2)
 
-    args = SamplerArgs(iter_warmup=10, adapt_engaged=False)
+    args = SamplerArgs(iter_warmup=0, adapt_engaged=True)
     with pytest.raises(ValueError):
         args.validate(chains=2)
 
