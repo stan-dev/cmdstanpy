@@ -1435,6 +1435,26 @@ def test_dont_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
     )
 
 
+def test_warmup_no_adapt() -> None:
+    # we may want to have a "burn-in" period, even without adaptation
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+    bern_model = CmdStanModel(stan_file=stan)
+    bern_fit = bern_model.sample(
+        data=jdata,
+        chains=2,
+        seed=12345,
+        iter_warmup=200,
+        iter_sampling=100,
+        adapt_engaged=False,
+    )
+
+    assert bern_fit.column_names == tuple(BERNOULLI_COLS)
+    assert bern_fit.num_draws_sampling == 100
+    assert bern_fit.draws().shape == (100, 2, len(BERNOULLI_COLS))
+
+
 def test_sampler_diags() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')

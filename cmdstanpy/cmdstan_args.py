@@ -139,10 +139,9 @@ class SamplerArgs:
                     'Value for iter_warmup must be a non-negative integer,'
                     ' found {}.'.format(self.iter_warmup)
                 )
-            if self.iter_warmup > 0 and not self.adapt_engaged:
+            if self.iter_warmup == 0 and self.adapt_engaged:
                 raise ValueError(
-                    'Argument "adapt_engaged" is False, '
-                    'cannot specify warmup iterations.'
+                    'Must specify iter_warmup > 0 when adapt_engaged=True.'
                 )
         if self.iter_sampling is not None:
             if self.iter_sampling < 0 or not isinstance(
