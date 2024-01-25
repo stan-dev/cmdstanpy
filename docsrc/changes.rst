@@ -15,6 +15,7 @@ CmdStanPy 1.2.1
 - Stan 2.34: Fixed parsing of unit_e output files.
 - Stan 2.34: Exposed new Pathfinder arguments.
 - Allow the ``vars`` argument to :meth:`CmdStanMCMC.draws_pd` to filter the ``chain__``, ``iter__``, and ``draws__`` columns.
+- Fixed a bug involving the interaction of the ``adapt_engaged`` and ``iter_warmup`` arguments to :meth:`CmdStanMCMC.sample`.
 
 Reminder: The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations.
 
