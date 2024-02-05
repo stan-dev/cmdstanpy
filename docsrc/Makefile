@@ -19,7 +19,7 @@ help:
 .PHONY: help Makefile
 
 github:
-	@make html
+	@make html SPHINXOPTS=-vv
 	@rm -rf ../docs/*
 	@cp -r _build/html/* ../docs
 
