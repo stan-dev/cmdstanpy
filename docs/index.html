@@ -1,36 +1,40 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -39,7 +43,7 @@
     <link rel="next" title="Installation" href="installation.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -47,7 +51,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -58,7 +62,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='#'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='#'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -188,7 +192,7 @@
               <div>
                 
   <section id="module-cmdstanpy">
-<span id="cmdstanpy-python-interface-to-cmdstan"></span><h1><a class="reference internal" href="#module-cmdstanpy" title="cmdstanpy: A lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms."><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmdstanpy</span></code></a> – Python interface to CmdStan<a class="headerlink" href="#module-cmdstanpy" title="Permalink to this headline">#</a></h1>
+<span id="cmdstanpy-python-interface-to-cmdstan"></span><h1><a class="reference internal" href="#module-cmdstanpy" title="cmdstanpy: A lightweight pure-Python interface to CmdStan which provides access to the Stan compiler and all inference algorithms."><code class="xref py py-mod docutils literal notranslate"><span class="pre">cmdstanpy</span></code></a> – Python interface to CmdStan<a class="headerlink" href="#module-cmdstanpy" title="Permalink to this heading">¶</a></h1>
 <p>CmdStanPy is a lightweight interface to Stan for Python users which
 provides the necessary objects and functions to do Bayesian inference
 given a probability model and data.
@@ -279,29 +283,75 @@ set of model, data, and posterior estimates.</p>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#classes">Classes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmodel">CmdStanModel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmcmc">CmdStanMCMC</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmle">CmdStanMLE</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanlaplace">CmdStanLaplace</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanpathfinder">CmdStanPathfinder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanvb">CmdStanVB</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstangq">CmdStanGQ</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmodel">CmdStanModel</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.CmdStanModel"><code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmcmc">CmdStanMCMC</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC"><code class="docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanmle">CmdStanMLE</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.CmdStanMLE"><code class="docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanlaplace">CmdStanLaplace</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.CmdStanLaplace"><code class="docutils literal notranslate"><span class="pre">CmdStanLaplace</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanpathfinder">CmdStanPathfinder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.CmdStanPathfinder"><code class="docutils literal notranslate"><span class="pre">CmdStanPathfinder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstanvb">CmdStanVB</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.CmdStanVB"><code class="docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstangq">CmdStanGQ</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.CmdStanGQ"><code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#functions">Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="api.html#show-versions">show_versions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstan-path">cmdstan_path</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#install-cmdstan">install_cmdstan</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#set-cmdstan-path">set_cmdstan_path</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstan-version">cmdstan_version</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#set-make-env">set_make_env</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#from-csv">from_csv</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api.html#write-stan-json">write_stan_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#show-versions">show_versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.show_versions"><code class="docutils literal notranslate"><span class="pre">show_versions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstan-path">cmdstan_path</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.cmdstan_path"><code class="docutils literal notranslate"><span class="pre">cmdstan_path()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#install-cmdstan">install_cmdstan</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.install_cmdstan"><code class="docutils literal notranslate"><span class="pre">install_cmdstan()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#set-cmdstan-path">set_cmdstan_path</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.set_cmdstan_path"><code class="docutils literal notranslate"><span class="pre">set_cmdstan_path()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#cmdstan-version">cmdstan_version</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.cmdstan_version"><code class="docutils literal notranslate"><span class="pre">cmdstan_version()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#set-make-env">set_make_env</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.set_make_env"><code class="docutils literal notranslate"><span class="pre">set_make_env()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#from-csv">from_csv</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.from_csv"><code class="docutils literal notranslate"><span class="pre">from_csv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#write-stan-json">write_stan_json</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.write_stan_json"><code class="docutils literal notranslate"><span class="pre">write_stan_json()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changes.html">What’s New</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-2-1">CmdStanPy 1.2.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-2-0">CmdStanPy 1.2.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-1-0">CmdStanPy 1.1.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-0-8">CmdStanPy 1.0.8</a></li>
@@ -346,9 +396,8 @@ set of model, data, and posterior estimates.</p>
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -359,7 +408,7 @@ set of model, data, and posterior estimates.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     

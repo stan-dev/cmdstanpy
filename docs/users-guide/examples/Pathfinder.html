@@ -1,37 +1,41 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Variational Inference using Pathfinder &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>Variational Inference using Pathfinder &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -41,7 +45,7 @@
     <link rel="prev" title="Maximum Likelihood Estimation" href="Maximum%20Likelihood%20Estimation.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -49,7 +53,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -60,7 +64,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -231,7 +235,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage mt-5 pt-1 pb-3">
+<div class="tocsection onthispage pt-5 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -281,12 +285,12 @@
               <div>
                 
   <section id="Variational-Inference-using-Pathfinder">
-<h1>Variational Inference using Pathfinder<a class="headerlink" href="#Variational-Inference-using-Pathfinder" title="Permalink to this headline">#</a></h1>
+<h1>Variational Inference using Pathfinder<a class="headerlink" href="#Variational-Inference-using-Pathfinder" title="Permalink to this heading">¶</a></h1>
 <p>Stan supports the Pathfinder algorithm (<a class="reference external" href="https://jmlr.org/papers/v23/21-0889.html">Zhang, 2022</a>). Pathfinder is a variational method for approximately sampling from differentiable log densities. Starting from a random initialization, Pathfinder locates normal approximations to the target density along a quasi-Newton optimization path, with local covariance estimated using the negative inverse Hessian estimates produced by the LBFGS optimizer. Pathfinder returns draws from the Gaussian
 approximation with the lowest estimated Kullback-Leibler (KL) divergence to the true posterior.</p>
 <p>There are two Stan implementations of the Pathfinder algorithm: single-path Pathfinder and multi-path Pathfinder. Single-path Pathfinder generates a set of approximate draws from one run of the basic Pathfinder algorithm. Multi-path Pathfinder uses importance resampling over the draws from multiple runs of Pathfinder. This better matches non-normal target densities and also mitigates the problem of L-BFGS getting stuck at local optima or in saddle points on plateaus.</p>
 <section id="Example:-variational-inference-with-Pathfinder-for-model-bernoulli.stan">
-<h2>Example: variational inference with Pathfinder for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-variational-inference-with-Pathfinder-for-model-bernoulli.stan" title="Permalink to this headline">#</a></h2>
+<h2>Example: variational inference with Pathfinder for model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-variational-inference-with-Pathfinder-for-model-bernoulli.stan" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.pathfinder">CmdStanModel pathfinder</a> method wraps the CmdStan <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/pathfinder-config.html">pathfinder</a> method.</p>
 <p>By default, CmdStanPy runs multi-path Pathfinder which returns an importance-resampled set of draws over the outputs of 4 independent single-path Pathfinders.</p>
 <div class="nbinput docutils container">
@@ -321,13 +325,20 @@ approximation with the lowest estimated Kullback-Leibler (KL) divergence to the 
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:37 - cmdstanpy - INFO - Chain [1] start processing
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-14:43:21 - cmdstanpy - INFO - Chain [1] start processing
-14:43:21 - cmdstanpy - INFO - Chain [1] done processing
+20:41:37 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -346,11 +357,11 @@ approximation with the lowest estimated Kullback-Leibler (KL) divergence to the 
 <div class="highlight"><pre>
 CmdStanPathfinder: model=bernoulli[&#39;method=pathfinder&#39;]
  csv_files:
-        /tmp/tmpe58v_i7q/bernoullih8v8dm3c/bernoulli-20231003144321.csv
+        /tmp/tmpar1gm37y/bernoulli3ctxpbm0/bernoulli-20240205204137.csv
  output_files:
-        /tmp/tmpe58v_i7q/bernoullih8v8dm3c/bernoulli-20231003144321_0-stdout.txt
+        /tmp/tmpar1gm37y/bernoulli3ctxpbm0/bernoulli-20240205204137_0-stdout.txt
 Metadata:
-{&#39;stan_version_major&#39;: 2, &#39;stan_version_minor&#39;: 33, &#39;stan_version_patch&#39;: 0, &#39;model&#39;: &#39;bernoulli_model&#39;, &#39;start_datetime&#39;: &#39;2023-10-03 14:43:21 UTC&#39;, &#39;method&#39;: &#39;pathfinder&#39;, &#39;init_alpha&#39;: 0.001, &#39;tol_obj&#39;: 1e-12, &#39;tol_rel_obj&#39;: 10000, &#39;tol_grad&#39;: 1e-08, &#39;tol_rel_grad&#39;: 10000000, &#39;tol_param&#39;: 1e-08, &#39;history_size&#39;: 5, &#39;num_psis_draws&#39;: 1000, &#39;num_paths&#39;: 4, &#39;save_single_paths&#39;: 0, &#39;max_lbfgs_iters&#39;: 1000, &#39;num_draws&#39;: 1000, &#39;num_elbo_draws&#39;: 25, &#39;id&#39;: 1, &#39;data_file&#39;: &#39;/home/runner/.cmdstan/cmdstan-2.33.1/examples/bernoulli/bernoulli.data.json&#39;, &#39;init&#39;: 2, &#39;seed&#39;: 56891, &#39;diagnostic_file&#39;: &#39;&#39;, &#39;refresh&#39;: 100, &#39;sig_figs&#39;: -1, &#39;profile_file&#39;: &#39;profile.csv&#39;, &#39;num_threads&#39;: 1, &#39;raw_header&#39;: &#39;lp_approx__,lp__,theta&#39;, &#39;column_names&#39;: (&#39;lp_approx__&#39;, &#39;lp__&#39;, &#39;theta&#39;)}
+{&#39;stan_version_major&#39;: 2, &#39;stan_version_minor&#39;: 34, &#39;stan_version_patch&#39;: 1, &#39;model&#39;: &#39;bernoulli_model&#39;, &#39;start_datetime&#39;: &#39;2024-02-05 20:41:37 UTC&#39;, &#39;method&#39;: &#39;pathfinder&#39;, &#39;init_alpha&#39;: 0.001, &#39;tol_obj&#39;: 1e-12, &#39;tol_rel_obj&#39;: 10000, &#39;tol_grad&#39;: 1e-08, &#39;tol_rel_grad&#39;: 10000000.0, &#39;tol_param&#39;: 1e-08, &#39;history_size&#39;: 5, &#39;num_psis_draws&#39;: 1000, &#39;num_paths&#39;: 4, &#39;save_single_paths&#39;: 0, &#39;psis_resample&#39;: 1, &#39;calculate_lp&#39;: 1, &#39;max_lbfgs_iters&#39;: 1000, &#39;num_draws&#39;: 1000, &#39;num_elbo_draws&#39;: 25, &#39;id&#39;: 1, &#39;data_file&#39;: &#39;/home/runner/.cmdstan/cmdstan-2.34.1/examples/bernoulli/bernoulli.data.json&#39;, &#39;init&#39;: 2, &#39;seed&#39;: 1285, &#39;diagnostic_file&#39;: &#39;&#39;, &#39;refresh&#39;: 100, &#39;sig_figs&#39;: -1, &#39;profile_file&#39;: &#39;profile.csv&#39;, &#39;save_cmdstan_config&#39;: 0, &#39;num_threads&#39;: 1, &#39;stanc_version&#39;: &#39;stanc3 v2.34.0&#39;, &#39;stancflags&#39;: &#39;&#39;, &#39;raw_header&#39;: &#39;lp_approx__,lp__,theta&#39;, &#39;column_names&#39;: (&#39;lp_approx__&#39;, &#39;lp__&#39;, &#39;theta&#39;)}
 
 </pre></div></div>
 </div>
@@ -412,7 +423,7 @@ Metadata:
 </div>
 </section>
 <section id="Pathfinders-as-initialization-for-the-MCMC-sampler">
-<h2>Pathfinders as initialization for the MCMC sampler<a class="headerlink" href="#Pathfinders-as-initialization-for-the-MCMC-sampler" title="Permalink to this headline">#</a></h2>
+<h2>Pathfinders as initialization for the MCMC sampler<a class="headerlink" href="#Pathfinders-as-initialization-for-the-MCMC-sampler" title="Permalink to this heading">¶</a></h2>
 <p>The method <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanPathfinder.create_inits">create_inits</a> returns a Python Dict containing a set of per-chain initializations for the model parameters. Each set of initializations is a random draw from the Pathfinder sample. These initializations can be used as the initial parameter values for Stan’s NUTS-HMC sampler, which will reduce the number of warmup iterations needed.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -428,7 +439,7 @@ Metadata:
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[{&#39;theta&#39;: array(0.161636)}, {&#39;theta&#39;: array(0.22604)}, {&#39;theta&#39;: array(0.174072)}, {&#39;theta&#39;: array(0.222407)}]
+[{&#39;theta&#39;: array(0.335465)}, {&#39;theta&#39;: array(0.370054)}, {&#39;theta&#39;: array(0.327206)}, {&#39;theta&#39;: array(0.220554)}]
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">create_inits</span></code> takes two arguments:</p>
@@ -450,7 +461,7 @@ Metadata:
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[{&#39;theta&#39;: array(0.0678106)}, {&#39;theta&#39;: array(0.177306)}, {&#39;theta&#39;: array(0.151628)}]
+[{&#39;theta&#39;: array(0.190597)}, {&#39;theta&#39;: array(0.268621)}, {&#39;theta&#39;: array(0.227258)}]
 </pre></div></div>
 </div>
 </section>
@@ -484,9 +495,8 @@ Metadata:
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -497,7 +507,7 @@ Metadata:
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     

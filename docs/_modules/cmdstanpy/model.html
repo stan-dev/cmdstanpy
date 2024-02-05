@@ -1,35 +1,39 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.model &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>cmdstanpy.model &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -37,7 +41,7 @@
     <link rel="search" title="Search" href="../../search.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -45,7 +49,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -56,7 +60,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -249,12 +253,12 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The constructor method allows model instantiation given either the</span>
 <span class="sd">    Stan program source file or the compiled executable, or both.</span>
-<span class="sd">    By default, the constructor will compile the Stan program on instantiation</span>
-<span class="sd">    unless the argument ``compile=False`` is specified.</span>
-<span class="sd">    The set of constructor arguments are:</span>
+<span class="sd">    This will compile the model if provided a Stan file and no executable,</span>
 
 <span class="sd">    :param model_name: Model name, used for output file names.</span>
 <span class="sd">        Optional, default is the base filename of the Stan program file.</span>
+<span class="sd">        Deprecated: In version 2.0.0, model name cannot be</span>
+<span class="sd">        specified and will always be taken from executable.</span>
 
 <span class="sd">    :param stan_file: Path to Stan program file.</span>
 
@@ -263,9 +267,8 @@
 <span class="sd">        the compiled executable file are specified, the base filenames</span>
 <span class="sd">        must match, (but different directory locations are allowed).</span>
 
-<span class="sd">    :param compile: Whether or not to compile the model.  Default is ``True``.</span>
-<span class="sd">        If set to the string ``&quot;force&quot;``, it will always compile even if</span>
-<span class="sd">        an existing executable is found.</span>
+<span class="sd">    :param force_compile: If ``True``, always compile, even if there</span>
+<span class="sd">        is an existing executable file for this model.</span>
 
 <span class="sd">    :param stanc_options: Options for stanc compiler, specified as a Python</span>
 <span class="sd">        dictionary containing Stanc3 compiler option name, value pairs.</span>
@@ -278,6 +281,13 @@
 <span class="sd">    :param user_header: A path to a header file to include during C++</span>
 <span class="sd">        compilation.</span>
 <span class="sd">        Optional.</span>
+
+<span class="sd">    :param compile: Whether or not to compile the model.  Default is ``True``.</span>
+<span class="sd">        If set to the string ``&quot;force&quot;``, it will always compile even if</span>
+<span class="sd">        an existing executable is found.</span>
+<span class="sd">        Deprecated: Use ``force_compile`` instead. The ability to instantiate</span>
+<span class="sd">        a CmdStanModel without an executable will be removed in version 2.0.0.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -295,14 +305,16 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize object given constructor args.</span>
 
-<span class="sd">        :param model_name: Model name, used for output file names.</span>
+<span class="sd">        :param model_name: Deprecated. Model name, used for output file names.</span>
 <span class="sd">        :param stan_file: Path to Stan program file.</span>
 <span class="sd">        :param exe_file: Path to compiled executable file.</span>
-<span class="sd">        :param compile: Whether or not to compile the model.</span>
+<span class="sd">        :param force_compile: Whether or not to force recompilation if</span>
+<span class="sd">            executable file already exists.</span>
 <span class="sd">        :param stanc_options: Options for stanc compiler.</span>
 <span class="sd">        :param cpp_options: Options for C++ compiler.</span>
 <span class="sd">        :param user_header: A path to a header file to include during C++</span>
 <span class="sd">            compilation.</span>
+<span class="sd">        :param compile: Deprecated. Whether or not to compile the model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span> <span class="o">=</span> <span class="kc">None</span>
@@ -615,6 +627,9 @@
         <span class="n">_internal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated: To compile a model, use the :class:`~cmdstanpy.CmdStanModel`</span>
+<span class="sd">        constructor or :func:`cmdstanpy.compile_stan_file()`.</span>
+
 <span class="sd">        Compile the given Stan program file.  Translates the Stan code to</span>
 <span class="sd">        C++, then calls the C++ compiler.</span>
 
@@ -731,7 +746,7 @@
 
 <span class="sd">        :param seed: The seed for random number generator. Must be an integer</span>
 <span class="sd">            between 0 and 2^32 - 1. If unspecified,</span>
-<span class="sd">            :class:`numpy.random.RandomState` is used to generate a seed.</span>
+<span class="sd">            :func:`numpy.random.default_rng` is used to generate a seed.</span>
 
 <span class="sd">        :param inits:  Specifies how the sampler initializes parameter values.</span>
 <span class="sd">            Initialization is either uniform random on a range centered on 0,</span>
@@ -958,7 +973,7 @@
 
 <span class="sd">        :param seed: The seed for random number generator. Must be an integer</span>
 <span class="sd">            between 0 and 2^32 - 1. If unspecified,</span>
-<span class="sd">            :class:`numpy.random.RandomState`</span>
+<span class="sd">            :func:`numpy.random.default_rng`</span>
 <span class="sd">            is used to generate a seed which will be used for all chains.</span>
 <span class="sd">            When the same seed is used across all chains,</span>
 <span class="sd">            the chain-id is used to advance the RNG to avoid dependent samples.</span>
@@ -1400,7 +1415,7 @@
 
 <span class="sd">        :param seed: The seed for random number generator. Must be an integer</span>
 <span class="sd">            between 0 and 2^32 - 1. If unspecified,</span>
-<span class="sd">            :class:`numpy.random.RandomState`</span>
+<span class="sd">            :func:`numpy.random.default_rng`</span>
 <span class="sd">            is used to generate a seed which will be used for all chains.</span>
 <span class="sd">            *NOTE: Specifying the seed will guarantee the same result for</span>
 <span class="sd">            multiple invocations of this method with the same inputs.  However</span>
@@ -1601,7 +1616,7 @@
 
 <span class="sd">        :param seed: The seed for random number generator. Must be an integer</span>
 <span class="sd">            between 0 and 2^32 - 1. If unspecified,</span>
-<span class="sd">            :class:`numpy.random.RandomState`</span>
+<span class="sd">            :func:`numpy.random.default_rng`</span>
 <span class="sd">            is used to generate a seed which will be used for all chains.</span>
 
 <span class="sd">        :param inits:  Specifies how the sampler initializes parameter values.</span>
@@ -1781,6 +1796,8 @@
         <span class="n">draws</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_single_draws</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_elbo_draws</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">psis_resample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">calculate_lp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="c1"># arguments standard to all methods</span>
         <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inits</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1814,9 +1831,17 @@
 
 <span class="sd">        :param num_elbo_draws: Number of Monte Carlo draws to evaluate ELBO.</span>
 
+<span class="sd">        :param psis_resample: Whether or not to use Pareto Smoothed Importance</span>
+<span class="sd">            Sampling on the result of the individual Pathfinders. If False, the</span>
+<span class="sd">            result contains the draws from each path.</span>
+
+<span class="sd">        :param calculate_lp: Whether or not to calculate the log probability</span>
+<span class="sd">            for approximate draws. If False, this also implies that</span>
+<span class="sd">            ``psis_resample`` will be set to False.</span>
+
 <span class="sd">        :param seed: The seed for random number generator. Must be an integer</span>
 <span class="sd">            between 0 and 2^32 - 1. If unspecified,</span>
-<span class="sd">            :class:`numpy.random.RandomState` is used to generate a seed.</span>
+<span class="sd">            :func:`numpy.random.default_rng` is used to generate a seed.</span>
 
 <span class="sd">        :param inits: Specifies how the algorithm initializes parameter values.</span>
 <span class="sd">            Initialization is either uniform random on a range centered on 0,</span>
@@ -1895,10 +1920,20 @@
 <span class="sd">        Research, 23(306), 1–49. Retrieved from</span>
 <span class="sd">        http://jmlr.org/papers/v23/21-0889.html</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exe_info</span><span class="p">()):</span>
+
+        <span class="n">exe_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exe_info</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="n">exe_info</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Method &#39;pathfinder&#39; not available for CmdStan versions &quot;</span>
                 <span class="s2">&quot;before 2.33&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">psis_resample</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">calculate_lp</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cmdstan_version_before</span><span class="p">(</span>
+            <span class="mi">2</span><span class="p">,</span> <span class="mi">34</span><span class="p">,</span> <span class="n">exe_info</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Arguments &#39;psis_resample&#39; and &#39;calculate_lp&#39; are only &quot;</span>
+                <span class="s2">&quot;available for CmdStan versions 2.34 and later&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_paths</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -1923,6 +1958,8 @@
             <span class="n">max_lbfgs_iters</span><span class="o">=</span><span class="n">max_lbfgs_iters</span><span class="p">,</span>
             <span class="n">num_draws</span><span class="o">=</span><span class="n">num_single_draws</span><span class="p">,</span>
             <span class="n">num_elbo_draws</span><span class="o">=</span><span class="n">num_elbo_draws</span><span class="p">,</span>
+            <span class="n">psis_resample</span><span class="o">=</span><span class="n">psis_resample</span><span class="p">,</span>
+            <span class="n">calculate_lp</span><span class="o">=</span><span class="n">calculate_lp</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">with</span> <span class="n">temp_single_json</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">_data</span><span class="p">,</span> <span class="n">temp_inits</span><span class="p">(</span><span class="n">inits</span><span class="p">)</span> <span class="k">as</span> <span class="n">_inits</span><span class="p">:</span>
@@ -2354,9 +2391,8 @@
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -2367,7 +2403,7 @@
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     

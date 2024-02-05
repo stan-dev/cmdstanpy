@@ -1,37 +1,41 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>Generating new quantities of interest. &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/nbsphinx-code-cells.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -41,7 +45,7 @@
     <link rel="prev" title="Using Variational Estimates to Initialize the NUTS-HMC Sampler" href="VI%20as%20Sampler%20Inits.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -49,7 +53,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -60,7 +64,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -231,7 +235,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage mt-5 pt-1 pb-3">
+<div class="tocsection onthispage pt-5 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -276,7 +280,7 @@
               <div>
                 
   <section id="Generating-new-quantities-of-interest.">
-<h1>Generating new quantities of interest.<a class="headerlink" href="#Generating-new-quantities-of-interest." title="Permalink to this headline">#</a></h1>
+<h1>Generating new quantities of interest.<a class="headerlink" href="#Generating-new-quantities-of-interest." title="Permalink to this heading">¶</a></h1>
 <p>The <a class="reference external" href="https://mc-stan.org/docs/reference-manual/program-block-generated-quantities.html">generated quantities block</a> computes quantities of interest based on the data, transformed data, parameters, and transformed parameters. It can be used to:</p>
 <ul class="simple">
 <li><p>generate simulated data for model testing by forward sampling</p></li>
@@ -288,7 +292,7 @@
 <li><p>calculate log likelihoods, deviances, etc. for model comparison</p></li>
 </ul>
 <section id="Example:-add-posterior-predictive-checks-to-bernoulli.stan">
-<h2>Example: add posterior predictive checks to <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-add-posterior-predictive-checks-to-bernoulli.stan" title="Permalink to this headline">#</a></h2>
+<h2>Example: add posterior predictive checks to <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code><a class="headerlink" href="#Example:-add-posterior-predictive-checks-to-bernoulli.stan" title="Permalink to this heading">¶</a></h2>
 <p>In this example we use the CmdStan example model <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.stan">bernoulli.stan</a> and data file <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/master/test/data/bernoulli.data.json">bernoulli.data.json</a> as our existing model and data.</p>
 <p>We instantiate the model <code class="docutils literal notranslate"><span class="pre">bernoulli</span></code>, as in the “Hello World” section of the CmdStanPy <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/blob/develop/cmdstanpy_tutorial.ipynb">tutorial</a> notebook.</p>
 <div class="nbinput docutils container">
@@ -375,17 +379,218 @@ mean of y: 0.2
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-14:43:23 - cmdstanpy - INFO - CmdStan start processing
-chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
-chain 2 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+20:41:39 - cmdstanpy - INFO - CmdStan start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 1 <a href="#id1"><span class="problematic" id="id2">|&lt;span class=&quot;ansi-yellow-fg&quot;&gt;          &lt;/span&gt;|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 1 <a href="#id3"><span class="problematic" id="id4">|\textcolor{ansi-yellow}{          }|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 1 <a href="#id5"><span class="problematic" id="id6">|[33m          [0m|</span></a> 00:00 Status</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
 
-chain 3 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 2 <a href="#id7"><span class="problematic" id="id8">|&lt;span class=&quot;ansi-yellow-fg&quot;&gt;          &lt;/span&gt;|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 2 <a href="#id9"><span class="problematic" id="id10">|\textcolor{ansi-yellow}{          }|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 2 <a href="#id11"><span class="problematic" id="id12">|[33m          [0m|</span></a> 00:00 Status</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
 
 
-chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
-chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
-chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
-chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 3 <a href="#id13"><span class="problematic" id="id14">|&lt;span class=&quot;ansi-yellow-fg&quot;&gt;          &lt;/span&gt;|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 3 <a href="#id15"><span class="problematic" id="id16">|\textcolor{ansi-yellow}{          }|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 3 <a href="#id17"><span class="problematic" id="id18">|[33m          [0m|</span></a> 00:00 Status</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 4 <a href="#id19"><span class="problematic" id="id20">|&lt;span class=&quot;ansi-yellow-fg&quot;&gt;          &lt;/span&gt;|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 4 <a href="#id21"><span class="problematic" id="id22">|\textcolor{ansi-yellow}{          }|</span></a> 00:00 Status</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 4 <a href="#id23"><span class="problematic" id="id24">|[33m          [0m|</span></a> 00:00 Status</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 1 <a href="#id25"><span class="problematic" id="id26">|&lt;span class=&quot;ansi-blue-fg&quot;&gt;██████████&lt;/span&gt;|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 1 <a href="#id27"><span class="problematic" id="id28">|\textcolor{ansi-blue}{██████████}|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 1 <a href="#id29"><span class="problematic" id="id30">|[34m██████████[0m|</span></a> 00:00 Sampling completed</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 2 <a href="#id31"><span class="problematic" id="id32">|&lt;span class=&quot;ansi-blue-fg&quot;&gt;██████████&lt;/span&gt;|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 2 <a href="#id33"><span class="problematic" id="id34">|\textcolor{ansi-blue}{██████████}|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 2 <a href="#id35"><span class="problematic" id="id36">|[34m██████████[0m|</span></a> 00:00 Sampling completed</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 3 <a href="#id37"><span class="problematic" id="id38">|&lt;span class=&quot;ansi-blue-fg&quot;&gt;██████████&lt;/span&gt;|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 3 <a href="#id39"><span class="problematic" id="id40">|\textcolor{ansi-blue}{██████████}|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 3 <a href="#id41"><span class="problematic" id="id42">|[34m██████████[0m|</span></a> 00:00 Sampling completed</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre></div></div>
+</div>
+<dl>
+<dt>chain 4 <a href="#id43"><span class="problematic" id="id44">|&lt;span class=&quot;ansi-blue-fg&quot;&gt;██████████&lt;/span&gt;|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>&lt;/pre&gt;</p>
+</div></blockquote>
+</dd>
+<dt>chain 4 <a href="#id45"><span class="problematic" id="id46">|\textcolor{ansi-blue}{██████████}|</span></a> 00:00 Sampling completed</dt><dd><blockquote>
+<div><p>end{sphinxVerbatim}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>chain 4 <a href="#id47"><span class="problematic" id="id48">|[34m██████████[0m|</span></a> 00:00 Sampling completed</p>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -402,7 +607,7 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
 
-14:43:24 - cmdstanpy - INFO - CmdStan done processing.
+20:41:39 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -459,27 +664,27 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
   <tbody>
     <tr>
       <th>lp__</th>
-      <td>-7.258710</td>
-      <td>0.017763</td>
-      <td>0.710178</td>
-      <td>-8.712690</td>
-      <td>-6.965650</td>
-      <td>-6.750050</td>
-      <td>1598.43</td>
-      <td>44400.9</td>
-      <td>1.00284</td>
+      <td>-7.273190</td>
+      <td>0.024164</td>
+      <td>0.755960</td>
+      <td>-8.784640</td>
+      <td>-6.98039</td>
+      <td>-6.75028</td>
+      <td>978.759</td>
+      <td>22244.5</td>
+      <td>1.00159</td>
     </tr>
     <tr>
       <th>theta</th>
-      <td>0.251822</td>
-      <td>0.003216</td>
-      <td>0.119748</td>
-      <td>0.080723</td>
-      <td>0.235608</td>
-      <td>0.473338</td>
-      <td>1386.06</td>
-      <td>38501.8</td>
-      <td>1.00213</td>
+      <td>0.252528</td>
+      <td>0.003132</td>
+      <td>0.120077</td>
+      <td>0.081241</td>
+      <td>0.23811</td>
+      <td>0.46955</td>
+      <td>1469.970</td>
+      <td>33408.4</td>
+      <td>1.00101</td>
     </tr>
   </tbody>
 </table>
@@ -500,8 +705,15 @@ chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-14:43:24 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
-14:43:42 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+20:41:39 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli_ppc
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -540,19 +752,68 @@ generated quantities {
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - Chain [1] start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - Chain [2] start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - Chain [1] done processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - Chain [3] start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - Chain [2] done processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - Chain [4] start processing
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - INFO - Chain [3] done processing
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-14:43:42 - cmdstanpy - INFO - Chain [1] start processing
-14:43:42 - cmdstanpy - INFO - Chain [1] done processing
-14:43:42 - cmdstanpy - INFO - Chain [2] start processing
-14:43:42 - cmdstanpy - INFO - Chain [2] done processing
-14:43:42 - cmdstanpy - INFO - Chain [3] start processing
-14:43:42 - cmdstanpy - INFO - Chain [3] done processing
-14:43:42 - cmdstanpy - INFO - Chain [4] start processing
-14:43:42 - cmdstanpy - INFO - Chain [4] done processing
+20:41:53 - cmdstanpy - INFO - Chain [4] done processing
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">generate_quantities</span></code> method returns a <code class="docutils literal notranslate"><span class="pre">CmdStanGQ</span></code> object which contains the values for all variables in the generated quantities block of the program <code class="docutils literal notranslate"><span class="pre">bernoulli_ppc.stan</span></code>. Unlike the output from the <code class="docutils literal notranslate"><span class="pre">sample</span></code> method, it doesn’t contain any information on the joint log probability density, sampler state, or parameters or transformed parameter values.</p>
@@ -572,10 +833,31 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
-14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
-14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
-14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+20:41:53 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+20:41:53 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -584,18 +866,18 @@ generated quantities {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 (1000, 4, 10) (&#39;y_rep[1]&#39;, &#39;y_rep[2]&#39;, &#39;y_rep[3]&#39;, &#39;y_rep[4]&#39;, &#39;y_rep[5]&#39;, &#39;y_rep[6]&#39;, &#39;y_rep[7]&#39;, &#39;y_rep[8]&#39;, &#39;y_rep[9]&#39;, &#39;y_rep[10]&#39;)
-[[0. 0. 0. 1. 1. 0. 0. 1. 0. 0.]
- [0. 0. 0. 1. 0. 0. 0. 0. 0. 0.]
- [0. 0. 0. 1. 1. 0. 0. 1. 0. 0.]
+[[0. 0. 0. 1. 1. 0. 0. 0. 0. 0.]
+ [0. 0. 1. 1. 1. 0. 0. 0. 0. 1.]
+ [0. 0. 1. 1. 1. 0. 0. 0. 0. 1.]
  [0. 0. 0. 1. 1. 0. 0. 0. 0. 0.]]
-[[0. 1. 1. 0. 0. 0. 0. 0. 1. 1.]
- [0. 1. 1. 0. 0. 0. 0. 0. 1. 1.]
- [1. 1. 1. 0. 0. 1. 0. 1. 1. 1.]
- [0. 1. 1. 0. 0. 0. 0. 0. 1. 1.]]
-[[0. 0. 0. 1. 0. 1. 0. 0. 0. 0.]
- [0. 0. 0. 1. 0. 1. 0. 1. 0. 0.]
- [0. 0. 0. 1. 0. 1. 0. 1. 0. 0.]
- [0. 0. 0. 1. 0. 1. 0. 1. 0. 0.]]
+[[0. 1. 0. 1. 0. 0. 1. 1. 0. 1.]
+ [0. 1. 0. 1. 0. 0. 1. 0. 0. 0.]
+ [0. 1. 0. 1. 0. 0. 1. 0. 0. 0.]
+ [0. 1. 0. 0. 0. 0. 1. 0. 0. 0.]]
+[[1. 1. 0. 0. 0. 0. 0. 1. 0. 0.]
+ [1. 1. 0. 0. 0. 0. 0. 1. 0. 0.]
+ [1. 1. 0. 0. 0. 0. 0. 0. 0. 0.]
+ [0. 0. 0. 0. 0. 0. 0. 0. 0. 0.]]
 </pre></div></div>
 </div>
 <p>We can also use <code class="docutils literal notranslate"><span class="pre">draws_pd(inc_sample=True)</span></code> to get a pandas DataFrame which combines the input drawset with the generated quantities.</p>
@@ -615,7 +897,7 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-14:43:42 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
+20:41:53 - cmdstanpy - WARNING - Sample doesn&#39;t contain draws from warmup iterations, rerun sampler with &#34;save_warmup=True&#34;.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -675,14 +957,14 @@ generated quantities {
   <tbody>
     <tr>
       <th>0</th>
-      <td>-6.75039</td>
-      <td>0.994259</td>
-      <td>1.04538</td>
-      <td>2.0</td>
+      <td>-6.94949</td>
+      <td>0.891339</td>
+      <td>0.834473</td>
+      <td>1.0</td>
       <td>3.0</td>
       <td>0.0</td>
-      <td>6.85607</td>
-      <td>0.241469</td>
+      <td>7.75373</td>
+      <td>0.176755</td>
       <td>1.0</td>
       <td>1.0</td>
       <td>...</td>
@@ -693,55 +975,55 @@ generated quantities {
       <td>1.0</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>1.0</td>
+      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>-7.02741</td>
-      <td>0.933689</td>
-      <td>1.04538</td>
-      <td>1.0</td>
-      <td>3.0</td>
+      <td>-7.04638</td>
+      <td>0.988320</td>
+      <td>0.834473</td>
+      <td>2.0</td>
+      <td>7.0</td>
       <td>0.0</td>
-      <td>7.05916</td>
-      <td>0.165126</td>
+      <td>7.14451</td>
+      <td>0.353708</td>
       <td>1.0</td>
       <td>2.0</td>
       <td>...</td>
       <td>0.0</td>
       <td>1.0</td>
+      <td>0.0</td>
       <td>1.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
       <td>1.0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>-6.96129</td>
-      <td>1.000000</td>
-      <td>1.04538</td>
+      <td>-7.43716</td>
+      <td>0.915396</td>
+      <td>0.834473</td>
       <td>1.0</td>
       <td>1.0</td>
       <td>0.0</td>
-      <td>7.05382</td>
-      <td>0.174834</td>
+      <td>7.44403</td>
+      <td>0.411715</td>
       <td>1.0</td>
       <td>3.0</td>
       <td>...</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>1.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
     </tr>
@@ -782,9 +1064,8 @@ generated quantities {
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -795,7 +1076,7 @@ generated quantities {
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     

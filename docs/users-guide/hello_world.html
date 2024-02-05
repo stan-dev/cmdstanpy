@@ -1,36 +1,40 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>“Hello, World!” &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>“Hello, World!” &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -40,7 +44,7 @@
     <link rel="prev" title="Overview" href="overview.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -48,7 +52,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -59,7 +63,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -230,7 +234,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage mt-5 pt-1 pb-3">
+<div class="tocsection onthispage pt-5 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -308,9 +312,9 @@
               <div>
                 
   <section id="hello-world">
-<h1>“Hello, World!”<a class="headerlink" href="#hello-world" title="Permalink to this headline">#</a></h1>
+<h1>“Hello, World!”<a class="headerlink" href="#hello-world" title="Permalink to this heading">¶</a></h1>
 <section id="fitting-a-stan-model-using-the-nuts-hmc-sampler">
-<h2>Fitting a Stan model using the NUTS-HMC sampler<a class="headerlink" href="#fitting-a-stan-model-using-the-nuts-hmc-sampler" title="Permalink to this headline">#</a></h2>
+<h2>Fitting a Stan model using the NUTS-HMC sampler<a class="headerlink" href="#fitting-a-stan-model-using-the-nuts-hmc-sampler" title="Permalink to this heading">¶</a></h2>
 <p>In order to verify the installation and also to demonstrate
 the CmdStanPy workflow, we use CmdStanPy to fit the
 the example Stan model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code>
@@ -323,7 +327,7 @@ the StanC compiler, and the C++ toolchain have all been properly installed.</p>
 guidance on coding statistical models in Stan, see
 the <a class="reference external" href="https://mc-stan.org/docs/stan-users-guide/index.html">Stan User’s Guide</a>.</p>
 <section id="the-stan-model">
-<h3>The Stan model<a class="headerlink" href="#the-stan-model" title="Permalink to this headline">#</a></h3>
+<h3>The Stan model<a class="headerlink" href="#the-stan-model" title="Permalink to this heading">¶</a></h3>
 <p>The model <code class="docutils literal notranslate"><span class="pre">bernoulli.stan</span></code>  is a trivial model:
 given a set of N observations of i.i.d. binary data
 <cite>y[1] … y[N]</cite>, it calculates the Bernoulli chance-of-success <cite>theta</cite>.</p>
@@ -365,12 +369,12 @@ A <cite>CmdStanModel</cite> can be instantiated from a Stan file or its correspo
 
 <span class="go"># inspect compiled model</span>
 <span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">exe_info</span><span class="p">())</span>
-<span class="go">{&#39;stan_version_major&#39;: &#39;2&#39;, &#39;stan_version_minor&#39;: &#39;33&#39;, &#39;stan_version_patch&#39;: &#39;0&#39;, &#39;STAN_THREADS&#39;: &#39;false&#39;, &#39;STAN_MPI&#39;: &#39;false&#39;, &#39;STAN_OPENCL&#39;: &#39;false&#39;, &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;, &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}</span>
+<span class="go">{&#39;stan_version_major&#39;: &#39;2&#39;, &#39;stan_version_minor&#39;: &#39;34&#39;, &#39;stan_version_patch&#39;: &#39;1&#39;, &#39;STAN_THREADS&#39;: &#39;false&#39;, &#39;STAN_MPI&#39;: &#39;false&#39;, &#39;STAN_OPENCL&#39;: &#39;false&#39;, &#39;STAN_NO_RANGE_CHECKS&#39;: &#39;false&#39;, &#39;STAN_CPP_OPTIMS&#39;: &#39;false&#39;}</span>
 </pre></div>
 </div>
 </section>
 <section id="data-inputs">
-<h3>Data inputs<a class="headerlink" href="#data-inputs" title="Permalink to this headline">#</a></h3>
+<h3>Data inputs<a class="headerlink" href="#data-inputs" title="Permalink to this heading">¶</a></h3>
 <p>CmdStanPy accepts input data either as a Python dictionary which maps data variable names
 to values, or as the corresponding JSON file.</p>
 <p>The bernoulli model requires two inputs: the number of observations <cite>N</cite>, and
@@ -384,7 +388,7 @@ The data file <cite>bernoulli.data.json</cite> contains the following inputs:</p
 </div>
 </section>
 <section id="fitting-the-model">
-<h3>Fitting the model<a class="headerlink" href="#fitting-the-model" title="Permalink to this headline">#</a></h3>
+<h3>Fitting the model<a class="headerlink" href="#fitting-the-model" title="Permalink to this heading">¶</a></h3>
 <p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method is used to do Bayesian inference
 over the model conditioned on data using  using Hamiltonian Monte Carlo
 (HMC) sampling. It runs Stan’s HMC-NUTS sampler on the model and data and
@@ -410,7 +414,7 @@ By default, the <cite>sample</cite> method runs 4 sampler chains.</p>
 </ul>
 </section>
 <section id="accessing-the-results">
-<h3>Accessing the results<a class="headerlink" href="#accessing-the-results" title="Permalink to this headline">#</a></h3>
+<h3>Accessing the results<a class="headerlink" href="#accessing-the-results" title="Permalink to this heading">¶</a></h3>
 <p>The sampler outputs are the set of per-chain
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html">Stan CSV files</a>,
 a non-standard CSV file format.
@@ -439,13 +443,13 @@ which by convention end in <code class="docutils literal notranslate"><span clas
 </ul>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="go"># access model variable by name</span>
 <span class="gp">In [9]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
-<span class="go">[0.177852 0.173031 0.163988 ... 0.275408 0.409219 0.371018]</span>
+<span class="go">[0.448643 0.176426 0.208806 ... 0.102241 0.145615 0.441178]</span>
 
 <span class="gp">In [10]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">)[:</span><span class="mi">3</span><span class="p">])</span>
-<span class="go">   chain__  iter__  draw__     theta</span>
-<span class="go">0      1.0     1.0     1.0  0.177852</span>
-<span class="go">1      1.0     2.0     2.0  0.173031</span>
-<span class="go">2      1.0     3.0     3.0  0.163988</span>
+<span class="go">      theta</span>
+<span class="go">0  0.448643</span>
+<span class="go">1  0.176426</span>
+<span class="go">2  0.208806</span>
 
 <span class="gp">In [11]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws_xr</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
 <span class="go">&lt;xarray.Dataset&gt;</span>
@@ -454,9 +458,9 @@ which by convention end in <code class="docutils literal notranslate"><span clas
 <span class="go">  * chain    (chain) int64 1 2 3 4</span>
 <span class="go">  * draw     (draw) int64 0 1 2 3 4 5 6 7 8 ... 992 993 994 995 996 997 998 999</span>
 <span class="go">Data variables:</span>
-<span class="go">    theta    (chain, draw) float64 0.1779 0.173 0.164 ... 0.2754 0.4092 0.371</span>
+<span class="go">    theta    (chain, draw) float64 0.4486 0.1764 0.2088 ... 0.1022 0.1456 0.4412</span>
 <span class="go">Attributes:</span>
-<span class="go">    stan_version:        2.33.0</span>
+<span class="go">    stan_version:        2.34.1</span>
 <span class="go">    model:               bernoulli_model</span>
 <span class="go">    num_draws_sampling:  1000</span>
 
@@ -485,17 +489,17 @@ which by convention end in <code class="docutils literal notranslate"><span clas
 <span class="gp">In [15]: </span><span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">()</span>
 <span class="gh">Out[15]: </span>
 <span class="go">      chain__  iter__  draw__  ...  divergent__  energy__     theta</span>
-<span class="go">0         1.0     1.0     1.0  ...          0.0   6.95849  0.177852</span>
-<span class="go">1         1.0     2.0     2.0  ...          0.0   7.00148  0.173031</span>
-<span class="go">2         1.0     3.0     3.0  ...          0.0   7.06116  0.163988</span>
-<span class="go">3         1.0     4.0     4.0  ...          0.0   7.05610  0.171522</span>
-<span class="go">4         1.0     5.0     5.0  ...          0.0  10.57630  0.048487</span>
+<span class="go">0         1.0     1.0     1.0  ...          0.0   7.87104  0.448643</span>
+<span class="go">1         1.0     2.0     2.0  ...          0.0   8.25851  0.176426</span>
+<span class="go">2         1.0     3.0     3.0  ...          0.0   6.91842  0.208806</span>
+<span class="go">3         1.0     4.0     4.0  ...          0.0   6.79549  0.230222</span>
+<span class="go">4         1.0     5.0     5.0  ...          0.0   6.89761  0.307075</span>
 <span class="go">...       ...     ...     ...  ...          ...       ...       ...</span>
-<span class="go">3995      4.0   996.0  3996.0  ...          0.0   6.78645  0.278351</span>
-<span class="go">3996      4.0   997.0  3997.0  ...          0.0   6.98251  0.213705</span>
-<span class="go">3997      4.0   998.0  3998.0  ...          0.0   7.01537  0.275408</span>
-<span class="go">3998      4.0   999.0  3999.0  ...          0.0   7.45646  0.409219</span>
-<span class="go">3999      4.0  1000.0  4000.0  ...          0.0   7.40839  0.371018</span>
+<span class="go">3995      4.0   996.0  3996.0  ...          0.0   8.17578  0.151596</span>
+<span class="go">3996      4.0   997.0  3997.0  ...          0.0   7.24072  0.149352</span>
+<span class="go">3997      4.0   998.0  3998.0  ...          0.0   7.81204  0.102241</span>
+<span class="go">3998      4.0   999.0  3999.0  ...          0.0   7.71005  0.145615</span>
+<span class="go">3999      4.0  1000.0  4000.0  ...          0.0   8.61979  0.441178</span>
 
 <span class="go">[4000 rows x 11 columns]</span>
 </pre></div>
@@ -507,13 +511,13 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
 <span class="go">diag_e</span>
 
 <span class="gp">In [17]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metric</span><span class="p">)</span>
-<span class="go">[[0.541273]</span>
-<span class="go"> [0.494389]</span>
-<span class="go"> [0.47914 ]</span>
-<span class="go"> [0.527164]]</span>
+<span class="go">[[0.484622]</span>
+<span class="go"> [0.449072]</span>
+<span class="go"> [0.422025]</span>
+<span class="go"> [0.530255]]</span>
 
 <span class="gp">In [18]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">step_size</span><span class="p">)</span>
-<span class="go">[0.86052  0.976211 0.837785 0.908424]</span>
+<span class="go">[0.996862 0.790725 1.14549  0.969396]</span>
 </pre></div>
 </div>
 <p>The CmdStanMCMC object also provides access to metadata about the model and the sampler run.</p>
@@ -521,12 +525,12 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
 <span class="go">bernoulli_model</span>
 
 <span class="gp">In [20]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">])</span>
-<span class="go">35339</span>
+<span class="go">38175</span>
 </pre></div>
 </div>
 </section>
 <section id="cmdstan-utilities-stansummary-diagnose">
-<h3>CmdStan utilities:  <code class="docutils literal notranslate"><span class="pre">stansummary</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnose</span></code><a class="headerlink" href="#cmdstan-utilities-stansummary-diagnose" title="Permalink to this headline">#</a></h3>
+<h3>CmdStan utilities:  <code class="docutils literal notranslate"><span class="pre">stansummary</span></code>, <code class="docutils literal notranslate"><span class="pre">diagnose</span></code><a class="headerlink" href="#cmdstan-utilities-stansummary-diagnose" title="Permalink to this heading">¶</a></h3>
 <p>CmdStan is distributed with a posterior analysis utility
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stansummary.html">stansummary</a>
 that reads the outputs of all chains and computes summary statistics
@@ -536,9 +540,9 @@ summaries of the total joint log-probability density <strong>lp__</strong> plus
 all model parameters and quantities of interest in a pandas.DataFrame:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 <span class="gh">Out[21]: </span>
-<span class="go">           Mean      MCSE    StdDev  ...    N_Eff  N_Eff/s    R_hat</span>
-<span class="go">lp__  -7.272440  0.019388  0.710329  ...  1342.24  36276.9  1.00122</span>
-<span class="go">theta  0.253652  0.003093  0.122388  ...  1566.22  42330.3  1.00217</span>
+<span class="go">           Mean      MCSE    StdDev  ...    N_Eff  N_Eff/s     R_hat</span>
+<span class="go">lp__  -7.282030  0.019091  0.747046  ...  1531.26  31250.2  1.002320</span>
+<span class="go">theta  0.249207  0.003292  0.120195  ...  1333.06  27205.2  0.999556</span>
 
 <span class="go">[2 rows x 9 columns]</span>
 </pre></div>
@@ -550,7 +554,7 @@ looking for potential problems which indicate that the sample
 isn’t a representative sample from the posterior.
 The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.diagnose" title="cmdstanpy.CmdStanMCMC.diagnose"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnose()</span></code></a> method runs this utility and prints the output to the console.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">diagnose</span><span class="p">())</span>
-<span class="go">Processing csv files: /tmp/tmp_3o6_t3p/bernoulli1l4b83ja/bernoulli-20231003144428_1.csv, /tmp/tmp_3o6_t3p/bernoulli1l4b83ja/bernoulli-20231003144428_2.csv, /tmp/tmp_3o6_t3p/bernoulli1l4b83ja/bernoulli-20231003144428_3.csv, /tmp/tmp_3o6_t3p/bernoulli1l4b83ja/bernoulli-20231003144428_4.csv</span>
+<span class="go">Processing csv files: /tmp/tmpld8wslo1/bernoulliozge2dfm/bernoulli-20240205204228_1.csv, /tmp/tmpld8wslo1/bernoulliozge2dfm/bernoulli-20240205204228_2.csv, /tmp/tmpld8wslo1/bernoulliozge2dfm/bernoulli-20240205204228_3.csv, /tmp/tmpld8wslo1/bernoulliozge2dfm/bernoulli-20240205204228_4.csv</span>
 
 <span class="go">Checking sampler transitions treedepth.</span>
 <span class="go">Treedepth satisfactory for all transitions.</span>
@@ -600,9 +604,8 @@ The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.diagno
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -613,7 +616,7 @@ The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.diagno
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     
