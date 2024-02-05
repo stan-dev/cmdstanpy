@@ -139,10 +139,9 @@ class SamplerArgs:
                     'Value for iter_warmup must be a non-negative integer,'
                     ' found {}.'.format(self.iter_warmup)
                 )
-            if self.iter_warmup > 0 and not self.adapt_engaged:
+            if self.iter_warmup == 0 and self.adapt_engaged:
                 raise ValueError(
-                    'Argument "adapt_engaged" is False, '
-                    'cannot specify warmup iterations.'
+                    'Must specify iter_warmup > 0 when adapt_engaged=True.'
                 )
         if self.iter_sampling is not None:
             if self.iter_sampling < 0 or not isinstance(
@@ -541,6 +540,8 @@ class PathfinderArgs:
         num_draws: Optional[int] = None,
         num_elbo_draws: Optional[int] = None,
         save_single_paths: bool = False,
+        psis_resample: bool = True,
+        calculate_lp: bool = True,
     ) -> None:
         self.init_alpha = init_alpha
         self.tol_obj = tol_obj
@@ -557,6 +558,8 @@ class PathfinderArgs:
         self.num_elbo_draws = num_elbo_draws
 
         self.save_single_paths = save_single_paths
+        self.psis_resample = psis_resample
+        self.calculate_lp = calculate_lp
 
     def validate(self, _chains: Optional[int] = None) -> None:
         """
@@ -608,6 +611,12 @@ class PathfinderArgs:
 
         if self.save_single_paths:
             cmd.append('save_single_paths=1')
+
+        if not self.psis_resample:
+            cmd.append('psis_resample=0')
+
+        if not self.calculate_lp:
+            cmd.append('calculate_lp=0')
 
         return cmd
 

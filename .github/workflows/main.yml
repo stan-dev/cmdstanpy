@@ -94,7 +94,7 @@ jobs:
       - name: CmdStan installation cacheing
         id: cache-cmdstan
         if: ${{ !startswith(needs.get-cmdstan-version.outputs.version, 'git:') }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cmdstan
           key: ${{ runner.os }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}

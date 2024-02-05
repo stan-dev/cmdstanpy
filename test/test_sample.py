@@ -778,24 +778,19 @@ def test_validate_good_run() -> None:
         fit.runset.chains * fit.num_draws_sampling,
         len(fit.column_names) + 3,
     )
-    assert fit.draws_pd(vars=['theta']).shape == (400, 4)
-    assert fit.draws_pd(vars=['lp__', 'theta']).shape == (400, 5)
-    assert fit.draws_pd(vars=['theta', 'lp__']).shape == (400, 5)
-    assert fit.draws_pd(vars='theta').shape == (400, 4)
+    assert fit.draws_pd(vars=['theta']).shape == (400, 1)
+    assert fit.draws_pd(vars=['lp__', 'theta']).shape == (400, 2)
+    assert fit.draws_pd(vars=['theta', 'lp__']).shape == (400, 2)
+    assert fit.draws_pd(vars='theta').shape == (400, 1)
 
     assert list(fit.draws_pd(vars=['theta', 'lp__']).columns) == [
-        'chain__',
-        'iter__',
-        'draw__',
         'theta',
         'lp__',
     ]
-    assert list(fit.draws_pd(vars=['lp__', 'theta']).columns) == [
-        'chain__',
-        'iter__',
-        'draw__',
+    assert list(fit.draws_pd(vars=['lp__', 'theta', 'iter__']).columns) == [
         'lp__',
         'theta',
+        'iter__',
     ]
 
     summary = fit.summary()
@@ -854,7 +849,7 @@ def test_validate_big_run() -> None:
     assert fit.step_size.shape == (2,)
     assert fit.metric.shape == (2, 2095)
     assert fit.draws().shape == (1000, 2, 2102)
-    assert fit.draws_pd(vars=['phi']).shape == (2000, 2098)
+    assert fit.draws_pd(vars=['phi']).shape == (2000, 2095)
     with raises_nested(ValueError, r'Unknown variable: gamma'):
         fit.draws_pd(vars=['gamma'])
 
@@ -1438,6 +1433,26 @@ def test_dont_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
             ' rerun sampler with "save_warmup=True".',
         ),
     )
+
+
+def test_warmup_no_adapt() -> None:
+    # we may want to have a "burn-in" period, even without adaptation
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+
+    bern_model = CmdStanModel(stan_file=stan)
+    bern_fit = bern_model.sample(
+        data=jdata,
+        chains=2,
+        seed=12345,
+        iter_warmup=200,
+        iter_sampling=100,
+        adapt_engaged=False,
+    )
+
+    assert bern_fit.column_names == tuple(BERNOULLI_COLS)
+    assert bern_fit.num_draws_sampling == 100
+    assert bern_fit.draws().shape == (100, 2, len(BERNOULLI_COLS))
 
 
 def test_sampler_diags() -> None:

@@ -1612,6 +1612,8 @@ class CmdStanModel:
         draws: Optional[int] = None,
         num_single_draws: Optional[int] = None,
         num_elbo_draws: Optional[int] = None,
+        psis_resample: bool = True,
+        calculate_lp: bool = True,
         # arguments standard to all methods
         seed: Optional[int] = None,
         inits: Union[Dict[str, float], float, str, os.PathLike, None] = None,
@@ -1644,6 +1646,14 @@ class CmdStanModel:
         :param max_lbfgs_iters: Maximum number of L-BFGS iterations.
 
         :param num_elbo_draws: Number of Monte Carlo draws to evaluate ELBO.
+
+        :param psis_resample: Whether or not to use Pareto Smoothed Importance
+            Sampling on the result of the individual Pathfinders. If False, the
+            result contains the draws from each path.
+
+        :param calculate_lp: Whether or not to calculate the log probability
+            for approximate draws. If False, this also implies that
+            ``psis_resample`` will be set to False.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
@@ -1726,10 +1736,20 @@ class CmdStanModel:
         Research, 23(306), 1–49. Retrieved from
         http://jmlr.org/papers/v23/21-0889.html
         """
-        if cmdstan_version_before(2, 33, self.exe_info()):
+
+        exe_info = self.exe_info()
+        if cmdstan_version_before(2, 33, exe_info):
             raise ValueError(
                 "Method 'pathfinder' not available for CmdStan versions "
                 "before 2.33"
+            )
+
+        if (not psis_resample or not calculate_lp) and cmdstan_version_before(
+            2, 34, exe_info
+        ):
+            raise ValueError(
+                "Arguments 'psis_resample' and 'calculate_lp' are only "
+                "available for CmdStan versions 2.34 and later"
             )
 
         if num_paths == 1:
@@ -1754,6 +1774,8 @@ class CmdStanModel:
             max_lbfgs_iters=max_lbfgs_iters,
             num_draws=num_single_draws,
             num_elbo_draws=num_elbo_draws,
+            psis_resample=psis_resample,
+            calculate_lp=calculate_lp,
         )
 
         with temp_single_json(data) as _data, temp_inits(inits) as _inits:

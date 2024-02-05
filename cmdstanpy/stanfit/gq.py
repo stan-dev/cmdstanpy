@@ -323,6 +323,8 @@ class CmdStanGQ(Generic[Fit]):
 
         self._assemble_generated_quantities()
 
+        all_columns = ['chain__', 'iter__', 'draw__'] + list(self.column_names)
+
         gq_cols: List[str] = []
         mcmc_vars: List[str] = []
         if vars is not None:
@@ -341,10 +343,12 @@ class CmdStanGQ(Generic[Fit]):
                             info.start_idx : info.end_idx
                         ]
                     )
+                elif var in ['chain__', 'iter__', 'draw__']:
+                    gq_cols.append(var)
                 else:
                     raise ValueError('Unknown variable: {}'.format(var))
         else:
-            gq_cols = list(self.column_names)
+            gq_cols = all_columns
             vars_list = gq_cols
 
         previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
@@ -369,13 +373,9 @@ class CmdStanGQ(Generic[Fit]):
         )
         draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
 
-        vars_list = ['chain__', 'iter__', 'draw__'] + vars_list
-        if gq_cols:
-            gq_cols = ['chain__', 'iter__', 'draw__'] + gq_cols
-
         draws_pd = pd.DataFrame(
             data=flatten_chains(draws),
-            columns=['chain__', 'iter__', 'draw__'] + list(self.column_names),
+            columns=all_columns,
         )
 
         if inc_sample and mcmc_vars:

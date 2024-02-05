@@ -85,9 +85,11 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
         - 3  # chain, iter, draw duplicates
     )
 
-    assert list(bern_gqs.draws_pd(vars=['y_rep']).columns) == (
-        ["chain__", "iter__", "draw__"] + column_names
-    )
+    assert list(bern_gqs.draws_pd(vars=['y_rep']).columns) == (column_names)
+
+    assert list(
+        bern_gqs.draws_pd(vars=["chain__", "iter__", "draw__", 'y_rep']).columns
+    ) == (["chain__", "iter__", "draw__"] + column_names)
 
 
 def test_pd_xr_agreement():
@@ -315,9 +317,9 @@ def test_save_warmup(caplog: pytest.LogCaptureFixture) -> None:
     assert bern_gqs.draws_pd(inc_warmup=True).shape == (800, 13)
     assert bern_gqs.draws_pd(vars=['y_rep'], inc_warmup=False).shape == (
         400,
-        13,
+        10,
     )
-    assert bern_gqs.draws_pd(vars='y_rep', inc_warmup=False).shape == (400, 13)
+    assert bern_gqs.draws_pd(vars='y_rep', inc_warmup=False).shape == (400, 10)
 
     theta = bern_gqs.stan_variable(var='theta')
     assert theta.shape == (400,)
