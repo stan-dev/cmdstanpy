@@ -2221,6 +2221,8 @@ class CmdStanModel:
             * "model": Gradients evaluated using autodiff.
             * "finite_diff": Gradients evaluated using finite differences.
             * "error": Delta between autodiff and finite difference gradients.
+
+            Gradients are evaluated in the unconstrained space.
         """
 
         with temp_single_json(data) as _data, \
@@ -2237,7 +2239,7 @@ class CmdStanModel:
             if _data is not None:
                 cmd += ["data", f"file={_data}"]
             if _inits is not None:
-                cmd.append(f"inits={_inits}")
+                cmd.append(f"init={_inits}")
 
             output_dir = tempfile.mkdtemp(prefix=self.name, dir=_TMPDIR)
 
