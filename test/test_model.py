@@ -610,6 +610,11 @@ def test_diagnose():
         "error",
     }
 
+    # Check gradients against the same value as in `log_prob`.
+    inits = {"theta": 0.34903938392023830482}
+    gradients = model.diagnose(data=BERN_DATA, inits=inits)
+    np.testing.assert_allclose(gradients.model.iloc[0], -1.18847)
+
     # Simulate bad gradients by using large finite difference.
     with pytest.raises(RuntimeError, match="may exceed the error threshold"):
         model.diagnose(data=BERN_DATA, epsilon=3)
