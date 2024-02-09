@@ -2254,6 +2254,11 @@ class CmdStanModel:
                 cmd, capture_output=True, check=False, text=True
             )
             if proc.returncode:
+                get_logger().error(
+                    "'diagnose' command failed!\nstdout:%s\nstderr:%s",
+                    proc.stdout,
+                    proc.stderr,
+                )
                 if require_gradients_ok:
                     raise RuntimeError(
                         "The difference between autodiff and finite difference "
@@ -2268,8 +2273,13 @@ class CmdStanModel:
                 )
 
             # Read the text and get the last chunk separated by a single # char.
-            with open(output) as handle:
-                text = handle.read()
+            try:
+                with open(output) as handle:
+                    text = handle.read()
+            except FileNotFoundError as exc:
+                raise RuntimeError(
+                    "Output of 'diagnose' command does not exist."
+                ) from exc
             *_, table = re.split(r"#\s*\n", text)
             table = (
                 re.sub(r"^#\s*", "", table, flags=re.M)
