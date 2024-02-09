@@ -1,5 +1,6 @@
 """CmdStanModel"""
 
+import io
 import os
 import platform
 import re
@@ -2171,3 +2172,106 @@ class CmdStanModel:
                 pbars[idx].postfix[0]["value"] = mline
 
         return progress_hook
+
+    def diagnose(
+        self,
+        inits: Union[Dict[str, Any], str, os.PathLike, None] = None,
+        data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
+        epsilon: Optional[float] = None,
+        error: Optional[float] = None,
+        require_gradients_ok: bool = True,
+        sig_figs: Optional[int] = None,
+    ) -> pd.DataFrame:
+        """
+        Run diagnostics to calculate the gradients at the specified parameter
+        values and compare them with gradients calculated by finite differences.
+
+        :param inits: Specifies how the sampler initializes parameter values.
+            Initialization is either uniform random on a range centered on 0,
+            exactly 0, or a dictionary or file of initial values for some or
+            all parameters in the model. The default initialization behavior
+            will initialize all parameter values on range [-2, 2] on the
+            *unconstrained* support. The following value types are allowed:
+            * Single number, n > 0 - initialization range is [-n, n].
+            * 0 - all parameters are initialized to 0.
+            * dictionary - pairs parameter name : initial value.
+            * string - pathname to a JSON or Rdump data file.
+
+        :param data: Values for all data variables in the model, specified
+            either as a dictionary with entries matching the data variables,
+            or as the path of a data file in JSON or Rdump format.
+
+        :param sig_figs: Numerical precision used for output CSV and text files.
+            Must be an integer between 1 and 18.  If unspecified, the default
+            precision for the system file I/O is used; the usual value is 6.
+
+        :param epsilon: Step size for finite difference gradients.
+
+        :param error: Absolute error threshold for comparing autodiff and finite
+            difference gradients.
+
+        :param require_gradients_ok: Whether or not to raise an error if Stan
+            reports that the difference between autodiff gradients and finite
+            difference gradients exceed the error threshold.
+
+        :return: A pandas.DataFrame containing columns
+            * "param_idx": increasing parameter index.
+            * "value": Parameter value.
+            * "model": Gradients evaluated using autodiff.
+            * "finite_diff": Gradients evaluated using finite differences.
+            * "error": Delta between autodiff and finite difference gradients.
+        """
+
+        with temp_single_json(data) as _data, \
+                temp_single_json(inits) as _inits:
+            cmd = [
+                str(self.exe_file),
+                "diagnose",
+                "test=gradient",
+            ]
+            if epsilon is not None:
+                cmd.append(f"epsilon={epsilon}")
+            if error is not None:
+                cmd.append(f"epsilon={error}")
+            if _data is not None:
+                cmd += ["data", f"file={_data}"]
+            if _inits is not None:
+                cmd.append(f"inits={_inits}")
+
+            output_dir = tempfile.mkdtemp(prefix=self.name, dir=_TMPDIR)
+
+            output = os.path.join(output_dir, "output.csv")
+            cmd += ["output", f"file={output}"]
+            if sig_figs is not None:
+                cmd.append(f"sig_figs={sig_figs}")
+
+            get_logger().debug("Cmd: %s", str(cmd))
+
+            proc = subprocess.run(
+                cmd, capture_output=True, check=False, text=True
+            )
+            if proc.returncode:
+                if require_gradients_ok:
+                    raise RuntimeError(
+                        "The difference between autodiff and finite difference "
+                        "gradients may exceed the error threshold. If you "
+                        "would like to inspect the output, re-call with "
+                        "`require_gradients_ok=False`."
+                    )
+                get_logger().warning(
+                    "The difference between autodiff and finite difference "
+                    "gradients may exceed the error threshold. Proceeding "
+                    "because `require_gradients_ok` is set to `False`."
+                )
+
+            # Read the text and get the last chunk separated by a single # char.
+            with open(output) as handle:
+                text = handle.read()
+            *_, table = re.split(r"#\s*\n", text)
+            table = (
+                re.sub(r"^#\s*", "", table, flags=re.M)
+                .replace("param idx", "param_idx")
+                .replace("finite diff", "finite_diff")
+            )
+            return pd.read_csv(io.StringIO(table), sep=r"\s+")
