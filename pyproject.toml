@@ -1,3 +1,68 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cmdstanpy"
+description = "Python interface to CmdStan"
+readme = "README.md"
+license = { text = "BSD-3-Clause" }
+authors = [{ name = "Stan Dev Team" }]
+requires-python = ">=3.8"
+dependencies = ["pandas", "numpy>=1.21", "tqdm", "stanio>=0.4.0,<2.0.0"]
+dynamic = ["version"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/stan-dev/cmdstanpy"
+"Bug Tracker" = "https://github.com/stan-dev/cmdstanpy/issues"
+
+[project.scripts]
+install_cmdstan = "cmdstanpy.install_cmdstan:__main__"
+install_cxx_toolchain = "cmdstanpy.install_cxx_toolchain:__main__"
+
+[tool.setuptools.dynamic]
+version = { attr = "cmdstanpy._version.__version__" }
+
+[tool.setuptools]
+packages = ["cmdstanpy", "cmdstanpy.stanfit", "cmdstanpy.utils"]
+
+[tool.setuptools.package-data]
+"cmdstanpy" = ["py.typed"]
+
+[project.optional-dependencies]
+all = ["xarray"]
+test = [
+    "flake8",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "pytest-order",
+    "mypy",
+    "xarray",
+]
+docs = [
+    "sphinx>5,<6",
+    "pydata-sphinx-theme<0.9",
+    "nbsphinx",
+    "ipython",
+    "ipykernel",
+    "ipywidgets",
+    "sphinx-copybutton",
+    "xarray",
+    "matplotlib",
+]
+
+
 [tool.black]
 line-length = 80
 skip-string-normalization = true
@@ -23,8 +88,8 @@ strict_equality = true
 disallow_untyped_calls = true
 
 [[tool.mypy.overrides]]
-module = [
-    'tqdm.auto',
-    'pandas',
-    ]
+module = ['tqdm.auto', 'pandas']
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["cmdstanpy"]
