@@ -1,36 +1,40 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Controlling Outputs &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>Controlling Outputs &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -40,7 +44,7 @@
     <link rel="prev" title="CmdStanPy Workflow" href="workflow.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -48,7 +52,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -59,7 +63,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -230,7 +234,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage mt-5 pt-1 pb-3">
+<div class="tocsection onthispage pt-5 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -275,9 +279,9 @@
               <div>
                 
   <section id="controlling-outputs">
-<h1>Controlling Outputs<a class="headerlink" href="#controlling-outputs" title="Permalink to this headline">#</a></h1>
+<h1>Controlling Outputs<a class="headerlink" href="#controlling-outputs" title="Permalink to this heading">¶</a></h1>
 <section id="csv-file-outputs">
-<h2>CSV File Outputs<a class="headerlink" href="#csv-file-outputs" title="Permalink to this headline">#</a></h2>
+<h2>CSV File Outputs<a class="headerlink" href="#csv-file-outputs" title="Permalink to this heading">¶</a></h2>
 <p>Underlyingly, the CmdStan outputs are a set of per-chain
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/stan-csv.html#mcmc-sampler-csv-output">Stan CSV files</a>.
 The filenames follow the template ‘&lt;model_name&gt;-&lt;YYYYMMDDHHMMSS&gt;-&lt;chain_id&gt;’
@@ -302,15 +306,15 @@ CmdStanPy also captures the per-chain console and error messages.</p>
 <span class="gp">In [7]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="p">)</span>
 <span class="go">CmdStanMCMC: model=bernoulli chains=4[&#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go"> csv_files:</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_1.csv</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_2.csv</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_3.csv</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_4.csv</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_1.csv</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_2.csv</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_3.csv</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_4.csv</span>
 <span class="go"> output_files:</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_0-stdout.txt</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_1-stdout.txt</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_2-stdout.txt</span>
-<span class="go">	/tmp/tmp_3o6_t3p/bernoullivqjj5wxw/bernoulli-20231003144428_3-stdout.txt</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_0-stdout.txt</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_1-stdout.txt</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_2-stdout.txt</span>
+<span class="go">	/tmp/tmpld8wslo1/bernoulli_zi120vj/bernoulli-20240205204228_3-stdout.txt</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> argument is an optional argument which specifies
@@ -324,10 +328,10 @@ to a temporary directory which is deleted when the current Python session is ter
 <span class="go">INFO:cmdstanpy:CmdStan done processing.</span>
 
 <span class="gp">In [9]: </span><span class="o">!</span>ls<span class="w"> </span>outputs/
-<span class="go">bernoulli-20231003144428_0-stdout.txt  bernoulli-20231003144428_2.csv</span>
-<span class="go">bernoulli-20231003144428_1-stdout.txt  bernoulli-20231003144428_3-stdout.txt</span>
-<span class="go">bernoulli-20231003144428_1.csv	       bernoulli-20231003144428_3.csv</span>
-<span class="go">bernoulli-20231003144428_2-stdout.txt  bernoulli-20231003144428_4.csv</span>
+<span class="go">bernoulli-20240205204229_0-stdout.txt  bernoulli-20240205204229_2.csv</span>
+<span class="go">bernoulli-20240205204229_1-stdout.txt  bernoulli-20240205204229_3-stdout.txt</span>
+<span class="go">bernoulli-20240205204229_1.csv	       bernoulli-20240205204229_3.csv</span>
+<span class="go">bernoulli-20240205204229_2-stdout.txt  bernoulli-20240205204229_4.csv</span>
 </pre></div>
 </div>
 <p>Alternatively, the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.save_csvfiles" title="cmdstanpy.CmdStanMCMC.save_csvfiles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_csvfiles()</span></code></a> function moves the CSV files
@@ -340,27 +344,27 @@ to a specified directory.</p>
 <span class="gp">In [11]: </span><span class="n">fit</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="o">=</span><span class="s1">&#39;some/path&#39;</span><span class="p">)</span>
 
 <span class="gp">In [12]: </span><span class="o">!</span>ls<span class="w"> </span>some/path
-<span class="go">bernoulli-20231003144429_1.csv	bernoulli-20231003144429_3.csv</span>
-<span class="go">bernoulli-20231003144429_2.csv	bernoulli-20231003144429_4.csv</span>
+<span class="go">bernoulli-20240205204229_1.csv	bernoulli-20240205204229_3.csv</span>
+<span class="go">bernoulli-20240205204229_2.csv	bernoulli-20240205204229_4.csv</span>
 </pre></div>
 </div>
 </section>
 <section id="logging">
-<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">#</a></h2>
+<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this heading">¶</a></h2>
 <p>You may notice CmdStanPy can produce a lot of output when it is running:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data_file</span><span class="p">,</span> <span class="n">show_progress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="go">INFO:cmdstanpy:CmdStan start processing</span>
 <span class="go">INFO:cmdstanpy:Chain [1] start processing</span>
 <span class="go">INFO:cmdstanpy:Chain [2] start processing</span>
-<span class="go">INFO:cmdstanpy:Chain [1] done processing</span>
 <span class="go">INFO:cmdstanpy:Chain [3] start processing</span>
-<span class="go">INFO:cmdstanpy:Chain [2] done processing</span>
 <span class="go">INFO:cmdstanpy:Chain [4] start processing</span>
+<span class="go">INFO:cmdstanpy:Chain [1] done processing</span>
+<span class="go">INFO:cmdstanpy:Chain [2] done processing</span>
 <span class="go">INFO:cmdstanpy:Chain [3] done processing</span>
 <span class="go">INFO:cmdstanpy:Chain [4] done processing</span>
 </pre></div>
 </div>
-<p>This output is managed through the built-in <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.11)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module. For example, it can be disabled entirely:</p>
+<p>This output is managed through the built-in <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.12)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> module. For example, it can be disabled entirely:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="gp">In [15]: </span><span class="n">cmdstanpy_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;cmdstanpy&quot;</span><span class="p">)</span>
@@ -404,40 +408,40 @@ to a file.</p>
 <span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">logs</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
 <span class="gp">   ....: </span>        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
 <span class="gp">   ....: </span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - cmd: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli info</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - cmd: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli info</span>
 <span class="go">cwd: None</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - CmdStan start processing</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 0</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [1] start processing</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 1</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=2&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_2.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [2] start processing</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [1] done processing</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 2</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=3&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_3.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [3] start processing</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [2] done processing</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - idx 3</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=4&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_4.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [4] start processing</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [3] done processing</span>
-<span class="go">14:44:29 - cmdstanpy - INFO - Chain [4] done processing</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - runset</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - CmdStan start processing</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - idx 0</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - idx 1</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - idx 2</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=2&#39;, &#39;random&#39;, &#39;seed=13203&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_2.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - idx 3</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=13203&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [2] start processing</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - running CmdStan, num_threads: 1</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [1] start processing</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=3&#39;, &#39;random&#39;, &#39;seed=13203&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_3.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - CmdStan args: [&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=4&#39;, &#39;random&#39;, &#39;seed=13203&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_4.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [3] start processing</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [4] start processing</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [2] done processing</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [3] done processing</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [1] done processing</span>
+<span class="go">20:42:29 - cmdstanpy - INFO - Chain [4] done processing</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - runset</span>
 <span class="go">RunSet: chains=4, chain_ids=[1, 2, 3, 4], num_processes=4</span>
 <span class="go">cmd (chain 1):</span>
-<span class="go">[&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=26092&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
+<span class="go">[&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;, &#39;id=1&#39;, &#39;random&#39;, &#39;seed=13203&#39;, &#39;data&#39;, &#39;file=users-guide/examples/bernoulli.data.json&#39;, &#39;output&#39;, &#39;file=/tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_1.csv&#39;, &#39;method=sample&#39;, &#39;algorithm=hmc&#39;, &#39;adapt&#39;, &#39;engaged=1&#39;]</span>
 <span class="go">retcodes=[0, 0, 0, 0]</span>
 <span class="go">per-chain output files (showing chain 1 only):</span>
 <span class="go">csv_file:</span>
-<span class="go">/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv</span>
+<span class="go">/tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_1.csv</span>
 <span class="go">console_msgs (if any):</span>
-<span class="go">/tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_0-stdout.txt</span>
-<span class="go">14:44:29 - cmdstanpy - DEBUG - Chain 1 console:</span>
+<span class="go">/tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_0-stdout.txt</span>
+<span class="go">20:42:29 - cmdstanpy - DEBUG - Chain 1 console:</span>
 <span class="go">method = sample (Default)</span>
 <span class="go">sample</span>
 <span class="go">num_samples = 1000 (Default)</span>
@@ -446,13 +450,14 @@ to a file.</p>
 <span class="go">thin = 1 (Default)</span>
 <span class="go">adapt</span>
 <span class="go">engaged = 1 (Default)</span>
-<span class="go">gamma = 0.050000000000000003 (Default)</span>
-<span class="go">delta = 0.80000000000000004 (Default)</span>
+<span class="go">gamma = 0.05 (Default)</span>
+<span class="go">delta = 0.8 (Default)</span>
 <span class="go">kappa = 0.75 (Default)</span>
 <span class="go">t0 = 10 (Default)</span>
 <span class="go">init_buffer = 75 (Default)</span>
 <span class="go">term_buffer = 50 (Default)</span>
 <span class="go">window = 25 (Default)</span>
+<span class="go">save_metric = 0 (Default)</span>
 <span class="go">algorithm = hmc (Default)</span>
 <span class="go">hmc</span>
 <span class="go">engine = nuts (Default)</span>
@@ -468,18 +473,19 @@ to a file.</p>
 <span class="go">file = users-guide/examples/bernoulli.data.json</span>
 <span class="go">init = 2 (Default)</span>
 <span class="go">random</span>
-<span class="go">seed = 26092</span>
+<span class="go">seed = 13203</span>
 <span class="go">output</span>
-<span class="go">file = /tmp/tmp_3o6_t3p/bernoulli5tltyftu/bernoulli-20231003144429_1.csv</span>
+<span class="go">file = /tmp/tmpld8wslo1/bernoulli8r5niwzl/bernoulli-20240205204229_1.csv</span>
 <span class="go">diagnostic_file =  (Default)</span>
 <span class="go">refresh = 100 (Default)</span>
 <span class="go">sig_figs = -1 (Default)</span>
 <span class="go">profile_file = profile.csv (Default)</span>
+<span class="go">save_cmdstan_config = 0 (Default)</span>
 <span class="go">num_threads = 1 (Default)</span>
 
 
-<span class="go">Gradient evaluation took 3e-06 seconds</span>
-<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0.03 seconds.</span>
+<span class="go">Gradient evaluation took 1e-06 seconds</span>
+<span class="go">1000 transitions using 10 leapfrog steps per transition would take 0.01 seconds.</span>
 <span class="go">Adjust your expectations accordingly!</span>
 
 
@@ -506,9 +512,9 @@ to a file.</p>
 <span class="go">Iteration: 1900 / 2000 [ 95%]  (Sampling)</span>
 <span class="go">Iteration: 2000 / 2000 [100%]  (Sampling)</span>
 
-<span class="go">Elapsed Time: 0.003 seconds (Warm-up)</span>
-<span class="go">0.009 seconds (Sampling)</span>
-<span class="go">0.012 seconds (Total)</span>
+<span class="go">Elapsed Time: 0.005 seconds (Warm-up)</span>
+<span class="go">0.014 seconds (Sampling)</span>
+<span class="go">0.019 seconds (Total)</span>
 </pre></div>
 </div>
 </section>
@@ -542,9 +548,8 @@ to a file.</p>
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -555,7 +560,7 @@ to a file.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     

@@ -1,36 +1,40 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Installation &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>Installation &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -40,7 +44,7 @@
     <link rel="prev" title="cmdstanpy – Python interface to CmdStan" href="index.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -48,7 +52,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -59,7 +63,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -161,7 +165,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage mt-5 pt-1 pb-3">
+<div class="tocsection onthispage pt-5 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -250,7 +254,7 @@
               <div>
                 
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
 <p>CmdStanPy is a pure-Python3 package which wraps CmdStan,
 the command-line interface to Stan which is written in C++.
 Therefore, in addition to Python3,
@@ -266,7 +270,7 @@ GitHub <a class="reference external" href="https://github.com/stan-dev/cmdstanpy
 <p>If you install CmdStanPy from PyPI or GitHub you will need to
 install CmdStan as well, see section <a class="reference internal" href="#cmdstan-install"><span class="std std-ref">CmdStan Installation</span></a> below.</p>
 <section id="conda-install-cmdstanpy-cmdstan-c-toolchain">
-<h2>Conda: install CmdStanPy, CmdStan, C++ toolchain<a class="headerlink" href="#conda-install-cmdstanpy-cmdstan-c-toolchain" title="Permalink to this headline">#</a></h2>
+<h2>Conda: install CmdStanPy, CmdStan, C++ toolchain<a class="headerlink" href="#conda-install-cmdstanpy-cmdstan-c-toolchain" title="Permalink to this heading">¶</a></h2>
 <p>If you use <a class="reference external" href="https://docs.conda.io/en/latest/">conda</a>,
 you can install CmdStanPy and the underlying CmdStan components from the
 <a class="reference external" href="https://conda-forge.org/">conda-forge</a> repository
@@ -306,7 +310,7 @@ Both CmdStan and the C++ toolchain are installed into the
 <code class="docutils literal notranslate"><span class="pre">$CONDA_PREFIX/bin/cmdstan</span></code> (Linux, MacOS), <code class="docutils literal notranslate"><span class="pre">%CONDA_PREFIX%\bin\cmdstan</span></code> (Windows).</p>
 </section>
 <section id="pypi-install-package-cmdstanpy">
-<h2>PyPI: install package CmdStanPy<a class="headerlink" href="#pypi-install-package-cmdstanpy" title="Permalink to this headline">#</a></h2>
+<h2>PyPI: install package CmdStanPy<a class="headerlink" href="#pypi-install-package-cmdstanpy" title="Permalink to this heading">¶</a></h2>
 <p>CmdStan can also be installed from PyPI via URL: <a class="reference external" href="https://pypi.org/project/cmdstanpy/">https://pypi.org/project/cmdstanpy/</a> or from the
 command line using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>cmdstanpy
@@ -322,7 +326,7 @@ command line using <code class="docutils literal notranslate"><span class="pre">
 </div>
 </section>
 <section id="github-install-from-the-cmdstanpy-repository">
-<h2>GitHub: install from the CmdStanPy repository<a class="headerlink" href="#github-install-from-the-cmdstanpy-repository" title="Permalink to this headline">#</a></h2>
+<h2>GitHub: install from the CmdStanPy repository<a class="headerlink" href="#github-install-from-the-cmdstanpy-repository" title="Permalink to this heading">¶</a></h2>
 <p>To install the current develop branch from GitHub:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>git+https://github.com/stan-dev/cmdstanpy@develop#egg<span class="o">=</span>cmdstanpy
 </pre></div>
@@ -344,7 +348,7 @@ and <a class="reference external" href="https://github.com/tqdm/tqdm/issues/394#
 </div>
 </section>
 <section id="cmdstan-installation">
-<span id="cmdstan-install"></span><h2>CmdStan Installation<a class="headerlink" href="#cmdstan-installation" title="Permalink to this headline">#</a></h2>
+<span id="cmdstan-install"></span><h2>CmdStan Installation<a class="headerlink" href="#cmdstan-installation" title="Permalink to this heading">¶</a></h2>
 <p>If you have installed CmdStanPy from PyPI or Github,
 <strong>you must install CmdStan</strong>.
 The recommended way to do so is via the <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code> function
@@ -353,7 +357,7 @@ The recommended way to do so is via the <code class="docutils literal notranslat
 both CmdStan and the C++ toolchain are installed into directory <code class="docutils literal notranslate"><span class="pre">$CONDA_PREFIX/bin</span></code>
 and you don’t need to do any further installs.</p>
 <section id="c-toolchain-requirements">
-<h3>C++ Toolchain Requirements<a class="headerlink" href="#c-toolchain-requirements" title="Permalink to this headline">#</a></h3>
+<h3>C++ Toolchain Requirements<a class="headerlink" href="#c-toolchain-requirements" title="Permalink to this heading">¶</a></h3>
 <p>To compile a Stan program requires a modern C++ compiler and the GNU-Make build utility.
 These vary by operating system.</p>
 <p><strong>Linux</strong> The required C++ compiler is <code class="docutils literal notranslate"><span class="pre">g++</span> <span class="pre">4.9</span> <span class="pre">3</span></code>.
@@ -367,7 +371,7 @@ This can be installed along with CmdStan when you invoke the function <a class="
 with argument <code class="docutils literal notranslate"><span class="pre">compiler=True</span></code>.</p>
 </section>
 <section id="function-install-cmdstan">
-<span id="install-cmdstan-fun"></span><h3>Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code><a class="headerlink" href="#function-install-cmdstan" title="Permalink to this headline">#</a></h3>
+<span id="install-cmdstan-fun"></span><h3>Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code><a class="headerlink" href="#function-install-cmdstan" title="Permalink to this heading">¶</a></h3>
 <p>CmdStanPy provides the function <a class="reference internal" href="api.html#cmdstanpy.install_cmdstan" title="cmdstanpy.install_cmdstan"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cmdstanpy.install_cmdstan()</span></code></a> which
 downloads CmdStan from GitHub and builds the CmdStan utilities.
 It can be can be called from within Python or from the command line.
@@ -407,7 +411,7 @@ ls<span class="w"> </span>-F<span class="w"> </span>my_local_cmdstan
 </pre></div>
 </div>
 <section id="alternate-linux-architectures">
-<h4>Alternate Linux Architectures<a class="headerlink" href="#alternate-linux-architectures" title="Permalink to this headline">#</a></h4>
+<h4>Alternate Linux Architectures<a class="headerlink" href="#alternate-linux-architectures" title="Permalink to this heading">¶</a></h4>
 <p>CmdStan can be installed on Linux for the following non-x86 architectures:
 <code class="docutils literal notranslate"><span class="pre">arm64</span></code>, <code class="docutils literal notranslate"><span class="pre">armel</span></code>, <code class="docutils literal notranslate"><span class="pre">armhf</span></code>, <code class="docutils literal notranslate"><span class="pre">mips64el</span></code>, <code class="docutils literal notranslate"><span class="pre">ppc64el</span></code> and <code class="docutils literal notranslate"><span class="pre">s390x</span></code>.</p>
 <p>CmdStanPy will do its best to determine which of these is applicable for your
@@ -417,13 +421,13 @@ to one of the above options, or to “false” to use the standard x86 download.
 </section>
 </section>
 <section id="diy-installation">
-<h3>DIY Installation<a class="headerlink" href="#diy-installation" title="Permalink to this headline">#</a></h3>
+<h3>DIY Installation<a class="headerlink" href="#diy-installation" title="Permalink to this heading">¶</a></h3>
 <p>If you with to install CmdStan yourself, follow the instructions
 in the <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/cmdstan-installation.html">CmdStan User’s Guide</a>.</p>
 </section>
 </section>
 <section id="locating-the-cmdstan-installation-directory">
-<h2>Locating the CmdStan installation directory<a class="headerlink" href="#locating-the-cmdstan-installation-directory" title="Permalink to this headline">#</a></h2>
+<h2>Locating the CmdStan installation directory<a class="headerlink" href="#locating-the-cmdstan-installation-directory" title="Permalink to this heading">¶</a></h2>
 <p>CmdStanPy uses the environment variable <code class="docutils literal notranslate"><span class="pre">CMDSTAN</span></code> to register the CmdStan installation location.</p>
 <ul class="simple">
 <li><p>If you use conda to install CmdStanPy, CmdStan is installed into location
@@ -473,9 +477,8 @@ or via the CmdStanPy command <code class="docutils literal notranslate"><span cl
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -486,7 +489,7 @@ or via the CmdStanPy command <code class="docutils literal notranslate"><span cl
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     

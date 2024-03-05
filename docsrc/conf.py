@@ -28,7 +28,10 @@ if "conda" in sys.executable:
 
 else:
     print("pip environment:")
-    subprocess.run([sys.executable, "-m", "pip", "list"])
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "list"])
+    except:
+        pass
 
 # hacky for RTD - which doesn't actually call conda activate
 # see: https://github.com/readthedocs/readthedocs.org/issues/5339

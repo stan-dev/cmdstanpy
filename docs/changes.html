@@ -1,36 +1,40 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>What’s New &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>What’s New &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -40,7 +44,7 @@
     <link rel="prev" title="Internal API Reference" href="internal_api.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -48,7 +52,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -59,7 +63,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -161,12 +165,17 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage mt-5 pt-1 pb-3">
+<div class="tocsection onthispage pt-5 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#cmdstanpy-1-2-1">
+   CmdStanPy 1.2.1
+  </a>
+ </li>
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#cmdstanpy-1-2-0">
    CmdStanPy 1.2.0
@@ -251,10 +260,22 @@
               <div>
                 
   <section id="what-s-new">
-<h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this headline">#</a></h1>
+<h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this heading">¶</a></h1>
 <p>For full changes, see the <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/releases">Releases page</a> on GitHub.</p>
+<section id="cmdstanpy-1-2-1">
+<h2>CmdStanPy 1.2.1<a class="headerlink" href="#cmdstanpy-1-2-1" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Switched from <a class="reference external" href="https://numpy.org/doc/stable/reference/random/legacy.html#numpy.random.RandomState" title="(in NumPy v1.26)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code></a> to <a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="(in NumPy v1.26)"><code class="xref py py-func docutils literal notranslate"><span class="pre">default_rng()</span></code></a>.</p></li>
+<li><p>Fixed minor doc typos.</p></li>
+<li><p>Stan 2.34: Fixed parsing of unit_e output files.</p></li>
+<li><p>Stan 2.34: Exposed new Pathfinder arguments.</p></li>
+<li><p>Allow the <code class="docutils literal notranslate"><span class="pre">vars</span></code> argument to <a class="reference internal" href="api.html#cmdstanpy.CmdStanMCMC.draws_pd" title="cmdstanpy.CmdStanMCMC.draws_pd"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanMCMC.draws_pd()</span></code></a> to filter the <code class="docutils literal notranslate"><span class="pre">chain__</span></code>, <code class="docutils literal notranslate"><span class="pre">iter__</span></code>, and <code class="docutils literal notranslate"><span class="pre">draws__</span></code> columns.</p></li>
+<li><p>Fixed a bug involving the interaction of the <code class="docutils literal notranslate"><span class="pre">adapt_engaged</span></code> and <code class="docutils literal notranslate"><span class="pre">iter_warmup</span></code> arguments to <code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanMCMC.sample()</span></code>.</p></li>
+</ul>
+<p>Reminder: The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations.</p>
+</section>
 <section id="cmdstanpy-1-2-0">
-<h2>CmdStanPy 1.2.0<a class="headerlink" href="#cmdstanpy-1-2-0" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.2.0<a class="headerlink" href="#cmdstanpy-1-2-0" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>New functionality</strong></p>
 <ul>
@@ -292,7 +313,7 @@ A new argument, <code class="docutils literal notranslate"><span class="pre">mea
 </div>
 </section>
 <section id="cmdstanpy-1-1-0">
-<h2>CmdStanPy 1.1.0<a class="headerlink" href="#cmdstanpy-1-1-0" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.1.0<a class="headerlink" href="#cmdstanpy-1-1-0" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>New functionality</strong></p>
 <ul>
@@ -315,7 +336,7 @@ and model development.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-8">
-<h2>CmdStanPy 1.0.8<a class="headerlink" href="#cmdstanpy-1-0-8" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.8<a class="headerlink" href="#cmdstanpy-1-0-8" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code> now downloads the correct CmdStan for non-x86 Linux machines.</p></li>
 <li><p>Improved reporting of errors during <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.compile" title="cmdstanpy.CmdStanModel.compile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile()</span></code></a>.</p></li>
@@ -327,20 +348,20 @@ and model development.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-7">
-<h2>CmdStanPy 1.0.7<a class="headerlink" href="#cmdstanpy-1-0-7" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.7<a class="headerlink" href="#cmdstanpy-1-0-7" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed an issue where complex number containers in Stan program outputs were not being read in properly by CmdStanPy. The output would have the correct shape, but the values would be mixed up.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-6">
-<h2>CmdStanPy 1.0.6<a class="headerlink" href="#cmdstanpy-1-0-6" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.6<a class="headerlink" href="#cmdstanpy-1-0-6" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed a build error in the documentation</p></li>
 <li><p>Improved messages when model fails to compile due to C++ errors.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-5">
-<h2>CmdStanPy 1.0.5<a class="headerlink" href="#cmdstanpy-1-0-5" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.5<a class="headerlink" href="#cmdstanpy-1-0-5" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fixed a typo in <a class="reference internal" href="api.html#cmdstanpy.show_versions" title="cmdstanpy.show_versions"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.show_versions()</span></code></a></p></li>
 <li><p>Reorganized and updated the documentation</p></li>
@@ -351,13 +372,13 @@ and model development.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-4">
-<h2>CmdStanPy 1.0.4<a class="headerlink" href="#cmdstanpy-1-0-4" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.4<a class="headerlink" href="#cmdstanpy-1-0-4" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Fix an issue with <a class="reference internal" href="api.html#cmdstanpy.install_cmdstan" title="cmdstanpy.install_cmdstan"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.install_cmdstan()</span></code></a> where the installation would report that it had failed even when it had not.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-3">
-<h2>CmdStanPy 1.0.3<a class="headerlink" href="#cmdstanpy-1-0-3" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.3<a class="headerlink" href="#cmdstanpy-1-0-3" title="Permalink to this heading">¶</a></h2>
 <ul>
 <li><p>Fix an issue where Stan fit objects were not <code class="docutils literal notranslate"><span class="pre">pickle</span></code>-able when they previously were.</p>
 <div class="admonition warning">
@@ -368,7 +389,7 @@ and model development.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-2">
-<h2>CmdStanPy 1.0.2<a class="headerlink" href="#cmdstanpy-1-0-2" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.2<a class="headerlink" href="#cmdstanpy-1-0-2" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>CmdStanPy can now format (and canonicalize) your Stan files with <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.format" title="cmdstanpy.CmdStanModel.format"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.format()</span></code></a></p></li>
 <li><p>Stan variables can now be accessed from fit objects using the <cite>.</cite> syntax when no naming conflicts occur. For example, previous code <code class="docutils literal notranslate"><span class="pre">fit.stan_variable(&quot;my_cool_variable&quot;)</span></code> can now be written <code class="docutils literal notranslate"><span class="pre">fit.my_cool_variable</span></code></p></li>
@@ -381,7 +402,7 @@ and model development.</p></li>
 </ul>
 </section>
 <section id="cmdstanpy-1-0-1">
-<h2>CmdStanPy 1.0.1<a class="headerlink" href="#cmdstanpy-1-0-1" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.1<a class="headerlink" href="#cmdstanpy-1-0-1" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Support new optimizations in CmdStan 2.29</p></li>
 <li><p>Support complex numbers as both inputs and outputs of Stan programs</p></li>
@@ -396,7 +417,7 @@ and model development.</p></li>
 </div>
 </section>
 <section id="cmdstanpy-1-0-0">
-<h2>CmdStanPy 1.0.0<a class="headerlink" href="#cmdstanpy-1-0-0" title="Permalink to this headline">#</a></h2>
+<h2>CmdStanPy 1.0.0<a class="headerlink" href="#cmdstanpy-1-0-0" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Initial release</p></li>
 </ul>
@@ -431,9 +452,8 @@ and model development.</p></li>
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -444,7 +464,7 @@ and model development.</p></li>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     

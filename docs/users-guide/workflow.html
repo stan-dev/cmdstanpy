@@ -1,36 +1,40 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.2.0 documentation</title>
+    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.2.1 documentation</title>
     
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-
+  
     
-  <link rel="stylesheet"
-    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-
+    <link rel="stylesheet"
+      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     
-  <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-
+    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -40,7 +44,7 @@
     <link rel="prev" title="“Hello, World!”" href="hello_world.html" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
+    <meta name="docsearch:language" content="en">
     
 
     <!-- Google Analytics -->
@@ -48,7 +52,7 @@
 <link rel="stylesheet" href="_static/basic.css" type="text/css" />
 
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -59,7 +63,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.0</a>
+<a class='navbar-brand' href='../index.html'>CmdStanPy 1.2.1</a>
     
   </div>
 
@@ -230,7 +234,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage mt-5 pt-1 pb-3">
+<div class="tocsection onthispage pt-5 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -292,7 +296,7 @@
               <div>
                 
   <section id="cmdstanpy-workflow">
-<h1>CmdStanPy Workflow<a class="headerlink" href="#cmdstanpy-workflow" title="Permalink to this headline">#</a></h1>
+<h1>CmdStanPy Workflow<a class="headerlink" href="#cmdstanpy-workflow" title="Permalink to this heading">¶</a></h1>
 <p>The statistical modeling enterprise has two principal modalities:
 development and production.
 The focus of development is model building, comparison, and validation.
@@ -322,7 +326,7 @@ also applies to monitoring model performance in production.
 The following sections describe the process of building, running, and
 managing the resulting inference for a single model and set of inputs.</p>
 <section id="compile-the-stan-model">
-<span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Permalink to this headline">#</a></h2>
+<span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Permalink to this heading">¶</a></h2>
 <p>The: <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class provides methods
 to compile and run the Stan program.
 A CmdStanModel object can be instantiated by specifying
@@ -384,7 +388,7 @@ we recommend the value <code class="docutils literal notranslate"><span class="p
 </div>
 </section>
 <section id="assemble-input-and-initialization-data">
-<h2>Assemble input and initialization data<a class="headerlink" href="#assemble-input-and-initialization-data" title="Permalink to this headline">#</a></h2>
+<h2>Assemble input and initialization data<a class="headerlink" href="#assemble-input-and-initialization-data" title="Permalink to this heading">¶</a></h2>
 <p>CmdStan is file-based interface, therefore all model input and
 initialization data must be supplied as JSON files, as described in the
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/json.html">CmdStan User’s Guide</a>.</p>
@@ -396,7 +400,7 @@ these inputs contain either a collection compatible with
 numpy arrays or pandas.Series.</p>
 </section>
 <section id="run-the-cmdstan-inference-engine">
-<h2>Run the CmdStan inference engine<a class="headerlink" href="#run-the-cmdstan-inference-engine" title="Permalink to this headline">#</a></h2>
+<h2>Run the CmdStan inference engine<a class="headerlink" href="#run-the-cmdstan-inference-engine" title="Permalink to this heading">¶</a></h2>
 <p>For each CmdStan inference method, there is a corresponding method on the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class.
 An example of each is provided in the <a class="reference internal" href="examples.html"><span class="doc">next section</span></a>.</p>
 <ul>
@@ -414,8 +418,8 @@ a sample from a Gaussian approximation the posterior distribution.</p>
 <a class="reference external" href="https://mc-stan.org/docs/reference-manual/vi-algorithms-chapter.html">Automatic Differentiation Variational Inference (ADVI) algorithm</a>.</p>
 <p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a> object which contains an approximation the posterior distribution.</p>
 </li>
-<li><p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.optimize" title="cmdstanpy.CmdStanModel.optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">optimize()</span></code></a> runs one of
-<a class="reference external" href="https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html">Stan’s optimization algorithms</a>.
+<li><p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.optimize" title="cmdstanpy.CmdStanModel.optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">optimize()</span></code></a> runs one of Stan’s
+<a class="reference external" href="https://mc-stan.org/docs/reference-manual/optimization-algorithms-chapter.html">optimization algorithms</a>
 to find a mode of the density specified by the Stan program.</p>
 <p>It returns a <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a> object.</p>
 </li>
@@ -429,7 +433,7 @@ uses the parameter estimates in the fit to run the Stan program’s
 </ul>
 </section>
 <section id="validate-view-export-the-inference-engine-outputs">
-<h2>Validate, view, export the inference engine outputs<a class="headerlink" href="#validate-view-export-the-inference-engine-outputs" title="Permalink to this headline">#</a></h2>
+<h2>Validate, view, export the inference engine outputs<a class="headerlink" href="#validate-view-export-the-inference-engine-outputs" title="Permalink to this heading">¶</a></h2>
 <p>The inference method-specific results objects
 <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanPathfinder" title="cmdstanpy.CmdStanPathfinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanPathfinder</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a>,
 <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a>, and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a>
@@ -438,7 +442,7 @@ and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
 as well as method-specific informational properties and methods.objects</p>
 <section id="output-data">
-<h3>Output data<a class="headerlink" href="#output-data" title="Permalink to this headline">#</a></h3>
+<h3>Output data<a class="headerlink" href="#output-data" title="Permalink to this heading">¶</a></h3>
 <p>The resulting Stan CSV file or set of files are assembled into an inference result object.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> object contains the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> outputs</p></li>
@@ -461,7 +465,7 @@ method variables, cf <a class="reference internal" href="../api.html#cmdstanpy.C
 <p>The output from the methods <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a> return the sample contents
 in tabular form, see <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws" title="cmdstanpy.CmdStanMCMC.draws"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws()</span></code></a> and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws_pd" title="cmdstanpy.CmdStanMCMC.draws_pd"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_pd()</span></code></a>.
 Similarly, the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws_xr" title="cmdstanpy.CmdStanMCMC.draws_xr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_xr()</span></code></a> method returns the sample
-contents as an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2023.9.1.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which is a mapping from variable names to their respective values.</p>
+contents as an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2024.1.2.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which is a mapping from variable names to their respective values.</p>
 </section>
 </section>
 </section>
@@ -494,9 +498,8 @@ contents as an <a class="reference external" href="https://docs.xarray.dev/en/st
       </div>
     </div>
   
-  <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
+    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -507,7 +510,7 @@ contents as an <a class="reference external" href="https://docs.xarray.dev/en/st
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
     </div>
     
