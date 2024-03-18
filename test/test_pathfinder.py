@@ -152,3 +152,20 @@ def test_pathfinder_no_lp_calc():
     n_lp_nan = np.sum(np.isnan(pathfinder.method_variables()['lp__']))
     assert n_lp_nan < 4000  # some lp still calculated during pathfinder
     assert n_lp_nan > 3000  # but most are not
+
+
+def test_pathfinder_threads():
+    stan = DATAFILES_PATH / 'bernoulli.stan'
+    bern_model = cmdstanpy.CmdStanModel(stan_file=stan)
+    jdata = str(DATAFILES_PATH / 'bernoulli.data.json')
+
+    bern_model.pathfinder(data=jdata, num_threads=1)
+
+    with pytest.raises(ValueError, match="STAN_THREADS"):
+        bern_model.pathfinder(data=jdata, num_threads=4)
+
+    bern_model = cmdstanpy.CmdStanModel(
+        stan_file=stan, cpp_options={'STAN_THREADS': True}, force_compile=True
+    )
+    pathfinder = bern_model.pathfinder(data=jdata, num_threads=4)
+    assert pathfinder.draws().shape == (1000, 3)
