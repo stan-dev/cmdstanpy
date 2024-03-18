@@ -55,7 +55,7 @@ BERNOULLI_COLS = SAMPLER_STATE + ['theta']
 )
 def test_bernoulli_good(stanfile: str):
     stan = os.path.join(DATAFILES_PATH, stanfile)
-    bern_model = CmdStanModel(stan_file=stan)
+    bern_model = CmdStanModel(stan_file=stan, force_compile=True)
 
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
     bern_fit = bern_model.sample(
@@ -74,6 +74,7 @@ def test_bernoulli_good(stanfile: str):
 
     for i in range(bern_fit.runset.chains):
         csv_file = bern_fit.runset.csv_files[i]
+        # NB this assumes we're not using threads for chains
         stdout_file = bern_fit.runset.stdout_files[i]
         assert os.path.exists(csv_file)
         assert os.path.exists(stdout_file)
