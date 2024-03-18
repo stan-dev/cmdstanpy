@@ -22,7 +22,7 @@ atexit.register(_cleanup_tmpdir)
 
 
 from ._version import __version__  # noqa
-from .compilation import compile_stan_file
+from .compilation import compile_stan_file, format_stan_file
 from .install_cmdstan import rebuild_cmdstan
 from .model import CmdStanModel
 from .stanfit import (
@@ -50,6 +50,7 @@ __all__ = [
     'set_make_env',
     'install_cmdstan',
     'compile_stan_file',
+    'format_stan_file',
     'CmdStanMCMC',
     'CmdStanMLE',
     'CmdStanGQ',
