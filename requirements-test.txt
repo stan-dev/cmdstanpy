@@ -1,8 +1,0 @@
-flake8
-pylint
-pytest
-pytest-cov
-pytest-order
-mypy
-tqdm
-xarray

@@ -23,7 +23,6 @@ repos:
     rev: v1.5.0
     hooks:
       - id: mypy
-        # Copied from setup.cfg
         exclude: ^test/
         additional_dependencies: [ numpy >= 1.22]
   # local uses the user-installed pylint, this allows dependency checking

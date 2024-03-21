@@ -56,12 +56,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies (python)
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip wheel build
+
+      - name: Build package
         run: |
-          python -m pip install --upgrade pip wheel build
-          pip install -r requirements.txt
-          pip install -r requirements-test.txt
-          pip install codecov
+          python -m build
+          python -m pip install .[test]
+
+      - name: Show libraries
+        run: python -m pip freeze
 
       - name: Install numpy, scipy nightlies
         if: matrix.python-version == '3.11' && matrix.os != 'windows-latest'
@@ -74,22 +78,6 @@ jobs:
           flake8 cmdstanpy test
           pylint -v cmdstanpy test
           mypy cmdstanpy
-
-      - name: Build wheel
-        run: python -m build
-
-      - name: Install wheel (Linux, macOS)
-        if: matrix.os != 'windows-latest'
-        run: pip install dist/*.whl
-
-      - name: Install wheel (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          $whl = Get-ChildItem -Path dist -Filter *.whl | Select-Object -First 1
-          pip install "$whl"
-
-      - name: Show libraries
-        run: python -m pip freeze
 
       - name: CmdStan installation cacheing
         id: cache-cmdstan
@@ -123,13 +111,8 @@ jobs:
           cd run_tests
           pytest -v ../test --cov=../cmdstanpy
 
-      - name: Run model with requirements-optional.txt
-        run: |
-          cd run_tests
-          python -m pip install -r ../requirements-optional.txt
-          python ../test/example_script.py
-
       - name: Submit codecov
         run: |
+          pip install codecov
           cd run_tests
           codecov

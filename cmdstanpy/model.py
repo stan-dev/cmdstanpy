@@ -10,7 +10,6 @@ import tempfile
 import threading
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from io import StringIO
 from multiprocessing import cpu_count
 from typing import (
@@ -57,9 +56,7 @@ from cmdstanpy.stanfit import (
     from_csv,
 )
 from cmdstanpy.utils import (
-    EXTENSION,
     cmdstan_path,
-    cmdstan_version,
     cmdstan_version_before,
     do_command,
     get_logger,
@@ -320,6 +317,7 @@ class CmdStanModel:
             return {}
         return compilation.src_info(str(self.stan_file), self._compiler_options)
 
+    # TODO(2.0) remove
     def format(
         self,
         overwrite_file: bool = False,
@@ -329,6 +327,8 @@ class CmdStanModel:
         backup: bool = True,
     ) -> None:
         """
+        Deprecated: Use :func:`cmdstanpy.format_stan_file()` instead.
+
         Run stanc's auto-formatter on the model code. Either saves directly
         back to the file or prints for inspection
 
@@ -345,72 +345,24 @@ class CmdStanModel:
             writing to the file. Only disable this if you're sure you have other
             copies of the file or are using a version control system like Git.
         """
-        if self.stan_file is None or not os.path.isfile(self.stan_file):
+
+        get_logger().warning(
+            "CmdStanModel.format() is deprecated and will be "
+            "removed in the next major version.\n"
+            "Use cmdstanpy.format_stan_file() instead."
+        )
+
+        if self.stan_file is None:
             raise ValueError("No Stan file found for this module")
-        try:
-            cmd = (
-                [os.path.join(cmdstan_path(), 'bin', 'stanc' + EXTENSION)]
-                # handle include-paths, allow-undefined etc
-                + self._compiler_options.compose_stanc(None)
-                + [str(self.stan_file)]
-            )
 
-            if canonicalize:
-                if cmdstan_version_before(2, 29):
-                    if isinstance(canonicalize, bool):
-                        cmd.append('--print-canonical')
-                    else:
-                        raise ValueError(
-                            "Invalid arguments passed for current CmdStan"
-                            + " version({})\n".format(
-                                cmdstan_version() or "Unknown"
-                            )
-                            + "--canonicalize requires 2.29 or higher"
-                        )
-                else:
-                    if isinstance(canonicalize, str):
-                        cmd.append('--canonicalize=' + canonicalize)
-                    elif isinstance(canonicalize, Iterable):
-                        cmd.append('--canonicalize=' + ','.join(canonicalize))
-                    else:
-                        cmd.append('--print-canonical')
-
-            # before 2.29, having both --print-canonical
-            # and --auto-format printed twice
-            if not (cmdstan_version_before(2, 29) and canonicalize):
-                cmd.append('--auto-format')
-
-            if not cmdstan_version_before(2, 29):
-                cmd.append(f'--max-line-length={max_line_length}')
-            elif max_line_length != 78:
-                raise ValueError(
-                    "Invalid arguments passed for current CmdStan version"
-                    + " ({})\n".format(cmdstan_version() or "Unknown")
-                    + "--max-line-length requires 2.29 or higher"
-                )
-
-            out = subprocess.run(
-                cmd, capture_output=True, text=True, check=True
-            )
-            if out.stderr:
-                get_logger().warning(out.stderr)
-            result = out.stdout
-            if overwrite_file:
-                if result:
-                    if backup:
-                        shutil.copyfile(
-                            self.stan_file,
-                            str(self.stan_file)
-                            + '.bak-'
-                            + datetime.now().strftime("%Y%m%d%H%M%S"),
-                        )
-                    with open(self.stan_file, 'w') as file_handle:
-                        file_handle.write(result)
-            else:
-                print(result)
-
-        except (ValueError, RuntimeError) as e:
-            raise RuntimeError("Stanc formatting failed") from e
+        compilation.format_stan_file(
+            self.stan_file,
+            overwrite_file=overwrite_file,
+            max_line_length=max_line_length,
+            canonicalize=canonicalize,
+            backup=backup,
+            stanc_options=self.stanc_options,
+        )
 
     @property
     def stanc_options(self) -> Dict[str, Union[bool, int, str]]:
