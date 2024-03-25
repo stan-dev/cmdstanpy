@@ -2,6 +2,8 @@
     Tests for the Pathfinder method.
 """
 
+import contextlib
+from io import StringIO
 from pathlib import Path
 
 import numpy as np
@@ -129,6 +131,26 @@ def test_pathfinder_init_sampling():
     assert fit.draws().shape == (1000, 4, 9)
 
 
+def test_inits_for_pathfinder():
+    stan = DATAFILES_PATH / 'bernoulli.stan'
+    bern_model = cmdstanpy.CmdStanModel(stan_file=stan)
+    jdata = str(DATAFILES_PATH / 'bernoulli.data.json')
+    bern_model.pathfinder(
+        jdata, inits=[{"theta": 0.1}, {"theta": 0.9}], num_paths=2
+    )
+
+    # second path is initialized too large!
+    with contextlib.redirect_stdout(StringIO()) as captured:
+        bern_model.pathfinder(
+            jdata,
+            inits=[{"theta": 0.1}, {"theta": 1.1}],
+            num_paths=2,
+            show_console=True,
+        )
+
+    assert "Bounded variable is 1.1" in captured.getvalue()
+
+
 def test_pathfinder_no_psis():
     stan = DATAFILES_PATH / 'bernoulli.stan'
     bern_model = cmdstanpy.CmdStanModel(stan_file=stan)
@@ -152,3 +174,20 @@ def test_pathfinder_no_lp_calc():
     n_lp_nan = np.sum(np.isnan(pathfinder.method_variables()['lp__']))
     assert n_lp_nan < 4000  # some lp still calculated during pathfinder
     assert n_lp_nan > 3000  # but most are not
+
+
+def test_pathfinder_threads():
+    stan = DATAFILES_PATH / 'bernoulli.stan'
+    bern_model = cmdstanpy.CmdStanModel(stan_file=stan)
+    jdata = str(DATAFILES_PATH / 'bernoulli.data.json')
+
+    bern_model.pathfinder(data=jdata, num_threads=1)
+
+    with pytest.raises(ValueError, match="STAN_THREADS"):
+        bern_model.pathfinder(data=jdata, num_threads=4)
+
+    bern_model = cmdstanpy.CmdStanModel(
+        stan_file=stan, cpp_options={'STAN_THREADS': True}, force_compile=True
+    )
+    pathfinder = bern_model.pathfinder(data=jdata, num_threads=4)
+    assert pathfinder.draws().shape == (1000, 3)
