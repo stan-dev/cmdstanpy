@@ -74,7 +74,8 @@ def test_bernoulli_good(stanfile: str):
 
     for i in range(bern_fit.runset.chains):
         csv_file = bern_fit.runset.csv_files[i]
-        # NB this assumes we're not using threads for chains
+        # NB: This will fail if STAN_THREADS is enabled
+        # due to sampling only producing 1 stdout file in that case
         stdout_file = bern_fit.runset.stdout_files[i]
         assert os.path.exists(csv_file)
         assert os.path.exists(stdout_file)
