@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies (python)
         run: |
           python -m pip install --upgrade pip wheel build twine requests
-          pip install -e .[doc,test]
+          pip install -e .[docs,test]
 
       - name: Install CmdStan
         run: |
