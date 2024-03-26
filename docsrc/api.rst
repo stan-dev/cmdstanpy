@@ -84,16 +84,16 @@ CmdStanGQ
 Functions
 *********
 
-compile_stan_model
-=============
+compile_stan_file
+=================
 
-.. autofunction:: cmdstanpy.compile_stan_model
+.. autofunction:: cmdstanpy.compile_stan_file
 
 
-format_stan_model
-=============
+format_stan_file
+================
 
-.. autofunction:: cmdstanpy.format_stan_model
+.. autofunction:: cmdstanpy.format_stan_file
 
 show_versions
 =============
