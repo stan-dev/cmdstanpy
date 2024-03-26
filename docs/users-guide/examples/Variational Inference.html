@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Variational Inference using ADVI &#8212; CmdStanPy 1.2.1 documentation</title>
+    <title>Variational Inference using ADVI &#8212; CmdStanPy 1.2.2 documentation</title>
     
     <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -39,6 +39,7 @@
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Using Variational Estimates to Initialize the NUTS-HMC Sampler" href="VI%20as%20Sampler%20Inits.html" />
@@ -64,7 +65,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.1</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.2</a>
     
   </div>
 
@@ -310,16 +311,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/opt/hostedtoolcache/Python/3.9.18/x64/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-20:41:57 - cmdstanpy - INFO - Chain [1] start processing
+16:30:04 - cmdstanpy - INFO - Chain [1] start processing
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -327,7 +319,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:41:57 - cmdstanpy - INFO - Chain [1] done processing
+16:30:04 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <p>The class <code class="docutils literal notranslate"><span class="pre">`CmdStanVB</span></code> &lt;<a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanvb">https://mc-stan.org/cmdstanpy/api.html#cmdstanvb</a>&gt;`__ provides the following properties to access information about the parameter names, estimated means, and the sample:</p>
@@ -370,7 +362,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-0.234156
+0.228927
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -404,7 +396,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:41:57 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
+16:30:04 - cmdstanpy - INFO - compiling stan file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail.stan to exe file /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -412,7 +404,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:42:13 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
+16:30:21 - cmdstanpy - INFO - compiled model executable: /home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/eta_should_fail
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -420,7 +412,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:42:13 - cmdstanpy - INFO - Chain [1] start processing
+16:30:21 - cmdstanpy - INFO - Chain [1] start processing
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -428,7 +420,7 @@ denoted by <code class="docutils literal notranslate"><span class="pre">tol_rel_
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:42:13 - cmdstanpy - INFO - Chain [1] done processing
+16:30:21 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -442,20 +434,20 @@ Cell <span class="ansi-green-fg">In[5], line 2</span>
 <span class="ansi-green-intense-fg ansi-bold">      1</span> model_fail <span style="color: rgb(98,98,98)">=</span> CmdStanModel(stan_file<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">eta_should_fail.stan</span><span style="color: rgb(175,0,0)">&#39;</span>)
 <span class="ansi-green-fg">----&gt; 2</span> vi_fail <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">model_fail</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">variational</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">)</span>
 
-File <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py:1575</span>, in <span class="ansi-cyan-fg">CmdStanModel.variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_latent_dynamics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, draws, require_converged, show_console, refresh, time_fmt, timeout, output_samples)</span>
-<span class="ansi-green-intense-fg ansi-bold">   1573</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span style="color: rgb(0,135,0)">len</span>(re<span style="color: rgb(98,98,98)">.</span>findall(pat, contents)) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>:
-<span class="ansi-green-intense-fg ansi-bold">   1574</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> require_converged:
-<span class="ansi-green-fg">-&gt; 1575</span>         <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">RuntimeError</span>(
-<span class="ansi-green-intense-fg ansi-bold">   1576</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1577</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">If you would like to inspect the output, </span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1578</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">re-call with require_converged=False</span><span style="color: rgb(175,0,0)">&#39;</span>
-<span class="ansi-green-intense-fg ansi-bold">   1579</span>         )
-<span class="ansi-green-intense-fg ansi-bold">   1580</span>     <span style="color: rgb(95,135,135)"># else:</span>
-<span class="ansi-green-intense-fg ansi-bold">   1581</span>     get_logger()<span style="color: rgb(98,98,98)">.</span>warning(
-<span class="ansi-green-intense-fg ansi-bold">   1582</span>         <span style="color: rgb(175,0,0)">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span style="color: rgb(175,0,0)">&#39;</span>,
-<span class="ansi-green-intense-fg ansi-bold">   1583</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span style="color: rgb(175,0,0)">&#39;</span>,
-<span class="ansi-green-intense-fg ansi-bold">   1584</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Proceeding because require_converged is set to False</span><span style="color: rgb(175,0,0)">&#39;</span>,
-<span class="ansi-green-intense-fg ansi-bold">   1585</span>     )
+File <span class="ansi-green-fg">~/work/cmdstanpy/cmdstanpy/cmdstanpy/model.py:1527</span>, in <span class="ansi-cyan-fg">CmdStanModel.variational</span><span class="ansi-blue-fg">(self, data, seed, inits, output_dir, sig_figs, save_latent_dynamics, save_profile, algorithm, iter, grad_samples, elbo_samples, eta, adapt_engaged, adapt_iter, tol_rel_obj, eval_elbo, draws, require_converged, show_console, refresh, time_fmt, timeout, output_samples)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1525</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span style="color: rgb(0,135,0)">len</span>(re<span style="color: rgb(98,98,98)">.</span>findall(pat, contents)) <span style="color: rgb(98,98,98)">&gt;</span> <span style="color: rgb(98,98,98)">0</span>:
+<span class="ansi-green-intense-fg ansi-bold">   1526</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> require_converged:
+<span class="ansi-green-fg">-&gt; 1527</span>         <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">RuntimeError</span>(
+<span class="ansi-green-intense-fg ansi-bold">   1528</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1529</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">If you would like to inspect the output, </span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1530</span>             <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">re-call with require_converged=False</span><span style="color: rgb(175,0,0)">&#39;</span>
+<span class="ansi-green-intense-fg ansi-bold">   1531</span>         )
+<span class="ansi-green-intense-fg ansi-bold">   1532</span>     <span style="color: rgb(95,135,135)"># else:</span>
+<span class="ansi-green-intense-fg ansi-bold">   1533</span>     get_logger()<span style="color: rgb(98,98,98)">.</span>warning(
+<span class="ansi-green-intense-fg ansi-bold">   1534</span>         <span style="color: rgb(175,0,0)">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-bold" style="color: rgb(175,95,135)">%s</span><span style="color: rgb(175,0,0)">&#39;</span>,
+<span class="ansi-green-intense-fg ansi-bold">   1535</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">The algorithm may not have converged.</span><span style="color: rgb(175,0,0)">&#39;</span>,
+<span class="ansi-green-intense-fg ansi-bold">   1536</span>         <span style="color: rgb(175,0,0)">&#39;</span><span style="color: rgb(175,0,0)">Proceeding because require_converged is set to False</span><span style="color: rgb(175,0,0)">&#39;</span>,
+<span class="ansi-green-intense-fg ansi-bold">   1537</span>     )
 
 <span class="ansi-red-fg">RuntimeError</span>: The algorithm may not have converged.
 If you would like to inspect the output, re-call with require_converged=False
@@ -475,7 +467,7 @@ If you would like to inspect the output, re-call with require_converged=False
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:42:13 - cmdstanpy - INFO - Chain [1] start processing
+16:30:21 - cmdstanpy - INFO - Chain [1] start processing
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -483,7 +475,7 @@ If you would like to inspect the output, re-call with require_converged=False
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:42:13 - cmdstanpy - INFO - Chain [1] done processing
+16:30:21 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -491,7 +483,7 @@ If you would like to inspect the output, re-call with require_converged=False
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-20:42:13 - cmdstanpy - WARNING - The algorithm may not have converged.
+16:30:21 - cmdstanpy - WARNING - The algorithm may not have converged.
 Proceeding because require_converged is set to False
 </pre></div></div>
 </div>
@@ -513,8 +505,8 @@ Proceeding because require_converged is set to False
 OrderedDict([(&#39;lp__&#39;, 0.0),
              (&#39;log_p__&#39;, 0.0),
              (&#39;log_g__&#39;, 0.0),
-             (&#39;mu[1]&#39;, 0.00316325),
-             (&#39;mu[2]&#39;, 0.0245446)])
+             (&#39;mu[1]&#39;, -0.0227764),
+             (&#39;mu[2]&#39;, -0.057944)])
 </pre></div></div>
 </div>
 <p>See the <a class="reference external" href="https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.variational">API documentation</a> for a full description of all arguments.</p>

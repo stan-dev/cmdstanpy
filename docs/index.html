@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.2.1 documentation</title>
+    <title>cmdstanpy – Python interface to CmdStan &#8212; CmdStanPy 1.2.2 documentation</title>
     
     <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -38,6 +38,7 @@
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" />
@@ -62,7 +63,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='#'>CmdStanPy 1.2.1</a>
+<a class='navbar-brand' href='#'>CmdStanPy 1.2.2</a>
     
   </div>
 
@@ -314,6 +315,14 @@ set of model, data, and posterior estimates.</p>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#compile-stan-file">compile_stan_file</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.compile_stan_file"><code class="docutils literal notranslate"><span class="pre">compile_stan_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#format-stan-file">format_stan_file</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.format_stan_file"><code class="docutils literal notranslate"><span class="pre">format_stan_file()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="api.html#show-versions">show_versions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="api.html#cmdstanpy.show_versions"><code class="docutils literal notranslate"><span class="pre">show_versions()</span></code></a></li>
 </ul>
@@ -351,6 +360,7 @@ set of model, data, and posterior estimates.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changes.html">What’s New</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-2-2">CmdStanPy 1.2.2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-2-1">CmdStanPy 1.2.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-2-0">CmdStanPy 1.2.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#cmdstanpy-1-1-0">CmdStanPy 1.1.0</a></li>
