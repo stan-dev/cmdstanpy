@@ -62,6 +62,7 @@ jobs:
       - name: Install numpy, scipy nightlies
         run: |
           pip install -U --pre numpy==2.0.0rc1
+          pip install "python-dateutil>=2.8.2"
           pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U scipy pandas
 
       - name: Build package
