@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.cmdstan_args &#8212; CmdStanPy 1.2.1 documentation</title>
+    <title>cmdstanpy.cmdstan_args &#8212; CmdStanPy 1.2.2 documentation</title>
     
     <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -37,6 +37,7 @@
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -60,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.1</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.2</a>
     
   </div>
 
@@ -1103,6 +1104,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
                     <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method_args</span><span class="p">,</span> <span class="n">SamplerArgs</span><span class="p">)</span>
                     <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_args</span><span class="o">.</span><span class="n">num_chains</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                    <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">method_args</span><span class="p">,</span> <span class="n">PathfinderArgs</span><span class="p">)</span>
                 <span class="p">):</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">):</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no such file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inits</span><span class="p">))</span>

@@ -9,8 +9,8 @@ Project templates
 Templates are a great way to piggy back on other users' work, saving you time
 when you start a new project.
 
-- `cookiecutter-cmdstanpy-analysis <https://github.com/teddygroves/cookiecutter-cmdstanpy-analysis>`_
-  A cookiecutter template for cmdstanpy-based statistical analysis projects.
+- `bibat <https://github.com/teddygroves/bibat>`_
+  A batteries-included template for Bayesian statistical analysis projects.
 
 - `cookiecutter-cmdstanpy-wrapper <https://github.com/WardBrian/cookiecutter-cmdstanpy-wrapper>`_
   A cookiecutter template using Stan models in Python packages, including

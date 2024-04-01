@@ -1587,6 +1587,7 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
+        num_threads: Optional[int] = None,
     ) -> CmdStanPathfinder:
         """
         Run CmdStan's Pathfinder variational inference algorithm.
@@ -1689,6 +1690,10 @@ class CmdStanModel:
         :param timeout: Duration at which Pathfinder times
             out in seconds. Defaults to None.
 
+        :param num_threads: Number of threads to request for parallel execution.
+            A number other than ``1`` requires the model to have been compiled
+            with STAN_THREADS=True.
+
         :return: A :class:`CmdStanPathfinder` object
 
         References
@@ -1714,6 +1719,17 @@ class CmdStanModel:
                 "Arguments 'psis_resample' and 'calculate_lp' are only "
                 "available for CmdStan versions 2.34 and later"
             )
+
+        if num_threads is not None:
+            if (
+                num_threads != 1
+                and exe_info.get('STAN_THREADS', '').lower() != 'true'
+            ):
+                raise ValueError(
+                    "Model must be compiled with 'STAN_THREADS=true' to use"
+                    " 'num_threads' argument"
+                )
+            os.environ['STAN_NUM_THREADS'] = str(num_threads)
 
         if num_paths == 1:
             if num_single_draws is None:

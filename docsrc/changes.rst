@@ -7,6 +7,19 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
+CmdStanPy 1.2.2
+---------------
+
+- Updated Community page to link to the ``bibat`` package.
+- Moved CmdStanPy's metadata to exclusively use the ``pyproject.toml`` file.
+- Fixed an issue where the deprecation of the ``compile=False`` argument to :class:`CmdStanModel` would
+  make it impossible to use the canonicalizer to update old models.
+  The new function :func:`cmdstanpy.format_stan_file` supports this use case.
+- Fixed a bug preventing multiple inits from being used with :meth:`CmdStanModel.pathfinder`.
+- Added a helper argument ``num_threads`` to :meth:`CmdStanModel.pathfinder`.
+
+Reminder: The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations.
+
 CmdStanPy 1.2.1
 ---------------
 

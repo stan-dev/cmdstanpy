@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>What’s New &#8212; CmdStanPy 1.2.1 documentation</title>
+    <title>What’s New &#8212; CmdStanPy 1.2.2 documentation</title>
     
     <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -38,6 +38,7 @@
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Community" href="community.html" />
@@ -63,7 +64,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='index.html'>CmdStanPy 1.2.1</a>
+<a class='navbar-brand' href='index.html'>CmdStanPy 1.2.2</a>
     
   </div>
 
@@ -172,6 +173,11 @@
 <nav id="bd-toc-nav">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#cmdstanpy-1-2-2">
+   CmdStanPy 1.2.2
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#cmdstanpy-1-2-1">
    CmdStanPy 1.2.1
   </a>
@@ -262,6 +268,19 @@
   <section id="what-s-new">
 <h1>What’s New<a class="headerlink" href="#what-s-new" title="Permalink to this heading">¶</a></h1>
 <p>For full changes, see the <a class="reference external" href="https://github.com/stan-dev/cmdstanpy/releases">Releases page</a> on GitHub.</p>
+<section id="cmdstanpy-1-2-2">
+<h2>CmdStanPy 1.2.2<a class="headerlink" href="#cmdstanpy-1-2-2" title="Permalink to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Updated Community page to link to the <code class="docutils literal notranslate"><span class="pre">bibat</span></code> package.</p></li>
+<li><p>Moved CmdStanPy’s metadata to exclusively use the <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> file.</p></li>
+<li><p>Fixed an issue where the deprecation of the <code class="docutils literal notranslate"><span class="pre">compile=False</span></code> argument to <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> would
+make it impossible to use the canonicalizer to update old models.
+The new function <a class="reference internal" href="api.html#cmdstanpy.format_stan_file" title="cmdstanpy.format_stan_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.format_stan_file()</span></code></a> supports this use case.</p></li>
+<li><p>Fixed a bug preventing multiple inits from being used with <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.pathfinder" title="cmdstanpy.CmdStanModel.pathfinder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.pathfinder()</span></code></a>.</p></li>
+<li><p>Added a helper argument <code class="docutils literal notranslate"><span class="pre">num_threads</span></code> to <a class="reference internal" href="api.html#cmdstanpy.CmdStanModel.pathfinder" title="cmdstanpy.CmdStanModel.pathfinder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanModel.pathfinder()</span></code></a>.</p></li>
+</ul>
+<p>Reminder: The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations.</p>
+</section>
 <section id="cmdstanpy-1-2-1">
 <h2>CmdStanPy 1.2.1<a class="headerlink" href="#cmdstanpy-1-2-1" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
@@ -291,7 +310,7 @@ The next non-bugfix release of CmdStanPy will be version 2.0, which will remove 
 <ul>
 <li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> will <em>require</em> that it has a compiled executable after construction. The <code class="docutils literal notranslate"><span class="pre">compile</span></code> argument is deprecated,
 (the ability to force recompilation is available under the argument <code class="docutils literal notranslate"><span class="pre">force_compile</span></code>), and the <code class="docutils literal notranslate"><span class="pre">compile()</span></code> method is deprecated.
-If you wish to compile Stan files independent of constructing a model, use <code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.compile_stan_file()</span></code>.</p></li>
+If you wish to compile Stan files independent of constructing a model, use <a class="reference internal" href="api.html#cmdstanpy.compile_stan_file" title="cmdstanpy.compile_stan_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.compile_stan_file()</span></code></a>.</p></li>
 <li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanMLE.stan_variable" title="cmdstanpy.CmdStanMLE.stan_variable"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanMLE.stan_variable()</span></code></a> will begin returning a <code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> in all cases, as opposed to the current behavior where sometimes a float is returned.</p></li>
 <li><p><a class="reference internal" href="api.html#cmdstanpy.CmdStanVB.stan_variables" title="cmdstanpy.CmdStanVB.stan_variables"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CmdStanVB.stan_variables()</span></code></a> will return the _draws_ from the approximate posterior, rather than the optimized mean.
 A new argument, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, can be set to True to return the mean instead. Additionally, a <code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> will be returned in all cases starting in the next version.</p></li>

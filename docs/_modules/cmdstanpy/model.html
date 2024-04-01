@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.model &#8212; CmdStanPy 1.2.1 documentation</title>
+    <title>cmdstanpy.model &#8212; CmdStanPy 1.2.2 documentation</title>
     
     <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -37,6 +37,7 @@
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
 
@@ -60,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.1</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.2</a>
     
   </div>
 
@@ -183,7 +184,6 @@
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">cpu_count</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
@@ -230,9 +230,7 @@
     <span class="n">from_csv</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">EXTENSION</span><span class="p">,</span>
     <span class="n">cmdstan_path</span><span class="p">,</span>
-    <span class="n">cmdstan_version</span><span class="p">,</span>
     <span class="n">cmdstan_version_before</span><span class="p">,</span>
     <span class="n">do_command</span><span class="p">,</span>
     <span class="n">get_logger</span><span class="p">,</span>
@@ -493,6 +491,7 @@
             <span class="k">return</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="n">compilation</span><span class="o">.</span><span class="n">src_info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="p">)</span></div>
 
+    <span class="c1"># TODO(2.0) remove</span>
 <div class="viewcode-block" id="CmdStanModel.format"><a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">overwrite_file</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -502,6 +501,8 @@
         <span class="n">backup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated: Use :func:`cmdstanpy.format_stan_file()` instead.</span>
+
 <span class="sd">        Run stanc&#39;s auto-formatter on the model code. Either saves directly</span>
 <span class="sd">        back to the file or prints for inspection</span>
 
@@ -518,72 +519,24 @@
 <span class="sd">            writing to the file. Only disable this if you&#39;re sure you have other</span>
 <span class="sd">            copies of the file or are using a version control system like Git.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">):</span>
+
+        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;CmdStanModel.format() is deprecated and will be &quot;</span>
+            <span class="s2">&quot;removed in the next major version.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Use cmdstanpy.format_stan_file() instead.&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No Stan file found for this module&quot;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">cmd</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;stanc&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)]</span>
-                <span class="c1"># handle include-paths, allow-undefined etc</span>
-                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">compose_stanc</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-                <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">)]</span>
-            <span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">canonicalize</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">29</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">canonicalize</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
-                        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--print-canonical&#39;</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                            <span class="s2">&quot;Invalid arguments passed for current CmdStan&quot;</span>
-                            <span class="o">+</span> <span class="s2">&quot; version(</span><span class="si">{}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                <span class="n">cmdstan_version</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;Unknown&quot;</span>
-                            <span class="p">)</span>
-                            <span class="o">+</span> <span class="s2">&quot;--canonicalize requires 2.29 or higher&quot;</span>
-                        <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">canonicalize</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--canonicalize=&#39;</span> <span class="o">+</span> <span class="n">canonicalize</span><span class="p">)</span>
-                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">canonicalize</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
-                        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--canonicalize=&#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">canonicalize</span><span class="p">))</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--print-canonical&#39;</span><span class="p">)</span>
-
-            <span class="c1"># before 2.29, having both --print-canonical</span>
-            <span class="c1"># and --auto-format printed twice</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span> <span class="ow">and</span> <span class="n">canonicalize</span><span class="p">):</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--auto-format&#39;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">29</span><span class="p">):</span>
-                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--max-line-length=</span><span class="si">{</span><span class="n">max_line_length</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">max_line_length</span> <span class="o">!=</span> <span class="mi">78</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Invalid arguments passed for current CmdStan version&quot;</span>
-                    <span class="o">+</span> <span class="s2">&quot; (</span><span class="si">{}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmdstan_version</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">)</span>
-                    <span class="o">+</span> <span class="s2">&quot;--max-line-length requires 2.29 or higher&quot;</span>
-                <span class="p">)</span>
-
-            <span class="n">out</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
-                <span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
-                <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">stdout</span>
-            <span class="k">if</span> <span class="n">overwrite_file</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">backup</span><span class="p">:</span>
-                        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">,</span>
-                            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">)</span>
-                            <span class="o">+</span> <span class="s1">&#39;.bak-&#39;</span>
-                            <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">),</span>
-                        <span class="p">)</span>
-                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_handle</span><span class="p">:</span>
-                        <span class="n">file_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Stanc formatting failed&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+        <span class="n">compilation</span><span class="o">.</span><span class="n">format_stan_file</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">,</span>
+            <span class="n">overwrite_file</span><span class="o">=</span><span class="n">overwrite_file</span><span class="p">,</span>
+            <span class="n">max_line_length</span><span class="o">=</span><span class="n">max_line_length</span><span class="p">,</span>
+            <span class="n">canonicalize</span><span class="o">=</span><span class="n">canonicalize</span><span class="p">,</span>
+            <span class="n">backup</span><span class="o">=</span><span class="n">backup</span><span class="p">,</span>
+            <span class="n">stanc_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stanc_options</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">stanc_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
@@ -1808,6 +1761,7 @@
         <span class="n">refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">time_fmt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">,</span>
         <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_threads</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanPathfinder</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run CmdStan&#39;s Pathfinder variational inference algorithm.</span>
@@ -1910,6 +1864,10 @@
 <span class="sd">        :param timeout: Duration at which Pathfinder times</span>
 <span class="sd">            out in seconds. Defaults to None.</span>
 
+<span class="sd">        :param num_threads: Number of threads to request for parallel execution.</span>
+<span class="sd">            A number other than ``1`` requires the model to have been compiled</span>
+<span class="sd">            with STAN_THREADS=True.</span>
+
 <span class="sd">        :return: A :class:`CmdStanPathfinder` object</span>
 
 <span class="sd">        References</span>
@@ -1935,6 +1893,17 @@
                 <span class="s2">&quot;Arguments &#39;psis_resample&#39; and &#39;calculate_lp&#39; are only &quot;</span>
                 <span class="s2">&quot;available for CmdStan versions 2.34 and later&quot;</span>
             <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_threads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">num_threads</span> <span class="o">!=</span> <span class="mi">1</span>
+                <span class="ow">and</span> <span class="n">exe_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;STAN_THREADS&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;true&#39;</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Model must be compiled with &#39;STAN_THREADS=true&#39; to use&quot;</span>
+                    <span class="s2">&quot; &#39;num_threads&#39; argument&quot;</span>
+                <span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;STAN_NUM_THREADS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_paths</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">num_single_draws</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

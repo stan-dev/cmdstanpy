@@ -930,6 +930,7 @@ class CmdStanArgs:
                 if not (
                     isinstance(self.method_args, SamplerArgs)
                     and self.method_args.num_chains > 1
+                    or isinstance(self.method_args, PathfinderArgs)
                 ):
                     if not os.path.exists(self.inits):
                         raise ValueError('no such file {}'.format(self.inits))
