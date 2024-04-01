@@ -68,9 +68,9 @@ jobs:
         run: python -m pip freeze
 
       - name: Install numpy, scipy nightlies
-        if: matrix.python-version == '3.11' && matrix.os != 'windows-latest'
         run: |
-          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U numpy scipy pandas
+          pip install -U --pre numpy==2.0.0rc1
+          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U scipy pandas
 
       - name: Run flake8, pylint, mypy
         if: matrix.python-version == '3.11'
