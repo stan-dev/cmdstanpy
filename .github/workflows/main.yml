@@ -63,7 +63,8 @@ jobs:
         run: |
           pip install -U --pre numpy==2.0.0rc1
           pip install "python-dateutil>=2.8.2"
-          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U scipy pandas
+          pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple pandas
+          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U scipy
 
       - name: Build package
         run: |
