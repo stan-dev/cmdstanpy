@@ -59,6 +59,11 @@ jobs:
       - name: Install dependencies
         run: python -m pip install --upgrade pip wheel build
 
+      - name: Install numpy, scipy nightlies
+        run: |
+          pip install -U --pre numpy==2.0.0rc1
+          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U scipy pandas
+
       - name: Build package
         run: |
           python -m build
@@ -66,11 +71,6 @@ jobs:
 
       - name: Show libraries
         run: python -m pip freeze
-
-      - name: Install numpy, scipy nightlies
-        run: |
-          pip install -U --pre numpy==2.0.0rc1
-          pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple -U scipy pandas
 
       - name: Run flake8, pylint, mypy
         if: matrix.python-version == '3.11'
