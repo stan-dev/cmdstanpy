@@ -52,7 +52,7 @@ def check_sampler_csv(
             )
         )
     if save_warmup:
-        if not ('save_warmup' in meta and meta['save_warmup'] == 1):
+        if not ('save_warmup' in meta and meta['save_warmup'] in (1, 'true')):
             raise ValueError(
                 'bad Stan CSV file {}, '
                 'config error, expected save_warmup = 1'.format(path)

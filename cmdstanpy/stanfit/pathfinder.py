@@ -214,8 +214,10 @@ class CmdStanPathfinder:
         """
         return (  # type: ignore
             self._metadata.cmdstan_config.get("num_paths", 4) > 1
-            and self._metadata.cmdstan_config.get('psis_resample', 1) == 1
-            and self._metadata.cmdstan_config.get('calculate_lp', 1) == 1
+            and self._metadata.cmdstan_config.get('psis_resample', 1)
+            in (1, 'true')
+            and self._metadata.cmdstan_config.get('calculate_lp', 1)
+            in (1, 'true')
         )
 
     def save_csvfiles(self, dir: Optional[str] = None) -> None:

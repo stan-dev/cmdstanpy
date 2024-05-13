@@ -262,12 +262,13 @@ def test_variables_3d() -> None:
     )
     vars_iters = multidim_mle_iters.stan_variables(inc_iterations=True)
     assert len(vars_iters) == len(multidim_mle_iters.metadata.stan_vars)
-    assert 'y_rep' in vars_iters
-    assert vars_iters['y_rep'].shape == (8, 5, 4, 3)
-    assert 'beta' in vars_iters
-    assert vars_iters['beta'].shape == (8, 2)
     assert 'frac_60' in vars_iters
-    assert vars_iters['frac_60'].shape == (8,)
+    n_iter = vars_iters['frac_60'].shape[0]
+    assert n_iter > 1
+    assert 'y_rep' in vars_iters
+    assert vars_iters['y_rep'].shape == (n_iter, 5, 4, 3)
+    assert 'beta' in vars_iters
+    assert vars_iters['beta'].shape == (n_iter, 2)
 
 
 def test_optimize_good() -> None:
