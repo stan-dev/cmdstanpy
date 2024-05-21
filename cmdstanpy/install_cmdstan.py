@@ -523,6 +523,8 @@ def retrieve_version(version: str, progress: bool = True) -> None:
         first = tar.next()
         if first is not None:
             top_dir = first.name
+        else:
+            top_dir = ''
         cmdstan_dir = f'cmdstan-{version}'
         if top_dir != cmdstan_dir:
             raise CmdStanInstallError(
