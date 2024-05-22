@@ -235,8 +235,10 @@ def get_toolchain_name() -> str:
     return ''
 
 
+# TODO(2.0): drop 3.5 support
 def get_url(version: str) -> str:
     """Return URL for toolchain."""
+    url = ''
     if platform.system() == 'Windows':
         if version == '4.0':
             # pylint: disable=line-too-long
@@ -277,6 +279,8 @@ def run_rtools_install(args: Dict[str, Any]) -> None:
 
     if 'verbose' in args:
         verbose = args['verbose']
+    else:
+        verbose = False
 
     install_dir = args['dir']
     if install_dir is None:

@@ -1748,33 +1748,36 @@ def test_save_latent_dynamics() -> None:
 
 def test_save_profile() -> None:
     stan = os.path.join(DATAFILES_PATH, 'profile_likelihood.stan')
-    profile_model = CmdStanModel(stan_file=stan)
+    profile_model = CmdStanModel(
+        stan_file=stan, cpp_options={"STAN_THREADS": '1'}, force_compile=True
+    )
+
     profile_fit = profile_model.sample(
         chains=2,
         parallel_chains=2,
+        force_one_process_per_chain=True,
         seed=12345,
         iter_warmup=100,
         iter_sampling=200,
         save_profile=True,
     )
-    for i in range(profile_fit.runset.chains):
-        profile_file = profile_fit.runset.profile_files[i]
+    assert len(profile_fit.runset.profile_files) == 2
+    for profile_file in profile_fit.runset.profile_files:
         assert os.path.exists(profile_file)
 
     profile_fit = profile_model.sample(
         chains=2,
         parallel_chains=2,
+        force_one_process_per_chain=False,
         seed=12345,
+        iter_warmup=100,
         iter_sampling=200,
-        save_latent_dynamics=True,
         save_profile=True,
     )
 
-    for i in range(profile_fit.runset.chains):
-        profile_file = profile_fit.runset.profile_files[i]
+    assert len(profile_fit.runset.profile_files) == 1
+    for profile_file in profile_fit.runset.profile_files:
         assert os.path.exists(profile_file)
-        diagnostics_file = profile_fit.runset.diagnostic_files[i]
-        assert os.path.exists(diagnostics_file)
 
 
 def test_xarray_draws() -> None:

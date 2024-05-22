@@ -61,18 +61,26 @@ class RunSet:
         self._base_outfile = (
             f'{args.model_name}-{datetime.now().strftime(time_fmt)}'
         )
-        # per-process console messages
+        # per-process outputs
         self._stdout_files = [''] * self._num_procs
+        self._profile_files = [''] * self._num_procs  # optional
         if one_process_per_chain:
             for i in range(chains):
                 self._stdout_files[i] = self.file_path("-stdout.txt", id=i)
+                if args.save_profile:
+                    self._profile_files[i] = self.file_path(
+                        ".csv", extra="-profile", id=chain_ids[i]
+                    )
         else:
             self._stdout_files[0] = self.file_path("-stdout.txt")
+            if args.save_profile:
+                self._profile_files[0] = self.file_path(
+                    ".csv", extra="-profile"
+                )
 
         # per-chain output files
         self._csv_files: List[str] = [''] * chains
         self._diagnostic_files = [''] * chains  # optional
-        self._profile_files = [''] * chains  # optional
 
         if chains == 1:
             self._csv_files[0] = self.file_path(".csv")
@@ -80,20 +88,12 @@ class RunSet:
                 self._diagnostic_files[0] = self.file_path(
                     ".csv", extra="-diagnostic"
                 )
-            if args.save_profile:
-                self._profile_files[0] = self.file_path(
-                    ".csv", extra="-profile"
-                )
         else:
             for i in range(chains):
                 self._csv_files[i] = self.file_path(".csv", id=chain_ids[i])
                 if args.save_latent_dynamics:
                     self._diagnostic_files[i] = self.file_path(
                         ".csv", extra="-diagnostic", id=chain_ids[i]
-                    )
-                if args.save_profile:
-                    self._profile_files[i] = self.file_path(
-                        ".csv", extra="-profile", id=chain_ids[i]
                     )
 
     def __repr__(self) -> str:
