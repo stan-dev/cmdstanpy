@@ -51,7 +51,7 @@ data_file = os.path.join(cmdstan_path(), 'examples', 'bernoulli', 'bernoulli.dat
 model = CmdStanModel(stan_file=stan_file)
 
 # obtain a posterior sample from the model conditioned on the data
-fit = model.sample(chains=4, data=data_file)
+fit = model.sample(data=data_file)
 
 # summarize the results (wraps CmdStan `bin/stansummary`):
 fit.summary()
