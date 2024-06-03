@@ -7,6 +7,15 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
+
+CmdStanPy 1.2.3
+---------------
+
+- Updated the logic around reading Stan CSV files to support CmdStan 2.35.0+
+- Fixed an issue where the ``profile_files`` member of the RunSet object was not correct when running multiple chains in the same process.
+
+Reminder: The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations.
+
 CmdStanPy 1.2.2
 ---------------
 
