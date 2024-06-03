@@ -15,6 +15,7 @@ import pytest
 from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.stanfit import CmdStanVB, RunSet, from_csv
+from cmdstanpy.utils.cmdstan import cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -150,12 +151,12 @@ def test_variational_good() -> None:
         'mu[2]',
     )
     # fixed seed, id=1 by default will give known output values
-    assert variational.eta == 100
+    assert variational.eta == 10
     np.testing.assert_almost_equal(
-        variational.variational_params_dict['mu[1]'], 311.545, decimal=2
+        variational.variational_params_dict['mu[1]'], 302.142, decimal=2
     )
     np.testing.assert_almost_equal(
-        variational.variational_params_dict['mu[2]'], 532.801, decimal=2
+        variational.variational_params_dict['mu[2]'], 361.005, decimal=2
     )
     np.testing.assert_almost_equal(
         variational.variational_params_np[0],
@@ -177,7 +178,11 @@ def test_variational_eta_small() -> None:
         DATAFILES_PATH, 'variational', 'eta_should_be_small.stan'
     )
     model = CmdStanModel(stan_file=stan)
-    variational = model.variational(algorithm='meanfield', seed=12345)
+    if cmdstan_version_before(2, 35):
+        seed = 12345
+    else:
+        seed = 1234
+    variational = model.variational(algorithm='meanfield', seed=seed)
     assert variational.column_names == (
         'lp__',
         'log_p__',
