@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Variational Inference using Pathfinder &#8212; CmdStanPy 1.2.2 documentation</title>
+    <title>Variational Inference using Pathfinder &#8212; CmdStanPy 1.2.3 documentation</title>
     
     <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -65,7 +65,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.2</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.3</a>
     
   </div>
 
@@ -317,20 +317,13 @@ approximation with the lowest estimated Kullback-Leibler (KL) divergence to the 
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-16:29:44 - cmdstanpy - INFO - Chain [1] start processing
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-16:29:44 - cmdstanpy - INFO - Chain [1] done processing
+15:16:09 - cmdstanpy - INFO - Chain [1] start processing
+15:16:09 - cmdstanpy - INFO - Chain [1] done processing
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -349,11 +342,11 @@ approximation with the lowest estimated Kullback-Leibler (KL) divergence to the 
 <div class="highlight"><pre>
 CmdStanPathfinder: model=bernoulli[&#39;method=pathfinder&#39;]
  csv_files:
-        /tmp/tmpimv2ege0/bernoullifbcxwakw/bernoulli-20240326162944.csv
+        /tmp/tmpy5plbz4g/bernoullio19cm8ts/bernoulli-20240603151609.csv
  output_files:
-        /tmp/tmpimv2ege0/bernoullifbcxwakw/bernoulli-20240326162944_0-stdout.txt
+        /tmp/tmpy5plbz4g/bernoullio19cm8ts/bernoulli-20240603151609_0-stdout.txt
 Metadata:
-{&#39;stan_version_major&#39;: 2, &#39;stan_version_minor&#39;: 34, &#39;stan_version_patch&#39;: 1, &#39;model&#39;: &#39;bernoulli_model&#39;, &#39;start_datetime&#39;: &#39;2024-03-26 16:29:44 UTC&#39;, &#39;method&#39;: &#39;pathfinder&#39;, &#39;init_alpha&#39;: 0.001, &#39;tol_obj&#39;: 1e-12, &#39;tol_rel_obj&#39;: 10000, &#39;tol_grad&#39;: 1e-08, &#39;tol_rel_grad&#39;: 10000000.0, &#39;tol_param&#39;: 1e-08, &#39;history_size&#39;: 5, &#39;num_psis_draws&#39;: 1000, &#39;num_paths&#39;: 4, &#39;save_single_paths&#39;: 0, &#39;psis_resample&#39;: 1, &#39;calculate_lp&#39;: 1, &#39;max_lbfgs_iters&#39;: 1000, &#39;num_draws&#39;: 1000, &#39;num_elbo_draws&#39;: 25, &#39;id&#39;: 1, &#39;data_file&#39;: &#39;/home/runner/.cmdstan/cmdstan-2.34.1/examples/bernoulli/bernoulli.data.json&#39;, &#39;init&#39;: 2, &#39;seed&#39;: 50890, &#39;diagnostic_file&#39;: &#39;&#39;, &#39;refresh&#39;: 100, &#39;sig_figs&#39;: -1, &#39;profile_file&#39;: &#39;profile.csv&#39;, &#39;save_cmdstan_config&#39;: 0, &#39;num_threads&#39;: 1, &#39;stanc_version&#39;: &#39;stanc3 v2.34.0&#39;, &#39;stancflags&#39;: &#39;&#39;, &#39;raw_header&#39;: &#39;lp_approx__,lp__,theta&#39;, &#39;column_names&#39;: (&#39;lp_approx__&#39;, &#39;lp__&#39;, &#39;theta&#39;)}
+{&#39;stan_version_major&#39;: 2, &#39;stan_version_minor&#39;: 35, &#39;stan_version_patch&#39;: 0, &#39;model&#39;: &#39;bernoulli_model&#39;, &#39;start_datetime&#39;: &#39;2024-06-03 15:16:09 UTC&#39;, &#39;method&#39;: &#39;pathfinder&#39;, &#39;init_alpha&#39;: 0.001, &#39;tol_obj&#39;: 1e-12, &#39;tol_rel_obj&#39;: 10000, &#39;tol_grad&#39;: 1e-08, &#39;tol_rel_grad&#39;: 10000000.0, &#39;tol_param&#39;: 1e-08, &#39;history_size&#39;: 5, &#39;num_psis_draws&#39;: 1000, &#39;num_paths&#39;: 4, &#39;save_single_paths&#39;: &#39;false&#39;, &#39;psis_resample&#39;: &#39;true&#39;, &#39;calculate_lp&#39;: &#39;true&#39;, &#39;max_lbfgs_iters&#39;: 1000, &#39;num_draws&#39;: 1000, &#39;num_elbo_draws&#39;: 25, &#39;id&#39;: 1, &#39;data_file&#39;: &#39;/home/runner/.cmdstan/cmdstan-2.35.0/examples/bernoulli/bernoulli.data.json&#39;, &#39;init&#39;: 2, &#39;seed&#39;: 37888, &#39;diagnostic_file&#39;: &#39;&#39;, &#39;refresh&#39;: 100, &#39;sig_figs&#39;: -1, &#39;profile_file&#39;: &#39;profile.csv&#39;, &#39;save_cmdstan_config&#39;: &#39;false&#39;, &#39;num_threads&#39;: 1, &#39;stanc_version&#39;: &#39;stanc3 v2.35.0&#39;, &#39;stancflags&#39;: &#39;&#39;, &#39;raw_header&#39;: &#39;lp_approx__,lp__,theta&#39;, &#39;column_names&#39;: (&#39;lp_approx__&#39;, &#39;lp__&#39;, &#39;theta&#39;)}
 
 </pre></div></div>
 </div>
@@ -431,7 +424,7 @@ Metadata:
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[{&#39;theta&#39;: array(0.278046)}, {&#39;theta&#39;: array(0.189515)}, {&#39;theta&#39;: array(0.28219)}, {&#39;theta&#39;: array(0.174821)}]
+[{&#39;theta&#39;: array(0.244849)}, {&#39;theta&#39;: array(0.0384281)}, {&#39;theta&#39;: array(0.148251)}, {&#39;theta&#39;: array(0.532504)}]
 </pre></div></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">create_inits</span></code> takes two arguments:</p>
@@ -453,7 +446,7 @@ Metadata:
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-[{&#39;theta&#39;: array(0.151519)}, {&#39;theta&#39;: array(0.156614)}, {&#39;theta&#39;: array(0.066908)}]
+[{&#39;theta&#39;: array(0.295373)}, {&#39;theta&#39;: array(0.223648)}, {&#39;theta&#39;: array(0.238005)}]
 </pre></div></div>
 </div>
 </section>

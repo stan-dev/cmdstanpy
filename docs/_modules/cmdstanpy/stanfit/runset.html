@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.runset &#8212; CmdStanPy 1.2.2 documentation</title>
+    <title>cmdstanpy.stanfit.runset &#8212; CmdStanPy 1.2.3 documentation</title>
     
     <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.2.2</a>
+<a class='navbar-brand' href='../../../index.html'>CmdStanPy 1.2.3</a>
     
   </div>
 
@@ -235,18 +235,26 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_base_outfile</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">time_fmt</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="p">)</span>
-        <span class="c1"># per-process console messages</span>
+        <span class="c1"># per-process outputs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_procs</span>  <span class="c1"># optional</span>
         <span class="k">if</span> <span class="n">one_process_per_chain</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;-stdout.txt&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
+                        <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stdout_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;-stdout.txt&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
+                    <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span>
+                <span class="p">)</span>
 
         <span class="c1"># per-chain output files</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">chains</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">chains</span>  <span class="c1"># optional</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">chains</span>  <span class="c1"># optional</span>
 
         <span class="k">if</span> <span class="n">chains</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
@@ -254,20 +262,12 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
                     <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-diagnostic&quot;</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
-                    <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span>
-                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_latent_dynamics</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_diagnostic_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
                         <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-diagnostic&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                    <span class="p">)</span>
-                <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">save_profile</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_profile_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">(</span>
-                        <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="s2">&quot;-profile&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="n">chain_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                     <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
