@@ -110,6 +110,11 @@ install_cmdstan
 
 .. autofunction:: cmdstanpy.install_cmdstan
 
+rebuild_cmdstan
+===============
+
+.. autofunction:: cmdstanpy.rebuild_cmdstan
+
 set_cmdstan_path
 ================
 
