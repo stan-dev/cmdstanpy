@@ -7,6 +7,12 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
+CmdStanPy 1.2.4
+---------------
+
+- Fixed a bug in `from_csv` which prevented reading files created by CmdStan 2.35.0+
+
+Reminder: The next non-bugfix release of CmdStanPy will be version 2.0, which will remove all existing deprecations.
 
 CmdStanPy 1.2.3
 ---------------

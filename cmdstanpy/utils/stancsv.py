@@ -193,7 +193,12 @@ def scan_config(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
                     try:
                         val = float(raw_val)
                     except ValueError:
-                        val = raw_val
+                        if raw_val == "true":
+                            val = 1
+                        elif raw_val == "false":
+                            val = 0
+                        else:
+                            val = raw_val
                 config_dict[key_val[0].strip()] = val
         cur_pos = fd.tell()
         line = fd.readline().strip()
