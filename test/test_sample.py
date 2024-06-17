@@ -2030,6 +2030,26 @@ def test_tuple_data_in() -> None:
     data_model.sample(data, chains=1, iter_warmup=1, iter_sampling=1)
 
 
+def test_csv_roundtrip():
+    stan = os.path.join(DATAFILES_PATH, 'matrix_var.stan')
+    model = CmdStanModel(stan_file=stan)
+    fit = model.sample(
+        iter_sampling=10, iter_warmup=9, chains=2, save_warmup=True
+    )
+    z = fit.stan_variable(var="z")
+    assert z.shape == (20, 4, 3)
+    z_with_warmup = fit.stan_variable(var="z", inc_warmup=True)
+    assert z_with_warmup.shape == (38, 4, 3)
+
+    # mostly just asserting that from_csv always succeeds
+    # in parsing latest cmdstan headers
+    fit_from_csv = from_csv(fit.runset.csv_files)
+    z_from_csv = fit_from_csv.stan_variable(var="z")
+    assert z_from_csv.shape == (20, 4, 3)
+    z_with_warmup_from_csv = fit.stan_variable(var="z", inc_warmup=True)
+    assert z_with_warmup_from_csv.shape == (38, 4, 3)
+
+
 @pytest.mark.order(before="test_no_xarray")
 def test_serialization(stanfile='bernoulli.stan'):
     # This test must before any test that uses the `without_import` context
