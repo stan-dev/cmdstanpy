@@ -1588,6 +1588,7 @@ class CmdStanModel:
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
         num_threads: Optional[int] = None,
+        save_single_paths=False,
     ) -> CmdStanPathfinder:
         """
         Run CmdStan's Pathfinder variational inference algorithm.
@@ -1755,6 +1756,7 @@ class CmdStanModel:
             num_elbo_draws=num_elbo_draws,
             psis_resample=psis_resample,
             calculate_lp=calculate_lp,
+            save_single_paths=save_single_paths,
         )
 
         with temp_single_json(data) as _data, temp_inits(inits) as _inits:
