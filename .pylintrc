@@ -76,6 +76,7 @@ disable=consider-using-in,
     consider-using-dict-items,
     unspecified-encoding,
     consider-using-f-string,
+    too-many-positional-arguments, 
     duplicate-code,
 
 # Enable the message, report, category or checker with the given id(s). You can
