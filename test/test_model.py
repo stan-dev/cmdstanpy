@@ -95,10 +95,13 @@ def test_exe_only() -> None:
     assert not model2._fixed_param
 
 
-def test_fixed_param() -> None:
+def test_legacy_fixed_param() -> None:
     stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
     model = CmdStanModel(stan_file=stan)
-    assert model._fixed_param
+    if cmdstan_version_before(2, 36):
+        assert not model._fixed_param
+    else:
+        assert model._fixed_param
 
 
 def test_model_pedantic(caplog: pytest.LogCaptureFixture) -> None:
