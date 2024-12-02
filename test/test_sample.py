@@ -986,6 +986,12 @@ def test_from_csv_fixed_param() -> None:
     assert fixed_param_sample.draws_pd().shape == (100, 88)
 
 
+def test_from_csv_no_param_hmc() -> None:
+    csv_path = os.path.join(DATAFILES_PATH, 'no_param_hmc_sample.csv')
+    no_parameters_sample = from_csv(path=csv_path)
+    assert no_parameters_sample.draws_pd().shape == (100, 93)
+
+
 def test_custom_metric() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
