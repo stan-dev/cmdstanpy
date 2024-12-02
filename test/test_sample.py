@@ -646,9 +646,14 @@ def test_sample_no_params() -> None:
     stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
     datagen_model = CmdStanModel(stan_file=stan)
     datagen_fit = datagen_model.sample(iter_sampling=100, show_progress=False)
-    assert np.isnan(datagen_fit.step_size).all()
     summary = datagen_fit.summary()
-    assert 'lp__' in list(summary.index)
+
+    if cmdstan_version_before(2, 36):
+        assert 'lp__' not in list(summary.index)
+        assert datagen_fit.step_size is None
+    else:
+        assert 'lp__' in list(summary.index)
+        assert np.isnan(datagen_fit.step_size).all()
 
     exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
     shutil.copyfile(datagen_model.exe_file, exe_only)
@@ -656,9 +661,14 @@ def test_sample_no_params() -> None:
     datagen2_model = CmdStanModel(exe_file=exe_only)
     datagen2_fit = datagen2_model.sample(iter_sampling=200, show_console=True)
     assert datagen2_fit.chains == 4
-    assert np.isnan(datagen2_fit.step_size).all()
     summary = datagen2_fit.summary()
-    assert 'lp__' in list(summary.index)
+
+    if cmdstan_version_before(2, 36):
+        assert datagen2_fit.step_size is None
+        assert 'lp__' not in list(summary.index)
+    else:
+        assert np.isnan(datagen2_fit.step_size).all()
+        assert 'lp__' in list(summary.index)
 
 
 def test_index_bounds_error() -> None:
