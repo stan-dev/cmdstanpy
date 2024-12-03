@@ -205,9 +205,9 @@ class CmdStanModel:
                 self._compiler_options.add_include_path(path)
 
             # try to detect models w/out parameters, needed for sampler
-            if not cmdstan_version_before(
-                2, 27
-            ):  # unknown end of version range
+            if (not cmdstan_version_before(2, 27)) and cmdstan_version_before(
+                2, 36
+            ):
                 try:
                     model_info = self.src_info()
                     if 'parameters' in model_info:

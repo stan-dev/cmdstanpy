@@ -412,7 +412,7 @@ class CmdStanMCMC:
                     self._step_size[chain] = float(step_size.strip())
                     if self._metadata.cmdstan_config['metric'] != 'unit_e':
                         line = fd.readline().strip()  # metric type
-                        line = fd.readline().lstrip(' #\t')
+                        line = fd.readline().lstrip(' #\t').rstrip()
                         num_unconstrained_params = len(line.split(','))
                         if chain == 0:  # can't allocate w/o num params
                             if self.metric_type == 'diag_e':
@@ -429,18 +429,21 @@ class CmdStanMCMC:
                                     ),
                                     dtype=float,
                                 )
-                        if self.metric_type == 'diag_e':
-                            xs = line.split(',')
-                            self._metric[chain, :] = [float(x) for x in xs]
-                        else:
-                            xs = line.split(',')
-                            self._metric[chain, 0, :] = [float(x) for x in xs]
-                            for i in range(1, num_unconstrained_params):
-                                line = fd.readline().lstrip(' #\t').strip()
+                        if line:
+                            if self.metric_type == 'diag_e':
                                 xs = line.split(',')
-                                self._metric[chain, i, :] = [
+                                self._metric[chain, :] = [float(x) for x in xs]
+                            else:
+                                xs = line.strip().split(',')
+                                self._metric[chain, 0, :] = [
                                     float(x) for x in xs
                                 ]
+                                for i in range(1, num_unconstrained_params):
+                                    line = fd.readline().lstrip(' #\t').rstrip()
+                                    xs = line.split(',')
+                                    self._metric[chain, i, :] = [
+                                        float(x) for x in xs
+                                    ]
                     else:  # unit_e changed in 2.34 to have an extra line
                         pos = fd.tell()
                         line = fd.readline().strip()

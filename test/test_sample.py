@@ -642,13 +642,18 @@ def test_fixed_param_good() -> None:
     assert datagen_fit.step_size is None
 
 
-def test_fixed_param_unspecified() -> None:
+def test_sample_no_params() -> None:
     stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
     datagen_model = CmdStanModel(stan_file=stan)
     datagen_fit = datagen_model.sample(iter_sampling=100, show_progress=False)
-    assert datagen_fit.step_size is None
     summary = datagen_fit.summary()
-    assert 'lp__' not in list(summary.index)
+
+    if cmdstan_version_before(2, 36):
+        assert 'lp__' not in list(summary.index)
+        assert datagen_fit.step_size is None
+    else:
+        assert 'lp__' in list(summary.index)
+        assert np.isnan(datagen_fit.step_size).all()
 
     exe_only = os.path.join(DATAFILES_PATH, 'exe_only')
     shutil.copyfile(datagen_model.exe_file, exe_only)
@@ -656,9 +661,14 @@ def test_fixed_param_unspecified() -> None:
     datagen2_model = CmdStanModel(exe_file=exe_only)
     datagen2_fit = datagen2_model.sample(iter_sampling=200, show_console=True)
     assert datagen2_fit.chains == 4
-    assert datagen2_fit.step_size is None
     summary = datagen2_fit.summary()
-    assert 'lp__' not in list(summary.index)
+
+    if cmdstan_version_before(2, 36):
+        assert datagen2_fit.step_size is None
+        assert 'lp__' not in list(summary.index)
+    else:
+        assert np.isnan(datagen2_fit.step_size).all()
+        assert 'lp__' in list(summary.index)
 
 
 def test_index_bounds_error() -> None:
@@ -823,7 +833,7 @@ def test_validate_good_run() -> None:
     assert 'Treedepth satisfactory for all transitions.' in diagnostics
     assert 'No divergent transitions found.' in diagnostics
     assert 'E-BFMI satisfactory' in diagnostics
-    assert 'Effective sample size satisfactory.' in diagnostics
+    assert 'effective sample size satisfactory' in diagnostics.lower()
 
 
 def test_validate_big_run() -> None:
@@ -984,6 +994,12 @@ def test_from_csv_fixed_param() -> None:
     csv_path = os.path.join(DATAFILES_PATH, 'fixed_param_sample.csv')
     fixed_param_sample = from_csv(path=csv_path)
     assert fixed_param_sample.draws_pd().shape == (100, 88)
+
+
+def test_from_csv_no_param_hmc() -> None:
+    csv_path = os.path.join(DATAFILES_PATH, 'no_param_hmc_sample.csv')
+    no_parameters_sample = from_csv(path=csv_path)
+    assert no_parameters_sample.draws_pd().shape == (100, 93)
 
 
 def test_custom_metric() -> None:
@@ -1621,33 +1637,18 @@ def test_validate_sample_sig_figs(stanfile='bernoulli.stan'):
 
 
 def test_validate_summary_sig_figs() -> None:
-    # construct CmdStanMCMC from logistic model output, config
-    exe = os.path.join(DATAFILES_PATH, 'logistic' + EXTENSION)
-    rdata = os.path.join(DATAFILES_PATH, 'logistic.data.R')
-    sampler_args = SamplerArgs(iter_sampling=100)
-    cmdstan_args = CmdStanArgs(
-        model_name='logistic',
-        model_exe=exe,
-        chain_ids=[1, 2, 3, 4],
-        seed=12345,
-        data=rdata,
-        output_dir=DATAFILES_PATH,
-        sig_figs=17,
-        method_args=sampler_args,
+    # construct CmdStanMCMC from logistic model output
+    fit = from_csv(
+        [
+            os.path.join(DATAFILES_PATH, 'logistic_output_1.csv'),
+            os.path.join(DATAFILES_PATH, 'logistic_output_2.csv'),
+            os.path.join(DATAFILES_PATH, 'logistic_output_3.csv'),
+            os.path.join(DATAFILES_PATH, 'logistic_output_4.csv'),
+        ]
     )
-    runset = RunSet(args=cmdstan_args, chains=4)
-    runset._csv_files = [
-        os.path.join(DATAFILES_PATH, 'logistic_output_1.csv'),
-        os.path.join(DATAFILES_PATH, 'logistic_output_2.csv'),
-        os.path.join(DATAFILES_PATH, 'logistic_output_3.csv'),
-        os.path.join(DATAFILES_PATH, 'logistic_output_4.csv'),
-    ]
-    retcodes = runset._retcodes
-    for i in range(len(retcodes)):
-        runset._set_retcode(i, 0)
-    fit = CmdStanMCMC(runset)
 
     sum_default = fit.summary()
+
     beta1_default = format(sum_default.iloc[1, 0], '.18g')
     assert beta1_default.startswith('1.3')
 
