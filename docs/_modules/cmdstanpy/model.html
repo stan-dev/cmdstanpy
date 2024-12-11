@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.model &#8212; CmdStanPy 1.2.4 documentation</title>
+    <title>cmdstanpy.model &#8212; CmdStanPy 1.2.5 documentation</title>
     
     <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
@@ -61,7 +61,7 @@
   <div id="navbar-start">
     
     <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.4</a>
+<a class='navbar-brand' href='../../index.html'>CmdStanPy 1.2.5</a>
     
   </div>
 
@@ -379,9 +379,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">add_include_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
             <span class="c1"># try to detect models w/out parameters, needed for sampler</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">cmdstan_version_before</span><span class="p">(</span>
-                <span class="mi">2</span><span class="p">,</span> <span class="mi">27</span>
-            <span class="p">):</span>  <span class="c1"># unknown end of version range</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">27</span><span class="p">))</span> <span class="ow">and</span> <span class="n">cmdstan_version_before</span><span class="p">(</span>
+                <span class="mi">2</span><span class="p">,</span> <span class="mi">36</span>
+            <span class="p">):</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">model_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_info</span><span class="p">()</span>
                     <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">model_info</span><span class="p">:</span>
