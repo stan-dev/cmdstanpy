@@ -90,10 +90,3 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: python -m twine upload -u ${TWINE_USERNAME} -p ${TWINE_PASSWORD} --skip-existing dist/*
-
-      - name: Change default version in readthedocs.io
-        if: success()
-        env:
-          RTD_USERNAME: ${{ secrets.RTD_USERNAME }}
-          RTD_PASSWORD: ${{ secrets.RTD_PASSWORD }}
-        run: python rtd_change_default_version.py cmdstanpy ${RTD_USERNAME} ${RTD_PASSWORD} v${{ github.event.inputs.new_version }}
