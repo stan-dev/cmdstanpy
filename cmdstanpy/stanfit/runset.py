@@ -81,9 +81,11 @@ class RunSet:
         # per-chain output files
         self._csv_files: List[str] = [''] * chains
         self._diagnostic_files = [''] * chains  # optional
+        self._metric_files = [''] * chains
 
         if chains == 1:
             self._csv_files[0] = self.file_path(".csv")
+            self._metric_files[0] = self.file_path(".json", extra="_metric")
             if args.save_latent_dynamics:
                 self._diagnostic_files[0] = self.file_path(
                     ".csv", extra="-diagnostic"
@@ -91,6 +93,9 @@ class RunSet:
         else:
             for i in range(chains):
                 self._csv_files[i] = self.file_path(".csv", id=chain_ids[i])
+                self._metric_files[i] = self.file_path(
+                    ".json", extra="_metric", id=chain_ids[i]
+                )
                 if args.save_latent_dynamics:
                     self._diagnostic_files[i] = self.file_path(
                         ".csv", extra="-diagnostic", id=chain_ids[i]
@@ -162,29 +167,50 @@ class RunSet:
             return self._args.compose_command(
                 idx,
                 csv_file=self.csv_files[idx],
-                diagnostic_file=self.diagnostic_files[idx]
-                if self._args.save_latent_dynamics
-                else None,
-                profile_file=self.profile_files[idx]
-                if self._args.save_profile
-                else None,
+                diagnostic_file=(
+                    self.diagnostic_files[idx]
+                    if self._args.save_latent_dynamics
+                    else None
+                ),
+                profile_file=(
+                    self.profile_files[idx] if self._args.save_profile else None
+                ),
             )
         else:
             return self._args.compose_command(
                 idx,
                 csv_file=self.file_path('.csv'),
-                diagnostic_file=self.file_path(".csv", extra="-diagnostic")
-                if self._args.save_latent_dynamics
-                else None,
-                profile_file=self.file_path(".csv", extra="-profile")
-                if self._args.save_profile
-                else None,
+                diagnostic_file=(
+                    self.file_path(".csv", extra="-diagnostic")
+                    if self._args.save_latent_dynamics
+                    else None
+                ),
+                profile_file=(
+                    self.file_path(".csv", extra="-profile")
+                    if self._args.save_profile
+                    else None
+                ),
             )
 
     @property
     def csv_files(self) -> List[str]:
         """List of paths to CmdStan output files."""
         return self._csv_files
+
+    @property
+    def metric_files(self) -> List[str]:
+        """List of paths to CmdStan output files."""
+        return self._metric_files
+
+    @property
+    def config_file(self) -> str:
+        """Path to CmdStan config file."""
+        if self.one_process_per_chain:
+            return self.file_path(
+                ".json", extra="_config", id=self.chain_ids[0]
+            )
+        else:
+            return self.file_path(".json", extra="_config")
 
     @property
     def stdout_files(self) -> List[str]:
@@ -216,7 +242,10 @@ class RunSet:
         self, suffix: str, *, extra: str = "", id: Optional[int] = None
     ) -> str:
         if id is not None:
-            suffix = f"_{id}{suffix}"
+            if self.one_process_per_chain:
+                extra = f"_{id}{extra}"
+            else:
+                suffix = f"_{id}{suffix}"
         file = os.path.join(
             self._output_dir, f"{self._base_outfile}{extra}{suffix}"
         )

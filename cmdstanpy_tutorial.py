@@ -32,6 +32,7 @@ print(fit)
 # ### Access the sample: the `CmdStanMCMC` object attributes and methods
 
 print(fit.draws().shape)
+print({k:v.mean() for k,v in fit.stan_variables().items()})
 
 # #### Get HMC sampler tuning parameters
 
@@ -39,10 +40,12 @@ print(fit.step_size)
 print(fit.metric_type)
 print(fit.metric)
 
+
+
 # #### Summarize the results
 
-print(fit.summary())
+# print(fit.summary())
 
 # #### Run sampler diagnostics
 
-print(fit.diagnose())
+# print(fit.diagnose())

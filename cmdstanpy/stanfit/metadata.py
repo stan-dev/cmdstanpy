@@ -1,7 +1,7 @@
 """Container for metadata parsed from the output of a CmdStan run"""
 
 import copy
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import stanio
 
@@ -13,10 +13,11 @@ class InferenceMetadata:
     Assumes valid CSV files.
     """
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: Dict[str, Any], param_names: List[str]) -> None:
         """Initialize object from CSV headers"""
         self._cmdstan_config = config
-        vars = stanio.parse_header(config['raw_header'])
+        self.column_names = param_names
+        vars = stanio.parse_header(','.join(param_names))
 
         self._method_vars = {
             k: v for (k, v) in vars.items() if k.endswith('__')

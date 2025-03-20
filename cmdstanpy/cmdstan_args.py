@@ -377,6 +377,7 @@ class SamplerArgs:
             else:
                 cmd.append(f'metric_file={self.metric_file[idx]}')
         cmd.append('adapt')
+        cmd.append("save_metric=1")
         if self.adapt_engaged:
             cmd.append('engaged=1')
         else:
@@ -1001,5 +1002,7 @@ class CmdStanArgs:
             cmd.append(f'refresh={self.refresh}')
         if self.sig_figs is not None:
             cmd.append(f'sig_figs={self.sig_figs}')
+        # NB: implies a lower bound on cmdstan versions of 2.35
+        cmd.append("save_cmdstan_config=true")
         cmd = self.method_args.compose(idx, cmd)
         return cmd

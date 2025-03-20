@@ -2,6 +2,7 @@
 Container for the result of running the sample (MCMC) method
 """
 
+import json
 import math
 import os
 from io import StringIO
@@ -99,9 +100,7 @@ class CmdStanMCMC:
         )
         self._chain_time: List[Dict[str, float]] = []
 
-        # info from CSV header and initial and final comment blocks
-        config = self._validate_csv_files()
-        self._metadata: InferenceMetadata = InferenceMetadata(config)
+        self._assemble_draws()
         if not self._is_fixed_param:
             self._check_sampler_diagnostics()
 
@@ -128,14 +127,6 @@ class CmdStanMCMC:
         except ValueError as e:
             # pylint: disable=raise-missing-from
             raise AttributeError(*e.args)
-
-    def __getstate__(self) -> dict:
-        # This function returns the mapping of objects to serialize with pickle.
-        # See https://docs.python.org/3/library/pickle.html#object.__getstate__
-        # for details. We call _assemble_draws to ensure posterior samples have
-        # been loaded prior to serialization.
-        self._assemble_draws()
-        return self.__dict__
 
     @property
     def chains(self) -> int:
@@ -177,7 +168,7 @@ class CmdStanMCMC:
         and quantities of interest. Corresponds to Stan CSV file header row,
         with names munged to array notation, e.g. `beta[1]` not `beta.1`.
         """
-        return self._metadata.cmdstan_config['column_names']  # type: ignore
+        return self._metadata.column_names  # type: ignore
 
     @property
     def metric_type(self) -> Optional[str]:
@@ -186,10 +177,14 @@ class CmdStanMCMC:
         to CmdStan arg 'metric'.
         When sampler algorithm 'fixed_param' is specified, metric_type is None.
         """
-        return (
-            self._metadata.cmdstan_config['metric']
-            if not self._is_fixed_param
-            else None
+
+        return (  # type: ignore
+            self._metadata.cmdstan_config.get("method", {})
+            .get("sample", {})
+            .get("algorithm", {})
+            .get("hmc", {})
+            .get("metric", {})
+            .get("value", None)
         )
 
     @property
@@ -200,12 +195,6 @@ class CmdStanMCMC:
         """
         if self._is_fixed_param:
             return None
-        if self._metadata.cmdstan_config['metric'] == 'unit_e':
-            get_logger().info(
-                'Unit diagnonal metric, inverse mass matrix size unknown.'
-            )
-            return None
-        self._assemble_draws()
         return self._metric
 
     @property
@@ -214,7 +203,6 @@ class CmdStanMCMC:
         Step size used by sampler for each chain.
         When sampler algorithm 'fixed_param' is specified, step size is None.
         """
-        self._assemble_draws()
         return self._step_size if not self._is_fixed_param else None
 
     @property
@@ -275,8 +263,6 @@ class CmdStanMCMC:
         CmdStanMCMC.draws_xr
         CmdStanGQ.draws
         """
-        self._assemble_draws()
-
         if inc_warmup and not self._save_warmup:
             get_logger().warning(
                 "Sample doesn't contain draws from warmup iterations,"
@@ -291,75 +277,11 @@ class CmdStanMCMC:
             return flatten_chains(self._draws[start_idx:, :, :])
         return self._draws[start_idx:, :, :]
 
-    def _validate_csv_files(self) -> Dict[str, Any]:
-        """
-        Checks that Stan CSV output files for all chains are consistent
-        and returns dict containing config and column names.
-
-        Tabulates sampling iters which are divergent or at max treedepth
-        Raises exception when inconsistencies detected.
-        """
-        dzero = {}
-        for i in range(self.chains):
-            if i == 0:
-                dzero = check_sampler_csv(
-                    path=self.runset.csv_files[i],
-                    is_fixed_param=self._is_fixed_param,
-                    iter_sampling=self._iter_sampling,
-                    iter_warmup=self._iter_warmup,
-                    save_warmup=self._save_warmup,
-                    thin=self._thin,
-                )
-                self._chain_time.append(dzero['time'])  # type: ignore
-                if not self._is_fixed_param:
-                    self._divergences[i] = dzero['ct_divergences']
-                    self._max_treedepths[i] = dzero['ct_max_treedepth']
-            else:
-                drest = check_sampler_csv(
-                    path=self.runset.csv_files[i],
-                    is_fixed_param=self._is_fixed_param,
-                    iter_sampling=self._iter_sampling,
-                    iter_warmup=self._iter_warmup,
-                    save_warmup=self._save_warmup,
-                    thin=self._thin,
-                )
-                self._chain_time.append(drest['time'])  # type: ignore
-                for key in dzero:
-                    # check args that matter for parsing, plus name, version
-                    if (
-                        key
-                        in [
-                            'stan_version_major',
-                            'stan_version_minor',
-                            'stan_version_patch',
-                            'stanc_version',
-                            'model',
-                            'num_samples',
-                            'num_warmup',
-                            'save_warmup',
-                            'thin',
-                            'refresh',
-                        ]
-                        and dzero[key] != drest[key]
-                    ):
-                        raise ValueError(
-                            'CmdStan config mismatch in Stan CSV file {}: '
-                            'arg {} is {}, expected {}'.format(
-                                self.runset.csv_files[i],
-                                key,
-                                dzero[key],
-                                drest[key],
-                            )
-                        )
-                if not self._is_fixed_param:
-                    self._divergences[i] = drest['ct_divergences']
-                    self._max_treedepths[i] = drest['ct_max_treedepth']
-        return dzero
-
     def _check_sampler_diagnostics(self) -> None:
         """
         Warn if any iterations ended in divergences or hit maxtreedepth.
         """
+        # TODO re-write to just sum over these columns of draws
         if np.any(self._divergences) or np.any(self._max_treedepths):
             diagnostics = ['Some chains may have failed to converge.']
             ct_iters = self._metadata.cmdstan_config['num_samples']
@@ -383,90 +305,52 @@ class CmdStanMCMC:
             get_logger().warning('\n\t'.join(diagnostics))
 
     def _assemble_draws(self) -> None:
-        """
-        Allocates and populates the step size, metric, and sample arrays
-        by parsing the validated stan_csv files.
-        """
-        if self._draws.shape != (0,):
-            return
         num_draws = self.num_draws_sampling
-        sampling_iter_start = 0
         if self._save_warmup:
             num_draws += self.num_draws_warmup
-            sampling_iter_start = self.num_draws_warmup
-        self._draws = np.empty(
-            (num_draws, self.chains, len(self.column_names)),
-            dtype=float,
-            order='F',
-        )
+
+        draws = []
         self._step_size = np.empty(self.chains, dtype=float)
         for chain in range(self.chains):
-            with open(self.runset.csv_files[chain], 'r') as fd:
-                line = fd.readline().strip()
-                # read initial comments, CSV header row
-                while len(line) > 0 and line.startswith('#'):
-                    line = fd.readline().strip()
-                if not self._is_fixed_param:
-                    # handle warmup draws, if any
-                    if self._save_warmup:
-                        for i in range(self.num_draws_warmup):
-                            line = fd.readline().strip()
-                            xs = line.split(',')
-                            self._draws[i, chain, :] = [float(x) for x in xs]
-                    line = fd.readline().strip()
-                    if line != '# Adaptation terminated':  # shouldn't happen?
-                        while line != '# Adaptation terminated':
-                            line = fd.readline().strip()
-                    # step_size, metric (diag_e and dense_e only)
-                    line = fd.readline().strip()
-                    _, step_size = line.split('=')
-                    self._step_size[chain] = float(step_size.strip())
-                    if self._metadata.cmdstan_config['metric'] != 'unit_e':
-                        line = fd.readline().strip()  # metric type
-                        line = fd.readline().lstrip(' #\t').rstrip()
-                        num_unconstrained_params = len(line.split(','))
-                        if chain == 0:  # can't allocate w/o num params
-                            if self.metric_type == 'diag_e':
-                                self._metric = np.empty(
-                                    (self.chains, num_unconstrained_params),
-                                    dtype=float,
-                                )
-                            else:
-                                self._metric = np.empty(
-                                    (
-                                        self.chains,
-                                        num_unconstrained_params,
-                                        num_unconstrained_params,
-                                    ),
-                                    dtype=float,
-                                )
-                        if line:
-                            if self.metric_type == 'diag_e':
-                                xs = line.split(',')
-                                self._metric[chain, :] = [float(x) for x in xs]
-                            else:
-                                xs = line.strip().split(',')
-                                self._metric[chain, 0, :] = [
-                                    float(x) for x in xs
-                                ]
-                                for i in range(1, num_unconstrained_params):
-                                    line = fd.readline().lstrip(' #\t').rstrip()
-                                    xs = line.split(',')
-                                    self._metric[chain, i, :] = [
-                                        float(x) for x in xs
-                                    ]
-                    else:  # unit_e changed in 2.34 to have an extra line
-                        pos = fd.tell()
-                        line = fd.readline().strip()
-                        if not line.startswith('#'):
-                            fd.seek(pos)
+            metric_file = self.runset.metric_files[chain]
+            sample_file = self.runset.csv_files[chain]
 
-                # process draws
-                for i in range(sampling_iter_start, num_draws):
-                    line = fd.readline().strip()
-                    xs = line.split(',')
-                    self._draws[i, chain, :] = [float(x) for x in xs]
-        assert self._draws is not None
+            with open(metric_file, 'r') as fd:
+                d = json.load(fd)
+                self._metric_type = d['metric_type']
+                if chain == 0:
+                    if self._metric_type == 'dense_e':
+                        self._metric = np.empty(
+                            (
+                                self.chains,
+                                len(d['inv_metric']),
+                                len(d['inv_metric']),
+                            ),
+                            dtype=float,
+                        )
+                    else:
+                        self._metric = np.empty(
+                            (self.chains, len(d['inv_metric'])), dtype=float
+                        )
+
+                    self._step_size = np.empty(self.chains, dtype=float)
+
+                self._metric[chain, ...] = np.array(d['inv_metric'])
+                self._metric_type = d['metric_type']
+                self._step_size[chain] = d['stepsize']
+
+            param_names, sample = read_raw(sample_file)
+            if chain == 0:
+                self._param_names = param_names
+            draws.append(sample)
+
+        self._draws = np.array(draws).reshape(
+            num_draws, self.chains, len(self._param_names)
+        )
+
+        with open(self.runset.config_file, 'r') as config_json:
+            config = json.load(config_json)
+        self._metadata = InferenceMetadata(config, self._param_names)
 
     def summary(
         self,
@@ -618,7 +502,6 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
 
-        self._assemble_draws()
         cols = []
         if vars is not None:
             for var in dict.fromkeys(vars_list):
@@ -694,8 +577,6 @@ class CmdStanMCMC:
             vars_list = [vars]
         else:
             vars_list = vars
-
-        self._assemble_draws()
 
         num_draws = self.num_draws_sampling
         meta = self._metadata.cmdstan_config
@@ -814,7 +695,6 @@ class CmdStanMCMC:
         Maps each column name to a numpy.ndarray (draws x chains x 1)
         containing per-draw diagnostic values.
         """
-        self._assemble_draws()
         return {
             name: var.extract_reshape(self._draws)
             for name, var in self._metadata.method_vars.items()
@@ -835,3 +715,37 @@ class CmdStanMCMC:
         cmdstanpy.from_csv
         """
         self.runset.save_csvfiles(dir)
+
+
+def read_raw(file: str) -> Tuple[List[str], np.ndarray]:
+    with open(file, "rb") as f:
+        magic = f.read(4)
+        if magic not in [b"STAN", b"NATS"]:
+            raise ValueError(f"Invalid magic bytes {magic!r}, expected STAN")
+
+        little_endian = magic == b"STAN"
+
+        header_size = (
+            int.from_bytes(f.read(8), "little" if little_endian else "big")
+            - 1  # null terminator
+        )
+        header = f.read(header_size).decode("utf-8")
+        header_row = header.split(",")
+        columns = len(header_row)
+
+        # next multiple of 8
+        start = (12 + header_size + 7) & ~7
+        f.seek(start)
+        buf = f.read()
+
+    if len(buf) % 8 != 0:
+        raise ValueError("Invalid file size")
+    rows = len(buf) // (columns * 8)
+
+    data: np.ndarray = np.ndarray(
+        shape=(rows, columns),
+        dtype="<f8" if little_endian else ">f8",
+        buffer=buf,
+    )
+
+    return (header_row, data)
