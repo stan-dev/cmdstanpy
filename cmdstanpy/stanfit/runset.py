@@ -242,6 +242,7 @@ class RunSet:
         self, suffix: str, *, extra: str = "", id: Optional[int] = None
     ) -> str:
         if id is not None:
+            # TODO sort this out
             if self.one_process_per_chain:
                 extra = f"_{id}{extra}"
             else:

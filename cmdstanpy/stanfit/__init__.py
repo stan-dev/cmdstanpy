@@ -35,6 +35,7 @@ __all__ = [
 ]
 
 
+# should this be a static method of each class?
 def from_csv(
     path: Union[str, List[str], os.PathLike, None] = None,
     method: Optional[str] = None,

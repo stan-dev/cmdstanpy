@@ -33,7 +33,6 @@ from cmdstanpy.cmdstan_args import Method, SamplerArgs
 from cmdstanpy.utils import (
     EXTENSION,
     build_xarray_data,
-    check_sampler_csv,
     cmdstan_path,
     cmdstan_version_before,
     create_named_text_file,
@@ -46,6 +45,10 @@ from .metadata import InferenceMetadata
 from .runset import RunSet
 
 
+# Eventually have a from_files and a from_runset, where from_runset does
+# additional checks like that the requested number of draws is actually present
+# In this world, we stop storing the runset, relying on the
+# files-on-disk as the source of truth
 class CmdStanMCMC:
     """
     Container for outputs from CmdStan sampler run.
@@ -53,9 +56,7 @@ class CmdStanMCMC:
     and accessor methods to access the entire sample or
     individual items. Created by :meth:`CmdStanModel.sample`
 
-    The sample is lazily instantiated on first access of either
-    the resulting sample or the HMC tuning parameters, i.e., the
-    step size and metric.
+
     """
 
     # pylint: disable=too-many-public-methods
