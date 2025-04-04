@@ -79,7 +79,6 @@ def scan_sampler_csv(path: str, is_fixed_param: bool = False) -> Dict[str, Any]:
                 lineno = scan_warmup_iters(fd, dict, lineno)
                 lineno = scan_hmc_params(fd, dict, lineno)
             lineno = scan_sampling_iters(fd, dict, lineno, is_fixed_param)
-            lineno = scan_time(fd, dict, lineno)
         except ValueError as e:
             raise ValueError("Error in reading csv file: " + path) from e
     return dict
@@ -379,66 +378,6 @@ def scan_sampling_iters(
     if not is_fixed_param:
         config_dict['ct_divergences'] = ct_divergences
         config_dict['ct_max_treedepth'] = ct_max_treedepth
-    return lineno
-
-
-def scan_time(fd: TextIO, config_dict: Dict[str, Any], lineno: int) -> int:
-    """
-    Scan time information from the trailing comment lines in a Stan CSV file.
-
-    #  Elapsed Time: 0.001332 seconds (Warm-up)
-    #                0.000249 seconds (Sampling)
-    #                0.001581 seconds (Total)
-
-
-    It extracts the time values and saves them in the config_dict: key 'time',
-    value a dictionary with keys 'warmup', 'sampling', and 'total'.
-    Returns the updated line number after reading the time info.
-
-    :param fd: Open file descriptor at comment row following all sample data.
-    :param config_dict: Dictionary to which the time info is added.
-    :param lineno: Current line number
-    """
-    time = {}
-    keys = ['warmup', 'sampling', 'total']
-    while True:
-        pos = fd.tell()
-        line = fd.readline()
-        if not line:
-            break
-        lineno += 1
-        stripped = line.strip()
-        if not stripped.startswith('#'):
-            fd.seek(pos)
-            lineno -= 1
-            break
-        content = stripped.lstrip('#').strip()
-        if not content:
-            continue
-        tokens = content.split()
-        if len(tokens) < 3:
-            raise ValueError(f"Invalid time at line {lineno}: {content}")
-        if 'Warm-up' in content:
-            key = 'warmup'
-            time_str = tokens[2]
-        elif 'Sampling' in content:
-            key = 'sampling'
-            time_str = tokens[0]
-        elif 'Total' in content:
-            key = 'total'
-            time_str = tokens[0]
-        else:
-            raise ValueError(f"Invalid time at line {lineno}: {content}")
-        try:
-            t = float(time_str)
-        except ValueError as e:
-            raise ValueError(f"Invalid time at line {lineno}: {content}") from e
-        time[key] = t
-
-    if not all(key in time for key in keys):
-        raise ValueError(f"Invalid time, stopped at {lineno}")
-
-    config_dict['time'] = time
     return lineno
 
 
