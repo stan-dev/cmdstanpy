@@ -48,7 +48,7 @@ def do_command(
                 stderr=subprocess.STDOUT,  # avoid buffer overflow
                 env=os.environ,
                 universal_newlines=True,
-                encoding=locale.getencoding(),
+                encoding=locale.getdefaultlocale()[1],
             )
             while proc.poll() is None:
                 if proc.stdout is not None:
