@@ -4,6 +4,7 @@ Run commands and handle returncodes
 import os
 import subprocess
 import sys
+import locale
 from typing import Callable, List, Optional, TextIO
 
 from .filesystem import pushd
@@ -47,6 +48,7 @@ def do_command(
                 stderr=subprocess.STDOUT,  # avoid buffer overflow
                 env=os.environ,
                 universal_newlines=True,
+                encoding=locale.getdefaultlocale()[1],
             )
             while proc.poll() is None:
                 if proc.stdout is not None:
