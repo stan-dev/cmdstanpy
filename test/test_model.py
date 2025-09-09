@@ -155,11 +155,11 @@ def test_stanc_options() -> None:
         stanc_opts = model.stanc_options
         assert stanc_opts[f'O{optim}']
         assert stanc_opts['allow-undefined']
-        assert stanc_opts['use-opencl']
         assert stanc_opts['name'] == 'foo'
 
         cpp_opts = model.cpp_options
         assert cpp_opts['STAN_OPENCL'] == 'TRUE'
+        assert not stanc_opts.get('use-opencl')
 
     with pytest.raises(ValueError):
         bad_opts = {'X': True}
