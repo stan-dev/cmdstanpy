@@ -189,6 +189,7 @@ class CompilerOptions:
                     self._cpp_options = {'STAN_OPENCL': 'TRUE'}
                 else:
                     self._cpp_options['STAN_OPENCL'] = 'TRUE'
+                ignore.append(key)
             elif key.startswith('O'):
                 if has_o_flag:
                     get_logger().warning(

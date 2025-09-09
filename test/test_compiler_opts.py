@@ -135,7 +135,8 @@ def test_opts_stanc_opencl() -> None:
     stanc_opts['use-opencl'] = 'foo'
     opts = CompilerOptions(stanc_options=stanc_opts)
     opts.validate()
-    assert opts.compose() == ['STANCFLAGS+=--use-opencl', 'STAN_OPENCL=TRUE']
+    # cmdstan STAN_OPENCL implies STANCFLAGS+=--use-opencl
+    assert opts.compose() == ['STAN_OPENCL=TRUE']
 
 
 def test_opts_stanc_ignore() -> None:
