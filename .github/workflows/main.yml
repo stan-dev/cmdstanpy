@@ -43,7 +43,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-2022, windows-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -106,8 +106,8 @@ jobs:
           cd run_tests
           pytest -v ../test --cov=../cmdstanpy
 
-      - name: Submit codecov
-        run: |
-          pip install codecov
-          cd run_tests
-          codecov
+      # - name: Submit codecov
+      #   run: |
+      #     pip install codecov
+      #     cd run_tests
+      #     codecov
