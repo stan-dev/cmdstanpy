@@ -419,7 +419,7 @@ class PathfinderArgs:
         tol_param: float | None = None,
         history_size: int | None = None,
         num_psis_draws: int | None = None,
-        num_paths: int | None = None,
+        num_paths: int = 4,
         max_lbfgs_iters: int | None = None,
         num_draws: int | None = None,
         num_elbo_draws: int | None = None,

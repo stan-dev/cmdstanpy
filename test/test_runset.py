@@ -3,7 +3,7 @@
 import os
 
 from cmdstanpy import _TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
+from cmdstanpy.cmdstan_args import CmdStanArgs, PathfinderArgs, SamplerArgs
 from cmdstanpy.stanfit import RunSet
 from cmdstanpy.utils import EXTENSION
 
@@ -299,3 +299,58 @@ def test_chain_ids() -> None:
     assert '_11.csv' in runset._csv_files[0]
     assert 'id=14' in runset.cmd(3)
     assert '_14.csv' in runset._csv_files[3]
+
+
+def test_output_filenames_pathfinder_single_paths() -> None:
+    exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
+    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
+    sampler_args = PathfinderArgs(num_paths=4, save_single_paths=True)
+    chain_ids = [1]
+    cmdstan_args = CmdStanArgs(
+        model_name='bernoulli',
+        model_exe=exe,
+        chain_ids=chain_ids,
+        data=jdata,
+        method_args=sampler_args,
+    )
+    runset = RunSet(args=cmdstan_args)
+    assert len(runset.single_path_csv_files) == 4
+    assert len(runset.single_path_json_files) == 4
+
+    assert all(
+        csv_file.endswith(f"_path_{id}.csv")
+        for id, csv_file in zip(range(1, 5), runset.single_path_csv_files)
+    )
+    assert all(
+        json_file.endswith(f"_path_{id}.json")
+        for id, json_file in zip(range(1, 5), runset.single_path_json_files)
+    )
+
+    sampler_args = PathfinderArgs(num_paths=1, save_single_paths=True)
+    cmdstan_args = CmdStanArgs(
+        model_name='bernoulli',
+        model_exe=exe,
+        chain_ids=chain_ids,
+        data=jdata,
+        method_args=sampler_args,
+    )
+    runset = RunSet(args=cmdstan_args)
+
+    assert len(runset.single_path_csv_files) == 1
+    assert len(runset.single_path_json_files) == 1
+
+    assert runset.single_path_csv_files[0].endswith(".csv")
+    assert runset.single_path_json_files[0].endswith(".json")
+
+    sampler_args = PathfinderArgs(num_paths=1, save_single_paths=False)
+    cmdstan_args = CmdStanArgs(
+        model_name='bernoulli',
+        model_exe=exe,
+        chain_ids=chain_ids,
+        data=jdata,
+        method_args=sampler_args,
+    )
+    runset = RunSet(args=cmdstan_args)
+
+    assert len(runset.single_path_csv_files) == 0
+    assert len(runset.single_path_json_files) == 0

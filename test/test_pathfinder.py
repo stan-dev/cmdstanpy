@@ -3,6 +3,7 @@ Tests for the Pathfinder method.
 """
 
 import contextlib
+import os
 from io import StringIO
 from pathlib import Path
 
@@ -193,3 +194,24 @@ def test_pathfinder_threads() -> None:
     )
     pathfinder = bern_model.pathfinder(data=jdata, num_threads=4)
     assert pathfinder.draws().shape == (1000, 4)
+
+
+def test_pathfinder_single_path_output() -> None:
+
+    stan = DATAFILES_PATH / 'bernoulli.stan'
+    bern_model = cmdstanpy.CmdStanModel(stan_file=stan)
+    jdata = str(DATAFILES_PATH / 'bernoulli.data.json')
+
+    fit = bern_model.pathfinder(data=jdata, num_paths=4, save_single_paths=True)
+    assert len(fit.runset.single_path_csv_files) == 4
+    assert len(fit.runset.single_path_json_files) == 4
+
+    assert all(os.path.exists(f) for f in fit.runset.single_path_csv_files)
+    assert all(os.path.exists(f) for f in fit.runset.single_path_json_files)
+
+    fit = bern_model.pathfinder(data=jdata, num_paths=1, save_single_paths=True)
+    assert len(fit.runset.single_path_csv_files) == 1
+    assert len(fit.runset.single_path_json_files) == 1
+
+    assert all(os.path.exists(f) for f in fit.runset.single_path_csv_files)
+    assert all(os.path.exists(f) for f in fit.runset.single_path_json_files)

@@ -11,7 +11,7 @@ from datetime import datetime
 from time import time
 
 from cmdstanpy import _TMPDIR
-from cmdstanpy.cmdstan_args import CmdStanArgs, Method
+from cmdstanpy.cmdstan_args import CmdStanArgs, Method, PathfinderArgs
 from cmdstanpy.utils import get_logger
 
 
@@ -57,6 +57,8 @@ class RunSet:
         self._stdout_files, self._profile_files = [], []
         self._csv_files, self._diagnostic_files = [], []
         self._config_files = []
+        self._single_path_csv_files: list[str] = []
+        self._single_path_json_files: list[str] = []
 
         # per-process output files
         if one_process_per_chain and chains > 1:
@@ -100,6 +102,9 @@ class RunSet:
                     self.gen_file_name(".csv", extra="diagnostic", id=id)
                     for id in self._chain_ids
                 ]
+
+        if args.method == Method.PATHFINDER:
+            self.populate_pathfinder_single_path_files()
 
     def __repr__(self) -> str:
         lines = [
@@ -222,6 +227,18 @@ class RunSet:
         """List of paths to CmdStan profiler files."""
         return self._profile_files
 
+    @property
+    def single_path_csv_files(self) -> list[str]:
+        """List of paths to single-path Pathfinder output CSV files.
+        Only populated when method is Pathfinder and save_single_paths=True"""
+        return self._single_path_csv_files
+
+    @property
+    def single_path_json_files(self) -> list[str]:
+        """List of paths to single-path Pathfinder output ELBO JSON files.
+        Only populated when method is Pathfinder and save_single_paths=True"""
+        return self._single_path_json_files
+
     def gen_file_name(
         self, suffix: str, *, extra: str = "", id: int | None = None
     ) -> str:
@@ -317,3 +334,23 @@ class RunSet:
                 f"{sum(self._timeout_flags)} of {self.num_procs} "
                 "processes timed out"
             )
+
+    def populate_pathfinder_single_path_files(self) -> None:
+        """Properly assigns output files for Pathfinder's
+        save_single_paths=True option"""
+        if not isinstance(self._args.method_args, PathfinderArgs):
+            return
+        if self._args.method_args.save_single_paths:
+            num_paths = self._args.method_args.num_paths
+            if num_paths > 1:
+                self._single_path_csv_files = [
+                    self.gen_file_name(".csv", extra="path", id=id)
+                    for id in range(1, num_paths + 1)
+                ]
+                self._single_path_json_files = [
+                    self.gen_file_name(".json", extra="path", id=id)
+                    for id in range(1, num_paths + 1)
+                ]
+            else:  # num_paths == 1
+                self._single_path_csv_files = [self.gen_file_name(".csv")]
+                self._single_path_json_files = [self.gen_file_name(".json")]
