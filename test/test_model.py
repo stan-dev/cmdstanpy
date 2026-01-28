@@ -58,6 +58,22 @@ def test_model_good() -> None:
     assert BERN_STAN == model.stan_file
     assert os.path.samefile(model.exe_file, BERN_EXE)
 
+def test_model_fromstring() -> None:
+    stan_string = """
+    data {
+        int<lower=0> N;
+        array[N] int<lower=0,upper=1> y;
+    }
+    parameters {
+        real<lower=0,upper=1> theta;
+    }
+    model {
+        theta ~ beta(1,1);
+        y ~ bernoulli(theta);
+    }
+    """
+    model = CmdStanModel.from_string(stan_string)
+    assert isinstance(model, CmdStanModel)
 
 def test_ctor_compile_arg() -> None:
     if os.path.exists(BERN_EXE):
