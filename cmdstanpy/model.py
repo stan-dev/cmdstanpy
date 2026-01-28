@@ -208,24 +208,24 @@ class CmdStanModel:
         """
         Initialize CmdStanModel using stan code from a string.
 
-        Internally, this method first writes the Stan code to a 
+        Internally, this method first writes the Stan code to a
         temporary file and then calls the regular CmdStanModel()
         constructor.
 
         Note that this method is only meant to be used for small
         examples and / or for development purposes. For all other
-        purposes, we recommend developing the model in a separate 
+        purposes, we recommend developing the model in a separate
         .stan file and calling CmdStanModel() directly.
 
         :param stan_code: Stan program code as a string.
-        :param **kwargs: keyword arguments passed to the CmdStanModel() 
+        :param **kwargs: keyword arguments passed to the CmdStanModel()
             constructor.
         """
-        with tempfile.TemporaryFile(mode="w", suffix=".stan", delete=False) as f:
+        with tempfile.TemporaryFile("w", suffix=".stan", delete=False) as f:
             f.writelines(stan_code)
-        
-        return cls(stan_file = f.name, **kwargs)
-        
+
+        return cls(stan_file=f.name, **kwargs)
+
     @property
     def name(self) -> str:
         """
