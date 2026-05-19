@@ -565,7 +565,7 @@ def test_from_optimization() -> None:
     assert os.path.exists(csv_file)
 
     assert bern_gqs.draws().shape == (1, 1, 10)
-    assert bern_gqs.draws(inc_sample=True).shape == (1, 1, 12)
+    assert bern_gqs.draws(inc_sample=True).shape == (1, 1, 13)
 
     # draws_pd()
     assert bern_gqs.draws_pd().shape == (1, 13)
@@ -610,18 +610,18 @@ def test_opt_save_iterations(caplog: pytest.LogCaptureFixture):
     assert bern_gqs.draws(inc_warmup=True, inc_sample=True).shape == (
         iters,
         1,
-        12,
+        13,
     )
 
     assert bern_gqs.draws(concat_chains=True).shape == (1, 10)
-    assert bern_gqs.draws(concat_chains=True, inc_sample=True).shape == (1, 12)
+    assert bern_gqs.draws(concat_chains=True, inc_sample=True).shape == (1, 13)
     assert bern_gqs.draws(concat_chains=True, inc_warmup=True).shape == (
         iters,
         10,
     )
     assert bern_gqs.draws(
         concat_chains=True, inc_warmup=True, inc_sample=True
-    ).shape == (iters, 12)
+    ).shape == (iters, 13)
 
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta')
