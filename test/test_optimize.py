@@ -92,13 +92,13 @@ def test_rosenbrock(caplog: pytest.LogCaptureFixture) -> None:
     assert 'CmdStanMLE: model=rosenbrock' in repr(mle)
     assert 'method=optimize' in repr(mle)
     assert mle.converged
-    assert mle.column_names == ('lp__', 'x', 'y')
+    assert mle.column_names == ('lp__', 'converged__', 'x', 'y')
     np.testing.assert_almost_equal(mle.stan_variable('x'), 1, decimal=3)
     np.testing.assert_almost_equal(mle.stan_variable('y'), 1, decimal=3)
     np.testing.assert_almost_equal(
         mle.optimized_params_pd['x'][0], 1, decimal=3
     )
-    np.testing.assert_almost_equal(mle.optimized_params_np[1], 1, decimal=3)
+    np.testing.assert_almost_equal(mle.optimized_params_np[2], 1, decimal=3)
     np.testing.assert_almost_equal(mle.optimized_params_dict['x'], 1, decimal=3)
     with caplog.at_level(logging.WARNING):
         assert mle.optimized_iterations_np is None
@@ -128,8 +128,8 @@ def test_rosenbrock(caplog: pytest.LogCaptureFixture) -> None:
     np.testing.assert_almost_equal(mle.stan_variable('x'), 1, decimal=3)
     np.testing.assert_almost_equal(mle.stan_variable('y'), 1, decimal=3)
 
-    assert mle.optimized_params_np.shape == (3,)
-    np.testing.assert_almost_equal(mle.optimized_params_np[1], 1, decimal=3)
+    assert mle.optimized_params_np.shape == (4,)
+    np.testing.assert_almost_equal(mle.optimized_params_np[2], 1, decimal=3)
     np.testing.assert_almost_equal(
         mle.optimized_params_pd['x'][0], 1, decimal=3
     )
@@ -140,7 +140,7 @@ def test_rosenbrock(caplog: pytest.LogCaptureFixture) -> None:
         mle.optimized_iterations_np[0, 1]
         != mle.optimized_iterations_np[last_iter, 1]
     )
-    for i in range(3):
+    for i in range(4):
         assert (
             mle.optimized_params_np[i]
             == mle.optimized_iterations_np[last_iter, i]
@@ -159,7 +159,7 @@ def test_eight_schools(caplog: pytest.LogCaptureFixture) -> None:
     assert 'method=optimize' in repr(mle)
     assert not mle.converged
     with caplog.at_level(logging.WARNING):
-        assert mle.optimized_params_pd.shape == (1, 11)
+        assert mle.optimized_params_pd.shape == (1, 12)
     check_present(
         caplog,
         (
@@ -294,15 +294,15 @@ def test_optimize_good() -> None:
     # test numpy output
     assert isinstance(mle.optimized_params_np, np.ndarray)
     np.testing.assert_almost_equal(mle.optimized_params_np[0], -5, decimal=2)
-    np.testing.assert_almost_equal(mle.optimized_params_np[1], 0.2, decimal=3)
+    np.testing.assert_almost_equal(mle.optimized_params_np[2], 0.2, decimal=3)
 
     # test pandas output
     assert mle.optimized_params_np[0] == mle.optimized_params_pd['lp__'][0]
-    assert mle.optimized_params_np[1] == mle.optimized_params_pd['theta'][0]
+    assert mle.optimized_params_np[2] == mle.optimized_params_pd['theta'][0]
 
     # test dict output
     assert mle.optimized_params_np[0] == mle.optimized_params_dict['lp__']
-    assert mle.optimized_params_np[1] == mle.optimized_params_dict['theta']
+    assert mle.optimized_params_np[2] == mle.optimized_params_dict['theta']
 
 
 def test_negative_parameter_values() -> None:
@@ -530,14 +530,14 @@ def test_optimize_good_dict() -> None:
     )
     # test numpy output
     np.testing.assert_almost_equal(mle.optimized_params_np[0], -5, decimal=2)
-    np.testing.assert_almost_equal(mle.optimized_params_np[1], 0.2, decimal=3)
+    np.testing.assert_almost_equal(mle.optimized_params_np[2], 0.2, decimal=3)
 
 
 def test_optimize_rosenbrock() -> None:
     stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
     rose_model = CmdStanModel(stan_file=stan)
     mle = rose_model.optimize(seed=1239812093, inits=None, algorithm='BFGS')
-    assert mle.column_names == ('lp__', 'x', 'y')
+    assert mle.column_names == ('lp__', 'converged__', 'x', 'y')
     np.testing.assert_almost_equal(mle.optimized_params_dict['x'], 1, decimal=3)
     np.testing.assert_almost_equal(mle.optimized_params_dict['y'], 1, decimal=3)
 
@@ -546,7 +546,7 @@ def test_optimize_no_data() -> None:
     stan = os.path.join(DATAFILES_PATH, 'optimize', 'no_data.stan')
     rose_model = CmdStanModel(stan_file=stan)
     mle = rose_model.optimize(seed=1239812093)
-    assert mle.column_names == ('lp__', 'a')
+    assert mle.column_names == ('lp__', 'converged__', 'a')
     np.testing.assert_almost_equal(mle.optimized_params_dict['a'], 0, decimal=3)
 
 
@@ -600,7 +600,7 @@ def test_exe_only() -> None:
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
     mle = bern2_model.optimize(data=jdata)
     assert mle.optimized_params_np[0] == mle.optimized_params_dict['lp__']
-    assert mle.optimized_params_np[1] == mle.optimized_params_dict['theta']
+    assert mle.optimized_params_np[2] == mle.optimized_params_dict['theta']
 
 
 def test_complex_output() -> None:
