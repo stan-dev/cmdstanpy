@@ -325,8 +325,7 @@ class CmdStanMCMC(MultiChainFit[SampleConfig]):
     def _comparable_config(
         cls, config: StanConfig[SampleConfig]
     ) -> dict[str, Any]:
-        """Extends the base cross-chain checks with the sampler settings
-        which affect how the draws are laid out."""
+        """Returns configuration settings that must agree across chains"""
         method_config = config.method_config
         return {
             **super()._comparable_config(config),
