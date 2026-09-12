@@ -6,7 +6,6 @@ generate quantities (GQ) method
 from __future__ import annotations
 
 import os
-from collections import Counter
 from collections.abc import Hashable, Sequence, MutableMapping
 from dataclasses import dataclass, field
 from typing import Any, Generic, NoReturn, TypeVar, overload
@@ -29,7 +28,7 @@ from cmdstanpy.utils import (
     stancsv,
 )
 
-from .base import MultiChainFit
+from .base import MultiChainFit, StanFit
 from .laplace import CmdStanLaplace
 from .mcmc import CmdStanMCMC
 from .metadata import GeneratedQuantitiesConfig, GeneratedQuantitiesRunConfig
@@ -157,16 +156,10 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         start_idx, _ = self._draws_start(inc_warmup)
         draws = self._draws[start_idx:]
         if inc_sample:
-            gq_columns = set(self.column_names)
-            drop_cols = [
-                idx
-                for idx, name in enumerate(self.previous_fit.column_names)
-                if name in gq_columns
-            ]
-
             previous_draws = self._previous_draws(True)[start_idx:]
             draws = np.concatenate(
-                (np.delete(previous_draws, drop_cols, axis=2), draws), axis=2
+                (previous_draws[:, :, self._previous_column_indices()], draws),
+                axis=2,
             )
 
         return flatten_chains(draws) if concat_chains else draws
@@ -196,101 +189,55 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         CmdStanGQ.draws_xr
         CmdStanMCMC.draws_pd
         """
-        if vars is not None:
-            if isinstance(vars, str):
-                vars_list = [vars]
-            else:
-                vars_list = vars
-
-            vars_list = list(dict.fromkeys(vars_list))
-
-        self._assemble()
-
-        all_columns = ['chain__', 'iter__', 'draw__'] + list(self.column_names)
-
-        gq_cols: list[str] = []
-        mcmc_vars: list[str] = []
+        identifiers = ['chain__', 'iter__', 'draw__']
         selected_columns: list[str] = []
+        include_previous = inc_sample and vars is None
         if vars is not None:
-            for var in vars_list:
+            vars_list = [vars] if isinstance(vars, str) else vars
+            for var in dict.fromkeys(vars_list):
+                fit: StanFit[Any]
                 if var in self.metadata.stan_vars:
-                    info = self.metadata.stan_vars[var]
-                    columns = self.column_names[info.start_idx : info.end_idx]
-                    gq_cols.extend(columns)
-                    selected_columns.extend(columns)
+                    fit = self
                 elif inc_sample and var in self.previous_fit.metadata.stan_vars:
-                    info = self.previous_fit.metadata.stan_vars[var]
-                    columns = self.previous_fit.column_names[
-                        info.start_idx : info.end_idx
-                    ]
-                    mcmc_vars.extend(columns)
-                    selected_columns.extend(columns)
-                elif var in ['chain__', 'iter__', 'draw__']:
-                    gq_cols.append(var)
+                    fit = self.previous_fit
+                    include_previous = True
+                elif var in identifiers:
                     selected_columns.append(var)
+                    continue
                 else:
-                    raise ValueError('Unknown variable: {}'.format(var))
-        else:
-            gq_cols = all_columns
-            vars_list = gq_cols
+                    raise ValueError(f'Unknown variable: {var}')
+                info = fit.metadata.stan_vars[var]
+                selected_columns.extend(
+                    fit.column_names[info.start_idx : info.end_idx]
+                )
 
-        draws = self.draws(inc_warmup=inc_warmup)
-        if inc_sample and (mcmc_vars or vars is None):
-            previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
-        # add long-form columns for chain, iteration, draw
-        n_draws, n_chains, _ = draws.shape
-        chains_col = (
-            np.repeat(np.arange(1, n_chains + 1), n_draws)
-            .reshape(1, n_chains, n_draws)
-            .T
-        )
-        iter_col = (
-            np.tile(np.arange(1, n_draws + 1), n_chains)
-            .reshape(1, n_chains, n_draws)
-            .T
-        )
-        draw_col = (
-            np.arange(1, (n_draws * n_chains) + 1)
-            .reshape(1, n_chains, n_draws)
-            .T
-        )
-        draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
-
-        draws_pd = pd.DataFrame(
-            data=flatten_chains(draws),
-            columns=all_columns,
-        )
-
-        if inc_sample and mcmc_vars:
-            if gq_cols:
-                return pd.concat(
-                    [
-                        previous_draws_pd,
-                        draws_pd[gq_cols],
-                    ],
-                    axis='columns',
-                )[selected_columns]
-            else:
-                return previous_draws_pd
-        elif inc_sample and vars is None:
-            cols_1 = list(previous_draws_pd.columns)
-            cols_2 = list(draws_pd.columns)
-            dups = [
-                item
-                for item, count in Counter(cols_1 + cols_2).items()
-                if count > 1
+        previous_columns = (
+            [
+                self.previous_fit.column_names[idx]
+                for idx in self._previous_column_indices()
             ]
-            return pd.concat(
-                [
-                    previous_draws_pd.drop(columns=dups).reset_index(drop=True),
-                    draws_pd,
-                ],
-                axis=1,
-            )
-        elif gq_cols:
-            return draws_pd[gq_cols]
+            if include_previous
+            else []
+        )
+        draws = self.draws(inc_warmup=inc_warmup, inc_sample=include_previous)
+        n_draws, n_chains, _ = draws.shape
+        frame = pd.DataFrame(
+            flatten_chains(draws),
+            columns=previous_columns + list(self.column_names),
+        )
+        frame['chain__'] = np.repeat(
+            np.arange(1, n_chains + 1, dtype=float), n_draws
+        )
+        frame['iter__'] = np.tile(
+            np.arange(1, n_draws + 1, dtype=float), n_chains
+        )
+        frame['draw__'] = np.arange(1, n_draws * n_chains + 1, dtype=float)
 
-        return draws_pd
+        # An empty variable list returns all GQ columns and IDs.
+        columns = selected_columns or (
+            previous_columns + identifiers + list(self.column_names)
+        )
+        return frame[columns]
 
     @overload
     def draws_xr(
@@ -583,29 +530,11 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         else:  # CmdStanLaplace, CmdStanPathfinder
             return p_fit.draws()[:, None, :]
 
-    def _previous_draws_pd(
-        self, vars: list[str], inc_warmup: bool
-    ) -> pd.DataFrame:
-        if vars:
-            sel: list[str] | slice = vars
-        else:
-            sel = slice(None, None)
-
-        p_fit = self.previous_fit
-        if isinstance(p_fit, CmdStanMCMC):
-            # ``vars`` contains expanded column names, not Stan variable names.
-            return p_fit.draws_pd(inc_warmup=inc_warmup and p_fit._save_warmup)[
-                sel
-            ]
-
-        elif isinstance(p_fit, CmdStanMLE):
-            if inc_warmup and p_fit.config.method_config.save_iterations:
-                return p_fit.optimized_iterations_pd[sel]  # type: ignore
-            else:
-                return p_fit.optimized_params_pd[sel]
-        elif isinstance(p_fit, CmdStanVB):
-            return p_fit.variational_sample_pd[sel]
-        elif isinstance(p_fit, CmdStanLaplace):
-            return p_fit.draws_pd()[sel]
-        else:  # CmdStanPathfinder
-            return pd.DataFrame(p_fit.draws(), columns=p_fit.column_names)[sel]
+    def _previous_column_indices(self) -> list[int]:
+        """Previous-fit columns retained when merging with generated quantities."""
+        gq_columns = set(self.column_names)
+        return [
+            idx
+            for idx, name in enumerate(self.previous_fit.column_names)
+            if name not in gq_columns
+        ]

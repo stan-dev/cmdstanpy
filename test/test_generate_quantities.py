@@ -638,6 +638,11 @@ def test_opt_save_iterations(caplog: pytest.LogCaptureFixture) -> None:
                 ),
                 flatten_chains(selected) if concat_chains else selected,
             )
+        frame = bern_gqs.draws_pd(
+            inc_warmup=include_iterations, inc_sample=True
+        )
+        columns = list(bern_fit.column_names + bern_gqs.column_names)
+        np.testing.assert_array_equal(frame[columns], flatten_chains(selected))
 
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta')
@@ -730,6 +735,16 @@ def test_from_vb() -> None:
         == bern_gqs.previous_fit.variational_sample_pd.shape[1]
         + bern_gqs.draws_pd().shape[1]
     )
+
+    # pandas must exclude the mean row just like the NumPy accessor.
+    columns = list(bern_fit.column_names + bern_gqs.column_names)
+    for inc_warmup in (False, True):
+        frame = bern_gqs.draws_pd(inc_sample=True, inc_warmup=inc_warmup)
+        expected = np.concatenate(
+            [bern_fit.variational_sample, flatten_chains(bern_gqs._draws[1:])],
+            axis=1,
+        )
+        np.testing.assert_array_equal(frame[columns], expected)
 
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta', mean=False)
@@ -1047,14 +1062,10 @@ def test_gq_saved_warmup_alignment(
     gq.previous_fit._draws = np.concatenate(
         [np.full((1, 2, 1), -10.0), gq.previous_fit._draws], axis=0
     )
-    gq._draws = np.concatenate(
-        [np.full((1, 2, 1), -20.0), gq._draws], axis=0
-    )
+    gq._draws = np.concatenate([np.full((1, 2, 1), -20.0), gq._draws], axis=0)
     expected = gq._draws
     if inc_sample:
-        expected = np.concatenate(
-            [gq.previous_fit._draws, expected], axis=2
-        )
+        expected = np.concatenate([gq.previous_fit._draws, expected], axis=2)
     if not inc_warmup:
         expected = expected[1:]
     with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
@@ -1070,3 +1081,59 @@ def test_gq_saved_warmup_alignment(
     columns = ['theta', 'z'] if inc_sample else ['z']
     np.testing.assert_array_equal(frame[columns], flatten_chains(expected))
     assert not caplog.records
+
+
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_draws_pd_default_layout(make_gq, inc_sample):
+    gq = make_gq('lp__,theta,z.1,z.2', 'z.1,z.2')
+    # pandas has historically used chain ordinals, not configured chain IDs.
+    gq.chain_ids = [3, 7]
+    gq.previous_fit.chain_ids = [3, 7]
+    expected = pd.DataFrame(
+        {
+            'chain__': [1.0, 1.0, 2.0, 2.0],
+            'iter__': [1.0, 2.0, 1.0, 2.0],
+            'draw__': [1.0, 2.0, 3.0, 4.0],
+            'z[1]': flatten_chains(gq._draws)[:, 0],
+            'z[2]': flatten_chains(gq._draws)[:, 1],
+        }
+    )
+    if inc_sample:
+        previous = flatten_chains(gq.previous_fit._draws)
+        expected.insert(0, 'theta', previous[:, 1])
+        expected.insert(0, 'lp__', previous[:, 0])
+    pd.testing.assert_frame_equal(gq.draws_pd(inc_sample=inc_sample), expected)
+
+
+@pytest.mark.parametrize(
+    'variables,columns',
+    [
+        ('z', ['z[1]', 'z[2]']),
+        (['z', 'theta', 'z'], ['z[1]', 'z[2]', 'theta']),
+        (['theta', 'iter__', 'z'], ['theta', 'iter__', 'z[1]', 'z[2]']),
+        (['draw__', 'chain__'], ['draw__', 'chain__']),
+    ],
+)
+def test_gq_draws_pd_selected_layout(make_gq, variables, columns):
+    gq = make_gq('theta,z.1,z.2', 'z.1,z.2')
+    expected = gq.draws_pd(inc_sample=True)[columns]
+    pd.testing.assert_frame_equal(
+        gq.draws_pd(vars=variables, inc_sample=True), expected
+    )
+
+
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_draws_pd_empty_vars(make_gq, inc_sample):
+    gq = make_gq('theta', 'z')
+    pd.testing.assert_frame_equal(
+        gq.draws_pd(vars=[], inc_sample=inc_sample), gq.draws_pd()
+    )
+
+
+@pytest.mark.parametrize(
+    'variable,inc_sample', [('unknown', True), ('theta', False)]
+)
+def test_gq_draws_pd_unknown_variable(make_gq, variable, inc_sample):
+    gq = make_gq('theta', 'z')
+    with pytest.raises(ValueError, match=f'Unknown variable: {variable}'):
+        gq.draws_pd(vars=variable, inc_sample=inc_sample)
