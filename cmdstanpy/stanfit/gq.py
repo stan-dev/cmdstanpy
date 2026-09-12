@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import os
 from collections import Counter
-from collections.abc import Hashable, Sequence
+from collections.abc import Hashable, Sequence, MutableMapping
 from dataclasses import dataclass, field
-from typing import Any, Generic, MutableMapping, NoReturn, TypeVar, overload
+from typing import Any, Generic, NoReturn, TypeVar, overload
 
 import numpy as np
 import pandas as pd
@@ -155,18 +155,12 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
                 )
 
         if inc_sample:
-            cols_1 = self.previous_fit.column_names
-            cols_2 = self.column_names
-            dups = [
-                item
-                for item, count in Counter(cols_1 + cols_2).items()
-                if count > 1
+            gq_columns = set(self.column_names)
+            drop_cols = [
+                idx
+                for idx, name in enumerate(self.previous_fit.column_names)
+                if name in gq_columns
             ]
-            drop_cols: list[int] = []
-            for dup in dups:
-                drop_cols.extend(
-                    self.previous_fit.metadata.stan_vars[dup].columns()
-                )
 
         start_idx, _ = self._draws_start(inc_warmup)
         previous_draws = self._previous_draws(True)
@@ -174,7 +168,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
             return flatten_chains(
                 np.dstack(
                     (
-                        np.delete(previous_draws, drop_cols, axis=1),
+                        np.delete(previous_draws, drop_cols, axis=2),
                         self._draws,
                     )
                 )[start_idx:, :, :]
@@ -184,7 +178,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         if inc_sample:
             return np.dstack(
                 (
-                    np.delete(previous_draws, drop_cols, axis=1),
+                    np.delete(previous_draws, drop_cols, axis=2),
                     self._draws,
                 )
             )[start_idx:, :, :]
@@ -252,22 +246,24 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
 
         gq_cols: list[str] = []
         mcmc_vars: list[str] = []
+        selected_columns: list[str] = []
         if vars is not None:
             for var in vars_list:
                 if var in self.metadata.stan_vars:
                     info = self.metadata.stan_vars[var]
-                    gq_cols.extend(
-                        self.column_names[info.start_idx : info.end_idx]
-                    )
+                    columns = self.column_names[info.start_idx : info.end_idx]
+                    gq_cols.extend(columns)
+                    selected_columns.extend(columns)
                 elif inc_sample and var in self.previous_fit.metadata.stan_vars:
                     info = self.previous_fit.metadata.stan_vars[var]
-                    mcmc_vars.extend(
-                        self.previous_fit.column_names[
-                            info.start_idx : info.end_idx
-                        ]
-                    )
+                    columns = self.previous_fit.column_names[
+                        info.start_idx : info.end_idx
+                    ]
+                    mcmc_vars.extend(columns)
+                    selected_columns.extend(columns)
                 elif var in ['chain__', 'iter__', 'draw__']:
                     gq_cols.append(var)
+                    selected_columns.append(var)
                 else:
                     raise ValueError('Unknown variable: {}'.format(var))
         else:
@@ -309,7 +305,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
                         draws_pd[gq_cols],
                     ],
                     axis='columns',
-                )[vars_list]
+                )[selected_columns]
             else:
                 return previous_draws_pd
         elif inc_sample and vars is None:
@@ -392,7 +388,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
             if isinstance(vars, str):
                 vars_list = [vars]
             else:
-                vars_list = vars
+                vars_list = list(vars)
             for var in vars_list:
                 if var not in self.metadata.stan_vars:
                     if inc_sample and (
@@ -633,7 +629,8 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
 
         p_fit = self.previous_fit
         if isinstance(p_fit, CmdStanMCMC):
-            return p_fit.draws_pd(vars or None, inc_warmup=inc_warmup)
+            # ``vars`` contains expanded column names, not Stan variable names.
+            return p_fit.draws_pd(inc_warmup=inc_warmup)[sel]
 
         elif isinstance(p_fit, CmdStanMLE):
             if inc_warmup and p_fit.config.method_config.save_iterations:
@@ -643,6 +640,6 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         elif isinstance(p_fit, CmdStanVB):
             return p_fit.variational_sample_pd[sel]
         elif isinstance(p_fit, CmdStanLaplace):
-            return p_fit.draws_pd(vars or None)
+            return p_fit.draws_pd()[sel]
         else:  # CmdStanPathfinder
             return pd.DataFrame(p_fit.draws(), columns=p_fit.column_names)[sel]

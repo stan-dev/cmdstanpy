@@ -8,6 +8,8 @@ import os
 import pickle
 import shutil
 from test import check_present, without_import
+from collections.abc import Callable
+from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
@@ -15,8 +17,18 @@ import pytest
 
 import cmdstanpy.stanfit
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanGQ
+from cmdstanpy.stanfit import CmdStanGQ, CmdStanLaplace, CmdStanMLE
 from cmdstanpy.stanfit.mcmc import CmdStanMCMC
+from cmdstanpy.stanfit.metadata import (
+    GeneratedQuantitiesConfig,
+    GeneratedQuantitiesRunConfig,
+    InferenceMetadata,
+    LaplaceConfig,
+    LaplaceRunConfig,
+    SampleConfig,
+    SampleRunConfig,
+)
+from cmdstanpy.utils import flatten_chains
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -828,3 +840,135 @@ def test_from_laplace() -> None:
     assert theta.shape == (1000,)
     y_rep = bern_gqs.stan_variable(var='y_rep')
     assert y_rep.shape == (1000, 10)
+
+
+@pytest.fixture
+def make_gq(monkeypatch: pytest.MonkeyPatch) -> Callable:
+    # These tests exercise accessors, not CSV parsing. Populate the draw caches
+    # directly and skip the sampler's eager CSV validation.
+    monkeypatch.setattr(CmdStanMCMC, '_validate_csv_files', lambda self: None)
+
+    def make(previous_header: str, gq_header: str) -> CmdStanGQ[CmdStanMCMC]:
+        previous = CmdStanMCMC(
+            metadata=InferenceMetadata(previous_header),
+            model_name='previous',
+            csv_files=['chain-1.csv', 'chain-2.csv'],
+            chain_ids=[1, 2],
+            config=SampleRunConfig(
+                model_name='previous',
+                stan_major_version='2',
+                stan_minor_version='39',
+                stan_patch_version='0',
+                method_config=SampleConfig(
+                    algorithm='fixed_param', num_samples=2, num_warmup=0
+                ),
+            ),
+        )
+        previous._draws = np.arange(
+            4 * len(previous.column_names), dtype=float
+        ).reshape(2, 2, -1)
+        gq = CmdStanGQ(
+            previous_fit=previous,
+            metadata=InferenceMetadata(gq_header),
+            model_name='generated',
+            csv_files=['gq-1.csv', 'gq-2.csv'],
+            chain_ids=[1, 2],
+            config=GeneratedQuantitiesRunConfig(
+                model_name='generated',
+                stan_major_version='2',
+                stan_minor_version='39',
+                stan_patch_version='0',
+                method_config=GeneratedQuantitiesConfig(
+                    fitted_params='chain-1.csv', num_chains=2
+                ),
+            ),
+        )
+        gq._draws = 100 + np.arange(
+            4 * len(gq.column_names), dtype=float
+        ).reshape(2, 2, -1)
+        return gq
+
+    return make
+
+
+@pytest.mark.parametrize('gq_header', ['z', 'z.1,z.2'])
+@pytest.mark.parametrize('concat_chains', [False, True])
+def test_draws_duplicate_columns(make_gq, gq_header, concat_chains):
+    gq = make_gq('theta,' + gq_header, gq_header)
+    expected = np.concatenate(
+        [gq.previous_fit._draws[:, :, :1], gq._draws], axis=2
+    )
+    if concat_chains:
+        expected = flatten_chains(expected)
+    np.testing.assert_array_equal(
+        gq.draws(inc_sample=True, concat_chains=concat_chains), expected
+    )
+
+
+@pytest.mark.parametrize('variables', [['theta', 'z'], ['z', 'theta']])
+def test_draws_pd_mixed_container_selection(make_gq, variables):
+    gq = make_gq('theta', 'z.1,z.2')
+    result = gq.draws_pd(vars=variables, inc_sample=True)
+    columns = [
+        column
+        for var in variables
+        for column in (['z[1]', 'z[2]'] if var == 'z' else ['theta'])
+    ]
+    assert list(result.columns) == columns
+    np.testing.assert_array_equal(
+        result['theta'], flatten_chains(gq.previous_fit._draws)[:, 0]
+    )
+    np.testing.assert_array_equal(
+        result[['z[1]', 'z[2]']], flatten_chains(gq._draws)
+    )
+
+
+def test_draws_pd_previous_container_selection(make_gq):
+    gq = make_gq('beta.1,beta.2', 'z')
+    result = gq.draws_pd(vars=['beta'], inc_sample=True)
+    assert list(result.columns) == ['beta[1]', 'beta[2]']
+    np.testing.assert_array_equal(
+        result, flatten_chains(gq.previous_fit._draws)
+    )
+
+
+def test_draws_pd_previous_laplace_container_selection(make_gq):
+    template = make_gq('beta.1,beta.2', 'z')
+    previous = CmdStanLaplace(
+        metadata=template.previous_fit.metadata,
+        model_name='previous',
+        csv_file='laplace.csv',
+        mode=Mock(spec=CmdStanMLE),
+        config=LaplaceRunConfig(
+            model_name='previous',
+            stan_major_version='2',
+            stan_minor_version='39',
+            stan_patch_version='0',
+            method_config=LaplaceConfig(mode='mode.csv', draws=2),
+        ),
+    )
+    previous._draws = template.previous_fit._draws[:, 0, :]
+    gq = CmdStanGQ(
+        previous_fit=previous,
+        metadata=template.metadata,
+        model_name=template.model_name,
+        csv_files=['gq.csv'],
+        chain_ids=[1],
+        config=template.config,
+    )
+    gq._draws = template._draws[:, :1, :]
+    result = gq.draws_pd(vars=['beta'], inc_sample=True)
+    assert list(result.columns) == ['beta[1]', 'beta[2]']
+    np.testing.assert_array_equal(result, previous._draws)
+
+
+def test_draws_xr_does_not_mutate_vars(make_gq):
+    pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    variables = ['theta', 'z']
+    result = gq.draws_xr(vars=variables, inc_sample=True)
+    assert variables == ['theta', 'z']
+    np.testing.assert_array_equal(
+        result.theta.values, gq.previous_fit._draws[:, :, 0].T
+    )
+    np.testing.assert_array_equal(result.z.values, gq._draws[:, :, 0].T)
