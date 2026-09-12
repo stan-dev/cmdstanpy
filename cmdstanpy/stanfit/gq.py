@@ -154,6 +154,8 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
                     '"inc_warmup=True"'
                 )
 
+        start_idx, _ = self._draws_start(inc_warmup)
+        draws = self._draws[start_idx:]
         if inc_sample:
             gq_columns = set(self.column_names)
             drop_cols = [
@@ -162,27 +164,12 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
                 if name in gq_columns
             ]
 
-        start_idx, _ = self._draws_start(inc_warmup)
-        previous_draws = self._previous_draws(True)
-        if concat_chains and inc_sample:
-            return flatten_chains(
-                np.dstack(
-                    (
-                        np.delete(previous_draws, drop_cols, axis=2),
-                        self._draws,
-                    )
-                )[start_idx:, :, :]
+            previous_draws = self._previous_draws(True)[start_idx:]
+            draws = np.concatenate(
+                (np.delete(previous_draws, drop_cols, axis=2), draws), axis=2
             )
-        if concat_chains:
-            return flatten_chains(self._draws[start_idx:, :, :])
-        if inc_sample:
-            return np.dstack(
-                (
-                    np.delete(previous_draws, drop_cols, axis=2),
-                    self._draws,
-                )
-            )[start_idx:, :, :]
-        return self._draws[start_idx:, :, :]
+
+        return flatten_chains(draws) if concat_chains else draws
 
     def draws_pd(
         self,
@@ -217,29 +204,6 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
 
             vars_list = list(dict.fromkeys(vars_list))
 
-        if inc_warmup:
-            if (
-                isinstance(self.previous_fit, CmdStanMCMC)
-                and not self.previous_fit._save_warmup
-            ):
-                get_logger().warning(
-                    "Sample doesn't contain draws from warmup iterations,"
-                    ' rerun sampler with "save_warmup=True".'
-                )
-            elif (
-                isinstance(self.previous_fit, CmdStanMLE)
-                and not self.previous_fit.config.method_config.save_iterations
-            ):
-                get_logger().warning(
-                    "MLE doesn't contain draws from pre-convergence iterations,"
-                    ' rerun optimization with "save_iterations=True".'
-                )
-            elif isinstance(self.previous_fit, CmdStanVB):
-                get_logger().warning(
-                    "Variational fit doesn't make sense with argument "
-                    '"inc_warmup=True"'
-                )
-
         self._assemble()
 
         all_columns = ['chain__', 'iter__', 'draw__'] + list(self.column_names)
@@ -270,9 +234,9 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
             gq_cols = all_columns
             vars_list = gq_cols
 
-        previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
-
         draws = self.draws(inc_warmup=inc_warmup)
+        if inc_sample and (mcmc_vars or vars is None):
+            previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
         # add long-form columns for chain, iteration, draw
         n_draws, n_chains, _ = draws.shape
         chains_col = (
@@ -602,7 +566,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         """
         p_fit = self.previous_fit
         if isinstance(p_fit, CmdStanMCMC):
-            return p_fit.draws(inc_warmup=inc_warmup)
+            return p_fit.draws(inc_warmup=inc_warmup and p_fit._save_warmup)
         elif isinstance(p_fit, CmdStanMLE):
             if inc_warmup and p_fit.config.method_config.save_iterations:
                 return p_fit.optimized_iterations_np[:, None]  # type: ignore
@@ -630,7 +594,9 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         p_fit = self.previous_fit
         if isinstance(p_fit, CmdStanMCMC):
             # ``vars`` contains expanded column names, not Stan variable names.
-            return p_fit.draws_pd(inc_warmup=inc_warmup)[sel]
+            return p_fit.draws_pd(inc_warmup=inc_warmup and p_fit._save_warmup)[
+                sel
+            ]
 
         elif isinstance(p_fit, CmdStanMLE):
             if inc_warmup and p_fit.config.method_config.save_iterations:

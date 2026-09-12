@@ -622,6 +622,23 @@ def test_opt_save_iterations(caplog: pytest.LogCaptureFixture) -> None:
         concat_chains=True, inc_warmup=True, inc_sample=True
     ).shape == (iters, 13)
 
+    # The final estimate and every saved iteration must remain aligned with GQ.
+    expected = np.concatenate(
+        [bern_fit.optimized_iterations_np[:, None, :], bern_gqs._draws],
+        axis=2,
+    )
+    for include_iterations in (False, True):
+        selected = expected if include_iterations else expected[-1:]
+        for concat_chains in (False, True):
+            np.testing.assert_array_equal(
+                bern_gqs.draws(
+                    inc_iterations=include_iterations,
+                    inc_sample=True,
+                    concat_chains=concat_chains,
+                ),
+                flatten_chains(selected) if concat_chains else selected,
+            )
+
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta')
     assert theta.shape == ()
@@ -972,3 +989,84 @@ def test_draws_xr_does_not_mutate_vars(make_gq):
         result.theta.values, gq.previous_fit._draws[:, :, 0].T
     )
     np.testing.assert_array_equal(result.z.values, gq._draws[:, :, 0].T)
+
+
+@pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_default_draws_no_warmup_warning(
+    make_gq, caplog, accessor, inc_sample
+):
+    if accessor == 'draws_xr':
+        pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        getattr(gq, accessor)(inc_sample=inc_sample)
+    assert not caplog.records
+
+
+@pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
+def test_gq_only_draws_do_not_convert_previous_fit(
+    make_gq, monkeypatch, accessor
+):
+    if accessor == 'draws_xr':
+        pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    unexpected = Mock(side_effect=AssertionError('Previous draws not needed'))
+    monkeypatch.setattr(CmdStanMCMC, 'draws', unexpected)
+    monkeypatch.setattr(CmdStanMCMC, 'draws_pd', unexpected)
+    getattr(gq, accessor)()
+    # Even with inc_sample, an explicitly GQ-only pandas request needs no
+    # previous-fit conversion.
+    if accessor == 'draws_pd':
+        gq.draws_pd(vars=['z'], inc_sample=True)
+    unexpected.assert_not_called()
+
+
+@pytest.mark.parametrize('accessor', ['draws', 'draws_pd'])
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_explicit_missing_warmup_warns_once(
+    make_gq, caplog, accessor, inc_sample
+):
+    gq = make_gq('theta', 'z')
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        getattr(gq, accessor)(inc_warmup=True, inc_sample=inc_sample)
+    assert len(caplog.records) == 1
+    assert "Sample doesn't contain draws from warmup" in caplog.text
+
+
+@pytest.mark.parametrize('inc_warmup', [False, True])
+@pytest.mark.parametrize('inc_sample', [False, True])
+@pytest.mark.parametrize('concat_chains', [False, True])
+def test_gq_saved_warmup_alignment(
+    make_gq, caplog, inc_warmup, inc_sample, concat_chains
+):
+    gq = make_gq('theta', 'z')
+    config = gq.previous_fit.config.method_config
+    config.save_warmup = True
+    config.num_warmup = 1
+    gq.previous_fit._draws = np.concatenate(
+        [np.full((1, 2, 1), -10.0), gq.previous_fit._draws], axis=0
+    )
+    gq._draws = np.concatenate(
+        [np.full((1, 2, 1), -20.0), gq._draws], axis=0
+    )
+    expected = gq._draws
+    if inc_sample:
+        expected = np.concatenate(
+            [gq.previous_fit._draws, expected], axis=2
+        )
+    if not inc_warmup:
+        expected = expected[1:]
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        result = gq.draws(
+            inc_warmup=inc_warmup,
+            inc_sample=inc_sample,
+            concat_chains=concat_chains,
+        )
+        frame = gq.draws_pd(inc_warmup=inc_warmup, inc_sample=inc_sample)
+    np.testing.assert_array_equal(
+        result, flatten_chains(expected) if concat_chains else expected
+    )
+    columns = ['theta', 'z'] if inc_sample else ['z']
+    np.testing.assert_array_equal(frame[columns], flatten_chains(expected))
+    assert not caplog.records
