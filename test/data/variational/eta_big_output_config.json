@@ -1,0 +1,41 @@
+{
+  "stan_major_version": "2",
+  "stan_minor_version": "28",
+  "stan_patch_version": "0",
+  "model_name": "eta_should_be_big_model",
+  "method": {
+    "value": "variational",
+    "variational": {
+      "algorithm": {
+        "value": "meanfield"
+      },
+      "iter": 50,
+      "grad_samples": 1,
+      "elbo_samples": 100,
+      "eta": 100,
+      "adapt": {
+        "engaged": true
+      },
+      "tol_rel_obj": 0.01,
+      "eval_elbo": 100,
+      "output_samples": 1000
+    }
+  },
+  "id": 1,
+  "data": {
+    "file": ""
+  },
+  "init": "2",
+  "random": {
+    "seed": 999999
+  },
+  "output": {
+    "file": "eta_big_output.csv",
+    "diagnostic_file": "",
+    "refresh": 100,
+    "sig_figs": -1,
+    "profile_file": "profile.csv",
+    "save_cmdstan_config": true
+  },
+  "num_threads": 1
+}

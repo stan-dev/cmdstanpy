@@ -9,7 +9,13 @@ readme = "README.md"
 license = { text = "BSD-3-Clause" }
 authors = [{ name = "Stan Dev Team" }]
 requires-python = ">=3.10"
-dependencies = ["pandas", "numpy>=1.21", "tqdm", "stanio>=0.4.0,<2.0.0", "pydantic"]
+dependencies = [
+    "pandas",
+    "numpy>=1.21",
+    "tqdm",
+    "stanio>=0.4.0,<2.0.0",
+    "pydantic>=2.5",
+]
 dynamic = ["version"]
 classifiers = [
     "Programming Language :: Python :: 3",

@@ -1,0 +1,38 @@
+# stan_version_major = 2
+# stan_version_minor = 39
+# stan_version_patch = 0
+# model = rosenbrock_model
+# start_datetime = 2026-08-28 01:36:03 UTC
+# method = optimize
+#   optimize
+#     algorithm = lbfgs (Default)
+#       lbfgs
+#         init_alpha = 0.001 (Default)
+#         tol_obj = 1e-12 (Default)
+#         tol_rel_obj = 10000 (Default)
+#         tol_grad = 1e-08 (Default)
+#         tol_rel_grad = 1e+07 (Default)
+#         tol_param = 1e-08 (Default)
+#         history_size = 5 (Default)
+#     jacobian = true
+#     iter = 2000 (Default)
+#     save_iterations = false (Default)
+# id = 1 (Default)
+# data
+#   file = /tmp/tmprid0xhh2/k9evwqpt.json
+# init = 2 (Default)
+# random
+#   seed = 1234
+# output
+#   file = /tmp/tmpj36xjb6e/rosenbrock-opt-20260827213603.csv
+#   diagnostic_file =  (Default)
+#   refresh = 100 (Default)
+#   sig_figs = 8 (Default)
+#   profile_file = profile.csv (Default)
+#   save_cmdstan_config = true
+# num_threads = 1 (Default)
+# stanc_version = stanc3 v2.39.0
+# stancflags = --filename-in-msg=rosenbrock.stan
+lp__,converged__,x,y
+-5.7541452e-12,31,0.99999769,0.99999532
+# Optimization terminated normally: Convergence detected: relative gradient magnitude is below tolerance

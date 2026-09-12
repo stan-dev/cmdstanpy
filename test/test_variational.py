@@ -8,60 +8,22 @@ import pickle
 import shutil
 from math import fabs
 from test import check_present
-from typing import Any
 
 import numpy as np
 import pytest
 
-from cmdstanpy.cmdstan_args import CmdStanArgs, VariationalArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanVB, RunSet, from_csv
-from cmdstanpy.utils.cmdstan import cmdstan_version_before
+from cmdstanpy.stanfit import CmdStanVB, from_output_files
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
-def test_instantiate() -> None:
-    stan = os.path.join(DATAFILES_PATH, 'variational', 'eta_should_be_big.stan')
-    model = CmdStanModel(stan_file=stan)
-    no_data: dict[str, Any] = {}
-    args = VariationalArgs(algorithm='meanfield')
-    cmdstan_args = CmdStanArgs(
-        model_name=model.name,
-        model_exe=model.exe_file,
-        chain_ids=None,
-        data=no_data,
-        method_args=args,
+def test_instantiate_from_output_files() -> None:
+    csv_path = os.path.join(
+        DATAFILES_PATH, 'variational', 'eta_should_be_big_vb.csv'
     )
-    runset = RunSet(args=cmdstan_args, chains=1)
-    runset._csv_files = [
-        os.path.join(DATAFILES_PATH, 'variational', 'eta_big_output.csv')
-    ]
-    variational = CmdStanVB(runset)
-    assert 'CmdStanVB: model=eta_should_be_big' in repr(variational)
-    assert 'method=variational' in repr(variational)
-    assert variational.column_names == (
-        'lp__',
-        'log_p__',
-        'log_g__',
-        'mu[1]',
-        'mu[2]',
-    )
-    assert variational.eta == 100
-
-    np.testing.assert_almost_equal(
-        variational.variational_params_dict['mu[1]'], 311.545, decimal=2
-    )
-    np.testing.assert_almost_equal(
-        variational.variational_params_dict['mu[2]'], 532.801, decimal=2
-    )
-    assert variational.variational_sample.shape == (1000, 5)
-
-
-def test_instantiate_from_csvfiles() -> None:
-    csvfiles_path = os.path.join(DATAFILES_PATH, 'variational')
-    variational = from_csv(path=csvfiles_path)
+    variational = from_output_files(csv_path)
     assert isinstance(variational, CmdStanVB)
     assert 'CmdStanVB: model=eta_should_be_big' in repr(variational)
     assert 'method=variational' in repr(variational)
@@ -71,14 +33,6 @@ def test_instantiate_from_csvfiles() -> None:
         'log_g__',
         'mu[1]',
         'mu[2]',
-    )
-    assert variational.eta == 100
-
-    np.testing.assert_almost_equal(
-        variational.variational_params_dict['mu[1]'], 311.545, decimal=2
-    )
-    np.testing.assert_almost_equal(
-        variational.variational_params_dict['mu[2]'], 532.801, decimal=2
     )
     assert variational.variational_sample.shape == (1000, 5)
 
@@ -180,11 +134,7 @@ def test_variational_eta_small() -> None:
         DATAFILES_PATH, 'variational', 'eta_should_be_small.stan'
     )
     model = CmdStanModel(stan_file=stan)
-    if cmdstan_version_before(2, 35):
-        seed = 12345
-    else:
-        seed = 1234
-    variational = model.variational(algorithm='meanfield', seed=seed)
+    variational = model.variational(algorithm='meanfield', seed=1234)
     assert variational.column_names == (
         'lp__',
         'log_p__',
@@ -335,7 +285,7 @@ def test_serialization() -> None:
     model = CmdStanModel(stan_file=stan)
     variational1 = model.variational(algorithm='meanfield', seed=999999)
     dumped = pickle.dumps(variational1)
-    shutil.rmtree(variational1.runset._outdir)
+    shutil.rmtree(os.path.dirname(variational1.csv_file))
     variational2: CmdStanVB = pickle.loads(dumped)
     np.testing.assert_array_equal(
         variational1.variational_sample, variational2.variational_sample
@@ -351,7 +301,7 @@ def test_variational_create_inits() -> None:
     bern_model = CmdStanModel(stan_file=stan)
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
 
-    vb = bern_model.variational(data=jdata, seed=11235)
+    vb = bern_model.variational(data=jdata, seed=11235, draws=10)
 
     inits = vb.create_inits()
     assert isinstance(inits, list)
@@ -359,9 +309,13 @@ def test_variational_create_inits() -> None:
     assert isinstance(inits[0], dict)
     assert 'theta' in inits[0]
 
-    inits_10 = vb.create_inits(chains=10)
+    inits_10 = vb.create_inits(seed=0, chains=10)
     assert isinstance(inits_10, list)
     assert len(inits_10) == 10
+    np.testing.assert_array_equal(
+        np.sort(np.asarray([init['theta'] for init in inits_10])),
+        np.sort(vb.theta),
+    )
 
     inits_1 = vb.create_inits(chains=1)
     assert isinstance(inits_1, dict)

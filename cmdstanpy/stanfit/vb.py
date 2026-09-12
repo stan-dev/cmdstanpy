@@ -1,112 +1,78 @@
 """Container for the results of running autodiff variational inference"""
 
+from __future__ import annotations
+
+import os
 from collections import OrderedDict
+from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
 
-from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.utils import stancsv
 
-from .metadata import InferenceMetadata
-from .runset import RunSet
+from .base import SingleFileFit
+from .metadata import VariationalConfig, VariationalRunConfig
 
 
-class CmdStanVB:
+@dataclass(kw_only=True)
+class CmdStanVB(SingleFileFit[VariationalConfig]):
     """
     Container for outputs from CmdStan variational run.
     Created by :meth:`CmdStanModel.variational`.
+
+    The first row of the output CSV holds the inferred variational means;
+    the remaining rows hold the approximate posterior sample.
     """
 
-    def __init__(self, runset: RunSet) -> None:
-        """Initialize object."""
-        if not runset.method == Method.VARIATIONAL:
-            raise ValueError(
-                'Wrong runset method, expecting variational inference, '
-                'found method {}'.format(runset.method)
-            )
-        self.runset = runset
+    _eta: float | None = field(default=None, init=False)
 
-        csv_file = self.runset.csv_files[0]
+    @classmethod
+    def from_files(
+        cls,
+        csv_file: str | os.PathLike,
+        config_file: str | os.PathLike,
+        stdout_file: str | os.PathLike | None = None,
+    ) -> CmdStanVB:
+        return cls(
+            **cls._from_files_kwargs(
+                csv_file, config_file, stdout_file, VariationalRunConfig
+            )
+        )
+
+    def _assemble(self) -> None:
+        if self._draws.shape != (0,):
+            return
+
         try:
             (
                 comment_lines,
-                header,
+                _,
                 draw_lines,
-            ) = stancsv.parse_comments_header_and_draws(
-                self.runset.csv_files[0]
-            )
-
-            self._metadata = InferenceMetadata(
-                stancsv.construct_config_header_dict(comment_lines, header)
-            )
+            ) = stancsv.parse_comments_header_and_draws(self.csv_file)
             self._eta = stancsv.parse_variational_eta(comment_lines)
-
-            draws_np = stancsv.csv_bytes_list_to_numpy(draw_lines)
-
+            self._draws = stancsv.csv_bytes_list_to_numpy(draw_lines)
         except Exception as exc:
             raise ValueError(
-                f"An error occurred when parsing Stan csv {csv_file}"
+                f"An error occurred when parsing Stan csv {self.csv_file}"
             ) from exc
-        self._variational_mean: np.ndarray = draws_np[0]
-        self._variational_sample: np.ndarray = draws_np[1:]
 
-    def create_inits(
-        self, seed: int | None = None, chains: int = 4
-    ) -> list[dict[str, np.ndarray]] | dict[str, np.ndarray]:
-        """
-        Create initial values for the parameters of the model
-        by randomly selecting draws from the variational approximation
-        draws.
-
-        :param seed: Used for random selection, defaults to None
-        :param chains: Number of initial values to return, defaults to 4
-        :return: The initial values for the parameters of the model.
-
-        If ``chains`` is 1, a dictionary is returned, otherwise a list
-        of dictionaries is returned, in the format expected for the
-        ``inits`` argument of :meth:`CmdStanModel.sample`.
-        """
-        rng = np.random.default_rng(seed)
-        idxs = rng.choice(
-            self.variational_sample.shape[0], size=chains, replace=False
-        )
-        if chains == 1:
-            draw = self.variational_sample[idxs[0]]
-            return {
-                name: var.extract_reshape(draw)
-                for name, var in self._metadata.stan_vars.items()
-            }
-        else:
-            return [
-                {
-                    name: var.extract_reshape(self.variational_sample[idx])
-                    for name, var in self._metadata.stan_vars.items()
-                }
-                for idx in idxs
-            ]
+    def _draws_for_inits(self) -> np.ndarray:
+        """Exclude the variational mean stored in the first CSV row."""
+        return self.variational_sample
 
     def __repr__(self) -> str:
-        repr = 'CmdStanVB: model={}{}'.format(
-            self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
-        )
-        repr = '{}\n csv_file:\n\t{}\n output_file:\n\t{}'.format(
-            repr,
-            '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.stdout_files),
-        )
-        # TODO - diagnostic, profiling files
-        return repr
-
-    def __getattr__(self, attr: str) -> np.ndarray:
-        """Synonymous with ``fit.stan_variable(attr)"""
-        if attr.startswith("_"):
-            raise AttributeError(f"Unknown variable name {attr}")
-        try:
-            return self.stan_variable(attr)
-        except ValueError as e:
-            # pylint: disable=raise-missing-from
-            raise AttributeError(*e.args)
+        mc = self.config.method_config
+        lines = [
+            f'CmdStanVB: model={self.model_name}'
+            f' method={mc.method} algorithm={mc.algorithm}',
+            f' csv_file:\n\t{self.csv_file}',
+        ]
+        if self.config_file is not None:
+            lines.append(f' config_file:\n\t{self.config_file}')
+        if self.stdout_file is not None:
+            lines.append(f' output_file:\n\t{self.stdout_file}')
+        return '\n'.join(lines)
 
     @property
     def columns(self) -> int:
@@ -118,48 +84,35 @@ class CmdStanVB:
         return len(self.column_names)
 
     @property
-    def column_names(self) -> tuple[str, ...]:
-        """
-        Names of information items returned by sampler for each draw.
-        Includes approximation information and names of model parameters
-        and computed quantities.
-        """
-        return self.metadata.column_names
-
-    @property
     def eta(self) -> float:
         """
         Step size scaling parameter 'eta'
         """
-        return self._eta
+        self._assemble()
+        return self._eta  # type: ignore[return-value]
 
     @property
     def variational_params_np(self) -> np.ndarray:
         """
         Returns inferred parameter means as numpy array.
         """
-        return self._variational_mean
+        self._assemble()
+        mean: np.ndarray = self._draws[0]
+        return mean
 
     @property
     def variational_params_pd(self) -> pd.DataFrame:
         """
         Returns inferred parameter means as pandas DataFrame.
         """
-        return pd.DataFrame([self._variational_mean], columns=self.column_names)
+        return pd.DataFrame(
+            [self.variational_params_np], columns=self.column_names
+        )
 
     @property
     def variational_params_dict(self) -> dict[str, np.ndarray]:
         """Returns inferred parameter means as Dict."""
-        return OrderedDict(zip(self.column_names, self._variational_mean))
-
-    @property
-    def metadata(self) -> InferenceMetadata:
-        """
-        Returns object which contains CmdStan configuration as well as
-        information about the names and structure of the inference method
-        and model output variables.
-        """
-        return self._metadata
+        return OrderedDict(zip(self.column_names, self.variational_params_np))
 
     def stan_variable(self, var: str, *, mean: bool = False) -> np.ndarray:
         """
@@ -178,7 +131,7 @@ class CmdStanVB:
         * If the variable is an array with N dimensions, the return array
           has shape ( draws, size(dim 1), ..., size(dim N))
 
-        This functionaltiy is also available via a shortcut using ``.`` -
+        This functionality is also available via a shortcut using ``.`` -
         writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
 
         :param var: variable name
@@ -189,55 +142,35 @@ class CmdStanVB:
         See Also
         --------
         CmdStanVB.stan_variables
-        CmdStanMCMC.stan_variable
-        CmdStanMLE.stan_variable
-        CmdStanPathfinder.stan_variable
-        CmdStanGQ.stan_variable
-        CmdStanLaplace.stan_variable
         """
-
         if mean:
-            draws = self._variational_mean
+            draws = self.variational_params_np
         else:
-            draws = self._variational_sample
-
-        try:
-            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
-                draws
-            )
-
-            return out
-        except KeyError:
-            # pylint: disable=raise-missing-from
-            raise ValueError(
-                f'Unknown variable name: {var}\n'
-                'Available variables are '
-                + ", ".join(self._metadata.stan_vars.keys())
-            )
+            draws = self.variational_sample
+        return self._extract_stan_var(var, draws)
 
     def stan_variables(self, *, mean: bool = False) -> dict[str, np.ndarray]:
         """
         Return a dictionary mapping Stan program variables names
         to the corresponding numpy.ndarray containing the inferred values.
 
+        :param mean: if True, return the variational mean. Otherwise,
+            return the variational sample. Defaults to False.
+
         See Also
         --------
         CmdStanVB.stan_variable
-        CmdStanMCMC.stan_variables
-        CmdStanMLE.stan_variables
-        CmdStanGQ.stan_variables
-        CmdStanPathfinder.stan_variables
-        CmdStanLaplace.stan_variables
         """
         result = {}
-        for name in self._metadata.stan_vars:
+        for name in self.metadata.stan_vars:
             result[name] = self.stan_variable(name, mean=mean)
         return result
 
     @property
     def variational_sample(self) -> np.ndarray:
         """Returns the set of approximate posterior output draws."""
-        return self._variational_sample
+        self._assemble()
+        return self._draws[1:]
 
     @property
     def variational_sample_pd(self) -> pd.DataFrame:
@@ -245,17 +178,4 @@ class CmdStanVB:
         Returns the set of approximate posterior output draws as
         a pandas DataFrame.
         """
-        return pd.DataFrame(self._variational_sample, columns=self.column_names)
-
-    def save_csvfiles(self, dir: str | None = None) -> None:
-        """
-        Move output CSV files to specified directory.
-
-        :param dir: directory path
-
-        See Also
-        --------
-        stanfit.RunSet.save_csvfiles
-        cmdstanpy.from_csv
-        """
-        self.runset.save_csvfiles(dir)
+        return pd.DataFrame(self.variational_sample, columns=self.column_names)

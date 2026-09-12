@@ -11,7 +11,7 @@ import re
 import shutil
 import stat
 import tempfile
-from test import check_present, mark_windows_only, raises_nested
+from test import check_present, mark_windows_only
 from typing import Generator
 from unittest import mock
 
@@ -19,12 +19,10 @@ import numpy as np
 import pytest
 
 from cmdstanpy import _DOT_CMDSTAN, _TMPDIR
-from cmdstanpy.model import CmdStanModel
 from cmdstanpy.progress import _disable_progress, allow_show_progress
 from cmdstanpy.utils import (
     EXTENSION,
     SanitizedOrTmpFilePath,
-    check_sampler_csv,
     cmdstan_path,
     cmdstan_version,
     cmdstan_version_before,
@@ -289,96 +287,6 @@ def test_temp_inits() -> None:
     with pytest.raises(ValueError):
         with temp_inits([dict_good], allow_multiple=False) as _:
             pass
-
-
-def test_check_sampler_csv_1() -> None:
-    csv_good = os.path.join(DATAFILES_PATH, 'bernoulli_output_1.csv')
-    dict = check_sampler_csv(
-        path=csv_good,
-        iter_warmup=100,
-        iter_sampling=10,
-        thin=1,
-    )
-    assert 'bernoulli_model' == dict['model']
-    assert 10 == dict['num_samples']
-    assert 10 == dict['draws_sampling']
-    assert 8 == len(dict['column_names'])
-
-    with raises_nested(ValueError, 'config error, expected thin = 2'):
-        check_sampler_csv(
-            path=csv_good, iter_warmup=100, iter_sampling=20, thin=2
-        )
-    with raises_nested(ValueError, 'config error, expected save_warmup'):
-        check_sampler_csv(
-            path=csv_good,
-            iter_warmup=100,
-            iter_sampling=10,
-            save_warmup=True,
-        )
-    with raises_nested(ValueError, 'expected 1000 draws'):
-        check_sampler_csv(path=csv_good, iter_warmup=100)
-
-
-def test_check_sampler_csv_2() -> None:
-    csv_bad = os.path.join(DATAFILES_PATH, 'no_such_file.csv')
-    with pytest.raises(Exception):
-        check_sampler_csv(csv_bad)
-
-
-def test_check_sampler_csv_3() -> None:
-    csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_cols.csv')
-    with raises_nested(Exception, '8 items'):
-        check_sampler_csv(csv_bad)
-
-
-def test_check_sampler_csv_4() -> None:
-    csv_bad = os.path.join(DATAFILES_PATH, 'output_bad_rows.csv')
-    with raises_nested(Exception, 'found 9'):
-        check_sampler_csv(csv_bad)
-
-
-def test_check_sampler_csv_thin() -> None:
-    stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
-    bern_model = CmdStanModel(stan_file=stan)
-    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-    bern_fit = bern_model.sample(
-        data=jdata,
-        chains=1,
-        parallel_chains=1,
-        seed=12345,
-        iter_sampling=490,
-        iter_warmup=490,
-        thin=7,
-        max_treedepth=11,
-        adapt_delta=0.98,
-    )
-    csv_file = bern_fit.runset.csv_files[0]
-    dict = check_sampler_csv(
-        path=csv_file,
-        iter_sampling=490,
-        iter_warmup=490,
-        thin=7,
-    )
-    assert dict['num_samples'] == 490
-    assert dict['thin'] == 7
-    assert dict['draws_sampling'] == 70
-    assert dict['seed'] == 12345
-    assert dict['max_depth'] == 11
-    assert dict['delta'] == 0.98
-
-    with raises_nested(ValueError, 'config error'):
-        check_sampler_csv(
-            path=csv_file,
-            iter_sampling=490,
-            iter_warmup=490,
-            thin=9,
-        )
-    with raises_nested(ValueError, 'expected 490 draws, found 70'):
-        check_sampler_csv(
-            path=csv_file,
-            iter_sampling=490,
-            iter_warmup=490,
-        )
 
 
 def test_metric_json_vec() -> None:

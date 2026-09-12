@@ -1,0 +1,36 @@
+{
+ "stan_major_version": "2",
+ "stan_minor_version": "39",
+ "stan_patch_version": "0",
+ "model_name": "rosenbrock_model",
+ "start_datetime": "2026-08-28 01:36:03 UTC",
+ "method": {
+  "value": "laplace",
+  "laplace": {
+   "mode": "/tmp/cmdstanpy-fixture/rosenbrock_opt.csv",
+   "jacobian": true,
+   "draws": 1000,
+   "calculate_lp": true
+  }
+ },
+ "id": 1,
+ "data": {
+  "file": "/tmp/tmprid0xhh2/35rtrihv.json"
+ },
+ "init": "2",
+ "random": {
+  "seed": 1234
+ },
+ "output": {
+  "file": "rosenbrock_laplace.csv",
+  "diagnostic_file": "",
+  "refresh": 100,
+  "sig_figs": 8,
+  "profile_file": "profile.csv",
+  "save_cmdstan_config": true
+ },
+ "num_threads": 1,
+ "mpi_enabled": false,
+ "stanc_version": "stanc3 v2.39.0",
+ "stancflags": "--filename-in-msg=rosenbrock.stan"
+}

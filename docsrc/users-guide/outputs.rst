@@ -36,13 +36,13 @@ to a temporary directory which is deleted when the current Python session is ter
 
     !ls outputs/
 
-Alternatively, the :meth:`~CmdStanMCMC.save_csvfiles` function moves the CSV files
+Alternatively, the :meth:`~CmdStanMCMC.save_output_files` function moves the CSV files
 to a specified directory.
 
 .. ipython:: python
 
     fit = model.sample(data=data_file)
-    fit.save_csvfiles(dir='some/path')
+    fit.save_output_files(dir='some/path')
 
     !ls some/path
 

@@ -5,14 +5,12 @@ such as file locations
 
 import os
 import re
-import shutil
 import tempfile
 from datetime import datetime
-from time import time
 
 from cmdstanpy import _TMPDIR
 from cmdstanpy.cmdstan_args import CmdStanArgs, Method
-from cmdstanpy.utils import get_logger
+from cmdstanpy.utils.filesystem import accompanying_json
 
 
 class RunSet:
@@ -65,13 +63,6 @@ class RunSet:
                 self.gen_file_name(".txt", extra="stdout", id=id)
                 for id in self._chain_ids
             ]
-            self._config_files = [
-                os.path.join(
-                    self._outdir, f"{self._base_outfile}_{id}_config.json"
-                )
-                for id in self._chain_ids
-            ]
-
             if args.save_profile:
                 self._profile_files = [
                     self.gen_file_name(".csv", extra="profile", id=id)
@@ -79,7 +70,6 @@ class RunSet:
                 ]
         else:
             self._stdout_files = [self.gen_file_name(".txt", extra="stdout")]
-            self._config_files = [self.gen_file_name(".json", extra="config")]
             if args.save_profile:
                 self._profile_files = [
                     self.gen_file_name(".csv", extra="profile")
@@ -88,10 +78,6 @@ class RunSet:
         # per-chain output files
         if chains == 1:
             self._csv_files = [self.gen_file_name(".csv")]
-            if args.method == Method.SAMPLE:
-                self._metric_files = [
-                    self.gen_file_name(".json", extra="metric")
-                ]
             if args.save_latent_dynamics:
                 self._diagnostic_files = [
                     self.gen_file_name(".csv", extra="diagnostic")
@@ -100,25 +86,26 @@ class RunSet:
             self._csv_files = [
                 self.gen_file_name(".csv", id=id) for id in self._chain_ids
             ]
-            if args.method == Method.SAMPLE:
-                if one_process_per_chain:
-                    self._metric_files = [
-                        os.path.join(
-                            self._outdir,
-                            f"{self._base_outfile}_{id}_metric.json",
-                        )
-                        for id in self._chain_ids
-                    ]
-                else:
-                    self._metric_files = [
-                        self.gen_file_name(".json", extra="metric", id=id)
-                        for id in self._chain_ids
-                    ]
             if args.save_latent_dynamics:
                 self._diagnostic_files = [
                     self.gen_file_name(".csv", extra="diagnostic", id=id)
                     for id in self._chain_ids
                 ]
+
+        if args.method == Method.SAMPLE:
+            self._metric_files = [
+                accompanying_json(csv_file, "metric")
+                for csv_file in self._csv_files
+            ]
+        if one_process_per_chain:
+            self._config_files = [
+                accompanying_json(csv_file, "config")
+                for csv_file in self._csv_files
+            ]
+        else:
+            self._config_files = [
+                accompanying_json(self._csv_files[0], "config")
+            ]
 
     def __repr__(self) -> str:
         lines = [
@@ -156,9 +143,9 @@ class RunSet:
     def one_process_per_chain(self) -> bool:
         """
         When True, for each chain, call CmdStan in its own subprocess.
-        When False, use CmdStan's `num_chains` arg to run parallel chains.
-        Always True if CmdStan < 2.28.
-        For CmdStan 2.28 and up, `sample` method determines value.
+        When False, use CmdStan's `num_chains` arg to run parallel chains,
+        which requires a model compiled with STAN_THREADS.
+        Determined by the `sample` method.
         """
         return self._one_process_per_chain
 
@@ -194,9 +181,9 @@ class RunSet:
         else:
             return self._args.compose_command(
                 idx,
-                csv_file=self.gen_file_name('.csv'),
+                csv_file=','.join(self.csv_files),
                 diagnostic_file=(
-                    self.gen_file_name(".csv", extra="diagnostic")
+                    ','.join(self.diagnostic_files)
                     if self._args.save_latent_dynamics
                     else None
                 ),
@@ -291,49 +278,6 @@ class RunSet:
                         if len(errors) > 0:
                             msgs.append('\n\t'.join(errors))
         return '\n'.join(msgs)
-
-    def save_csvfiles(self, dir: str | None = None) -> None:
-        """
-        Moves CSV files to specified directory.
-
-        :param dir: directory path
-
-        See Also
-        --------
-        cmdstanpy.from_csv
-        """
-        if dir is None:
-            dir = os.path.realpath('.')
-        test_path = os.path.join(dir, str(time()))
-        try:
-            os.makedirs(dir, exist_ok=True)
-            with open(test_path, 'w'):
-                pass
-            os.remove(test_path)  # cleanup
-        except (IOError, OSError, PermissionError) as exc:
-            raise RuntimeError('Cannot save to path: {}'.format(dir)) from exc
-
-        for i in range(self.chains):
-            if not os.path.exists(self._csv_files[i]):
-                raise ValueError(
-                    'Cannot access CSV file {}'.format(self._csv_files[i])
-                )
-
-            to_path = os.path.join(dir, os.path.basename(self._csv_files[i]))
-            if os.path.exists(to_path):
-                raise ValueError(
-                    'File exists, not overwriting: {}'.format(to_path)
-                )
-            try:
-                get_logger().debug(
-                    'saving tmpfile: "%s" as: "%s"', self._csv_files[i], to_path
-                )
-                shutil.move(self._csv_files[i], to_path)
-                self._csv_files[i] = to_path
-            except (IOError, OSError, PermissionError) as e:
-                raise ValueError(
-                    'Cannot save to file: {}'.format(to_path)
-                ) from e
 
     def raise_for_timeouts(self) -> None:
         if any(self._timeout_flags):

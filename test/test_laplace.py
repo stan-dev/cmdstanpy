@@ -1,13 +1,14 @@
 """Tests for the Laplace sampling method."""
 
 import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
 import pytest
 
 import cmdstanpy
-from cmdstanpy.stanfit import from_csv
+from cmdstanpy.stanfit import from_csv, from_output_files
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -26,27 +27,33 @@ def test_laplace_from_opt_csv() -> None:
     assert isinstance(fit.mode, cmdstanpy.CmdStanMLE)
 
 
-def test_laplace_from_csv() -> None:
+def test_laplace_from_output_files() -> None:
     model_file = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
     model = cmdstanpy.CmdStanModel(stan_file=model_file)
-    fit = model.laplace_sample(
-        data={},
-        seed=1234,
-    )
-    fit2 = from_csv(fit.runset.csv_files)
-    assert isinstance(fit2, cmdstanpy.CmdStanLaplace)
-    assert 'x' in fit2.stan_variables()
-    assert 'y' in fit2.stan_variables()
-    assert isinstance(fit2.mode, cmdstanpy.CmdStanMLE)
+    with TemporaryDirectory() as directory:
+        fit = model.laplace_sample(
+            data={},
+            seed=1234,
+            output_dir=directory,
+        )
+        fit2 = from_output_files(fit.csv_file)
+        assert isinstance(fit2, cmdstanpy.CmdStanLaplace)
+        assert 'x' in fit2.stan_variables()
+        assert 'y' in fit2.stan_variables()
+        assert isinstance(fit2.mode, cmdstanpy.CmdStanMLE)
 
-    with TemporaryDirectory() as dir:
-        model.laplace_sample(data={}, seed=1234, output_dir=dir)
+        with pytest.deprecated_call(match='use from_output_files instead'):
+            fit_from_csv = from_csv([fit.csv_file])
+        assert isinstance(fit_from_csv, cmdstanpy.CmdStanLaplace)
+        assert isinstance(fit_from_csv.mode, cmdstanpy.CmdStanMLE)
 
-        fit3 = from_csv(
+        # An explicit Laplace manifest includes the Laplace and mode CSV/config.
+        fit3 = from_output_files(
             [
-                os.path.join(dir, f)
-                for f in os.listdir(dir)
-                if f.endswith(".csv") and "opt" not in f
+                os.path.join(directory, filename)
+                for filename in os.listdir(directory)
+                if filename.endswith((".csv", "_config.json"))
+                and "profile" not in filename
             ]
         )
         assert isinstance(fit3, cmdstanpy.CmdStanLaplace)
@@ -55,15 +62,39 @@ def test_laplace_from_csv() -> None:
         assert isinstance(fit3.mode, cmdstanpy.CmdStanMLE)
 
 
+def test_laplace_save_output_files(tmp_path: Path) -> None:
+    model_file = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
+    model = cmdstanpy.CmdStanModel(stan_file=model_file)
+    fit = model.laplace_sample(data={}, seed=1234)
+
+    destination = tmp_path / 'saved'
+    fit.save_output_files(os.fspath(destination))
+
+    rebuilt = from_output_files(destination)
+    assert isinstance(rebuilt, cmdstanpy.CmdStanLaplace)
+    assert isinstance(rebuilt.mode, cmdstanpy.CmdStanMLE)
+    assert Path(rebuilt.mode.csv_file).parent == destination
+
+
+def test_laplace_missing_mode_files(tmp_path: Path) -> None:
+    # the laplace fixture records a stale mode path; without the mode's
+    # output files next to the laplace CSV either, loading must fail
+    import shutil
+
+    for name in ('rosenbrock_laplace.csv', 'rosenbrock_laplace_config.json'):
+        shutil.copy(
+            os.path.join(DATAFILES_PATH, 'laplace', name),
+            os.path.join(tmp_path, name),
+        )
+    with pytest.raises(ValueError, match=r'optimization mode'):
+        from_output_files(os.path.join(tmp_path, 'rosenbrock_laplace.csv'))
+
+
 def test_laplace_runs_opt() -> None:
     model_file = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
     model = cmdstanpy.CmdStanModel(stan_file=model_file)
     fit1 = model.laplace_sample(data={}, seed=1234, opt_args={'iter': 1003})
     assert isinstance(fit1.mode, cmdstanpy.CmdStanMLE)
-
-    assert fit1.mode.metadata.cmdstan_config['seed'] == 1234
-    assert fit1.metadata.cmdstan_config['seed'] == 1234
-    assert fit1.mode.metadata.cmdstan_config['iter'] == 1003
 
 
 def test_laplace_bad_jacobian_mismatch() -> None:

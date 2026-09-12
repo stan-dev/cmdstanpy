@@ -4,7 +4,11 @@ Container for the result of running a laplace approximation.
 
 from __future__ import annotations
 
-from typing import Any, Hashable, MutableMapping
+import os
+from collections.abc import Hashable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, MutableMapping
 
 import numpy as np
 import pandas as pd
@@ -16,147 +20,71 @@ try:
 except ImportError:
     XARRAY_INSTALLED = False
 
-from cmdstanpy.cmdstan_args import Method
-from cmdstanpy.utils import stancsv
 from cmdstanpy.utils.data_munging import build_xarray_data
+from cmdstanpy.utils.filesystem import accompanying_json
 
-from .metadata import InferenceMetadata
+from .base import SingleFileFit
+from .metadata import LaplaceConfig, LaplaceRunConfig
 from .mle import CmdStanMLE
-from .runset import RunSet
 
 # TODO list:
 # - docs and example notebook
 
 
-class CmdStanLaplace:
-    def __init__(self, runset: RunSet, mode: CmdStanMLE) -> None:
-        """Initialize object."""
-        if not runset.method == Method.LAPLACE:
-            raise ValueError(
-                'Wrong runset method, expecting laplace runset, '
-                'found method {}'.format(runset.method)
-            )
-        self.runset = runset
-        self._mode = mode
-        self._draws: np.ndarray = np.array(())
-        self._metadata = InferenceMetadata.from_csv(self.runset.csv_files[0])
-
-    def create_inits(
-        self, seed: int | None = None, chains: int = 4
-    ) -> list[dict[str, np.ndarray]] | dict[str, np.ndarray]:
-        """
-        Create initial values for the parameters of the model
-        by randomly selecting draws from the Laplace approximation.
-
-        :param seed: Used for random selection, defaults to None
-        :param chains: Number of initial values to return, defaults to 4
-        :return: The initial values for the parameters of the model.
-
-        If ``chains`` is 1, a dictionary is returned, otherwise a list
-        of dictionaries is returned, in the format expected for the
-        ``inits`` argument of :meth:`CmdStanModel.sample`.
-        """
-        self._assemble_draws()
-        rng = np.random.default_rng(seed)
-        idxs = rng.choice(self._draws.shape[0], size=chains, replace=False)
-        if chains == 1:
-            draw = self._draws[idxs[0]]
-            return {
-                name: var.extract_reshape(draw)
-                for name, var in self._metadata.stan_vars.items()
-            }
+def _mode_from_files(
+    mode_file: str, laplace_csv_file: str | os.PathLike
+) -> CmdStanMLE:
+    """Build a CmdStanMLE for the mode. If the provided mode output file isn't
+    found, falls back to looking for a sibling file with the same name."""
+    mode_csv = Path(mode_file)
+    if not mode_csv.exists():
+        sibling = Path(laplace_csv_file).parent / mode_csv.name
+        if sibling.exists():
+            mode_csv = sibling
         else:
-            return [
-                {
-                    name: var.extract_reshape(self._draws[idx])
-                    for name, var in self._metadata.stan_vars.items()
-                }
-                for idx in idxs
-            ]
-
-    def _assemble_draws(self) -> None:
-        if self._draws.shape != (0,):
-            return
-
-        csv_file = self.runset.csv_files[0]
-        try:
-            *_, draws = stancsv.parse_comments_header_and_draws(
-                self.runset.csv_files[0]
-            )
-            self._draws = stancsv.csv_bytes_list_to_numpy(draws)
-        except Exception as exc:
             raise ValueError(
-                f"An error occurred when parsing Stan csv {csv_file}"
-            ) from exc
-
-    def stan_variable(self, var: str) -> np.ndarray:
-        """
-        Return a numpy.ndarray which contains the estimates for the
-        for the named Stan program variable where the dimensions of the
-        numpy.ndarray match the shape of the Stan program variable.
-
-        This functionaltiy is also available via a shortcut using ``.`` -
-        writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
-
-        :param var: variable name
-
-        See Also
-        --------
-        CmdStanMLE.stan_variables
-        CmdStanMCMC.stan_variable
-        CmdStanPathfinder.stan_variable
-        CmdStanVB.stan_variable
-        CmdStanGQ.stan_variable
-        """
-        self._assemble_draws()
-        try:
-            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
-                self._draws
+                f'Mode file {mode_file} recorded in the laplace config not '
+                f'found.'
             )
-            return out
-        except KeyError:
-            # pylint: disable=raise-missing-from
-            raise ValueError(
-                f'Unknown variable name: {var}\n'
-                'Available variables are '
-                + ", ".join(self._metadata.stan_vars.keys())
+    mode_config = Path(accompanying_json(mode_csv, 'config'))
+    if not mode_config.exists():
+        raise ValueError(
+            f'No config file {mode_config.name} found alongside mode file '
+            f'{mode_csv}.'
+        )
+    return CmdStanMLE.from_files(csv_file=mode_csv, config_file=mode_config)
+
+
+@dataclass(kw_only=True)
+class CmdStanLaplace(SingleFileFit[LaplaceConfig]):
+    """
+    Container for outputs from the Laplace approximation.
+    Created by :meth:`CmdStanModel.laplace_sample`.
+    """
+
+    mode: CmdStanMLE
+
+    @classmethod
+    def from_files(
+        cls,
+        csv_file: str | os.PathLike,
+        config_file: str | os.PathLike,
+        stdout_file: str | os.PathLike | None = None,
+        mode: CmdStanMLE | None = None,
+    ) -> CmdStanLaplace:
+        kwargs = cls._from_files_kwargs(
+            csv_file, config_file, stdout_file, LaplaceRunConfig
+        )
+        if mode is None:
+            mode = _mode_from_files(
+                kwargs['config'].method_config.mode, csv_file
             )
+        return cls(mode=mode, **kwargs)
 
-    def stan_variables(self) -> dict[str, np.ndarray]:
-        """
-        Return a dictionary mapping Stan program variables names
-        to the corresponding numpy.ndarray containing the inferred values.
-
-        :param inc_warmup: When ``True`` and the warmup draws are present in
-            the MCMC sample, then the warmup draws are included.
-            Default value is ``False``
-
-        See Also
-        --------
-        CmdStanGQ.stan_variable
-        CmdStanMCMC.stan_variables
-        CmdStanMLE.stan_variables
-        CmdStanPathfinder.stan_variables
-        CmdStanVB.stan_variables
-        """
-        result = {}
-        for name in self._metadata.stan_vars:
-            result[name] = self.stan_variable(name)
-        return result
-
-    def method_variables(self) -> dict[str, np.ndarray]:
-        """
-        Returns a dictionary of all sampler variables, i.e., all
-        output column names ending in `__`.  Assumes that all variables
-        are scalar variables where column name is variable name.
-        Maps each column name to a numpy.ndarray (draws x chains x 1)
-        containing per-draw diagnostic values.
-        """
-        self._assemble_draws()
-        return {
-            name: var.extract_reshape(self._draws)
-            for name, var in self._metadata.method_vars.items()
-        }
+    def save_output_files(self, dir: str | None = None) -> None:
+        """Move the Laplace outputs and optimization mode outputs together."""
+        self.mode.save_output_files(dir)
+        super().save_output_files(dir)
 
     def draws(self) -> np.ndarray:
         """
@@ -164,7 +92,7 @@ class CmdStanLaplace:
         approximate posterior distribution. This is a 2-D array
         of shape (draws, parameters).
         """
-        self._assemble_draws()
+        self._assemble()
         return self._draws
 
     def draws_pd(
@@ -177,14 +105,14 @@ class CmdStanLaplace:
             else:
                 vars_list = vars
 
-        self._assemble_draws()
+        self._assemble()
         cols = []
         if vars is not None:
             for var in dict.fromkeys(vars_list):
-                if var in self._metadata.method_vars:
+                if var in self.metadata.method_vars:
                     cols.append(var)
-                elif var in self._metadata.stan_vars:
-                    info = self._metadata.stan_vars[var]
+                elif var in self.metadata.stan_vars:
+                    info = self.metadata.stan_vars[var]
                     cols.extend(
                         self.column_names[info.start_idx : info.end_idx]
                     )
@@ -216,19 +144,19 @@ class CmdStanLaplace:
             )
 
         if vars is None:
-            vars_list = list(self._metadata.stan_vars.keys())
+            vars_list = list(self.metadata.stan_vars.keys())
         elif isinstance(vars, str):
             vars_list = [vars]
         else:
             vars_list = vars
 
-        self._assemble_draws()
+        self._assemble()
 
-        meta = self._metadata.cmdstan_config
         attrs: MutableMapping[Hashable, Any] = {
-            "stan_version": f"{meta['stan_version_major']}."
-            f"{meta['stan_version_minor']}.{meta['stan_version_patch']}",
-            "model": meta["model"],
+            "stan_version": f"{self.config.stan_major_version}."
+            f"{self.config.stan_minor_version}."
+            f"{self.config.stan_patch_version}",
+            "model": self.model_name,
         }
 
         data: MutableMapping[Hashable, Any] = {}
@@ -239,7 +167,7 @@ class CmdStanLaplace:
         for var in vars_list:
             build_xarray_data(
                 data,
-                self._metadata.stan_vars[var],
+                self.metadata.stan_vars[var],
                 self._draws[:, np.newaxis, :],
             )
         return (
@@ -248,76 +176,17 @@ class CmdStanLaplace:
             .squeeze()
         )
 
-    @property
-    def mode(self) -> CmdStanMLE:
-        """
-        Return the maximum a posteriori estimate (mode)
-        as a :class:`CmdStanMLE` object.
-        """
-        return self._mode
-
-    @property
-    def metadata(self) -> InferenceMetadata:
-        """
-        Returns object which contains CmdStan configuration as well as
-        information about the names and structure of the inference method
-        and model output variables.
-        """
-        return self._metadata
-
     def __repr__(self) -> str:
-        mode = '\n'.join(
+        mode_repr = '\n'.join(
             ['\t' + line for line in repr(self.mode).splitlines()]
         )[1:]
-        rep = 'CmdStanLaplace: model={} \nmode=({})\n{}'.format(
-            self.runset.model,
-            mode,
-            self.runset._args.method_args.compose(0, cmd=[]),
-        )
-        rep = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
-            rep,
-            '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.stdout_files),
-        )
-        return rep
-
-    def __getattr__(self, attr: str) -> np.ndarray:
-        """Synonymous with ``fit.stan_variable(attr)"""
-        if attr.startswith("_"):
-            raise AttributeError(f"Unknown variable name {attr}")
-        try:
-            return self.stan_variable(attr)
-        except ValueError as e:
-            # pylint: disable=raise-missing-from
-            raise AttributeError(*e.args)
-
-    def __getstate__(self) -> dict:
-        # This function returns the mapping of objects to serialize with pickle.
-        # See https://docs.python.org/3/library/pickle.html#object.__getstate__
-        # for details. We call _assemble_draws to ensure posterior samples have
-        # been loaded prior to serialization.
-        self._assemble_draws()
-        return self.__dict__
-
-    @property
-    def column_names(self) -> tuple[str, ...]:
-        """
-        Names of all outputs from the sampler, comprising sampler parameters
-        and all components of all model parameters, transformed parameters,
-        and quantities of interest. Corresponds to Stan CSV file header row,
-        with names munged to array notation, e.g. `beta[1]` not `beta.1`.
-        """
-        return self._metadata.column_names
-
-    def save_csvfiles(self, dir: str | None = None) -> None:
-        """
-        Move output CSV files to specified directory.
-
-        :param dir: directory path
-
-        See Also
-        --------
-        stanfit.RunSet.save_csvfiles
-        cmdstanpy.from_csv
-        """
-        self.runset.save_csvfiles(dir)
+        lines = [
+            f'CmdStanLaplace: model={self.model_name}',
+            f' mode=({mode_repr})',
+            f' csv_file:\n\t{self.csv_file}',
+        ]
+        if self.config_file is not None:
+            lines.append(f' config_file:\n\t{self.config_file}')
+        if self.stdout_file is not None:
+            lines.append(f' output_file:\n\t{self.stdout_file}')
+        return '\n'.join(lines)

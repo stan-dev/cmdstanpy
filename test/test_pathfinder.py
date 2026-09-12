@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 import cmdstanpy
-from cmdstanpy.stanfit import from_csv
+from cmdstanpy.stanfit import from_output_files
 
 HERE = Path(__file__).parent
 DATAFILES_PATH = HERE / 'data'
@@ -39,9 +39,9 @@ def test_pathfinder_outputs() -> None:
     assert pathfinder.draws().shape == (draws, 4)
 
 
-def test_pathfinder_from_csv() -> None:
+def test_pathfinder_from_output_files() -> None:
     pathfinder_outputs = DATAFILES_PATH / 'pathfinder'
-    pathfinder = from_csv(pathfinder_outputs)
+    pathfinder = from_output_files(pathfinder_outputs)
     assert isinstance(pathfinder, cmdstanpy.CmdStanPathfinder)
     assert 'lp__' in pathfinder.column_names
     assert 'lp_approx__' in pathfinder.column_names
@@ -49,6 +49,35 @@ def test_pathfinder_from_csv() -> None:
     theta = pathfinder.theta
     assert theta.shape == (1000,)
     assert 0.23 < theta.mean() < 0.27
+
+
+def test_pathfinder_save_output_files(tmp_path: Path) -> None:
+    import shutil
+
+    # stage copies of the fixture outputs so the originals are not moved
+    src_dir = tmp_path / 'src'
+    src_dir.mkdir()
+    for f in (DATAFILES_PATH / 'pathfinder').iterdir():
+        shutil.copy(f, src_dir)
+
+    pathfinder = from_output_files(src_dir)
+    assert isinstance(pathfinder, cmdstanpy.CmdStanPathfinder)
+
+    dest = tmp_path / 'saved'
+    pathfinder.save_output_files(dir=str(dest))
+    assert Path(pathfinder.csv_file).parent == dest
+    assert Path(pathfinder.csv_file).exists()
+    assert pathfinder.config_file is not None
+    assert Path(pathfinder.config_file).parent == dest
+    assert Path(pathfinder.config_file).exists()
+    # draws still readable from the new location
+    assert pathfinder.theta.shape == (1000,)
+
+    # refuses to overwrite existing files
+    pathfinder2 = from_output_files(dest)
+    assert pathfinder2 is not None
+    with pytest.raises(ValueError, match='not overwriting'):
+        pathfinder2.save_output_files(dir=str(dest))
 
 
 def test_single_pathfinder() -> None:

@@ -1,0 +1,43 @@
+{
+  "stan_major_version": "2",
+  "stan_minor_version": "27",
+  "stan_patch_version": "0",
+  "model_name": "rosenbrock_model",
+  "method": {
+    "value": "optimize",
+    "optimize": {
+      "algorithm": {
+        "value": "lbfgs",
+        "lbfgs": {
+          "init_alpha": 0.001,
+          "tol_obj": 1e-12,
+          "tol_rel_obj": 10000,
+          "tol_grad": 1e-08,
+          "tol_rel_grad": 10000000,
+          "tol_param": 1e-08,
+          "history_size": 5
+        }
+      },
+      "iter": 2000,
+      "save_iterations": true,
+      "jacobian": false
+    }
+  },
+  "id": 0,
+  "data": {
+    "file": ""
+  },
+  "init": "2",
+  "random": {
+    "seed": 12345
+  },
+  "output": {
+    "file": "rosenbrock_mle_iters.csv",
+    "diagnostic_file": "",
+    "refresh": 100,
+    "sig_figs": -1,
+    "profile_file": "profile.csv",
+    "save_cmdstan_config": true
+  },
+  "num_threads": 1
+}

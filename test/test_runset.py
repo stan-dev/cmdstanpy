@@ -159,8 +159,15 @@ def test_output_filenames_threading() -> None:
     )
     assert len(runset.stdout_files) == 1
     assert runset.stdout_files[0].endswith("_stdout.txt")
+    # one config for the run, named for the first chain's output file
     assert len(runset.config_files) == 1
-    assert runset.config_files[0].endswith("_config.json")
+    assert runset.config_files[0] == runset.csv_files[0].replace(
+        ".csv", "_config.json"
+    )
+
+    # every output file is named explicitly, as a comma-separated list
+    cmd = runset.cmd(0)
+    assert f"file={','.join(runset.csv_files)}" in cmd
 
     cmdstan_args_other_files = CmdStanArgs(
         model_name='bernoulli',
@@ -337,10 +344,12 @@ def test_metric_output_filename() -> None:
     ]
     assert all(correct_output_files)
 
+    # CmdStan names the metric after each chain's output file, so a
+    # single-process run uses the same names as one process per chain.
     runset = RunSet(args=cmdstan_args, chains=2, one_process_per_chain=False)
     assert len(runset.metric_files) == 2
     assert all(
-        f.endswith(f"{base_file}_metric_{i}.json")
+        f.endswith(f"{base_file}_{i}_metric.json")
         for i, f in zip(chain_ids, runset.metric_files)
     )
 
