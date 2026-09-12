@@ -684,40 +684,6 @@ def _parse_explicit_fit(files: Sequence[Path]) -> FitFiles:
     )
 
 
-def _build_fit(files: FitFiles) -> AnyStanFit:
-    """Construct a fit from a normalized manifest without discovery."""
-    match files.method:
-        case 'sample':
-            return CmdStanMCMC.from_files(
-                csv_files=files.csv_files,
-                config_files=files.config_files,
-                metric_files=files.metric_files or None,
-                chain_ids=files.chain_ids,
-            )
-        case 'optimize':
-            return CmdStanMLE.from_files(
-                files.csv_files[0], files.config_files[0]
-            )
-        case 'variational':
-            return CmdStanVB.from_files(
-                files.csv_files[0], files.config_files[0]
-            )
-        case 'pathfinder':
-            return CmdStanPathfinder.from_files(
-                files.csv_files[0], files.config_files[0]
-            )
-        case 'laplace':
-            assert files.mode_files is not None
-            mode = CmdStanMLE.from_files(
-                files.mode_files.csv_files[0], files.mode_files.config_files[0]
-            )
-            return CmdStanLaplace.from_files(
-                files.csv_files[0], files.config_files[0], mode=mode
-            )
-        case _:
-            raise ValueError(f'Unsupported CmdStan method: {files.method}')
-
-
 def from_output_files(
     path: str | os.PathLike | Sequence[str | os.PathLike] | None = None,
     method: str | None = None,
@@ -775,7 +741,41 @@ def from_output_files(
                 f'Expecting CmdStan output files from method {method}, found '
                 f'outputs from method {manifest.method}'
             )
-        return _build_fit(manifest)
+        match manifest.method:
+            case 'sample':
+                return CmdStanMCMC.from_files(
+                    csv_files=manifest.csv_files,
+                    config_files=manifest.config_files,
+                    metric_files=manifest.metric_files or None,
+                    chain_ids=manifest.chain_ids,
+                )
+            case 'optimize':
+                return CmdStanMLE.from_files(
+                    manifest.csv_files[0], manifest.config_files[0]
+                )
+            case 'variational':
+                return CmdStanVB.from_files(
+                    manifest.csv_files[0], manifest.config_files[0]
+                )
+            case 'pathfinder':
+                return CmdStanPathfinder.from_files(
+                    manifest.csv_files[0], manifest.config_files[0]
+                )
+            case 'laplace':
+                assert manifest.mode_files is not None
+                mode_fit = CmdStanMLE.from_files(
+                    manifest.mode_files.csv_files[0],
+                    manifest.mode_files.config_files[0],
+                )
+                return CmdStanLaplace.from_files(
+                    manifest.csv_files[0],
+                    manifest.config_files[0],
+                    mode=mode_fit,
+                )
+            case _:
+                raise ValueError(
+                    f'Unsupported CmdStan method: {manifest.method}'
+                )
     except OSError as exc:
         raise ValueError(
             f'An error occurred processing the output files:\n\t{exc}'
