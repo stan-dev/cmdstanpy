@@ -92,6 +92,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
+    'sphinx.ext.imgmath',
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "nbsphinx",
@@ -101,16 +102,6 @@ extensions = [
 # this is needed for some reason...
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_show_class_members = False
-
-from distutils.version import LooseVersion
-
-# pngmath / imgmath compatibility layer for different sphinx versions
-import sphinx
-
-if LooseVersion(sphinx.__version__) < LooseVersion('1.4'):
-    extensions.append('sphinx.ext.pngmath')
-else:
-    extensions.append('sphinx.ext.imgmath')
 
 autodoc_default_options = {'members': True}
 autodoc_default_flags = ['members']
