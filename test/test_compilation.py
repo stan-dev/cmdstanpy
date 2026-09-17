@@ -201,6 +201,18 @@ def test_user_header() -> None:
         opts.validate()
 
 
+def test_user_header_is_posix_path() -> None:
+    """Backslashes in the -include path are eaten by clang."""
+    opts = CompilerOptions(
+        user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp')
+    )
+    opts.validate()
+    assert '\\' not in opts.user_header
+    assert opts.user_header.endswith('/return_one.hpp')
+    assert os.path.isfile(opts.user_header)
+    assert str(opts.cpp_options['USER_HEADER']) == opts.user_header
+
+
 def test_model_format_options() -> None:
     stan = os.path.join(DATAFILES_PATH, 'format_me.stan')
 

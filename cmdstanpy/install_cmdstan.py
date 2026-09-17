@@ -39,7 +39,9 @@ from tqdm.auto import tqdm
 from cmdstanpy import _DOT_CMDSTAN
 from cmdstanpy.utils import (
     cmdstan_path,
+    determine_windows_arch,
     do_command,
+    make_command,
     pushd,
     validate_dir,
     wrap_url_progress_hook,
@@ -71,8 +73,10 @@ def is_windows() -> bool:
     return platform.system() == 'Windows'
 
 
-MAKE = os.getenv('MAKE', 'make' if not is_windows() else 'mingw32-make')
 EXTENSION = '.exe' if is_windows() else ''
+
+# Windows ARM64 needs the Stan Math support added in stan-dev/math#3051
+MIN_WINDOWS_ARM64_VERSION = (2, 35)
 
 
 def get_headers() -> dict[str, str]:
@@ -203,7 +207,7 @@ class InteractiveSettings:
     def compiler(self) -> bool:
         if not is_windows():
             return False
-        print("Would you like to install the RTools40 C++ toolchain?")
+        print("Would you like to install the RTools C++ toolchain?")
         print("A C++ toolchain is required for CmdStan.")
         print(
             "If you are not sure if you need the toolchain or not, "
@@ -234,7 +238,7 @@ def clean_all(verbose: bool = False) -> None:
 
     :param verbose: Boolean value; when ``True``, show output from make command.
     """
-    cmd = [MAKE, 'clean-all']
+    cmd = [make_command(), 'clean-all']
     try:
         if verbose:
             do_command(cmd)
@@ -262,7 +266,7 @@ def build(verbose: bool = False, progress: bool = True, cores: int = 1) -> None:
     :param cores: Integer, number of cores to use in the ``make`` command.
         Default is 1 core.
     """
-    cmd = [MAKE, 'build', f'-j{cores}']
+    cmd = [make_command(), 'build', f'-j{cores}']
     try:
         if verbose:
             do_command(cmd)
@@ -343,7 +347,7 @@ def compile_example(verbose: bool = False) -> None:
     if path.is_file():
         path.unlink()
 
-    cmd = [MAKE, path.as_posix()]
+    cmd = [make_command(), path.as_posix()]
     try:
         if verbose:
             do_command(cmd)
@@ -544,59 +548,48 @@ def retrieve_version(version: str, progress: bool = True) -> None:
 
 
 def run_compiler_install(dir: str, verbose: bool, progress: bool) -> None:
-    from .install_cxx_toolchain import is_installed as _is_installed_cxx
     from .install_cxx_toolchain import latest_version as _latest_version_cxx
     from .install_cxx_toolchain import run_rtools_install as _main_cxx
-    from .utils import cxx_toolchain_path, determine_windows_arch
+    from .utils import cxx_toolchain_path
 
-    arch = determine_windows_arch()
-    known_versions = ['4.5', '4.4', '4.3', '4.2', '4.0', '3.5']
+    try:
+        cxx_toolchain_path(None, dir)
+        return
+    except ValueError:
+        pass
 
-    compiler_found = False
     cxx_version = _latest_version_cxx()
-    homes = [
-        home
-        for home in (
-            os.environ.get(var)
-            for var in (
-                'RTOOLS45_HOME',
-                'RTOOLS44_HOME',
-                'RTOOLS43_HOME',
-                'RTOOLS42_HOME',
-                'RTOOLS40_HOME',
-            )
-        )
-        if home
-    ]
-    names = ['RTools45', 'RTools44', 'RTools40', 'RTools35', 'RTools']
-    if arch == 'aarch64':
-        names = ['RTools45-aarch64', 'RTools44-aarch64'] + names
-    for cxx_loc in (
-        homes
-        + [home_cmdstan()]
-        + [os.path.join(os.path.abspath("/"), name) for name in names]
-        + [os.path.join(os.path.abspath("/"), "RBuildTools")]
-    ):
-        for version in known_versions:
-            if _is_installed_cxx(cxx_loc, version):
-                cxx_version = version
-                compiler_found = True
-                break
-        if compiler_found:
-            break
-    if not compiler_found:
-        print(f'Installing RTools {cxx_version}')
-        # copy argv and clear sys.argv
-        _main_cxx(
-            {
-                'dir': dir,
-                'progress': progress,
-                'version': None,
-                'verbose': verbose,
-            }
-        )
+    print(f'Installing RTools {cxx_version}')
+    _main_cxx(
+        {
+            'dir': dir,
+            'progress': progress,
+            'version': None,
+            'verbose': verbose,
+        }
+    )
     # Add toolchain to $PATH
     cxx_toolchain_path(cxx_version, dir)
+
+
+def validate_arm64_support(version: str) -> None:
+    """Raise if the requested CmdStan predates Windows ARM64 support."""
+    if not is_windows() or determine_windows_arch() != 'aarch64':
+        return
+    if version.startswith('git:'):
+        return
+    try:
+        parsed = tuple(
+            int(part) for part in version.split('-')[0].split('.')[:2]
+        )
+    except ValueError:
+        return
+    if parsed < MIN_WINDOWS_ARM64_VERSION:
+        minimum = '.'.join(str(part) for part in MIN_WINDOWS_ARM64_VERSION)
+        raise ValueError(
+            f'CmdStan {version} does not support Windows ARM64, '
+            f'version {minimum} or later is required.'
+        )
 
 
 def run_install(args: InteractiveSettings | InstallationSettings) -> None:
@@ -636,6 +629,7 @@ def run_install(args: InteractiveSettings | InstallationSettings) -> None:
                     'Connection to GitHub failed. '
                     'Check firewall settings or ensure this version exists.'
                 )
+            validate_arm64_support(args.version)
             shutil.rmtree(cmdstan_version, ignore_errors=True)
             retrieve_version(args.version, args.progress)
             install_version(

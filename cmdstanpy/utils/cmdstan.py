@@ -5,6 +5,7 @@ Utilities for finding and installing CmdStan
 import logging
 import os
 import platform
+import shutil
 import subprocess
 import sys
 from collections import OrderedDict
@@ -301,15 +302,15 @@ class RToolsLayout(NamedTuple):
 
 
 # Ordered newest-first so that a search without an explicit version
-# prefers the most recent layout. RTools 4.2 through 4.5 share a layout;
-# the ARM builds ship an LLVM toolchain rather than GCC.
+# prefers the most recent layout. RTools 4.2 through 4.5 share a layout.
+# The ARM builds are LLVM-based but ship gcc/g++ aliases for clang.
 RTOOLS_LAYOUTS = (
     RToolsLayout(
         '4.5',
         'aarch64',
         ('aarch64-w64-mingw32.static.posix', 'bin'),
         ('usr', 'bin'),
-        ('clang++', 'g++'),
+        ('g++', 'clang++'),
     ),
     RToolsLayout(
         '4.5',
@@ -323,7 +324,7 @@ RTOOLS_LAYOUTS = (
         'aarch64',
         ('aarch64-w64-mingw32.static.posix', 'bin'),
         ('usr', 'bin'),
-        ('clang++', 'g++'),
+        ('g++', 'clang++'),
     ),
     RToolsLayout(
         '4.4',
@@ -441,6 +442,15 @@ def _rtools_search_roots(install_dir: str | None, arch: str) -> list[str]:
     return roots
 
 
+def rtools_compiler(toolchain_root: str, layout: RToolsLayout) -> str | None:
+    """Return the name of the C++ compiler shipped in an installation."""
+    compiler_dir = os.path.join(toolchain_root, *layout.compiler_subdir)
+    for compiler in layout.compilers:
+        if os.path.exists(os.path.join(compiler_dir, compiler + EXTENSION)):
+            return compiler
+    return None
+
+
 def _probe_rtools_root(
     toolchain_root: str,
     layouts: list[RToolsLayout],
@@ -453,9 +463,11 @@ def _probe_rtools_root(
     if not toolchain_root or not os.path.exists(toolchain_root):
         return None
     for layout in layouts:
-        compiler_path = os.path.join(toolchain_root, *layout.compiler_subdir)
-        if not os.path.exists(compiler_path):
+        # RTools 4.2+ ship empty mingw64/ucrt64/clangarm64 stub directories,
+        # so the compiler binary itself must be checked, not just the dir
+        if rtools_compiler(toolchain_root, layout) is None:
             continue
+        compiler_path = os.path.join(toolchain_root, *layout.compiler_subdir)
         tool_path = os.path.join(toolchain_root, *layout.tool_subdir)
         if os.path.exists(tool_path):
             return toolchain_root, compiler_path, tool_path
@@ -469,13 +481,35 @@ def _probe_rtools_root(
     return None
 
 
-def rtools_compiler(toolchain_root: str, layout: RToolsLayout) -> str | None:
-    """Return the name of the C++ compiler shipped in an installation."""
-    compiler_dir = os.path.join(toolchain_root, *layout.compiler_subdir)
-    for compiler in layout.compilers:
-        if os.path.exists(os.path.join(compiler_dir, compiler + EXTENSION)):
-            return compiler
-    return None
+def make_command() -> str:
+    """
+    Name of the GNU Make executable to use.
+
+    RTools 4.0 ships ``mingw32-make``, while RTools 4.2 and later ship
+    plain ``make`` in ``usr/bin``. If neither is on the ``$PATH``, an RTools
+    installation managed by CmdStanPy is activated before giving up.
+    """
+    make = os.environ.get('MAKE')
+    if make:
+        return make
+    if platform.system() != 'Windows':
+        return 'make'
+
+    def _found() -> str | None:
+        for candidate in ('mingw32-make', 'make'):
+            if shutil.which(candidate):
+                return candidate
+        return None
+
+    found = _found()
+    if found is None:
+        try:
+            cxx_toolchain_path()
+        except ValueError:
+            pass
+        else:
+            found = _found()
+    return found or 'make'
 
 
 def cxx_toolchain_path(

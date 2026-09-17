@@ -12,7 +12,9 @@ from typing import Callable
 import pytest
 
 from cmdstanpy import install_cxx_toolchain
-from cmdstanpy.utils import cxx_toolchain_path
+from cmdstanpy.install_cmdstan import validate_arm64_support
+from cmdstanpy.utils import cmdstan as cmdstan_utils
+from cmdstanpy.utils import cxx_toolchain_path, make_command
 
 SetArch = Callable[[str], None]
 
@@ -77,14 +79,19 @@ def set_arch(monkeypatch: pytest.MonkeyPatch) -> SetArch:
 
 
 def make_toolchain(
-    root: Path, version: str, arch: str, complete: bool = True
+    root: Path,
+    version: str,
+    arch: str,
+    compiler: bool = True,
+    tools: bool = True,
 ) -> str:
     """Create a fake RTools installation tree, return its root."""
-    compiler_subdir, tool_subdir, compiler = LAYOUTS[(version, arch)]
+    compiler_subdir, tool_subdir, compiler_exe = LAYOUTS[(version, arch)]
     compiler_dir = root.joinpath(*compiler_subdir)
-    compiler_dir.mkdir(parents=True)
-    if complete:
-        compiler_dir.joinpath(compiler + '.exe').write_text('')
+    compiler_dir.mkdir(parents=True, exist_ok=True)
+    if compiler:
+        compiler_dir.joinpath(compiler_exe + '.exe').write_text('')
+    if tools:
         root.joinpath(*tool_subdir).mkdir(parents=True, exist_ok=True)
     return str(root)
 
@@ -128,26 +135,26 @@ def test_toolchain_name() -> None:
         (
             '4.5',
             'aarch64',
-            'https://cran.r-project.org/bin/windows/Rtools/rtools45/files/'
-            'rtools45-aarch64-6768-6492.exe',
+            'https://github.com/r-hub/rtools45/releases/download/latest/'
+            'rtools45-aarch64.exe',
         ),
         (
             '4.5',
             'x86_64',
-            'https://cran.r-project.org/bin/windows/Rtools/rtools45/files/'
-            'rtools45-6768-6492.exe',
+            'https://github.com/r-hub/rtools45/releases/download/latest/'
+            'rtools45.exe',
         ),
         (
             '4.4',
             'aarch64',
-            'https://cran.r-project.org/bin/windows/Rtools/rtools44/files/'
-            'rtools44-aarch64-6459-6401.exe',
+            'https://github.com/r-hub/rtools44/releases/download/latest/'
+            'rtools44-aarch64.exe',
         ),
         (
             '4.4',
             'x86_64',
-            'https://cran.r-project.org/bin/windows/Rtools/rtools44/files/'
-            'rtools44-6459-6401.exe',
+            'https://github.com/r-hub/rtools44/releases/download/latest/'
+            'rtools44.exe',
         ),
         (
             '4.0',
@@ -186,7 +193,7 @@ def test_get_url_unsupported_arch() -> None:
 
 @mark_windows_only
 @pytest.mark.parametrize(
-    'arch,expected', [('x86_64', '4.0'), ('aarch64', '4.5')]
+    'arch,expected', [('x86_64', '4.5'), ('aarch64', '4.5')]
 )
 def test_latest_version(set_arch: SetArch, arch: str, expected: str) -> None:
     set_arch(arch)
@@ -226,7 +233,7 @@ def test_is_installed_incomplete(
 ) -> None:
     """Compiler directory exists but the compiler itself is missing."""
     set_arch(arch)
-    root = make_toolchain(tmp_path, version, arch, complete=False)
+    root = make_toolchain(tmp_path, version, arch, compiler=False)
     assert not install_cxx_toolchain.is_installed(root, version)
 
 
@@ -236,8 +243,7 @@ def test_is_installed_missing_compiler(
 ) -> None:
     """Both directories present, but no compiler binary in them."""
     set_arch('aarch64')
-    make_toolchain(tmp_path, '4.4', 'aarch64', complete=False)
-    tmp_path.joinpath('usr', 'bin').mkdir(parents=True)
+    make_toolchain(tmp_path, '4.4', 'aarch64', compiler=False)
     assert not install_cxx_toolchain.is_installed(str(tmp_path), '4.4')
 
 
@@ -336,11 +342,32 @@ def test_toolchain_path_incomplete_warns(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     set_arch('x86_64')
-    root = make_toolchain(tmp_path, '4.4', 'x86_64', complete=False)
+    root = make_toolchain(tmp_path, '4.4', 'x86_64', tools=False)
     monkeypatch.setenv('CMDSTAN_TOOLCHAIN', root)
     with pytest.raises(ValueError, match='no RTools toolchain installation'):
         cxx_toolchain_path()
     assert 'Found invalid RTools installation' in caplog.text
+
+
+@mark_windows_only
+def test_toolchain_path_ignores_empty_stub_dirs(
+    monkeypatch: pytest.MonkeyPatch, set_arch: SetArch, tmp_path: Path
+) -> None:
+    """RTools 4.2+ ship empty mingw64/ucrt64/clangarm64 directories."""
+    set_arch('x86_64')
+    make_toolchain(tmp_path, '4.5', 'x86_64')
+    for stub in ('mingw64', 'mingw32', 'ucrt64', 'clang64', 'clangarm64'):
+        tmp_path.joinpath(stub, 'bin').mkdir(parents=True)
+    monkeypatch.setenv('CMDSTAN_TOOLCHAIN', str(tmp_path))
+
+    # an explicit 4.0 request must not match the empty mingw64 stub
+    with pytest.raises(ValueError, match='no RTools toolchain installation'):
+        cxx_toolchain_path('4.0')
+
+    compiler_path, _ = cxx_toolchain_path()
+    assert compiler_path.endswith(
+        os.path.join('x86_64-w64-mingw32.static.posix', 'bin')
+    )
 
 
 @mark_windows_only
@@ -446,6 +473,68 @@ def test_install_defaults_to_latest_version(
         install_cxx_toolchain.run_rtools_install(
             {'version': None, 'dir': str(tmp_path)}
         )
+
+
+@mark_windows_only
+@pytest.mark.parametrize(
+    'arch,version,ok',
+    [
+        ('aarch64', '2.34.1', False),
+        ('aarch64', '2.35.0', True),
+        ('aarch64', '2.36.0', True),
+        ('aarch64', 'git:develop', True),
+        # the floor only applies to Windows ARM64
+        ('x86_64', '2.30.0', True),
+    ],
+)
+def test_validate_arm64_support(
+    set_arch: SetArch, arch: str, version: str, ok: bool
+) -> None:
+    set_arch(arch)
+    if ok:
+        validate_arm64_support(version)
+    else:
+        with pytest.raises(ValueError, match='does not support Windows ARM64'):
+            validate_arm64_support(version)
+
+
+# ---------------------------------------------------------------------------
+# make resolution
+# ---------------------------------------------------------------------------
+
+
+def test_make_command_honours_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv('MAKE', 'my-make')
+    assert make_command() == 'my-make'
+
+
+@mark_not_windows
+def test_make_command_posix(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv('MAKE', raising=False)
+    assert make_command() == 'make'
+
+
+@mark_windows_only
+@pytest.mark.parametrize(
+    'available,expected',
+    [
+        # RTools 4.0 installs mingw32-make, which stays preferred
+        (['mingw32-make', 'make'], 'mingw32-make'),
+        # RTools 4.2+ only ship plain make in usr/bin
+        (['make'], 'make'),
+        ([], 'make'),
+    ],
+)
+def test_make_command_windows(
+    monkeypatch: pytest.MonkeyPatch, available: list[str], expected: str
+) -> None:
+    monkeypatch.delenv('MAKE', raising=False)
+    monkeypatch.setattr(
+        cmdstan_utils.shutil,
+        'which',
+        lambda name: f'C:\\fake\\{name}.exe' if name in available else None,
+    )
+    assert make_command() == expected
 
 
 @mark_windows_only

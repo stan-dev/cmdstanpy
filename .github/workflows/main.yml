@@ -43,8 +43,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest, windows-11-arm]
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        exclude:
+          # CPython has no Windows ARM64 release before 3.11
+          - os: windows-11-arm
+            python-version: "3.10"
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -80,21 +84,21 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cmdstan
-          key: ${{ runner.os }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
 
       - name: Delete precompiled header (MacOS)
         if: matrix.os == 'macos-latest' && steps.cache-cmdstan.outputs.cache-hit == 'true'
         run: rm -rf ~/.cmdstan/cmdstan-${{ needs.get-cmdstan-version.outputs.version }}/stan/src/stan/model/*.hpp.gch
 
       - name: Install CmdStan (Linux, macOS)
-        if: matrix.os != 'windows-latest'
+        if: runner.os != 'Windows'
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
           python -c "import cmdstanpy; cmdstanpy.install_cmdstan(version='${{ needs.get-cmdstan-version.outputs.version }}', cores=4)"
 
       - name: Install CmdStan (Windows)
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h

@@ -37,17 +37,17 @@ from cmdstanpy.utils import (
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
-# RTools 4.2 and later embed toolchain and installer build revisions in the
-# installer filename, so there is no stable URL. Refresh when CRAN publishes
-# a new build; see https://cran.r-project.org/bin/windows/Rtools/
+# CRAN embeds build revisions in the RTools 4.2+ installer filenames, so we
+# use the r-hub mirror, which publishes them under a stable 'latest' tag.
+# These are the builds the CmdStan guide points users at.
 RTOOLS_INSTALLERS = {
     '4.5': {
-        'x86_64': 'rtools45-6768-6492.exe',
-        'aarch64': 'rtools45-aarch64-6768-6492.exe',
+        'x86_64': 'rtools45.exe',
+        'aarch64': 'rtools45-aarch64.exe',
     },
     '4.4': {
-        'x86_64': 'rtools44-6459-6401.exe',
-        'aarch64': 'rtools44-aarch64-6459-6401.exe',
+        'x86_64': 'rtools44.exe',
+        'aarch64': 'rtools44-aarch64.exe',
     },
 }
 
@@ -203,10 +203,7 @@ def latest_version() -> str:
     """Latest RTools version supported on this machine."""
     if platform.system() != 'Windows':
         return ''
-    if determine_windows_arch() == 'aarch64':
-        # RTools 4.0 has no ARM64 build
-        return '4.5'
-    return '4.0'
+    return '4.5'
 
 
 def retrieve_toolchain(filename: str, url: str, progress: bool = True) -> None:
@@ -260,8 +257,8 @@ def get_url(version: str, arch: str | None = None) -> str:
             return ''
         series = 'rtools' + version.replace('.', '')
         return (
-            'https://cran.r-project.org/bin/windows/Rtools/'
-            f'{series}/files/{installer}'
+            f'https://github.com/r-hub/{series}/releases/'
+            f'download/latest/{installer}'
         )
     legacy = {
         ('4.0', 'x86_64'): 'rtools40-x86_64.exe',

@@ -5,7 +5,6 @@ Makefile options for stanc and C++ compilers
 import io
 import json
 import os
-import platform
 import shutil
 import subprocess
 from datetime import datetime
@@ -13,7 +12,12 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from cmdstanpy.utils import get_logger
-from cmdstanpy.utils.cmdstan import EXTENSION, cmdstan_path, stanc_path
+from cmdstanpy.utils.cmdstan import (
+    EXTENSION,
+    cmdstan_path,
+    make_command,
+    stanc_path,
+)
 from cmdstanpy.utils.command import do_command
 from cmdstanpy.utils.filesystem import SanitizedOrTmpFilePath
 
@@ -195,8 +199,8 @@ class CompilerOptions:
                 )
             if "allow-undefined" not in self._stanc_options:
                 self._stanc_options["allow-undefined"] = True
-            # set full path
-            self._user_header = os.path.abspath(self._user_header)
+            # clang treats backslashes in the -include path as escapes
+            self._user_header = Path(self._user_header).absolute().as_posix()
 
             if ' ' in self._user_header:
                 raise ValueError(
@@ -372,10 +376,7 @@ def compile_stan_file(
             exe_target,
         )
 
-        make = os.getenv(
-            'MAKE',
-            'make' if platform.system() != 'Windows' else 'mingw32-make',
-        )
+        make = make_command()
         cmd = [make]
         cmd.extend(compiler_options.compose(filename_in_msg=src.name))
         cmd.append(Path(exe_file).as_posix())

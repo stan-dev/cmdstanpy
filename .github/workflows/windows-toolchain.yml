@@ -44,23 +44,18 @@ jobs:
           - os: windows-latest
             arch: x86_64
             rtools: "4.0"
-            compiler: g++
           - os: windows-latest
             arch: x86_64
             rtools: "4.4"
-            compiler: g++
           - os: windows-latest
             arch: x86_64
             rtools: "4.5"
-            compiler: g++
           - os: windows-11-arm
             arch: aarch64
             rtools: "4.4"
-            compiler: clang++
           - os: windows-11-arm
             arch: aarch64
             rtools: "4.5"
-            compiler: clang++
     steps:
       - uses: actions/checkout@v7
 
@@ -96,7 +91,7 @@ jobs:
         run: |
           import os, shutil, subprocess
           from cmdstanpy.install_cxx_toolchain import get_toolchain_version, is_installed
-          from cmdstanpy.utils import cxx_toolchain_path
+          from cmdstanpy.utils import cxx_toolchain_path, make_command
 
           install_dir = os.path.join(os.environ["RUNNER_TEMP"], "toolchain")
           version = "${{ matrix.rtools }}"
@@ -109,12 +104,14 @@ jobs:
           print("tools:   ", tool_path)
           assert compiler_path.startswith(install_dir), compiler_path
 
-          cxx = shutil.which("${{ matrix.compiler }}")
+          # CmdStan invokes g++; on ARM64 it is an alias for clang
+          cxx = shutil.which("g++")
           assert cxx and cxx.startswith(compiler_path), cxx
           subprocess.run([cxx, "--version"], check=True)
 
-          make = shutil.which("mingw32-make") or shutil.which("make")
-          assert make, "no make found on PATH"
+          make = make_command()
+          print("make:", make, "->", shutil.which(make))
+          assert shutil.which(make), f"{make} not found on PATH"
           subprocess.run([make, "--version"], check=True)
 
       - name: Compile a trivial C++ program
@@ -130,5 +127,5 @@ jobs:
                   #include <iostream>
                   int main() { std::cout << "hello\\n"; return 0; }
               """))
-          subprocess.run(["${{ matrix.compiler }}", "-O0", "hello.cpp", "-o", "hello.exe"], check=True)
+          subprocess.run(["g++", "-O0", "hello.cpp", "-o", "hello.exe"], check=True)
           subprocess.run(["./hello.exe"], check=True)
