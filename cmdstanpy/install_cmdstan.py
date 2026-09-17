@@ -545,26 +545,47 @@ def retrieve_version(version: str, progress: bool = True) -> None:
 
 def run_compiler_install(dir: str, verbose: bool, progress: bool) -> None:
     from .install_cxx_toolchain import is_installed as _is_installed_cxx
+    from .install_cxx_toolchain import latest_version as _latest_version_cxx
     from .install_cxx_toolchain import run_rtools_install as _main_cxx
-    from .utils import cxx_toolchain_path
+    from .utils import cxx_toolchain_path, determine_windows_arch
+
+    arch = determine_windows_arch()
+    known_versions = ['4.5', '4.4', '4.3', '4.2', '4.0', '3.5']
 
     compiler_found = False
-    rtools40_home = os.environ.get('RTOOLS40_HOME')
-    for cxx_loc in ([rtools40_home] if rtools40_home is not None else []) + [
-        home_cmdstan(),
-        os.path.join(os.path.abspath("/"), "RTools40"),
-        os.path.join(os.path.abspath("/"), "RTools"),
-        os.path.join(os.path.abspath("/"), "RTools35"),
-        os.path.join(os.path.abspath("/"), "RBuildTools"),
-    ]:
-        for cxx_version in ['40', '35']:
-            if _is_installed_cxx(cxx_loc, cxx_version):
+    cxx_version = _latest_version_cxx()
+    homes = [
+        home
+        for home in (
+            os.environ.get(var)
+            for var in (
+                'RTOOLS45_HOME',
+                'RTOOLS44_HOME',
+                'RTOOLS43_HOME',
+                'RTOOLS42_HOME',
+                'RTOOLS40_HOME',
+            )
+        )
+        if home
+    ]
+    names = ['RTools45', 'RTools44', 'RTools40', 'RTools35', 'RTools']
+    if arch == 'aarch64':
+        names = ['RTools45-aarch64', 'RTools44-aarch64'] + names
+    for cxx_loc in (
+        homes
+        + [home_cmdstan()]
+        + [os.path.join(os.path.abspath("/"), name) for name in names]
+        + [os.path.join(os.path.abspath("/"), "RBuildTools")]
+    ):
+        for version in known_versions:
+            if _is_installed_cxx(cxx_loc, version):
+                cxx_version = version
                 compiler_found = True
                 break
         if compiler_found:
             break
     if not compiler_found:
-        print('Installing RTools40')
+        print(f'Installing RTools {cxx_version}')
         # copy argv and clear sys.argv
         _main_cxx(
             {
@@ -574,7 +595,6 @@ def run_compiler_install(dir: str, verbose: bool, progress: bool) -> None:
                 'verbose': verbose,
             }
         )
-        cxx_version = '40'
     # Add toolchain to $PATH
     cxx_toolchain_path(cxx_version, dir)
 
