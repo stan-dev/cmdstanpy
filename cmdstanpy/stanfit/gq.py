@@ -521,7 +521,8 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
             return p_fit.draws()[:, None, :]
 
     def _previous_column_indices(self) -> list[int]:
-        """Previous-fit columns retained when merging with generated quantities."""
+        """Previous-fit columns retained when merging with generated
+        quantities."""
         gq_columns = set(self.column_names)
         return [
             idx
