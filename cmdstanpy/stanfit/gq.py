@@ -153,7 +153,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
                     '"inc_warmup=True"'
                 )
 
-        start_idx, _ = self._draws_start(inc_warmup)
+        start_idx = self._draws_start(inc_warmup)
         draws = self._draws[start_idx:]
         if inc_sample:
             previous_draws = self._previous_draws(True)[start_idx:]
@@ -293,34 +293,30 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
                 'Method "draws_xr" is only available when '
                 'original fit is done via Sampling.'
             )
-        mcmc_vars_list = []
-        dup_vars = []
-        if vars is not None:
-            if isinstance(vars, str):
-                vars_list = [vars]
-            else:
-                vars_list = list(vars)
-            for var in vars_list:
-                if var not in self.metadata.stan_vars:
-                    if inc_sample and (
-                        var in self.previous_fit.metadata.stan_vars
-                    ):
-                        mcmc_vars_list.append(var)
-                        dup_vars.append(var)
-                    else:
-                        raise ValueError('Unknown variable: {}'.format(var))
-        else:
-            vars_list = list(self.metadata.stan_vars.keys())
-            if inc_sample:
-                for var in self.previous_fit.metadata.stan_vars.keys():
-                    if var not in vars_list and var not in mcmc_vars_list:
-                        mcmc_vars_list.append(var)
-        for var in dup_vars:
-            vars_list.remove(var)
-
-        self._assemble()
-
         prev = self.previous_fit
+        if vars is None:
+            requested = list(self.metadata.stan_vars)
+            if inc_sample:
+                requested.extend(prev.metadata.stan_vars)
+        else:
+            requested = [vars] if isinstance(vars, str) else vars
+
+        gq_vars: list[str] = []
+        previous_vars: list[str] = []
+        for var in dict.fromkeys(requested):
+            if var in self.metadata.stan_vars:
+                gq_vars.append(var)
+            elif inc_sample and var in prev.metadata.stan_vars:
+                previous_vars.append(var)
+            else:
+                raise ValueError(f'Unknown variable: {var}')
+
+        if inc_warmup and not prev._save_warmup:
+            get_logger().warning(
+                "Sample doesn't contain draws from warmup iterations,"
+                ' rerun sampler with "save_warmup=True".'
+            )
+        include_warmup = inc_warmup and prev._save_warmup
         num_draws = prev.num_draws_sampling
         attrs: MutableMapping[Hashable, Any] = {
             "stan_version": f"{prev.config.stan_major_version}."
@@ -329,9 +325,9 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
             "model": prev.model_name,
             "num_draws_sampling": num_draws,
         }
-        if inc_warmup and prev._save_warmup:
-            num_draws += self.previous_fit.num_draws_warmup
-            attrs["num_draws_warmup"] = self.previous_fit.num_draws_warmup
+        if include_warmup:
+            num_draws += prev.num_draws_warmup
+            attrs["num_draws_warmup"] = prev.num_draws_warmup
 
         data: MutableMapping[Hashable, Any] = {}
         coordinates: MutableMapping[Hashable, Any] = {
@@ -339,18 +335,15 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
             "draw": np.arange(num_draws),
         }
 
-        for var in vars_list:
-            build_xarray_data(
-                data,
-                self.metadata.stan_vars[var],
-                self.draws(inc_warmup=inc_warmup),
-            )
-        if inc_sample:
-            for var in mcmc_vars_list:
+        if gq_vars:
+            gq_draws = self.draws(inc_warmup=include_warmup)
+            for var in gq_vars:
+                build_xarray_data(data, self.metadata.stan_vars[var], gq_draws)
+        if previous_vars:
+            previous_draws = prev.draws(inc_warmup=include_warmup)
+            for var in previous_vars:
                 build_xarray_data(
-                    data,
-                    self.previous_fit.metadata.stan_vars[var],
-                    self.previous_fit.draws(inc_warmup=inc_warmup),
+                    data, prev.metadata.stan_vars[var], previous_draws
                 )
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
@@ -415,7 +408,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
         # is gq variable
         self._assemble()
 
-        draw1, _ = self._draws_start(
+        draw1 = self._draws_start(
             inc_warmup=kwargs.get('inc_warmup', False)
             or kwargs.get('inc_iterations', False)
         )
@@ -454,8 +447,7 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
     def _assemble(self) -> None:
         if self._draws.shape != (0,):
             return
-        # use numpy loadtxt
-        _, num_draws = self._draws_start(inc_warmup=True)
+        num_draws = self._num_draws_total()
 
         gq_sample: np.ndarray = np.empty(
             (num_draws, self.chains, len(self.column_names)),
@@ -476,35 +468,33 @@ class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
                 ) from exc
         self._draws = gq_sample
 
-    def _draws_start(self, inc_warmup: bool) -> tuple[int, int]:
-        draw1 = 0
+    def _draws_start(self, inc_warmup: bool) -> int:
+        """Start of the returned rows; -1 selects the final optimizer row."""
         p_fit = self.previous_fit
         if isinstance(p_fit, CmdStanMCMC):
-            num_draws = p_fit.num_draws_sampling
-            if p_fit._save_warmup:
-                if inc_warmup:
-                    num_draws += p_fit.num_draws_warmup
-                else:
-                    draw1 = p_fit.num_draws_warmup
-
+            if p_fit._save_warmup and not inc_warmup:
+                return p_fit.num_draws_warmup
         elif isinstance(p_fit, CmdStanMLE):
-            num_draws = 1
-            if p_fit.config.method_config.save_iterations:
-                opt_iters = len(p_fit.optimized_iterations_np)  # type: ignore
-                if inc_warmup:
-                    num_draws = opt_iters
-                else:
-                    draw1 = opt_iters - 1
+            if not inc_warmup:
+                return -1
         elif isinstance(p_fit, CmdStanVB):
-            draw1 = 1  # skip mean
-            num_draws = p_fit.variational_sample.shape[0]
-            if inc_warmup:
-                num_draws += 1
-        else:
-            num_draws = p_fit.draws().shape[0]
-            draw1 = 0
+            return 1  # Always skip the variational mean.
+        return 0
 
-        return draw1, num_draws
+    def _num_draws_total(self) -> int:
+        """Number of GQ CSV rows, including warmup, iterations, or VB mean."""
+        p_fit = self.previous_fit
+        if isinstance(p_fit, CmdStanMCMC):
+            return p_fit.num_draws_sampling + (
+                p_fit.num_draws_warmup if p_fit._save_warmup else 0
+            )
+        if isinstance(p_fit, CmdStanMLE):
+            if p_fit.config.method_config.save_iterations:
+                return len(p_fit.optimized_iterations_np)  # type: ignore
+            return 1
+        if isinstance(p_fit, CmdStanVB):
+            return int(p_fit.variational_sample.shape[0]) + 1
+        return int(p_fit.draws().shape[0])
 
     def _previous_draws(self, inc_warmup: bool) -> np.ndarray:
         """

@@ -1037,11 +1037,13 @@ def test_gq_only_draws_do_not_convert_previous_fit(
     unexpected.assert_not_called()
 
 
-@pytest.mark.parametrize('accessor', ['draws', 'draws_pd'])
+@pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
 @pytest.mark.parametrize('inc_sample', [False, True])
 def test_gq_explicit_missing_warmup_warns_once(
     make_gq, caplog, accessor, inc_sample
 ):
+    if accessor == 'draws_xr':
+        pytest.importorskip('xarray')
     gq = make_gq('theta', 'z')
     with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
         getattr(gq, accessor)(inc_warmup=True, inc_sample=inc_sample)
@@ -1137,3 +1139,99 @@ def test_gq_draws_pd_unknown_variable(make_gq, variable, inc_sample):
     gq = make_gq('theta', 'z')
     with pytest.raises(ValueError, match=f'Unknown variable: {variable}'):
         gq.draws_pd(vars=variable, inc_sample=inc_sample)
+
+
+@pytest.mark.parametrize(
+    'variables,inc_sample,expected_names,gq_calls,previous_calls',
+    [
+        (None, True, ['z', 'w', 'theta', 'beta'], 1, 1),
+        (None, False, ['z', 'w'], 1, 0),
+        (
+            ['beta', 'z', 'theta', 'w', 'z'],
+            True,
+            ['z', 'w', 'beta', 'theta'],
+            1,
+            1,
+        ),
+        (['theta', 'beta'], True, ['theta', 'beta'], 0, 1),
+        ('z', True, ['z'], 1, 0),
+        ([], True, [], 0, 0),
+    ],
+)
+def test_gq_draws_xr_loads_each_source_once(
+    make_gq,
+    monkeypatch,
+    caplog,
+    variables,
+    inc_sample,
+    expected_names,
+    gq_calls,
+    previous_calls,
+):
+    pytest.importorskip('xarray')
+    gq = make_gq('theta,beta.1,beta.2,z.1,z.2', 'z.1,z.2,w')
+    gq_draws = Mock(wraps=gq.draws)
+    previous_draws = Mock(wraps=gq.previous_fit.draws)
+    monkeypatch.setattr(gq, 'draws', gq_draws)
+    monkeypatch.setattr(gq.previous_fit, 'draws', previous_draws)
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        result = gq.draws_xr(
+            vars=variables, inc_sample=inc_sample, inc_warmup=True
+        )
+    assert list(result.data_vars) == expected_names
+    assert gq_draws.call_count == gq_calls
+    assert previous_draws.call_count == previous_calls
+    assert len(caplog.records) == 1
+    assert "Sample doesn't contain draws from warmup" in caplog.text
+    for name in expected_names:
+        source = gq if name in gq.metadata.stan_vars else gq.previous_fit
+        expected = source.metadata.stan_vars[name].extract_reshape(
+            source._draws
+        )
+        np.testing.assert_array_equal(
+            result[name].values, expected.swapaxes(0, 1)
+        )
+
+
+@pytest.mark.parametrize('inc_warmup', [False, True])
+def test_gq_draws_xr_saved_warmup_coordinates(make_gq, caplog, inc_warmup):
+    pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    gq.chain_ids = [3, 7]
+    gq.previous_fit.chain_ids = [3, 7]
+    config = gq.previous_fit.config.method_config
+    config.save_warmup = True
+    config.num_warmup = 1
+    gq.previous_fit._draws = np.concatenate(
+        [np.full((1, 2, 1), -10.0), gq.previous_fit._draws], axis=0
+    )
+    gq._draws = np.concatenate([np.full((1, 2, 1), -20.0), gq._draws], axis=0)
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        result = gq.draws_xr(inc_sample=True, inc_warmup=inc_warmup)
+    start = 0 if inc_warmup else 1
+    np.testing.assert_array_equal(result.z.values, gq._draws[start:, :, 0].T)
+    np.testing.assert_array_equal(
+        result.theta.values, gq.previous_fit._draws[start:, :, 0].T
+    )
+    np.testing.assert_array_equal(result.chain.values, [3, 7])
+    np.testing.assert_array_equal(result.draw.values, np.arange(3 - start))
+    assert result.z.dims == ('chain', 'draw')
+    attrs = {
+        'stan_version': '2.39.0',
+        'model': 'previous',
+        'num_draws_sampling': 2,
+    }
+    if inc_warmup:
+        attrs['num_draws_warmup'] = 1
+    assert result.attrs == attrs
+    assert not caplog.records
+
+
+@pytest.mark.parametrize(
+    'variable,inc_sample', [('unknown', True), ('theta', False)]
+)
+def test_gq_draws_xr_unknown_variable(make_gq, variable, inc_sample):
+    pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    with pytest.raises(ValueError, match=f'Unknown variable: {variable}'):
+        gq.draws_xr(vars=variable, inc_sample=inc_sample)
