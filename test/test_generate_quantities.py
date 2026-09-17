@@ -7,8 +7,8 @@ import logging
 import os
 import pickle
 import shutil
-from test import check_present, without_import
 from collections.abc import Callable
+from test import check_present, without_import
 from unittest.mock import Mock
 
 import numpy as np
@@ -874,8 +874,10 @@ def test_from_laplace() -> None:
     assert y_rep.shape == (1000, 10)
 
 
-@pytest.fixture
-def make_gq(monkeypatch: pytest.MonkeyPatch) -> Callable:
+@pytest.fixture(name='make_gq')
+def make_gq_fixture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Callable[[str, str], CmdStanGQ[CmdStanMCMC]]:
     # These tests exercise accessors, not CSV parsing. Populate the draw caches
     # directly and skip the sampler's eager CSV validation.
     monkeypatch.setattr(CmdStanMCMC, '_validate_csv_files', lambda self: None)
@@ -925,7 +927,11 @@ def make_gq(monkeypatch: pytest.MonkeyPatch) -> Callable:
 
 @pytest.mark.parametrize('gq_header', ['z', 'z.1,z.2'])
 @pytest.mark.parametrize('concat_chains', [False, True])
-def test_draws_duplicate_columns(make_gq, gq_header, concat_chains):
+def test_draws_duplicate_columns(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    gq_header: str,
+    concat_chains: bool,
+) -> None:
     gq = make_gq('theta,' + gq_header, gq_header)
     expected = np.concatenate(
         [gq.previous_fit._draws[:, :, :1], gq._draws], axis=2
@@ -938,7 +944,10 @@ def test_draws_duplicate_columns(make_gq, gq_header, concat_chains):
 
 
 @pytest.mark.parametrize('variables', [['theta', 'z'], ['z', 'theta']])
-def test_draws_pd_mixed_container_selection(make_gq, variables):
+def test_draws_pd_mixed_container_selection(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variables: list[str],
+) -> None:
     gq = make_gq('theta', 'z.1,z.2')
     result = gq.draws_pd(vars=variables, inc_sample=True)
     columns = [
@@ -955,7 +964,9 @@ def test_draws_pd_mixed_container_selection(make_gq, variables):
     )
 
 
-def test_draws_pd_previous_container_selection(make_gq):
+def test_draws_pd_previous_container_selection(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+) -> None:
     gq = make_gq('beta.1,beta.2', 'z')
     result = gq.draws_pd(vars=['beta'], inc_sample=True)
     assert list(result.columns) == ['beta[1]', 'beta[2]']
@@ -964,7 +975,9 @@ def test_draws_pd_previous_container_selection(make_gq):
     )
 
 
-def test_draws_pd_previous_laplace_container_selection(make_gq):
+def test_draws_pd_previous_laplace_container_selection(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+) -> None:
     template = make_gq('beta.1,beta.2', 'z')
     previous = CmdStanLaplace(
         metadata=template.previous_fit.metadata,
@@ -994,7 +1007,9 @@ def test_draws_pd_previous_laplace_container_selection(make_gq):
     np.testing.assert_array_equal(result, previous._draws)
 
 
-def test_draws_xr_does_not_mutate_vars(make_gq):
+def test_draws_xr_does_not_mutate_vars(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+) -> None:
     pytest.importorskip('xarray')
     gq = make_gq('theta', 'z')
     variables = ['theta', 'z']
@@ -1009,8 +1024,11 @@ def test_draws_xr_does_not_mutate_vars(make_gq):
 @pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
 @pytest.mark.parametrize('inc_sample', [False, True])
 def test_gq_default_draws_no_warmup_warning(
-    make_gq, caplog, accessor, inc_sample
-):
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    accessor: str,
+    inc_sample: bool,
+) -> None:
     if accessor == 'draws_xr':
         pytest.importorskip('xarray')
     gq = make_gq('theta', 'z')
@@ -1021,8 +1039,10 @@ def test_gq_default_draws_no_warmup_warning(
 
 @pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
 def test_gq_only_draws_do_not_convert_previous_fit(
-    make_gq, monkeypatch, accessor
-):
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    monkeypatch: pytest.MonkeyPatch,
+    accessor: str,
+) -> None:
     if accessor == 'draws_xr':
         pytest.importorskip('xarray')
     gq = make_gq('theta', 'z')
@@ -1040,8 +1060,11 @@ def test_gq_only_draws_do_not_convert_previous_fit(
 @pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
 @pytest.mark.parametrize('inc_sample', [False, True])
 def test_gq_explicit_missing_warmup_warns_once(
-    make_gq, caplog, accessor, inc_sample
-):
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    accessor: str,
+    inc_sample: bool,
+) -> None:
     if accessor == 'draws_xr':
         pytest.importorskip('xarray')
     gq = make_gq('theta', 'z')
@@ -1055,8 +1078,12 @@ def test_gq_explicit_missing_warmup_warns_once(
 @pytest.mark.parametrize('inc_sample', [False, True])
 @pytest.mark.parametrize('concat_chains', [False, True])
 def test_gq_saved_warmup_alignment(
-    make_gq, caplog, inc_warmup, inc_sample, concat_chains
-):
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    inc_warmup: bool,
+    inc_sample: bool,
+    concat_chains: bool,
+) -> None:
     gq = make_gq('theta', 'z')
     config = gq.previous_fit.config.method_config
     config.save_warmup = True
@@ -1086,7 +1113,10 @@ def test_gq_saved_warmup_alignment(
 
 
 @pytest.mark.parametrize('inc_sample', [False, True])
-def test_gq_draws_pd_default_layout(make_gq, inc_sample):
+def test_gq_draws_pd_default_layout(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    inc_sample: bool,
+) -> None:
     gq = make_gq('lp__,theta,z.1,z.2', 'z.1,z.2')
     # pandas has historically used chain ordinals, not configured chain IDs.
     gq.chain_ids = [3, 7]
@@ -1116,7 +1146,11 @@ def test_gq_draws_pd_default_layout(make_gq, inc_sample):
         (['draw__', 'chain__'], ['draw__', 'chain__']),
     ],
 )
-def test_gq_draws_pd_selected_layout(make_gq, variables, columns):
+def test_gq_draws_pd_selected_layout(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variables: str | list[str],
+    columns: list[str],
+) -> None:
     gq = make_gq('theta,z.1,z.2', 'z.1,z.2')
     expected = gq.draws_pd(inc_sample=True)[columns]
     pd.testing.assert_frame_equal(
@@ -1125,7 +1159,10 @@ def test_gq_draws_pd_selected_layout(make_gq, variables, columns):
 
 
 @pytest.mark.parametrize('inc_sample', [False, True])
-def test_gq_draws_pd_empty_vars(make_gq, inc_sample):
+def test_gq_draws_pd_empty_vars(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    inc_sample: bool,
+) -> None:
     gq = make_gq('theta', 'z')
     pd.testing.assert_frame_equal(
         gq.draws_pd(vars=[], inc_sample=inc_sample), gq.draws_pd()
@@ -1135,7 +1172,11 @@ def test_gq_draws_pd_empty_vars(make_gq, inc_sample):
 @pytest.mark.parametrize(
     'variable,inc_sample', [('unknown', True), ('theta', False)]
 )
-def test_gq_draws_pd_unknown_variable(make_gq, variable, inc_sample):
+def test_gq_draws_pd_unknown_variable(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variable: str,
+    inc_sample: bool,
+) -> None:
     gq = make_gq('theta', 'z')
     with pytest.raises(ValueError, match=f'Unknown variable: {variable}'):
         gq.draws_pd(vars=variable, inc_sample=inc_sample)
@@ -1159,15 +1200,15 @@ def test_gq_draws_pd_unknown_variable(make_gq, variable, inc_sample):
     ],
 )
 def test_gq_draws_xr_loads_each_source_once(
-    make_gq,
-    monkeypatch,
-    caplog,
-    variables,
-    inc_sample,
-    expected_names,
-    gq_calls,
-    previous_calls,
-):
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    variables: str | list[str] | None,
+    inc_sample: bool,
+    expected_names: list[str],
+    gq_calls: int,
+    previous_calls: int,
+) -> None:
     pytest.importorskip('xarray')
     gq = make_gq('theta,beta.1,beta.2,z.1,z.2', 'z.1,z.2,w')
     gq_draws = Mock(wraps=gq.draws)
@@ -1194,7 +1235,11 @@ def test_gq_draws_xr_loads_each_source_once(
 
 
 @pytest.mark.parametrize('inc_warmup', [False, True])
-def test_gq_draws_xr_saved_warmup_coordinates(make_gq, caplog, inc_warmup):
+def test_gq_draws_xr_saved_warmup_coordinates(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    inc_warmup: bool,
+) -> None:
     pytest.importorskip('xarray')
     gq = make_gq('theta', 'z')
     gq.chain_ids = [3, 7]
@@ -1230,7 +1275,11 @@ def test_gq_draws_xr_saved_warmup_coordinates(make_gq, caplog, inc_warmup):
 @pytest.mark.parametrize(
     'variable,inc_sample', [('unknown', True), ('theta', False)]
 )
-def test_gq_draws_xr_unknown_variable(make_gq, variable, inc_sample):
+def test_gq_draws_xr_unknown_variable(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variable: str,
+    inc_sample: bool,
+) -> None:
     pytest.importorskip('xarray')
     gq = make_gq('theta', 'z')
     with pytest.raises(ValueError, match=f'Unknown variable: {variable}'):

@@ -13,15 +13,14 @@ from typing import TypeAlias, cast
 
 from cmdstanpy.utils.filesystem import accompanying_json
 
-from .laplace import CmdStanLaplace
-from .mcmc import CmdStanMCMC
-from .metadata import (
-    AnyMethodConfig,
-    LaplaceConfig,
-    SampleConfig,
-    StanConfig,
-    parse_config,
+from .laplace import (
+    CmdStanLaplace,
+    _associate_laplace_files,
+    _discover_mode_files,
+    _validate_mode_compatible,
 )
+from .mcmc import CmdStanMCMC
+from .metadata import AnyMethodConfig, SampleConfig, StanConfig, parse_config
 from .mle import CmdStanMLE
 from .pathfinder import CmdStanPathfinder
 from .vb import CmdStanVB
@@ -135,30 +134,6 @@ def _validate_compatible(configs: Sequence[ParsedConfig]) -> None:
             )
 
 
-def _validate_mode_compatible(
-    laplace: ParsedConfig, mode: ParsedConfig
-) -> None:
-    left = laplace.value
-    right = mode.value
-    if (
-        left.model_name != right.model_name
-        or left.stan_major_version != right.stan_major_version
-        or left.stan_minor_version != right.stan_minor_version
-        or left.stan_patch_version != right.stan_patch_version
-    ):
-        raise ValueError(
-            f'Laplace config {laplace.path} and optimization mode config '
-            f'{mode.path} do not describe the same model and Stan version.'
-        )
-    laplace_jacobian = getattr(left.method_config, 'jacobian', None)
-    mode_jacobian = getattr(right.method_config, 'jacobian', None)
-    if laplace_jacobian != mode_jacobian:
-        raise ValueError(
-            f'Laplace config {laplace.path} and optimization mode config '
-            f'{mode.path} disagree on the jacobian setting.'
-        )
-
-
 def _discover_metric_files(csv_files: Sequence[Path]) -> tuple[Path, ...]:
     metrics = tuple(_json_for_csv(csv_file, 'metric') for csv_file in csv_files)
     return metrics if all(metric.exists() for metric in metrics) else ()
@@ -233,34 +208,14 @@ def _per_process_sample_candidate(
     )
 
 
-def _laplace_mode_name(config: ParsedConfig) -> str:
-    method_config = config.value.method_config
-    if not isinstance(method_config, LaplaceConfig):
-        raise ValueError(f'Config JSON {config.path} is not from Laplace.')
-    return Path(method_config.mode).name
-
-
 def _laplace_candidate(
     config: ParsedConfig,
     csv_file: Path,
     cache: dict[Path, ParsedConfig],
 ) -> FitFiles:
-    mode_name = _laplace_mode_name(config)
-    mode_csv = config.path.parent / mode_name
-    mode_config_path = _json_for_csv(mode_csv, 'config')
-    missing = [
-        str(path)
-        for path in (csv_file, mode_csv, mode_config_path)
-        if not path.is_file()
-    ]
-    if missing:
-        raise ValueError(
-            f'Laplace fit for {config.path} is missing its Laplace '
-            'CSV or optimization mode CSV/config JSON: '
-            + ', '.join(missing)
-            + '. Pass the Laplace and mode files explicitly, or call '
-            'CmdStanLaplace.from_files().'
-        )
+    mode_csv, mode_config_path = _discover_mode_files(
+        config.value, config.path, csv_file
+    )
     mode_config = cache.get(mode_config_path)
     if mode_config is None:
         mode_config = _read_config(mode_config_path)
@@ -275,7 +230,9 @@ def _laplace_candidate(
             f'Laplace mode config {mode_config_path} names output CSV '
             f'{configured_mode_csv.name}, expected {mode_csv.name}.'
         )
-    _validate_mode_compatible(config, mode_config)
+    _validate_mode_compatible(
+        config.value, mode_config.value, config.path, mode_config.path
+    )
     mode = FitFiles(
         method='optimize',
         csv_files=(mode_csv,),
@@ -555,68 +512,23 @@ def _explicit_sample(
     )
 
 
-def _unique_csv_for_config(
-    config: ParsedConfig, csv_files: Sequence[Path], role: str
-) -> Path:
-    matches = [path for path in csv_files if _config_csv_matches(config, path)]
-    if len(matches) != 1:
-        raise ValueError(
-            f'Cannot identify the {role} CSV associated with config JSON '
-            f'{config.path} among the explicitly supplied files. Use the '
-            'method-specific from_files() constructor for explicit association.'
-        )
-    return matches[0]
-
-
 def _explicit_laplace(
     configs: Sequence[ParsedConfig], csv_files: Sequence[Path]
 ) -> FitFiles:
-    laplace_configs = [
-        config
-        for config in configs
-        if config.value.method_config.method == 'laplace'
-    ]
-    optimize_configs = [
-        config
-        for config in configs
-        if config.value.method_config.method == 'optimize'
-    ]
-    if (
-        len(laplace_configs) != 1
-        or len(optimize_configs) != 1
-        or len(configs) != 2
-    ):
-        raise ValueError(
-            'Explicit Laplace loading requires exactly one Laplace config JSON '
-            'and the optimization mode config JSON. Alternatively call '
-            'CmdStanLaplace.from_files() with an explicit mode object.'
+    laplace_csv, laplace_config, mode_csv, mode_config = (
+        _associate_laplace_files(
+            {config.path: config.value for config in configs}, csv_files
         )
-    if len(csv_files) != 2:
-        raise ValueError(
-            'Explicit Laplace loading requires the Laplace CSV and the '
-            f'optimization mode CSV; found {len(csv_files)} CSV files.'
-        )
-    laplace = laplace_configs[0]
-    optimize = optimize_configs[0]
-    _validate_mode_compatible(laplace, optimize)
-    laplace_csv = _unique_csv_for_config(laplace, csv_files, 'Laplace')
-    mode_name = _laplace_mode_name(laplace)
-    mode_matches = [path for path in csv_files if path.name == mode_name]
-    if len(mode_matches) == 1:
-        mode_csv = mode_matches[0]
-    else:
-        mode_csv = _unique_csv_for_config(optimize, csv_files, 'mode')
-    if mode_csv == laplace_csv:
-        raise ValueError('Laplace CSV and optimization mode CSV must differ.')
+    )
     mode = FitFiles(
         method='optimize',
         csv_files=(mode_csv,),
-        config_files=(optimize.path,),
+        config_files=(mode_config,),
     )
     return FitFiles(
         method='laplace',
         csv_files=(laplace_csv,),
-        config_files=(laplace.path,),
+        config_files=(laplace_config,),
         mode_files=mode,
     )
 

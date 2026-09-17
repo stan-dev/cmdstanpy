@@ -6,7 +6,7 @@ generate quantities (GQ) method
 from __future__ import annotations
 
 import os
-from collections.abc import Hashable, Sequence, MutableMapping
+from collections.abc import Hashable, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Generic, NoReturn, TypeVar, overload
 
