@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, cmdstan_version_before
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before, delete_file
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -154,7 +154,7 @@ def test_model_info() -> None:
     info_dict = model.exe_info()
     assert info_dict['STAN_THREADS'].lower() == 'false'
 
-    os.remove(model.exe_file)
+    delete_file(model.exe_file)
     with pytest.raises(RuntimeError):
         model.exe_info()
 
@@ -299,7 +299,7 @@ def test_model_paths() -> None:
     assert model1.stan_file == dotdot_stan
     assert model1.exe_file == dotdot_exe
     os.remove(dotdot_stan)
-    os.remove(dotdot_exe)
+    delete_file(dotdot_exe)
 
     tilde_stan = os.path.realpath(
         os.path.join(os.path.expanduser('~'), 'bernoulli.stan')
@@ -316,7 +316,7 @@ def test_model_paths() -> None:
     assert model2.stan_file == tilde_stan
     assert model2.exe_file == tilde_exe
     os.remove(tilde_stan)
-    os.remove(tilde_exe)
+    delete_file(tilde_exe)
 
 
 def test_model_none() -> None:
@@ -362,7 +362,7 @@ def test_model_compile() -> None:
 @pytest.mark.parametrize("path", ["space in path", "tilde~in~path"])
 def test_model_compile_special_char(path: str) -> None:
     with tempfile.TemporaryDirectory(
-        prefix="cmdstanpy_testfolder_"
+        prefix="cmdstanpy_testfolder_", ignore_cleanup_errors=True
     ) as tmp_path:
         path_with_special_char = os.path.join(tmp_path, path)
         os.makedirs(path_with_special_char, exist_ok=True)

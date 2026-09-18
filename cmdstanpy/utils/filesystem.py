@@ -8,6 +8,7 @@ import platform
 import re
 import shutil
 import tempfile
+import time
 from typing import Any, Iterator, Mapping, Sequence
 
 import numpy as np
@@ -18,6 +19,27 @@ from .json import write_stan_json
 from .logging import get_logger
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
+
+
+def delete_file(path: str, timeout: float = 5.0) -> None:
+    """
+    Delete a file, retrying briefly on Windows.
+
+    Antivirus software scans a binary the first time it is executed and
+    holds it open while doing so, which makes Windows deny the delete with
+    ``PermissionError`` until the scan finishes.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            os.remove(path)
+            return
+        except FileNotFoundError:
+            return
+        except PermissionError:
+            if platform.system() != 'Windows' or time.monotonic() > deadline:
+                raise
+            time.sleep(0.1)
 
 
 def windows_short_path(path: str) -> str:

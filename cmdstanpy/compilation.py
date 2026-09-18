@@ -19,7 +19,7 @@ from cmdstanpy.utils.cmdstan import (
     stanc_path,
 )
 from cmdstanpy.utils.command import do_command
-from cmdstanpy.utils.filesystem import SanitizedOrTmpFilePath
+from cmdstanpy.utils.filesystem import SanitizedOrTmpFilePath, delete_file
 
 STANC_OPTS = [
     'O',
@@ -368,7 +368,7 @@ def compile_stan_file(
             os.remove(hpp_file)
         if os.path.exists(exe_file):
             get_logger().debug('Removing %s', exe_file)
-            os.remove(exe_file)
+            delete_file(exe_file)
 
         get_logger().info(
             'compiling stan file %s to exe file %s',
