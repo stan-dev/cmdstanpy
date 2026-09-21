@@ -25,14 +25,12 @@ from time import sleep
 from typing import Any
 
 from cmdstanpy import _DOT_CMDSTAN
-from cmdstanpy.utils import (
+from cmdstanpy.utils import pushd, validate_dir, wrap_url_progress_hook
+from cmdstanpy.utils.cmdstan import (
     determine_windows_arch,
     normalize_rtools_version,
-    pushd,
     rtools_compiler,
     rtools_layouts,
-    validate_dir,
-    wrap_url_progress_hook,
 )
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''

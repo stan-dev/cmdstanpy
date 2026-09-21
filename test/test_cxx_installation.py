@@ -13,7 +13,8 @@ import pytest
 
 from cmdstanpy import install_cxx_toolchain
 from cmdstanpy.utils import cmdstan as cmdstan_utils
-from cmdstanpy.utils import cxx_toolchain_path, make_command
+from cmdstanpy.utils import cxx_toolchain_path
+from cmdstanpy.utils.cmdstan import make_command
 
 SetArch = Callable[[str], None]
 

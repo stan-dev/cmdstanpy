@@ -40,12 +40,11 @@ from cmdstanpy import _DOT_CMDSTAN
 from cmdstanpy.utils import (
     cmdstan_path,
     do_command,
-    make_command,
     pushd,
     validate_dir,
     wrap_url_progress_hook,
 )
-from cmdstanpy.utils.cmdstan import get_download_url
+from cmdstanpy.utils.cmdstan import get_download_url, make_command
 
 from . import progress as progbar
 

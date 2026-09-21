@@ -67,7 +67,7 @@ jobs:
 
       - name: Report detected architecture
         run: |
-          python -c "import platform; from cmdstanpy.utils import determine_windows_arch as d; print(platform.machine(), d()); assert d() == '${{ matrix.arch }}'"
+          python -c "import platform; from cmdstanpy.utils.cmdstan import determine_windows_arch as d; print(platform.machine(), d()); assert d() == '${{ matrix.arch }}'"
 
       # The runner images ship their own RTools; make sure discovery only sees
       # what this job installed.
@@ -88,7 +88,8 @@ jobs:
         run: |
           import os, shutil, subprocess
           from cmdstanpy.install_cxx_toolchain import get_toolchain_version, is_installed
-          from cmdstanpy.utils import cxx_toolchain_path, make_command
+          from cmdstanpy.utils import cxx_toolchain_path
+          from cmdstanpy.utils.cmdstan import make_command
 
           install_dir = os.path.join(os.environ["RUNNER_TEMP"], "toolchain")
           version = "${{ matrix.rtools }}"
