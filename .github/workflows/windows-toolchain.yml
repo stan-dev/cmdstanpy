@@ -5,9 +5,6 @@ name: Windows toolchain
 
 on:
   workflow_dispatch:
-  schedule:
-    # weekly: catches CRAN retiring the pinned installer revisions
-    - cron: "0 6 * * 1"
   pull_request:
     paths:
       - "cmdstanpy/install_cxx_toolchain.py"
