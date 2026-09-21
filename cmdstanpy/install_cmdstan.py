@@ -39,7 +39,6 @@ from tqdm.auto import tqdm
 from cmdstanpy import _DOT_CMDSTAN
 from cmdstanpy.utils import (
     cmdstan_path,
-    determine_windows_arch,
     do_command,
     make_command,
     pushd,
@@ -74,9 +73,6 @@ def is_windows() -> bool:
 
 
 EXTENSION = '.exe' if is_windows() else ''
-
-# Windows ARM64 needs the Stan Math support added in stan-dev/math#3051
-MIN_WINDOWS_ARM64_VERSION = (2, 35)
 
 
 def get_headers() -> dict[str, str]:
@@ -572,26 +568,6 @@ def run_compiler_install(dir: str, verbose: bool, progress: bool) -> None:
     cxx_toolchain_path(cxx_version, dir)
 
 
-def validate_arm64_support(version: str) -> None:
-    """Raise if the requested CmdStan predates Windows ARM64 support."""
-    if not is_windows() or determine_windows_arch() != 'aarch64':
-        return
-    if version.startswith('git:'):
-        return
-    try:
-        parsed = tuple(
-            int(part) for part in version.split('-')[0].split('.')[:2]
-        )
-    except ValueError:
-        return
-    if parsed < MIN_WINDOWS_ARM64_VERSION:
-        minimum = '.'.join(str(part) for part in MIN_WINDOWS_ARM64_VERSION)
-        raise ValueError(
-            f'CmdStan {version} does not support Windows ARM64, '
-            f'version {minimum} or later is required.'
-        )
-
-
 def run_install(args: InteractiveSettings | InstallationSettings) -> None:
     """
     Run a (potentially interactive) installation
@@ -629,7 +605,6 @@ def run_install(args: InteractiveSettings | InstallationSettings) -> None:
                     'Connection to GitHub failed. '
                     'Check firewall settings or ensure this version exists.'
                 )
-            validate_arm64_support(args.version)
             shutil.rmtree(cmdstan_version, ignore_errors=True)
             retrieve_version(args.version, args.progress)
             install_version(

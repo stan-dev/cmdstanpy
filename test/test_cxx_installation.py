@@ -12,7 +12,6 @@ from typing import Callable
 import pytest
 
 from cmdstanpy import install_cxx_toolchain
-from cmdstanpy.install_cmdstan import validate_arm64_support
 from cmdstanpy.utils import cmdstan as cmdstan_utils
 from cmdstanpy.utils import cxx_toolchain_path, make_command
 
@@ -473,29 +472,6 @@ def test_install_defaults_to_latest_version(
         install_cxx_toolchain.run_rtools_install(
             {'version': None, 'dir': str(tmp_path)}
         )
-
-
-@mark_windows_only
-@pytest.mark.parametrize(
-    'arch,version,ok',
-    [
-        ('aarch64', '2.34.1', False),
-        ('aarch64', '2.35.0', True),
-        ('aarch64', '2.36.0', True),
-        ('aarch64', 'git:develop', True),
-        # the floor only applies to Windows ARM64
-        ('x86_64', '2.30.0', True),
-    ],
-)
-def test_validate_arm64_support(
-    set_arch: SetArch, arch: str, version: str, ok: bool
-) -> None:
-    set_arch(arch)
-    if ok:
-        validate_arm64_support(version)
-    else:
-        with pytest.raises(ValueError, match='does not support Windows ARM64'):
-            validate_arm64_support(version)
 
 
 # ---------------------------------------------------------------------------

@@ -226,7 +226,7 @@ Windows on ARM64
 
 CmdStan can be built on ARM 64-bit (``aarch64``) Windows machines using the
 ARM64 build of RTools 4.4 or 4.5, which CmdStanPy installs and detects
-automatically. CmdStan 2.35 or later is required.
+automatically.
 
 A Python interpreter built for Intel/AMD and running under emulation reports an
 ``x86_64`` architecture; in that case the Intel/AMD toolchain is used. The two
