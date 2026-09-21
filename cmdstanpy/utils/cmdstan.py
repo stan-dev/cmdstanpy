@@ -349,14 +349,9 @@ RTOOLS_LAYOUTS = (
     ),
     RToolsLayout('4.0', 'x86_64', ('mingw64', 'bin'), ('usr', 'bin'), ('g++',)),
     RToolsLayout('4.0', 'i686', ('mingw32', 'bin'), ('usr', 'bin'), ('g++',)),
-    RToolsLayout('3.5', 'x86_64', ('mingw_64', 'bin'), ('bin',), ('g++',)),
-    RToolsLayout('3.5', 'i686', ('mingw_32', 'bin'), ('bin',), ('g++',)),
 )
 
 _RTOOLS_VERSION_ALIASES = {
-    '3': '3.5',
-    '35': '3.5',
-    '3.5': '3.5',
     '4': '4.0',
     '40': '4.0',
     '4.0': '4.0',
@@ -384,8 +379,6 @@ _RTOOLS_DIR_NAMES = (
     'RTools43',
     'RTools42',
     'RTools40',
-    'RTools35',
-    'RTools30',
     'RTools',
 )
 

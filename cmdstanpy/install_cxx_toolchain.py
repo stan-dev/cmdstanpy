@@ -2,7 +2,7 @@
 """
 Download and install a C++ toolchain.
 Currently implemented platforms (platform.system)
-    Windows: RTools 3.5, 4.0 (default on x86), 4.4, 4.5 (default on ARM64)
+    Windows: RTools 4.0, 4.4, 4.5 (default)
     Darwin (macOS): Not implemented
     Linux: Not implemented
 Optional command line arguments:
@@ -56,7 +56,7 @@ def usage() -> None:
     """Print usage."""
     print(
         """Arguments:
-        -v (--version) : RTools version: 3.5, 4.0, 4.4 or 4.5
+        -v (--version) : RTools version: 4.0, 4.4 or 4.5
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
@@ -263,8 +263,6 @@ def get_url(version: str, arch: str | None = None) -> str:
     legacy = {
         ('4.0', 'x86_64'): 'rtools40-x86_64.exe',
         ('4.0', 'i686'): 'rtools40-i686.exe',
-        ('3.5', 'x86_64'): 'Rtools35.exe',
-        ('3.5', 'i686'): 'Rtools35.exe',
     }.get((version, arch), '')
     if legacy:
         return f'https://cran.r-project.org/bin/windows/Rtools/{legacy}'
@@ -307,8 +305,8 @@ def run_rtools_install(args: dict[str, Any]) -> None:
     if not url:
         raise ValueError(
             f'RTools {version} is not available for {arch}. '
-            f'Supported: {", ".join(sorted(RTOOLS_INSTALLERS))}, 4.0, 3.5 '
-            '(4.0 and 3.5 are x86 only).'
+            f'Supported: {", ".join(sorted(RTOOLS_INSTALLERS))}, 4.0 '
+            '(4.0 is x86 only).'
         )
 
     if 'verbose' in args:
@@ -372,7 +370,7 @@ def parse_cmdline_args() -> dict[str, Any]:
     parser.add_argument(
         '--version',
         '-v',
-        help="RTools version (3.5, 4.0, 4.4, 4.5), defaults to latest",
+        help="RTools version (4.0, 4.4, 4.5), defaults to latest",
     )
     parser.add_argument(
         '--dir', '-d', help="install directory, defaults to '~/.cmdstan"

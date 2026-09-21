@@ -160,7 +160,7 @@ This can be installed along with CmdStan when you invoke the function :meth:`cmd
 with argument ``compiler=True``.
 RTools is available for both Intel/AMD 64-bit (``x86_64``) and ARM 64-bit (``aarch64``) machines;
 CmdStanPy selects the matching build automatically.
-Older toolchains (RTools 4.0 and 3.5, Intel/AMD only) are still detected if already installed.
+Older toolchains (RTools 4.0, Intel/AMD only) are still detected if already installed.
 
 
 .. _install-cmdstan-fun:

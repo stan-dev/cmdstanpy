@@ -665,7 +665,6 @@ def parse_cmdline_args() -> dict[str, Any]:
     if is_windows():
         # use compiler installed with install_cxx_toolchain
         # Install a new compiler if compiler not found
-        # Search order is RTools40, RTools35
         parser.add_argument(
             '--compiler',
             '-c',

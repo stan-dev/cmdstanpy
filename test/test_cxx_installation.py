@@ -19,7 +19,6 @@ SetArch = Callable[[str], None]
 
 # (rtools version, arch) -> (compiler subdir, tool subdir, compiler exe)
 LAYOUTS = {
-    ('3.5', 'x86_64'): (('mingw_64', 'bin'), ('bin',), 'g++'),
     ('4.0', 'x86_64'): (('mingw64', 'bin'), ('usr', 'bin'), 'g++'),
     ('4.4', 'x86_64'): (
         ('x86_64-w64-mingw32.static.posix', 'bin'),
@@ -107,15 +106,15 @@ def make_toolchain(
         ('4.0', '4.0'),
         ('4', '4.0'),
         ('40', '4.0'),
-        ('3.5', '3.5'),
-        ('35', '3.5'),
-        ('3', '3.5'),
         ('4.2', '4.2'),
         ('42', '4.2'),
         ('4.4', '4.4'),
         ('44', '4.4'),
         ('4.5', '4.5'),
         ('45', '4.5'),
+        # no longer aliased, passed through unchanged
+        ('3.5', '3.5'),
+        ('35', '35'),
     ],
 )
 def test_normalize_version(given: str, expected: str) -> None:
@@ -161,13 +160,10 @@ def test_toolchain_name() -> None:
             'https://cran.r-project.org/bin/windows/Rtools/'
             'rtools40-x86_64.exe',
         ),
-        (
-            '3.5',
-            'x86_64',
-            'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe',
-        ),
         # no ARM64 builds exist before RTools 4.4
         ('4.0', 'aarch64', ''),
+        # RTools before 4.0 is no longer supported
+        ('3.5', 'x86_64', ''),
         ('3.5', 'aarch64', ''),
     ],
 )
