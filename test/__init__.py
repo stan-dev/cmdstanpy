@@ -2,8 +2,10 @@
 
 import contextlib
 import logging
+import os
 import platform
 import re
+import time
 from importlib import reload
 from types import ModuleType
 from typing import Generator, Optional, Type
@@ -17,6 +19,28 @@ mark_windows_only = pytest.mark.skipif(
 mark_not_windows = pytest.mark.skipif(
     platform.system() == 'Windows', reason='does not run on windows'
 )
+
+
+def delete_file(path: str, timeout: float = 5.0) -> None:
+    """
+    Delete a file, retrying briefly on Windows.
+
+    Antivirus software scans a binary the first time it is executed and
+    holds it open while doing so, which makes Windows deny the delete with
+    ``PermissionError`` until the scan finishes. Defender is disabled on the
+    x86_64 CI images but cannot be disabled on the ARM64 ones.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            os.remove(path)
+            return
+        except FileNotFoundError:
+            return
+        except PermissionError:
+            if platform.system() != 'Windows' or time.monotonic() > deadline:
+                raise
+            time.sleep(0.1)
 
 
 # pylint: disable=invalid-name

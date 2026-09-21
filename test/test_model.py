@@ -5,14 +5,14 @@ import os
 import re
 import shutil
 import tempfile
-from test import check_present
+from test import check_present, delete_file
 from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, cmdstan_version_before, delete_file
+from cmdstanpy.utils import EXTENSION, cmdstan_version_before
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')

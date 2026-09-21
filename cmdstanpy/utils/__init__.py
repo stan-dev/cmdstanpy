@@ -32,7 +32,6 @@ from .data_munging import build_xarray_data, flatten_chains
 from .filesystem import (
     SanitizedOrTmpFilePath,
     create_named_text_file,
-    delete_file,
     pushd,
     windows_short_path,
 )
@@ -116,7 +115,6 @@ __all__ = [
     'cmdstan_version_before',
     'create_named_text_file',
     'cxx_toolchain_path',
-    'delete_file',
     'determine_windows_arch',
     'do_command',
     'flatten_chains',
