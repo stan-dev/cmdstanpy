@@ -7,28 +7,37 @@ import logging
 import os
 import pickle
 import shutil
+from collections.abc import Callable
 from test import check_present, without_import
+from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
 import pytest
 
 import cmdstanpy.stanfit
-from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanGQ
+from cmdstanpy.stanfit import CmdStanGQ, CmdStanLaplace, CmdStanMLE
 from cmdstanpy.stanfit.mcmc import CmdStanMCMC
+from cmdstanpy.stanfit.metadata import (
+    GeneratedQuantitiesConfig,
+    GeneratedQuantitiesRunConfig,
+    InferenceMetadata,
+    LaplaceConfig,
+    LaplaceRunConfig,
+    SampleConfig,
+    SampleRunConfig,
+)
+from cmdstanpy.utils import flatten_chains
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
-def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
-    # fitted_params sample - list of filenames
+def test_from_output_files_files(caplog: pytest.LogCaptureFixture) -> None:
+    # fitted_params sample - config JSONs are discovered for a CSV-only list
     goodfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', 'bern')
-    csv_files = []
-    for i in range(4):
-        csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
+    csv_files = ['{}-{}.csv'.format(goodfiles_path, i + 1) for i in range(4)]
 
     # gq_model
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
@@ -37,14 +46,12 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
 
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=csv_files)
 
-    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
     assert 'method=generate_quantities' in repr(bern_gqs)
 
-    assert bern_gqs.runset.chains == 4
-    for i in range(bern_gqs.runset.chains):
-        assert bern_gqs.runset._retcode(i) == 0
-        csv_file = bern_gqs.runset.csv_files[i]
+    assert bern_gqs.chains == 4
+    for i in range(bern_gqs.chains):
+        csv_file = bern_gqs.csv_files[i]
         assert os.path.exists(csv_file)
 
     column_names = [
@@ -93,11 +100,9 @@ def test_from_csv_files(caplog: pytest.LogCaptureFixture) -> None:
 
 
 def test_pd_xr_agreement() -> None:
-    # fitted_params sample - list of filenames
+    # fitted_params sample - config JSONs are discovered for a CSV-only list
     goodfiles_path = os.path.join(DATAFILES_PATH, 'runset-good', 'bern')
-    csv_files = []
-    for i in range(4):
-        csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
+    csv_files = ['{}-{}.csv'.format(goodfiles_path, i + 1) for i in range(4)]
 
     # gq_model
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
@@ -131,7 +136,7 @@ def test_pd_xr_agreement() -> None:
     )
 
 
-def test_from_csv_files_bad() -> None:
+def test_from_output_files_files_bad() -> None:
     # gq model
     stan = os.path.join(DATAFILES_PATH, 'bernoulli_ppc.stan')
     model = CmdStanModel(stan_file=stan)
@@ -145,9 +150,7 @@ def test_from_csv_files_bad() -> None:
     goodfiles_path = os.path.join(
         DATAFILES_PATH, 'runset-bad', 'bad-draws-bern'
     )
-    csv_files = []
-    for i in range(4):
-        csv_files.append('{}-{}.csv'.format(goodfiles_path, i + 1))
+    csv_files = ['{}-{}.csv'.format(goodfiles_path, i + 1) for i in range(4)]
 
     with pytest.raises(Exception, match='Invalid sample from Stan CSV files'):
         model.generate_quantities(data=jdata, previous_fit=csv_files)
@@ -171,13 +174,11 @@ def test_from_previous_fit() -> None:
 
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
-    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
     assert 'method=generate_quantities' in repr(bern_gqs)
-    assert bern_gqs.runset.chains == 4
-    for i in range(bern_gqs.runset.chains):
-        assert bern_gqs.runset._retcode(i) == 0
-        csv_file = bern_gqs.runset.csv_files[i]
+    assert bern_gqs.chains == 4
+    for i in range(bern_gqs.chains):
+        csv_file = bern_gqs.csv_files[i]
         assert os.path.exists(csv_file)
 
 
@@ -532,7 +533,7 @@ def test_serialization() -> None:
     fit1 = model.generate_quantities(data=jdata, previous_fit=fit_sampling)
 
     dumped = pickle.dumps(fit1)
-    shutil.rmtree(fit1.runset._outdir)
+    shutil.rmtree(os.path.dirname(fit1.csv_files[0]))
     fit2: CmdStanGQ[CmdStanMCMC] = pickle.loads(dumped)
     variables1 = fit1.stan_variables()
     variables2 = fit2.stan_variables()
@@ -555,13 +556,10 @@ def test_from_optimization() -> None:
 
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
-    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
-
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
     assert 'method=generate_quantities' in repr(bern_gqs)
-    assert bern_gqs.runset.chains == 1
-    assert bern_gqs.runset._retcode(0) == 0
-    csv_file = bern_gqs.runset.csv_files[0]
+    assert bern_gqs.chains == 1
+    csv_file = bern_gqs.csv_files[0]
     assert os.path.exists(csv_file)
 
     assert bern_gqs.draws().shape == (1, 1, 10)
@@ -623,6 +621,28 @@ def test_opt_save_iterations(caplog: pytest.LogCaptureFixture) -> None:
     assert bern_gqs.draws(
         concat_chains=True, inc_warmup=True, inc_sample=True
     ).shape == (iters, 13)
+
+    # The final estimate and every saved iteration must remain aligned with GQ.
+    expected = np.concatenate(
+        [bern_fit.optimized_iterations_np[:, None, :], bern_gqs._draws],
+        axis=2,
+    )
+    for include_iterations in (False, True):
+        selected = expected if include_iterations else expected[-1:]
+        for concat_chains in (False, True):
+            np.testing.assert_array_equal(
+                bern_gqs.draws(
+                    inc_iterations=include_iterations,
+                    inc_sample=True,
+                    concat_chains=concat_chains,
+                ),
+                flatten_chains(selected) if concat_chains else selected,
+            )
+        frame = bern_gqs.draws_pd(
+            inc_warmup=include_iterations, inc_sample=True
+        )
+        columns = list(bern_fit.column_names + bern_gqs.column_names)
+        np.testing.assert_array_equal(frame[columns], flatten_chains(selected))
 
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta')
@@ -699,12 +719,10 @@ def test_from_vb() -> None:
 
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
-    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
     assert 'method=generate_quantities' in repr(bern_gqs)
-    assert bern_gqs.runset.chains == 1
-    assert bern_gqs.runset._retcode(0) == 0
-    csv_file = bern_gqs.runset.csv_files[0]
+    assert bern_gqs.chains == 1
+    csv_file = bern_gqs.csv_files[0]
     assert os.path.exists(csv_file)
 
     assert bern_gqs.draws().shape == (1000, 1, 10)
@@ -717,6 +735,16 @@ def test_from_vb() -> None:
         == bern_gqs.previous_fit.variational_sample_pd.shape[1]
         + bern_gqs.draws_pd().shape[1]
     )
+
+    # pandas must exclude the mean row just like the NumPy accessor.
+    columns = list(bern_fit.column_names + bern_gqs.column_names)
+    for inc_warmup in (False, True):
+        frame = bern_gqs.draws_pd(inc_sample=True, inc_warmup=inc_warmup)
+        expected = np.concatenate(
+            [bern_fit.variational_sample, flatten_chains(bern_gqs._draws[1:])],
+            axis=1,
+        )
+        np.testing.assert_array_equal(frame[columns], expected)
 
     # stan_variable
     theta = bern_gqs.stan_variable(var='theta', mean=False)
@@ -788,12 +816,10 @@ def test_from_pathfinder() -> None:
 
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
-    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
     assert 'method=generate_quantities' in repr(bern_gqs)
-    assert bern_gqs.runset.chains == 1
-    assert bern_gqs.runset._retcode(0) == 0
-    csv_file = bern_gqs.runset.csv_files[0]
+    assert bern_gqs.chains == 1
+    csv_file = bern_gqs.csv_files[0]
     assert os.path.exists(csv_file)
 
     assert bern_gqs.draws().shape == (1000, 1, 10)
@@ -824,12 +850,10 @@ def test_from_laplace() -> None:
 
     bern_gqs = model.generate_quantities(data=jdata, previous_fit=bern_fit)
 
-    assert bern_gqs.runset._args.method == Method.GENERATE_QUANTITIES
     assert 'CmdStanGQ: model=bernoulli_ppc' in repr(bern_gqs)
     assert 'method=generate_quantities' in repr(bern_gqs)
-    assert bern_gqs.runset.chains == 1
-    assert bern_gqs.runset._retcode(0) == 0
-    csv_file = bern_gqs.runset.csv_files[0]
+    assert bern_gqs.chains == 1
+    csv_file = bern_gqs.csv_files[0]
     assert os.path.exists(csv_file)
 
     assert bern_gqs.draws().shape == (1000, 1, 10)
@@ -848,3 +872,415 @@ def test_from_laplace() -> None:
     assert theta.shape == (1000,)
     y_rep = bern_gqs.stan_variable(var='y_rep')
     assert y_rep.shape == (1000, 10)
+
+
+@pytest.fixture(name='make_gq')
+def make_gq_fixture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Callable[[str, str], CmdStanGQ[CmdStanMCMC]]:
+    # These tests exercise accessors, not CSV parsing. Populate the draw caches
+    # directly and skip the sampler's eager CSV validation.
+    monkeypatch.setattr(CmdStanMCMC, '_validate_csv_files', lambda self: None)
+
+    def make(previous_header: str, gq_header: str) -> CmdStanGQ[CmdStanMCMC]:
+        previous = CmdStanMCMC(
+            metadata=InferenceMetadata(previous_header),
+            model_name='previous',
+            csv_files=['chain-1.csv', 'chain-2.csv'],
+            chain_ids=[1, 2],
+            config=SampleRunConfig(
+                model_name='previous',
+                stan_major_version='2',
+                stan_minor_version='39',
+                stan_patch_version='0',
+                method_config=SampleConfig(
+                    algorithm='fixed_param', num_samples=2, num_warmup=0
+                ),
+            ),
+        )
+        previous._draws = np.arange(
+            4 * len(previous.column_names), dtype=float
+        ).reshape(2, 2, -1)
+        gq = CmdStanGQ(
+            previous_fit=previous,
+            metadata=InferenceMetadata(gq_header),
+            model_name='generated',
+            csv_files=['gq-1.csv', 'gq-2.csv'],
+            chain_ids=[1, 2],
+            config=GeneratedQuantitiesRunConfig(
+                model_name='generated',
+                stan_major_version='2',
+                stan_minor_version='39',
+                stan_patch_version='0',
+                method_config=GeneratedQuantitiesConfig(
+                    fitted_params='chain-1.csv', num_chains=2
+                ),
+            ),
+        )
+        gq._draws = 100 + np.arange(
+            4 * len(gq.column_names), dtype=float
+        ).reshape(2, 2, -1)
+        return gq
+
+    return make
+
+
+@pytest.mark.parametrize('gq_header', ['z', 'z.1,z.2'])
+@pytest.mark.parametrize('concat_chains', [False, True])
+def test_draws_duplicate_columns(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    gq_header: str,
+    concat_chains: bool,
+) -> None:
+    gq = make_gq('theta,' + gq_header, gq_header)
+    expected = np.concatenate(
+        [gq.previous_fit._draws[:, :, :1], gq._draws], axis=2
+    )
+    if concat_chains:
+        expected = flatten_chains(expected)
+    np.testing.assert_array_equal(
+        gq.draws(inc_sample=True, concat_chains=concat_chains), expected
+    )
+
+
+@pytest.mark.parametrize('variables', [['theta', 'z'], ['z', 'theta']])
+def test_draws_pd_mixed_container_selection(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variables: list[str],
+) -> None:
+    gq = make_gq('theta', 'z.1,z.2')
+    result = gq.draws_pd(vars=variables, inc_sample=True)
+    columns = [
+        column
+        for var in variables
+        for column in (['z[1]', 'z[2]'] if var == 'z' else ['theta'])
+    ]
+    assert list(result.columns) == columns
+    np.testing.assert_array_equal(
+        result['theta'], flatten_chains(gq.previous_fit._draws)[:, 0]
+    )
+    np.testing.assert_array_equal(
+        result[['z[1]', 'z[2]']], flatten_chains(gq._draws)
+    )
+
+
+def test_draws_pd_previous_container_selection(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+) -> None:
+    gq = make_gq('beta.1,beta.2', 'z')
+    result = gq.draws_pd(vars=['beta'], inc_sample=True)
+    assert list(result.columns) == ['beta[1]', 'beta[2]']
+    np.testing.assert_array_equal(
+        result, flatten_chains(gq.previous_fit._draws)
+    )
+
+
+def test_draws_pd_previous_laplace_container_selection(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+) -> None:
+    template = make_gq('beta.1,beta.2', 'z')
+    previous = CmdStanLaplace(
+        metadata=template.previous_fit.metadata,
+        model_name='previous',
+        csv_file='laplace.csv',
+        mode=Mock(spec=CmdStanMLE),
+        config=LaplaceRunConfig(
+            model_name='previous',
+            stan_major_version='2',
+            stan_minor_version='39',
+            stan_patch_version='0',
+            method_config=LaplaceConfig(mode='mode.csv', draws=2),
+        ),
+    )
+    previous._draws = template.previous_fit._draws[:, 0, :]
+    gq = CmdStanGQ(
+        previous_fit=previous,
+        metadata=template.metadata,
+        model_name=template.model_name,
+        csv_files=['gq.csv'],
+        chain_ids=[1],
+        config=template.config,
+    )
+    gq._draws = template._draws[:, :1, :]
+    result = gq.draws_pd(vars=['beta'], inc_sample=True)
+    assert list(result.columns) == ['beta[1]', 'beta[2]']
+    np.testing.assert_array_equal(result, previous._draws)
+
+
+def test_draws_xr_does_not_mutate_vars(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+) -> None:
+    pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    variables = ['theta', 'z']
+    result = gq.draws_xr(vars=variables, inc_sample=True)
+    assert variables == ['theta', 'z']
+    np.testing.assert_array_equal(
+        result.theta.values, gq.previous_fit._draws[:, :, 0].T
+    )
+    np.testing.assert_array_equal(result.z.values, gq._draws[:, :, 0].T)
+
+
+@pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_default_draws_no_warmup_warning(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    accessor: str,
+    inc_sample: bool,
+) -> None:
+    if accessor == 'draws_xr':
+        pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        getattr(gq, accessor)(inc_sample=inc_sample)
+    assert not caplog.records
+
+
+@pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
+def test_gq_only_draws_do_not_convert_previous_fit(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    monkeypatch: pytest.MonkeyPatch,
+    accessor: str,
+) -> None:
+    if accessor == 'draws_xr':
+        pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    unexpected = Mock(side_effect=AssertionError('Previous draws not needed'))
+    monkeypatch.setattr(CmdStanMCMC, 'draws', unexpected)
+    monkeypatch.setattr(CmdStanMCMC, 'draws_pd', unexpected)
+    getattr(gq, accessor)()
+    # Even with inc_sample, an explicitly GQ-only pandas request needs no
+    # previous-fit conversion.
+    if accessor == 'draws_pd':
+        gq.draws_pd(vars=['z'], inc_sample=True)
+    unexpected.assert_not_called()
+
+
+@pytest.mark.parametrize('accessor', ['draws', 'draws_pd', 'draws_xr'])
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_explicit_missing_warmup_warns_once(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    accessor: str,
+    inc_sample: bool,
+) -> None:
+    if accessor == 'draws_xr':
+        pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        getattr(gq, accessor)(inc_warmup=True, inc_sample=inc_sample)
+    assert len(caplog.records) == 1
+    assert "Sample doesn't contain draws from warmup" in caplog.text
+
+
+@pytest.mark.parametrize('inc_warmup', [False, True])
+@pytest.mark.parametrize('inc_sample', [False, True])
+@pytest.mark.parametrize('concat_chains', [False, True])
+def test_gq_saved_warmup_alignment(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    inc_warmup: bool,
+    inc_sample: bool,
+    concat_chains: bool,
+) -> None:
+    gq = make_gq('theta', 'z')
+    config = gq.previous_fit.config.method_config
+    config.save_warmup = True
+    config.num_warmup = 1
+    gq.previous_fit._draws = np.concatenate(
+        [np.full((1, 2, 1), -10.0), gq.previous_fit._draws], axis=0
+    )
+    gq._draws = np.concatenate([np.full((1, 2, 1), -20.0), gq._draws], axis=0)
+    expected = gq._draws
+    if inc_sample:
+        expected = np.concatenate([gq.previous_fit._draws, expected], axis=2)
+    if not inc_warmup:
+        expected = expected[1:]
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        result = gq.draws(
+            inc_warmup=inc_warmup,
+            inc_sample=inc_sample,
+            concat_chains=concat_chains,
+        )
+        frame = gq.draws_pd(inc_warmup=inc_warmup, inc_sample=inc_sample)
+    np.testing.assert_array_equal(
+        result, flatten_chains(expected) if concat_chains else expected
+    )
+    columns = ['theta', 'z'] if inc_sample else ['z']
+    np.testing.assert_array_equal(frame[columns], flatten_chains(expected))
+    assert not caplog.records
+
+
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_draws_pd_default_layout(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    inc_sample: bool,
+) -> None:
+    gq = make_gq('lp__,theta,z.1,z.2', 'z.1,z.2')
+    # pandas has historically used chain ordinals, not configured chain IDs.
+    gq.chain_ids = [3, 7]
+    gq.previous_fit.chain_ids = [3, 7]
+    expected = pd.DataFrame(
+        {
+            'chain__': [1.0, 1.0, 2.0, 2.0],
+            'iter__': [1.0, 2.0, 1.0, 2.0],
+            'draw__': [1.0, 2.0, 3.0, 4.0],
+            'z[1]': flatten_chains(gq._draws)[:, 0],
+            'z[2]': flatten_chains(gq._draws)[:, 1],
+        }
+    )
+    if inc_sample:
+        previous = flatten_chains(gq.previous_fit._draws)
+        expected.insert(0, 'theta', previous[:, 1])
+        expected.insert(0, 'lp__', previous[:, 0])
+    pd.testing.assert_frame_equal(gq.draws_pd(inc_sample=inc_sample), expected)
+
+
+@pytest.mark.parametrize(
+    'variables,columns',
+    [
+        ('z', ['z[1]', 'z[2]']),
+        (['z', 'theta', 'z'], ['z[1]', 'z[2]', 'theta']),
+        (['theta', 'iter__', 'z'], ['theta', 'iter__', 'z[1]', 'z[2]']),
+        (['draw__', 'chain__'], ['draw__', 'chain__']),
+    ],
+)
+def test_gq_draws_pd_selected_layout(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variables: str | list[str],
+    columns: list[str],
+) -> None:
+    gq = make_gq('theta,z.1,z.2', 'z.1,z.2')
+    expected = gq.draws_pd(inc_sample=True)[columns]
+    pd.testing.assert_frame_equal(
+        gq.draws_pd(vars=variables, inc_sample=True), expected
+    )
+
+
+@pytest.mark.parametrize('inc_sample', [False, True])
+def test_gq_draws_pd_empty_vars(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    inc_sample: bool,
+) -> None:
+    gq = make_gq('theta', 'z')
+    pd.testing.assert_frame_equal(
+        gq.draws_pd(vars=[], inc_sample=inc_sample), gq.draws_pd()
+    )
+
+
+@pytest.mark.parametrize(
+    'variable,inc_sample', [('unknown', True), ('theta', False)]
+)
+def test_gq_draws_pd_unknown_variable(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variable: str,
+    inc_sample: bool,
+) -> None:
+    gq = make_gq('theta', 'z')
+    with pytest.raises(ValueError, match=f'Unknown variable: {variable}'):
+        gq.draws_pd(vars=variable, inc_sample=inc_sample)
+
+
+@pytest.mark.parametrize(
+    'variables,inc_sample,expected_names,gq_calls,previous_calls',
+    [
+        (None, True, ['z', 'w', 'theta', 'beta'], 1, 1),
+        (None, False, ['z', 'w'], 1, 0),
+        (
+            ['beta', 'z', 'theta', 'w', 'z'],
+            True,
+            ['z', 'w', 'beta', 'theta'],
+            1,
+            1,
+        ),
+        (['theta', 'beta'], True, ['theta', 'beta'], 0, 1),
+        ('z', True, ['z'], 1, 0),
+        ([], True, [], 0, 0),
+    ],
+)
+def test_gq_draws_xr_loads_each_source_once(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    variables: str | list[str] | None,
+    inc_sample: bool,
+    expected_names: list[str],
+    gq_calls: int,
+    previous_calls: int,
+) -> None:
+    pytest.importorskip('xarray')
+    gq = make_gq('theta,beta.1,beta.2,z.1,z.2', 'z.1,z.2,w')
+    gq_draws = Mock(wraps=gq.draws)
+    previous_draws = Mock(wraps=gq.previous_fit.draws)
+    monkeypatch.setattr(gq, 'draws', gq_draws)
+    monkeypatch.setattr(gq.previous_fit, 'draws', previous_draws)
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        result = gq.draws_xr(
+            vars=variables, inc_sample=inc_sample, inc_warmup=True
+        )
+    assert list(result.data_vars) == expected_names
+    assert gq_draws.call_count == gq_calls
+    assert previous_draws.call_count == previous_calls
+    assert len(caplog.records) == 1
+    assert "Sample doesn't contain draws from warmup" in caplog.text
+    for name in expected_names:
+        source = gq if name in gq.metadata.stan_vars else gq.previous_fit
+        expected = source.metadata.stan_vars[name].extract_reshape(
+            source._draws
+        )
+        np.testing.assert_array_equal(
+            result[name].values, expected.swapaxes(0, 1)
+        )
+
+
+@pytest.mark.parametrize('inc_warmup', [False, True])
+def test_gq_draws_xr_saved_warmup_coordinates(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    caplog: pytest.LogCaptureFixture,
+    inc_warmup: bool,
+) -> None:
+    pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    gq.chain_ids = [3, 7]
+    gq.previous_fit.chain_ids = [3, 7]
+    config = gq.previous_fit.config.method_config
+    config.save_warmup = True
+    config.num_warmup = 1
+    gq.previous_fit._draws = np.concatenate(
+        [np.full((1, 2, 1), -10.0), gq.previous_fit._draws], axis=0
+    )
+    gq._draws = np.concatenate([np.full((1, 2, 1), -20.0), gq._draws], axis=0)
+    with caplog.at_level(logging.WARNING, logger='cmdstanpy'):
+        result = gq.draws_xr(inc_sample=True, inc_warmup=inc_warmup)
+    start = 0 if inc_warmup else 1
+    np.testing.assert_array_equal(result.z.values, gq._draws[start:, :, 0].T)
+    np.testing.assert_array_equal(
+        result.theta.values, gq.previous_fit._draws[start:, :, 0].T
+    )
+    np.testing.assert_array_equal(result.chain.values, [3, 7])
+    np.testing.assert_array_equal(result.draw.values, np.arange(3 - start))
+    assert result.z.dims == ('chain', 'draw')
+    attrs = {
+        'stan_version': '2.39.0',
+        'model': 'previous',
+        'num_draws_sampling': 2,
+    }
+    if inc_warmup:
+        attrs['num_draws_warmup'] = 1
+    assert result.attrs == attrs
+    assert not caplog.records
+
+
+@pytest.mark.parametrize(
+    'variable,inc_sample', [('unknown', True), ('theta', False)]
+)
+def test_gq_draws_xr_unknown_variable(
+    make_gq: Callable[[str, str], CmdStanGQ[CmdStanMCMC]],
+    variable: str,
+    inc_sample: bool,
+) -> None:
+    pytest.importorskip('xarray')
+    gq = make_gq('theta', 'z')
+    with pytest.raises(ValueError, match=f'Unknown variable: {variable}'):
+        gq.draws_xr(vars=variable, inc_sample=inc_sample)

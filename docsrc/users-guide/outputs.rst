@@ -3,14 +3,22 @@
 Controlling Outputs
 ===================
 
-CSV File Outputs
-----------------
+File Outputs
+------------
 
-Underlyingly, the CmdStan outputs are a set of per-chain
-`Stan CSV files <https://mc-stan.org/docs/cmdstan-guide/stan_csv_apdx.html#mcmc-sampler-csv-output>`__.
-The filenames follow the template '<model_name>-<YYYYMMDDHHMMSS>_<chain_id>'
-plus the file suffix '.csv'. CmdStanPy also captures the per-chain console and
-error messages.
+CmdStanPy's inference methods produce a bundle of files containing draws or
+estimates, the run configuration, and other method-specific information. When
+sampling with :meth:`CmdStanModel.sample`, the primary outputs are a set of
+per-chain `Stan CSV files
+<https://mc-stan.org/docs/cmdstan-guide/stan_csv_apdx.html#mcmc-sampler-csv-output>`__.
+Their filenames generally follow the pattern
+``<model_name>-<YYYYMMDDHHMMSS>_<chain_id>.csv``.
+
+Each CmdStan process also writes a configuration JSON file that records the
+arguments passed to it. CmdStanPy uses the configuration and CSV files to
+faithfully reconstruct a fit object such as :class:`CmdStanMCMC`. CmdStanPy
+also captures console messages in text files. Depending on the method and its
+options, the bundle can include metric, diagnostic, and profiling files.
 
 .. ipython:: python
 
@@ -26,9 +34,9 @@ error messages.
     print(fit)
 
 The ``output_dir`` argument is an optional argument which specifies
-the path to the output directory used by CmdStan.
-If this argument is omitted, the output files are written
-to a temporary directory which is deleted when the current Python session is terminated.
+the path to the output directory used by CmdStan. If this argument is omitted,
+the output files are written to a temporary directory which is deleted when the
+current Python session is terminated.
 
 .. ipython:: python
 
@@ -36,13 +44,13 @@ to a temporary directory which is deleted when the current Python session is ter
 
     !ls outputs/
 
-Alternatively, the :meth:`~CmdStanMCMC.save_csvfiles` function moves the CSV files
-to a specified directory.
+Alternatively, the :meth:`~CmdStanMCMC.save_output_files` method moves the
+fit's output files to a specified directory.
 
 .. ipython:: python
 
     fit = model.sample(data=data_file)
-    fit.save_csvfiles(dir='some/path')
+    fit.save_output_files(dir='some/path')
 
     !ls some/path
 

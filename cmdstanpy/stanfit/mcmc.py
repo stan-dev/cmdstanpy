@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import math
 import os
+from collections.abc import Hashable, MutableMapping, Sequence
+from dataclasses import dataclass, field
 from io import StringIO
-from typing import Any, Hashable, MutableMapping, Sequence
+from typing import Any, ClassVar
 
 import numpy as np
 import pandas as pd
@@ -19,12 +21,10 @@ try:
 except ImportError:
     XARRAY_INSTALLED = False
 
-from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP, _TMPDIR
-from cmdstanpy.cmdstan_args import Method, SamplerArgs
+from cmdstanpy import _TMPDIR
 from cmdstanpy.utils import (
     EXTENSION,
     build_xarray_data,
-    check_sampler_csv,
     cmdstan_path,
     create_named_text_file,
     do_command,
@@ -33,72 +33,128 @@ from cmdstanpy.utils import (
     stancsv,
 )
 
-from .metadata import InferenceMetadata, MetricInfo
-from .runset import RunSet
+from .base import MultiChainFit
+from .metadata import MetricInfo, SampleConfig, SampleRunConfig, StanConfig
 
 
-class CmdStanMCMC:
+@dataclass(kw_only=True)
+class CmdStanMCMC(MultiChainFit[SampleConfig]):
     """
     Container for outputs from CmdStan sampler run.
     Provides methods to summarize and diagnose the model fit
     and accessor methods to access the entire sample or
-    individual items. Created by :meth:`CmdStanModel.sample`
+    individual items. Created by :meth:`CmdStanModel.sample`.
 
     The sample is lazily instantiated on first access of either
     the resulting sample or the HMC tuning parameters, i.e., the
     step size and metric.
     """
 
-    # pylint: disable=too-many-public-methods
-    def __init__(
-        self,
-        runset: RunSet,
-    ) -> None:
-        """Initialize object."""
-        if not runset.method == Method.SAMPLE:
-            raise ValueError(
-                'Wrong runset method, expecting sample runset, '
-                'found method {}'.format(runset.method)
-            )
-        self.runset = runset
+    # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
-        # info from runset to be exposed
-        sampler_args = self.runset._args.method_args
-        assert isinstance(
-            sampler_args, SamplerArgs
-        )  # make the typechecker happy
-        self._iter_sampling: int = _CMDSTAN_SAMPLING
-        if sampler_args.iter_sampling is not None:
-            self._iter_sampling = sampler_args.iter_sampling
-        self._iter_warmup: int = _CMDSTAN_WARMUP
-        if sampler_args.iter_warmup is not None:
-            self._iter_warmup = sampler_args.iter_warmup
-        self._thin: int = _CMDSTAN_THIN
-        if sampler_args.thin is not None:
-            self._thin = sampler_args.thin
-        self._is_fixed_param = sampler_args.fixed_param
-        self._save_warmup: bool = sampler_args.save_warmup
-        self._sig_figs = runset._args.sig_figs
+    metric_files: list[str] | None = None
+    diagnostic_files: list[str] | None = None
+    profile_files: list[str] | None = None
+    sig_figs: int | None = None
 
-        # info from CSV values, instantiated lazily
-        self._draws: np.ndarray = np.array(())
-        # only valid when not is_fixed_param
-        self._metric_type: str | None = None
-        self._metric: np.ndarray = np.array(())
-        self._step_size: np.ndarray = np.array(())
-        self._divergences: np.ndarray = np.zeros(self.runset.chains, dtype=int)
-        self._max_treedepths: np.ndarray = np.zeros(
-            self.runset.chains, dtype=int
-        )
-        self._chain_time: list[dict[str, float]] = []
+    _FILE_ATTRS: ClassVar[tuple[str, ...]] = (
+        'csv_files',
+        'config_files',
+        'metric_files',
+        'stdout_files',
+        'diagnostic_files',
+        'profile_files',
+    )
 
-        # info from CSV header and initial and final comment blocks
-        config = self._validate_csv_files()
-        self._metadata: InferenceMetadata = InferenceMetadata(config)
-        self._chain_metric_info: list[MetricInfo] = []
+    _draws: np.ndarray = field(default_factory=lambda: np.array(()), init=False)
+    _metric_type: str | None = field(default=None, init=False)
+    _metric: np.ndarray = field(
+        default_factory=lambda: np.array(()), init=False
+    )
+    _step_size: np.ndarray = field(
+        default_factory=lambda: np.array(()), init=False
+    )
+    _divergences: np.ndarray = field(
+        default_factory=lambda: np.array(()), init=False
+    )
+    _max_treedepths: np.ndarray = field(
+        default_factory=lambda: np.array(()), init=False
+    )
 
+    def __post_init__(self) -> None:
+        self._divergences = np.zeros(self.chains, dtype=int)
+        self._max_treedepths = np.zeros(self.chains, dtype=int)
+        super().__post_init__()
+        self._validate_csv_files()
         if not self._is_fixed_param:
             self._check_sampler_diagnostics()
+
+    @classmethod
+    def from_files(
+        cls,
+        csv_files: Sequence[str | os.PathLike],
+        config_files: Sequence[str | os.PathLike] | str | os.PathLike,
+        metric_files: Sequence[str | os.PathLike] | None = None,
+        stdout_files: Sequence[str | os.PathLike] | None = None,
+        diagnostic_files: Sequence[str | os.PathLike] | None = None,
+        profile_files: Sequence[str | os.PathLike] | None = None,
+        chain_ids: Sequence[int] | None = None,
+        sig_figs: int | None = None,
+    ) -> CmdStanMCMC:
+        """Build a CmdStanMCMC from output files.
+
+        ``config_files`` may be a single path (when CmdStan ran multiple chains
+        in one process) or a per-chain list.
+        """
+        kwargs = cls._from_files_kwargs(
+            csv_files, config_files, stdout_files, chain_ids, SampleRunConfig
+        )
+        stan_config = kwargs['config']
+        chains = len(kwargs['csv_files'])
+
+        if sig_figs is None and stan_config.output.sig_figs > 0:
+            # A value of -1 is CmdStan's default (six digits).
+            sig_figs = stan_config.output.sig_figs
+
+        def _maybe_list(
+            files: Sequence[str | os.PathLike] | None,
+        ) -> list[str] | None:
+            return [os.fspath(f) for f in files] if files is not None else None
+
+        metric_files_list = _maybe_list(metric_files)
+        if metric_files_list is not None and len(metric_files_list) != chains:
+            raise ValueError(
+                f'Expected one metric file per chain ({chains}), '
+                f'got {len(metric_files_list)}.'
+            )
+
+        return cls(
+            metric_files=metric_files_list,
+            diagnostic_files=_maybe_list(diagnostic_files),
+            profile_files=_maybe_list(profile_files),
+            sig_figs=sig_figs,
+            **kwargs,
+        )
+
+    @property
+    def _iter_sampling(self) -> int:
+        return self.config.method_config.num_samples
+
+    @property
+    def _iter_warmup(self) -> int:
+        return self.config.method_config.num_warmup
+
+    @property
+    def _thin(self) -> int:
+        return self.config.method_config.thin
+
+    @property
+    def _save_warmup(self) -> bool:
+        return self.config.method_config.save_warmup
+
+    @property
+    def _is_fixed_param(self) -> bool:
+        return self.config.method_config.algorithm == 'fixed_param'
 
     def create_inits(
         self, seed: int | None = None, chains: int = 4
@@ -118,7 +174,7 @@ class CmdStanMCMC:
         of dictionaries is returned, in the format expected for the
         ``inits`` argument of :meth:`CmdStanModel.sample`.
         """
-        self._assemble_draws()
+        self._assemble()
         rng = np.random.default_rng(seed)
         n_draws, n_chains = self._draws.shape[:2]
         draw_idxs = rng.choice(n_draws, size=chains, replace=False)
@@ -129,58 +185,29 @@ class CmdStanMCMC:
             draw = self._draws[draw_idxs[0], chain_idxs[0]]
             return {
                 name: var.extract_reshape(draw)
-                for name, var in self._metadata.stan_vars.items()
+                for name, var in self.metadata.stan_vars.items()
             }
         else:
             return [
                 {
                     name: var.extract_reshape(self._draws[d, i])
-                    for name, var in self._metadata.stan_vars.items()
+                    for name, var in self.metadata.stan_vars.items()
                 }
                 for d, i in zip(draw_idxs, chain_idxs)
             ]
 
     def __repr__(self) -> str:
-        repr = 'CmdStanMCMC: model={} chains={}{}'.format(
-            self.runset.model,
-            self.runset.chains,
-            self.runset._args.method_args.compose(0, cmd=[]),
-        )
-        repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
-            repr,
-            '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.stdout_files),
-        )
-        # TODO - hamiltonian, profiling files
-        return repr
-
-    def __getattr__(self, attr: str) -> np.ndarray:
-        """Synonymous with ``fit.stan_variable(attr)"""
-        if attr.startswith("_"):
-            raise AttributeError(f"Unknown variable name {attr}")
-        try:
-            return self.stan_variable(attr)
-        except ValueError as e:
-            # pylint: disable=raise-missing-from
-            raise AttributeError(*e.args)
-
-    def __getstate__(self) -> dict:
-        # This function returns the mapping of objects to serialize with pickle.
-        # See https://docs.python.org/3/library/pickle.html#object.__getstate__
-        # for details. We call _assemble_draws to ensure posterior samples have
-        # been loaded prior to serialization.
-        self._assemble_draws()
-        return self.__dict__
-
-    @property
-    def chains(self) -> int:
-        """Number of chains."""
-        return self.runset.chains
-
-    @property
-    def chain_ids(self) -> list[int]:
-        """Chain ids."""
-        return self.runset.chain_ids
+        mc = self.config.method_config
+        lines = [
+            f'CmdStanMCMC: model={self.model_name} chains={self.chains}'
+            f' method={mc.method} algorithm={mc.algorithm}',
+            ' csv_files:\n\t' + '\n\t'.join(self.csv_files),
+        ]
+        if self.config_files is not None:
+            lines.append(' config_files:\n\t' + '\n\t'.join(self.config_files))
+        if self.stdout_files is not None:
+            lines.append(' output_files:\n\t' + '\n\t'.join(self.stdout_files))
+        return '\n'.join(lines)
 
     @property
     def num_draws_warmup(self) -> int:
@@ -196,38 +223,15 @@ class CmdStanMCMC:
         return int(math.ceil((self._iter_sampling) / self._thin))
 
     @property
-    def metadata(self) -> InferenceMetadata:
-        """
-        Returns object which contains CmdStan configuration as well as
-        information about the names and structure of the inference method
-        and model output variables.
-        """
-        return self._metadata
-
-    @property
-    def column_names(self) -> tuple[str, ...]:
-        """
-        Names of all outputs from the sampler, comprising sampler parameters
-        and all components of all model parameters, transformed parameters,
-        and quantities of interest. Corresponds to Stan CSV file header row,
-        with names munged to array notation, e.g. `beta[1]` not `beta.1`.
-        """
-        return self._metadata.column_names
-
-    @property
     def metric_type(self) -> str | None:
         """
         Metric type used for adaptation, either 'diag_e' or 'dense_e', according
         to CmdStan arg 'metric'.
-        When sampler algorithm 'fixed_param' is specified, metric_type is None.
+        Returns None when sampler algorithm 'fixed_param' is specified, or when
+        no metric files are available (e.g. adaptation was disabled, so CmdStan
+        wrote no metric output).
         """
-        if self._is_fixed_param:
-            return None
-
-        if self._metric_type is None:
-            self._parse_metric_info()
-
-        return self._metric_type
+        return self._metric_type if self._ensure_metric_parsed() else None
 
     @property
     def inv_metric(self) -> np.ndarray | None:
@@ -235,32 +239,21 @@ class CmdStanMCMC:
         Inverse mass matrix used by sampler for each chain.
         Returns a ``nchains x nparams`` array when metric_type is 'diag_e',
         a ``nchains x nparams x nparams`` array when metric_type is 'dense_e',
-        or ``None`` when metric_type is 'unit_e' or algorithm is 'fixed_param'.
+        or ``None`` when metric_type is 'unit_e', algorithm is 'fixed_param',
+        or no metric files are available.
         """
-        if self._is_fixed_param:
+        if not self._ensure_metric_parsed() or self._metric_type == 'unit_e':
             return None
-
-        if self._metric_type is None:
-            self._parse_metric_info()
-
-        if self.metric_type == 'unit_e':
-            return None
-
         return self._metric
 
     @property
     def step_size(self) -> np.ndarray | None:
         """
         Step size used by sampler for each chain.
-        When sampler algorithm 'fixed_param' is specified, step size is None.
+        Returns None when sampler algorithm 'fixed_param' is specified, or when
+        no metric files are available (e.g. adaptation was disabled).
         """
-        if self._is_fixed_param:
-            return None
-
-        if self._metric_type is None:
-            self._parse_metric_info()
-
-        return self._step_size
+        return self._step_size if self._ensure_metric_parsed() else None
 
     @property
     def thin(self) -> int:
@@ -285,14 +278,6 @@ class CmdStanMCMC:
         When sampler algorithm 'fixed_param' is specified, returns None.
         """
         return self._max_treedepths if not self._is_fixed_param else None
-
-    @property
-    def time(self) -> list[dict[str, float]]:
-        """
-        List of per-chain time info scraped from CSV file.
-        Each chain has dict with keys "warmup", "sampling", "total".
-        """
-        return self._chain_time
 
     def draws(
         self, *, inc_warmup: bool = False, concat_chains: bool = False
@@ -320,7 +305,7 @@ class CmdStanMCMC:
         CmdStanMCMC.draws_xr
         CmdStanGQ.draws
         """
-        self._assemble_draws()
+        self._assemble()
 
         if inc_warmup and not self._save_warmup:
             get_logger().warning(
@@ -336,88 +321,126 @@ class CmdStanMCMC:
             return flatten_chains(self._draws[start_idx:, :, :])
         return self._draws[start_idx:, :, :]
 
-    def _validate_csv_files(self) -> dict[str, Any]:
-        """
-        Checks that Stan CSV output files for all chains are consistent
-        and returns dict containing config and column names.
+    @classmethod
+    def _comparable_config(
+        cls, config: StanConfig[SampleConfig]
+    ) -> dict[str, Any]:
+        """Returns configuration settings that must agree across chains"""
+        method_config = config.method_config
+        return {
+            **super()._comparable_config(config),
+            'algorithm': method_config.algorithm,
+            'num_samples': method_config.num_samples,
+            'num_warmup': method_config.num_warmup,
+            'save_warmup': method_config.save_warmup,
+            'thin': method_config.thin,
+            'max_depth': method_config.max_depth,
+        }
 
-        Tabulates sampling iters which are divergent or at max treedepth
+    def _validate_csv_files(self) -> None:
+        """
+        Checks that the draws in the Stan CSV output files are consistent
+        with the run configuration, and tabulates per-chain counts of
+        sampling iters which are divergent or at max treedepth.
+
         Raises exception when inconsistencies detected.
         """
-        dzero = {}
+        expected_sampling = math.ceil(self._iter_sampling / self._thin)
+        expected_warmup = (
+            math.ceil(self._iter_warmup / self._thin)
+            if self._save_warmup
+            else 0
+        )
+        max_depth = self.config.method_config.max_depth
         for i in range(self.chains):
-            if i == 0:
-                dzero = check_sampler_csv(
-                    path=self.runset.csv_files[i],
-                    iter_sampling=self._iter_sampling,
-                    iter_warmup=self._iter_warmup,
-                    save_warmup=self._save_warmup,
-                    thin=self._thin,
+            path = self.csv_files[i]
+            _, header, draws = stancsv.parse_comments_header_and_draws(path)
+            if header is None:
+                raise ValueError(f'No header found in Stan CSV file {path}')
+            stancsv.raise_on_inconsistent_draws_shape(header, draws)
+
+            num_warmup, num_sampling = stancsv.count_warmup_and_sampling_draws(
+                path
+            )
+            if num_sampling != expected_sampling:
+                raise ValueError(
+                    f'Bad Stan CSV file {path}, expected {expected_sampling} '
+                    f'draws, found {num_sampling}'
                 )
-                self._chain_time.append(dzero['time'])
-                if not self._is_fixed_param:
-                    self._divergences[i] = dzero['ct_divergences']
-                    self._max_treedepths[i] = dzero['ct_max_treedepth']
-            else:
-                drest = check_sampler_csv(
-                    path=self.runset.csv_files[i],
-                    iter_sampling=self._iter_sampling,
-                    iter_warmup=self._iter_warmup,
-                    save_warmup=self._save_warmup,
-                    thin=self._thin,
+            if self._save_warmup and num_warmup != expected_warmup:
+                raise ValueError(
+                    f'Bad Stan CSV file {path}, expected {expected_warmup} '
+                    f'warmup draws, found {num_warmup}'
                 )
-                self._chain_time.append(drest['time'])
-                for key in dzero:
-                    # check args that matter for parsing, plus name, version
-                    if (
-                        key
-                        in [
-                            'stan_version_major',
-                            'stan_version_minor',
-                            'stan_version_patch',
-                            'stanc_version',
-                            'model',
-                            'num_samples',
-                            'num_warmup',
-                            'save_warmup',
-                            'thin',
-                            'refresh',
-                        ]
-                        and dzero[key] != drest[key]
-                    ):
-                        raise ValueError(
-                            'CmdStan config mismatch in Stan CSV file {}: '
-                            'arg {} is {}, expected {}'.format(
-                                self.runset.csv_files[i],
-                                key,
-                                dzero[key],
-                                drest[key],
-                            )
-                        )
-                if not self._is_fixed_param:
-                    self._divergences[i] = drest['ct_divergences']
-                    self._max_treedepths[i] = drest['ct_max_treedepth']
-        return dzero
+            if not self._is_fixed_param:
+                # HMC runs always record max_depth; only fixed_param omits it
+                assert max_depth is not None
+                treedepths, divergences = (
+                    stancsv.extract_max_treedepth_and_divergence_counts(
+                        header, draws, max_depth, num_warmup
+                    )
+                )
+                self._max_treedepths[i] = treedepths
+                self._divergences[i] = divergences
+
+    def _ensure_metric_parsed(self) -> bool:
+        """Parse the metric info if available, returning whether it is.
+
+        Returns False (and the metric properties then report None) for
+        fixed-param runs or when no metric files were written.
+        """
+        if self._is_fixed_param:
+            return False
+        if self._metric_type is None:
+            if not self._metric_available():
+                return False
+            self._parse_metric_info()
+        return True
+
+    def _metric_available(self) -> bool:
+        """Whether a metric JSON is present on disk for every chain.
+
+        Returns False when there are no metric files at all -- either none
+        were passed, or CmdStan wrote none because adaptation was disabled --
+        so the metric properties can report None rather than fail. Raises when
+        some but not all chains have a metric file, since parsing a partial set
+        would silently misalign the per-chain metric arrays.
+        """
+        if self.metric_files is None:
+            return False
+        existing = [os.path.exists(f) for f in self.metric_files]
+        if not any(existing):
+            return False
+        if not all(existing):
+            missing = [
+                f for f, ok in zip(self.metric_files, existing) if not ok
+            ]
+            raise ValueError(
+                'Metric files missing for some chains: ' + ', '.join(missing)
+            )
+        return True
 
     def _parse_metric_info(self) -> None:
         """Extracts metric type, inv_metric, and step size information from the
         parsed metric JSONs."""
-        self._chain_metric_info = []
-        for mf in self.runset.metric_files:
+        if self.metric_files is None:
+            raise ValueError(
+                'No metric files available; cannot read metric info.'
+            )
+        chain_metric_info: list[MetricInfo] = []
+        for mf in self.metric_files:
             with open(mf) as f:
-                self._chain_metric_info.append(
+                chain_metric_info.append(
                     MetricInfo.model_validate_json(f.read())
                 )
 
-        metric_types = {cmi.metric_type for cmi in self._chain_metric_info}
+        metric_types = {cmi.metric_type for cmi in chain_metric_info}
         if len(metric_types) != 1:
             raise ValueError("Inconsistent metric types found across chains")
-        self._metric_type = self._chain_metric_info[0].metric_type
-        self._metric = np.asarray(
-            [cmi.inv_metric for cmi in self._chain_metric_info]
-        )
+        self._metric_type = chain_metric_info[0].metric_type
+        self._metric = np.asarray([cmi.inv_metric for cmi in chain_metric_info])
         self._step_size = np.asarray(
-            [cmi.stepsize for cmi in self._chain_metric_info]
+            [cmi.stepsize for cmi in chain_metric_info]
         )
 
     def _check_sampler_diagnostics(self) -> None:
@@ -426,8 +449,8 @@ class CmdStanMCMC:
         """
         if np.any(self._divergences) or np.any(self._max_treedepths):
             diagnostics = ['Some chains may have failed to converge.']
-            ct_iters = self._metadata.cmdstan_config['num_samples']
-            for i in range(self.runset._chains):
+            ct_iters = self.config.method_config.num_samples
+            for i in range(self.chains):
                 if self._divergences[i] > 0:
                     diagnostics.append(
                         f'Chain {i + 1} had {self._divergences[i]} '
@@ -446,10 +469,10 @@ class CmdStanMCMC:
             )
             get_logger().warning('\n\t'.join(diagnostics))
 
-    def _assemble_draws(self) -> None:
+    def _assemble(self) -> None:
         """
-        Allocates and populates the step size, metric, and sample arrays
-        by parsing the validated stan_csv files.
+        Allocates and populates the sample array by parsing the validated
+        stan_csv files.
         """
         if self._draws.shape != (0,):
             return
@@ -470,7 +493,7 @@ class CmdStanMCMC:
                     header,
                     draws,
                 ) = stancsv.parse_comments_header_and_draws(
-                    self.runset.csv_files[chain]
+                    self.csv_files[chain]
                 )
 
                 draws_np = stancsv.csv_bytes_list_to_numpy(draws)
@@ -481,10 +504,8 @@ class CmdStanMCMC:
                 self._draws[:, chain, :] = draws_np
             except Exception as exc:
                 raise ValueError(
-                    f"Parsing output from {self.runset.csv_files[chain]} failed"
+                    f"Parsing output from {self.csv_files[chain]} failed"
                 ) from exc
-
-        assert self._draws is not None
 
     def summary(
         self,
@@ -534,7 +555,7 @@ class CmdStanMCMC:
                 'Keyword "sig_figs" must be an integer between 1 and 18,'
                 ' found {}'.format(sig_figs)
             )
-        csv_sig_figs = self._sig_figs or 6
+        csv_sig_figs = self.sig_figs or 6
         if sig_figs > csv_sig_figs:
             get_logger().warning(
                 'Requesting %d significant digits of output, but CSV files'
@@ -546,18 +567,18 @@ class CmdStanMCMC:
         cmd_path = os.path.join(
             cmdstan_path(), 'bin', 'stansummary' + EXTENSION
         )
-        tmp_csv_file = 'stansummary-{}-'.format(self.runset._args.model_name)
+        tmp_csv_file = f'stansummary-{self.model_name}-'
         tmp_csv_path = create_named_text_file(
             dir=_TMPDIR, prefix=tmp_csv_file, suffix='.csv', name_only=True
         )
-        csv_str = '--csv_filename={}'.format(tmp_csv_path)
+        csv_str = f'--csv_filename={tmp_csv_path}'
 
         cmd = [
             cmd_path,
             percentiles_str,
             sig_figs_str,
             csv_str,
-        ] + self.runset.csv_files
+        ] + self.csv_files
         do_command(cmd, fd_out=None)
         with open(tmp_csv_path, 'rb') as fd:
             summary_data = pd.read_csv(
@@ -593,7 +614,7 @@ class CmdStanMCMC:
         + High R-hat values
         """
         cmd_path = os.path.join(cmdstan_path(), 'bin', 'diagnose' + EXTENSION)
-        cmd = [cmd_path] + self.runset.csv_files
+        cmd = [cmd_path] + self.csv_files
         result = StringIO()
         do_command(cmd=cmd, fd_out=result)
         return result.getvalue()
@@ -634,14 +655,14 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
 
-        self._assemble_draws()
+        self._assemble()
         cols = []
         if vars is not None:
             for var in dict.fromkeys(vars_list):
-                if var in self._metadata.method_vars:
+                if var in self.metadata.method_vars:
                     cols.append(var)
-                elif var in self._metadata.stan_vars:
-                    info = self._metadata.stan_vars[var]
+                elif var in self.metadata.stan_vars:
+                    info = self.metadata.stan_vars[var]
                     cols.extend(
                         self.column_names[info.start_idx : info.end_idx]
                     )
@@ -705,20 +726,20 @@ class CmdStanMCMC:
                 ' must run sampler with "save_warmup=True".'
             )
         if vars is None:
-            vars_list = list(self._metadata.stan_vars.keys())
+            vars_list = list(self.metadata.stan_vars.keys())
         elif isinstance(vars, str):
             vars_list = [vars]
         else:
             vars_list = vars
 
-        self._assemble_draws()
+        self._assemble()
 
         num_draws = self.num_draws_sampling
-        meta = self._metadata.cmdstan_config
         attrs: MutableMapping[Hashable, Any] = {
-            "stan_version": f"{meta['stan_version_major']}."
-            f"{meta['stan_version_minor']}.{meta['stan_version_patch']}",
-            "model": meta["model"],
+            "stan_version": f"{self.config.stan_major_version}."
+            f"{self.config.stan_minor_version}."
+            f"{self.config.stan_patch_version}",
+            "model": self.model_name,
             "num_draws_sampling": num_draws,
         }
         if inc_warmup and self._save_warmup:
@@ -734,7 +755,7 @@ class CmdStanMCMC:
         for var in vars_list:
             build_xarray_data(
                 data,
-                self._metadata.stan_vars[var],
+                self.metadata.stan_vars[var],
                 self.draws(inc_warmup=inc_warmup),
             )
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
@@ -789,38 +810,8 @@ class CmdStanMCMC:
         CmdStanGQ.stan_variable
         CmdStanLaplace.stan_variable
         """
-        try:
-            draws = self.draws(inc_warmup=inc_warmup, concat_chains=True)
-            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
-                draws
-            )
-            return out
-        except KeyError:
-            # pylint: disable=raise-missing-from
-            raise ValueError(
-                f'Unknown variable name: {var}\n'
-                'Available variables are '
-                + ", ".join(self._metadata.stan_vars.keys())
-            )
-
-    def stan_variables(self) -> dict[str, np.ndarray]:
-        """
-        Return a dictionary mapping Stan program variables names
-        to the corresponding numpy.ndarray containing the inferred values.
-
-        See Also
-        --------
-        CmdStanMCMC.stan_variable
-        CmdStanMLE.stan_variables
-        CmdStanPathfinder.stan_variables
-        CmdStanVB.stan_variables
-        CmdStanGQ.stan_variables
-        CmdStanLaplace.stan_variables
-        """
-        result = {}
-        for name in self._metadata.stan_vars:
-            result[name] = self.stan_variable(name)
-        return result
+        draws = self.draws(inc_warmup=inc_warmup, concat_chains=True)
+        return self._extract_stan_var(var, draws)
 
     def method_variables(self) -> dict[str, np.ndarray]:
         """
@@ -830,21 +821,8 @@ class CmdStanMCMC:
         Maps each column name to a numpy.ndarray (draws x chains x 1)
         containing per-draw diagnostic values.
         """
-        self._assemble_draws()
+        self._assemble()
         return {
             name: var.extract_reshape(self._draws)
-            for name, var in self._metadata.method_vars.items()
+            for name, var in self.metadata.method_vars.items()
         }
-
-    def save_csvfiles(self, dir: str | None = None) -> None:
-        """
-        Move output CSV files to specified directory.
-
-        :param dir: directory path
-
-        See Also
-        --------
-        stanfit.RunSet.save_csvfiles
-        cmdstanpy.from_csv
-        """
-        self.runset.save_csvfiles(dir)

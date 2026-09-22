@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.utils import EXTENSION, cmdstan_version_before
+from cmdstanpy.utils import EXTENSION
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -92,10 +92,7 @@ def test_exe_only() -> None:
 def test_legacy_fixed_param() -> None:
     stan = os.path.join(DATAFILES_PATH, 'datagen_poisson_glm.stan')
     model = CmdStanModel(stan_file=stan)
-    if cmdstan_version_before(2, 36):
-        assert model._fixed_param
-    else:
-        assert not model._fixed_param
+    assert not model._fixed_param
 
 
 def test_model_pedantic(caplog: pytest.LogCaptureFixture) -> None:

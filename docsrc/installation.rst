@@ -204,7 +204,7 @@ can be used to override these defaults:
 
 .. code-block:: bash
 
-    install_cmdstan -d my_local_cmdstan -v 2.36.0
+    install_cmdstan -d my_local_cmdstan -v 2.37.0
     ls -F my_local_cmdstan
 
 Alternate Linux Architectures

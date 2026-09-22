@@ -13,42 +13,34 @@ from typing import Any
 import numpy as np
 import pytest
 
-from cmdstanpy.cmdstan_args import CmdStanArgs, OptimizeArgs
 from cmdstanpy.model import CmdStanModel
-from cmdstanpy.stanfit import CmdStanMLE, RunSet, from_csv
+from cmdstanpy.stanfit import CmdStanMLE, from_output_files
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
 
 
 def test_instantiate() -> None:
-    stan = os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock.stan')
-    model = CmdStanModel(stan_file=stan)
-    args = OptimizeArgs(algorithm='Newton')
-    cmdstan_args = CmdStanArgs(
-        model_name=model.name,
-        model_exe=model.exe_file,
-        chain_ids=None,
-        data={},
-        method_args=args,
+    csvfiles_path = os.path.join(
+        DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv'
     )
-    runset = RunSet(args=cmdstan_args, chains=1)
-    runset._csv_files = [
-        os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv')
-    ]
-    mle = CmdStanMLE(runset)
+    mle = from_output_files(path=csvfiles_path)
+    assert isinstance(mle, CmdStanMLE)
     assert 'CmdStanMLE: model=rosenbrock' in repr(mle)
     assert 'method=optimize' in repr(mle)
     assert mle.column_names == ('lp__', 'x', 'y')
+    # Pre-2.39 outputs have no convergence status, so retain the legacy
+    # assumption that successfully produced output converged.
+    assert mle.converged
     np.testing.assert_almost_equal(mle.optimized_params_dict['x'], 1, decimal=3)
     np.testing.assert_almost_equal(mle.optimized_params_dict['y'], 1, decimal=3)
 
 
-def test_instantiate_from_csvfiles() -> None:
+def test_instantiate_from_output_filesfiles() -> None:
     csvfiles_path = os.path.join(
         DATAFILES_PATH, 'optimize', 'rosenbrock_mle.csv'
     )
-    mle = from_csv(path=csvfiles_path)
+    mle = from_output_files(path=csvfiles_path)
     assert isinstance(mle, CmdStanMLE)
     assert 'CmdStanMLE: model=rosenbrock' in repr(mle)
     assert 'method=optimize' in repr(mle)
@@ -57,11 +49,11 @@ def test_instantiate_from_csvfiles() -> None:
     np.testing.assert_almost_equal(mle.optimized_params_dict['y'], 1, decimal=3)
 
 
-def test_instantiate_from_csvfiles_save_iterations() -> None:
+def test_instantiate_from_output_filesfiles_save_iterations() -> None:
     csvfiles_path = os.path.join(
         DATAFILES_PATH, 'optimize', 'eight_schools_mle_iters.csv'
     )
-    mle = from_csv(path=csvfiles_path)
+    mle = from_output_files(path=csvfiles_path)
     assert isinstance(mle, CmdStanMLE)
     assert 'CmdStanMLE: model=eight_schools' in repr(mle)
     assert 'method=optimize' in repr(mle)
@@ -86,6 +78,42 @@ def test_instantiate_from_csvfiles_save_iterations() -> None:
     )
     assert mle.optimized_iterations_np is not None
     assert mle.optimized_iterations_np.shape == (173, 11)
+
+
+@pytest.mark.parametrize(
+    ('status', 'expected'),
+    (
+        (10, True),
+        (20, True),
+        (21, True),
+        (30, True),
+        (31, True),
+        (0, False),
+        (40, False),
+        (-1, False),
+    ),
+)
+def test_convergence_status_from_csv(
+    tmp_path: Any, status: int, expected: bool
+) -> None:
+    csv_file = tmp_path / 'mle.csv'
+    csv_file.write_text(
+        'lp__,converged__,x,y\n' '-2,0,0,0\n' f'-1,{status},1,1\n'
+    )
+    config_file = tmp_path / 'mle_config.json'
+    shutil.copy(
+        os.path.join(DATAFILES_PATH, 'optimize', 'rosenbrock_mle_config.json'),
+        config_file,
+    )
+
+    # The final CSV status takes precedence over the process-status fallback.
+    mle = CmdStanMLE.from_files(csv_file, config_file, converged=not expected)
+    assert mle.converged is expected
+
+    # Reconstruction has no process status, so it must also use the column.
+    reconstructed = from_output_files(path=[csv_file, config_file])
+    assert isinstance(reconstructed, CmdStanMLE)
+    assert reconstructed.converged is expected
 
 
 def test_rosenbrock(caplog: pytest.LogCaptureFixture) -> None:
@@ -664,7 +692,7 @@ def test_serialization() -> None:
         history_size=5,
     )
     dumped = pickle.dumps(mle1)
-    shutil.rmtree(mle1.runset._outdir)
+    shutil.rmtree(os.path.dirname(mle1.csv_file))
     mle2: CmdStanMLE = pickle.loads(dumped)
     np.testing.assert_array_equal(
         mle1.optimized_params_np, mle2.optimized_params_np

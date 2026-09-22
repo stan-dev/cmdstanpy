@@ -1,0 +1,49 @@
+
+{
+  "stan_major_version" : "2",
+  "stan_minor_version" : "37",
+  "stan_patch_version" : "0",
+  "model_name" : "eta_should_be_big_model",
+  "start_datetime" : "2026-05-03 16:33:45 UTC",
+  "method" : {
+    "value" : "variational",
+    "variational" : {
+      "algorithm" : {
+        "value" : "meanfield",
+        "meanfield" : {
+        }
+      },
+      "iter" : 10000,
+      "grad_samples" : 1,
+      "elbo_samples" : 100,
+      "eta" : 1,
+      "adapt" : {
+        "engaged" : true,
+        "iter" : 50
+      },
+      "tol_rel_obj" : 0.01,
+      "eval_elbo" : 100,
+      "output_samples" : 1000
+    }
+  },
+  "id" : 1,
+  "data" : {
+    "file" : ""
+  },
+  "init" : "2",
+  "random" : {
+    "seed" : 999999
+  },
+  "output" : {
+    "file" : "eta_should_be_big_vb.csv",
+    "diagnostic_file" : "",
+    "refresh" : 100,
+    "sig_figs" : 8,
+    "profile_file" : "profile.csv",
+    "save_cmdstan_config" : true
+  },
+  "num_threads" : 1,
+  "mpi_enabled" : false,
+  "stanc_version" : "stanc3 v2.37.0",
+  "stancflags" : "--filename-in-msg=eta_should_be_big.stan"
+}

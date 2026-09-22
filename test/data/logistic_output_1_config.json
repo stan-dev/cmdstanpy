@@ -1,0 +1,66 @@
+
+{
+  "stan_major_version" : "2",
+  "stan_minor_version" : "37",
+  "stan_patch_version" : "0",
+  "model_name" : "logistic_model",
+  "start_datetime" : "2026-07-20 20:23:44 UTC",
+  "method" : {
+    "value" : "sample",
+    "sample" : {
+      "num_samples" : 100,
+      "num_warmup" : 1000,
+      "save_warmup" : false,
+      "thin" : 1,
+      "adapt" : {
+        "engaged" : true,
+        "gamma" : 0.050000000000000003,
+        "delta" : 0.80000000000000004,
+        "kappa" : 0.75,
+        "t0" : 10,
+        "init_buffer" : 75,
+        "term_buffer" : 50,
+        "window" : 25,
+        "save_metric" : true
+      },
+      "algorithm" : {
+        "value" : "hmc",
+        "hmc" : {
+          "engine" : {
+            "value" : "nuts",
+            "nuts" : {
+              "max_depth" : 10
+            }
+          },
+          "metric" : {
+            "value" : "diag_e"
+          },
+          "metric_file" : "",
+          "stepsize" : 1,
+          "stepsize_jitter" : 0
+        }
+      },
+      "num_chains" : 1
+    }
+  },
+  "id" : 1,
+  "data" : {
+    "file" : "test\/data\/logistic.data.R"
+  },
+  "init" : "2",
+  "random" : {
+    "seed" : 12345
+  },
+  "output" : {
+    "file" : "logistic_output_1.csv",
+    "diagnostic_file" : "",
+    "refresh" : 100,
+    "sig_figs" : 17,
+    "profile_file" : "profile.csv",
+    "save_cmdstan_config" : true
+  },
+  "num_threads" : 1,
+  "mpi_enabled" : false,
+  "stanc_version" : "stanc3 v2.37.0",
+  "stancflags" : "--filename-in-msg=logistic.stan"
+}

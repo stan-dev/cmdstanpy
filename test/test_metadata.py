@@ -5,14 +5,23 @@ import math
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
-from cmdstanpy.cmdstan_args import CmdStanArgs, SamplerArgs
-from cmdstanpy.stanfit import InferenceMetadata, RunSet
-from cmdstanpy.stanfit.metadata import MetricInfo
-from cmdstanpy.utils import EXTENSION, check_sampler_csv
+from cmdstanpy.stanfit import InferenceMetadata
+from cmdstanpy.stanfit.metadata import (
+    GeneratedQuantitiesConfig,
+    LaplaceConfig,
+    MetricInfo,
+    OptimizeConfig,
+    PathfinderConfig,
+    SampleConfig,
+    StanConfig,
+    VariationalConfig,
+    parse_config,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATAFILES_PATH = os.path.join(HERE, 'data')
@@ -22,44 +31,216 @@ GOODFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-good')
 BADFILES_PATH = os.path.join(DATAFILES_PATH, 'runset-bad')
 
 
+def make_config_output(
+    method_name: str, method_body: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        'stan_major_version': '2',
+        'stan_minor_version': '37',
+        'stan_patch_version': '0',
+        'model_name': 'mu_model',
+        'start_datetime': '2026-01-23 22:20:01 UTC',
+        'method': {
+            'value': method_name,
+            method_name: method_body,
+        },
+        'id': 1,
+        'data': {'file': ''},
+        'init': '2',
+        'random': {'seed': 12345},
+        'output': {
+            'file': '/tmp/mu.csv',
+            'diagnostic_file': '',
+            'refresh': 100,
+            'sig_figs': 8,
+            'profile_file': 'profile.csv',
+            'save_cmdstan_config': True,
+        },
+        'num_threads': 4,
+        'mpi_enabled': False,
+        'stanc_version': 'stanc3 v2.37.0',
+        'stancflags': '--filename-in-msg=mu.stan',
+    }
+
+
+CONFIG_OUTPUT_CASES: list[
+    tuple[str, dict[str, Any], type[Any], dict[str, Any]]
+] = [
+    (
+        'sample',
+        make_config_output(
+            'sample',
+            {
+                'num_samples': 1000,
+                'num_warmup': 1000,
+                'save_warmup': False,
+                'thin': 1,
+                'adapt': {
+                    'engaged': True,
+                    'gamma': 0.05,
+                    'delta': 0.8,
+                    'kappa': 0.75,
+                    't0': 10,
+                    'init_buffer': 75,
+                    'term_buffer': 50,
+                    'window': 25,
+                    'save_metric': True,
+                },
+                'algorithm': {
+                    'value': 'hmc',
+                    'hmc': {
+                        'engine': {
+                            'value': 'nuts',
+                            'nuts': {'max_depth': 10},
+                        },
+                        'metric': {'value': 'diag_e'},
+                        'metric_file': '',
+                        'stepsize': 1,
+                        'stepsize_jitter': 0,
+                    },
+                },
+                'num_chains': 4,
+            },
+        ),
+        SampleConfig,
+        {
+            'algorithm': 'hmc',
+            'num_samples': 1000,
+            'num_warmup': 1000,
+            'save_warmup': False,
+            'thin': 1,
+            'max_depth': 10,
+        },
+    ),
+    (
+        'optimize',
+        make_config_output(
+            'optimize',
+            {
+                'algorithm': {
+                    'value': 'lbfgs',
+                    'lbfgs': {
+                        'init_alpha': 0.001,
+                        'tol_obj': 1e-12,
+                        'tol_rel_obj': 10000,
+                        'tol_grad': 1e-08,
+                        'tol_rel_grad': 10000000,
+                        'tol_param': 1e-08,
+                        'history_size': 5,
+                    },
+                },
+                'jacobian': False,
+                'iter': 2000,
+                'save_iterations': False,
+            },
+        ),
+        OptimizeConfig,
+        {
+            'algorithm': 'lbfgs',
+            'jacobian': False,
+            'save_iterations': False,
+        },
+    ),
+    (
+        'variational',
+        make_config_output(
+            'variational',
+            {
+                'algorithm': {
+                    'value': 'meanfield',
+                    'meanfield': {},
+                },
+                'iter': 10000,
+                'grad_samples': 1,
+                'elbo_samples': 100,
+                'eta': 1,
+                'adapt': {
+                    'engaged': True,
+                    'iter': 50,
+                },
+                'tol_rel_obj': 0.01,
+                'eval_elbo': 100,
+                'output_samples': 1000,
+            },
+        ),
+        VariationalConfig,
+        {
+            'algorithm': 'meanfield',
+            'iter': 10000,
+            'grad_samples': 1,
+            'elbo_samples': 100,
+            'eta': 1.0,
+        },
+    ),
+    (
+        'pathfinder',
+        make_config_output(
+            'pathfinder',
+            {
+                'init_alpha': 0.001,
+                'tol_obj': 1e-12,
+                'tol_rel_obj': 10000,
+                'tol_grad': 1e-08,
+                'tol_rel_grad': 10000000,
+                'tol_param': 1e-08,
+                'history_size': 5,
+                'num_psis_draws': 1000,
+                'num_paths': 4,
+                'save_single_paths': False,
+                'psis_resample': True,
+                'calculate_lp': True,
+                'max_lbfgs_iters': 1000,
+                'num_draws': 1000,
+                'num_elbo_draws': 25,
+            },
+        ),
+        PathfinderConfig,
+        {
+            'num_draws': 1000,
+            'num_paths': 4,
+            'psis_resample': True,
+            'calculate_lp': True,
+        },
+    ),
+    (
+        'laplace',
+        make_config_output(
+            'laplace',
+            {
+                'mode': '/tmp/mu-opt.csv',
+                'jacobian': True,
+                'draws': 1000,
+                'calculate_lp': True,
+            },
+        ),
+        LaplaceConfig,
+        {
+            'mode': '/tmp/mu-opt.csv',
+            'draws': 1000,
+            'jacobian': True,
+        },
+    ),
+    (
+        'generate_quantities',
+        make_config_output(
+            'generate_quantities',
+            {
+                'fitted_params': '/tmp/mu-fit.csv',
+                'num_chains': 1,
+            },
+        ),
+        GeneratedQuantitiesConfig,
+        {
+            'fitted_params': '/tmp/mu-fit.csv',
+            'num_chains': 1,
+        },
+    ),
+]
+
+
 def test_good() -> None:
-    # construct fit using existing sampler output
-    exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
-    jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
-    sampler_args = SamplerArgs(
-        iter_sampling=100, max_treedepth=11, adapt_delta=0.95
-    )
-    cmdstan_args = CmdStanArgs(
-        model_name='bernoulli',
-        model_exe=exe,
-        chain_ids=[1, 2, 3, 4],
-        seed=12345,
-        data=jdata,
-        output_dir=DATAFILES_PATH,
-        method_args=sampler_args,
-    )
-    runset = RunSet(args=cmdstan_args)
-    runset._csv_files = [
-        os.path.join(DATAFILES_PATH, 'runset-good', 'bern-1.csv'),
-        os.path.join(DATAFILES_PATH, 'runset-good', 'bern-2.csv'),
-        os.path.join(DATAFILES_PATH, 'runset-good', 'bern-3.csv'),
-        os.path.join(DATAFILES_PATH, 'runset-good', 'bern-4.csv'),
-    ]
-    retcodes = runset._retcodes
-    for i in range(len(retcodes)):
-        runset._set_retcode(i, 0)
-    config = check_sampler_csv(
-        path=runset.csv_files[i],
-        iter_sampling=100,
-        iter_warmup=1000,
-        save_warmup=False,
-        thin=1,
-    )
-    expected = 'Metadata:\n{}\n'.format(config)
-    metadata = InferenceMetadata(config)
-    actual = '{}'.format(metadata)
-    assert expected == actual
-    assert config == metadata.cmdstan_config
+    csv_file = os.path.join(DATAFILES_PATH, 'runset-good', 'bern-1.csv')
+    metadata = InferenceMetadata.from_csv(csv_file)
 
     hmc_vars = {
         'lp__',
@@ -70,11 +251,58 @@ def test_good() -> None:
         'divergent__',
         'energy__',
     }
+    assert hmc_vars == metadata.method_vars.keys()
+    assert {'theta'} == metadata.stan_vars.keys()
+    assert metadata.column_names == (
+        'lp__',
+        'accept_stat__',
+        'stepsize__',
+        'treedepth__',
+        'n_leapfrog__',
+        'divergent__',
+        'energy__',
+        'theta',
+    )
 
-    method_vars_cols = metadata.method_vars
-    assert hmc_vars == method_vars_cols.keys()
-    bern_model_vars = {'theta'}
-    assert bern_model_vars == metadata.stan_vars.keys()
+
+@pytest.mark.parametrize(
+    'method_name, config_json, expected_type, expected_fields',
+    CONFIG_OUTPUT_CASES,
+)
+def test_parse_config_outputs(
+    method_name: str,
+    config_json: dict[str, Any],
+    expected_type: type[Any],
+    expected_fields: dict[str, Any],
+) -> None:
+    parsed = parse_config(json.dumps(config_json))
+
+    assert isinstance(parsed, StanConfig)
+    assert parsed.model_name == 'mu_model'
+    assert parsed.stan_major_version == '2'
+    assert parsed.stan_minor_version == '37'
+    assert parsed.stan_patch_version == '0'
+    assert isinstance(parsed.method_config, expected_type)
+    assert parsed.method_config.method == method_name
+
+    dumped = parsed.method_config.model_dump()
+    for key, expected in expected_fields.items():
+        assert dumped[key] == expected
+
+
+def test_parse_config_accepts_bytes() -> None:
+    config_json = make_config_output(
+        'generate_quantities',
+        {
+            'fitted_params': '/tmp/mu-fit.csv',
+            'num_chains': 1,
+        },
+    )
+
+    parsed = parse_config(json.dumps(config_json).encode())
+
+    assert isinstance(parsed.method_config, GeneratedQuantitiesConfig)
+    assert parsed.method_config.fitted_params == '/tmp/mu-fit.csv'
 
 
 class TestMetricInfoValidators:

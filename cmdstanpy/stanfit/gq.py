@@ -5,16 +5,10 @@ generate quantities (GQ) method
 
 from __future__ import annotations
 
-from collections import Counter
-from typing import (
-    Any,
-    Generic,
-    Hashable,
-    MutableMapping,
-    NoReturn,
-    TypeVar,
-    overload,
-)
+import os
+from collections.abc import Hashable, MutableMapping, Sequence
+from dataclasses import dataclass, field
+from typing import Any, Generic, NoReturn, TypeVar, overload
 
 import numpy as np
 import pandas as pd
@@ -27,7 +21,6 @@ except ImportError:
     XARRAY_INSTALLED = False
 
 
-from cmdstanpy.cmdstan_args import Method
 from cmdstanpy.utils import (
     build_xarray_data,
     flatten_chains,
@@ -35,12 +28,12 @@ from cmdstanpy.utils import (
     stancsv,
 )
 
+from .base import MultiChainFit, StanFit
 from .laplace import CmdStanLaplace
 from .mcmc import CmdStanMCMC
-from .metadata import InferenceMetadata
+from .metadata import GeneratedQuantitiesConfig, GeneratedQuantitiesRunConfig
 from .mle import CmdStanMLE
 from .pathfinder import CmdStanPathfinder
-from .runset import RunSet
 from .vb import CmdStanVB
 
 PrevFit = TypeVar(
@@ -53,119 +46,51 @@ PrevFit = TypeVar(
 )
 
 
-class CmdStanGQ(Generic[PrevFit]):
+@dataclass(kw_only=True)
+class CmdStanGQ(MultiChainFit[GeneratedQuantitiesConfig], Generic[PrevFit]):
     """
     Container for outputs from CmdStan generate_quantities run.
     Created by :meth:`CmdStanModel.generate_quantities`.
     """
 
-    def __init__(
-        self,
-        runset: RunSet,
+    previous_fit: PrevFit
+
+    _draws: np.ndarray = field(default_factory=lambda: np.array(()), init=False)
+
+    @classmethod
+    def from_files(
+        cls,
+        csv_files: Sequence[str | os.PathLike],
+        config_files: Sequence[str | os.PathLike] | str | os.PathLike,
         previous_fit: PrevFit,
-    ) -> None:
-        """Initialize object."""
-        if not runset.method == Method.GENERATE_QUANTITIES:
-            raise ValueError(
-                'Wrong runset method, expecting generate_quantities runset, '
-                'found method {}'.format(runset.method)
-            )
-        self.runset = runset
+        stdout_files: Sequence[str | os.PathLike] | None = None,
+        chain_ids: Sequence[int] | None = None,
+    ) -> CmdStanGQ[PrevFit]:
+        """Build a CmdStanGQ from output files.
 
-        self.previous_fit: PrevFit = previous_fit
-
-        self._draws: np.ndarray = np.array(())
-        self._metadata = self._validate_csv_files()
+        ``config_files`` may be a single path (when CmdStan ran multiple chains
+        in one process) or a per-chain list.
+        """
+        return cls(
+            previous_fit=previous_fit,
+            **cls._from_files_kwargs(
+                csv_files,
+                config_files,
+                stdout_files,
+                chain_ids,
+                GeneratedQuantitiesRunConfig,
+            ),
+        )
 
     def __repr__(self) -> str:
-        repr = 'CmdStanGQ: model={} chains={}{}'.format(
-            self.runset.model,
-            self.chains,
-            self.runset._args.method_args.compose(0, cmd=[]),
-        )
-        repr = '{}\n csv_files:\n\t{}\n output_files:\n\t{}'.format(
-            repr,
-            '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.stdout_files),
-        )
-        return repr
-
-    def __getattr__(self, attr: str) -> np.ndarray:
-        """Synonymous with ``fit.stan_variable(attr)"""
-        if attr.startswith("_"):
-            raise AttributeError(f"Unknown variable name {attr}")
-        try:
-            return self.stan_variable(attr)
-        except ValueError as e:
-            # pylint: disable=raise-missing-from
-            raise AttributeError(*e.args)
-
-    def __getstate__(self) -> dict:
-        # This function returns the mapping of objects to serialize with pickle.
-        # See https://docs.python.org/3/library/pickle.html#object.__getstate__
-        # for details. We call _assemble_generated_quantities to ensure
-        # the data are loaded prior to serialization.
-        self._assemble_generated_quantities()
-        return self.__dict__
-
-    def _validate_csv_files(self) -> InferenceMetadata:
-        """
-        Checks that Stan CSV output files for all chains are consistent
-        and returns InferenceMetadata object containing config and column names.
-
-        Raises exception if inconsistencies are detected.
-        """
-        excluded_fields = {
-            'id',
-            'fitted_params',
-            'diagnostic_file',
-            'metric_file',
-            'profile_file',
-            'init',
-            'seed',
-            'start_datetime',
-        }
-        meta0 = InferenceMetadata.from_csv(self.runset.csv_files[0])
-        for i in range(1, self.chains):
-            meta = InferenceMetadata.from_csv(self.runset.csv_files[i])
-            for key in set(meta._cmdstan_config.keys()) - excluded_fields:
-                if meta0[key] != meta[key]:
-                    raise ValueError(
-                        'CmdStan config mismatch in Stan CSV file {}: '
-                        'arg {} is {}, expected {}'.format(
-                            self.runset.csv_files[i],
-                            key,
-                            meta0[key],
-                            meta[key],
-                        )
-                    )
-        return meta0
-
-    @property
-    def chains(self) -> int:
-        """Number of chains."""
-        return self.runset.chains
-
-    @property
-    def chain_ids(self) -> list[int]:
-        """Chain ids."""
-        return self.runset.chain_ids
-
-    @property
-    def column_names(self) -> tuple[str, ...]:
-        """
-        Names of generated quantities of interest.
-        """
-        return self._metadata.column_names
-
-    @property
-    def metadata(self) -> InferenceMetadata:
-        """
-        Returns object which contains CmdStan configuration as well as
-        information about the names and structure of the inference method
-        and model output variables.
-        """
-        return self._metadata
+        lines = [
+            f'CmdStanGQ: model={self.model_name} chains={self.chains}'
+            f' method={self.config.method_config.method}',
+            ' csv_files:\n\t' + '\n\t'.join(self.csv_files),
+        ]
+        if self.stdout_files is not None:
+            lines.append(' output_files:\n\t' + '\n\t'.join(self.stdout_files))
+        return '\n'.join(lines)
 
     def draws(
         self,
@@ -203,7 +128,7 @@ class CmdStanGQ(Generic[PrevFit]):
         CmdStanGQ.draws_xr
         CmdStanMCMC.draws
         """
-        self._assemble_generated_quantities()
+        self._assemble()
         inc_warmup |= inc_iterations
         if inc_warmup:
             if (
@@ -216,7 +141,7 @@ class CmdStanGQ(Generic[PrevFit]):
                 )
             elif (
                 isinstance(self.previous_fit, CmdStanMLE)
-                and not self.previous_fit._save_iterations
+                and not self.previous_fit.config.method_config.save_iterations
             ):
                 get_logger().warning(
                     "MLE doesn't contain draws from pre-convergence iterations,"
@@ -228,41 +153,16 @@ class CmdStanGQ(Generic[PrevFit]):
                     '"inc_warmup=True"'
                 )
 
+        start_idx = self._draws_start(inc_warmup)
+        draws = self._draws[start_idx:]
         if inc_sample:
-            cols_1 = self.previous_fit.column_names
-            cols_2 = self.column_names
-            dups = [
-                item
-                for item, count in Counter(cols_1 + cols_2).items()
-                if count > 1
-            ]
-            drop_cols: list[int] = []
-            for dup in dups:
-                drop_cols.extend(
-                    self.previous_fit._metadata.stan_vars[dup].columns()
-                )
-
-        start_idx, _ = self._draws_start(inc_warmup)
-        previous_draws = self._previous_draws(True)
-        if concat_chains and inc_sample:
-            return flatten_chains(
-                np.dstack(
-                    (
-                        np.delete(previous_draws, drop_cols, axis=1),
-                        self._draws,
-                    )
-                )[start_idx:, :, :]
+            previous_draws = self._previous_draws(True)[start_idx:]
+            draws = np.concatenate(
+                (previous_draws[:, :, self._previous_column_indices()], draws),
+                axis=2,
             )
-        if concat_chains:
-            return flatten_chains(self._draws[start_idx:, :, :])
-        if inc_sample:
-            return np.dstack(
-                (
-                    np.delete(previous_draws, drop_cols, axis=1),
-                    self._draws,
-                )
-            )[start_idx:, :, :]
-        return self._draws[start_idx:, :, :]
+
+        return flatten_chains(draws) if concat_chains else draws
 
     def draws_pd(
         self,
@@ -289,124 +189,55 @@ class CmdStanGQ(Generic[PrevFit]):
         CmdStanGQ.draws_xr
         CmdStanMCMC.draws_pd
         """
+        identifiers = ['chain__', 'iter__', 'draw__']
+        selected_columns: list[str] = []
+        include_previous = inc_sample and vars is None
         if vars is not None:
-            if isinstance(vars, str):
-                vars_list = [vars]
-            else:
-                vars_list = vars
-
-            vars_list = list(dict.fromkeys(vars_list))
-
-        if inc_warmup:
-            if (
-                isinstance(self.previous_fit, CmdStanMCMC)
-                and not self.previous_fit._save_warmup
-            ):
-                get_logger().warning(
-                    "Sample doesn't contain draws from warmup iterations,"
-                    ' rerun sampler with "save_warmup=True".'
-                )
-            elif (
-                isinstance(self.previous_fit, CmdStanMLE)
-                and not self.previous_fit._save_iterations
-            ):
-                get_logger().warning(
-                    "MLE doesn't contain draws from pre-convergence iterations,"
-                    ' rerun optimization with "save_iterations=True".'
-                )
-            elif isinstance(self.previous_fit, CmdStanVB):
-                get_logger().warning(
-                    "Variational fit doesn't make sense with argument "
-                    '"inc_warmup=True"'
-                )
-
-        self._assemble_generated_quantities()
-
-        all_columns = ['chain__', 'iter__', 'draw__'] + list(self.column_names)
-
-        gq_cols: list[str] = []
-        mcmc_vars: list[str] = []
-        if vars is not None:
-            for var in vars_list:
-                if var in self._metadata.stan_vars:
-                    info = self._metadata.stan_vars[var]
-                    gq_cols.extend(
-                        self.column_names[info.start_idx : info.end_idx]
-                    )
-                elif (
-                    inc_sample and var in self.previous_fit._metadata.stan_vars
-                ):
-                    info = self.previous_fit._metadata.stan_vars[var]
-                    mcmc_vars.extend(
-                        self.previous_fit.column_names[
-                            info.start_idx : info.end_idx
-                        ]
-                    )
-                elif var in ['chain__', 'iter__', 'draw__']:
-                    gq_cols.append(var)
+            vars_list = [vars] if isinstance(vars, str) else vars
+            for var in dict.fromkeys(vars_list):
+                fit: StanFit[Any]
+                if var in self.metadata.stan_vars:
+                    fit = self
+                elif inc_sample and var in self.previous_fit.metadata.stan_vars:
+                    fit = self.previous_fit
+                    include_previous = True
+                elif var in identifiers:
+                    selected_columns.append(var)
+                    continue
                 else:
-                    raise ValueError('Unknown variable: {}'.format(var))
-        else:
-            gq_cols = all_columns
-            vars_list = gq_cols
+                    raise ValueError(f'Unknown variable: {var}')
+                info = fit.metadata.stan_vars[var]
+                selected_columns.extend(
+                    fit.column_names[info.start_idx : info.end_idx]
+                )
 
-        previous_draws_pd = self._previous_draws_pd(mcmc_vars, inc_warmup)
-
-        draws = self.draws(inc_warmup=inc_warmup)
-        # add long-form columns for chain, iteration, draw
-        n_draws, n_chains, _ = draws.shape
-        chains_col = (
-            np.repeat(np.arange(1, n_chains + 1), n_draws)
-            .reshape(1, n_chains, n_draws)
-            .T
-        )
-        iter_col = (
-            np.tile(np.arange(1, n_draws + 1), n_chains)
-            .reshape(1, n_chains, n_draws)
-            .T
-        )
-        draw_col = (
-            np.arange(1, (n_draws * n_chains) + 1)
-            .reshape(1, n_chains, n_draws)
-            .T
-        )
-        draws = np.concatenate([chains_col, iter_col, draw_col, draws], axis=2)
-
-        draws_pd = pd.DataFrame(
-            data=flatten_chains(draws),
-            columns=all_columns,
-        )
-
-        if inc_sample and mcmc_vars:
-            if gq_cols:
-                return pd.concat(
-                    [
-                        previous_draws_pd,
-                        draws_pd[gq_cols],
-                    ],
-                    axis='columns',
-                )[vars_list]
-            else:
-                return previous_draws_pd
-        elif inc_sample and vars is None:
-            cols_1 = list(previous_draws_pd.columns)
-            cols_2 = list(draws_pd.columns)
-            dups = [
-                item
-                for item, count in Counter(cols_1 + cols_2).items()
-                if count > 1
+        previous_columns = (
+            [
+                self.previous_fit.column_names[idx]
+                for idx in self._previous_column_indices()
             ]
-            return pd.concat(
-                [
-                    previous_draws_pd.drop(columns=dups).reset_index(drop=True),
-                    draws_pd,
-                ],
-                axis=1,
-            )
-        elif gq_cols:
-            return draws_pd[gq_cols]
+            if include_previous
+            else []
+        )
+        draws = self.draws(inc_warmup=inc_warmup, inc_sample=include_previous)
+        n_draws, n_chains, _ = draws.shape
+        frame = pd.DataFrame(
+            flatten_chains(draws),
+            columns=previous_columns + list(self.column_names),
+        )
+        frame['chain__'] = np.repeat(
+            np.arange(1, n_chains + 1, dtype=float), n_draws
+        )
+        frame['iter__'] = np.tile(
+            np.arange(1, n_draws + 1, dtype=float), n_chains
+        )
+        frame['draw__'] = np.arange(1, n_draws * n_chains + 1, dtype=float)
 
-        return draws_pd
+        # An empty variable list returns all GQ columns and IDs.
+        columns = selected_columns or (
+            previous_columns + identifiers + list(self.column_names)
+        )
+        return frame[columns]
 
     @overload
     def draws_xr(
@@ -462,45 +293,41 @@ class CmdStanGQ(Generic[PrevFit]):
                 'Method "draws_xr" is only available when '
                 'original fit is done via Sampling.'
             )
-        mcmc_vars_list = []
-        dup_vars = []
-        if vars is not None:
-            if isinstance(vars, str):
-                vars_list = [vars]
-            else:
-                vars_list = vars
-            for var in vars_list:
-                if var not in self._metadata.stan_vars:
-                    if inc_sample and (
-                        var in self.previous_fit._metadata.stan_vars
-                    ):
-                        mcmc_vars_list.append(var)
-                        dup_vars.append(var)
-                    else:
-                        raise ValueError('Unknown variable: {}'.format(var))
-        else:
-            vars_list = list(self._metadata.stan_vars.keys())
+        prev = self.previous_fit
+        if vars is None:
+            requested = list(self.metadata.stan_vars)
             if inc_sample:
-                for var in self.previous_fit._metadata.stan_vars.keys():
-                    if var not in vars_list and var not in mcmc_vars_list:
-                        mcmc_vars_list.append(var)
-        for var in dup_vars:
-            vars_list.remove(var)
+                requested.extend(prev.metadata.stan_vars)
+        else:
+            requested = [vars] if isinstance(vars, str) else vars
 
-        self._assemble_generated_quantities()
+        gq_vars: list[str] = []
+        previous_vars: list[str] = []
+        for var in dict.fromkeys(requested):
+            if var in self.metadata.stan_vars:
+                gq_vars.append(var)
+            elif inc_sample and var in prev.metadata.stan_vars:
+                previous_vars.append(var)
+            else:
+                raise ValueError(f'Unknown variable: {var}')
 
-        num_draws = self.previous_fit.num_draws_sampling
-        sample_config = self.previous_fit._metadata.cmdstan_config
+        if inc_warmup and not prev._save_warmup:
+            get_logger().warning(
+                "Sample doesn't contain draws from warmup iterations,"
+                ' rerun sampler with "save_warmup=True".'
+            )
+        include_warmup = inc_warmup and prev._save_warmup
+        num_draws = prev.num_draws_sampling
         attrs: MutableMapping[Hashable, Any] = {
-            "stan_version": f"{sample_config['stan_version_major']}."
-            f"{sample_config['stan_version_minor']}."
-            f"{sample_config['stan_version_patch']}",
-            "model": sample_config["model"],
+            "stan_version": f"{prev.config.stan_major_version}."
+            f"{prev.config.stan_minor_version}."
+            f"{prev.config.stan_patch_version}",
+            "model": prev.model_name,
             "num_draws_sampling": num_draws,
         }
-        if inc_warmup and sample_config['save_warmup']:
-            num_draws += self.previous_fit.num_draws_warmup
-            attrs["num_draws_warmup"] = self.previous_fit.num_draws_warmup
+        if include_warmup:
+            num_draws += prev.num_draws_warmup
+            attrs["num_draws_warmup"] = prev.num_draws_warmup
 
         data: MutableMapping[Hashable, Any] = {}
         coordinates: MutableMapping[Hashable, Any] = {
@@ -508,18 +335,15 @@ class CmdStanGQ(Generic[PrevFit]):
             "draw": np.arange(num_draws),
         }
 
-        for var in vars_list:
-            build_xarray_data(
-                data,
-                self._metadata.stan_vars[var],
-                self.draws(inc_warmup=inc_warmup),
-            )
-        if inc_sample:
-            for var in mcmc_vars_list:
+        if gq_vars:
+            gq_draws = self.draws(inc_warmup=include_warmup)
+            for var in gq_vars:
+                build_xarray_data(data, self.metadata.stan_vars[var], gq_draws)
+        if previous_vars:
+            previous_draws = prev.draws(inc_warmup=include_warmup)
+            for var in previous_vars:
                 build_xarray_data(
-                    data,
-                    self.previous_fit._metadata.stan_vars[var],
-                    self.previous_fit.draws(inc_warmup=inc_warmup),
+                    data, prev.metadata.stan_vars[var], previous_draws
                 )
 
         return xr.Dataset(data, coords=coordinates, attrs=attrs).transpose(
@@ -570,8 +394,8 @@ class CmdStanGQ(Generic[PrevFit]):
         CmdStanVB.stan_variable
         CmdStanLaplace.stan_variable
         """
-        model_var_names = self.previous_fit._metadata.stan_vars.keys()
-        gq_var_names = self._metadata.stan_vars.keys()
+        model_var_names = self.previous_fit.metadata.stan_vars.keys()
+        gq_var_names = self.metadata.stan_vars.keys()
         if not (var in model_var_names or var in gq_var_names):
             raise ValueError(
                 f'Unknown variable name: {var}\n'
@@ -582,14 +406,14 @@ class CmdStanGQ(Generic[PrevFit]):
             return self.previous_fit.stan_variable(var, **kwargs)
 
         # is gq variable
-        self._assemble_generated_quantities()
+        self._assemble()
 
-        draw1, _ = self._draws_start(
+        draw1 = self._draws_start(
             inc_warmup=kwargs.get('inc_warmup', False)
             or kwargs.get('inc_iterations', False)
         )
         draws = flatten_chains(self._draws[draw1:])
-        out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(draws)
+        out: np.ndarray = self.metadata.stan_vars[var].extract_reshape(draws)
         return out
 
     def stan_variables(self, **kwargs: bool) -> dict[str, np.ndarray]:
@@ -611,8 +435,8 @@ class CmdStanGQ(Generic[PrevFit]):
         CmdStanLaplace.stan_variables
         """
         result = {}
-        sample_var_names = self.previous_fit._metadata.stan_vars.keys()
-        gq_var_names = self._metadata.stan_vars.keys()
+        sample_var_names = self.previous_fit.metadata.stan_vars.keys()
+        gq_var_names = self.metadata.stan_vars.keys()
         for name in gq_var_names:
             result[name] = self.stan_variable(name, **kwargs)
         for name in sample_var_names:
@@ -620,11 +444,10 @@ class CmdStanGQ(Generic[PrevFit]):
                 result[name] = self.stan_variable(name, **kwargs)
         return result
 
-    def _assemble_generated_quantities(self) -> None:
+    def _assemble(self) -> None:
         if self._draws.shape != (0,):
             return
-        # use numpy loadtxt
-        _, num_draws = self._draws_start(inc_warmup=True)
+        num_draws = self._num_draws_total()
 
         gq_sample: np.ndarray = np.empty(
             (num_draws, self.chains, len(self.column_names)),
@@ -632,10 +455,10 @@ class CmdStanGQ(Generic[PrevFit]):
             order='F',
         )
         for chain in range(self.chains):
-            csv_file = self.runset.csv_files[chain]
+            csv_file = self.csv_files[chain]
             try:
                 *_, draws = stancsv.parse_comments_header_and_draws(
-                    self.runset.csv_files[chain]
+                    self.csv_files[chain]
                 )
                 gq_sample[:, chain, :] = stancsv.csv_bytes_list_to_numpy(draws)
             except Exception as exc:
@@ -645,35 +468,33 @@ class CmdStanGQ(Generic[PrevFit]):
                 ) from exc
         self._draws = gq_sample
 
-    def _draws_start(self, inc_warmup: bool) -> tuple[int, int]:
-        draw1 = 0
+    def _draws_start(self, inc_warmup: bool) -> int:
+        """Start of the returned rows; -1 selects the final optimizer row."""
         p_fit = self.previous_fit
         if isinstance(p_fit, CmdStanMCMC):
-            num_draws = p_fit.num_draws_sampling
-            if p_fit._save_warmup:
-                if inc_warmup:
-                    num_draws += p_fit.num_draws_warmup
-                else:
-                    draw1 = p_fit.num_draws_warmup
-
+            if p_fit._save_warmup and not inc_warmup:
+                return p_fit.num_draws_warmup
         elif isinstance(p_fit, CmdStanMLE):
-            num_draws = 1
-            if p_fit._save_iterations:
-                opt_iters = len(p_fit.optimized_iterations_np)  # type: ignore
-                if inc_warmup:
-                    num_draws = opt_iters
-                else:
-                    draw1 = opt_iters - 1
+            if not inc_warmup:
+                return -1
         elif isinstance(p_fit, CmdStanVB):
-            draw1 = 1  # skip mean
-            num_draws = p_fit.variational_sample.shape[0]
-            if inc_warmup:
-                num_draws += 1
-        else:
-            num_draws = p_fit.draws().shape[0]
-            draw1 = 0
+            return 1  # Always skip the variational mean.
+        return 0
 
-        return draw1, num_draws
+    def _num_draws_total(self) -> int:
+        """Number of GQ CSV rows, including warmup, iterations, or VB mean."""
+        p_fit = self.previous_fit
+        if isinstance(p_fit, CmdStanMCMC):
+            return p_fit.num_draws_sampling + (
+                p_fit.num_draws_warmup if p_fit._save_warmup else 0
+            )
+        if isinstance(p_fit, CmdStanMLE):
+            if p_fit.config.method_config.save_iterations:
+                return len(p_fit.optimized_iterations_np)  # type: ignore
+            return 1
+        if isinstance(p_fit, CmdStanVB):
+            return int(p_fit.variational_sample.shape[0]) + 1
+        return int(p_fit.draws().shape[0])
 
     def _previous_draws(self, inc_warmup: bool) -> np.ndarray:
         """
@@ -682,9 +503,9 @@ class CmdStanGQ(Generic[PrevFit]):
         """
         p_fit = self.previous_fit
         if isinstance(p_fit, CmdStanMCMC):
-            return p_fit.draws(inc_warmup=inc_warmup)
+            return p_fit.draws(inc_warmup=inc_warmup and p_fit._save_warmup)
         elif isinstance(p_fit, CmdStanMLE):
-            if inc_warmup and p_fit._save_iterations:
+            if inc_warmup and p_fit.config.method_config.save_iterations:
                 return p_fit.optimized_iterations_np[:, None]  # type: ignore
 
             return np.atleast_2d(  # type: ignore
@@ -699,39 +520,12 @@ class CmdStanGQ(Generic[PrevFit]):
         else:  # CmdStanLaplace, CmdStanPathfinder
             return p_fit.draws()[:, None, :]
 
-    def _previous_draws_pd(
-        self, vars: list[str], inc_warmup: bool
-    ) -> pd.DataFrame:
-        if vars:
-            sel: list[str] | slice = vars
-        else:
-            sel = slice(None, None)
-
-        p_fit = self.previous_fit
-        if isinstance(p_fit, CmdStanMCMC):
-            return p_fit.draws_pd(vars or None, inc_warmup=inc_warmup)
-
-        elif isinstance(p_fit, CmdStanMLE):
-            if inc_warmup and p_fit._save_iterations:
-                return p_fit.optimized_iterations_pd[sel]  # type: ignore
-            else:
-                return p_fit.optimized_params_pd[sel]
-        elif isinstance(p_fit, CmdStanVB):
-            return p_fit.variational_sample_pd[sel]
-        elif isinstance(p_fit, CmdStanLaplace):
-            return p_fit.draws_pd(vars or None)
-        else:  # CmdStanPathfinder
-            return pd.DataFrame(p_fit.draws(), columns=p_fit.column_names)[sel]
-
-    def save_csvfiles(self, dir: str | None = None) -> None:
-        """
-        Move output CSV files to specified directory.
-
-        :param dir: directory path
-
-        See Also
-        --------
-        stanfit.RunSet.save_csvfiles
-        cmdstanpy.from_csv
-        """
-        self.runset.save_csvfiles(dir)
+    def _previous_column_indices(self) -> list[int]:
+        """Previous-fit columns retained when merging with generated
+        quantities."""
+        gq_columns = set(self.column_names)
+        return [
+            idx
+            for idx, name in enumerate(self.previous_fit.column_names)
+            if name not in gq_columns
+        ]

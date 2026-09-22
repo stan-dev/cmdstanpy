@@ -1,60 +1,74 @@
 """Container for the result of running optimization"""
 
+from __future__ import annotations
+
+import os
 from collections import OrderedDict
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 
-from cmdstanpy.cmdstan_args import Method, OptimizeArgs
-from cmdstanpy.utils import get_logger, stancsv
+from cmdstanpy.utils import get_logger
 
-from .metadata import InferenceMetadata
-from .runset import RunSet
+from .base import SingleFileFit
+from .metadata import OptimizeConfig, OptimizeRunConfig
+
+# Codes indicating successful convergence of MLE
+# See stan::optimize::TerminationCondition in stan-dev/stan for definitions
+_CONVERGED_CODES = frozenset((10, 20, 21, 30, 31))
 
 
-class CmdStanMLE:
+@dataclass(kw_only=True)
+class CmdStanMLE(SingleFileFit[OptimizeConfig]):
     """
     Container for outputs from CmdStan optimization.
     Created by :meth:`CmdStanModel.optimize`.
+
+    The last row of the output CSV holds the final estimate; when the
+    optimizer was run with ``save_iterations=True`` the preceding rows
+    hold the intermediate iterations.
     """
 
-    def __init__(self, runset: RunSet) -> None:
-        """Initialize object."""
-        if not runset.method == Method.OPTIMIZE:
-            raise ValueError(
-                'Wrong runset method, expecting optimize runset, '
-                'found method {}'.format(runset.method)
-            )
-        self.runset = runset
-        # info from runset to be exposed
-        self.converged = runset._check_retcodes()
-        optimize_args = self.runset._args.method_args
-        assert isinstance(
-            optimize_args, OptimizeArgs
-        )  # make the typechecker happy
-        self._save_iterations: bool = optimize_args.save_iterations
+    converged: bool = True
 
-        csv_file = self.runset.csv_files[0]
-        try:
-            (
-                comment_lines,
-                header,
-                draws_lines,
-            ) = stancsv.parse_comments_header_and_draws(
-                self.runset.csv_files[0]
-            )
-            self._metadata = InferenceMetadata(
-                stancsv.construct_config_header_dict(comment_lines, header)
-            )
-            all_draws = stancsv.csv_bytes_list_to_numpy(draws_lines)
+    @classmethod
+    def from_files(
+        cls,
+        csv_file: str | os.PathLike,
+        config_file: str | os.PathLike,
+        stdout_file: str | os.PathLike | None = None,
+        converged: bool = True,
+    ) -> CmdStanMLE:
+        fit = cls(
+            converged=converged,
+            **cls._from_files_kwargs(
+                csv_file, config_file, stdout_file, OptimizeRunConfig
+            ),
+        )
+        # Below conditional only true in CmdStan 2.39+
+        if 'converged__' in fit.metadata.method_vars:
+            # Intermediate rows have status 0, so saved iterations require
+            # using the termination condition from the final row
+            status = fit.method_variables()['converged__'][-1]
+            fit.converged = status in _CONVERGED_CODES
+        return fit
 
-        except Exception as exc:
-            raise ValueError(
-                f"An error occurred when parsing Stan csv {csv_file}"
-            ) from exc
-        self._mle: np.ndarray = all_draws[-1]
-        if self._save_iterations:
-            self._all_iters: np.ndarray = all_draws
+    def _warn_if_not_converged(self) -> None:
+        if not self.converged:
+            get_logger().warning(
+                'Invalid estimate, optimization failed to converge.'
+            )
+
+    def _check_for_saved_iterations(self) -> bool:
+        """Whether saved iterations are available, warning when not."""
+        if not self.config.method_config.save_iterations:
+            get_logger().warning(
+                'Intermediate iterations not saved to CSV output file. '
+                'Rerun the optimize method with "save_iterations=True".'
+            )
+            return False
+        return True
 
     def create_inits(
         self, seed: int | None = None, chains: int = 4
@@ -79,45 +93,21 @@ class CmdStanMLE:
         return self.stan_variables()
 
     def __repr__(self) -> str:
-        repr = 'CmdStanMLE: model={}{}'.format(
-            self.runset.model, self.runset._args.method_args.compose(0, cmd=[])
-        )
-        repr = '{}\n csv_file:\n\t{}\n output_file:\n\t{}'.format(
-            repr,
-            '\n\t'.join(self.runset.csv_files),
-            '\n\t'.join(self.runset.stdout_files),
-        )
+        mc = self.config.method_config
+        lines = [
+            f'CmdStanMLE: model={self.model_name}'
+            f' method={mc.method} algorithm={mc.algorithm}',
+            f' csv_file:\n\t{self.csv_file}',
+        ]
+        if self.config_file is not None:
+            lines.append(f' config_file:\n\t{self.config_file}')
+        if self.stdout_file is not None:
+            lines.append(f' output_file:\n\t{self.stdout_file}')
         if not self.converged:
-            repr = '{}\n Warning: invalid estimate, '.format(repr)
-            repr = '{} optimization failed to converge.'.format(repr)
-        return repr
-
-    def __getattr__(self, attr: str) -> np.ndarray:
-        """Synonymous with ``fit.stan_variable(attr)"""
-        if attr.startswith("_"):
-            raise AttributeError(f"Unknown variable name {attr}")
-        try:
-            return self.stan_variable(attr)
-        except ValueError as e:
-            # pylint: disable=raise-missing-from
-            raise AttributeError(*e.args)
-
-    @property
-    def column_names(self) -> tuple[str, ...]:
-        """
-        Names of estimated quantities, includes joint log probability,
-        and all parameters, transformed parameters, and generated quantities.
-        """
-        return self.metadata.column_names
-
-    @property
-    def metadata(self) -> InferenceMetadata:
-        """
-        Returns object which contains CmdStan configuration as well as
-        information about the names and structure of the inference method
-        and model output variables.
-        """
-        return self._metadata
+            lines.append(
+                ' Warning: invalid estimate, optimization failed to converge.'
+            )
+        return '\n'.join(lines)
 
     @property
     def optimized_params_np(self) -> np.ndarray:
@@ -126,11 +116,10 @@ class CmdStanMLE:
         which contains all optimizer outputs, i.e., the value for `lp__`
         as well as all Stan program variables.
         """
-        if not self.converged:
-            get_logger().warning(
-                'Invalid estimate, optimization failed to converge.'
-            )
-        return self._mle
+        self._warn_if_not_converged()
+        self._assemble()
+        mle: np.ndarray = self._draws[-1]
+        return mle
 
     @property
     def optimized_iterations_np(self) -> np.ndarray | None:
@@ -140,17 +129,11 @@ class CmdStanMLE:
         the value for `lp__` as well as all Stan program variables.
 
         """
-        if not self._save_iterations:
-            get_logger().warning(
-                'Intermediate iterations not saved to CSV output file. '
-                'Rerun the optimize method with "save_iterations=True".'
-            )
+        if not self._check_for_saved_iterations():
             return None
-        if not self.converged:
-            get_logger().warning(
-                'Invalid estimate, optimization failed to converge.'
-            )
-        return self._all_iters
+        self._warn_if_not_converged()
+        self._assemble()
+        return self._draws
 
     @property
     def optimized_params_pd(self) -> pd.DataFrame:
@@ -159,11 +142,9 @@ class CmdStanMLE:
         which contains all optimizer outputs, i.e., the value for `lp__`
         as well as all Stan program variables.
         """
-        if not self.runset._check_retcodes():
-            get_logger().warning(
-                'Invalid estimate, optimization failed to converge.'
-            )
-        return pd.DataFrame([self._mle], columns=self.column_names)
+        return pd.DataFrame(
+            [self.optimized_params_np], columns=self.column_names
+        )
 
     @property
     def optimized_iterations_pd(self) -> pd.DataFrame | None:
@@ -173,17 +154,10 @@ class CmdStanMLE:
         the value for `lp__` as well as all Stan program variables.
 
         """
-        if not self._save_iterations:
-            get_logger().warning(
-                'Intermediate iterations not saved to CSV output file. '
-                'Rerun the optimize method with "save_iterations=True".'
-            )
+        iters = self.optimized_iterations_np
+        if iters is None:
             return None
-        if not self.converged:
-            get_logger().warning(
-                'Invalid estimate, optimization failed to converge.'
-            )
-        return pd.DataFrame(self._all_iters, columns=self.column_names)
+        return pd.DataFrame(iters, columns=self.column_names)
 
     @property
     def optimized_params_dict(self) -> dict[str, np.float64]:
@@ -191,11 +165,7 @@ class CmdStanMLE:
         Returns all estimates from the optimizer, including `lp__` as a
         Python Dict.  Only returns estimate from final iteration.
         """
-        if not self.runset._check_retcodes():
-            get_logger().warning(
-                'Invalid estimate, optimization failed to converge.'
-            )
-        return OrderedDict(zip(self.column_names, self._mle))
+        return OrderedDict(zip(self.column_names, self.optimized_params_np))
 
     def stan_variable(
         self,
@@ -209,7 +179,7 @@ class CmdStanMLE:
         for the named Stan program variable where the dimensions of the
         numpy.ndarray match the shape of the Stan program variable.
 
-        This functionaltiy is also available via a shortcut using ``.`` -
+        This functionality is also available via a shortcut using ``.`` -
         writing ``fit.a`` is a synonym for ``fit.stan_variable("a")``
 
         :param var: variable name
@@ -222,43 +192,24 @@ class CmdStanMLE:
         See Also
         --------
         CmdStanMLE.stan_variables
-        CmdStanMCMC.stan_variable
-        CmdStanPathfinder.stan_variable
-        CmdStanVB.stan_variable
-        CmdStanGQ.stan_variable
-        CmdStanLaplace.stan_variable
         """
-        if var not in self._metadata.stan_vars:
+        if var not in self.metadata.stan_vars:
             raise ValueError(
                 f'Unknown variable name: {var}\n'
-                'Available variables are ' + ", ".join(self._metadata.stan_vars)
+                'Available variables are ' + ", ".join(self.metadata.stan_vars)
             )
-        if warn and inc_iterations and not self._save_iterations:
-            get_logger().warning(
-                'Intermediate iterations not saved to CSV output file. '
-                'Rerun the optimize method with "save_iterations=True".'
-            )
-        if warn and not self.runset._check_retcodes():
-            get_logger().warning(
-                'Invalid estimate, optimization failed to converge.'
-            )
-        if inc_iterations and self._save_iterations:
-            data = self._all_iters
+        save_iterations = self.config.method_config.save_iterations
+        if warn and inc_iterations and not save_iterations:
+            self._check_for_saved_iterations()
+        if warn:
+            self._warn_if_not_converged()
+        self._assemble()
+        if inc_iterations and save_iterations:
+            data = self._draws
         else:
-            data = self._mle
+            data = self._draws[-1]
 
-        try:
-            out: np.ndarray = self._metadata.stan_vars[var].extract_reshape(
-                data
-            )
-            return out
-        except KeyError:
-            # pylint: disable=raise-missing-from
-            raise ValueError(
-                f'Unknown variable name: {var}\n'
-                'Available variables are '
-                + ", ".join(self._metadata.stan_vars.keys())
-            )
+        return self._extract_stan_var(var, data)
 
     def stan_variables(
         self, inc_iterations: bool = False
@@ -276,32 +227,11 @@ class CmdStanMLE:
         See Also
         --------
         CmdStanMLE.stan_variable
-        CmdStanMCMC.stan_variables
-        CmdStanPathfinder.stan_variables
-        CmdStanVB.stan_variables
-        CmdStanGQ.stan_variables
-        CmdStanLaplace.stan_variables
         """
-        if not self.runset._check_retcodes():
-            get_logger().warning(
-                'Invalid estimate, optimization failed to converge.'
-            )
+        self._warn_if_not_converged()
         result = {}
-        for name in self._metadata.stan_vars:
+        for name in self.metadata.stan_vars:
             result[name] = self.stan_variable(
                 name, inc_iterations=inc_iterations, warn=False
             )
         return result
-
-    def save_csvfiles(self, dir: str | None = None) -> None:
-        """
-        Move output CSV files to specified directory.
-
-        :param dir: directory path
-
-        See Also
-        --------
-        stanfit.RunSet.save_csvfiles
-        cmdstanpy.from_csv
-        """
-        self.runset.save_csvfiles(dir)

@@ -1,0 +1,52 @@
+
+{
+  "stan_major_version" : "2",
+  "stan_minor_version" : "37",
+  "stan_patch_version" : "0",
+  "model_name" : "datagen_poisson_glm_model",
+  "start_datetime" : "2026-07-20 20:31:59 UTC",
+  "method" : {
+    "value" : "sample",
+    "sample" : {
+      "num_samples" : 100,
+      "num_warmup" : 1000,
+      "save_warmup" : false,
+      "thin" : 1,
+      "adapt" : {
+        "engaged" : true,
+        "gamma" : 0.05,
+        "delta" : 0.8,
+        "kappa" : 0.75,
+        "t0" : 10,
+        "init_buffer" : 75,
+        "term_buffer" : 50,
+        "window" : 25,
+        "save_metric" : false
+      },
+      "algorithm" : {
+        "value" : "fixed_param"
+      },
+      "num_chains" : 1
+    }
+  },
+  "id" : 1,
+  "data" : {
+    "file" : ""
+  },
+  "init" : "2",
+  "random" : {
+    "seed" : 12345
+  },
+  "output" : {
+    "file" : "fixed_param_sample.csv",
+    "diagnostic_file" : "",
+    "refresh" : 100,
+    "sig_figs" : 8,
+    "profile_file" : "profile.csv",
+    "save_cmdstan_config" : true
+  },
+  "num_threads" : 1,
+  "mpi_enabled" : false,
+  "stanc_version" : "stanc3 v2.37.0",
+  "stancflags" : "--filename-in-msg=datagen_poisson_glm.stan"
+}

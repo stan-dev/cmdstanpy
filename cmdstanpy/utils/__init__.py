@@ -30,7 +30,7 @@ from .filesystem import (
 )
 from .json import write_stan_json
 from .logging import disable_logging, enable_logging, get_logger
-from .stancsv import check_sampler_csv, parse_rdump_value, read_metric, rload
+from .stancsv import parse_rdump_value, read_metric, rload
 
 
 def show_versions(output: bool = True) -> str:
@@ -100,7 +100,6 @@ __all__ = [
     'EXTENSION',
     'SanitizedOrTmpFilePath',
     'build_xarray_data',
-    'check_sampler_csv',
     'cmdstan_path',
     'cmdstan_version',
     'cmdstan_version_before',

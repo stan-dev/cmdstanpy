@@ -20,6 +20,12 @@ from .logging import get_logger
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
 
 
+def accompanying_json(output_file: str | os.PathLike, kind: str) -> str:
+    """Name CmdStan gives a JSON written for an output CSV."""
+    stem, _ = os.path.splitext(os.fspath(output_file))
+    return f'{stem}_{kind}.json'
+
+
 def windows_short_path(path: str) -> str:
     """
     Gets the short path name of a given long path.

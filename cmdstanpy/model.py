@@ -22,7 +22,6 @@ from cmdstanpy.cmdstan_args import (
     CmdStanArgs,
     GenerateQuantitiesArgs,
     LaplaceArgs,
-    Method,
     OptimizeArgs,
     PathfinderArgs,
     SamplerArgs,
@@ -37,11 +36,13 @@ from cmdstanpy.stanfit import (
     CmdStanVB,
     PrevFit,
     RunSet,
-    from_csv,
+    from_output_files,
 )
+from cmdstanpy.stanfit.base import SingleFileFit
 from cmdstanpy.utils import do_command, get_logger
 from cmdstanpy.utils.cmdstan import cmdstan_version_before, windows_tbb_path
 from cmdstanpy.utils.filesystem import (
+    accompanying_json,
     temp_inits,
     temp_metrics,
     temp_single_json,
@@ -51,6 +52,18 @@ from cmdstanpy.utils.stancsv import try_deduce_metric_type
 from . import progress as progbar
 
 OptionalPath = str | os.PathLike | None
+
+
+def _output_files_for_generate_quantities(files: list[str]) -> list[str]:
+    """Add corresponding config files for the CSV-only input"""
+    output_files = list(files)
+    if all(os.path.splitext(path)[1] == '.csv' for path in files):
+        output_files.extend(
+            config_file
+            for path in files
+            if os.path.isfile(config_file := accompanying_json(path, 'config'))
+        )
+    return output_files
 
 
 class CmdStanModel:
@@ -175,12 +188,6 @@ class CmdStanModel:
                 user_header=user_header,
             )
 
-            # try to detect models w/out parameters, needed for sampler
-            if cmdstan_version_before(2, 36):
-                model_info = self.src_info()
-                if 'parameters' in model_info:
-                    self._fixed_param |= len(model_info['parameters']) == 0
-
         # check CmdStan version compatibility
         exe_info = None
         try:
@@ -192,9 +199,9 @@ class CmdStanModel:
                 self._name,
                 str(e),
             )
-        if cmdstan_version_before(2, 35, exe_info):
+        if cmdstan_version_before(2, 37, exe_info):
             raise RuntimeError(
-                "This version of CmdStanPy requires CmdStan 2.35 or higher."
+                "This version of CmdStanPy requires CmdStan 2.37 or higher."
             )
 
     def __repr__(self) -> str:
@@ -371,8 +378,10 @@ class CmdStanModel:
         :param save_iterations: When ``True``, save intermediate approximations
             to the output CSV file.  Default is ``False``.
 
-        :param require_converged: Whether or not to raise an error if Stan
-            reports that "The algorithm may not have converged".
+        :param require_converged: Whether or not to raise an error if the
+            optimizer fails to meet a convergence criterion. With CmdStan
+            2.39 and newer this is determined from the ``converged__`` output
+            column; older versions use the process return code.
 
         :param show_console: If ``True``, stream CmdStan messages sent to
             stdout and stderr to the console.  Default is ``False``.
@@ -434,7 +443,8 @@ class CmdStanModel:
             )
         runset.raise_for_timeouts()
 
-        if not runset._check_retcodes():
+        process_succeeded = runset._check_retcodes()
+        if not process_succeeded:
             msg = "Error during optimization! Command '{}' failed: {}".format(
                 ' '.join(runset.cmd(0)), runset.get_err_msgs()
             )
@@ -442,7 +452,17 @@ class CmdStanModel:
                 get_logger().warning(msg)
             else:
                 raise RuntimeError(msg)
-        mle = CmdStanMLE(runset)
+        mle = CmdStanMLE.from_files(
+            csv_file=runset.csv_files[0],
+            config_file=runset.config_files[0],
+            stdout_file=runset.stdout_files[0],
+            converged=process_succeeded,
+        )
+        if process_succeeded and not mle.converged:
+            msg = 'Error during optimization! The algorithm did not converge.'
+            if require_converged:
+                raise RuntimeError(msg)
+            get_logger().warning(msg)
         return mle
 
     # pylint: disable=too-many-arguments
@@ -530,16 +550,16 @@ class CmdStanModel:
         :param parallel_chains: Number of processes to run in parallel. Must be
             a positive integer.  Defaults to :func:`multiprocessing.cpu_count`,
             i.e., it will only run as many chains in parallel as there are
-            cores on the machine.   Note that CmdStan 2.28 and higher can run
-            all chains in parallel providing that the model was compiled with
-            threading support.
+            cores on the machine.   Note that CmdStan can run all chains in
+            parallel providing that the model was compiled with threading
+            support.
 
         :param threads_per_chain: The number of threads to use in parallelized
             sections within an MCMC chain (e.g., when using the Stan functions
             ``reduce_sum()``  or ``map_rect()``).  This will only have an effect
             if the model was compiled with threading support.  For such models,
-            CmdStan version 2.28 and higher will run all chains in parallel
-            from within a single process.  The total number of threads used
+            CmdStan will run all chains in parallel from within a single
+            process.  The total number of threads used
             will be ``parallel_chains * threads_per_chain``, where the default
             value for parallel_chains is the number of cpus, not chains.
 
@@ -683,12 +703,12 @@ class CmdStanModel:
 
         :param force_one_process_per_chain: If ``True``, run multiple chains in
             distinct processes regardless of model ability to run parallel
-            chains (CmdStan 2.28+ feature). If ``False``, always run multiple
-            chains in one process (does not check that this is valid).
+            chains. If ``False``, always run multiple chains in one process
+            (does not check that this is valid).
 
-            If None (Default): Check that CmdStan version is >=2.28, and that
-            model was compiled with STAN_THREADS=True, and utilize the
-            parallel chain functionality if those conditions are met.
+            If None (Default): Check that the model was compiled with
+            STAN_THREADS=True, and utilize the parallel chain functionality
+            if so.
 
         :param timeout: Duration at which sampling times out in seconds.
 
@@ -945,7 +965,16 @@ class CmdStanModel:
                     )
                 get_logger().warning(msg)
 
-            mcmc = CmdStanMCMC(runset)
+            mcmc = CmdStanMCMC.from_files(
+                csv_files=runset.csv_files,
+                config_files=runset.config_files,
+                metric_files=runset.metric_files or None,
+                stdout_files=runset.stdout_files,
+                diagnostic_files=runset.diagnostic_files or None,
+                profile_files=runset.profile_files or None,
+                chain_ids=runset.chain_ids,
+                sig_figs=runset._args.sig_figs,
+            )
         return mcmc
 
     def generate_quantities(
@@ -992,9 +1021,8 @@ class CmdStanModel:
             or as the path of a data file in JSON or Rdump format.
 
         :param previous_fit: Can be either a :class:`CmdStanMCMC`,
-            :class:`CmdStanMLE`, or :class:`CmdStanVB` or a list of
-            stan-csv files generated by fitting the model to the data
-            using any Stan interface.
+            :class:`CmdStanMLE`, or :class:`CmdStanVB`, or a list of Stan CSV
+            files.
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
@@ -1040,15 +1068,18 @@ class CmdStanModel:
             ),
         ):
             fit_object = previous_fit
-            fit_csv_files = previous_fit.runset.csv_files
         elif isinstance(previous_fit, list):
             if len(previous_fit) < 1:
                 raise ValueError(
-                    'Expecting list of Stan CSV files, found empty list'
+                    'Expecting list of output files, found empty list'
                 )
             try:
-                fit_csv_files = previous_fit
-                fit_object: PrevFit = from_csv(fit_csv_files)  # type: ignore
+                output_files = _output_files_for_generate_quantities(
+                    previous_fit
+                )
+                fit_object: PrevFit = from_output_files(  # type: ignore
+                    output_files
+                )
             except ValueError as e:
                 raise ValueError(
                     'Invalid sample from Stan CSV files, error:\n\t{}\n\t'
@@ -1059,8 +1090,12 @@ class CmdStanModel:
         else:
             raise ValueError(
                 'Previous fit must be either CmdStanPy fit object'
-                ' or list of paths to Stan CSV files.'
+                ' or list of paths to the output files of a fit.'
             )
+        if isinstance(fit_object, SingleFileFit):
+            fit_csv_files = [fit_object.csv_file]
+        else:
+            fit_csv_files = fit_object.csv_files
         if isinstance(fit_object, CmdStanMCMC):
             chains = fit_object.chains
             chain_ids = fit_object.chain_ids
@@ -1072,7 +1107,7 @@ class CmdStanModel:
         elif isinstance(fit_object, CmdStanMLE):
             chains = 1
             chain_ids = [1]
-            if fit_object._save_iterations:
+            if fit_object.config.method_config.save_iterations:
                 get_logger().warning(
                     'MLE contains saved iterations which will be used '
                     'to generate additional quantities of interest.'
@@ -1126,7 +1161,13 @@ class CmdStanModel:
                         ' above output is unclear!'
                     )
                 raise RuntimeError(msg)
-            quantities = CmdStanGQ(runset=runset, previous_fit=fit_object)
+            quantities = CmdStanGQ.from_files(
+                csv_files=runset.csv_files,
+                config_files=runset.config_files,
+                previous_fit=fit_object,
+                stdout_files=runset.stdout_files,
+                chain_ids=runset.chain_ids,
+            )
         return quantities
 
     def variational(
@@ -1329,9 +1370,11 @@ class CmdStanModel:
                     runset.get_err_msgs()
                 )
             raise RuntimeError(msg)
-        # pylint: disable=invalid-name
-        vb = CmdStanVB(runset)
-        return vb
+        return CmdStanVB.from_files(
+            csv_file=runset.csv_files[0],
+            config_file=runset.config_files[0],
+            stdout_file=runset.stdout_files[0],
+        )
 
     def pathfinder(
         self,
@@ -1553,7 +1596,11 @@ class CmdStanModel:
                 ' '.join(runset.cmd(0)), runset.get_err_msgs()
             )
             raise RuntimeError(msg)
-        return CmdStanPathfinder(runset)
+        return CmdStanPathfinder.from_files(
+            csv_file=runset.csv_files[0],
+            config_file=runset.config_files[0],
+            stdout_file=runset.stdout_files[0],
+        )
 
     def log_prob(
         self,
@@ -1660,7 +1707,9 @@ class CmdStanModel:
         :param mode: The mode around which to place the approximation, either
 
             * A :class:`CmdStanMLE` object
-            * A path to a CSV file containing the output of an optimization run.
+            * A path to a CSV file containing the output of an
+              optimization run, with the config JSON file written by
+              CmdStan alongside it.
             * ``None`` - use default optimizer settings and/or any ``opt_args``.
 
         :param draws: Number of approximate draws to return.
@@ -1735,18 +1784,17 @@ class CmdStanModel:
                     "Consider supplying a mode or additional optimizer args"
                 ) from e
         elif not isinstance(mode, CmdStanMLE):
-            cmdstan_mode = from_csv(mode)  # type: ignore  # we check below
+            # we check the type below
+            cmdstan_mode = from_output_files(mode)  # type: ignore
         else:
             cmdstan_mode = mode
 
-        if cmdstan_mode.runset.method != Method.OPTIMIZE:
+        if not isinstance(cmdstan_mode, CmdStanMLE):
             raise ValueError(
                 "Mode must be a CmdStanMLE or a path to an optimize CSV"
             )
 
-        mode_jacobian = (
-            cmdstan_mode.runset._args.method_args.jacobian  # type: ignore
-        )
+        mode_jacobian = cmdstan_mode.config.method_config.jacobian
         if mode_jacobian != jacobian:
             raise ValueError(
                 "Jacobian argument to optimize and laplace must match!\n"
@@ -1754,9 +1802,7 @@ class CmdStanModel:
                 f"but optimize was run with jacobian={mode_jacobian}"
             )
 
-        laplace_args = LaplaceArgs(
-            cmdstan_mode.runset.csv_files[0], draws, jacobian
-        )
+        laplace_args = LaplaceArgs(cmdstan_mode.csv_file, draws, jacobian)
 
         with temp_single_json(data) as _data:
             args = CmdStanArgs(
@@ -1780,7 +1826,12 @@ class CmdStanModel:
                 timeout=timeout,
             )
         runset.raise_for_timeouts()
-        return CmdStanLaplace(runset, cmdstan_mode)
+        return CmdStanLaplace.from_files(
+            csv_file=runset.csv_files[0],
+            config_file=runset.config_files[0],
+            stdout_file=runset.stdout_files[0],
+            mode=cmdstan_mode,
+        )
 
     def _run_cmdstan(
         self,

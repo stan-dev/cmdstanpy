@@ -4,7 +4,6 @@ Utility functions for reading the Stan CSV format
 
 import io
 import json
-import math
 import os
 import re
 import warnings
@@ -13,7 +12,23 @@ from typing import Any, Iterator, Mapping, Sequence
 import numpy as np
 import numpy.typing as npt
 
-from cmdstanpy import _CMDSTAN_SAMPLING, _CMDSTAN_THIN, _CMDSTAN_WARMUP
+
+def scan_header(
+    stan_csv: str | os.PathLike | Iterator[bytes],
+) -> str | None:
+    """Return a Stan CSV file's header line (its first non-comment line),
+    without reading the draws."""
+
+    def scan(lines: Iterator[bytes]) -> str | None:
+        for line in lines:
+            if not line.startswith(b"#"):
+                return line.strip().decode()
+        return None
+
+    if isinstance(stan_csv, (str, os.PathLike)):
+        with open(stan_csv, "rb") as f:
+            return scan(f)
+    return scan(stan_csv)
 
 
 def parse_comments_header_and_draws(
@@ -103,69 +118,25 @@ def csv_bytes_list_to_numpy(
     return out
 
 
-def extract_key_val_pairs(
-    comment_lines: list[bytes], remove_default_text: bool = True
-) -> Iterator[tuple[str, str]]:
-    """Yields cleaned key = val pairs from stan csv comments.
-    Removes '(Default)' text from values if remove_default_text is True."""
-    cleaned_lines = (
-        line.decode().lstrip("# ").strip() for line in comment_lines
-    )
-    for line in cleaned_lines:
-        split_on_eq = line.split(" = ")
-        # Only want lines with key = value
-        if len(split_on_eq) != 2:
+def munge_varname(name: str) -> str:
+    if '.' not in name and ':' not in name:
+        return name
+
+    tuple_parts = name.split(':')
+    for i, part in enumerate(tuple_parts):
+        if '.' not in part:
             continue
+        part = part.replace('.', '[', 1)
+        part = part.replace('.', ',')
+        part += ']'
+        tuple_parts[i] = part
 
-        key, val = split_on_eq
-        if remove_default_text:
-            val = val.replace("(Default)", "").strip()
-        yield key, val
-
-
-def parse_config(
-    comment_lines: list[bytes],
-) -> dict[str, str | int | float]:
-    """Extracts the key=value config settings from Stan CSV comment
-    lines and returns a dictionary."""
-    out: dict[str, str | int | float] = {}
-    for key, val in extract_key_val_pairs(comment_lines):
-        if key == 'file':
-            if not val.endswith('csv'):
-                out['data_file'] = val
-        else:
-            if val == 'true':
-                out[key] = 1
-            elif val == 'false':
-                out[key] = 0
-            else:
-                for cast in (int, float):
-                    try:
-                        out[key] = cast(val)
-                        break
-                    except ValueError:
-                        pass
-                else:
-                    out[key] = val
-    return out
+    return '.'.join(tuple_parts)
 
 
 def parse_header(header: str) -> tuple[str, ...]:
     """Returns munged variable names from a Stan csv header line"""
     return tuple(munge_varname(name) for name in header.split(","))
-
-
-def construct_config_header_dict(
-    comment_lines: list[bytes], header: str | None
-) -> dict[str, str | int | float | tuple[str, ...]]:
-    """Extracts config and header info from comment/draws lines parsed
-    from a Stan CSV file."""
-    config = parse_config(comment_lines)
-    out: dict[str, str | int | float | tuple[str, ...]] = {**config}
-    if header:
-        out["raw_header"] = header
-        out["column_names"] = parse_header(header)
-    return out
 
 
 def parse_variational_eta(comment_lines: list[bytes]) -> float:
@@ -306,128 +277,6 @@ def raise_on_inconsistent_draws_shape(
                 f"line {i}: bad draw, expecting {num_cols} items, "
                 f"found {draw_size}"
             )
-
-
-def parse_timing_lines(
-    comment_lines: list[bytes],
-) -> dict[str, float]:
-    """Parse the timing lines into a dictionary with key corresponding
-    to the phase, e.g. Warm-up, Sampling, Total, and value the elapsed seconds
-    """
-    out: dict[str, float] = {}
-
-    cleaned_lines = (ln.lstrip(b"# ") for ln in comment_lines)
-    in_timing_block = False
-    for line in cleaned_lines:
-        if line.startswith(b"Elapsed Time") and not in_timing_block:
-            in_timing_block = True
-
-        if not in_timing_block:
-            continue
-        match = re.findall(r"([\d\.e\+\-]+) seconds \((.+)\)", str(line))
-        if match:
-            seconds = float(match[0][0])
-            phase = match[0][1]
-            out[phase] = seconds
-    return out
-
-
-def check_sampler_csv(
-    path: str | os.PathLike,
-    iter_sampling: int = _CMDSTAN_SAMPLING,
-    iter_warmup: int = _CMDSTAN_WARMUP,
-    save_warmup: bool = False,
-    thin: int = _CMDSTAN_THIN,
-) -> dict[str, Any]:
-    """Capture essential config, shape from stan_csv file."""
-    meta = parse_sampler_metadata_from_csv(path)
-    if thin > _CMDSTAN_THIN:
-        if 'thin' not in meta:
-            raise ValueError(
-                f'Bad Stan CSV file {path}, config error, '
-                f'expected thin = {thin}'
-            )
-        if meta['thin'] != thin:
-            raise ValueError(
-                f'Bad Stan CSV file {path}, '
-                f'config error, expected thin = {thin}, found {meta["thin"]}'
-            )
-    draws_warmup = int(math.ceil(iter_warmup / thin))
-    draws_sampling = int(math.ceil(iter_sampling / thin))
-    if meta['draws_sampling'] != draws_sampling:
-        raise ValueError(
-            f'Bad Stan CSV file {path}, expected {draws_sampling} draws, '
-            f'found {meta["draws_sampling"]}'
-        )
-    if save_warmup:
-        if not ('save_warmup' in meta and meta['save_warmup'] == 1):
-            raise ValueError(
-                f'Bad Stan CSV file {path}, config error, expected '
-                'save_warmup = 1'
-            )
-        if meta['draws_warmup'] != draws_warmup:
-            raise ValueError(
-                f'Bad Stan CSV file {path}, expected {draws_warmup} '
-                f'warmup draws, found {meta["draws_warmup"]}'
-            )
-    return meta
-
-
-def parse_sampler_metadata_from_csv(
-    path: str | os.PathLike,
-) -> dict[str, int | float | str | tuple[str, ...] | dict[str, float]]:
-    """Parses sampling metadata from a given Stan CSV path for a sample run"""
-    try:
-        comments, header, draws = parse_comments_header_and_draws(path)
-        if header is None:
-            raise ValueError("No header line found in stan csv")
-        raise_on_inconsistent_draws_shape(header, draws)
-        config = construct_config_header_dict(comments, header)
-        num_warmup, num_sampling = count_warmup_and_sampling_draws(path)
-        timings = parse_timing_lines(comments)
-        if (
-            (config['algorithm'] != 'fixed_param')
-            and header
-            and not is_sneaky_fixed_param(header)
-        ):
-            max_depth: int = config["max_depth"]  # type: ignore
-            max_tree_hits, divs = extract_max_treedepth_and_divergence_counts(
-                header, draws, max_depth, num_warmup
-            )
-        else:
-            max_tree_hits, divs = 0, 0
-    except (KeyError, ValueError) as exc:
-        raise ValueError(f"Error in reading csv file: {path}") from exc
-
-    key_renames = {
-        "Warm-up": "warmup",
-        "Sampling": "sampling",
-        "Total": "total",
-    }
-    addtl: dict[str, int | dict[str, float]] = {
-        "draws_warmup": num_warmup,
-        "draws_sampling": num_sampling,
-        "ct_divergences": divs,
-        "ct_max_treedepth": max_tree_hits,
-        "time": {key_renames[k]: v for k, v in timings.items()},
-    }
-    return config | addtl
-
-
-def munge_varname(name: str) -> str:
-    if '.' not in name and ':' not in name:
-        return name
-
-    tuple_parts = name.split(':')
-    for i, part in enumerate(tuple_parts):
-        if '.' not in part:
-            continue
-        part = part.replace('.', '[', 1)
-        part = part.replace('.', ',')
-        part += ']'
-        tuple_parts[i] = part
-
-    return '.'.join(tuple_parts)
 
 
 def read_metric(path: str) -> list[int]:

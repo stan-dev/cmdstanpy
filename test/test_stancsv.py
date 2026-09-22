@@ -105,6 +105,17 @@ def test_parse_comments_header_and_draws() -> None:
     assert draws_lines == [b"3\n"]
 
 
+def test_scan_header() -> None:
+    lines: list[bytes] = [b"# 1\n", b"a,b\n", b"3,4\n", b"# 4\n"]
+    assert stancsv.scan_header(iter(lines)) == "a,b"
+    assert stancsv.scan_header(iter([b"# 1\n", b"# 2\n"])) is None
+
+    csv_path = os.path.join(DATAFILES_PATH, "logistic_output_1.csv")
+    header = stancsv.scan_header(csv_path)
+    assert header is not None
+    assert header.startswith("lp__")
+
+
 def test_csv_polars_and_numpy_equiv() -> None:
     lines = [
         b"-6.76206,1,0.787025,1,1,0,6.81411,0.229458\n",
@@ -164,60 +175,6 @@ def test_parse_stan_csv_from_file() -> None:
     assert draws_lines == draws_lines_path
 
 
-def test_config_parsing() -> None:
-    csv_path = os.path.join(DATAFILES_PATH, "bernoulli_output_1.csv")
-
-    comment_lines, *_ = stancsv.parse_comments_header_and_draws(csv_path)
-    config = stancsv.parse_config(comment_lines)
-
-    expected = {
-        'stan_version_major': 2,
-        'stan_version_minor': 19,
-        'stan_version_patch': 0,
-        'model': 'bernoulli_model',
-        'method': 'sample',
-        'num_samples': 10,
-        'num_warmup': 100,
-        'save_warmup': 0,
-        'thin': 1,
-        'engaged': 1,
-        'gamma': 0.05,
-        'delta': 0.8,
-        'kappa': 0.75,
-        't0': 10,
-        'init_buffer': 75,
-        'term_buffer': 50,
-        'window': 25,
-        'algorithm': 'hmc',
-        'engine': 'nuts',
-        'max_depth': 10,
-        'metric': 'diag_e',
-        'metric_file': '',
-        'stepsize': 1,
-        'stepsize_jitter': 0,
-        'id': 1,
-        'data_file': 'examples/bernoulli/bernoulli.data.json',
-        'init': 2,
-        'seed': 123456,
-        'diagnostic_file': '',
-        'refresh': 100,
-        'Step size': 0.787025,
-    }
-
-    assert config == expected
-
-
-def test_config_parsing_data_transforms() -> None:
-    comments = [
-        b"# bool_t = true\n",
-        b"# bool_f = false\n",
-        b"# float = 1.5\n",
-        b"# int = 1\n",
-    ]
-    expected = {"bool_t": 1, "bool_f": 0, "float": 1.5, "int": 1}
-    assert stancsv.parse_config(comments) == expected
-
-
 def test_column_filter_basic() -> None:
     data = [b"1,2,3\n", b"4,5,6\n"]
     indexes = [0, 2]
@@ -264,15 +221,6 @@ def test_parse_header() -> None:
         "theta[1]",
     )
     assert parsed == expected
-
-
-def test_extract_config_and_header_info() -> None:
-    comments = [b"# stan_version_major = 2\n"]
-    header = "lp__,theta.1"
-    out = stancsv.construct_config_header_dict(comments, header)
-    assert out["stan_version_major"] == 2
-    assert out["raw_header"] == "lp__,theta.1"
-    assert out["column_names"] == ("lp__", "theta[1]")
 
 
 def test_parse_variational_eta() -> None:
@@ -441,38 +389,6 @@ def test_inconsistent_draws_shape() -> None:
 
 def test_inconsistent_draws_shape_empty() -> None:
     stancsv.raise_on_inconsistent_draws_shape("", [])
-
-
-def test_parsing_timing_lines() -> None:
-    lines = [
-        b"# \n",
-        b"#  Elapsed Time: 0.001332 seconds (Warm-up)\n",
-        b"#                0.000249 seconds (Sampling)\n",
-        b"#                0.001581 seconds (Total)\n",
-        b"# \n",
-    ]
-    out = stancsv.parse_timing_lines(lines)
-
-    assert len(out) == 3
-    assert out['Warm-up'] == 0.001332
-    assert out['Sampling'] == 0.000249
-    assert out['Total'] == 0.001581
-
-
-def test_parsing_timing_lines_scientific_notation() -> None:
-    lines = [
-        b'# \n',
-        b'#  Elapsed Time: 630099e0 seconds (Warm-up)\n',
-        b'#                4358560.0e-1 seconds (Sampling)\n',
-        b'#                1.06595e+06 seconds (Total)\n',
-        b'# \n',
-    ]
-    out = stancsv.parse_timing_lines(lines)
-
-    assert len(out) == 3
-    assert out['Warm-up'] == 630099.0
-    assert out['Sampling'] == 435856.0
-    assert out['Total'] == 1065950.0
 
 
 def test_munge_varname() -> None:
