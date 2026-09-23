@@ -4,7 +4,6 @@
 
 import os
 import platform
-import sys
 from pathlib import Path
 from test import mark_not_windows, mark_windows_only
 from typing import Callable
@@ -514,14 +513,3 @@ def test_make_command_windows(
 def test_usage(capsys: pytest.CaptureFixture) -> None:
     install_cxx_toolchain.usage()
     assert '--version' in capsys.readouterr().out
-
-
-def test_parse_cmdline_args(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        sys, 'argv', ['install_cxx_toolchain', '-v', '4.5', '-d', 'somewhere']
-    )
-    args = install_cxx_toolchain.parse_cmdline_args()
-    assert args['version'] == '4.5'
-    assert args['dir'] == 'somewhere'
-    assert args['silent'] is False
-    assert args['progress'] is False

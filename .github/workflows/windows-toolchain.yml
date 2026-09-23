@@ -40,18 +40,23 @@ jobs:
         include:
           - os: windows-latest
             arch: x86_64
+            machine: x86-64
             rtools: "4.0"
           - os: windows-latest
             arch: x86_64
+            machine: x86-64
             rtools: "4.4"
           - os: windows-latest
             arch: x86_64
+            machine: x86-64
             rtools: "4.5"
           - os: windows-11-arm
             arch: aarch64
+            machine: ARM64
             rtools: "4.4"
           - os: windows-11-arm
             arch: aarch64
+            machine: ARM64
             rtools: "4.5"
     steps:
       - uses: actions/checkout@v7
@@ -66,8 +71,14 @@ jobs:
           python -m pip install .
 
       - name: Report detected architecture
+        shell: python
         run: |
-          python -c "import platform; from cmdstanpy.utils.cmdstan import determine_windows_arch as d; print(platform.machine(), d()); assert d() == '${{ matrix.arch }}'"
+          import platform
+          from cmdstanpy.utils.cmdstan import determine_windows_arch
+
+          arch = determine_windows_arch()
+          print(platform.machine(), "->", arch)
+          assert arch == "${{ matrix.arch }}", arch
 
       # The runner images ship their own RTools; make sure discovery only sees
       # what this job installed.
@@ -105,25 +116,41 @@ jobs:
           # CmdStan invokes g++; on ARM64 it is an alias for clang
           cxx = shutil.which("g++")
           assert cxx and cxx.startswith(compiler_path), cxx
-          subprocess.run([cxx, "--version"], check=True)
 
           make = make_command()
           print("make:", make, "->", shutil.which(make))
           assert shutil.which(make), f"{make} not found on PATH"
           subprocess.run([make, "--version"], check=True)
 
-      - name: Compile a trivial C++ program
-        shell: python
-        run: |
-          import os, subprocess, textwrap
-          from cmdstanpy.utils import cxx_toolchain_path
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as f:
+              f.write(f"CXX_BIN={compiler_path}\n")
+              f.write(f"TOOL_BIN={tool_path}\n")
 
-          cxx_toolchain_path("${{ matrix.rtools }}", os.path.join(os.environ["RUNNER_TEMP"], "toolchain"))
-          with open("hello.cpp", "w") as f:
-              f.write(textwrap.dedent("""
-                  #include <cstdint>
-                  #include <iostream>
-                  int main() { std::cout << "hello\\n"; return 0; }
-              """))
-          subprocess.run(["g++", "-O0", "hello.cpp", "-o", "hello.exe"], check=True)
-          subprocess.run(["./hello.exe"], check=True)
+      - name: Compile and run a trivial C++ program
+        shell: pwsh
+        run: |
+          #Requires -Version 7.4
+          $PSNativeCommandUseErrorActionPreference = $true
+          $cxx = Join-Path $env:CXX_BIN 'g++.exe'
+
+          & $cxx --version
+          $triple = (& $cxx -dumpmachine).Trim()
+          Write-Host "target triple: $triple"
+          if (-not $triple.StartsWith('${{ matrix.arch }}')) {
+            throw "expected a ${{ matrix.arch }} target, got '$triple'"
+          }
+
+          Set-Content hello.cpp @(
+            '#include <cstdint>',
+            '#include <iostream>',
+            'int main() { std::cout << "hello" << std::endl; return 0; }'
+          )
+          & $cxx -O0 hello.cpp -o hello.exe
+          ./hello.exe
+
+          # file(1) ships in RTools' usr/bin; proves what was actually emitted
+          $described = & (Join-Path $env:TOOL_BIN 'file.exe') hello.exe
+          Write-Host $described
+          if ($described -notlike '*${{ matrix.machine }}*') {
+            throw "expected a ${{ matrix.machine }} binary, got '$described'"
+          }

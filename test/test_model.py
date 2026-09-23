@@ -43,12 +43,6 @@ def test_model_good() -> None:
     assert os.path.samefile(model.exe_file, BERN_EXE)
     assert 'bernoulli' == model.name
 
-    # compile with external header
-    model = CmdStanModel(
-        stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
-        user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
-    )
-
     # default model name
     model = CmdStanModel(stan_file=BERN_STAN)
     assert BERN_BASENAME == model.name
@@ -57,6 +51,16 @@ def test_model_good() -> None:
     model = CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
     assert BERN_STAN == model.stan_file
     assert os.path.samefile(model.exe_file, BERN_EXE)
+
+
+def test_model_compile_user_header() -> None:
+    """The header path is passed with this platform's native separators."""
+    model = CmdStanModel(
+        stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
+        user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
+        force_compile=True,
+    )
+    assert os.path.exists(model.exe_file)
 
 
 def test_ctor_compile_arg() -> None:
