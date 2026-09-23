@@ -200,8 +200,9 @@ class CompilerOptions:
             if "allow-undefined" not in self._stanc_options:
                 self._stanc_options["allow-undefined"] = True
             # CmdStan's make/program does not apply its usual
-            # $(subst \,/,...) to USER_HEADER, and clang reads the remaining
-            # backslashes in -include as escapes
+            # $(subst \,/,...) to USER_HEADER, and Stan Math sets SHELL on
+            # Windows, so recipes run through sh, which eats the backslashes
+            # before the compiler sees the -include path
             self._user_header = Path(self._user_header).absolute().as_posix()
 
             if ' ' in self._user_header:
