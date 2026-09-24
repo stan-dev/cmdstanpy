@@ -2,7 +2,7 @@
 """
 Download and install a C++ toolchain.
 Currently implemented platforms (platform.system)
-    Windows: RTools 3.5, 4.0 (default)
+    Windows: RTools 4.0, 4.4, 4.5 (default)
     Darwin (macOS): Not implemented
     Linux: Not implemented
 Optional command line arguments:
@@ -26,16 +26,35 @@ from typing import Any
 
 from cmdstanpy import _DOT_CMDSTAN
 from cmdstanpy.utils import pushd, validate_dir, wrap_url_progress_hook
+from cmdstanpy.utils.cmdstan import (
+    determine_windows_arch,
+    normalize_rtools_version,
+    rtools_compiler,
+    rtools_layouts,
+)
 
 EXTENSION = '.exe' if platform.system() == 'Windows' else ''
-IS_64BITS = sys.maxsize > 2**32
+
+# CRAN embeds build revisions in the RTools 4.2+ installer filenames, so we
+# use the r-hub mirror, which publishes them under a stable 'latest' tag.
+# These are the builds the CmdStan guide points users at.
+RTOOLS_INSTALLERS = {
+    '4.5': {
+        'x86_64': 'rtools45.exe',
+        'aarch64': 'rtools45-aarch64.exe',
+    },
+    '4.4': {
+        'x86_64': 'rtools44.exe',
+        'aarch64': 'rtools44-aarch64.exe',
+    },
+}
 
 
 def usage() -> None:
     """Print usage."""
     print(
         """Arguments:
-        -v (--version) :CmdStan version
+        -v (--version) : RTools version: 4.0, 4.4 or 4.5
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
@@ -111,13 +130,14 @@ def install_version(
 
 def install_mingw32_make(toolchain_loc: str, verbose: bool = False) -> None:
     """Install mingw32-make for Windows RTools 4.0."""
+    arch = determine_windows_arch()
     os.environ['PATH'] = ';'.join(
         list(
             OrderedDict.fromkeys(
                 [
                     os.path.join(
                         toolchain_loc,
-                        'mingw_64' if IS_64BITS else 'mingw_32',
+                        'mingw64' if arch == 'x86_64' else 'mingw32',
                         'bin',
                     ),
                     os.path.join(toolchain_loc, 'usr', 'bin'),
@@ -129,7 +149,11 @@ def install_mingw32_make(toolchain_loc: str, verbose: bool = False) -> None:
     cmd = [
         'pacman',
         '-Sy',
-        'mingw-w64-x86_64-make' if IS_64BITS else 'mingw-w64-i686-make',
+        (
+            'mingw-w64-x86_64-make'
+            if arch == 'x86_64'
+            else 'mingw-w64-i686-make'
+        ),
         '--noconfirm',
     ]
     with pushd('.'):
@@ -162,37 +186,22 @@ def install_mingw32_make(toolchain_loc: str, verbose: bool = False) -> None:
 
 def is_installed(toolchain_loc: str, version: str) -> bool:
     """Returns True is toolchain is installed."""
-    if platform.system() == 'Windows':
-        if version in ['35', '3.5']:
-            if not os.path.exists(os.path.join(toolchain_loc, 'bin')):
-                return False
-            return os.path.exists(
-                os.path.join(
-                    toolchain_loc,
-                    'mingw_64' if IS_64BITS else 'mingw_32',
-                    'bin',
-                    'g++' + EXTENSION,
-                )
-            )
-        elif version in ['40', '4.0', '4']:
-            return os.path.exists(
-                os.path.join(
-                    toolchain_loc,
-                    'mingw64' if IS_64BITS else 'mingw32',
-                    'bin',
-                    'g++' + EXTENSION,
-                )
-            )
-        else:
-            return False
+    if platform.system() != 'Windows':
+        return False
+    for layout in rtools_layouts(normalize_rtools_version(version)):
+        tool_path = os.path.join(toolchain_loc, *layout.tool_subdir)
+        if not os.path.exists(tool_path):
+            continue
+        if rtools_compiler(toolchain_loc, layout) is not None:
+            return True
     return False
 
 
 def latest_version() -> str:
-    """Windows version hardcoded to 4.0."""
-    if platform.system() == 'Windows':
-        return '4.0'
-    return ''
+    """Latest RTools version supported on this machine."""
+    if platform.system() != 'Windows':
+        return ''
+    return '4.5'
 
 
 def retrieve_toolchain(filename: str, url: str, progress: bool = True) -> None:
@@ -222,10 +231,7 @@ def retrieve_toolchain(filename: str, url: str, progress: bool = True) -> None:
 def normalize_version(version: str) -> str:
     """Return maj.min part of version string."""
     if platform.system() == 'Windows':
-        if version in ['4', '40']:
-            version = '4.0'
-        elif version == '35':
-            version = '3.5'
+        return normalize_rtools_version(version)
     return version
 
 
@@ -237,28 +243,42 @@ def get_toolchain_name() -> str:
 
 
 # TODO(2.0): consider something other than RTools
-def get_url(version: str) -> str:
+def get_url(version: str, arch: str | None = None) -> str:
     """Return URL for toolchain."""
-    url = ''
-    if platform.system() == 'Windows':
-        if version == '4.0':
-            # pylint: disable=line-too-long
-            if IS_64BITS:
-                url = 'https://cran.r-project.org/bin/windows/Rtools/rtools40-x86_64.exe'  # noqa: disable=E501
-            else:
-                url = 'https://cran.r-project.org/bin/windows/Rtools/rtools40-i686.exe'  # noqa: disable=E501
-        elif version == '3.5':
-            url = 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
-    return url
+    if platform.system() != 'Windows':
+        return ''
+    if arch is None:
+        arch = determine_windows_arch()
+    if version in RTOOLS_INSTALLERS:
+        installer = RTOOLS_INSTALLERS[version].get(arch, '')
+        if not installer:
+            return ''
+        series = 'rtools' + version.replace('.', '')
+        return (
+            f'https://github.com/r-hub/{series}/releases/'
+            f'download/latest/{installer}'
+        )
+    legacy = {
+        ('4.0', 'x86_64'): 'rtools40-x86_64.exe',
+        ('4.0', 'i686'): 'rtools40-i686.exe',
+    }.get((version, arch), '')
+    if legacy:
+        return f'https://cran.r-project.org/bin/windows/Rtools/{legacy}'
+    return ''
 
 
-def get_toolchain_version(name: str, version: str) -> str:
-    """Toolchain version."""
-    toolchain_folder = ''
-    if platform.system() == 'Windows':
-        toolchain_folder = '{}{}'.format(name, version.replace('.', ''))
-
-    return toolchain_folder
+def get_toolchain_version(
+    name: str, version: str, arch: str | None = None
+) -> str:
+    """Toolchain install folder name."""
+    if platform.system() != 'Windows':
+        return ''
+    if arch is None:
+        arch = determine_windows_arch()
+    folder = '{}{}'.format(name, version.replace('.', ''))
+    if arch == 'aarch64':
+        folder += '-aarch64'
+    return folder
 
 
 def run_rtools_install(args: dict[str, Any]) -> None:
@@ -274,9 +294,18 @@ def run_rtools_install(args: dict[str, Any]) -> None:
     if version is None:
         version = latest_version()
     version = normalize_version(version)
-    print("C++ toolchain '{}' version: {}".format(toolchain, version))
+    arch = determine_windows_arch()
+    print(
+        "C++ toolchain '{}' version: {} ({})".format(toolchain, version, arch)
+    )
 
-    url = get_url(version)
+    url = get_url(version, arch)
+    if not url:
+        raise ValueError(
+            f'RTools {version} is not available for {arch}. '
+            f'Supported: {", ".join(sorted(RTOOLS_INSTALLERS))}, 4.0 '
+            '(4.0 is x86 only).'
+        )
 
     if 'verbose' in args:
         verbose = args['verbose']
@@ -297,12 +326,12 @@ def run_rtools_install(args: dict[str, Any]) -> None:
     if platform.system() == 'Windows':
         silent = 'silent' in args
         # force silent == False for 4.0 version
-        if 'silent' not in args and version in ('4.0', '4', '40'):
+        if 'silent' not in args and version == '4.0':
             silent = False
     else:
         silent = False
 
-    toolchain_folder = get_toolchain_version(toolchain, version)
+    toolchain_folder = get_toolchain_version(toolchain, version, arch)
     with pushd(install_dir):
         if is_installed(toolchain_folder, version):
             print('C++ toolchain {} already installed'.format(toolchain_folder))
@@ -322,7 +351,7 @@ def run_rtools_install(args: dict[str, Any]) -> None:
         if (
             'no-make' not in args
             and (platform.system() == 'Windows')
-            and (version in ('4.0', '4', '40'))
+            and version == '4.0'
         ):
             if os.path.exists(
                 os.path.join(
@@ -336,7 +365,11 @@ def run_rtools_install(args: dict[str, Any]) -> None:
 
 def parse_cmdline_args() -> dict[str, Any]:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', '-v', help="version, defaults to latest")
+    parser.add_argument(
+        '--version',
+        '-v',
+        help="RTools version (4.0, 4.4, 4.5), defaults to latest",
+    )
     parser.add_argument(
         '--dir', '-d', help="install directory, defaults to '~/.cmdstan"
     )

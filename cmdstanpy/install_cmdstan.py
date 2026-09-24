@@ -44,7 +44,7 @@ from cmdstanpy.utils import (
     validate_dir,
     wrap_url_progress_hook,
 )
-from cmdstanpy.utils.cmdstan import get_download_url
+from cmdstanpy.utils.cmdstan import get_download_url, make_command
 
 from . import progress as progbar
 
@@ -71,7 +71,6 @@ def is_windows() -> bool:
     return platform.system() == 'Windows'
 
 
-MAKE = os.getenv('MAKE', 'make' if not is_windows() else 'mingw32-make')
 EXTENSION = '.exe' if is_windows() else ''
 
 
@@ -203,7 +202,7 @@ class InteractiveSettings:
     def compiler(self) -> bool:
         if not is_windows():
             return False
-        print("Would you like to install the RTools40 C++ toolchain?")
+        print("Would you like to install the RTools C++ toolchain?")
         print("A C++ toolchain is required for CmdStan.")
         print(
             "If you are not sure if you need the toolchain or not, "
@@ -234,7 +233,7 @@ def clean_all(verbose: bool = False) -> None:
 
     :param verbose: Boolean value; when ``True``, show output from make command.
     """
-    cmd = [MAKE, 'clean-all']
+    cmd = [make_command(), 'clean-all']
     try:
         if verbose:
             do_command(cmd)
@@ -262,7 +261,7 @@ def build(verbose: bool = False, progress: bool = True, cores: int = 1) -> None:
     :param cores: Integer, number of cores to use in the ``make`` command.
         Default is 1 core.
     """
-    cmd = [MAKE, 'build', f'-j{cores}']
+    cmd = [make_command(), 'build', f'-j{cores}']
     try:
         if verbose:
             do_command(cmd)
@@ -343,7 +342,7 @@ def compile_example(verbose: bool = False) -> None:
     if path.is_file():
         path.unlink()
 
-    cmd = [MAKE, path.as_posix()]
+    cmd = [make_command(), path.as_posix()]
     try:
         if verbose:
             do_command(cmd)
@@ -544,37 +543,26 @@ def retrieve_version(version: str, progress: bool = True) -> None:
 
 
 def run_compiler_install(dir: str, verbose: bool, progress: bool) -> None:
-    from .install_cxx_toolchain import is_installed as _is_installed_cxx
+    from .install_cxx_toolchain import latest_version as _latest_version_cxx
     from .install_cxx_toolchain import run_rtools_install as _main_cxx
     from .utils import cxx_toolchain_path
 
-    compiler_found = False
-    rtools40_home = os.environ.get('RTOOLS40_HOME')
-    for cxx_loc in ([rtools40_home] if rtools40_home is not None else []) + [
-        home_cmdstan(),
-        os.path.join(os.path.abspath("/"), "RTools40"),
-        os.path.join(os.path.abspath("/"), "RTools"),
-        os.path.join(os.path.abspath("/"), "RTools35"),
-        os.path.join(os.path.abspath("/"), "RBuildTools"),
-    ]:
-        for cxx_version in ['40', '35']:
-            if _is_installed_cxx(cxx_loc, cxx_version):
-                compiler_found = True
-                break
-        if compiler_found:
-            break
-    if not compiler_found:
-        print('Installing RTools40')
-        # copy argv and clear sys.argv
-        _main_cxx(
-            {
-                'dir': dir,
-                'progress': progress,
-                'version': None,
-                'verbose': verbose,
-            }
-        )
-        cxx_version = '40'
+    try:
+        cxx_toolchain_path(None, dir)
+        return
+    except ValueError:
+        pass
+
+    cxx_version = _latest_version_cxx()
+    print(f'Installing RTools {cxx_version}')
+    _main_cxx(
+        {
+            'dir': dir,
+            'progress': progress,
+            'version': None,
+            'verbose': verbose,
+        }
+    )
     # Add toolchain to $PATH
     cxx_toolchain_path(cxx_version, dir)
 
@@ -676,7 +664,6 @@ def parse_cmdline_args() -> dict[str, Any]:
     if is_windows():
         # use compiler installed with install_cxx_toolchain
         # Install a new compiler if compiler not found
-        # Search order is RTools40, RTools35
         parser.add_argument(
             '--compiler',
             '-c',

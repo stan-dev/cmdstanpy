@@ -1,0 +1,156 @@
+name: Windows toolchain
+
+# Exercises the RTools install + discovery path on real Windows runners.
+# Kept out of the main matrix because the RTools 4.4/4.5 installers are ~450MB.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "cmdstanpy/install_cxx_toolchain.py"
+      - "cmdstanpy/utils/cmdstan.py"
+      - "cmdstanpy/install_cmdstan.py"
+      - "test/test_cxx_installation.py"
+      - ".github/workflows/windows-toolchain.yml"
+
+jobs:
+  # Fast, hardware-independent: the layout table is exercised with fake trees.
+  unit:
+    name: layout unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, windows-11-arm]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .[test]
+      - run: python -m pytest test/test_cxx_installation.py -v
+
+  install:
+    name: RTools ${{ matrix.rtools }} on ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x86_64
+            machine: x86-64
+            rtools: "4.0"
+          - os: windows-latest
+            arch: x86_64
+            machine: x86-64
+            rtools: "4.4"
+          - os: windows-latest
+            arch: x86_64
+            machine: x86-64
+            rtools: "4.5"
+          - os: windows-11-arm
+            arch: aarch64
+            machine: ARM64
+            rtools: "4.4"
+          - os: windows-11-arm
+            arch: aarch64
+            machine: ARM64
+            rtools: "4.5"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Report detected architecture
+        shell: python
+        run: |
+          import platform
+          from cmdstanpy.utils.cmdstan import determine_windows_arch
+
+          arch = determine_windows_arch()
+          print(platform.machine(), "->", arch)
+          assert arch == "${{ matrix.arch }}", arch
+
+      # The runner images ship their own RTools; make sure discovery only sees
+      # what this job installed.
+      - name: Clear pre-existing RTools environment
+        run: |
+          "RTOOLS40_HOME=" >> $env:GITHUB_ENV
+          "RTOOLS42_HOME=" >> $env:GITHUB_ENV
+          "RTOOLS43_HOME=" >> $env:GITHUB_ENV
+          "RTOOLS44_HOME=" >> $env:GITHUB_ENV
+          "RTOOLS45_HOME=" >> $env:GITHUB_ENV
+
+      - name: Install RTools ${{ matrix.rtools }}
+        run: |
+          python -m cmdstanpy.install_cxx_toolchain --version ${{ matrix.rtools }} --dir ${{ runner.temp }}\toolchain --verbose
+
+      - name: Discover and activate toolchain
+        shell: python
+        run: |
+          import os, shutil, subprocess
+          from cmdstanpy.install_cxx_toolchain import get_toolchain_version, is_installed
+          from cmdstanpy.utils import cxx_toolchain_path
+          from cmdstanpy.utils.cmdstan import make_command
+
+          install_dir = os.path.join(os.environ["RUNNER_TEMP"], "toolchain")
+          version = "${{ matrix.rtools }}"
+          folder = get_toolchain_version("RTools", version)
+          print("expecting install folder:", folder)
+          assert is_installed(os.path.join(install_dir, folder), version)
+
+          compiler_path, tool_path = cxx_toolchain_path(version, install_dir)
+          print("compiler:", compiler_path)
+          print("tools:   ", tool_path)
+          assert compiler_path.startswith(install_dir), compiler_path
+
+          # CmdStan invokes g++; on ARM64 it is an alias for clang
+          cxx = shutil.which("g++")
+          assert cxx and cxx.startswith(compiler_path), cxx
+
+          make = make_command()
+          print("make:", make, "->", shutil.which(make))
+          assert shutil.which(make), f"{make} not found on PATH"
+          subprocess.run([make, "--version"], check=True)
+
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as f:
+              f.write(f"CXX_BIN={compiler_path}\n")
+              f.write(f"TOOL_BIN={tool_path}\n")
+
+      - name: Compile and run a trivial C++ program
+        shell: pwsh
+        run: |
+          #Requires -Version 7.4
+          $PSNativeCommandUseErrorActionPreference = $true
+          $cxx = Join-Path $env:CXX_BIN 'g++.exe'
+
+          & $cxx --version
+          $triple = (& $cxx -dumpmachine).Trim()
+          Write-Host "target triple: $triple"
+          if (-not $triple.StartsWith('${{ matrix.arch }}')) {
+            throw "expected a ${{ matrix.arch }} target, got '$triple'"
+          }
+
+          Set-Content hello.cpp @(
+            '#include <cstdint>',
+            '#include <iostream>',
+            'int main() { std::cout << "hello" << std::endl; return 0; }'
+          )
+          & $cxx -O0 hello.cpp -o hello.exe
+          ./hello.exe
+
+          # file(1) ships in RTools' usr/bin; proves what was actually emitted
+          $described = & (Join-Path $env:TOOL_BIN 'file.exe') hello.exe
+          Write-Host $described
+          if ($described -notlike '*${{ matrix.machine }}*') {
+            throw "expected a ${{ matrix.machine }} binary, got '$described'"
+          }

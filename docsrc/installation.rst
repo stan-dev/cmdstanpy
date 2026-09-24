@@ -154,10 +154,13 @@ There is usually a pre-installed C++ compiler as well, but not necessarily new e
 **MacOS** The Xcode and Xcode command line tools must be installed.  Xcode is available for free from the Mac App Store.
 To install the Xcode command line tools, run the shell command: ``xcode-select --install``.
 
-**Windows**  We recommend using the `RTools 4.0 <https://cran.r-project.org/bin/windows/Rtools/rtools40.html>`_ toolchain
-which contains a ``g++ 8`` compiler and ``Mingw``, the native Windows equivalent of the GNU-Make utility.
+**Windows**  We recommend using the `RTools 4.5 <https://cran.r-project.org/bin/windows/Rtools/rtools45/rtools.html>`_ toolchain,
+which contains a C++ compiler and the GNU-Make build utility.
 This can be installed along with CmdStan when you invoke the function :meth:`cmdstanpy.install_cmdstan`
 with argument ``compiler=True``.
+RTools is available for both Intel/AMD 64-bit (``x86_64``) and ARM 64-bit (``aarch64``) machines;
+CmdStanPy selects the matching build automatically.
+Older toolchains (RTools 4.0, Intel/AMD only) are still detected if already installed.
 
 
 .. _install-cmdstan-fun:
@@ -217,6 +220,17 @@ CmdStanPy will do its best to determine which of these is applicable for your
 machine when running ``install_cmdstan``. If the wrong choice is made, or if you
 need to manually override this, you can set the ``CMDSTAN_ARCH`` environment variable
 to one of the above options, or to "false" to use the standard x86 download.
+
+Windows on ARM64
+................
+
+CmdStan can be built on ARM 64-bit (``aarch64``) Windows machines using the
+ARM64 build of RTools 4.4 or 4.5, which CmdStanPy installs and detects
+automatically.
+
+A Python interpreter built for Intel/AMD and running under emulation reports an
+``x86_64`` architecture; in that case the Intel/AMD toolchain is used. The two
+architectures can be installed side by side.
 
 DIY Installation
 ^^^^^^^^^^^^^^^^

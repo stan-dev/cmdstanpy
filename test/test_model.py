@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 import tempfile
-from test import check_present
+from test import check_present, delete_file
 from unittest.mock import patch
 
 import numpy as np
@@ -43,12 +43,6 @@ def test_model_good() -> None:
     assert os.path.samefile(model.exe_file, BERN_EXE)
     assert 'bernoulli' == model.name
 
-    # compile with external header
-    model = CmdStanModel(
-        stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
-        user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
-    )
-
     # default model name
     model = CmdStanModel(stan_file=BERN_STAN)
     assert BERN_BASENAME == model.name
@@ -57,6 +51,16 @@ def test_model_good() -> None:
     model = CmdStanModel(stan_file=BERN_STAN, exe_file=BERN_EXE)
     assert BERN_STAN == model.stan_file
     assert os.path.samefile(model.exe_file, BERN_EXE)
+
+
+def test_model_compile_user_header() -> None:
+    """The header path is passed with this platform's native separators."""
+    model = CmdStanModel(
+        stan_file=os.path.join(DATAFILES_PATH, "external.stan"),
+        user_header=os.path.join(DATAFILES_PATH, 'return_one.hpp'),
+        force_compile=True,
+    )
+    assert os.path.exists(model.exe_file)
 
 
 def test_ctor_compile_arg() -> None:
@@ -151,7 +155,7 @@ def test_model_info() -> None:
     info_dict = model.exe_info()
     assert info_dict['STAN_THREADS'].lower() == 'false'
 
-    os.remove(model.exe_file)
+    delete_file(model.exe_file)
     with pytest.raises(RuntimeError):
         model.exe_info()
 
@@ -296,7 +300,7 @@ def test_model_paths() -> None:
     assert model1.stan_file == dotdot_stan
     assert model1.exe_file == dotdot_exe
     os.remove(dotdot_stan)
-    os.remove(dotdot_exe)
+    delete_file(dotdot_exe)
 
     tilde_stan = os.path.realpath(
         os.path.join(os.path.expanduser('~'), 'bernoulli.stan')
@@ -313,7 +317,7 @@ def test_model_paths() -> None:
     assert model2.stan_file == tilde_stan
     assert model2.exe_file == tilde_exe
     os.remove(tilde_stan)
-    os.remove(tilde_exe)
+    delete_file(tilde_exe)
 
 
 def test_model_none() -> None:
@@ -359,7 +363,7 @@ def test_model_compile() -> None:
 @pytest.mark.parametrize("path", ["space in path", "tilde~in~path"])
 def test_model_compile_special_char(path: str) -> None:
     with tempfile.TemporaryDirectory(
-        prefix="cmdstanpy_testfolder_"
+        prefix="cmdstanpy_testfolder_", ignore_cleanup_errors=True
     ) as tmp_path:
         path_with_special_char = os.path.join(tmp_path, path)
         os.makedirs(path_with_special_char, exist_ok=True)
