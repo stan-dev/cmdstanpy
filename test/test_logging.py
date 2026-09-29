@@ -1,10 +1,43 @@
 """Logging control tests"""
 
 import logging
+import subprocess
+import sys
 
 import pytest
 
 import cmdstanpy
+
+
+@pytest.mark.parametrize(
+    "level", [logging.NOTSET, logging.DEBUG, logging.WARNING, logging.ERROR]
+)
+def test_logger_initialization_preserves_level(level: int) -> None:
+    # A fresh process avoids pytest's logging handlers and the cached logger.
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            f"""
+import logging
+import cmdstanpy
+
+logger = logging.getLogger('cmdstanpy')
+logger.setLevel({level})
+logger = cmdstanpy.utils.get_logger()
+print(logger.level)
+logger.warning('warning message')
+logger.error('error message')
+""",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    expected_level = logging.DEBUG if level == logging.NOTSET else level
+    assert int(result.stdout) == expected_level
+    assert ('warning message' in result.stderr) == (level <= logging.WARNING)
+    assert 'error message' in result.stderr
 
 
 def test_disable_logging(caplog: pytest.LogCaptureFixture) -> None:

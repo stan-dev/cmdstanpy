@@ -97,6 +97,16 @@ These functions also work as context managers for more local control:
         fit = model.sample(data=data_file, show_progress=False)
 
 
+An explicitly configured level is preserved when CmdStanPy initializes its
+logger. For example, to show errors but suppress warnings, set the level before
+using a model:
+
+.. code-block:: python
+
+    import logging
+
+    logging.getLogger("cmdstanpy").setLevel(logging.ERROR)
+
 For more fine-grained control, one can interact with the underlying ``logging``
 library directly. For example, the following code installs a custom handler
 that sends all logs (including the ``DEBUG`` logs, which are hidden by
