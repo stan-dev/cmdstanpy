@@ -533,7 +533,7 @@ def retrieve_version(version: str, progress: bool = True) -> None:
                 tar.extract(member=member)
         else:
             tar.extractall()
-    except Exception as e:  # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-exception-caught
         raise CmdStanInstallError(
             f'Failed to unpack file {file_tmp}, error:\n\t{str(e)}'
         ) from e

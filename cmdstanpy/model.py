@@ -192,8 +192,7 @@ class CmdStanModel:
         exe_info = None
         try:
             exe_info = self.exe_info()
-        # pylint: disable=broad-except
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             get_logger().warning(
                 'Could not get exe info for model %s, error: %s',
                 self._name,
