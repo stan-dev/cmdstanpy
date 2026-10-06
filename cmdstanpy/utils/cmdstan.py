@@ -669,8 +669,7 @@ def install_cmdstan(
                 cores=cores,
             )
         run_install(args)
-    # pylint: disable=broad-except
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logger.warning('CmdStan installation failed.\n%s', str(e))
         return False
 
