@@ -1689,6 +1689,7 @@ class CmdStanModel:
         seed: int | None = None,
         output_dir: OptionalPath = None,
         sig_figs: int | None = None,
+        save_diagnostics: bool = False,
         save_profile: bool = False,
         show_console: bool = False,
         refresh: int | None = None,
@@ -1727,6 +1728,13 @@ class CmdStanModel:
             Must be an integer between 1 and 18.  If unspecified, the default
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
+
+        :param save_diagnostics: Whether or not to save CmdStan's diagnostic
+            file.  If ``True``, a JSON file is written to
+            '<model_name>-<YYYYMMDDHHMM>_diagnostic.json'.  It holds the
+            Hessian of the log density at the mode, on the unconstrained
+            scale, which is available as :attr:`CmdStanLaplace.hessian`.
+            Default is ``False``.
 
         :param save_profile: Whether or not to profile auto-diff operations in
             labelled blocks of code.  If ``True``, CSV outputs are written to
@@ -1812,6 +1820,7 @@ class CmdStanModel:
                 seed=seed,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
+                save_latent_dynamics=save_diagnostics,
                 save_profile=save_profile,
                 method_args=laplace_args,
                 refresh=refresh,
@@ -1830,6 +1839,9 @@ class CmdStanModel:
             config_file=runset.config_files[0],
             stdout_file=runset.stdout_files[0],
             mode=cmdstan_mode,
+            diagnostic_file=(
+                runset.diagnostic_files[0] if save_diagnostics else None
+            ),
         )
 
     def _run_cmdstan(
