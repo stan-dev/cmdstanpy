@@ -1643,6 +1643,10 @@ class CmdStanModel:
         with (
             temp_single_json(data) as _data,
             temp_single_json(params) as _params,
+            # the output is read below and is not needed after this call.
+            tempfile.TemporaryDirectory(
+                prefix=self.name, dir=_TMPDIR
+            ) as output_dir,
         ):
             cmd = [
                 str(self.exe_file),
@@ -1652,8 +1656,6 @@ class CmdStanModel:
             ]
             if _data is not None:
                 cmd += ["data", f"file={_data}"]
-
-            output_dir = tempfile.mkdtemp(prefix=self.name, dir=_TMPDIR)
 
             output = os.path.join(output_dir, "output.csv")
             cmd += ["output", f"file={output}"]
