@@ -1,5 +1,6 @@
 """Tests for the Laplace sampling method."""
 
+import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -136,6 +137,62 @@ def test_laplace_outputs() -> None:
     assert 'x' in fit_pd.columns
     assert 'y' in fit_pd.columns
     assert fit_pd['x'].shape == (123,)
+
+    assert fit.diagnostic_file is None
+    assert fit.hessian is None
+
+
+def test_laplace_hessian(tmp_path: Path) -> None:
+    model_file = os.path.join(DATAFILES_PATH, 'linear_regression.stan')
+    data_file = os.path.join(DATAFILES_PATH, 'linear_regression.data.json')
+    model = cmdstanpy.CmdStanModel(stan_file=model_file)
+    fit = model.laplace_sample(
+        data=data_file,
+        jacobian=False,
+        seed=1234,
+        sig_figs=18,
+        save_diagnostics=True,
+    )
+    assert fit.diagnostic_file is not None
+    assert fit.diagnostic_file.endswith('_diagnostic.json')
+
+    # unconstrained parameters: alpha, beta, log(sigma)
+    hessian = fit.hessian
+    assert hessian is not None
+    assert hessian.shape == (3, 3)
+    np.testing.assert_array_equal(hessian, hessian.T)
+    assert np.all(np.linalg.eigvalsh(hessian) < 0)
+
+    # Analytic Hessian of the log likelihood of y ~ normal(alpha + beta * x,
+    # sigma) in (alpha, beta, log(sigma)), evaluated at the mode CmdStan used.
+    with open(data_file) as fd:
+        data = json.load(fd)
+    x, y = np.array(data['x']), np.array(data['y'])
+    mode = fit.mode.stan_variables()
+    resid = y - mode['alpha'] - mode['beta'] * x
+    expected = (
+        -np.array(
+            [
+                [len(x), x.sum(), 2 * resid.sum()],
+                [x.sum(), (x**2).sum(), 2 * (x * resid).sum()],
+                [2 * resid.sum(), 2 * (x * resid).sum(), 2 * (resid**2).sum()],
+            ]
+        )
+        / mode['sigma'] ** 2
+    )
+    np.testing.assert_allclose(hessian, expected, rtol=1e-6, atol=1e-6)
+
+    # the diagnostic file moves with the other output files
+    fit.save_output_files(os.fspath(tmp_path))
+    assert Path(fit.diagnostic_file).parent == tmp_path
+    assert fit.config_file is not None
+    rebuilt = cmdstanpy.CmdStanLaplace.from_files(
+        csv_file=fit.csv_file,
+        config_file=fit.config_file,
+        mode=fit.mode,
+        diagnostic_file=fit.diagnostic_file,
+    )
+    np.testing.assert_array_equal(rebuilt.hessian, hessian)
 
 
 def test_laplace_create_inits() -> None:
