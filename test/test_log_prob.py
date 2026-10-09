@@ -8,6 +8,7 @@ from test import check_present
 import numpy as np
 import pytest
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import EXTENSION
 
@@ -71,3 +72,31 @@ def test_lp_bad(
             re.compile(r"(?s).*variable does not exist.*name=theta.*"),
         ),
     )
+
+
+@pytest.mark.parametrize(
+    "params, fails",
+    [({"theta": 0.34903938392023830482}, False), ({"not_here": 0.1}, True)],
+)
+def test_lp_removes_output_dir(
+    params: dict[str, float],
+    fails: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    cmdstanpy_tmp = set(os.listdir(_TMPDIR))
+
+    with caplog.at_level(logging.DEBUG, logger="cmdstanpy"):
+        for _ in range(3):
+            if fails:
+                with pytest.raises(RuntimeError, match="failed with return"):
+                    model.log_prob(params, data=BERN_DATA)
+            else:
+                model.log_prob(params, data=BERN_DATA)
+
+    assert set(os.listdir(_TMPDIR)) == cmdstanpy_tmp
+    # the command is logged as a list repr, which escapes Windows separators
+    output_arg = "file=" + repr(str(_TMPDIR))[1:-1]
+    cmds = [r.getMessage() for r in caplog.records if "Cmd:" in r.message]
+    assert len(cmds) == 3
+    assert all(output_arg in cmd for cmd in cmds)
