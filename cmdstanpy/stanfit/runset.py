@@ -76,11 +76,13 @@ class RunSet:
                 ]
 
         # per-chain output files
+        # Laplace writes its diagnostic file (the Hessian) as JSON
+        diagnostic_ext = ".json" if args.method == Method.LAPLACE else ".csv"
         if chains == 1:
             self._csv_files = [self.gen_file_name(".csv")]
             if args.save_latent_dynamics:
                 self._diagnostic_files = [
-                    self.gen_file_name(".csv", extra="diagnostic")
+                    self.gen_file_name(diagnostic_ext, extra="diagnostic")
                 ]
         else:
             self._csv_files = [
@@ -88,7 +90,9 @@ class RunSet:
             ]
             if args.save_latent_dynamics:
                 self._diagnostic_files = [
-                    self.gen_file_name(".csv", extra="diagnostic", id=id)
+                    self.gen_file_name(
+                        diagnostic_ext, extra="diagnostic", id=id
+                    )
                     for id in self._chain_ids
                 ]
 

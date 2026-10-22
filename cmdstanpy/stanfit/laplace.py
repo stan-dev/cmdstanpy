@@ -4,11 +4,12 @@ Container for the result of running a laplace approximation.
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Hashable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, MutableMapping
+from typing import Any, ClassVar, MutableMapping
 
 import numpy as np
 import pandas as pd
@@ -195,6 +196,16 @@ class CmdStanLaplace(SingleFileFit[LaplaceConfig]):
     """
 
     mode: CmdStanMLE
+    diagnostic_file: str | None = None
+
+    _FILE_ATTRS: ClassVar[tuple[str, ...]] = (
+        'csv_file',
+        'config_file',
+        'stdout_file',
+        'diagnostic_file',
+    )
+
+    _hessian: np.ndarray | None = field(default=None, init=False)
 
     @classmethod
     def from_files(
@@ -203,6 +214,7 @@ class CmdStanLaplace(SingleFileFit[LaplaceConfig]):
         config_file: str | os.PathLike,
         stdout_file: str | os.PathLike | None = None,
         mode: CmdStanMLE | None = None,
+        diagnostic_file: str | os.PathLike | None = None,
     ) -> CmdStanLaplace:
         kwargs = cls._from_files_kwargs(
             csv_file, config_file, stdout_file, LaplaceRunConfig
@@ -211,7 +223,31 @@ class CmdStanLaplace(SingleFileFit[LaplaceConfig]):
             mode = _mode_from_files(
                 kwargs['config'].method_config.mode, csv_file
             )
-        return cls(mode=mode, **kwargs)
+        return cls(
+            mode=mode,
+            diagnostic_file=(
+                os.fspath(diagnostic_file)
+                if diagnostic_file is not None
+                else None
+            ),
+            **kwargs,
+        )
+
+    @property
+    def hessian(self) -> np.ndarray | None:
+        """
+        The Hessian of the log density at the mode, on the unconstrained
+        scale, read from CmdStan's diagnostic file.  This is the matrix from
+        which the Laplace approximation is built.  ``None`` if the diagnostic
+        file was not saved; see the ``save_diagnostics`` argument of
+        :meth:`CmdStanModel.laplace_sample`.
+        """
+        if self.diagnostic_file is None:
+            return None
+        if self._hessian is None:
+            with open(self.diagnostic_file) as fd:
+                self._hessian = np.array(json.load(fd)['Hessian'], dtype=float)
+        return self._hessian
 
     def save_output_files(self, dir: str | None = None) -> None:
         """Move the Laplace outputs and optimization mode outputs together."""
@@ -321,4 +357,6 @@ class CmdStanLaplace(SingleFileFit[LaplaceConfig]):
             lines.append(f' config_file:\n\t{self.config_file}')
         if self.stdout_file is not None:
             lines.append(f' output_file:\n\t{self.stdout_file}')
+        if self.diagnostic_file is not None:
+            lines.append(f' diagnostic_file:\n\t{self.diagnostic_file}')
         return '\n'.join(lines)
