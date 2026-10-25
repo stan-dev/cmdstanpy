@@ -2027,7 +2027,14 @@ class CmdStanModel:
             Gradients are evaluated in the unconstrained space.
         """
 
-        with temp_single_json(data) as _data, temp_single_json(inits) as _inits:
+        with (
+            temp_single_json(data) as _data,
+            temp_single_json(inits) as _inits,
+            # the output is read below and is not needed after this call.
+            tempfile.TemporaryDirectory(
+                prefix=self.name, dir=_TMPDIR
+            ) as output_dir,
+        ):
             cmd = [
                 str(self.exe_file),
                 "diagnose",
@@ -2036,13 +2043,11 @@ class CmdStanModel:
             if epsilon is not None:
                 cmd.append(f"epsilon={epsilon}")
             if error is not None:
-                cmd.append(f"epsilon={error}")
+                cmd.append(f"error={error}")
             if _data is not None:
                 cmd += ["data", f"file={_data}"]
             if _inits is not None:
                 cmd.append(f"init={_inits}")
-
-            output_dir = tempfile.mkdtemp(prefix=self.name, dir=_TMPDIR)
 
             output = os.path.join(output_dir, "output.csv")
             cmd += ["output", f"file={output}"]
