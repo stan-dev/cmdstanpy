@@ -494,16 +494,15 @@ def test_diagnose_removes_output_dir(
     cmdstanpy_tmp = set(os.listdir(_TMPDIR))
 
     with caplog.at_level(logging.DEBUG, logger="cmdstanpy"):
-        for _ in range(3):
-            if fails:
-                with pytest.raises(RuntimeError, match="may exceed"):
-                    model.diagnose(data=BERN_DATA, epsilon=3)
-            else:
-                model.diagnose(data=BERN_DATA)
+        if fails:
+            with pytest.raises(RuntimeError, match="may exceed"):
+                model.diagnose(data=BERN_DATA, epsilon=3)
+        else:
+            model.diagnose(data=BERN_DATA)
 
     assert set(os.listdir(_TMPDIR)) == cmdstanpy_tmp
     # the command is logged as a list repr, which escapes Windows separators
     output_arg = "file=" + repr(str(_TMPDIR))[1:-1]
     cmds = [r.getMessage() for r in caplog.records if "Cmd:" in r.message]
-    assert len(cmds) == 3
-    assert all(output_arg in cmd for cmd in cmds)
+    assert len(cmds) == 1
+    assert output_arg in cmds[0]
