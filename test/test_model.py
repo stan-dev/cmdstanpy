@@ -11,6 +11,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
+from cmdstanpy import _TMPDIR
 from cmdstanpy.model import CmdStanModel
 from cmdstanpy.utils import EXTENSION
 
@@ -472,3 +473,36 @@ def test_diagnose() -> None:
         require_gradients_ok=False,
     )
     assert np.abs(gradients["error"]).max() > 1e-3
+
+
+def test_diagnose_error_argument(caplog: pytest.LogCaptureFixture) -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    with caplog.at_level(logging.DEBUG, logger="cmdstanpy"):
+        model.diagnose(data=BERN_DATA, epsilon=1e-5, error=1e-3)
+    cmds = [r.getMessage() for r in caplog.records if "Cmd:" in r.message]
+    assert len(cmds) == 1
+    assert "'epsilon=1e-05'" in cmds[0]
+    assert "'error=0.001'" in cmds[0]
+    assert cmds[0].count("epsilon=") == 1
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_diagnose_removes_output_dir(
+    fails: bool, caplog: pytest.LogCaptureFixture
+) -> None:
+    model = CmdStanModel(stan_file=BERN_STAN)
+    cmdstanpy_tmp = set(os.listdir(_TMPDIR))
+
+    with caplog.at_level(logging.DEBUG, logger="cmdstanpy"):
+        if fails:
+            with pytest.raises(RuntimeError, match="may exceed"):
+                model.diagnose(data=BERN_DATA, epsilon=3)
+        else:
+            model.diagnose(data=BERN_DATA)
+
+    assert set(os.listdir(_TMPDIR)) == cmdstanpy_tmp
+    # the command is logged as a list repr, which escapes Windows separators
+    output_arg = "file=" + repr(str(_TMPDIR))[1:-1]
+    cmds = [r.getMessage() for r in caplog.records if "Cmd:" in r.message]
+    assert len(cmds) == 1
+    assert output_arg in cmds[0]
