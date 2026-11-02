@@ -119,7 +119,7 @@ def test_output_filenames_one_proc_per_chain() -> None:
         chain_ids=chain_ids,
         data=jdata,
         method_args=sampler_args,
-        save_latent_dynamics=True,
+        save_diagnostics=True,
         save_profile=True,
     )
     runset_other_files = RunSet(
@@ -175,7 +175,7 @@ def test_output_filenames_threading() -> None:
         chain_ids=chain_ids,
         data=jdata,
         method_args=sampler_args,
-        save_latent_dynamics=True,
+        save_diagnostics=True,
         save_profile=True,
     )
     runset_other_files = RunSet(
@@ -221,7 +221,7 @@ def test_output_filenames_single_chain() -> None:
         chain_ids=chain_ids,
         data=jdata,
         method_args=sampler_args,
-        save_latent_dynamics=True,
+        save_diagnostics=True,
         save_profile=True,
     )
     runset_other_files = RunSet(
@@ -260,7 +260,7 @@ def test_commands() -> None:
     assert 'id=4' in runset.cmd(3)
 
 
-def test_save_latent_dynamics() -> None:
+def test_save_diagnostics() -> None:
     exe = os.path.join(DATAFILES_PATH, 'bernoulli' + EXTENSION)
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
     sampler_args = SamplerArgs()
@@ -271,7 +271,7 @@ def test_save_latent_dynamics() -> None:
         chain_ids=chain_ids,
         data=jdata,
         method_args=sampler_args,
-        save_latent_dynamics=True,
+        save_diagnostics=True,
     )
     runset = RunSet(args=cmdstan_args, chains=4)
     assert _TMPDIR in runset.diagnostic_files[0]
@@ -282,7 +282,7 @@ def test_save_latent_dynamics() -> None:
         chain_ids=chain_ids,
         data=jdata,
         method_args=sampler_args,
-        save_latent_dynamics=True,
+        save_diagnostics=True,
         output_dir=os.path.abspath('.'),
     )
     runset = RunSet(args=cmdstan_args, chains=4)

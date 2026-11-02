@@ -495,7 +495,7 @@ class CmdStanModel:
         fixed_param: bool = False,
         output_dir: OptionalPath = None,  # Update OptionalPath if needed
         sig_figs: int | None = None,
-        save_latent_dynamics: bool = False,
+        save_diagnostics: bool = False,
         save_profile: bool = False,
         show_progress: bool = True,
         show_console: bool = False,
@@ -668,7 +668,7 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param save_latent_dynamics: Whether or not to output the position and
+        :param save_diagnostics: Whether or not to output the position and
             momentum information for the model parameters (unconstrained).
             If ``True``, CSV outputs are written to an output file
             '<model_name>-<YYYYMMDDHHMM>_diagnostic_<chain_id>',
@@ -869,7 +869,7 @@ class CmdStanModel:
                 inits=cmdstan_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_latent_dynamics=save_latent_dynamics,
+                save_diagnostics=save_diagnostics,
                 save_profile=save_profile,
                 method_args=sampler_args,
                 refresh=refresh,
@@ -1176,7 +1176,7 @@ class CmdStanModel:
         inits: float | None = None,
         output_dir: OptionalPath = None,
         sig_figs: int | None = None,
-        save_latent_dynamics: bool = False,
+        save_diagnostics: bool = False,
         save_profile: bool = False,
         algorithm: str | None = None,
         iter: int | None = None,
@@ -1238,7 +1238,7 @@ class CmdStanModel:
             precision for the system file I/O is used; the usual value is 6.
             Introduced in CmdStan-2.25.
 
-        :param save_latent_dynamics: Whether or not to save diagnostics.
+        :param save_diagnostics: Whether or not to save diagnostics.
             If ``True``, CSV outputs are written to output file
             '<model_name>-<YYYYMMDDHHMM>-diagnostic-<chain_id>',
             e.g. 'bernoulli-201912081451-diagnostic-1.csv'.
@@ -1315,7 +1315,7 @@ class CmdStanModel:
                 inits=_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_latent_dynamics=save_latent_dynamics,
+                save_diagnostics=save_diagnostics,
                 save_profile=save_profile,
                 method_args=variational_args,
                 refresh=refresh,
@@ -1822,7 +1822,7 @@ class CmdStanModel:
                 seed=seed,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_latent_dynamics=save_diagnostics,
+                save_diagnostics=save_diagnostics,
                 save_profile=save_profile,
                 method_args=laplace_args,
                 refresh=refresh,

@@ -2114,7 +2114,7 @@ def test_metadata() -> None:
     assert tuple(fit.metadata.stan_vars['beta'].columns()) == (7, 8)
 
 
-def test_save_latent_dynamics() -> None:
+def test_save_diagnostics() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
     bern_model = CmdStanModel(stan_file=stan)
@@ -2125,7 +2125,7 @@ def test_save_latent_dynamics() -> None:
         seed=12345,
         iter_warmup=100,
         iter_sampling=200,
-        save_latent_dynamics=True,
+        save_diagnostics=True,
     )
     for i in range(bern_fit.chains):
         diagnostics_file = bern_fit.diagnostic_files[i]  # type: ignore

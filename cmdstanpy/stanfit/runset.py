@@ -80,7 +80,7 @@ class RunSet:
         diagnostic_ext = ".json" if args.method == Method.LAPLACE else ".csv"
         if chains == 1:
             self._csv_files = [self.gen_file_name(".csv")]
-            if args.save_latent_dynamics:
+            if args.save_diagnostics:
                 self._diagnostic_files = [
                     self.gen_file_name(diagnostic_ext, extra="diagnostic")
                 ]
@@ -88,7 +88,7 @@ class RunSet:
             self._csv_files = [
                 self.gen_file_name(".csv", id=id) for id in self._chain_ids
             ]
-            if args.save_latent_dynamics:
+            if args.save_diagnostics:
                 self._diagnostic_files = [
                     self.gen_file_name(
                         diagnostic_ext, extra="diagnostic", id=id
@@ -120,7 +120,7 @@ class RunSet:
             " per-chain output files (showing chain 1 only):",
             f" csv_file:\n\t{self._csv_files[0] if self._csv_files else ''}",
         ]
-        if self._args.save_latent_dynamics:
+        if self._args.save_diagnostics:
             lines.append(f" diagnostics_file:\n\t{self._diagnostic_files[0]}")
         if self._args.save_profile:
             lines.append(f" profile_file:\n\t{self._profile_files[0]}")
@@ -175,7 +175,7 @@ class RunSet:
                 csv_file=self.csv_files[idx],
                 diagnostic_file=(
                     self.diagnostic_files[idx]
-                    if self._args.save_latent_dynamics
+                    if self._args.save_diagnostics
                     else None
                 ),
                 profile_file=(
@@ -188,7 +188,7 @@ class RunSet:
                 csv_file=','.join(self.csv_files),
                 diagnostic_file=(
                     ','.join(self.diagnostic_files)
-                    if self._args.save_latent_dynamics
+                    if self._args.save_diagnostics
                     else None
                 ),
                 profile_file=(
