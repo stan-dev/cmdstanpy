@@ -651,7 +651,7 @@ class CmdStanArgs:
         inits: int | float | str | list[str] | None = None,
         output_dir: OptionalPath = None,
         sig_figs: int | None = None,
-        save_latent_dynamics: bool = False,
+        save_diagnostics: bool = False,
         save_profile: bool = False,
         refresh: int | None = None,
     ) -> None:
@@ -664,7 +664,7 @@ class CmdStanArgs:
         self.inits = inits
         self.output_dir = output_dir
         self.sig_figs = sig_figs
-        self.save_latent_dynamics = save_latent_dynamics
+        self.save_diagnostics = save_diagnostics
         self.save_profile = save_profile
         self.refresh = refresh
         self.method_args = method_args
