@@ -162,23 +162,29 @@ class RunSet:
             return self._args.compose_command(
                 idx,
                 csv_file=self.csv_files[idx],
-                diagnostic_file=self.diagnostic_files[idx]
-                if self._args.save_latent_dynamics
-                else None,
-                profile_file=self.profile_files[idx]
-                if self._args.save_profile
-                else None,
+                diagnostic_file=(
+                    self.diagnostic_files[idx]
+                    if self._args.save_latent_dynamics
+                    else None
+                ),
+                profile_file=(
+                    self.profile_files[idx] if self._args.save_profile else None
+                ),
             )
         else:
             return self._args.compose_command(
                 idx,
                 csv_file=self.file_path('.csv'),
-                diagnostic_file=self.file_path(".csv", extra="-diagnostic")
-                if self._args.save_latent_dynamics
-                else None,
-                profile_file=self.file_path(".csv", extra="-profile")
-                if self._args.save_profile
-                else None,
+                diagnostic_file=(
+                    self.file_path(".csv", extra="-diagnostic")
+                    if self._args.save_latent_dynamics
+                    else None
+                ),
+                profile_file=(
+                    self.file_path(".csv", extra="-profile")
+                    if self._args.save_profile
+                    else None
+                ),
             )
 
     @property

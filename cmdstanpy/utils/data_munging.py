@@ -2,7 +2,8 @@
 Common functions for reshaping numpy arrays
 """
 
-from typing import Hashable, MutableMapping
+from collections.abc import Hashable
+from typing import MutableMapping
 
 import numpy as np
 import stanio

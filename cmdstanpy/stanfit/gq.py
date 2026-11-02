@@ -4,10 +4,10 @@ generate quantities (GQ) method
 """
 
 from collections import Counter
+from collections.abc import Hashable
 from typing import (
     Any,
     Generic,
-    Hashable,
     MutableMapping,
     NoReturn,
     Optional,

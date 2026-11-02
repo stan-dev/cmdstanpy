@@ -4,8 +4,9 @@ Container for the result of running the sample (MCMC) method
 
 import math
 import os
+from collections.abc import Hashable
 from io import StringIO
-from typing import Any, Hashable, MutableMapping, Optional, Sequence, Union
+from typing import Any, MutableMapping, Optional, Sequence, Union
 
 import numpy as np
 import pandas as pd

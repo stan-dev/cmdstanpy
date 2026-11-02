@@ -43,8 +43,7 @@ def wrap_callback(func):  # type: ignore
 
         try:
             return func(*args, **kwargs)
-        # pylint: disable=broad-except
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             _disable_progress(e)
             return callback
 

@@ -42,7 +42,7 @@ def show_versions(output: bool = True) -> str:
 
     deps_info = []
     try:
-        (sysname, _, release, _, machine, processor) = platform.uname()
+        sysname, _, release, _, machine, processor = platform.uname()
         deps_info.extend(
             [
                 ("python", sys.version),
@@ -57,15 +57,13 @@ def show_versions(output: bool = True) -> str:
                 ("LOCALE", f"{locale.getlocale()}"),
             ]
         )
-    # pylint: disable=broad-except
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
 
     try:
         deps_info.append(('cmdstan_folder', cmdstan_path()))
         deps_info.append(('cmdstan', str(cmdstan_version())))
-    # pylint: disable=broad-except
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         deps_info.append(('cmdstan', 'NOT FOUND'))
 
     deps = ['cmdstanpy', 'pandas', 'xarray', 'tqdm', 'numpy']

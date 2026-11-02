@@ -2,7 +2,8 @@
 Container for the result of running a laplace approximation.
 """
 
-from typing import Any, Hashable, MutableMapping, Optional, Union
+from collections.abc import Hashable
+from typing import Any, MutableMapping, Optional, Union
 
 import numpy as np
 import pandas as pd

@@ -1,6 +1,7 @@
 """Logging control tests"""
 
 import logging
+
 import cmdstanpy
 
 
