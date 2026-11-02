@@ -33,16 +33,14 @@ IS_64BITS = sys.maxsize > 2**32
 
 def usage() -> None:
     """Print usage."""
-    print(
-        """Arguments:
+    print("""Arguments:
         -v (--version) :CmdStan version
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
         --progress : flag, when specified show progress bar for RTools download
         -h (--help) : this message
-        """
-    )
+        """)
 
 
 def get_config(dir: str, silent: bool) -> list[str]:
@@ -244,11 +242,11 @@ def get_url(version: str) -> str:
         if version == '4.0':
             # pylint: disable=line-too-long
             if IS_64BITS:
-                url = 'https://cran.r-project.org/bin/windows/Rtools/rtools40-x86_64.exe'  # noqa: disable=E501
+                url = 'https://cran-archive.r-project.org/bin/windows/Rtools/rtools40-x86_64.exe'  # noqa: disable=E501
             else:
-                url = 'https://cran.r-project.org/bin/windows/Rtools/rtools40-i686.exe'  # noqa: disable=E501
+                url = 'https://cran-archive.r-project.org/bin/windows/Rtools/rtools40-i686.exe'  # noqa: disable=E501
         elif version == '3.5':
-            url = 'https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe'
+            url = 'https://cran-archive.r-project.org/bin/windows/Rtools/Rtools35.exe'  # noqa: disable=E501
     return url
 
 
