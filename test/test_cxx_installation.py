@@ -157,7 +157,7 @@ def test_toolchain_name() -> None:
         (
             '4.0',
             'x86_64',
-            'https://cran.r-project.org/bin/windows/Rtools/'
+            'https://cran-archive.r-project.org/bin/windows/Rtools/'
             'rtools40-x86_64.exe',
         ),
         # no ARM64 builds exist before RTools 4.4

@@ -52,16 +52,14 @@ RTOOLS_INSTALLERS = {
 
 def usage() -> None:
     """Print usage."""
-    print(
-        """Arguments:
+    print("""Arguments:
         -v (--version) : RTools version: 4.0, 4.4 or 4.5
         -d (--dir) : install directory
         -s (--silent) : install with /VERYSILENT instead of /SILENT for RTools
         -m (--no-make) : don't install mingw32-make (Windows RTools 4.0 only)
         --progress : flag, when specified show progress bar for RTools download
         -h (--help) : this message
-        """
-    )
+        """)
 
 
 def get_config(dir: str, silent: bool) -> list[str]:
@@ -263,7 +261,7 @@ def get_url(version: str, arch: str | None = None) -> str:
         ('4.0', 'i686'): 'rtools40-i686.exe',
     }.get((version, arch), '')
     if legacy:
-        return f'https://cran.r-project.org/bin/windows/Rtools/{legacy}'
+        return f'https://cran-archive.r-project.org/bin/windows/Rtools/{legacy}'
     return ''
 
 
