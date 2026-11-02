@@ -529,7 +529,7 @@ class CmdStanModel:
         fixed_param: bool = False,
         output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
-        save_latent_dynamics: bool = False,
+        save_diagnostics: bool = False,
         save_profile: bool = False,
         show_progress: bool = True,
         show_console: bool = False,
@@ -545,6 +545,7 @@ class CmdStanModel:
             list[Union[str, np.ndarray, Mapping[str, Any]]],
             None,
         ] = None,
+        save_latent_dynamics: Optional[bool] = None,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS-HMC sampler to produce a set of draws
@@ -743,6 +744,13 @@ class CmdStanModel:
         if fixed_param is None:
             fixed_param = self._fixed_param
 
+        if save_latent_dynamics is not None:
+            get_logger().warning(
+                "Argument name `save_latent_dynamics` is deprecated, please "
+                "rename to `save_diagnostics`."
+            )
+            save_diagnostics = save_latent_dynamics  # type: ignore
+
         if chains is None:
             chains = 4
         if chains < 1:
@@ -928,7 +936,7 @@ class CmdStanModel:
                 inits=cmdstan_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_latent_dynamics=save_latent_dynamics,
+                save_latent_dynamics=save_diagnostics,
                 save_profile=save_profile,
                 method_args=sampler_args,
                 refresh=refresh,
@@ -1226,7 +1234,7 @@ class CmdStanModel:
         inits: Optional[float] = None,
         output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
-        save_latent_dynamics: bool = False,
+        save_diagnostics: bool = False,
         save_profile: bool = False,
         algorithm: Optional[str] = None,
         iter: Optional[int] = None,
@@ -1245,6 +1253,7 @@ class CmdStanModel:
         timeout: Optional[float] = None,
         *,
         output_samples: Optional[int] = None,
+        save_latent_dynamics: Optional[bool] = None,
     ) -> CmdStanVB:
         """
         Run CmdStan's variational inference algorithm to approximate
@@ -1356,6 +1365,13 @@ class CmdStanModel:
 
             draws = output_samples
 
+        if save_latent_dynamics is not None:
+            get_logger().warning(
+                "Argument name `save_latent_dynamics` is deprecated, please "
+                "rename to `save_diagnostics`."
+            )
+            save_diagnostics = save_latent_dynamics  # type: ignore
+
         variational_args = VariationalArgs(
             algorithm=algorithm,
             iter=iter,
@@ -1382,7 +1398,7 @@ class CmdStanModel:
                 inits=_inits,
                 output_dir=output_dir,
                 sig_figs=sig_figs,
-                save_latent_dynamics=save_latent_dynamics,
+                save_latent_dynamics=save_diagnostics,
                 save_profile=save_profile,
                 method_args=variational_args,
                 refresh=refresh,
