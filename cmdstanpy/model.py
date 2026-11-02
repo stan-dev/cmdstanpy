@@ -1,5 +1,7 @@
 """CmdStanModel"""
 
+import functools
+import inspect
 import io
 import os
 import platform
@@ -9,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import warnings
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
@@ -57,6 +60,55 @@ from . import progress as progbar
 
 OptionalPath = Union[str, os.PathLike, None]
 Fit = TypeVar('Fit', CmdStanMCMC, CmdStanMLE, CmdStanVB)
+F = TypeVar('F', bound=Callable[..., Any])
+
+
+def _deprecate_positional_args(last_deprecated: str) -> Callable[[F], F]:
+    """
+    Allow, with a FutureWarning, keyword-only arguments up to and including
+    ``last_deprecated`` to still be passed by position.
+
+    Temporary shim for the 1.x series; positional use of these
+    arguments becomes an error in CmdStanPy 2.0.
+    """
+
+    def decorator(func: F) -> F:
+        params = inspect.signature(func).parameters.values()
+        n_positional = sum(
+            p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD for p in params
+        )
+        kw_only = [
+            p.name for p in params if p.kind == inspect.Parameter.KEYWORD_ONLY
+        ]
+        deprecated = kw_only[: kw_only.index(last_deprecated) + 1]
+
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            extra = args[n_positional:]
+            if not extra or len(extra) > len(deprecated):
+                # either nothing to do, or let Python raise its usual error
+                return func(*args, **kwargs)
+            names = deprecated[: len(extra)]
+            for name in names:
+                if name in kwargs:
+                    raise TypeError(
+                        f"{func.__qualname__}() got multiple values for "
+                        f"argument '{name}'"
+                    )
+            warnings.warn(
+                f"Passing {', '.join(map(repr, names))} to "
+                f"{func.__qualname__}() by position is deprecated and will "
+                "raise an error in CmdStanPy 2.0. Pass them as keyword "
+                f"arguments instead, e.g. {names[0]}=...",
+                FutureWarning,
+                stacklevel=2,
+            )
+            kwargs.update(zip(names, extra))
+            return func(*args[:n_positional], **kwargs)
+
+        return wrapper  # type: ignore[return-value]
+
+    return decorator
 
 
 class CmdStanModel:
@@ -304,9 +356,11 @@ class CmdStanModel:
             )
         return code
 
+    @_deprecate_positional_args(last_deprecated="jacobian")
     def optimize(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
         seed: Optional[int] = None,
         inits: Union[Mapping[str, Any], float, str, os.PathLike, None] = None,
         output_dir: OptionalPath = None,
@@ -328,7 +382,6 @@ class CmdStanModel:
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
         jacobian: bool = False,
-        # would be nice to move this further up, but that's a breaking change
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -496,9 +549,11 @@ class CmdStanModel:
         return mle
 
     # pylint: disable=too-many-arguments
+    @_deprecate_positional_args(last_deprecated="timeout")
     def sample(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
         chains: Optional[int] = None,
         parallel_chains: Optional[int] = None,
         threads_per_chain: Optional[int] = None,
@@ -536,7 +591,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
         force_one_process_per_chain: Optional[bool] = None,
         inv_metric: Union[
             str,
@@ -1034,10 +1088,12 @@ class CmdStanModel:
             mcmc = CmdStanMCMC(runset)
         return mcmc
 
+    @_deprecate_positional_args(last_deprecated="timeout")
     def generate_quantities(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         previous_fit: Union[Fit, list[str], None] = None,
+        *,
         seed: Optional[int] = None,
         gq_output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
@@ -1045,7 +1101,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
         mcmc_sample: Union[CmdStanMCMC, list[str], None] = None,
     ) -> CmdStanGQ[Fit]:
         """
@@ -1227,9 +1282,11 @@ class CmdStanModel:
             quantities = CmdStanGQ(runset=runset, previous_fit=fit_object)
         return quantities
 
+    @_deprecate_positional_args(last_deprecated="timeout")
     def variational(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
         seed: Optional[int] = None,
         inits: Optional[float] = None,
         output_dir: OptionalPath = None,
@@ -1251,7 +1308,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
         output_samples: Optional[int] = None,
         save_latent_dynamics: Optional[bool] = None,
     ) -> CmdStanVB:
