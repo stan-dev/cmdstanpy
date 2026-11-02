@@ -7,6 +7,7 @@ import inspect
 import logging
 import os
 import re
+import sys
 from test import check_present
 from typing import Any, Callable
 from unittest import mock
@@ -113,6 +114,11 @@ def test_optimize_positional_seed(caplog: pytest.LogCaptureFixture) -> None:
     assert mle_pos.optimized_params_dict == mle_kw.optimized_params_dict
 
 
+@pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="mock.patch resolves `cmdstanpy.install_cmdstan` to the "
+    "re-exported function, not the module, before Python 3.11",
+)
 def test_install_cmdstan_positional(caplog: pytest.LogCaptureFixture) -> None:
     # stop right after argument handling; nothing is downloaded
     with mock.patch(
