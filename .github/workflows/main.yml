@@ -3,10 +3,7 @@ name: CmdStanPy
 on:
   push:
     branches:
-      - 'develop'
-      - 'master'
-    tags:
-      - '**'
+      - 'develop-1.x'
   pull_request:
   workflow_dispatch:
     inputs:
@@ -44,15 +41,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check out github
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -68,7 +65,7 @@ jobs:
         run: python -m pip freeze
 
       - name: Run flake8, pylint, mypy
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.14'
         run: |
           flake8 cmdstanpy test
           pylint -v cmdstanpy test
@@ -77,24 +74,24 @@ jobs:
       - name: CmdStan installation cacheing
         id: cache-cmdstan
         if: ${{ !startswith(needs.get-cmdstan-version.outputs.version, 'git:') }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cmdstan
-          key: ${{ runner.os }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cmdstan-${{ needs.get-cmdstan-version.outputs.version }}-${{ hashFiles('**/install_cmdstan.py') }}
 
       - name: Delete precompiled header (MacOS)
         if: matrix.os == 'macos-latest' && steps.cache-cmdstan.outputs.cache-hit == 'true'
         run: rm -rf ~/.cmdstan/cmdstan-${{ needs.get-cmdstan-version.outputs.version }}/stan/src/stan/model/*.hpp.gch
 
       - name: Install CmdStan (Linux, macOS)
-        if: matrix.os != 'windows-latest'
+        if: runner.os != 'Windows'
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
           python -c "import cmdstanpy; cmdstanpy.install_cmdstan(version='${{ needs.get-cmdstan-version.outputs.version }}', cores=4)"
 
       - name: Install CmdStan (Windows)
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         run: |
           install_cmdstan -h
           install_cxx_toolchain -h
@@ -107,7 +104,7 @@ jobs:
           pytest -v ../test --cov=../cmdstanpy
 
       - name: Submit codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true

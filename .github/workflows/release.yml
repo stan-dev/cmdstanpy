@@ -18,10 +18,10 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
 
       - name: Install os dependencies
         run: |
@@ -84,7 +84,7 @@ jobs:
 
       - name: Publish on PyPI
         if: success()
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.2
         with:
           packages-dir: dist/
           skip-existing: true
