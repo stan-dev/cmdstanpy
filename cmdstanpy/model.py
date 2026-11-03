@@ -46,6 +46,7 @@ from cmdstanpy.utils import (
     do_command,
     get_logger,
 )
+from cmdstanpy.utils.deprecation import deprecate_positional_args
 from cmdstanpy.utils.filesystem import (
     temp_inits,
     temp_metrics,
@@ -304,9 +305,11 @@ class CmdStanModel:
             )
         return code
 
+    @deprecate_positional_args(last_deprecated="jacobian")
     def optimize(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
         seed: Optional[int] = None,
         inits: Union[Mapping[str, Any], float, str, os.PathLike, None] = None,
         output_dir: OptionalPath = None,
@@ -328,7 +331,6 @@ class CmdStanModel:
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
         jacobian: bool = False,
-        # would be nice to move this further up, but that's a breaking change
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -496,9 +498,11 @@ class CmdStanModel:
         return mle
 
     # pylint: disable=too-many-arguments
+    @deprecate_positional_args(last_deprecated="timeout")
     def sample(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
         chains: Optional[int] = None,
         parallel_chains: Optional[int] = None,
         threads_per_chain: Optional[int] = None,
@@ -536,7 +540,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
         force_one_process_per_chain: Optional[bool] = None,
         inv_metric: Union[
             str,
@@ -1034,10 +1037,12 @@ class CmdStanModel:
             mcmc = CmdStanMCMC(runset)
         return mcmc
 
+    @deprecate_positional_args(last_deprecated="timeout")
     def generate_quantities(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
         previous_fit: Union[Fit, list[str], None] = None,
+        *,
         seed: Optional[int] = None,
         gq_output_dir: OptionalPath = None,
         sig_figs: Optional[int] = None,
@@ -1045,7 +1050,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
         mcmc_sample: Union[CmdStanMCMC, list[str], None] = None,
     ) -> CmdStanGQ[Fit]:
         """
@@ -1227,9 +1231,11 @@ class CmdStanModel:
             quantities = CmdStanGQ(runset=runset, previous_fit=fit_object)
         return quantities
 
+    @deprecate_positional_args(last_deprecated="timeout")
     def variational(
         self,
         data: Union[Mapping[str, Any], str, os.PathLike, None] = None,
+        *,
         seed: Optional[int] = None,
         inits: Optional[float] = None,
         output_dir: OptionalPath = None,
@@ -1251,7 +1257,6 @@ class CmdStanModel:
         refresh: Optional[int] = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: Optional[float] = None,
-        *,
         output_samples: Optional[int] = None,
         save_latent_dynamics: Optional[bool] = None,
     ) -> CmdStanVB:
