@@ -7,6 +7,26 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
+CmdStanPy 2.0.0
+---------------
+ - CmdStanPy now has a minimum supported CmdStan version, which will always be
+   at least one year old at the time of a new release. For 2.0.0, this is
+   **CmdStan 2.37.0**.
+ - The oldest supported Python version is now **Python 3.10**. Pydantic is now
+   required as a dependency.
+ - Added support for newer RTools versions.
+ - Overhauled the internals of the StanFit objects.
+   - These leverage additional output files in newer CmdStan versions, which
+     have led to some changes when loading a saved fit from disk -- ``from_csv``
+     is deprecated in favor of ``from_output_files``.
+ - Removed all previously deprecated features:
+   - The :class:`CmdStanModel` class no longer supports cases where there is not
+     a compiled model. In practical terms, this changed the signature of the
+     constructor (`stan_file` is now the first argument) and removed
+     ``.compile()``.
+   - Several argument names were renamed, and most arguments to
+     :class:`CmdStanModel` methods can no longer be passed positionally.
+
 CmdStanPy 1.3.2
 ---------------
 
