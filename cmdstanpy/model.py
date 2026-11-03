@@ -271,6 +271,8 @@ class CmdStanModel:
     def optimize(
         self,
         data: Mapping[str, Any] | str | os.PathLike | None = None,
+        *,
+        jacobian: bool = False,
         seed: int | None = None,
         inits: Mapping[str, Any] | float | str | os.PathLike | None = None,
         output_dir: OptionalPath = None,
@@ -291,8 +293,6 @@ class CmdStanModel:
         refresh: int | None = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: float | None = None,
-        jacobian: bool = False,
-        # would be nice to move this further up, but that's a breaking change
     ) -> CmdStanMLE:
         """
         Run the specified CmdStan optimize algorithm to produce a
@@ -318,6 +318,11 @@ class CmdStanModel:
         :param data: Values for all data variables in the model, specified
             either as a dictionary with entries matching the data variables,
             or as the path of a data file in JSON or Rdump format.
+
+        :param jacobian: Whether or not to use the Jacobian adjustment for
+            constrained variables in optimization. By default this is false,
+            meaning optimization yields the Maximum Likehood Estimate (MLE).
+            Setting it to true yields the Maximum A Posteriori Estimate (MAP).
 
         :param seed: The seed for random number generator. Must be an integer
             between 0 and 2^32 - 1. If unspecified,
@@ -394,11 +399,6 @@ class CmdStanModel:
 
         :param timeout: Duration at which optimization times out in seconds.
 
-        :param jacobian: Whether or not to use the Jacobian adjustment for
-            constrained variables in optimization. By default this is false,
-            meaning optimization yields the Maximum Likehood Estimate (MLE).
-            Setting it to true yields the Maximum A Posteriori Estimate (MAP).
-
         :return: CmdStanMLE object
         """
         optimize_args = OptimizeArgs(
@@ -468,6 +468,7 @@ class CmdStanModel:
     def sample(
         self,
         data: Mapping[str, Any] | str | os.PathLike | None = None,
+        *,
         chains: int | None = None,
         parallel_chains: int | None = None,
         threads_per_chain: int | None = None,
@@ -486,6 +487,13 @@ class CmdStanModel:
         thin: int | None = None,
         max_treedepth: int | None = None,
         metric: str | None = None,
+        inv_metric: (
+            str
+            | np.ndarray
+            | Mapping[str, Any]
+            | Sequence[str | np.ndarray | Mapping[str, Any]]
+            | None
+        ) = None,
         step_size: float | list[float] | None = None,
         adapt_engaged: bool = True,
         adapt_delta: float | None = None,
@@ -502,15 +510,7 @@ class CmdStanModel:
         refresh: int | None = None,
         time_fmt: str = "%Y%m%d%H%M%S",
         timeout: float | None = None,
-        *,
         force_one_process_per_chain: bool | None = None,
-        inv_metric: (
-            str
-            | np.ndarray
-            | Mapping[str, Any]
-            | Sequence[str | np.ndarray | Mapping[str, Any]]
-            | None
-        ) = None,
     ) -> CmdStanMCMC:
         """
         Run or more chains of the NUTS-HMC sampler to produce a set of draws
@@ -980,6 +980,7 @@ class CmdStanModel:
         self,
         data: Mapping[str, Any] | str | os.PathLike | None = None,
         previous_fit: PrevFit | list[str] | None = None,
+        *,
         seed: int | None = None,
         gq_output_dir: OptionalPath = None,
         sig_figs: int | None = None,
@@ -1172,6 +1173,7 @@ class CmdStanModel:
     def variational(
         self,
         data: Mapping[str, Any] | str | os.PathLike | None = None,
+        *,
         seed: int | None = None,
         inits: float | None = None,
         output_dir: OptionalPath = None,
