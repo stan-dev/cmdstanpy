@@ -22,7 +22,7 @@ Python classes which provide methods to do analysis and manage the resulting
 set of model, data, and posterior estimates.
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    installation
    users-guide

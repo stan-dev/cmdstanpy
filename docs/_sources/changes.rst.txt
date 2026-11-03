@@ -7,6 +7,15 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
+CmdStanPy 1.3.1
+---------------
+
+ - Fixed the URL that RTools40 is downloaded from following CRAN changes.
+ - Deprecated the ``save_latent_dynamics`` argument, use the name ``save_diagnostics`` instead.
+ - Deprecated passing most arguments to the model methods by position, e.g. ``model.sample(data, 2)`` should be written ``model.sample(data, chains=2)``.
+
+Reminder: We anticipate the next release of CmdStanPy will be version 2.0, which will remove all existing deprecations.
+
 CmdStanPy 1.3.0
 ---------------
 
