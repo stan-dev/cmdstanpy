@@ -1,303 +1,431 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+
+<html lang="en" data-content_root="../" >
+
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.3.0 documentation</title>
-    
-    <link href="../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.3.1 documentation</title>
   
-    
-    <link rel="stylesheet"
-      href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
   
-    
-      
   
-    
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/project-template.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    
-    <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=7facd19e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=bb516dca"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=30646c52"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'users-guide/workflow';</script>
+    <link rel="icon" href="../_static/logo_icon.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Controlling Outputs" href="outputs.html" />
     <link rel="prev" title="“Hello, World!”" href="hello_world.html" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en">
-    
-
-    <!-- Google Analytics -->
-    
-<link rel="stylesheet" href="_static/basic.css" type="text/css" />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.3.1" />
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
-    
-    <div class="container-fluid" id="banner"></div>
-
-    
-<nav id="navbar-main" class="navbar navbar-dark navbar-expand-lg fixed-top bd-navbar"
-    style="background-color: #222222;"><div class="container-xl">
-
-  <div id="navbar-start">
-    
-    <!-- This will display the version of the docs -->
-<a class='navbar-brand' href='../index.html'>CmdStanPy 1.3.0</a>
-    
-  </div>
-
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
   
-  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
-    <div id="navbar-center" class="mr-auto">
-      
-      <div class="navbar-center-item">
-        <ul id="navbar-main-elements" class="navbar-nav">
-    <li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../installation.html">
-  Installation
- </a>
-</li>
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
-<li class="toctree-l1 current active nav-item">
- <a class="reference internal nav-link" href="../users-guide.html">
-  User’s Guide
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../api.html">
-  API Reference
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../changes.html">
-  What’s New
- </a>
-</li>
-
-<li class="toctree-l1 nav-item">
- <a class="reference internal nav-link" href="../community.html">
-  Community
- </a>
-</li>
-
+  
+  <dialog id="pst-search-dialog">
     
-</ul>
-      </div>
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo_tm.png" class="logo__image only-light" alt="CmdStanPy - Home"/>
+    <img src="../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
+  
+  
+    <p class="title logo__title">CmdStanPy v1.3.1</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../users-guide.html">
+    User’s Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changes.html">
+    What’s New
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../community.html">
+    Community
+  </a>
+</li>
+
+  </ul>
+</nav></div>
       
     </div>
-
-    <div id="navbar-end">
+    
+    
+    <div class="navbar-header-items__end">
       
-      <div class="navbar-end-item">
-        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
         <li class="nav-item">
-          <a class="nav-link" href="https://twitter.com/mcmc_stan" rel="noopener" target="_blank" title="Twitter"><span><i class="fab fa-twitter"></i></span>
-            <label class="sr-only">Twitter</label></a>
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/stan-dev/cmdstanpy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="https://github.com/stan-dev/cmdstanpy" rel="noopener" target="_blank" title="GitHub"><span><i class="fab fa-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://discourse.mc-stan.org/" title="Forums" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fas fa-users fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Forums</span></a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="https://discourse.mc-stan.org/" rel="noopener" target="_blank" title="Forums"><span><i class="fas fa-users"></i></span>
-            <label class="sr-only">Forums</label></a>
-        </li>
-      </ul>
-      </div>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
       
     </div>
+    
   </div>
+  
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
 </div>
-</nav>
 
+    </header>
+  
 
-    <div class="container-xl">
-      <div class="row">
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
           
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
-  <div class="bd-toc-item active">
-    <ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="overview.html">
-   Overview
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
   </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="hello_world.html">
-   “Hello, World!”
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   CmdStanPy Workflow
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="outputs.html">
-   Controlling Outputs
-  </a>
- </li>
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="examples.html">
-   CmdStanPy Examples
-  </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
-  <label for="toctree-checkbox-1">
-   <i class="fas fa-chevron-down">
-   </i>
-  </label>
-  <ul>
-   <li class="toctree-l2">
-    <a class="reference internal" href="examples/MCMC%20Sampling.html">
-     MCMC Sampling
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="examples/Maximum%20Likelihood%20Estimation.html">
-     Maximum Likelihood Estimation
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="examples/Pathfinder.html">
-     Variational Inference using Pathfinder
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="examples/Variational%20Inference.html">
-     Variational Inference using ADVI
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html">
-     Initializing the NUTS-HMC sampler
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="examples/Run%20Generated%20Quantities.html">
-     Generating new quantities of interest
-    </a>
-   </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="examples/Using%20External%20C%2B%2B.html">
-     Advanced Topic: Using External C++ Functions
-    </a>
-   </li>
-  </ul>
- </li>
-</ul>
+</li>
 
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../users-guide.html">
+    User’s Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api.html">
+    API Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../changes.html">
+    What’s New
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../community.html">
+    Community
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/stan-dev/cmdstanpy" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://discourse.mc-stan.org/" title="Forums" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fas fa-users fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Forums</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
   </div>
-</nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
-
-          
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
-<div class="tocsection onthispage pt-5 pb-3">
-    <i class="fas fa-list"></i> On this page
-</div>
-
-<nav id="bd-toc-nav">
-    <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#compile-the-stan-model">
-   Compile the Stan model
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#assemble-input-and-initialization-data">
-   Assemble input and initialization data
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#run-the-cmdstan-inference-engine">
-   Run the CmdStan inference engine
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#validate-view-export-the-inference-engine-outputs">
-   Validate, view, export the inference engine outputs
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#output-data">
-     Output data
-    </a>
-   </li>
-  </ul>
- </li>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">“Hello, World!”</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">CmdStanPy Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outputs.html">Controlling Outputs</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples.html">CmdStanPy Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/MCMC%20Sampling.html">MCMC Sampling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Maximum%20Likelihood%20Estimation.html">Maximum Likelihood Estimation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Pathfinder.html">Variational Inference using Pathfinder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Variational%20Inference.html">Variational Inference using ADVI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/VI%20as%20Sampler%20Inits.html">Initializing the NUTS-HMC sampler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Run%20Generated%20Quantities.html">Generating new quantities of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/Using%20External%20C%2B%2B.html">Advanced Topic: Using External C++ Functions</a></li>
 </ul>
-
-</nav>
-              </div>
-              
-              <div class="toc-item">
-                
-
-<div class="tocsection editthispage">
-    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide/workflow.rst">
-        <i class="fas fa-pencil-alt"></i> Edit this page
-    </a>
+</details></li>
+</ul>
 </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
 
-              </div>
-              
-            
-          </div>
-          
 
-          
-          
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
               
-              <div>
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../users-guide.html" class="nav-link">User’s Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">CmdStanPy Workflow</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
                 
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
   <section id="cmdstanpy-workflow">
-<h1>CmdStanPy Workflow<a class="headerlink" href="#cmdstanpy-workflow" title="Permalink to this heading">¶</a></h1>
+<h1>CmdStanPy Workflow<a class="headerlink" href="#cmdstanpy-workflow" title="Link to this heading">#</a></h1>
 <p>The statistical modeling enterprise has two principal modalities:
 development and production.
 The focus of development is model building, comparison, and validation.
@@ -327,7 +455,7 @@ also applies to monitoring model performance in production.
 The following sections describe the process of building, running, and
 managing the resulting inference for a single model and set of inputs.</p>
 <section id="compile-the-stan-model">
-<span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Permalink to this heading">¶</a></h2>
+<span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Link to this heading">#</a></h2>
 <p>The: <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class provides methods
 to compile and run the Stan program.
 A CmdStanModel object can be instantiated by specifying
@@ -354,7 +482,7 @@ The constructor argument <cite>compile</cite> controls this behavior.</p>
 <span class="n">my_model</span><span class="o">.</span><span class="n">code</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The CmdStanModel class also provides the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.compile" title="cmdstanpy.CmdStanModel.compile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile()</span></code></a> method,
+<p>The CmdStanModel class also provides the <code class="xref py py-meth docutils literal notranslate"><span class="pre">compile()</span></code> method,
 which can be called at any point to (re)compile the model as needed.</p>
 <p>Model compilation is carried out via the GNU Make build tool.
 The CmdStan <code class="docutils literal notranslate"><span class="pre">makefile</span></code> contains a set of general rules which
@@ -389,7 +517,7 @@ we recommend the value <code class="docutils literal notranslate"><span class="p
 </div>
 </section>
 <section id="assemble-input-and-initialization-data">
-<h2>Assemble input and initialization data<a class="headerlink" href="#assemble-input-and-initialization-data" title="Permalink to this heading">¶</a></h2>
+<h2>Assemble input and initialization data<a class="headerlink" href="#assemble-input-and-initialization-data" title="Link to this heading">#</a></h2>
 <p>CmdStan is file-based interface, therefore all model input and
 initialization data must be supplied as JSON files, as described in the
 <a class="reference external" href="https://mc-stan.org/docs/cmdstan-guide/json.html">CmdStan User’s Guide</a>.</p>
@@ -401,7 +529,7 @@ these inputs contain either a collection compatible with
 numpy arrays or pandas.Series.</p>
 </section>
 <section id="run-the-cmdstan-inference-engine">
-<h2>Run the CmdStan inference engine<a class="headerlink" href="#run-the-cmdstan-inference-engine" title="Permalink to this heading">¶</a></h2>
+<h2>Run the CmdStan inference engine<a class="headerlink" href="#run-the-cmdstan-inference-engine" title="Link to this heading">#</a></h2>
 <p>For each CmdStan inference method, there is a corresponding method on the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class.
 An example of each is provided in the <a class="reference internal" href="examples.html"><span class="doc">next section</span></a>.</p>
 <ul>
@@ -434,7 +562,7 @@ uses the parameter estimates in the fit to run the Stan program’s
 </ul>
 </section>
 <section id="validate-view-export-the-inference-engine-outputs">
-<h2>Validate, view, export the inference engine outputs<a class="headerlink" href="#validate-view-export-the-inference-engine-outputs" title="Permalink to this heading">¶</a></h2>
+<h2>Validate, view, export the inference engine outputs<a class="headerlink" href="#validate-view-export-the-inference-engine-outputs" title="Link to this heading">#</a></h2>
 <p>The inference method-specific results objects
 <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanPathfinder" title="cmdstanpy.CmdStanPathfinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanPathfinder</span></code></a>, <a class="reference internal" href="../api.html#cmdstanpy.CmdStanVB" title="cmdstanpy.CmdStanVB"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanVB</span></code></a>,
 <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMLE" title="cmdstanpy.CmdStanMLE"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMLE</span></code></a>, and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a>
@@ -443,7 +571,7 @@ and the location of all output files produced.
 The provide a common set methods for accessing the inference results and metadata,
 as well as method-specific informational properties and methods.objects</p>
 <section id="output-data">
-<h3>Output data<a class="headerlink" href="#output-data" title="Permalink to this heading">¶</a></h3>
+<h3>Output data<a class="headerlink" href="#output-data" title="Link to this heading">#</a></h3>
 <p>The resulting Stan CSV file or set of files are assembled into an inference result object.</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> object contains the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.sample" title="cmdstanpy.CmdStanModel.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> outputs</p></li>
@@ -466,56 +594,130 @@ method variables, cf <a class="reference internal" href="../api.html#cmdstanpy.C
 <p>The output from the methods <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC" title="cmdstanpy.CmdStanMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanMCMC</span></code></a> and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanGQ" title="cmdstanpy.CmdStanGQ"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanGQ</span></code></a> return the sample contents
 in tabular form, see <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws" title="cmdstanpy.CmdStanMCMC.draws"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws()</span></code></a> and <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws_pd" title="cmdstanpy.CmdStanMCMC.draws_pd"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_pd()</span></code></a>.
 Similarly, the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanMCMC.draws_xr" title="cmdstanpy.CmdStanMCMC.draws_xr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">draws_xr()</span></code></a> method returns the sample
-contents as an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2025.10.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which is a mapping from variable names to their respective values.</p>
+contents as an <a class="reference external" href="https://docs.xarray.dev/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v2026.9.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code></a> which is a mapping from variable names to their respective values.</p>
 </section>
 </section>
 </section>
 
 
-              </div>
+                </article>
               
               
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="hello_world.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">“Hello, World!”</p>
-        </div>
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="hello_world.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">“Hello, World!”</p>
+      </div>
     </a>
-    <a class='right-next' id="next-link" href="outputs.html" title="next page">
-    <div class="prev-next-info">
+    <a class="right-next"
+       href="outputs.html"
+       title="next page">
+      <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
         <p class="prev-next-title">Controlling Outputs</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
+                </footer>
               
-          </main>
-          
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-      </div>
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compile-the-stan-model">Compile the Stan model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assemble-input-and-initialization-data">Assemble input and initialization data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-cmdstan-inference-engine">Run the CmdStan inference engine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-view-export-the-inference-engine-outputs">Validate, view, export the inference engine outputs</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-data">Output data</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/users-guide/workflow.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/stan-dev/cmdstanpy/edit/develop/docsrc/users-guide/workflow.rst">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, Stan Development Team.
+      <br/>
+    
+  </p>
+</div>
+      
     </div>
   
-    <script src="../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
-    &copy; Copyright 2023, Stan Development Team.<br>
-</p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
-</p>
-    </div>
-    
-  </div>
-</footer>
+  
+  
+</div>
+
+  </footer>
   </body>
 </html>
