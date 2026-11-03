@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.model &#8212; CmdStanPy 1.3.1 documentation</title>
+    <title>cmdstanpy.model &#8212; CmdStanPy 1.3.2 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=bb516dca"></script>
+    <script src="../../_static/documentation_options.js?v=8ca9e7a0"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.1" />
+  <meta name="docsearch:version" content="1.3.2" />
   </head>
   
   
@@ -122,7 +122,7 @@
     <img src="../../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.1</p>
+    <p class="title logo__title">CmdStanPy v1.3.2</p>
   
 </a></div>
     
@@ -410,7 +410,16 @@
 <span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">cpu_count</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Literal</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -468,6 +477,11 @@
 <span class="sd">    Stan program source file or the compiled executable, or both.</span>
 <span class="sd">    This will compile the model if provided a Stan file and no executable,</span>
 
+<span class="sd">    :param model_name: Model name, used for output file names.</span>
+<span class="sd">        Optional, default is the base filename of the Stan program file.</span>
+<span class="sd">        Deprecated: In version 2.0.0, model name cannot be</span>
+<span class="sd">        specified and will always be taken from executable.</span>
+
 <span class="sd">    :param stan_file: Path to Stan program file.</span>
 
 <span class="sd">    :param exe_file: Path to compiled executable file.  Optional, unless</span>
@@ -489,20 +503,31 @@
 <span class="sd">    :param user_header: A path to a header file to include during C++</span>
 <span class="sd">        compilation.</span>
 <span class="sd">        Optional.</span>
+
+<span class="sd">    :param compile: Whether or not to compile the model.  Default is ``True``.</span>
+<span class="sd">        If set to the string ``&quot;force&quot;``, it will always compile even if</span>
+<span class="sd">        an existing executable is found.</span>
+<span class="sd">        Deprecated: Use ``force_compile`` instead. The ability to instantiate</span>
+<span class="sd">        a CmdStanModel without an executable will be removed in version 2.0.0.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">stan_file</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">exe_file</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">force_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">stanc_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cpp_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">user_header</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="nb">compile</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;force&#39;</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize object given constructor args.</span>
 
+<span class="sd">        :param model_name: Deprecated. Model name, used for output file names.</span>
 <span class="sd">        :param stan_file: Path to Stan program file.</span>
 <span class="sd">        :param exe_file: Path to compiled executable file.</span>
 <span class="sd">        :param force_compile: Whether or not to force recompilation if</span>
@@ -511,30 +536,52 @@
 <span class="sd">        :param cpp_options: Options for C++ compiler.</span>
 <span class="sd">        :param user_header: A path to a header file to include during C++</span>
 <span class="sd">            compilation.</span>
+<span class="sd">        :param compile: Deprecated. Whether or not to compile the model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">stanc_options</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="o">=</span> <span class="n">compilation</span><span class="o">.</span><span class="n">CompilerOptions</span><span class="p">(</span>
+            <span class="n">stanc_options</span><span class="o">=</span><span class="n">stanc_options</span><span class="p">,</span>
+            <span class="n">cpp_options</span><span class="o">=</span><span class="n">cpp_options</span><span class="p">,</span>
+            <span class="n">user_header</span><span class="o">=</span><span class="n">user_header</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_param</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="k">if</span> <span class="n">exe_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">exe_file</span><span class="p">))</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no such file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">))</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">exename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">exename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">compile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">compile</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;CmdStanModel(compile=...) is deprecated and will be &quot;</span>
+                <span class="s2">&quot;removed in the next major version. The constructor will &quot;</span>
+                <span class="s2">&quot;always ensure a model has a compiled executable.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;If you wish to force recompilation, use force_compile=True &quot;</span>
+                <span class="s2">&quot;instead.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">force_compile</span><span class="p">:</span>
+            <span class="nb">compile</span> <span class="o">=</span> <span class="s1">&#39;force&#39;</span>
+
+        <span class="k">if</span> <span class="n">model_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;CmdStanModel(model_name=...) is deprecated and will be &quot;</span>
+                <span class="s2">&quot;removed in the next major version.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">model_name</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;Invalid value for argument model name, found &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">model_name</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">model_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">stan_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">exe_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s1">&#39;Missing model file arguments, you must specify &#39;</span>
                     <span class="s1">&#39;either Stan source or executable program file or both.&#39;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="n">force_compile</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;Cannot force compilation when no Stan source file &#39;</span>
-                    <span class="s1">&#39;is specified.&#39;</span>
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">stan_file</span><span class="p">))</span>
@@ -547,29 +594,41 @@
                 <span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">!=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s1">&#39;Name mismatch between Stan file and compiled&#39;</span>
-                        <span class="s1">&#39; executable, expecting basename: </span><span class="si">{}</span><span class="s1">&#39;</span>
-                        <span class="s1">&#39; found: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-                    <span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">compilation</span><span class="o">.</span><span class="n">compile_stan_file</span><span class="p">(</span>
-                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">),</span>
-                <span class="n">force</span><span class="o">=</span><span class="n">force_compile</span><span class="p">,</span>
-                <span class="n">stanc_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">,</span>
-                <span class="n">cpp_options</span><span class="o">=</span><span class="n">cpp_options</span><span class="p">,</span>
-                <span class="n">user_header</span><span class="o">=</span><span class="n">user_header</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="c1"># if program has include directives, record path</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+                <span class="n">program</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;#include&#39;</span> <span class="ow">in</span> <span class="n">program</span><span class="p">:</span>
+                <span class="n">path</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">add_include_path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
             <span class="c1"># try to detect models w/out parameters, needed for sampler</span>
             <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">27</span><span class="p">))</span> <span class="ow">and</span> <span class="n">cmdstan_version_before</span><span class="p">(</span>
                 <span class="mi">2</span><span class="p">,</span> <span class="mi">36</span>
             <span class="p">):</span>
-                <span class="n">model_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_info</span><span class="p">()</span>
-                <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">model_info</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_param</span> <span class="o">|=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_info</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">model_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">src_info</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="s1">&#39;parameters&#39;</span> <span class="ow">in</span> <span class="n">model_info</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_fixed_param</span> <span class="o">|=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_info</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">compile</span><span class="p">:</span>
+                        <span class="k">raise</span>
+                    <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">exe_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">exe_file</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;no such file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">))</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">exename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">exename</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">!=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">exename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s1">&#39;Name mismatch between Stan file and compiled&#39;</span>
+                        <span class="s1">&#39; executable, expecting basename: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                        <span class="s1">&#39; found: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span> <span class="n">exename</span><span class="p">)</span>
+                    <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -592,16 +651,22 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;TBB already found in load path&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="nb">compile</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">compile</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;force&#39;</span><span class="p">,</span> <span class="n">_internal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;CmdStanModel(stan_file=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="si">!r}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;exe_file=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">exe_file</span><span class="si">!r}</span><span class="s2">)&quot;</span>
-        <span class="p">)</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanModel: name=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n\t</span><span class="s1"> stan_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">)</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n\t</span><span class="s1"> exe_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span><span class="p">)</span>
+        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n\t</span><span class="s1"> compiler_options=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">repr</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Model name used in output filename templates.</span>
+<span class="sd">        Model name used in output filename templates. Default is basename</span>
+<span class="sd">        of Stan program or exe file, unless specified in call to constructor</span>
+<span class="sd">        via argument ``model_name``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 
@@ -611,7 +676,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">exe_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">exe_file</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptionalPath</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Full path to Stan exe file.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span>
 
@@ -621,17 +686,25 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run model with option &#39;info&#39;. Parse output statements, which all</span>
 <span class="sd">        have form &#39;key = value&#39; into a Dict.</span>
+<span class="sd">        If exe file compiled with CmdStan &lt; 2.27, option &#39;info&#39; isn&#39;t</span>
+<span class="sd">        available and the method returns an empty dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">info</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
-        <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">exe_file</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">],</span> <span class="n">fd_out</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
-        <span class="n">lines</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-            <span class="n">kv_pair</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kv_pair</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">result</span><span class="p">[</span><span class="n">kv_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">kv_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exe_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+            <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exe_file</span><span class="p">),</span> <span class="s1">&#39;info&#39;</span><span class="p">],</span> <span class="n">fd_out</span><span class="o">=</span><span class="n">info</span><span class="p">)</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                <span class="n">kv_pair</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kv_pair</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">kv_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">kv_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">result</span></div>
 
 
 <div class="viewcode-block" id="CmdStanModel.src_info">
@@ -645,7 +718,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">27</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">{}</span>
-        <span class="k">return</span> <span class="n">compilation</span><span class="o">.</span><span class="n">src_info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">compilation</span><span class="o">.</span><span class="n">src_info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="p">)</span></div>
 
 
     <span class="c1"># TODO(2.0) remove</span>
@@ -694,9 +767,24 @@
             <span class="n">max_line_length</span><span class="o">=</span><span class="n">max_line_length</span><span class="p">,</span>
             <span class="n">canonicalize</span><span class="o">=</span><span class="n">canonicalize</span><span class="p">,</span>
             <span class="n">backup</span><span class="o">=</span><span class="n">backup</span><span class="p">,</span>
-            <span class="n">stanc_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stanc_options</span><span class="p">,</span>
+            <span class="n">stanc_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stanc_options</span><span class="p">,</span>
         <span class="p">)</span></div>
 
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stanc_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Options to stanc compilers.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">_stanc_options</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cpp_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Options to C++ compilers.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">_cpp_options</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">user_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The user header file if it exists, otherwise empty&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">_user_header</span>
 
 <div class="viewcode-block" id="CmdStanModel.code">
 <a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.code">[docs]</a>
@@ -714,6 +802,85 @@
                 <span class="s1">&#39;Cannot read file Stan file: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">code</span></div>
+
+
+    <span class="c1"># TODO(2.0): remove</span>
+<div class="viewcode-block" id="CmdStanModel.compile">
+<a class="viewcode-back" href="../../api.html#cmdstanpy.CmdStanModel.compile">[docs]</a>
+    <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">stanc_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cpp_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">user_header</span><span class="p">:</span> <span class="n">OptionalPath</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">override_options</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">_internal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deprecated: To compile a model, use the :class:`~cmdstanpy.CmdStanModel`</span>
+<span class="sd">        constructor or :func:`cmdstanpy.compile_stan_file()`.</span>
+
+<span class="sd">        Compile the given Stan program file.  Translates the Stan code to</span>
+<span class="sd">        C++, then calls the C++ compiler.</span>
+
+<span class="sd">        By default, this function compares the timestamps on the source and</span>
+<span class="sd">        executable files; if the executable is newer than the source file, it</span>
+<span class="sd">        will not recompile the file, unless argument ``force`` is ``True``</span>
+<span class="sd">        or unless the compiler options have been changed.</span>
+
+<span class="sd">        :param force: When ``True``, always compile, even if the executable file</span>
+<span class="sd">            is newer than the source file.  Used for Stan models which have</span>
+<span class="sd">            ``#include`` directives in order to force recompilation when changes</span>
+<span class="sd">            are made to the included files.</span>
+
+<span class="sd">        :param stanc_options: Options for stanc compiler.</span>
+<span class="sd">        :param cpp_options: Options for C++ compiler.</span>
+<span class="sd">        :param user_header: A path to a header file to include during C++</span>
+<span class="sd">            compilation.</span>
+
+<span class="sd">        :param override_options: When ``True``, override existing option.</span>
+<span class="sd">            When ``False``, add/replace existing options.  Default is ``False``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_internal</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;CmdStanModel.compile() is deprecated and will be removed in &quot;</span>
+                <span class="s2">&quot;the next major version. To compile a model, use the &quot;</span>
+                <span class="s2">&quot;CmdStanModel() constructor or cmdstanpy.compile_stan_file().&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_file</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Please specify source file&#39;</span><span class="p">)</span>
+
+        <span class="n">compiler_options</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">stanc_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="n">cpp_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="n">user_header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="n">compiler_options</span> <span class="o">=</span> <span class="n">compilation</span><span class="o">.</span><span class="n">CompilerOptions</span><span class="p">(</span>
+                <span class="n">stanc_options</span><span class="o">=</span><span class="n">stanc_options</span><span class="p">,</span>
+                <span class="n">cpp_options</span><span class="o">=</span><span class="n">cpp_options</span><span class="p">,</span>
+                <span class="n">user_header</span><span class="o">=</span><span class="n">user_header</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">compiler_options</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">compiler_options</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="p">:</span>
+                <span class="n">force</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="o">=</span> <span class="n">compiler_options</span>
+                <span class="k">elif</span> <span class="n">override_options</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span> <span class="o">=</span> <span class="n">compiler_options</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">compiler_options</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exe_file</span> <span class="o">=</span> <span class="n">compilation</span><span class="o">.</span><span class="n">compile_stan_file</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stan_file</span><span class="p">),</span>
+            <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">,</span>
+            <span class="n">stanc_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">stanc_options</span><span class="p">,</span>
+            <span class="n">cpp_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">cpp_options</span><span class="p">,</span>
+            <span class="n">user_header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compiler_options</span><span class="o">.</span><span class="n">user_header</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CmdStanModel.optimize">

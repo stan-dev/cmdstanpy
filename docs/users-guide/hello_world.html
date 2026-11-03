@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>“Hello, World!” &#8212; CmdStanPy 1.3.1 documentation</title>
+    <title>“Hello, World!” &#8212; CmdStanPy 1.3.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=bb516dca"></script>
+    <script src="../_static/documentation_options.js?v=8ca9e7a0"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Overview" href="overview.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.1" />
+  <meta name="docsearch:version" content="1.3.2" />
   </head>
   
   
@@ -125,7 +125,7 @@
     <img src="../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.1</p>
+    <p class="title logo__title">CmdStanPy v1.3.2</p>
   
 </a></div>
     
@@ -475,7 +475,10 @@ A <cite>CmdStanModel</cite> can be instantiated from a Stan file or its correspo
 
 <span class="go"># inspect model object</span>
 <span class="gp">In [5]: </span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-<span class="go">CmdStanModel(stan_file=&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli.stan&#39;, exe_file=&#39;/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli&#39;)</span>
+<span class="go">CmdStanModel: name=bernoulli</span>
+<span class="go">	 stan_file=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli.stan</span>
+<span class="go">	 exe_file=/home/runner/work/cmdstanpy/cmdstanpy/docsrc/users-guide/examples/bernoulli</span>
+<span class="go">	 compiler_options=stanc_options={}, cpp_options={}</span>
 
 <span class="go"># inspect compiled model</span>
 <span class="gp">In [6]: </span><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">exe_info</span><span class="p">())</span>
@@ -553,13 +556,13 @@ which by convention end in <code class="docutils literal notranslate"><span clas
 </ul>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="go"># access model variable by name</span>
 <span class="gp">In [9]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
-<span class="go">[0.16242645 0.13870285 0.13892333 ... 0.25880777 0.22508723 0.16724898]</span>
+<span class="go">[0.50928364 0.56157968 0.41940619 ... 0.43521655 0.41042861 0.12198212]</span>
 
 <span class="gp">In [10]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">)[:</span><span class="mi">3</span><span class="p">])</span>
 <span class="go">      theta</span>
-<span class="go">0  0.162426</span>
-<span class="go">1  0.138703</span>
-<span class="go">2  0.138923</span>
+<span class="go">0  0.509284</span>
+<span class="go">1  0.561580</span>
+<span class="go">2  0.419406</span>
 
 <span class="gp">In [11]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">draws_xr</span><span class="p">(</span><span class="s1">&#39;theta&#39;</span><span class="p">))</span>
 <span class="go">&lt;xarray.Dataset&gt; Size: 40kB</span>
@@ -568,7 +571,7 @@ which by convention end in <code class="docutils literal notranslate"><span clas
 <span class="go">  * draw     (draw) int64 8kB 0 1 2 3 4 5 6 7 ... 993 994 995 996 997 998 999</span>
 <span class="go">  * chain    (chain) int64 32B 1 2 3 4</span>
 <span class="go">Data variables:</span>
-<span class="go">    theta    (chain, draw) float64 32kB 0.1624 0.1387 0.1389 ... 0.2251 0.1672</span>
+<span class="go">    theta    (chain, draw) float64 32kB 0.5093 0.5616 0.4194 ... 0.4104 0.122</span>
 <span class="go">Attributes:</span>
 <span class="go">    stan_version:        2.40.0</span>
 <span class="go">    model:               bernoulli_model</span>
@@ -599,17 +602,17 @@ which by convention end in <code class="docutils literal notranslate"><span clas
 <span class="gp">In [15]: </span><span class="n">fit</span><span class="o">.</span><span class="n">draws_pd</span><span class="p">()</span>
 <span class="gh">Out[15]: </span>
 <span class="go">      chain__  iter__  draw__  ...  divergent__  energy__     theta</span>
-<span class="go">0         1.0     1.0     1.0  ...          0.0  7.287177  0.162426</span>
-<span class="go">1         1.0     2.0     2.0  ...          0.0  7.278412  0.138703</span>
-<span class="go">2         1.0     3.0     3.0  ...          0.0  7.357800  0.138923</span>
-<span class="go">3         1.0     4.0     4.0  ...          0.0  7.220326  0.172716</span>
-<span class="go">4         1.0     5.0     5.0  ...          0.0  6.964222  0.189649</span>
+<span class="go">0         1.0     1.0     1.0  ...          0.0  8.477676  0.509284</span>
+<span class="go">1         1.0     2.0     2.0  ...          0.0  9.387333  0.561580</span>
+<span class="go">2         1.0     3.0     3.0  ...          0.0  8.760109  0.419406</span>
+<span class="go">3         1.0     4.0     4.0  ...          0.0  7.390337  0.346431</span>
+<span class="go">4         1.0     5.0     5.0  ...          0.0  9.050504  0.129975</span>
 <span class="go">...       ...     ...     ...  ...          ...       ...       ...</span>
-<span class="go">3995      4.0   996.0  3996.0  ...          0.0  8.715382  0.214938</span>
-<span class="go">3996      4.0   997.0  3997.0  ...          0.0  7.679435  0.201961</span>
-<span class="go">3997      4.0   998.0  3998.0  ...          0.0  6.848137  0.258808</span>
-<span class="go">3998      4.0   999.0  3999.0  ...          0.0  6.950081  0.225087</span>
-<span class="go">3999      4.0  1000.0  4000.0  ...          0.0  7.034639  0.167249</span>
+<span class="go">3995      4.0   996.0  3996.0  ...          0.0  7.504941  0.124181</span>
+<span class="go">3996      4.0   997.0  3997.0  ...          0.0  7.993671  0.121021</span>
+<span class="go">3997      4.0   998.0  3998.0  ...          0.0  7.638699  0.435217</span>
+<span class="go">3998      4.0   999.0  3999.0  ...          0.0  7.701525  0.410429</span>
+<span class="go">3999      4.0  1000.0  4000.0  ...          0.0  7.490367  0.121982</span>
 
 <span class="go">[4000 rows x 11 columns]</span>
 </pre></div>
@@ -621,13 +624,13 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
 <span class="go">diag_e</span>
 
 <span class="gp">In [17]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">inv_metric</span><span class="p">)</span>
-<span class="go">[[0.485628]</span>
-<span class="go"> [0.543576]</span>
-<span class="go"> [0.474981]</span>
-<span class="go"> [0.456803]]</span>
+<span class="go">[[0.505873]</span>
+<span class="go"> [0.532751]</span>
+<span class="go"> [0.544604]</span>
+<span class="go"> [0.57161 ]]</span>
 
 <span class="gp">In [18]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">step_size</span><span class="p">)</span>
-<span class="go">[0.908016 0.91666  0.789868 0.997263]</span>
+<span class="go">[0.795469 1.01824  0.902607 0.782358]</span>
 </pre></div>
 </div>
 <p>The CmdStanMCMC object also provides access to metadata about the model and the sampler run.</p>
@@ -635,7 +638,7 @@ access to the the per-chain HMC tuning parameters from the NUTS-HMC adaptive sam
 <span class="go">bernoulli_model</span>
 
 <span class="gp">In [20]: </span><span class="nb">print</span><span class="p">(</span><span class="n">fit</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">])</span>
-<span class="go">86507</span>
+<span class="go">77444</span>
 </pre></div>
 </div>
 </section>
@@ -650,9 +653,9 @@ summaries of the total joint log-probability density <strong>lp__</strong> plus
 all model parameters and quantities of interest in a pandas.DataFrame:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="n">fit</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 <span class="gh">Out[21]: </span>
-<span class="go">           Mean      MCSE    StdDev  ...  ESS_tail  ESS_bulk/s   R_hat</span>
-<span class="go">lp__  -7.295070  0.023570  0.798019  ...   1448.50     71795.9  1.0005</span>
-<span class="go">theta  0.248059  0.003361  0.121487  ...   1112.09     58716.2  1.0024</span>
+<span class="go">           Mean      MCSE    StdDev  ...  ESS_tail  ESS_bulk/s    R_hat</span>
+<span class="go">lp__  -7.307190  0.023780  0.790553  ...   1253.88     34296.5  1.00051</span>
+<span class="go">theta  0.247877  0.003301  0.121745  ...   1142.33     29671.8  1.00337</span>
 
 <span class="go">[2 rows x 11 columns]</span>
 </pre></div>

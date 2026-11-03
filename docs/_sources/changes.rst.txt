@@ -7,6 +7,13 @@ What's New
 
 For full changes, see the `Releases page <https://github.com/stan-dev/cmdstanpy/releases>`_ on GitHub.
 
+CmdStanPy 1.3.2
+---------------
+
+ - Reverted accidental breaking changes in 1.3.1
+
+Reminder: We anticipate the next release of CmdStanPy will be version 2.0, which will remove all existing deprecations.
+
 CmdStanPy 1.3.1
 ---------------
 
