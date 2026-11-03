@@ -581,13 +581,13 @@ def windows_tbb_path() -> None:
 
 def install_cmdstan(
     version: str | None = None,
+    *,
     dir: str | None = None,
     overwrite: bool = False,
     compiler: bool = False,
     progress: bool = False,
     verbose: bool = False,
     cores: int = 1,
-    *,
     interactive: bool = False,
 ) -> bool:
     """
