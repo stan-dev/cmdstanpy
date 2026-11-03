@@ -56,15 +56,15 @@ jobs:
           git commit -m "release/v${{ github.event.inputs.new_version }}: updating version numbers"
           git push -u origin release/v${{ github.event.inputs.new_version }}
 
-      - name: Merge into develop
+      - name: Merge into develop-1.x
         run: |
-          git checkout develop
+          git checkout develop-1.x
           git reset --hard release/v${{ github.event.inputs.new_version }}
-          git push origin develop
+          git push origin develop-1.x
 
       - name: Tag version
         run: |
-          git checkout develop
+          git checkout develop-1.x
           git tag -a "v${{ github.event.inputs.new_version }}" -m "Tagging v${{ github.event.inputs.new_version }}"
           git push origin "v${{ github.event.inputs.new_version }}"
 
