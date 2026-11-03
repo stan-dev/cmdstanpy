@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.3.1 documentation</title>
+    <title>Advanced Topic: Using External C++ Functions &#8212; CmdStanPy 1.3.2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=bb516dca"></script>
+    <script src="../../_static/documentation_options.js?v=8ca9e7a0"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -56,7 +56,7 @@
     <link rel="prev" title="Generating new quantities of interest" href="Run%20Generated%20Quantities.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.1" />
+  <meta name="docsearch:version" content="1.3.2" />
   </head>
   
   
@@ -126,7 +126,7 @@
     <img src="../../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.1</p>
+    <p class="title logo__title">CmdStanPy v1.3.2</p>
   
 </a></div>
     
@@ -436,9 +436,9 @@
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;bernoulli_external.stan&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">stan_code</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">stan_code</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
+<span class="n">model_external</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_external.stan&#39;</span><span class="p">,</span> <span class="nb">compile</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">model_external</span><span class="o">.</span><span class="n">code</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -473,8 +473,7 @@ generated quantities {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
-<span class="n">model_external</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_external.stan&#39;</span><span class="p">,</span> <span class="n">force_compile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_external</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -483,7 +482,7 @@ generated quantities {
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-12:25:18 - cmdstanpy - INFO - compiling stan file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan to exe file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
+16:02:06 - cmdstanpy - INFO - compiling stan file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan to exe file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -493,43 +492,21 @@ generated quantities {
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[3]</span><span class="ansi-green-fg">, line 2</span>
-<span class="ansi-green-fg">      1</span> <span class="ansi-bold" style="color: rgb(0,135,0)">from</span> <span class="ansi-blue-intense-fg ansi-bold">cmdstanpy</span> <span class="ansi-bold" style="color: rgb(0,135,0)">import</span> CmdStanModel
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">2</span> model_external = <span class="ansi-yellow-bg">CmdStanModel</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">stan_file</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-fg ansi-yellow-bg">&#39;</span><span class="ansi-yellow-fg ansi-yellow-bg">bernoulli_external.stan</span><span class="ansi-yellow-fg ansi-yellow-bg">&#39;</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">force_compile</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg ansi-bold" style="color: rgb(0,135,0)">True</span><span class="ansi-yellow-bg">)</span>
+<span class="ansi-green-fg">&lt;ipython-input-3-ca7a518eb77d&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model_external<span class="ansi-blue-fg">.</span>compile<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
 
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/Dev/py/cmdstanpy/cmdstanpy/model.py:183</span>, in <span class="ansi-cyan-fg">CmdStanModel.__init__</span><span class="ansi-blue-fg">(self, stan_file, exe_file, force_compile, stanc_options, cpp_options, user_header)</span>
-<span class="ansi-green-fg">    180</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">elif</span> path <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> <span style="color: rgb(0,135,0)">self</span>._stanc_options[<span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">include-paths</span><span class="ansi-yellow-fg">&#39;</span>]:
-<span class="ansi-green-fg">    181</span>         <span style="color: rgb(0,135,0)">self</span>._stanc_options[<span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">include-paths</span><span class="ansi-yellow-fg">&#39;</span>].append(path)
-<span class="ansi-green-fg">--&gt; </span><span class="ansi-green-fg">183</span> <span style="color: rgb(0,135,0)">self</span>._exe_file = <span class="ansi-yellow-bg">compilation</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">compile_stan_file</span><span class="ansi-yellow-bg">(</span>
-<span class="ansi-green-fg">    184</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">str</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">stan_file</span><span class="ansi-yellow-bg">)</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    185</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">force</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg">force_compile</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    186</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">stanc_options</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">_stanc_options</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    187</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">cpp_options</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg">cpp_options</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    188</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">user_header</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg">user_header</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    189</span> <span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-fg">    191</span> <span style="color: rgb(95,135,135)"># try to detect models w/out parameters, needed for sampler</span>
-<span class="ansi-green-fg">    192</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> (<span class="ansi-bold" style="color: rgb(175,0,255)">not</span> cmdstan_version_before(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">27</span>)) <span class="ansi-bold" style="color: rgb(175,0,255)">and</span> cmdstan_version_before(
-<span class="ansi-green-fg">    193</span>     <span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">36</span>
-<span class="ansi-green-fg">    194</span> ):
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/Dev/py/cmdstanpy/cmdstanpy/compilation.py:429</span>, in <span class="ansi-cyan-fg">compile_stan_file</span><span class="ansi-blue-fg">(src, force, stanc_options, cpp_options, user_header)</span>
-<span class="ansi-green-fg">    422</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">PCH</span><span class="ansi-yellow-fg">&#39;</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> console <span class="ansi-bold" style="color: rgb(175,0,255)">or</span> <span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">precompiled header</span><span class="ansi-yellow-fg">&#39;</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> console:
-<span class="ansi-green-fg">    423</span>         get_logger().warning(
-<span class="ansi-green-fg">    424</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">CmdStan</span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">s precompiled header (PCH) files </span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    425</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">may need to be rebuilt.</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    426</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">Please run cmdstanpy.rebuild_cmdstan().</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    427</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">If the issue persists please open a bug report</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    428</span>         )
-<span class="ansi-green-fg">--&gt; </span><span class="ansi-green-fg">429</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">ValueError</span>(
-<span class="ansi-green-fg">    430</span>         <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">Failed to compile Stan model </span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>src<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">. Console:</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>console<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    431</span>     )
-<span class="ansi-green-fg">    432</span> <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> <span style="color: rgb(0,135,0)">str</span>(exe_target)
+<span class="ansi-green-fg">~/Dev/py/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">compile</span><span class="ansi-blue-fg">(self, force, stanc_options, cpp_options, user_header, override_options)</span>
+<span class="ansi-green-intense-fg ansi-bold">    561</span>                         <span class="ansi-blue-fg">&#34;If the issue persists please open a bug report&#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">    562</span>                     )
+<span class="ansi-green-fg">--&gt; 563</span><span class="ansi-red-fg">                 raise ValueError(
+</span><span class="ansi-green-intense-fg ansi-bold">    564</span>                     <span class="ansi-blue-fg">f&#34;Failed to compile Stan model &#39;{self._stan_file}&#39;. &#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">    565</span>                     <span class="ansi-blue-fg">f&#34;Console:\n{console}&#34;</span>
 
 <span class="ansi-red-fg">ValueError</span>: Failed to compile Stan model &#39;/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan&#39;. Console:
 
 --- Translating Stan model to C++ code ---
-bin/stanc --filename-in-msg=bernoulli_external.stan --o=/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan
-Semantic error in &#39;bernoulli_external.stan&#39;, line 2, column 7 to column 16:
+bin/stanc  --o=/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan
+Semantic error in &#39;/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan&#39;, line 2, column 7 to column 16:
    -------------------------------------------------
      1:  functions {
      2:    real make_odds(real theta);
@@ -539,10 +516,10 @@ Semantic error in &#39;bernoulli_external.stan&#39;, line 2, column 7 to column 
    -------------------------------------------------
 
 Function &#39;make_odds&#39; is declared without specifying a definition.
-make: *** [make/program:66: /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp] Error 1
+make: *** [make/program:50: /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp] Error 1
 
-Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.stan&#39;, &#39;/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external&#39;]
-        exited with code &#39;2&#39; No such file or directory
+Command [&#39;make&#39;, &#39;/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external&#39;]
+        error during processing No such file or directory
 
 </pre></div></div>
 </div>
@@ -551,7 +528,7 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_external</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_external.stan&#39;</span><span class="p">,</span> <span class="n">force_compile</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stanc_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;allow-undefined&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_external</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">stanc_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;allow-undefined&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -560,7 +537,7 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-12:25:18 - cmdstanpy - INFO - compiling stan file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan to exe file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
+16:02:10 - cmdstanpy - INFO - compiling stan file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan to exe file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -570,48 +547,44 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 <div class="highlight"><pre>
 <span class="ansi-red-fg">---------------------------------------------------------------------------</span>
 <span class="ansi-red-fg">ValueError</span>                                Traceback (most recent call last)
-<span class="ansi-cyan-fg">Cell</span><span class="ansi-cyan-fg"> </span><span class="ansi-green-fg">In[4]</span><span class="ansi-green-fg">, line 1</span>
-<span class="ansi-green-fg">----&gt; </span><span class="ansi-green-fg">1</span> model_external = <span class="ansi-yellow-bg">CmdStanModel</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">stan_file</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-fg ansi-yellow-bg">&#39;</span><span class="ansi-yellow-fg ansi-yellow-bg">bernoulli_external.stan</span><span class="ansi-yellow-fg ansi-yellow-bg">&#39;</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">force_compile</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg ansi-bold" style="color: rgb(0,135,0)">True</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">stanc_options</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg">{</span><span class="ansi-yellow-fg ansi-yellow-bg">&#39;</span><span class="ansi-yellow-fg ansi-yellow-bg">allow-undefined</span><span class="ansi-yellow-fg ansi-yellow-bg">&#39;</span><span class="ansi-yellow-bg">:</span><span class="ansi-yellow-bg ansi-bold" style="color: rgb(0,135,0)">True</span><span class="ansi-yellow-bg">}</span><span class="ansi-yellow-bg">)</span>
+<span class="ansi-green-fg">&lt;ipython-input-4-604c5622a59a&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>model_external<span class="ansi-blue-fg">.</span>compile<span class="ansi-blue-fg">(</span>stanc_options<span class="ansi-blue-fg">=</span><span class="ansi-blue-fg">{</span><span class="ansi-blue-fg">&#39;allow-undefined&#39;</span><span class="ansi-blue-fg">:</span><span class="ansi-green-fg">True</span><span class="ansi-blue-fg">}</span><span class="ansi-blue-fg">)</span>
 
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/Dev/py/cmdstanpy/cmdstanpy/model.py:183</span>, in <span class="ansi-cyan-fg">CmdStanModel.__init__</span><span class="ansi-blue-fg">(self, stan_file, exe_file, force_compile, stanc_options, cpp_options, user_header)</span>
-<span class="ansi-green-fg">    180</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">elif</span> path <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> <span style="color: rgb(0,135,0)">self</span>._stanc_options[<span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">include-paths</span><span class="ansi-yellow-fg">&#39;</span>]:
-<span class="ansi-green-fg">    181</span>         <span style="color: rgb(0,135,0)">self</span>._stanc_options[<span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">include-paths</span><span class="ansi-yellow-fg">&#39;</span>].append(path)
-<span class="ansi-green-fg">--&gt; </span><span class="ansi-green-fg">183</span> <span style="color: rgb(0,135,0)">self</span>._exe_file = <span class="ansi-yellow-bg">compilation</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">compile_stan_file</span><span class="ansi-yellow-bg">(</span>
-<span class="ansi-green-fg">    184</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">str</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">stan_file</span><span class="ansi-yellow-bg">)</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    185</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">force</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg">force_compile</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    186</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">stanc_options</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg">.</span><span class="ansi-yellow-bg">_stanc_options</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    187</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">cpp_options</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg">cpp_options</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    188</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">user_header</span><span class="ansi-yellow-bg">=</span><span class="ansi-yellow-bg">user_header</span><span class="ansi-yellow-bg">,</span>
-<span class="ansi-green-fg">    189</span> <span class="ansi-yellow-bg">)</span>
-<span class="ansi-green-fg">    191</span> <span style="color: rgb(95,135,135)"># try to detect models w/out parameters, needed for sampler</span>
-<span class="ansi-green-fg">    192</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> (<span class="ansi-bold" style="color: rgb(175,0,255)">not</span> cmdstan_version_before(<span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">27</span>)) <span class="ansi-bold" style="color: rgb(175,0,255)">and</span> cmdstan_version_before(
-<span class="ansi-green-fg">    193</span>     <span class="ansi-green-fg">2</span>, <span class="ansi-green-fg">36</span>
-<span class="ansi-green-fg">    194</span> ):
-
-<span class="ansi-cyan-fg">File </span><span class="ansi-green-fg">~/Dev/py/cmdstanpy/cmdstanpy/compilation.py:429</span>, in <span class="ansi-cyan-fg">compile_stan_file</span><span class="ansi-blue-fg">(src, force, stanc_options, cpp_options, user_header)</span>
-<span class="ansi-green-fg">    422</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> <span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">PCH</span><span class="ansi-yellow-fg">&#39;</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> console <span class="ansi-bold" style="color: rgb(175,0,255)">or</span> <span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">precompiled header</span><span class="ansi-yellow-fg">&#39;</span> <span class="ansi-bold" style="color: rgb(175,0,255)">in</span> console:
-<span class="ansi-green-fg">    423</span>         get_logger().warning(
-<span class="ansi-green-fg">    424</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">CmdStan</span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">s precompiled header (PCH) files </span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    425</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">may need to be rebuilt.</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    426</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">Please run cmdstanpy.rebuild_cmdstan().</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    427</span>             <span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">If the issue persists please open a bug report</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    428</span>         )
-<span class="ansi-green-fg">--&gt; </span><span class="ansi-green-fg">429</span>     <span class="ansi-bold" style="color: rgb(0,135,0)">raise</span> <span class="ansi-bold" style="color: rgb(215,95,95)">ValueError</span>(
-<span class="ansi-green-fg">    430</span>         <span class="ansi-yellow-fg">f</span><span class="ansi-yellow-fg">&#34;</span><span class="ansi-yellow-fg">Failed to compile Stan model </span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>src<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#39;</span><span class="ansi-yellow-fg">. Console:</span><span class="ansi-bold" style="color: rgb(175,95,0)">\n</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>console<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span class="ansi-yellow-fg">&#34;</span>
-<span class="ansi-green-fg">    431</span>     )
-<span class="ansi-green-fg">    432</span> <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> <span style="color: rgb(0,135,0)">str</span>(exe_target)
+<span class="ansi-green-fg">~/Dev/py/cmdstanpy/cmdstanpy/model.py</span> in <span class="ansi-cyan-fg">compile</span><span class="ansi-blue-fg">(self, force, stanc_options, cpp_options, user_header, override_options)</span>
+<span class="ansi-green-intense-fg ansi-bold">    561</span>                         <span class="ansi-blue-fg">&#34;If the issue persists please open a bug report&#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">    562</span>                     )
+<span class="ansi-green-fg">--&gt; 563</span><span class="ansi-red-fg">                 raise ValueError(
+</span><span class="ansi-green-intense-fg ansi-bold">    564</span>                     <span class="ansi-blue-fg">f&#34;Failed to compile Stan model &#39;{self._stan_file}&#39;. &#34;</span>
+<span class="ansi-green-intense-fg ansi-bold">    565</span>                     <span class="ansi-blue-fg">f&#34;Console:\n{console}&#34;</span>
 
 <span class="ansi-red-fg">ValueError</span>: Failed to compile Stan model &#39;/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan&#39;. Console:
-ERROR: Missing user header.
-Because --allow-undefined is set, we need a C++ header file to include.
-We tried to find the user header at:
-  /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/user_header.hpp
 
-You can also set the USER_HEADER variable to the path of your C++ file.
-make: *** [make/program:52: /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/user_header.hpp] Error 1
+--- Translating Stan model to C++ code ---
+bin/stanc --allow-undefined --o=/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan
 
-Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.stan&#39;, &#39;STANCFLAGS+=--allow-undefined&#39;, &#39;/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external&#39;]
-        exited with code &#39;2&#39; No such file or directory
+--- Compiling, linking C++ code ---
+g++ -std=c++1y -pthread -D_REENTRANT -Wno-sign-compare -Wno-ignored-attributes      -I stan/lib/stan_math/lib/tbb_2020.3/include    -O3 -I src -I stan/src -I stan/lib/rapidjson_1.1.0/ -I lib/CLI11-1.9.1/ -I stan/lib/stan_math/ -I stan/lib/stan_math/lib/eigen_3.4.0 -I stan/lib/stan_math/lib/boost_1.78.0 -I stan/lib/stan_math/lib/sundials_6.1.1/include -I stan/lib/stan_math/lib/sundials_6.1.1/src/sundials    -DBOOST_DISABLE_ASSERTS          -c -Wno-ignored-attributes   -include /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/user_header.hpp -x c++ -o /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.o /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp: In member function ‘void bernoulli_external_model_namespace::bernoulli_external_model::write_array_impl(RNG&amp;, VecR&amp;, VecI&amp;, VecVar&amp;, bool, bool, std::ostream*) const’:
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp:156:14: error: there are no arguments to ‘make_odds’ that depend on a template parameter, so a declaration of ‘make_odds’ must be available [-fpermissive]
+  156 |       odds = make_odds(theta, pstream__);
+      |              ^~~~~~~~~
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp:156:14: note: (if you use ‘-fpermissive’, G++ will accept your code, but allowing the use of an undeclared name is deprecated)
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp: In instantiation of ‘void bernoulli_external_model_namespace::bernoulli_external_model::write_array_impl(RNG&amp;, VecR&amp;, VecI&amp;, VecVar&amp;, bool, bool, std::ostream*) const [with RNG = boost::random::additive_combine_engine&lt;boost::random::linear_congruential_engine&lt;unsigned int, 40014, 0, 2147483563&gt;, boost::random::linear_congruential_engine&lt;unsigned int, 40692, 0, 2147483399&gt; &gt;; VecR = Eigen::Matrix&lt;double, -1, 1&gt;; VecI = std::vector&lt;int&gt;; VecVar = Eigen::Matrix&lt;double, -1, 1&gt;; stan::require_vector_like_vt&lt;std::is_floating_point, VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_vector_vt&lt;std::is_floating_point, VecVar&gt;* &lt;anonymous&gt; = 0; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp:275:21:   required from ‘void bernoulli_external_model_namespace::bernoulli_external_model::write_array(RNG&amp;, Eigen::Matrix&lt;double, -1, 1&gt;&amp;, Eigen::Matrix&lt;double, -1, 1&gt;&amp;, bool, bool, std::ostream*) const [with RNG = boost::random::additive_combine_engine&lt;boost::random::linear_congruential_engine&lt;unsigned int, 40014, 0, 2147483563&gt;, boost::random::linear_congruential_engine&lt;unsigned int, 40692, 0, 2147483399&gt; &gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:140:61:   required from ‘void stan::model::model_base_crtp&lt;M&gt;::write_array(boost::random::ecuyer1988&amp;, Eigen::VectorXd&amp;, Eigen::VectorXd&amp;, bool, bool, std::ostream*) const [with M = bernoulli_external_model_namespace::bernoulli_external_model; boost::random::ecuyer1988 = boost::random::additive_combine_engine&lt;boost::random::linear_congruential_engine&lt;unsigned int, 40014, 0, 2147483563&gt;, boost::random::linear_congruential_engine&lt;unsigned int, 40692, 0, 2147483399&gt; &gt;; Eigen::VectorXd = Eigen::Matrix&lt;double, -1, 1&gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:136:8:   required from here
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp:156:23: error: ‘make_odds’ was not declared in this scope
+  156 |       odds = make_odds(theta, pstream__);
+      |              ~~~~~~~~~^~~~~~~~~~~~~~~~~~
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp: In instantiation of ‘void bernoulli_external_model_namespace::bernoulli_external_model::write_array_impl(RNG&amp;, VecR&amp;, VecI&amp;, VecVar&amp;, bool, bool, std::ostream*) const [with RNG = boost::random::additive_combine_engine&lt;boost::random::linear_congruential_engine&lt;unsigned int, 40014, 0, 2147483563&gt;, boost::random::linear_congruential_engine&lt;unsigned int, 40692, 0, 2147483399&gt; &gt;; VecR = std::vector&lt;double, std::allocator&lt;double&gt; &gt;; VecI = std::vector&lt;int&gt;; VecVar = std::vector&lt;double, std::allocator&lt;double&gt; &gt;; stan::require_vector_like_vt&lt;std::is_floating_point, VecR&gt;* &lt;anonymous&gt; = 0; stan::require_vector_like_vt&lt;std::is_integral, VecI&gt;* &lt;anonymous&gt; = 0; stan::require_vector_vt&lt;std::is_floating_point, VecVar&gt;* &lt;anonymous&gt; = 0; std::ostream = std::basic_ostream&lt;char&gt;]’:
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp:291:21:   required from ‘void bernoulli_external_model_namespace::bernoulli_external_model::write_array(RNG&amp;, std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, bool, bool, std::ostream*) const [with RNG = boost::random::additive_combine_engine&lt;boost::random::linear_congruential_engine&lt;unsigned int, 40014, 0, 2147483563&gt;, boost::random::linear_congruential_engine&lt;unsigned int, 40692, 0, 2147483399&gt; &gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:202:61:   required from ‘void stan::model::model_base_crtp&lt;M&gt;::write_array(boost::random::ecuyer1988&amp;, std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, std::vector&lt;int&gt;&amp;, std::vector&lt;double, std::allocator&lt;double&gt; &gt;&amp;, bool, bool, std::ostream*) const [with M = bernoulli_external_model_namespace::bernoulli_external_model; boost::random::ecuyer1988 = boost::random::additive_combine_engine&lt;boost::random::linear_congruential_engine&lt;unsigned int, 40014, 0, 2147483563&gt;, boost::random::linear_congruential_engine&lt;unsigned int, 40692, 0, 2147483399&gt; &gt;; std::ostream = std::basic_ostream&lt;char&gt;]’
+stan/src/stan/model/model_base_crtp.hpp:198:8:   required from here
+/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.hpp:156:23: error: ‘make_odds’ was not declared in this scope
+make: *** [make/program:58: /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external] Error 1
+
+Command [&#39;make&#39;, &#39;STANCFLAGS+=--allow-undefined&#39;, &#39;/home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external&#39;]
+        error during processing No such file or directory
 
 </pre></div></div>
 </div>
@@ -622,7 +595,8 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_external</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="s1">&#39;bernoulli_external.stan&#39;</span><span class="p">,</span> <span class="n">user_header</span><span class="o">=</span><span class="s1">&#39;make_odds.hpp&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_external</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">user_header</span><span class="o">=</span><span class="s1">&#39;make_odds.hpp&#39;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">model_external</span><span class="o">.</span><span class="n">exe_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </div>
@@ -631,8 +605,8 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-12:25:18 - cmdstanpy - INFO - compiling stan file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan to exe file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
-12:25:34 - cmdstanpy - INFO - compiled model executable: /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
+16:03:06 - cmdstanpy - INFO - compiling stan file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external.stan to exe file /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
+16:03:25 - cmdstanpy - INFO - compiled model executable: /home/brian/Dev/py/cmdstanpy/docsrc/users-guide/examples/bernoulli_external
 </pre></div></div>
 </div>
 <p>We can then run this model and inspect the output</p>
@@ -650,32 +624,15 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-12:25:34 - cmdstanpy - INFO - CmdStan start processing
+16:03:31 - cmdstanpy - INFO - CmdStan start processing
+chain 1 |<span class="ansi-yellow-fg">          </span>| 00:00 Status
+
+
+chain 1 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 2 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 3 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
+chain 4 |<span class="ansi-blue-fg">██████████</span>| 00:00 Sampling completed
 </pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "623a9281ae694435b03929bb08011a69", "version_major": 2, "version_minor": 0}</script></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "10d27fe524694e8f989235d8507ae16d", "version_major": 2, "version_minor": 0}</script></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "ac026644c2504c94b4513860306a7fc3", "version_major": 2, "version_minor": 0}</script></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "0c8f9a7fcba042e19d1d3167ceabf18e", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
@@ -690,7 +647,8 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-12:25:34 - cmdstanpy - INFO - CmdStan done processing.
+
+16:03:31 - cmdstanpy - INFO - CmdStan done processing.
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -707,8 +665,7 @@ Command [&#39;make&#39;, &#39;STANCFLAGS+=--filename-in-msg=bernoulli_external.s
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([0.17954691, 0.29004656, 0.29004656, ..., 0.11342197, 0.13338524,
-       0.18325849])
+array([0.28554 , 0.395692, 0.38404 , ..., 0.581201, 0.406603, 0.244602])
 </pre></div></div>
 </div>
 <p>The contents of this header file are presented without comment:</p>

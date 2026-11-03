@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API Reference &#8212; CmdStanPy 1.3.1 documentation</title>
+    <title>API Reference &#8212; CmdStanPy 1.3.2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=bb516dca"></script>
+    <script src="_static/documentation_options.js?v=8ca9e7a0"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Advanced Topic: Using External C++ Functions" href="users-guide/examples/Using%20External%20C%2B%2B.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.1" />
+  <meta name="docsearch:version" content="1.3.2" />
   </head>
   
   
@@ -125,7 +125,7 @@
     <img src="_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.1</p>
+    <p class="title logo__title">CmdStanPy v1.3.2</p>
   
 </a></div>
     
@@ -437,13 +437,17 @@ does not guarantee either stability and backwards compatibility.</p>
 </dl>
 <dl class="py class">
 <dt class="sig sig-object py" id="cmdstanpy.CmdStanModel">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cmdstanpy.</span></span><span class="sig-name descname"><span class="pre">CmdStanModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stan_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exe_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_compile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stanc_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpp_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cmdstanpy.</span></span><span class="sig-name descname"><span class="pre">CmdStanModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stan_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exe_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_compile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stanc_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpp_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel" title="Link to this definition">#</a></dt>
 <dd><p>The constructor method allows model instantiation given either the
 Stan program source file or the compiled executable, or both.
 This will compile the model if provided a Stan file and no executable,</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>) – Model name, used for output file names.
+Optional, default is the base filename of the Stan program file.
+Deprecated: In version 2.0.0, model name cannot be
+specified and will always be taken from executable.</p></li>
 <li><p><strong>stan_file</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><em>PathLike</em></a><em> | </em><em>None</em>) – Path to Stan program file.</p></li>
 <li><p><strong>exe_file</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><em>PathLike</em></a><em> | </em><em>None</em>) – Path to compiled executable file.  Optional, unless
 no Stan program file is specified.  If both the program file and
@@ -460,6 +464,11 @@ Optional.</p></li>
 <li><p><strong>user_header</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><em>PathLike</em></a><em> | </em><em>None</em>) – A path to a header file to include during C++
 compilation.
 Optional.</p></li>
+<li><p><strong>compile</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.15)"><em>Literal</em></a><em>[</em><em>'force'</em><em>] </em><em>| </em><em>None</em>) – Whether or not to compile the model.  Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.
+If set to the string <code class="docutils literal notranslate"><span class="pre">&quot;force&quot;</span></code>, it will always compile even if
+an existing executable is found.
+Deprecated: Use <code class="docutils literal notranslate"><span class="pre">force_compile</span></code> instead. The ability to instantiate
+a CmdStanModel without an executable will be removed in version 2.0.0.</p></li>
 </ul>
 </dd>
 </dl>
@@ -470,6 +479,39 @@ Optional.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stanc_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpp_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">override_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">_internal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.compile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.compile" title="Link to this definition">#</a></dt>
+<dd><p>Deprecated: To compile a model, use the <a class="reference internal" href="#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a>
+constructor or <a class="reference internal" href="#cmdstanpy.compile_stan_file" title="cmdstanpy.compile_stan_file"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmdstanpy.compile_stan_file()</span></code></a>.</p>
+<p>Compile the given Stan program file.  Translates the Stan code to
+C++, then calls the C++ compiler.</p>
+<p>By default, this function compares the timestamps on the source and
+executable files; if the executable is newer than the source file, it
+will not recompile the file, unless argument <code class="docutils literal notranslate"><span class="pre">force</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>
+or unless the compiler options have been changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, always compile, even if the executable file
+is newer than the source file.  Used for Stan models which have
+<code class="docutils literal notranslate"><span class="pre">#include</span></code> directives in order to force recompilation when changes
+are made to the included files.</p></li>
+<li><p><strong>stanc_options</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Options for stanc compiler.</p></li>
+<li><p><strong>cpp_options</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Options for C++ compiler.</p></li>
+<li><p><strong>user_header</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><em>PathLike</em></a><em> | </em><em>None</em>) – A path to a header file to include during C++
+compilation.</p></li>
+<li><p><strong>override_options</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, override existing option.
+When <code class="docutils literal notranslate"><span class="pre">False</span></code>, add/replace existing options.  Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>_internal</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -526,7 +568,9 @@ difference gradients exceed the error threshold.</p></li>
 <dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.exe_info">
 <span class="sig-name descname"><span class="pre">exe_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/model.html#CmdStanModel.exe_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.CmdStanModel.exe_info" title="Link to this definition">#</a></dt>
 <dd><p>Run model with option ‘info’. Parse output statements, which all
-have form ‘key = value’ into a Dict.</p>
+have form ‘key = value’ into a Dict.
+If exe file compiled with CmdStan &lt; 2.27, option ‘info’ isn’t
+available and the method returns an empty dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>, <a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>]</p>
@@ -1210,21 +1254,41 @@ out in seconds.</p></li>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.cpp_options">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cpp_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#cmdstanpy.CmdStanModel.cpp_options" title="Link to this definition">#</a></dt>
+<dd><p>Options to C++ compilers.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.exe_file">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exe_file</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#cmdstanpy.CmdStanModel.exe_file" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exe_file</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><span class="pre">PathLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></em><a class="headerlink" href="#cmdstanpy.CmdStanModel.exe_file" title="Link to this definition">#</a></dt>
 <dd><p>Full path to Stan exe file.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.name">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#cmdstanpy.CmdStanModel.name" title="Link to this definition">#</a></dt>
-<dd><p>Model name used in output filename templates.</p>
+<dd><p>Model name used in output filename templates. Default is basename
+of Stan program or exe file, unless specified in call to constructor
+via argument <code class="docutils literal notranslate"><span class="pre">model_name</span></code>.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.stan_file">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stan_file</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><span class="pre">PathLike</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><span class="pre">None</span></a></em><a class="headerlink" href="#cmdstanpy.CmdStanModel.stan_file" title="Link to this definition">#</a></dt>
 <dd><p>Full path to Stan program file.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.stanc_options">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stanc_options</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#cmdstanpy.CmdStanModel.stanc_options" title="Link to this definition">#</a></dt>
+<dd><p>Options to stanc compilers.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cmdstanpy.CmdStanModel.user_header">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user_header</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#cmdstanpy.CmdStanModel.user_header" title="Link to this definition">#</a></dt>
+<dd><p>The user header file if it exists, otherwise empty</p>
 </dd></dl>
 
 </dd></dl>
@@ -2868,6 +2932,7 @@ copied before type conversion, not modified</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanmodel">CmdStanModel</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel"><code class="docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.code"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.code()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.compile"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.compile()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.diagnose"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.diagnose()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.exe_info"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.exe_info()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.format"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.format()</span></code></a></li>
@@ -2879,9 +2944,12 @@ copied before type conversion, not modified</p></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.sample"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.sample()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.src_info"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.src_info()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.variational"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.variational()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.cpp_options"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.cpp_options</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.exe_file"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.exe_file</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.name"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.name</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.stan_file"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.stan_file</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.stanc_options"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.stanc_options</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.CmdStanModel.user_header"><code class="docutils literal notranslate"><span class="pre">CmdStanModel.user_header</span></code></a></li>
 </ul>
 </li>
 </ul>
