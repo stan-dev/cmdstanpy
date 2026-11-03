@@ -367,6 +367,7 @@ def test_check_sampler_csv_metric_4() -> None:
 def test_check_sampler_csv_thin() -> None:
     stan = os.path.join(DATAFILES_PATH, 'bernoulli.stan')
     bern_model = CmdStanModel(stan_file=stan)
+    bern_model.compile()
     jdata = os.path.join(DATAFILES_PATH, 'bernoulli.data.json')
     bern_fit = bern_model.sample(
         data=jdata,

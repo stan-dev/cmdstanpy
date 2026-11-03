@@ -632,7 +632,7 @@ class CmdStanArgs:
     def __init__(
         self,
         model_name: str,
-        model_exe: str,
+        model_exe: OptionalPath,
         chain_ids: Optional[list[int]],
         method_args: Union[
             SamplerArgs,
@@ -692,6 +692,10 @@ class CmdStanArgs:
         * if no seed specified, set random seed.
         * length of per-chain lists equals specified # of chains
         """
+        if self.model_name is None:
+            raise ValueError('no stan model specified')
+        if self.model_exe is None:
+            raise ValueError('model not compiled')
 
         if self.chain_ids is not None:
             for chain_id in self.chain_ids:
@@ -853,10 +857,10 @@ class CmdStanArgs:
                         idx, len(self.chain_ids)
                     )
                 )
-            cmd.append(self.model_exe)
+            cmd.append(self.model_exe)  # type: ignore # guaranteed by validate
             cmd.append(f'id={self.chain_ids[idx]}')
         else:
-            cmd.append(self.model_exe)
+            cmd.append(self.model_exe)  # type: ignore # guaranteed by validate
 
         if self.seed is not None:
             if not isinstance(self.seed, list):

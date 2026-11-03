@@ -469,10 +469,12 @@ def test_multi_proc_threads(caplog: pytest.LogCaptureFixture) -> None:
     # 2.28 compile with cpp_options={'STAN_THREADS':'true'}
     if not cmdstan_version_before(2, 28):
         logistic_stan = os.path.join(DATAFILES_PATH, 'logistic.stan')
-        logistic_model = CmdStanModel(
-            stan_file=logistic_stan,
+        logistic_model = CmdStanModel(stan_file=logistic_stan)
+
+        os.remove(logistic_model.exe_file)
+        logistic_model.compile(
+            force=True,
             cpp_options={'STAN_THREADS': 'TRUE'},
-            force_compile=True,
         )
         info_dict = logistic_model.exe_info()
         assert info_dict is not None
