@@ -232,6 +232,29 @@ def test_model_format_options() -> None:
     assert formatted.count('(') == 1
 
 
+def test_model_format_includes() -> None:
+    stan = os.path.join(DATAFILES_PATH, 'bernoulli_include.stan')
+
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
+        format_stan_file(
+            stan, stanc_options={'include-paths': [DATAFILES_PATH]}
+        )
+    formatted = sys_stdout.getvalue()
+    assert '#include divide_real_by_two.stan' in formatted
+
+    sys_stdout = io.StringIO()
+    with contextlib.redirect_stdout(sys_stdout):
+        format_stan_file(
+            stan,
+            canonicalize='includes',
+            stanc_options={'include-paths': [DATAFILES_PATH]},
+        )
+    formatted = sys_stdout.getvalue()
+    assert '#include' not in formatted
+    assert 'real divide_real_by_two(real x)' in formatted
+
+
 def test_compilation_options_resolution() -> None:
     out = resolve_cpp_options(None, multithreading=False)
     assert not out

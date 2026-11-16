@@ -446,6 +446,27 @@ def format_stan_file(
         writing to the file. Only disable this if you're sure you have other
         copies of the file or are using a version control system like Git.
     :param stanc_options: Additional options to pass to the stanc compiler.
+        If the Stan program uses ``#include`` statements, the directories
+        that contain the included files must be passed as ``include-paths``,
+        otherwise formatting fails.
+
+    For example, to format a program whose included files are in the
+    directory ``stan``:
+
+    .. code-block:: python
+
+        from pathlib import Path
+        from cmdstanpy import format_stan_file
+
+        format_stan_file(
+            "model.stan",
+            stanc_options={"include-paths": [Path("stan").resolve()]},
+        )
+
+    The ``#include`` statements are kept in the formatted output. To replace
+    them with the contents of the included files, also pass
+    ``canonicalize="includes"``. Note that ``canonicalize`` must be given as
+    an argument of this function, not inside ``stanc_options``.
     """
     stan_file = Path(stan_file).resolve()
 
