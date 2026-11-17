@@ -44,7 +44,7 @@
    "outputs": [],
    "source": [
     "import os\n",
-    "from cmdstanpy.model import CmdStanModel, cmdstan_path"
+    "from cmdstanpy import CmdStanModel, cmdstan_path"
    ]
   },
   {

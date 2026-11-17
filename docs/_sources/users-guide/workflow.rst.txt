@@ -39,21 +39,14 @@ managing the resulting inference for a single model and set of inputs.
 Compile the Stan model
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The: :class:`CmdStanModel` class provides methods
-to compile and run the Stan program.
-A CmdStanModel object can be instantiated by specifying
-either a Stan file or the executable file, or both.
-If only the Stan file path is specified, the constructor will
-check for the existence of a correspondingly named exe file in
-the same directory.  If found, it will use this as the exe file path.
+The :class:`CmdStanModel` class provides methods to compile and run the Stan
+program. A CmdStanModel object can be instantiated by specifying a Stan file,
+the executable file, or both. If only the Stan file path is specified, the
+constructor will check for the existence of a correspondingly named executable in
+the same directory. If found, it will use this as the exe file path.
 
-By default, when a CmdStanModel object is instantiated from a Stan file,
-the constructor will compile the model as needed.
-The constructor argument `compile` controls this behavior.
-
-* ``compile=False``: never compile the Stan file.
-* ``compile="Force"``: always compile the Stan file.
-* ``compile=True``: (default) compile the Stan file as needed, i.e., if no exe file exists or if the Stan file is newer than the exe file.
+When a CmdStanModel object is instantiated from a Stan file, the constructor
+will compile the model if the executable is non-existent or out-of-date.
 
 .. code-block:: python
 
@@ -67,8 +60,8 @@ The constructor argument `compile` controls this behavior.
     my_model.exe_file
     my_model.code()
 
-The CmdStanModel class also provides the :meth:`~CmdStanModel.compile` method,
-which can be called at any point to (re)compile the model as needed.
+The ``force_compile=True`` argument can be passed to the CmdStanModel 
+constructor, which will force (re)compilation of the model.
 
 Model compilation is carried out via the GNU Make build tool.
 The CmdStan ``makefile`` contains a set of general rules which
@@ -83,20 +76,22 @@ Model compilation is done in two steps:
 * The C++ compiler compiles the generated code and links in
   the necessary supporting libraries.
 
-Therefore, both the constructor and the ``compile`` method
-allow optional arguments ``stanc_options`` and ``cpp_options`` which
-specify options for each compilation step.
-Options are specified as a Python dictionary mapping
-compiler option names to appropriate values.
+The constructor accepts arguments to specify both ``stanc`` and C++ compilation
+options, if desired. Passing `multithreading=True` enables the **STAN_THREADS**
+C++ flag, which is needed to parallelize within-chain computations, such as
+with ``reduce_sum``, or to parallelize the NUTS-HMC sampler across chains.
+Passing ``stanc_optimizations=True`` will enable ``O1`` optimizations in the
+``stanc`` compiler.
 
-In order parallelize within-chain computations using the
-Stan language ``reduce_sum`` function, or to parallelize
-running the NUTS-HMC sampler across chains,
-the Stan model must be compiled with
-C++ compiler flag **STAN_THREADS**.
-While any value can be used,
-we recommend the value ``True``, e.g.:
+Outside of these common options, the constructor accepts the optional arguments
+``stanc_options`` and ``cpp_options``, which allow specifying arbitrary
+compilation options. Some more advanced Stan features, like MPI or OpenCL
+support, require using these. Note that if the lower-level compilation options
+conflict with an argument like ``multithreading=True``, the option in
+``stanc_options`` or ``cpp_options`` takes precedence.
 
+An example model compilation that enables multithreading and 
+basic optimization can be done like so:
 
 .. code-block:: python
 
@@ -104,7 +99,7 @@ we recommend the value ``True``, e.g.:
     from cmdstanpy import CmdStanModel
 
     my_stanfile = os.path.join('.', 'my_model.stan')
-    my_model = CmdStanModel(stan_file=my_stanfile, cpp_options={'STAN_THREADS':'true'})
+    my_model = CmdStanModel(stan_file=my_stanfile, multithreading=True, stanc_optimizations=True)
 
 
 Assemble input and initialization data

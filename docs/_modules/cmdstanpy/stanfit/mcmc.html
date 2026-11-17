@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.mcmc &#8212; CmdStanPy 1.3.2 documentation</title>
+    <title>cmdstanpy.stanfit.mcmc &#8212; CmdStanPy 2.0.0rc1 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=7facd19e" />
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=8ca9e7a0"></script>
+    <script src="../../../_static/documentation_options.js?v=f2943afd"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.2" />
+  <meta name="docsearch:version" content="2.0.0rc1" />
   </head>
   
   
@@ -122,7 +122,7 @@
     <img src="../../../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.2</p>
+    <p class="title logo__title">CmdStanPy v2.0.0rc1</p>
   
 </a></div>
     
@@ -377,9 +377,6 @@
     
     <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../stanfit.html" class="nav-link">cmdstanpy.stanfit</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">cmdstanpy.stanfit.mcmc</span></li>
   </ul>
 </nav>
@@ -402,30 +399,30 @@
 <span class="sd">Container for the result of running the sample (MCMC) method</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Hashable</span>
-<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
     <span class="n">XARRAY_INSTALLED</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">XARRAY_INSTALLED</span> <span class="o">=</span> <span class="kc">False</span>
 
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">_CMDSTAN_SAMPLING</span><span class="p">,</span> <span class="n">_CMDSTAN_THIN</span><span class="p">,</span> <span class="n">_CMDSTAN_WARMUP</span><span class="p">,</span> <span class="n">_TMPDIR</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.cmdstan_args</span> <span class="kn">import</span> <span class="n">Method</span><span class="p">,</span> <span class="n">SamplerArgs</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">_TMPDIR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">EXTENSION</span><span class="p">,</span>
     <span class="n">build_xarray_data</span><span class="p">,</span>
-    <span class="n">check_sampler_csv</span><span class="p">,</span>
     <span class="n">cmdstan_path</span><span class="p">,</span>
-    <span class="n">cmdstan_version_before</span><span class="p">,</span>
     <span class="n">create_named_text_file</span><span class="p">,</span>
     <span class="n">do_command</span><span class="p">,</span>
     <span class="n">flatten_chains</span><span class="p">,</span>
@@ -433,77 +430,139 @@
     <span class="n">stancsv</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">.metadata</span> <span class="kn">import</span> <span class="n">InferenceMetadata</span>
-<span class="kn">from</span> <span class="nn">.runset</span> <span class="kn">import</span> <span class="n">RunSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiChainFit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInfo</span><span class="p">,</span> <span class="n">SampleConfig</span><span class="p">,</span> <span class="n">SampleRunConfig</span><span class="p">,</span> <span class="n">StanConfig</span>
 
 
 <div class="viewcode-block" id="CmdStanMCMC">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC">[docs]</a>
-<span class="k">class</span> <span class="nc">CmdStanMCMC</span><span class="p">:</span>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">kw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CmdStanMCMC</span><span class="p">(</span><span class="n">MultiChainFit</span><span class="p">[</span><span class="n">SampleConfig</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Container for outputs from CmdStan sampler run.</span>
 <span class="sd">    Provides methods to summarize and diagnose the model fit</span>
 <span class="sd">    and accessor methods to access the entire sample or</span>
-<span class="sd">    individual items. Created by :meth:`CmdStanModel.sample`</span>
+<span class="sd">    individual items. Created by :meth:`CmdStanModel.sample`.</span>
 
 <span class="sd">    The sample is lazily instantiated on first access of either</span>
 <span class="sd">    the resulting sample or the HMC tuning parameters, i.e., the</span>
 <span class="sd">    step size and metric.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># pylint: disable=too-many-public-methods</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">runset</span><span class="p">:</span> <span class="n">RunSet</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">runset</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="n">Method</span><span class="o">.</span><span class="n">SAMPLE</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;Wrong runset method, expecting sample runset, &#39;</span>
-                <span class="s1">&#39;found method </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">runset</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">runset</span> <span class="o">=</span> <span class="n">runset</span>
+    <span class="c1"># pylint: disable=too-many-instance-attributes,too-many-public-methods</span>
 
-        <span class="c1"># info from runset to be exposed</span>
-        <span class="n">sampler_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method_args</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">sampler_args</span><span class="p">,</span> <span class="n">SamplerArgs</span>
-        <span class="p">)</span>  <span class="c1"># make the typechecker happy</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_CMDSTAN_SAMPLING</span>
-        <span class="k">if</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_sampling</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_sampling</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_CMDSTAN_WARMUP</span>
-        <span class="k">if</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_warmup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">iter_warmup</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_CMDSTAN_THIN</span>
-        <span class="k">if</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">thin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">thin</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">fixed_param</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">sampler_args</span><span class="o">.</span><span class="n">save_warmup</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_figs</span> <span class="o">=</span> <span class="n">runset</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">sig_figs</span>
+    <span class="n">metric_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">diagnostic_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">profile_files</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># info from CSV values, instantiated lazily</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
-        <span class="c1"># only valid when not is_fixed_param</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_chain_time</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_FILE_ATTRS</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">&#39;csv_files&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;config_files&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;metric_files&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;stdout_files&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;diagnostic_files&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;profile_files&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
 
-        <span class="c1"># info from CSV header and initial and final comment blocks</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_csv_files</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="p">:</span> <span class="n">InferenceMetadata</span> <span class="o">=</span> <span class="n">InferenceMetadata</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">_draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(()),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_metric_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_metric</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(()),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">_step_size</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(()),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">_divergences</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(()),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">_max_treedepths</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(()),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_csv_files</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_sampler_diagnostics</span><span class="p">()</span>
 
+<div class="viewcode-block" id="CmdStanMCMC.from_files">
+<a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.from_files">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_files</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">csv_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span>
+        <span class="n">config_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
+        <span class="n">metric_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stdout_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">diagnostic_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">profile_files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chain_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CmdStanMCMC</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a CmdStanMCMC from output files.</span>
+
+<span class="sd">        ``config_files`` may be a single path (when CmdStan ran multiple chains</span>
+<span class="sd">        in one process) or a per-chain list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_from_files_kwargs</span><span class="p">(</span>
+            <span class="n">csv_files</span><span class="p">,</span> <span class="n">config_files</span><span class="p">,</span> <span class="n">stdout_files</span><span class="p">,</span> <span class="n">chain_ids</span><span class="p">,</span> <span class="n">SampleRunConfig</span>
+        <span class="p">)</span>
+        <span class="n">stan_config</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;csv_files&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">sig_figs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">stan_config</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">sig_figs</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># A value of -1 is CmdStan&#39;s default (six digits).</span>
+            <span class="n">sig_figs</span> <span class="o">=</span> <span class="n">stan_config</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">sig_figs</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_maybe_list</span><span class="p">(</span>
+            <span class="n">files</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">fspath</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span> <span class="k">if</span> <span class="n">files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">metric_files_list</span> <span class="o">=</span> <span class="n">_maybe_list</span><span class="p">(</span><span class="n">metric_files</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metric_files_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_files_list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">chains</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Expected one metric file per chain (</span><span class="si">{</span><span class="n">chains</span><span class="si">}</span><span class="s1">), &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">metric_files_list</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">metric_files</span><span class="o">=</span><span class="n">metric_files_list</span><span class="p">,</span>
+            <span class="n">diagnostic_files</span><span class="o">=</span><span class="n">_maybe_list</span><span class="p">(</span><span class="n">diagnostic_files</span><span class="p">),</span>
+            <span class="n">profile_files</span><span class="o">=</span><span class="n">_maybe_list</span><span class="p">(</span><span class="n">profile_files</span><span class="p">),</span>
+            <span class="n">sig_figs</span><span class="o">=</span><span class="n">sig_figs</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_iter_sampling</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span><span class="o">.</span><span class="n">num_samples</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_iter_warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span><span class="o">.</span><span class="n">num_warmup</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_thin</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span><span class="o">.</span><span class="n">thin</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span><span class="o">.</span><span class="n">save_warmup</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_fixed_param</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">==</span> <span class="s1">&#39;fixed_param&#39;</span>
+
 <div class="viewcode-block" id="CmdStanMCMC.create_inits">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.create_inits">[docs]</a>
-    <span class="k">def</span> <span class="nf">create_inits</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_inits</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create initial values for the parameters of the model by</span>
 <span class="sd">        randomly selecting draws from the MCMC samples. If the samples</span>
@@ -519,7 +578,7 @@
 <span class="sd">        of dictionaries is returned, in the format expected for the</span>
 <span class="sd">        ``inits`` argument of :meth:`CmdStanModel.sample`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">()</span>
         <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
         <span class="n">n_draws</span><span class="p">,</span> <span class="n">n_chains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">draw_idxs</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n_draws</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">chains</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -530,67 +589,38 @@
             <span class="n">draw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">draw_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">chain_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
             <span class="k">return</span> <span class="p">{</span>
                 <span class="n">name</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">extract_reshape</span><span class="p">(</span><span class="n">draw</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span>
                 <span class="p">{</span>
                     <span class="n">name</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">extract_reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
-                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="p">}</span>
                 <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">draw_idxs</span><span class="p">,</span> <span class="n">chain_idxs</span><span class="p">)</span>
             <span class="p">]</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;CmdStanMCMC: model=</span><span class="si">{}</span><span class="s1"> chains=</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">method_args</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cmd</span><span class="o">=</span><span class="p">[]),</span>
-        <span class="p">)</span>
-        <span class="nb">repr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> csv_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="se">\n</span><span class="s1"> output_files:</span><span class="se">\n\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="nb">repr</span><span class="p">,</span>
-            <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">),</span>
-            <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="c1"># TODO - hamiltonian, profiling files</span>
-        <span class="k">return</span> <span class="nb">repr</span>
-
-    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Synonymous with ``fit.stan_variable(attr)&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown variable name </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># pylint: disable=raise-missing-from</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="c1"># This function returns the mapping of objects to serialize with pickle.</span>
-        <span class="c1"># See https://docs.python.org/3/library/pickle.html#object.__getstate__</span>
-        <span class="c1"># for details. We call _assemble_draws to ensure posterior samples have</span>
-        <span class="c1"># been loaded prior to serialization.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">mc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">f</span><span class="s1">&#39;CmdStanMCMC: model=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s1"> chains=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39; method=</span><span class="si">{</span><span class="n">mc</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s1"> algorithm=</span><span class="si">{</span><span class="n">mc</span><span class="o">.</span><span class="n">algorithm</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="s1">&#39; csv_files:</span><span class="se">\n\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csv_files</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; config_files:</span><span class="se">\n\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_files</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stdout_files</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; output_files:</span><span class="se">\n\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stdout_files</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of chains.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chains</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">chain_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Chain ids.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">chain_ids</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_draws_warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_draws_warmup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of warmup draws per chain, i.e., thinned warmup iterations.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_draws_sampling</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_draws_sampling</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Number of sampling (post-warmup) draws per chain, i.e.,</span>
 <span class="sd">        thinned sampling iterations.</span>
@@ -598,79 +628,47 @@
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InferenceMetadata</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns object which contains CmdStan configuration as well as</span>
-<span class="sd">        information about the names and structure of the inference method</span>
-<span class="sd">        and model output variables.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Names of all outputs from the sampler, comprising sampler parameters</span>
-<span class="sd">        and all components of all model parameters, transformed parameters,</span>
-<span class="sd">        and quantities of interest. Corresponds to Stan CSV file header row,</span>
-<span class="sd">        with names munged to array notation, e.g. `beta[1]` not `beta.1`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">column_names</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">metric_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">metric_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Metric type used for adaptation, either &#39;diag_e&#39; or &#39;dense_e&#39;, according</span>
 <span class="sd">        to CmdStan arg &#39;metric&#39;.</span>
-<span class="sd">        When sampler algorithm &#39;fixed_param&#39; is specified, metric_type is None.</span>
+<span class="sd">        Returns None when sampler algorithm &#39;fixed_param&#39; is specified, or when</span>
+<span class="sd">        no metric files are available (e.g. adaptation was disabled, so CmdStan</span>
+<span class="sd">        wrote no metric output).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span>
-            <span class="k">else</span> <span class="kc">None</span>
-        <span class="p">)</span>
-
-    <span class="c1"># TODO(2.0): remove</span>
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deprecated. Use ``.inv_metric`` instead.&quot;&quot;&quot;</span>
-        <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s1">&#39;The &quot;metric&quot; property is deprecated, use &quot;inv_metric&quot; instead. &#39;</span>
-            <span class="s1">&#39;This will be the same quantity, but with a more accurate name.&#39;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_metric</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_type</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_metric_parsed</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">inv_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inv_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inverse mass matrix used by sampler for each chain.</span>
 <span class="sd">        Returns a ``nchains x nparams`` array when metric_type is &#39;diag_e&#39;,</span>
 <span class="sd">        a ``nchains x nparams x nparams`` array when metric_type is &#39;dense_e&#39;,</span>
-<span class="sd">        or ``None`` when metric_type is &#39;unit_e&#39; or algorithm is &#39;fixed_param&#39;.</span>
+<span class="sd">        or ``None`` when metric_type is &#39;unit_e&#39;, algorithm is &#39;fixed_param&#39;,</span>
+<span class="sd">        or no metric files are available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">==</span> <span class="s1">&#39;unit_e&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_metric_parsed</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_type</span> <span class="o">==</span> <span class="s1">&#39;unit_e&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">step_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Step size used by sampler for each chain.</span>
-<span class="sd">        When sampler algorithm &#39;fixed_param&#39; is specified, step size is None.</span>
+<span class="sd">        Returns None when sampler algorithm &#39;fixed_param&#39; is specified, or when</span>
+<span class="sd">        no metric files are available (e.g. adaptation was disabled).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_metric_parsed</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">thin</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Period between recorded iterations.  (Default is 1).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">divergences</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">divergences</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Per-chain total number of post-warmup divergent iterations.</span>
 <span class="sd">        When sampler algorithm &#39;fixed_param&#39; is specified, returns None.</span>
@@ -678,7 +676,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">max_treedepths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_treedepths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Per-chain total number of post-warmup iterations where the NUTS sampler</span>
 <span class="sd">        reached the maximum allowed treedepth.</span>
@@ -686,17 +684,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span> <span class="k">else</span> <span class="kc">None</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List of per-chain time info scraped from CSV file.</span>
-<span class="sd">        Each chain has dict with keys &quot;warmup&quot;, &quot;sampling&quot;, &quot;total&quot;.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chain_time</span>
-
 <div class="viewcode-block" id="CmdStanMCMC.draws">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.draws">[docs]</a>
-    <span class="k">def</span> <span class="nf">draws</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draws</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">concat_chains</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -722,7 +712,7 @@
 <span class="sd">        CmdStanMCMC.draws_xr</span>
 <span class="sd">        CmdStanGQ.draws</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -739,77 +729,136 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_validate_csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Checks that Stan CSV output files for all chains are consistent</span>
-<span class="sd">        and returns dict containing config and column names.</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_comparable_config</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">StanConfig</span><span class="p">[</span><span class="n">SampleConfig</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns configuration settings that must agree across chains&quot;&quot;&quot;</span>
+        <span class="n">method_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">method_config</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="o">**</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_comparable_config</span><span class="p">(</span><span class="n">config</span><span class="p">),</span>
+            <span class="s1">&#39;algorithm&#39;</span><span class="p">:</span> <span class="n">method_config</span><span class="o">.</span><span class="n">algorithm</span><span class="p">,</span>
+            <span class="s1">&#39;num_samples&#39;</span><span class="p">:</span> <span class="n">method_config</span><span class="o">.</span><span class="n">num_samples</span><span class="p">,</span>
+            <span class="s1">&#39;num_warmup&#39;</span><span class="p">:</span> <span class="n">method_config</span><span class="o">.</span><span class="n">num_warmup</span><span class="p">,</span>
+            <span class="s1">&#39;save_warmup&#39;</span><span class="p">:</span> <span class="n">method_config</span><span class="o">.</span><span class="n">save_warmup</span><span class="p">,</span>
+            <span class="s1">&#39;thin&#39;</span><span class="p">:</span> <span class="n">method_config</span><span class="o">.</span><span class="n">thin</span><span class="p">,</span>
+            <span class="s1">&#39;max_depth&#39;</span><span class="p">:</span> <span class="n">method_config</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+        <span class="p">}</span>
 
-<span class="sd">        Tabulates sampling iters which are divergent or at max treedepth</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_csv_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks that the draws in the Stan CSV output files are consistent</span>
+<span class="sd">        with the run configuration, and tabulates per-chain counts of</span>
+<span class="sd">        sampling iters which are divergent or at max treedepth.</span>
+
 <span class="sd">        Raises exception when inconsistencies detected.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">dzero</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">expected_sampling</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">)</span>
+        <span class="n">expected_warmup</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span>
+            <span class="k">else</span> <span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="n">max_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span><span class="o">.</span><span class="n">max_depth</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">dzero</span> <span class="o">=</span> <span class="n">check_sampler_csv</span><span class="p">(</span>
-                    <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                    <span class="n">iter_sampling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span><span class="p">,</span>
-                    <span class="n">iter_warmup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span><span class="p">,</span>
-                    <span class="n">save_warmup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">,</span>
-                    <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_chain_time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dzero</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dzero</span><span class="p">[</span><span class="s1">&#39;ct_divergences&#39;</span><span class="p">]</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dzero</span><span class="p">[</span><span class="s1">&#39;ct_max_treedepth&#39;</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">drest</span> <span class="o">=</span> <span class="n">check_sampler_csv</span><span class="p">(</span>
-                    <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                    <span class="n">iter_sampling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_sampling</span><span class="p">,</span>
-                    <span class="n">iter_warmup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter_warmup</span><span class="p">,</span>
-                    <span class="n">save_warmup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">,</span>
-                    <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_thin</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_chain_time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">drest</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
-                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dzero</span><span class="p">:</span>
-                    <span class="c1"># check args that matter for parsing, plus name, version</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="n">key</span>
-                        <span class="ow">in</span> <span class="p">[</span>
-                            <span class="s1">&#39;stan_version_major&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;stan_version_minor&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;stan_version_patch&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;stanc_version&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;model&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;num_samples&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;num_warmup&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;save_warmup&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;thin&#39;</span><span class="p">,</span>
-                            <span class="s1">&#39;refresh&#39;</span><span class="p">,</span>
-                        <span class="p">]</span>
-                        <span class="ow">and</span> <span class="n">dzero</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">drest</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-                    <span class="p">):</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                            <span class="s1">&#39;CmdStan config mismatch in Stan CSV file </span><span class="si">{}</span><span class="s1">: &#39;</span>
-                            <span class="s1">&#39;arg </span><span class="si">{}</span><span class="s1"> is </span><span class="si">{}</span><span class="s1">, expected </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                                <span class="n">key</span><span class="p">,</span>
-                                <span class="n">dzero</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
-                                <span class="n">drest</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
-                            <span class="p">)</span>
-                        <span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">drest</span><span class="p">[</span><span class="s1">&#39;ct_divergences&#39;</span><span class="p">]</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">drest</span><span class="p">[</span><span class="s1">&#39;ct_max_treedepth&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">dzero</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">draws</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">parse_comments_header_and_draws</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No header found in Stan CSV file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">stancsv</span><span class="o">.</span><span class="n">raise_on_inconsistent_draws_shape</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">draws</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_sampler_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">num_warmup</span><span class="p">,</span> <span class="n">num_sampling</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">count_warmup_and_sampling_draws</span><span class="p">(</span>
+                <span class="n">path</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">num_sampling</span> <span class="o">!=</span> <span class="n">expected_sampling</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Bad Stan CSV file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">, expected </span><span class="si">{</span><span class="n">expected_sampling</span><span class="si">}</span><span class="s1"> &#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;draws, found </span><span class="si">{</span><span class="n">num_sampling</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span> <span class="ow">and</span> <span class="n">num_warmup</span> <span class="o">!=</span> <span class="n">expected_warmup</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Bad Stan CSV file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">, expected </span><span class="si">{</span><span class="n">expected_warmup</span><span class="si">}</span><span class="s1"> &#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;warmup draws, found </span><span class="si">{</span><span class="n">num_warmup</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
+                <span class="c1"># HMC runs always record max_depth; only fixed_param omits it</span>
+                <span class="k">assert</span> <span class="n">max_depth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="n">treedepths</span><span class="p">,</span> <span class="n">divergences</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">stancsv</span><span class="o">.</span><span class="n">extract_max_treedepth_and_divergence_counts</span><span class="p">(</span>
+                        <span class="n">header</span><span class="p">,</span> <span class="n">draws</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">,</span> <span class="n">num_warmup</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">treedepths</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">divergences</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_metric_parsed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the metric info if available, returning whether it is.</span>
+
+<span class="sd">        Returns False (and the metric properties then report None) for</span>
+<span class="sd">        fixed-param runs or when no metric files were written.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_available</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parse_metric_info</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_metric_available</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether a metric JSON is present on disk for every chain.</span>
+
+<span class="sd">        Returns False when there are no metric files at all -- either none</span>
+<span class="sd">        were passed, or CmdStan wrote none because adaptation was disabled --</span>
+<span class="sd">        so the metric properties can report None rather than fail. Raises when</span>
+<span class="sd">        some but not all chains have a metric file, since parsing a partial set</span>
+<span class="sd">        would silently misalign the per-chain metric arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_files</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_files</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">existing</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">existing</span><span class="p">):</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">f</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">ok</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_files</span><span class="p">,</span> <span class="n">existing</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">ok</span>
+            <span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Metric files missing for some chains: &#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_metric_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extracts metric type, inv_metric, and step size information from the</span>
+<span class="sd">        parsed metric JSONs.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_files</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;No metric files available; cannot read metric info.&#39;</span>
+            <span class="p">)</span>
+        <span class="n">chain_metric_info</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">MetricInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">mf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">chain_metric_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">MetricInfo</span><span class="o">.</span><span class="n">model_validate_json</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                <span class="p">)</span>
+
+        <span class="n">metric_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">cmi</span><span class="o">.</span><span class="n">metric_type</span> <span class="k">for</span> <span class="n">cmi</span> <span class="ow">in</span> <span class="n">chain_metric_info</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_types</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inconsistent metric types found across chains&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metric_type</span> <span class="o">=</span> <span class="n">chain_metric_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">metric_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">cmi</span><span class="o">.</span><span class="n">inv_metric</span> <span class="k">for</span> <span class="n">cmi</span> <span class="ow">in</span> <span class="n">chain_metric_info</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">cmi</span><span class="o">.</span><span class="n">stepsize</span> <span class="k">for</span> <span class="n">cmi</span> <span class="ow">in</span> <span class="n">chain_metric_info</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_sampler_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Warn if any iterations ended in divergences or hit maxtreedepth.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_max_treedepths</span><span class="p">):</span>
             <span class="n">diagnostics</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Some chains may have failed to converge.&#39;</span><span class="p">]</span>
-            <span class="n">ct_iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span><span class="p">[</span><span class="s1">&#39;num_samples&#39;</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_chains</span><span class="p">):</span>
+            <span class="n">ct_iters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">method_config</span><span class="o">.</span><span class="n">num_samples</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">diagnostics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s1">&#39;Chain </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1"> had </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_divergences</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s1"> &#39;</span>
@@ -828,10 +877,10 @@
             <span class="p">)</span>
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">diagnostics</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_assemble_draws</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_assemble</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Allocates and populates the step size, metric, and sample arrays</span>
-<span class="sd">        by parsing the validated stan_csv files.</span>
+<span class="sd">        Allocates and populates the sample array by parsing the validated</span>
+<span class="sd">        stan_csv files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span>
             <span class="k">return</span>
@@ -844,17 +893,15 @@
             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
             <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
-        <span class="n">mass_matrix_per_chain</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="p">(</span>
-                    <span class="n">comments</span><span class="p">,</span>
+                    <span class="n">_</span><span class="p">,</span>
                     <span class="n">header</span><span class="p">,</span>
                     <span class="n">draws</span><span class="p">,</span>
                 <span class="p">)</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">parse_comments_header_and_draws</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">chain</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">chain</span><span class="p">]</span>
                 <span class="p">)</span>
 
                 <span class="n">draws_np</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">csv_bytes_list_to_numpy</span><span class="p">(</span><span class="n">draws</span><span class="p">)</span>
@@ -863,25 +910,14 @@
                     <span class="n">draws_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">))</span>
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">[:,</span> <span class="n">chain</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">draws_np</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fixed_param</span><span class="p">:</span>
-                    <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_step_size</span><span class="p">[</span><span class="n">chain</span><span class="p">],</span>
-                        <span class="n">mass_matrix</span><span class="p">,</span>
-                    <span class="p">)</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">parse_hmc_adaptation_lines</span><span class="p">(</span><span class="n">comments</span><span class="p">)</span>
-                    <span class="n">mass_matrix_per_chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mass_matrix</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Parsing output from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">chain</span><span class="p">]</span><span class="si">}</span><span class="s2"> failed&quot;</span>
-                <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
-
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">mm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="n">mass_matrix_per_chain</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mass_matrix_per_chain</span><span class="p">)</span>
-
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parsing output from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">csv_files</span><span class="p">[</span><span class="n">chain</span><span class="p">]</span><span class="si">}</span><span class="s2"> failed&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
 <div class="viewcode-block" id="CmdStanMCMC.summary">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.summary">[docs]</a>
-    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">95</span><span class="p">),</span>
         <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>
@@ -929,7 +965,7 @@
                 <span class="s1">&#39;Keyword &quot;sig_figs&quot; must be an integer between 1 and 18,&#39;</span>
                 <span class="s1">&#39; found </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sig_figs</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="n">csv_sig_figs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_figs</span> <span class="ow">or</span> <span class="mi">6</span>
+        <span class="n">csv_sig_figs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sig_figs</span> <span class="ow">or</span> <span class="mi">6</span>
         <span class="k">if</span> <span class="n">sig_figs</span> <span class="o">&gt;</span> <span class="n">csv_sig_figs</span><span class="p">:</span>
             <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s1">&#39;Requesting </span><span class="si">%d</span><span class="s1"> significant digits of output, but CSV files&#39;</span>
@@ -941,20 +977,18 @@
         <span class="n">cmd_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;stansummary&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span>
         <span class="p">)</span>
-        <span class="n">tmp_csv_file</span> <span class="o">=</span> <span class="s1">&#39;stansummary-</span><span class="si">{}</span><span class="s1">-&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">tmp_csv_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;stansummary-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s1">-&#39;</span>
         <span class="n">tmp_csv_path</span> <span class="o">=</span> <span class="n">create_named_text_file</span><span class="p">(</span>
             <span class="nb">dir</span><span class="o">=</span><span class="n">_TMPDIR</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">tmp_csv_file</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="n">name_only</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
-        <span class="n">csv_str</span> <span class="o">=</span> <span class="s1">&#39;--csv_filename=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">)</span>
-        <span class="c1"># TODO: remove at some future release</span>
-        <span class="k">if</span> <span class="n">cmdstan_version_before</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">24</span><span class="p">):</span>
-            <span class="n">csv_str</span> <span class="o">=</span> <span class="s1">&#39;--csv_file=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">)</span>
+        <span class="n">csv_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;--csv_filename=</span><span class="si">{</span><span class="n">tmp_csv_path</span><span class="si">}</span><span class="s1">&#39;</span>
+
         <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">cmd_path</span><span class="p">,</span>
             <span class="n">percentiles_str</span><span class="p">,</span>
             <span class="n">sig_figs_str</span><span class="p">,</span>
             <span class="n">csv_str</span><span class="p">,</span>
-        <span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span>
+        <span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv_files</span>
         <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">fd_out</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_csv_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
             <span class="n">summary_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
@@ -978,7 +1012,7 @@
 
 <div class="viewcode-block" id="CmdStanMCMC.diagnose">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.diagnose">[docs]</a>
-    <span class="k">def</span> <span class="nf">diagnose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagnose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run cmdstan/bin/diagnose over all output CSV files,</span>
 <span class="sd">        return console output.</span>
@@ -993,7 +1027,7 @@
 <span class="sd">        + High R-hat values</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cmd_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;diagnose&#39;</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd_path</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">csv_files</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmd_path</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv_files</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
         <span class="n">do_command</span><span class="p">(</span><span class="n">cmd</span><span class="o">=</span><span class="n">cmd</span><span class="p">,</span> <span class="n">fd_out</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
@@ -1001,9 +1035,9 @@
 
 <div class="viewcode-block" id="CmdStanMCMC.draws_pd">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.draws_pd">[docs]</a>
-    <span class="k">def</span> <span class="nf">draws_pd</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draws_pd</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="nb">vars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">vars</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1037,14 +1071,14 @@
                 <span class="s1">&#39; must run sampler with &quot;save_warmup=True&quot;.&#39;</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">()</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">vars_list</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">method_vars</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">method_vars</span><span class="p">:</span>
                     <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
-                    <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
+                    <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
                     <span class="n">cols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="n">info</span><span class="o">.</span><span class="n">start_idx</span> <span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">end_idx</span><span class="p">]</span>
                     <span class="p">)</span>
@@ -1083,9 +1117,9 @@
 
 <div class="viewcode-block" id="CmdStanMCMC.draws_xr">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.draws_xr">[docs]</a>
-    <span class="k">def</span> <span class="nf">draws_xr</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;xr.Dataset&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draws_xr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="nb">vars</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the sampler draws as a xarray Dataset.</span>
 
@@ -1111,20 +1145,20 @@
                 <span class="s1">&#39; must run sampler with &quot;save_warmup=True&quot;.&#39;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">vars</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">vars_list</span> <span class="o">=</span> <span class="p">[</span><span class="nb">vars</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">vars_list</span> <span class="o">=</span> <span class="nb">vars</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">()</span>
 
         <span class="n">num_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_draws_sampling</span>
-        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">cmdstan_config</span>
         <span class="n">attrs</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;stan_version&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;stan_version_major&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;stan_version_minor&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;stan_version_patch&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;stan_version&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">stan_major_version</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">stan_minor_version</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">stan_patch_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
             <span class="s2">&quot;num_draws_sampling&quot;</span><span class="p">:</span> <span class="n">num_draws</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">if</span> <span class="n">inc_warmup</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_warmup</span><span class="p">:</span>
@@ -1140,7 +1174,7 @@
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_list</span><span class="p">:</span>
             <span class="n">build_xarray_data</span><span class="p">(</span>
                 <span class="n">data</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
@@ -1150,7 +1184,7 @@
 
 <div class="viewcode-block" id="CmdStanMCMC.stan_variable">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.stan_variable">[docs]</a>
-    <span class="k">def</span> <span class="nf">stan_variable</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stan_variable</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">inc_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -1198,46 +1232,13 @@
 <span class="sd">        CmdStanGQ.stan_variable</span>
 <span class="sd">        CmdStanLaplace.stan_variable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">,</span> <span class="n">concat_chains</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">out</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">extract_reshape</span><span class="p">(</span>
-                <span class="n">draws</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="n">out</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="c1"># pylint: disable=raise-missing-from</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s1">&#39;Unknown variable name: </span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="s1">&#39;Available variables are &#39;</span>
-                <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-            <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="CmdStanMCMC.stan_variables">
-<a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.stan_variables">[docs]</a>
-    <span class="k">def</span> <span class="nf">stan_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return a dictionary mapping Stan program variables names</span>
-<span class="sd">        to the corresponding numpy.ndarray containing the inferred values.</span>
-
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        CmdStanMCMC.stan_variable</span>
-<span class="sd">        CmdStanMLE.stan_variables</span>
-<span class="sd">        CmdStanPathfinder.stan_variables</span>
-<span class="sd">        CmdStanVB.stan_variables</span>
-<span class="sd">        CmdStanGQ.stan_variables</span>
-<span class="sd">        CmdStanLaplace.stan_variables</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">stan_vars</span><span class="p">:</span>
-            <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stan_variable</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div>
+        <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">(</span><span class="n">inc_warmup</span><span class="o">=</span><span class="n">inc_warmup</span><span class="p">,</span> <span class="n">concat_chains</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_stan_var</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">draws</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="CmdStanMCMC.method_variables">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.method_variables">[docs]</a>
-    <span class="k">def</span> <span class="nf">method_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">method_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a dictionary of all sampler variables, i.e., all</span>
 <span class="sd">        output column names ending in `__`.  Assumes that all variables</span>
@@ -1245,30 +1246,11 @@
 <span class="sd">        Maps each column name to a numpy.ndarray (draws x chains x 1)</span>
 <span class="sd">        containing per-draw diagnostic values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble_draws</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_assemble</span><span class="p">()</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">name</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">extract_reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span><span class="o">.</span><span class="n">method_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">method_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span></div>
-
-
-<div class="viewcode-block" id="CmdStanMCMC.save_csvfiles">
-<a class="viewcode-back" href="../../../api.html#cmdstanpy.CmdStanMCMC.save_csvfiles">[docs]</a>
-    <span class="k">def</span> <span class="nf">save_csvfiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Move output CSV files to specified directory.  If files were</span>
-<span class="sd">        written to the temporary session directory, clean filename.</span>
-<span class="sd">        E.g., save &#39;bernoulli-201912081451-1-5nm6as7u.csv&#39; as</span>
-<span class="sd">        &#39;bernoulli-201912081451-1.csv&#39;.</span>
-
-<span class="sd">        :param dir: directory path</span>
-
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        stanfit.RunSet.save_csvfiles</span>
-<span class="sd">        cmdstanpy.from_csv</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">runset</span><span class="o">.</span><span class="n">save_csvfiles</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.stanfit.metadata &#8212; CmdStanPy 1.3.2 documentation</title>
+    <title>cmdstanpy.stanfit.metadata &#8212; CmdStanPy 2.0.0rc1 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=7facd19e" />
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=8ca9e7a0"></script>
+    <script src="../../../_static/documentation_options.js?v=f2943afd"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.2" />
+  <meta name="docsearch:version" content="2.0.0rc1" />
   </head>
   
   
@@ -122,7 +122,7 @@
     <img src="../../../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.2</p>
+    <p class="title logo__title">CmdStanPy v2.0.0rc1</p>
   
 </a></div>
     
@@ -377,9 +377,6 @@
     
     <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="../stanfit.html" class="nav-link">cmdstanpy.stanfit</a></li>
-    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">cmdstanpy.stanfit.metadata</span></li>
   </ul>
 </nav>
@@ -400,32 +397,40 @@
   <h1>Source code for cmdstanpy.stanfit.metadata</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Container for metadata parsed from the output of a CmdStan run&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">stanio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Literal</span>
 
-<span class="kn">from</span> <span class="nn">cmdstanpy.utils</span> <span class="kn">import</span> <span class="n">stancsv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">stanio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaseModel</span><span class="p">,</span>
+    <span class="n">ConfigDict</span><span class="p">,</span>
+    <span class="n">Discriminator</span><span class="p">,</span>
+    <span class="n">Field</span><span class="p">,</span>
+    <span class="n">field_validator</span><span class="p">,</span>
+    <span class="n">model_validator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Self</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">stancsv</span>
 
 
 <div class="viewcode-block" id="InferenceMetadata">
 <a class="viewcode-back" href="../../../internal_api.html#cmdstanpy.stanfit.InferenceMetadata">[docs]</a>
-<span class="k">class</span> <span class="nc">InferenceMetadata</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InferenceMetadata</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    CmdStan configuration and contents of output file parsed out of</span>
-<span class="sd">    the Stan CSV file header comments and column headers.</span>
-<span class="sd">    Assumes valid CSV files.</span>
+<span class="sd">    Names and structure of the output variables of a CmdStan run, parsed</span>
+<span class="sd">    from the Stan CSV file&#39;s column header. Assumes valid CSV files.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object from CSV headers&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cmdstan_config</span> <span class="o">=</span> <span class="n">config</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize object from a Stan CSV header line.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">parse_header</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 
-        <span class="nb">vars</span> <span class="o">=</span> <span class="n">stanio</span><span class="o">.</span><span class="n">parse_header</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;raw_header&#39;</span><span class="p">])</span>  <span class="c1"># type: ignore</span>
-
+        <span class="nb">vars</span> <span class="o">=</span> <span class="n">stanio</span><span class="o">.</span><span class="n">parse_header</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_method_vars</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">vars</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
         <span class="p">}</span>
@@ -434,54 +439,303 @@
         <span class="p">}</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_csv</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">stan_csv</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;InferenceMetadata&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_csv</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">stan_csv</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span> <span class="o">|</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InferenceMetadata</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">comments</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">parse_comments_header_and_draws</span><span class="p">(</span>
-                <span class="n">stan_csv</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">stancsv</span><span class="o">.</span><span class="n">construct_config_header_dict</span><span class="p">(</span><span class="n">comments</span><span class="p">,</span> <span class="n">header</span><span class="p">))</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">stancsv</span><span class="o">.</span><span class="n">scan_header</span><span class="p">(</span><span class="n">stan_csv</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No header line found&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;An error occurred when parsing Stan csv </span><span class="si">{</span><span class="n">stan_csv</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s1">&#39;Metadata:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cmdstan_config</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmdstan_config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;Metadata:</span><span class="se">\n</span><span class="s1"> column_names=</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">cmdstan_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns a dictionary containing a set of name, value pairs</span>
-<span class="sd">        parsed out of the Stan CSV file header.  These include the</span>
-<span class="sd">        command configuration and the CSV file header row information.</span>
-<span class="sd">        Uses deepcopy for immutability.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cmdstan_config</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_column_names</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">column_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-        <span class="n">col_names</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s1">&#39;column_names&#39;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">col_names</span>  <span class="c1"># type: ignore</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">method_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">stanio</span><span class="o">.</span><span class="n">Variable</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">method_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">stanio</span><span class="o">.</span><span class="n">Variable</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method variable names always end in `__`, e.g. `lp__`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_vars</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">stan_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">stanio</span><span class="o">.</span><span class="n">Variable</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stan_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">stanio</span><span class="o">.</span><span class="n">Variable</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        These are the user-defined variables in the Stan program.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stan_vars</span></div>
 
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Structured representation of HMC-NUTS metric information,</span>
+<span class="sd">    as output by CmdStan&quot;&quot;&quot;</span>
+
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">metric_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;diag_e&quot;</span><span class="p">,</span> <span class="s2">&quot;dense_e&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_e&quot;</span><span class="p">]</span>
+    <span class="n">inv_metric</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;stepsize&quot;</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_stepsize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stepsize must be greater than 0 or NaN&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_inv_metric_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInfo</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_metric</span><span class="p">:</span>  <span class="c1"># Empty inv_metric, e.g. from no parameters</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="n">is_1d</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inv_metric</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;diag_e&quot;</span><span class="p">,</span> <span class="s2">&quot;unit_e&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_1d</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;inv_metric must be 1D for diag_e and unit_e metric type&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_type</span> <span class="o">==</span> <span class="s2">&quot;dense_e&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_1d</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dense inv_metric must be 2D&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_metric</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dense inv_metric cannot contain empty rows&quot;</span><span class="p">)</span>
+
+            <span class="n">n_rows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inv_metric</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">==</span> <span class="n">n_rows</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv_metric</span>  <span class="c1"># type: ignore</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dense inv_metric must be square&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SampleConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;sample&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sample&quot;</span>
+    <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">num_warmup</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">num_chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">save_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">thin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OptimizeConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;optimize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;optimize&quot;</span>
+    <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">save_iterations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">jacobian</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PathfinderConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;pathfinder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;pathfinder&quot;</span>
+    <span class="n">num_draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">num_paths</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">psis_resample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">calculate_lp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">LaplaceConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;laplace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;laplace&quot;</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">jacobian</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VariationalConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;variational&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;variational&quot;</span>
+    <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10000</span>
+    <span class="n">grad_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">elbo_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">eta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">tol_rel_obj</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="n">eval_elbo</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">output_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneratedQuantitiesConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;generate_quantities&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;generate_quantities&quot;</span>
+    <span class="n">fitted_params</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">num_chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+
+
+<span class="n">AnyMethodConfig</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span>
+    <span class="n">SampleConfig</span>
+    <span class="o">|</span> <span class="n">OptimizeConfig</span>
+    <span class="o">|</span> <span class="n">PathfinderConfig</span>
+    <span class="o">|</span> <span class="n">LaplaceConfig</span>
+    <span class="o">|</span> <span class="n">VariationalConfig</span>
+    <span class="o">|</span> <span class="n">GeneratedQuantitiesConfig</span><span class="p">,</span>
+    <span class="n">Discriminator</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="n">MethodT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;MethodT&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">AnyMethodConfig</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">OutputConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Common CmdStan output settings used when reconstructing fits.&quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">sig_figs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StanConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">MethodT</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Common representation of a config JSON file output as part of a</span>
+<span class="sd">    Stan inference run. Separate method-specific config classes handle</span>
+<span class="sd">    the variation of output between methods.&quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;allow&quot;</span><span class="p">)</span>
+
+    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">stan_major_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">stan_minor_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">stan_patch_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">stanc_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">OutputConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">OutputConfig</span><span class="p">)</span>
+
+    <span class="n">method_config</span><span class="p">:</span> <span class="n">MethodT</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">json_data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a CmdStan config JSON string into this config class.&quot;&quot;&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">:</span> <span class="n">Self</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">flatten_config</span><span class="p">(</span><span class="n">raw</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">config</span>
+
+
+<span class="c1"># Named classes for each method - these can be pickled unlike the generic</span>
+<span class="c1"># StanConfig[MethodConfig]</span>
+
+
+<span class="c1"># pylint: disable-next=too-few-public-methods</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SampleRunConfig</span><span class="p">(</span><span class="n">StanConfig</span><span class="p">[</span><span class="n">SampleConfig</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run configuration of the sample method.&quot;&quot;&quot;</span>
+
+
+<span class="c1"># pylint: disable-next=too-few-public-methods</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OptimizeRunConfig</span><span class="p">(</span><span class="n">StanConfig</span><span class="p">[</span><span class="n">OptimizeConfig</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run configuration of the optimize method.&quot;&quot;&quot;</span>
+
+
+<span class="c1"># pylint: disable-next=too-few-public-methods</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">VariationalRunConfig</span><span class="p">(</span><span class="n">StanConfig</span><span class="p">[</span><span class="n">VariationalConfig</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run configuration of the variational method.&quot;&quot;&quot;</span>
+
+
+<span class="c1"># pylint: disable-next=too-few-public-methods</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LaplaceRunConfig</span><span class="p">(</span><span class="n">StanConfig</span><span class="p">[</span><span class="n">LaplaceConfig</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run configuration of the laplace method.&quot;&quot;&quot;</span>
+
+
+<span class="c1"># pylint: disable-next=too-few-public-methods</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PathfinderRunConfig</span><span class="p">(</span><span class="n">StanConfig</span><span class="p">[</span><span class="n">PathfinderConfig</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run configuration of the pathfinder method.&quot;&quot;&quot;</span>
+
+
+<span class="c1"># pylint: disable-next=too-few-public-methods</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GeneratedQuantitiesRunConfig</span><span class="p">(</span><span class="n">StanConfig</span><span class="p">[</span><span class="n">GeneratedQuantitiesConfig</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run configuration of the generate_quantities method.&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten_value_dict</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively flatten CmdStan&#39;s nested value/subdict structure.</span>
+
+<span class="sd">    CmdStan uses a pattern where a field contains:</span>
+<span class="sd">        {&quot;value&quot;: &quot;val&quot;, &quot;val&quot;: {&quot;k1&quot;: v1, &quot;k2&quot;: v2}}</span>
+
+<span class="sd">    This flattens it to the parent level as:</span>
+<span class="sd">        {&quot;field&quot;: &quot;val&quot;, &quot;k1&quot;: v1, &quot;k2&quot;: v2}</span>
+
+<span class="sd">    The flattening is applied recursively to any nested dicts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="s2">&quot;value&quot;</span> <span class="ow">in</span> <span class="n">val</span><span class="p">:</span>
+            <span class="n">value_name</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_name</span>
+
+            <span class="c1"># Get the nested dict matching the value name and flatten it</span>
+            <span class="n">nested</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">value_name</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nested</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">flattened_nested</span> <span class="o">=</span> <span class="n">flatten_value_dict</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">nested_key</span><span class="p">,</span> <span class="n">nested_val</span> <span class="ow">in</span> <span class="n">flattened_nested</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">nested_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                        <span class="n">result</span><span class="p">[</span><span class="n">nested_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">nested_val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Regular dict without value pattern - recurse into it</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">flatten_value_dict</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten_config</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Flatten nested CmdStan config JSON structure.</span>
+
+<span class="sd">    CmdStan outputs config JSON with deeply nested structure like:</span>
+<span class="sd">        {&quot;method&quot;: {&quot;value&quot;: &quot;sample&quot;, &quot;sample&quot;: {&quot;num_samples&quot;: 1000, ...}}}</span>
+
+<span class="sd">    This flattens it to:</span>
+<span class="sd">        {&quot;method_config&quot;: {&quot;method&quot;: &quot;sample&quot;, &quot;num_samples&quot;: 1000, ...}, ...}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">method_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;method&quot;</span><span class="p">}</span>
+    <span class="n">method_name</span> <span class="o">=</span> <span class="n">method_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Build method_config from the method-specific nested dict</span>
+    <span class="n">nested_method</span> <span class="o">=</span> <span class="n">method_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">method_config</span> <span class="o">=</span> <span class="n">flatten_value_dict</span><span class="p">(</span><span class="n">nested_method</span><span class="p">)</span>
+    <span class="n">method_config</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_name</span>
+
+    <span class="n">result</span><span class="p">[</span><span class="s1">&#39;method_config&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_config</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_config</span><span class="p">(</span><span class="n">json_data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StanConfig</span><span class="p">[</span><span class="n">AnyMethodConfig</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a CmdStan config JSON string into a StanConfig, auto-detecting</span>
+<span class="sd">    the method from the JSON content via the discriminated union</span>
+<span class="sd">    ``AnyMethodConfig``.</span>
+
+<span class="sd">    When the method is known in advance, use the ``from_json`` constructor</span>
+<span class="sd">    of the corresponding named config class (e.g. ``SampleRunConfig``)</span>
+<span class="sd">    instead; unlike the parametrized generic returned here, instances of</span>
+<span class="sd">    the named classes support pickling.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span>
+    <span class="n">flat</span> <span class="o">=</span> <span class="n">flatten_config</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">StanConfig</span><span class="p">[</span><span class="n">AnyMethodConfig</span><span class="p">]</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 </pre></div>
 
                 </article>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Internal API Reference &#8212; CmdStanPy 1.3.2 documentation</title>
+    <title>Internal API Reference &#8212; CmdStanPy 2.0.0rc1 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=7facd19e" />
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8ca9e7a0"></script>
+    <script src="_static/documentation_options.js?v=f2943afd"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="API Reference" href="api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.2" />
+  <meta name="docsearch:version" content="2.0.0rc1" />
   </head>
   
   
@@ -125,7 +125,7 @@
     <img src="_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.2</p>
+    <p class="title logo__title">CmdStanPy v2.0.0rc1</p>
   
 </a></div>
     
@@ -422,24 +422,14 @@ minor versions and refactors are expected. If you find yourself needing somethin
 <h3>InferenceMetadata<a class="headerlink" href="#inferencemetadata" title="Link to this heading">#</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="cmdstanpy.stanfit.InferenceMetadata">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cmdstanpy.stanfit.</span></span><span class="sig-name descname"><span class="pre">InferenceMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit/metadata.html#InferenceMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.stanfit.InferenceMetadata" title="Link to this definition">#</a></dt>
-<dd><p>CmdStan configuration and contents of output file parsed out of
-the Stan CSV file header comments and column headers.
-Assumes valid CSV files.</p>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cmdstanpy.stanfit.</span></span><span class="sig-name descname"><span class="pre">InferenceMetadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit/metadata.html#InferenceMetadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.stanfit.InferenceMetadata" title="Link to this definition">#</a></dt>
+<dd><p>Names and structure of the output variables of a CmdStan run, parsed
+from the Stan CSV file’s column header. Assumes valid CSV files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>...</em><em>]</em><em>]</em>)</p>
+<dd class="field-odd"><p><strong>header</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
 </dd>
 </dl>
-<dl class="py property">
-<dt class="sig sig-object py" id="cmdstanpy.stanfit.InferenceMetadata.cmdstan_config">
-<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cmdstan_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#cmdstanpy.stanfit.InferenceMetadata.cmdstan_config" title="Link to this definition">#</a></dt>
-<dd><p>Returns a dictionary containing a set of name, value pairs
-parsed out of the Stan CSV file header.  These include the
-command configuration and the CSV file header row information.
-Uses deepcopy for immutability.</p>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="cmdstanpy.stanfit.InferenceMetadata.method_vars">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">method_vars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Variable</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#cmdstanpy.stanfit.InferenceMetadata.method_vars" title="Link to this definition">#</a></dt>
@@ -493,6 +483,24 @@ specify CmdStan arg <cite>num_chains</cite> and leave chain idx off CSV files.</
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.gen_file_name">
+<span class="sig-name descname"><span class="pre">gen_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit/runset.html#RunSet.gen_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.gen_file_name" title="Link to this definition">#</a></dt>
+<dd><p>Generate a standard file name according to CmdStan output pattern</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>suffix</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
+<li><p><strong>extra</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
+<li><p><strong>id</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.get_err_msgs">
 <span class="sig-name descname"><span class="pre">get_err_msgs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit/runset.html#RunSet.get_err_msgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.get_err_msgs" title="Link to this definition">#</a></dt>
 <dd><p>Checks console messages for each CmdStan run.</p>
@@ -501,24 +509,6 @@ specify CmdStan arg <cite>num_chains</cite> and leave chain idx off CSV files.</
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a></p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.save_csvfiles">
-<span class="sig-name descname"><span class="pre">save_csvfiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/stanfit/runset.html#RunSet.save_csvfiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.save_csvfiles" title="Link to this definition">#</a></dt>
-<dd><p>Moves CSV files to specified directory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dir</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>) – directory path</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-<div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><a class="reference internal" href="api.html#cmdstanpy.from_csv" title="cmdstanpy.from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cmdstanpy.from_csv</span></code></a></p>
-</div>
 </dd></dl>
 
 <dl class="py property">
@@ -531,6 +521,12 @@ specify CmdStan arg <cite>num_chains</cite> and leave chain idx off CSV files.</
 <dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.chains">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">chains</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></em><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.chains" title="Link to this definition">#</a></dt>
 <dd><p>Number of chains.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.config_files">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">config_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.config_files" title="Link to this definition">#</a></dt>
+<dd><p>List of paths to CmdStan config json files.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -552,6 +548,12 @@ specify CmdStan arg <cite>num_chains</cite> and leave chain idx off CSV files.</
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.metric_files">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metric_files</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.metric_files" title="Link to this definition">#</a></dt>
+<dd><p>List of paths to CmdStan NUTS-HMC sampler metric files.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.model">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></em><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.model" title="Link to this definition">#</a></dt>
 <dd><p>Stan model name.</p>
@@ -567,9 +569,9 @@ specify CmdStan arg <cite>num_chains</cite> and leave chain idx off CSV files.</
 <dt class="sig sig-object py" id="cmdstanpy.stanfit.RunSet.one_process_per_chain">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">one_process_per_chain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></em><a class="headerlink" href="#cmdstanpy.stanfit.RunSet.one_process_per_chain" title="Link to this definition">#</a></dt>
 <dd><p>When True, for each chain, call CmdStan in its own subprocess.
-When False, use CmdStan’s <cite>num_chains</cite> arg to run parallel chains.
-Always True if CmdStan &lt; 2.28.
-For CmdStan 2.28 and up, <cite>sample</cite> method determines value.</p>
+When False, use CmdStan’s <cite>num_chains</cite> arg to run parallel chains,
+which requires a model compiled with STAN_THREADS.
+Determined by the <cite>sample</cite> method.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -624,34 +626,6 @@ Transcripts include config information, progress, and error messages.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="cmdstanpy.compilation.CompilerOptions.add">
-<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/compilation.html#CompilerOptions.add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.compilation.CompilerOptions.add" title="Link to this definition">#</a></dt>
-<dd><p>Adds options to existing set of compiler options.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>new_opts</strong> (<a class="reference internal" href="#cmdstanpy.compilation.CompilerOptions" title="cmdstanpy.compilation.CompilerOptions"><em>CompilerOptions</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cmdstanpy.compilation.CompilerOptions.add_include_path">
-<span class="sig-name descname"><span class="pre">add_include_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/compilation.html#CompilerOptions.add_include_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.compilation.CompilerOptions.add_include_path" title="Link to this definition">#</a></dt>
-<dd><p>Adds include path to existing set of compiler options.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="cmdstanpy.compilation.CompilerOptions.compose">
 <span class="sig-name descname"><span class="pre">compose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename_in_msg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/compilation.html#CompilerOptions.compose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.compilation.CompilerOptions.compose" title="Link to this definition">#</a></dt>
 <dd><p>Format makefile options as list of strings.</p>
@@ -662,17 +636,6 @@ Transcripts include config information, progress, and error messages.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)">str</a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="cmdstanpy.compilation.CompilerOptions.is_empty">
-<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/compilation.html#CompilerOptions.is_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.compilation.CompilerOptions.is_empty" title="Link to this definition">#</a></dt>
-<dd><p>True if no options specified.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -750,7 +713,7 @@ Raise ValueError if bad config is found.</p>
 <h3>CmdStanArgs<a class="headerlink" href="#cmdstanargs" title="Link to this heading">#</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="cmdstanpy.cmdstan_args.CmdStanArgs">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cmdstanpy.cmdstan_args.</span></span><span class="sig-name descname"><span class="pre">CmdStanArgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_exe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_figs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_latent_dynamics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/cmdstan_args.html#CmdStanArgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.cmdstan_args.CmdStanArgs" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">cmdstanpy.cmdstan_args.</span></span><span class="sig-name descname"><span class="pre">CmdStanArgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_exe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_figs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_diagnostics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmdstanpy/cmdstan_args.html#CmdStanArgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cmdstanpy.cmdstan_args.CmdStanArgs" title="Link to this definition">#</a></dt>
 <dd><p>Container for CmdStan command line arguments.
 Consists of arguments common to all methods and
 and an object which contains the method-specific arguments.</p>
@@ -758,15 +721,15 @@ and an object which contains the method-specific arguments.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
-<li><p><strong>model_exe</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><em>PathLike</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>model_exe</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
 <li><p><strong>chain_ids</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>method_args</strong> (<a class="reference internal" href="#cmdstanpy.cmdstan_args.SamplerArgs" title="cmdstanpy.cmdstan_args.SamplerArgs"><em>SamplerArgs</em></a><em> | </em><a class="reference internal" href="#cmdstanpy.cmdstan_args.OptimizeArgs" title="cmdstanpy.cmdstan_args.OptimizeArgs"><em>OptimizeArgs</em></a><em> | </em><em>GenerateQuantitiesArgs</em><em> | </em><a class="reference internal" href="#cmdstanpy.cmdstan_args.VariationalArgs" title="cmdstanpy.cmdstan_args.VariationalArgs"><em>VariationalArgs</em></a><em> | </em><a class="reference internal" href="#cmdstanpy.cmdstan_args.LaplaceArgs" title="cmdstanpy.cmdstan_args.LaplaceArgs"><em>LaplaceArgs</em></a><em> | </em><a class="reference internal" href="#cmdstanpy.cmdstan_args.PathfinderArgs" title="cmdstanpy.cmdstan_args.PathfinderArgs"><em>PathfinderArgs</em></a>)</p></li>
 <li><p><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.15)"><em>Mapping</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><em>Any</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.5)"><em>integer</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.integer" title="(in NumPy v2.5)"><em>integer</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>inits</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 <li><p><strong>output_dir</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/os.html#os.PathLike" title="(in Python v3.15)"><em>PathLike</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>sig_figs</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
-<li><p><strong>save_latent_dynamics</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
+<li><p><strong>save_diagnostics</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
 <li><p><strong>save_profile</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>)</p></li>
 <li><p><strong>refresh</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em> | </em><em>None</em>)</p></li>
 </ul>
@@ -1153,7 +1116,6 @@ and an object which contains the method-specific arguments.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#inferencemetadata">InferenceMetadata</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.InferenceMetadata"><code class="docutils literal notranslate"><span class="pre">InferenceMetadata</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.InferenceMetadata.cmdstan_config"><code class="docutils literal notranslate"><span class="pre">InferenceMetadata.cmdstan_config</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.InferenceMetadata.method_vars"><code class="docutils literal notranslate"><span class="pre">InferenceMetadata.method_vars</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.InferenceMetadata.stan_vars"><code class="docutils literal notranslate"><span class="pre">InferenceMetadata.stan_vars</span></code></a></li>
 </ul>
@@ -1163,13 +1125,15 @@ and an object which contains the method-specific arguments.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#runset">RunSet</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet"><code class="docutils literal notranslate"><span class="pre">RunSet</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.cmd"><code class="docutils literal notranslate"><span class="pre">RunSet.cmd()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.gen_file_name"><code class="docutils literal notranslate"><span class="pre">RunSet.gen_file_name()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.get_err_msgs"><code class="docutils literal notranslate"><span class="pre">RunSet.get_err_msgs()</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.save_csvfiles"><code class="docutils literal notranslate"><span class="pre">RunSet.save_csvfiles()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.chain_ids"><code class="docutils literal notranslate"><span class="pre">RunSet.chain_ids</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.chains"><code class="docutils literal notranslate"><span class="pre">RunSet.chains</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.config_files"><code class="docutils literal notranslate"><span class="pre">RunSet.config_files</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.csv_files"><code class="docutils literal notranslate"><span class="pre">RunSet.csv_files</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.diagnostic_files"><code class="docutils literal notranslate"><span class="pre">RunSet.diagnostic_files</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.method"><code class="docutils literal notranslate"><span class="pre">RunSet.method</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.metric_files"><code class="docutils literal notranslate"><span class="pre">RunSet.metric_files</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.model"><code class="docutils literal notranslate"><span class="pre">RunSet.model</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.num_procs"><code class="docutils literal notranslate"><span class="pre">RunSet.num_procs</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.stanfit.RunSet.one_process_per_chain"><code class="docutils literal notranslate"><span class="pre">RunSet.one_process_per_chain</span></code></a></li>
@@ -1181,10 +1145,7 @@ and an object which contains the method-specific arguments.</p>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compileroptions">CompilerOptions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions"><code class="docutils literal notranslate"><span class="pre">CompilerOptions</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions.add"><code class="docutils literal notranslate"><span class="pre">CompilerOptions.add()</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions.add_include_path"><code class="docutils literal notranslate"><span class="pre">CompilerOptions.add_include_path()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions.compose"><code class="docutils literal notranslate"><span class="pre">CompilerOptions.compose()</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions.is_empty"><code class="docutils literal notranslate"><span class="pre">CompilerOptions.is_empty()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions.validate"><code class="docutils literal notranslate"><span class="pre">CompilerOptions.validate()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions.validate_cpp_opts"><code class="docutils literal notranslate"><span class="pre">CompilerOptions.validate_cpp_opts()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#cmdstanpy.compilation.CompilerOptions.validate_stanc_opts"><code class="docutils literal notranslate"><span class="pre">CompilerOptions.validate_stanc_opts()</span></code></a></li>

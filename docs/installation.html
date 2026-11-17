@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; CmdStanPy 1.3.2 documentation</title>
+    <title>Installation &#8212; CmdStanPy 2.0.0rc1 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=7facd19e" />
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8ca9e7a0"></script>
+    <script src="_static/documentation_options.js?v=f2943afd"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="cmdstanpy – Python interface to CmdStan" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.2" />
+  <meta name="docsearch:version" content="2.0.0rc1" />
   </head>
   
   
@@ -125,7 +125,7 @@
     <img src="_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.2</p>
+    <p class="title logo__title">CmdStanPy v2.0.0rc1</p>
   
 </a></div>
     
@@ -407,11 +407,12 @@
                   
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<p>CmdStanPy is a pure-Python3 package which wraps CmdStan,
-the command-line interface to Stan which is written in C++.
-Therefore, in addition to Python3,
-CmdStanPy requires a modern C++ toolchain in order to build and run Stan models.
-There are several ways to install CmdStanPy and the underlying CmdStan components.</p>
+<p>CmdStanPy is a pure-Python package which wraps CmdStan,
+the command-line interface to Stan which is written in C++.</p>
+<p>Therefore, CmdStanPy requires a modern C++ toolchain in order to build and run
+Stan models, as well as a recent version of CmdStan (released within the year
+prior to the release of the CmdStanPy version being used). There are several
+ways to install CmdStanPy and the underlying CmdStan components.</p>
 <ul class="simple">
 <li><p>You can download CmdStanPy, CmdStan, and the C++ toolchain from conda-forge.</p></li>
 <li><p>You can download the CmdStanPy package from <a class="reference external" href="https://pypi.org">PyPI</a>
@@ -445,12 +446,8 @@ run the command</p>
 </pre></div>
 </div>
 <p>By default, the latest release of CmdStan is installed.
-If you require a specific release of CmdStan, CmdStan versions
-2.26.1 and <em>newer</em> can be installed by specifying
-<code class="docutils literal notranslate"><span class="pre">cmdstan==VERSION</span></code> in the install command.
-Versions before 2.26.1 are not available from conda
-but can be downloaded from the CmdStan
-<a class="reference external" href="https://github.com/stan-dev/cmdstan/releases">releases</a> page.</p>
+If you require a specific release of CmdStan, versions can be installed by specifying
+<code class="docutils literal notranslate"><span class="pre">cmdstan==VERSION</span></code> in the install command.</p>
 <p>A Conda environment is a directory that contains a specific collection of Conda packages.
 To see the locations of your conda environments, use the command</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>info<span class="w"> </span>-e
@@ -517,10 +514,13 @@ On most systems the GNU-Make utility is pre-installed and is the default <code c
 There is usually a pre-installed C++ compiler as well, but not necessarily new enough.</p>
 <p><strong>MacOS</strong> The Xcode and Xcode command line tools must be installed.  Xcode is available for free from the Mac App Store.
 To install the Xcode command line tools, run the shell command: <code class="docutils literal notranslate"><span class="pre">xcode-select</span> <span class="pre">--install</span></code>.</p>
-<p><strong>Windows</strong>  We recommend using the <a class="reference external" href="https://cran-archive.r-project.org/bin/windows/Rtools/rtools40.html">RTools 4.0</a> toolchain
-which contains a <code class="docutils literal notranslate"><span class="pre">g++</span> <span class="pre">8</span></code> compiler and <code class="docutils literal notranslate"><span class="pre">Mingw</span></code>, the native Windows equivalent of the GNU-Make utility.
+<p><strong>Windows</strong>  We recommend using the <a class="reference external" href="https://cran.r-project.org/bin/windows/Rtools/rtools45/rtools.html">RTools 4.5</a> toolchain,
+which contains a C++ compiler and the GNU-Make build utility.
 This can be installed along with CmdStan when you invoke the function <a class="reference internal" href="api.html#cmdstanpy.install_cmdstan" title="cmdstanpy.install_cmdstan"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cmdstanpy.install_cmdstan()</span></code></a>
-with argument <code class="docutils literal notranslate"><span class="pre">compiler=True</span></code>.</p>
+with argument <code class="docutils literal notranslate"><span class="pre">compiler=True</span></code>.
+RTools is available for both Intel/AMD 64-bit (<code class="docutils literal notranslate"><span class="pre">x86_64</span></code>) and ARM 64-bit (<code class="docutils literal notranslate"><span class="pre">aarch64</span></code>) machines;
+CmdStanPy selects the matching build automatically.
+Older toolchains (RTools 4.0, Intel/AMD only) are still detected if already installed.</p>
 </section>
 <section id="function-install-cmdstan">
 <span id="install-cmdstan-fun"></span><h3>Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code><a class="headerlink" href="#function-install-cmdstan" title="Link to this heading">#</a></h3>
@@ -533,7 +533,7 @@ On Windows, the <code class="docutils literal notranslate"><span class="pre">com
 <ul class="simple">
 <li><p>From Python</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cmdstanpy</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">cmdstanpy</span>
 <span class="n">cmdstanpy</span><span class="o">.</span><span class="n">install_cmdstan</span><span class="p">()</span>
 <span class="n">cmdstanpy</span><span class="o">.</span><span class="n">install_cmdstan</span><span class="p">(</span><span class="n">compiler</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># only valid on Windows</span>
 </pre></div>
@@ -558,18 +558,27 @@ you about the various options to the installation script, with
 reasonable defaults set for all questions.</p>
 <p>The named arguments: <code class="docutils literal notranslate"><span class="pre">-d</span> <span class="pre">&lt;directory&gt;</span></code> and  <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">&lt;version&gt;</span></code>
 can be used to override these defaults:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan<span class="w"> </span>-d<span class="w"> </span>my_local_cmdstan<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>.33.0
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>install_cmdstan<span class="w"> </span>-d<span class="w"> </span>my_local_cmdstan<span class="w"> </span>-v<span class="w"> </span><span class="m">2</span>.37.0
 ls<span class="w"> </span>-F<span class="w"> </span>my_local_cmdstan
 </pre></div>
 </div>
 <section id="alternate-linux-architectures">
 <h4>Alternate Linux Architectures<a class="headerlink" href="#alternate-linux-architectures" title="Link to this heading">#</a></h4>
 <p>CmdStan can be installed on Linux for the following non-x86 architectures:
-<code class="docutils literal notranslate"><span class="pre">arm64</span></code>, <code class="docutils literal notranslate"><span class="pre">armel</span></code>, <code class="docutils literal notranslate"><span class="pre">armhf</span></code>, <code class="docutils literal notranslate"><span class="pre">mips64el</span></code>, <code class="docutils literal notranslate"><span class="pre">ppc64el</span></code> and <code class="docutils literal notranslate"><span class="pre">s390x</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">arm64</span></code>, <code class="docutils literal notranslate"><span class="pre">armel</span></code>, <code class="docutils literal notranslate"><span class="pre">armhf</span></code>, <code class="docutils literal notranslate"><span class="pre">ppc64el</span></code> and <code class="docutils literal notranslate"><span class="pre">s390x</span></code>.</p>
 <p>CmdStanPy will do its best to determine which of these is applicable for your
 machine when running <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code>. If the wrong choice is made, or if you
 need to manually override this, you can set the <code class="docutils literal notranslate"><span class="pre">CMDSTAN_ARCH</span></code> environment variable
 to one of the above options, or to “false” to use the standard x86 download.</p>
+</section>
+<section id="windows-on-arm64">
+<h4>Windows on ARM64<a class="headerlink" href="#windows-on-arm64" title="Link to this heading">#</a></h4>
+<p>CmdStan can be built on ARM 64-bit (<code class="docutils literal notranslate"><span class="pre">aarch64</span></code>) Windows machines using the
+ARM64 build of RTools 4.4 or 4.5, which CmdStanPy installs and detects
+automatically.</p>
+<p>A Python interpreter built for Intel/AMD and running under emulation reports an
+<code class="docutils literal notranslate"><span class="pre">x86_64</span></code> architecture; in that case the Intel/AMD toolchain is used. The two
+architectures can be installed side by side.</p>
 </section>
 </section>
 <section id="diy-installation">
@@ -592,7 +601,7 @@ directory named <code class="docutils literal notranslate"><span class="pre">.cm
 <p>If you have installed CmdStan from a GitHub release or by cloning the CmdStan repository,
 you will need to set this location, either via the <code class="docutils literal notranslate"><span class="pre">CMDSTAN</span></code> environment variable,
 or via the CmdStanPy command <code class="docutils literal notranslate"><span class="pre">set_cmdstan_path</span></code></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">cmdstan_path</span><span class="p">,</span> <span class="n">set_cmdstan_path</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmdstan_path</span><span class="p">,</span> <span class="n">set_cmdstan_path</span>
 
 <span class="n">set_cmdstan_path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span><span class="s1">&#39;to&#39;</span><span class="p">,</span><span class="s1">&#39;cmdstan&#39;</span><span class="p">))</span>
 <span class="n">cmdstan_path</span><span class="p">()</span>
@@ -655,6 +664,7 @@ or via the CmdStanPy command <code class="docutils literal notranslate"><span cl
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#c-toolchain-requirements">C++ Toolchain Requirements</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#function-install-cmdstan">Function <code class="docutils literal notranslate"><span class="pre">install_cmdstan</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#alternate-linux-architectures">Alternate Linux Architectures</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#windows-on-arm64">Windows on ARM64</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diy-installation">DIY Installation</a></li>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CmdStanPy Workflow &#8212; CmdStanPy 1.3.2 documentation</title>
+    <title>CmdStanPy Workflow &#8212; CmdStanPy 2.0.0rc1 documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=7facd19e" />
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=8ca9e7a0"></script>
+    <script src="../_static/documentation_options.js?v=f2943afd"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="“Hello, World!”" href="hello_world.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.2" />
+  <meta name="docsearch:version" content="2.0.0rc1" />
   </head>
   
   
@@ -125,7 +125,7 @@
     <img src="../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.2</p>
+    <p class="title logo__title">CmdStanPy v2.0.0rc1</p>
   
 </a></div>
     
@@ -456,23 +456,15 @@ The following sections describe the process of building, running, and
 managing the resulting inference for a single model and set of inputs.</p>
 <section id="compile-the-stan-model">
 <span id="model-compilation"></span><h2>Compile the Stan model<a class="headerlink" href="#compile-the-stan-model" title="Link to this heading">#</a></h2>
-<p>The: <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class provides methods
-to compile and run the Stan program.
-A CmdStanModel object can be instantiated by specifying
-either a Stan file or the executable file, or both.
-If only the Stan file path is specified, the constructor will
-check for the existence of a correspondingly named exe file in
-the same directory.  If found, it will use this as the exe file path.</p>
-<p>By default, when a CmdStanModel object is instantiated from a Stan file,
-the constructor will compile the model as needed.
-The constructor argument <cite>compile</cite> controls this behavior.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">compile=False</span></code>: never compile the Stan file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">compile=&quot;Force&quot;</span></code>: always compile the Stan file.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">compile=True</span></code>: (default) compile the Stan file as needed, i.e., if no exe file exists or if the Stan file is newer than the exe file.</p></li>
-</ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
+<p>The <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel" title="cmdstanpy.CmdStanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CmdStanModel</span></code></a> class provides methods to compile and run the Stan
+program. A CmdStanModel object can be instantiated by specifying a Stan file,
+the executable file, or both. If only the Stan file path is specified, the
+constructor will check for the existence of a correspondingly named executable in
+the same directory. If found, it will use this as the exe file path.</p>
+<p>When a CmdStanModel object is instantiated from a Stan file, the constructor
+will compile the model if the executable is non-existent or out-of-date.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">CmdStanModel</span>
 
 <span class="n">my_stanfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;my_model.stan&#39;</span><span class="p">)</span>
 <span class="n">my_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">my_stanfile</span><span class="p">)</span>
@@ -482,8 +474,8 @@ The constructor argument <cite>compile</cite> controls this behavior.</p>
 <span class="n">my_model</span><span class="o">.</span><span class="n">code</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The CmdStanModel class also provides the <a class="reference internal" href="../api.html#cmdstanpy.CmdStanModel.compile" title="cmdstanpy.CmdStanModel.compile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compile()</span></code></a> method,
-which can be called at any point to (re)compile the model as needed.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">force_compile=True</span></code> argument can be passed to the CmdStanModel
+constructor, which will force (re)compilation of the model.</p>
 <p>Model compilation is carried out via the GNU Make build tool.
 The CmdStan <code class="docutils literal notranslate"><span class="pre">makefile</span></code> contains a set of general rules which
 specify the dependencies between the Stan program and the
@@ -496,23 +488,25 @@ which are passed in to the <code class="docutils literal notranslate"><span clas
 <li><p>The C++ compiler compiles the generated code and links in
 the necessary supporting libraries.</p></li>
 </ul>
-<p>Therefore, both the constructor and the <code class="docutils literal notranslate"><span class="pre">compile</span></code> method
-allow optional arguments <code class="docutils literal notranslate"><span class="pre">stanc_options</span></code> and <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code> which
-specify options for each compilation step.
-Options are specified as a Python dictionary mapping
-compiler option names to appropriate values.</p>
-<p>In order parallelize within-chain computations using the
-Stan language <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code> function, or to parallelize
-running the NUTS-HMC sampler across chains,
-the Stan model must be compiled with
-C++ compiler flag <strong>STAN_THREADS</strong>.
-While any value can be used,
-we recommend the value <code class="docutils literal notranslate"><span class="pre">True</span></code>, e.g.:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">CmdStanModel</span>
+<p>The constructor accepts arguments to specify both <code class="docutils literal notranslate"><span class="pre">stanc</span></code> and C++ compilation
+options, if desired. Passing <cite>multithreading=True</cite> enables the <strong>STAN_THREADS</strong>
+C++ flag, which is needed to parallelize within-chain computations, such as
+with <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code>, or to parallelize the NUTS-HMC sampler across chains.
+Passing <code class="docutils literal notranslate"><span class="pre">stanc_optimizations=True</span></code> will enable <code class="docutils literal notranslate"><span class="pre">O1</span></code> optimizations in the
+<code class="docutils literal notranslate"><span class="pre">stanc</span></code> compiler.</p>
+<p>Outside of these common options, the constructor accepts the optional arguments
+<code class="docutils literal notranslate"><span class="pre">stanc_options</span></code> and <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code>, which allow specifying arbitrary
+compilation options. Some more advanced Stan features, like MPI or OpenCL
+support, require using these. Note that if the lower-level compilation options
+conflict with an argument like <code class="docutils literal notranslate"><span class="pre">multithreading=True</span></code>, the option in
+<code class="docutils literal notranslate"><span class="pre">stanc_options</span></code> or <code class="docutils literal notranslate"><span class="pre">cpp_options</span></code> takes precedence.</p>
+<p>An example model compilation that enables multithreading and
+basic optimization can be done like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">CmdStanModel</span>
 
 <span class="n">my_stanfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;my_model.stan&#39;</span><span class="p">)</span>
-<span class="n">my_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">my_stanfile</span><span class="p">,</span> <span class="n">cpp_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;STAN_THREADS&#39;</span><span class="p">:</span><span class="s1">&#39;true&#39;</span><span class="p">})</span>
+<span class="n">my_model</span> <span class="o">=</span> <span class="n">CmdStanModel</span><span class="p">(</span><span class="n">stan_file</span><span class="o">=</span><span class="n">my_stanfile</span><span class="p">,</span> <span class="n">multithreading</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stanc_optimizations</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

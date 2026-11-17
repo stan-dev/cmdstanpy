@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cmdstanpy.utils.cmdstan &#8212; CmdStanPy 1.3.2 documentation</title>
+    <title>cmdstanpy.utils.cmdstan &#8212; CmdStanPy 2.0.0rc1 documentation</title>
   
   
   
@@ -29,7 +29,7 @@
   <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=7facd19e" />
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=8ca9e7a0"></script>
+    <script src="../../../_static/documentation_options.js?v=f2943afd"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.3.2" />
+  <meta name="docsearch:version" content="2.0.0rc1" />
   </head>
   
   
@@ -122,7 +122,7 @@
     <img src="../../../_static/logo_tm.png" class="logo__image only-dark pst-js-only" alt="CmdStanPy - Home"/>
   
   
-    <p class="title logo__title">CmdStanPy v1.3.2</p>
+    <p class="title logo__title">CmdStanPy v2.0.0rc1</p>
   
 </a></div>
     
@@ -402,25 +402,45 @@
 <span class="sd">Utilities for finding and installing CmdStan</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">platform</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">NamedTuple</span>
 
-<span class="kn">from</span> <span class="nn">tqdm.auto</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm.auto</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="kn">from</span> <span class="nn">cmdstanpy</span> <span class="kn">import</span> <span class="n">_DOT_CMDSTAN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DOT_CMDSTAN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cmdstanpy.utils.command</span><span class="w"> </span><span class="kn">import</span> <span class="n">do_command</span>
 
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">progress</span> <span class="k">as</span> <span class="n">progbar</span>
-<span class="kn">from</span> <span class="nn">.deprecation</span> <span class="kn">import</span> <span class="n">deprecate_positional_args</span>
-<span class="kn">from</span> <span class="nn">.logging</span> <span class="kn">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">progress</span> <span class="k">as</span> <span class="n">progbar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
 
 <span class="n">EXTENSION</span> <span class="o">=</span> <span class="s1">&#39;.exe&#39;</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
 
 
-<span class="k">def</span> <span class="nf">determine_linux_arch</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">determine_windows_arch</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the architecture of the running Windows process:</span>
+<span class="sd">    ``&#39;x86_64&#39;``, ``&#39;aarch64&#39;`` or ``&#39;i686&#39;``.</span>
+
+<span class="sd">    A CPython built for x86-64 running under emulation on an ARM64 machine</span>
+<span class="sd">    reports ``AMD64``, which is what we want: it needs the Intel RTools.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">machine</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">machine</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s1">&#39;ARM64&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;aarch64&#39;</span>
+    <span class="k">if</span> <span class="n">machine</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;AMD64&#39;</span><span class="p">,</span> <span class="s1">&#39;X86_64&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;x86_64&#39;</span>
+    <span class="k">if</span> <span class="n">machine</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;X86&#39;</span><span class="p">,</span> <span class="s1">&#39;I386&#39;</span><span class="p">,</span> <span class="s1">&#39;I686&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;i686&#39;</span>
+    <span class="k">return</span> <span class="s1">&#39;x86_64&#39;</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span> <span class="k">else</span> <span class="s1">&#39;i686&#39;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">determine_linux_arch</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">machine</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">machine</span><span class="p">()</span>
     <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="k">if</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;aarch64&quot;</span><span class="p">:</span>
@@ -438,8 +458,6 @@
             <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;armel&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;armhf&quot;</span>
-    <span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;mips64&quot;</span><span class="p">:</span>
-        <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;mips64el&quot;</span>
     <span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;ppc64el&quot;</span> <span class="ow">or</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;ppc64le&quot;</span><span class="p">:</span>
         <span class="n">arch</span> <span class="o">=</span> <span class="s2">&quot;ppc64el&quot;</span>
     <span class="k">elif</span> <span class="n">machine</span> <span class="o">==</span> <span class="s2">&quot;s390x&quot;</span><span class="p">:</span>
@@ -447,7 +465,7 @@
     <span class="k">return</span> <span class="n">arch</span>
 
 
-<span class="k">def</span> <span class="nf">get_download_url</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_download_url</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">arch</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CMDSTAN_ARCH&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">arch</span> <span class="ow">and</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Linux&quot;</span><span class="p">:</span>
         <span class="n">arch</span> <span class="o">=</span> <span class="n">determine_linux_arch</span><span class="p">()</span>
@@ -460,7 +478,7 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;https://github.com/stan-dev/cmdstan/releases/download/</span><span class="si">{</span><span class="n">url_end</span><span class="si">}</span><span class="s1">&#39;</span>
 
 
-<span class="k">def</span> <span class="nf">validate_dir</span><span class="p">(</span><span class="n">install_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_dir</span><span class="p">(</span><span class="n">install_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check that specified install directory exists, can write.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">install_dir</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -468,7 +486,7 @@
         <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">,</span> <span class="ne">PermissionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s1">&#39;Cannot create directory: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">install_dir</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -481,10 +499,10 @@
         <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s1">&#39;Cannot write files to directory </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
 
-<span class="k">def</span> <span class="nf">get_latest_cmdstan</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_latest_cmdstan</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given a valid directory path, find all installed CmdStan versions</span>
 <span class="sd">    and return highest (i.e., latest) version number.</span>
@@ -528,7 +546,7 @@
     <span class="k">return</span> <span class="s1">&#39;cmdstan-&#39;</span> <span class="o">+</span> <span class="n">latest</span>
 
 
-<span class="k">def</span> <span class="nf">validate_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate that CmdStan directory exists and binaries have been built.</span>
 <span class="sd">    Throws exception if specified path is invalid.</span>
@@ -544,7 +562,7 @@
         <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">stanc_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">stanc_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the path to the stanc executable in the CmdStan installation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -560,7 +578,7 @@
 
 <div class="viewcode-block" id="set_cmdstan_path">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.set_cmdstan_path">[docs]</a>
-<span class="k">def</span> <span class="nf">set_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_cmdstan_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate, then set CmdStan directory path.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -571,7 +589,7 @@
 
 <div class="viewcode-block" id="set_make_env">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.set_make_env">[docs]</a>
-<span class="k">def</span> <span class="nf">set_make_env</span><span class="p">(</span><span class="n">make</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_make_env</span><span class="p">(</span><span class="n">make</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    set MAKE environmental variable.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -581,7 +599,7 @@
 
 <div class="viewcode-block" id="cmdstan_path">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.cmdstan_path">[docs]</a>
-<span class="k">def</span> <span class="nf">cmdstan_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cmdstan_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate, then return CmdStan directory path.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -610,7 +628,7 @@
 
 <div class="viewcode-block" id="cmdstan_version">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.cmdstan_version">[docs]</a>
-<span class="k">def</span> <span class="nf">cmdstan_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cmdstan_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parses version string out of CmdStan makefile variable CMDSTAN_VERSION,</span>
 <span class="sd">    returns Tuple(Major, minor).</span>
@@ -654,8 +672,8 @@
 
 
 
-<span class="k">def</span> <span class="nf">cmdstan_version_before</span><span class="p">(</span>
-    <span class="n">major</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">minor</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cmdstan_version_before</span><span class="p">(</span>
+    <span class="n">major</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">minor</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Check that CmdStan version is less than Major.minor version.</span>
@@ -685,8 +703,222 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">cxx_toolchain_path</span><span class="p">(</span>
-    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">install_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RToolsLayout</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Directory layout of one RTools version/architecture combination.&quot;&quot;&quot;</span>
+
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">arch</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">compiler_subdir</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">tool_subdir</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">compilers</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+
+<span class="c1"># Ordered newest-first so that a search without an explicit version</span>
+<span class="c1"># prefers the most recent layout. RTools 4.2 through 4.5 share a layout.</span>
+<span class="c1"># The ARM builds are LLVM-based but ship gcc/g++ aliases for clang.</span>
+<span class="n">RTOOLS_LAYOUTS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span>
+        <span class="s1">&#39;4.5&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;aarch64&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s1">&#39;aarch64-w64-mingw32.static.posix&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,</span> <span class="s1">&#39;clang++&#39;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span>
+        <span class="s1">&#39;4.5&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;x86_64&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s1">&#39;x86_64-w64-mingw32.static.posix&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,),</span>
+    <span class="p">),</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span>
+        <span class="s1">&#39;4.4&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;aarch64&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s1">&#39;aarch64-w64-mingw32.static.posix&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,</span> <span class="s1">&#39;clang++&#39;</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span>
+        <span class="s1">&#39;4.4&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;x86_64&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s1">&#39;x86_64-w64-mingw32.static.posix&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,),</span>
+    <span class="p">),</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span>
+        <span class="s1">&#39;4.3&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;x86_64&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s1">&#39;x86_64-w64-mingw32.static.posix&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,),</span>
+    <span class="p">),</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span>
+        <span class="s1">&#39;4.2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;x86_64&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s1">&#39;x86_64-w64-mingw32.static.posix&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,),</span>
+    <span class="p">),</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span><span class="s1">&#39;4.0&#39;</span><span class="p">,</span> <span class="s1">&#39;x86_64&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;mingw64&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,)),</span>
+    <span class="n">RToolsLayout</span><span class="p">(</span><span class="s1">&#39;4.0&#39;</span><span class="p">,</span> <span class="s1">&#39;i686&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;mingw32&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;g++&#39;</span><span class="p">,)),</span>
+<span class="p">)</span>
+
+<span class="n">_RTOOLS_VERSION_ALIASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;4&#39;</span><span class="p">:</span> <span class="s1">&#39;4.0&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;40&#39;</span><span class="p">:</span> <span class="s1">&#39;4.0&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;4.0&#39;</span><span class="p">:</span> <span class="s1">&#39;4.0&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;42&#39;</span><span class="p">:</span> <span class="s1">&#39;4.2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;4.2&#39;</span><span class="p">:</span> <span class="s1">&#39;4.2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;43&#39;</span><span class="p">:</span> <span class="s1">&#39;4.3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;4.3&#39;</span><span class="p">:</span> <span class="s1">&#39;4.3&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;44&#39;</span><span class="p">:</span> <span class="s1">&#39;4.4&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;4.4&#39;</span><span class="p">:</span> <span class="s1">&#39;4.4&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;45&#39;</span><span class="p">:</span> <span class="s1">&#39;4.5&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;4.5&#39;</span><span class="p">:</span> <span class="s1">&#39;4.5&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">_RTOOLS_HOME_VARS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;RTOOLS45_HOME&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTOOLS44_HOME&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTOOLS43_HOME&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTOOLS42_HOME&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTOOLS40_HOME&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_RTOOLS_DIR_NAMES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;RTools45&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTools44&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTools43&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTools42&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTools40&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;RTools&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_rtools_version</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the ``maj.min`` form of an RTools version string.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_RTOOLS_VERSION_ALIASES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">rtools_layouts</span><span class="p">(</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">arch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">RToolsLayout</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the known RTools directory layouts matching a version and</span>
+<span class="sd">    architecture, newest first. An empty list means the combination is</span>
+<span class="sd">    not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">arch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">arch</span> <span class="o">=</span> <span class="n">determine_windows_arch</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">layout</span>
+        <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">RTOOLS_LAYOUTS</span>
+        <span class="k">if</span> <span class="n">layout</span><span class="o">.</span><span class="n">arch</span> <span class="o">==</span> <span class="n">arch</span>
+        <span class="ow">and</span> <span class="p">(</span><span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">layout</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="n">version</span><span class="p">)</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rtools_dir_names</span><span class="p">(</span><span class="n">arch</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_RTOOLS_DIR_NAMES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">arch</span> <span class="o">==</span> <span class="s1">&#39;aarch64&#39;</span><span class="p">:</span>
+            <span class="c1"># CRAN installs the ARM builds to e.g. C:\rtools45-aarch64</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">-aarch64&#39;</span><span class="p">)</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">names</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rtools_search_roots</span><span class="p">(</span><span class="n">install_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">arch</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Candidate RTools installation roots, in order of preference.&quot;&quot;&quot;</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">home</span>
+        <span class="k">for</span> <span class="n">home</span> <span class="ow">in</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">_RTOOLS_HOME_VARS</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">home</span>
+    <span class="p">]</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">_rtools_dir_names</span><span class="p">(</span><span class="n">arch</span><span class="p">)</span>
+    <span class="n">parents</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">install_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">install_dir</span><span class="p">)</span>
+    <span class="n">parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">,</span> <span class="n">_DOT_CMDSTAN</span><span class="p">)))</span>
+    <span class="n">parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
+        <span class="n">roots</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">)</span>
+    <span class="n">roots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">),</span> <span class="s1">&#39;RBuildTools&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">roots</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">rtools_compiler</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">layout</span><span class="p">:</span> <span class="n">RToolsLayout</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the name of the C++ compiler shipped in an installation.&quot;&quot;&quot;</span>
+    <span class="n">compiler_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="o">*</span><span class="n">layout</span><span class="o">.</span><span class="n">compiler_subdir</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">compiler</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">compilers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">compiler_dir</span><span class="p">,</span> <span class="n">compiler</span> <span class="o">+</span> <span class="n">EXTENSION</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">compiler</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_probe_rtools_root</span><span class="p">(</span>
+    <span class="n">toolchain_root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">layouts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RToolsLayout</span><span class="p">],</span>
+    <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Match an installation root against the given layouts, returning</span>
+<span class="sd">    ``(root, compiler_path, tool_path)`` or ``None``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">toolchain_root</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">layouts</span><span class="p">:</span>
+        <span class="c1"># RTools 4.2+ ship empty mingw64/ucrt64/clangarm64 stub directories,</span>
+        <span class="c1"># so the compiler binary itself must be checked, not just the dir</span>
+        <span class="k">if</span> <span class="n">rtools_compiler</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="o">*</span><span class="n">layout</span><span class="o">.</span><span class="n">compiler_subdir</span><span class="p">)</span>
+        <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="o">*</span><span class="n">layout</span><span class="o">.</span><span class="n">tool_subdir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">toolchain_root</span><span class="p">,</span> <span class="n">compiler_path</span><span class="p">,</span> <span class="n">tool_path</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">&#39;Found invalid RTools installation on </span><span class="si">%s</span><span class="s1">: missing </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">toolchain_root</span><span class="p">,</span>
+            <span class="n">tool_path</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Found no usable RTools installation on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">toolchain_root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">make_command</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Name of the GNU Make executable to use.</span>
+
+<span class="sd">    RTools 4.0 ships ``mingw32-make``, while RTools 4.2 and later ship</span>
+<span class="sd">    plain ``make`` in ``usr/bin``. If neither is on the ``$PATH``, an RTools</span>
+<span class="sd">    installation managed by CmdStanPy is activated before giving up.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">make</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;MAKE&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">make</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">make</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;make&#39;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_found</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;mingw32-make&#39;</span><span class="p">,</span> <span class="s1">&#39;make&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">candidate</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_found</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cxx_toolchain_path</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">_found</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">found</span> <span class="ow">or</span> <span class="s1">&#39;make&#39;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cxx_toolchain_path</span><span class="p">(</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">install_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate, then activate C++ toolchain directory path.</span>
@@ -698,143 +930,33 @@
     <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Format version number as a string&#39;</span><span class="p">)</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+
+    <span class="n">arch</span> <span class="o">=</span> <span class="n">determine_windows_arch</span><span class="p">()</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="n">rtools_layouts</span><span class="p">(</span>
+        <span class="n">normalize_rtools_version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span> <span class="k">if</span> <span class="n">version</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">arch</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">layouts</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;unsupported RTools version: </span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">found</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="s1">&#39;CMDSTAN_TOOLCHAIN&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
-        <span class="n">toolchain_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CMDSTAN_TOOLCHAIN&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;mingw64&#39;</span><span class="p">)):</span>
-            <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="n">toolchain_root</span><span class="p">,</span>
-                <span class="s1">&#39;mingw64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw32&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
-                <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
-                    <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="s1">&#39;Found invalid installion for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                        <span class="n">toolchain_root</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s1">&#39;Found invalid installion for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                    <span class="n">toolchain_root</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-
-        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;mingw_64&#39;</span><span class="p">)):</span>
-            <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="n">toolchain_root</span><span class="p">,</span>
-                <span class="s1">&#39;mingw_64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw_32&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
-                <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
-                    <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="s1">&#39;Found invalid installion for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                        <span class="n">toolchain_root</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s1">&#39;Found invalid installion for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                    <span class="n">toolchain_root</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="n">_probe_rtools_root</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CMDSTAN_TOOLCHAIN&#39;</span><span class="p">],</span> <span class="n">layouts</span><span class="p">,</span> <span class="n">logger</span>
+        <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">rtools40_home</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;RTOOLS40_HOME&#39;</span><span class="p">)</span>
-        <span class="n">cmdstan_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">,</span> <span class="n">_DOT_CMDSTAN</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">toolchain_root</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="p">([</span><span class="n">rtools40_home</span><span class="p">]</span> <span class="k">if</span> <span class="n">rtools40_home</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[])</span>
-            <span class="o">+</span> <span class="p">(</span>
-                <span class="p">[</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools40&#39;</span><span class="p">),</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools35&#39;</span><span class="p">),</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools30&#39;</span><span class="p">),</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="s1">&#39;RTools&#39;</span><span class="p">),</span>
-                <span class="p">]</span>
-                <span class="k">if</span> <span class="n">install_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="p">[]</span>
-            <span class="p">)</span>
-            <span class="o">+</span> <span class="p">[</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="s1">&#39;RTools40&#39;</span><span class="p">),</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RTools40&quot;</span><span class="p">),</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="s1">&#39;RTools35&#39;</span><span class="p">),</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RTools35&quot;</span><span class="p">),</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmdstan_dir</span><span class="p">,</span> <span class="s1">&#39;RTools&#39;</span><span class="p">),</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RTools&quot;</span><span class="p">),</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">),</span> <span class="s2">&quot;RBuildTools&quot;</span><span class="p">),</span>
-            <span class="p">]</span>
-        <span class="p">):</span>
-            <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">toolchain_root</span> <span class="ow">in</span> <span class="n">_rtools_search_roots</span><span class="p">(</span><span class="n">install_dir</span><span class="p">,</span> <span class="n">arch</span><span class="p">):</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">_probe_rtools_root</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="n">layouts</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">break</span>
 
-            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;35&#39;</span><span class="p">,</span> <span class="s1">&#39;3.5&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">):</span>
-                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">toolchain_root</span><span class="p">,</span>
-                        <span class="s1">&#39;mingw64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw32&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
-                        <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;usr&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
-                            <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                            <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                                <span class="s1">&#39;Found invalid installation for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                                <span class="n">toolchain_root</span><span class="p">,</span>
-                            <span class="p">)</span>
-                            <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="k">break</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                            <span class="s1">&#39;Found invalid installation for RTools40 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                            <span class="n">toolchain_root</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">compiler_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">toolchain_root</span><span class="p">,</span>
-                        <span class="s1">&#39;mingw_64&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;mingw_32&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;bin&#39;</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">compiler_path</span><span class="p">):</span>
-                        <span class="n">tool_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">toolchain_root</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tool_path</span><span class="p">):</span>
-                            <span class="n">tool_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                            <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                                <span class="s1">&#39;Found invalid installation for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                                <span class="n">toolchain_root</span><span class="p">,</span>
-                            <span class="p">)</span>
-                            <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="k">break</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">compiler_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                            <span class="s1">&#39;Found invalid installation for RTools35 on </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
-                            <span class="n">toolchain_root</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">toolchain_root</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">toolchain_root</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s1">&#39;no RTools toolchain installation found, &#39;</span>
             <span class="s1">&#39;run command line script &#39;</span>
             <span class="s1">&#39;&quot;python -m cmdstanpy.install_cxx_toolchain&quot;&#39;</span>
         <span class="p">)</span>
+    <span class="n">toolchain_root</span><span class="p">,</span> <span class="n">compiler_path</span><span class="p">,</span> <span class="n">tool_path</span> <span class="o">=</span> <span class="n">found</span>
+
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Add C++ toolchain to $PATH: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">toolchain_root</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
         <span class="nb">list</span><span class="p">(</span>
@@ -846,13 +968,35 @@
     <span class="k">return</span> <span class="n">compiler_path</span><span class="p">,</span> <span class="n">tool_path</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">windows_tbb_path</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">do_command</span><span class="p">([</span><span class="s1">&#39;where.exe&#39;</span><span class="p">,</span> <span class="s1">&#39;tbb.dll&#39;</span><span class="p">],</span> <span class="n">fd_out</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="c1"># Add tbb to the $PATH on Windows</span>
+            <span class="n">libtbb</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;STAN_TBB&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">libtbb</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">libtbb</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">cmdstan_path</span><span class="p">(),</span> <span class="s1">&#39;stan&#39;</span><span class="p">,</span> <span class="s1">&#39;lib&#39;</span><span class="p">,</span> <span class="s1">&#39;stan_math&#39;</span><span class="p">,</span> <span class="s1">&#39;lib&#39;</span><span class="p">,</span> <span class="s1">&#39;tbb&#39;</span>
+                <span class="p">)</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding TBB (</span><span class="si">%s</span><span class="s2">) to PATH&quot;</span><span class="p">,</span> <span class="n">libtbb</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span>
+                    <span class="n">OrderedDict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">libtbb</span><span class="p">]</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;PATH&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">get_logger</span><span class="p">()</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;TBB already found in load path&quot;</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="install_cmdstan">
 <a class="viewcode-back" href="../../../api.html#cmdstanpy.install_cmdstan">[docs]</a>
-<span class="nd">@deprecate_positional_args</span><span class="p">(</span><span class="n">last_deprecated</span><span class="o">=</span><span class="s2">&quot;cores&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">install_cmdstan</span><span class="p">(</span>
-    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">install_cmdstan</span><span class="p">(</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="nb">dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="nb">dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">compiler</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -903,13 +1047,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">..install_cmdstan</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">..install_cmdstan</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
             <span class="n">InstallationSettings</span><span class="p">,</span>
             <span class="n">InteractiveSettings</span><span class="p">,</span>
             <span class="n">run_install</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">InstallationSettings</span><span class="p">,</span> <span class="n">InteractiveSettings</span><span class="p">]</span>
+        <span class="n">args</span><span class="p">:</span> <span class="n">InstallationSettings</span> <span class="o">|</span> <span class="n">InteractiveSettings</span>
 
         <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
@@ -954,7 +1098,7 @@
 
 
 <span class="nd">@progbar</span><span class="o">.</span><span class="n">wrap_callback</span>
-<span class="k">def</span> <span class="nf">wrap_url_progress_hook</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">wrap_url_progress_hook</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets up tqdm callback for url downloads.&quot;&quot;&quot;</span>
     <span class="n">pbar</span><span class="p">:</span> <span class="n">tqdm</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span>
         <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
@@ -964,7 +1108,7 @@
         <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">download_progress_hook</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download_progress_hook</span><span class="p">(</span>
         <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">total_size</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">pbar</span><span class="o">.</span><span class="n">total</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
