@@ -16,10 +16,13 @@ CmdStanPy 2.0.0
    required as a dependency.
  - Added support for newer RTools versions.
  - Overhauled the internals of the StanFit objects.
+
    - These leverage additional output files in newer CmdStan versions, which
      have led to some changes when loading a saved fit from disk -- ``from_csv``
      is deprecated in favor of ``from_output_files``.
+
  - Removed all previously deprecated features:
+
    - The :class:`CmdStanModel` class no longer supports cases where there is not
      a compiled model. In practical terms, this changed the signature of the
      constructor (`stan_file` is now the first argument) and removed
